@@ -1,0 +1,231 @@
+{
+  "date": "2026-11-05",
+  "stage": "P1 exploratory prototype",
+  "training_seeds": [
+    7,
+    11,
+    23
+  ],
+  "foundation_parameters": 969576,
+  "individual_fast_parameters": 16640,
+  "metrics": [
+    {
+      "seed": 7,
+      "steps": 1000,
+      "training_seconds": 230.80896589998156,
+      "peak_cuda_allocated_bytes": 55350784,
+      "scores": {
+        "written": {
+          "mean": 0.9990234375,
+          "ci95": [
+            0.9970703125,
+            1.0
+          ]
+        },
+        "no_write": {
+          "mean": 0.060546875,
+          "ci95": [
+            0.046875,
+            0.0751953125
+          ]
+        },
+        "after_new_old": {
+          "mean": 0.998046875,
+          "ci95": [
+            0.9951171875,
+            1.0
+          ]
+        },
+        "after_new_new": {
+          "mean": 0.998046875,
+          "ci95": [
+            0.9951171875,
+            1.0
+          ]
+        },
+        "alternate_mapping": {
+          "mean": 0.9990234375,
+          "ci95": [
+            0.9970703125,
+            1.0
+          ]
+        }
+      },
+      "paired_memory_gain": {
+        "mean": 0.9384765625,
+        "ci95": [
+          0.923828125,
+          0.9521484375
+        ]
+      },
+      "paired_old_task_loss": {
+        "mean": 0.0009765625,
+        "ci95": [
+          -0.001953125,
+          0.0048828125
+        ]
+      },
+      "restart_match": true,
+      "p1_gain_gate": true,
+      "foundation_sha256": "fb81a75a8eb3859dc027012fb60224aaf0551e4826577c2aebe70ae00f228a71"
+    },
+    {
+      "seed": 11,
+      "steps": 1000,
+      "training_seconds": 257.26143950002734,
+      "peak_cuda_allocated_bytes": 55350784,
+      "scores": {
+        "written": {
+          "mean": 0.9990234375,
+          "ci95": [
+            0.9970703125,
+            1.0
+          ]
+        },
+        "no_write": {
+          "mean": 0.0556640625,
+          "ci95": [
+            0.041015625,
+            0.0712890625
+          ]
+        },
+        "after_new_old": {
+          "mean": 0.99609375,
+          "ci95": [
+            0.9921875,
+            0.9990234375
+          ]
+        },
+        "after_new_new": {
+          "mean": 0.9990234375,
+          "ci95": [
+            0.9970703125,
+            1.0
+          ]
+        },
+        "alternate_mapping": {
+          "mean": 0.9970703125,
+          "ci95": [
+            0.9931640625,
+            1.0
+          ]
+        }
+      },
+      "paired_memory_gain": {
+        "mean": 0.943359375,
+        "ci95": [
+          0.927734375,
+          0.9580078125
+        ]
+      },
+      "paired_old_task_loss": {
+        "mean": 0.0029296875,
+        "ci95": [
+          -0.0009765625,
+          0.0078125
+        ]
+      },
+      "restart_match": true,
+      "p1_gain_gate": true,
+      "foundation_sha256": "5f49bfebd12d4cd76be5e46888783785c07000be0bae4ed94ffbf76e3d51944d"
+    },
+    {
+      "seed": 23,
+      "steps": 1000,
+      "training_seconds": 244.32471640000585,
+      "peak_cuda_allocated_bytes": 55350784,
+      "scores": {
+        "written": {
+          "mean": 0.9970703125,
+          "ci95": [
+            0.9931640625,
+            1.0
+          ]
+        },
+        "no_write": {
+          "mean": 0.068359375,
+          "ci95": [
+            0.052734375,
+            0.083984375
+          ]
+        },
+        "after_new_old": {
+          "mean": 0.9951171875,
+          "ci95": [
+            0.990234375,
+            0.9990234375
+          ]
+        },
+        "after_new_new": {
+          "mean": 0.99609375,
+          "ci95": [
+            0.9921875,
+            0.9990234375
+          ]
+        },
+        "alternate_mapping": {
+          "mean": 0.9970703125,
+          "ci95": [
+            0.9931640625,
+            1.0
+          ]
+        }
+      },
+      "paired_memory_gain": {
+        "mean": 0.9287109375,
+        "ci95": [
+          0.912109375,
+          0.9443359375
+        ]
+      },
+      "paired_old_task_loss": {
+        "mean": 0.001953125,
+        "ci95": [
+          -0.0029296875,
+          0.0068359375
+        ]
+      },
+      "restart_match": true,
+      "p1_gain_gate": true,
+      "foundation_sha256": "f53ba42944a6c96c0163c54f4d10a8fa3ecd19e46c9a246d7339ba6876e5af02"
+    }
+  ],
+  "stress_seed7": {
+    "worlds": 32,
+    "seed": 300000,
+    "capacity": {
+      "8": {
+        "all": 1.0,
+        "oldest8": 1.0,
+        "latest8": 1.0
+      },
+      "16": {
+        "all": 0.998046875,
+        "oldest8": 1.0,
+        "latest8": 0.99609375
+      },
+      "32": {
+        "all": 0.9599609375,
+        "oldest8": 0.89453125,
+        "latest8": 0.9921875
+      },
+      "64": {
+        "all": 0.8154296875,
+        "oldest8": 0.6328125,
+        "latest8": 0.98046875
+      }
+    },
+    "single_write_correction": {
+      "updated": 0.125,
+      "unaffected": 1.0
+    },
+    "interpretation": "Exploratory stress probe, not used for selection or retraining."
+  },
+  "limitations": [
+    "Simple symbolic associations, not Chinese conversation",
+    "No slow consolidation into P tested",
+    "No matched-compute learned alternative baseline yet",
+    "One-shot correction and finite-capacity retention fail",
+    "No evidence of artificial life or consciousness"
+  ]
+}

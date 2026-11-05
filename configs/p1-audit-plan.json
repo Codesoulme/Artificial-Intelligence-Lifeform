@@ -1,0 +1,19 @@
+{
+  "stage": "P1 exploratory parameter memory",
+  "training_seeds": [7, 11, 23],
+  "steps_per_seed": 1000,
+  "batch_size": 8,
+  "facts_per_training_world": 8,
+  "audit_worlds_per_seed": 128,
+  "audit_generator_seed": 200000,
+  "checkpoint_selection": "final step only; no selection by audit",
+  "primary_endpoint": "written minus no-write accuracy on new random mappings",
+  "exploratory_gain_gate": "paired within-seed 95% lower bound greater than 0.10",
+  "secondary_endpoints": [
+    "older facts after eight new disjoint facts",
+    "new fact accuracy",
+    "mutually inconsistent experience branches",
+    "new-process reload predictions"
+  ],
+  "limits": "Exploratory three-seed replication, not definitive lifelong-learning evidence."
+}

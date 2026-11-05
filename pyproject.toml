@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spora"
+version = "0.1.0"
+description = "Random-initialized persistent neural memory research"
+requires-python = ">=3.11"
+dependencies = ["torch>=2.5,<2.6", "numpy>=2.1,<2.2"]
+
+[tool.setuptools.packages.find]
+include = ["spora*"]
