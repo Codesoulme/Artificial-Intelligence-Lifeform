@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-05",
+  "scope": "Consolidation side effects, diagnosis, bounded repair and fresh audit",
+  "parent_commit": "6f0acec",
+  "development_seed": 810000,
+  "audit_seed": 910000,
+  "foundation_seeds": [7, 11, 23],
+  "development_worlds": 3,
+  "audit_worlds_per_foundation": 4,
+  "stages": 3,
+  "facts_per_stage": 8,
+  "steps_per_stage": 400,
+  "writer_variants": ["direct", "residual"],
+  "writer_variant_note": "Added after read-only P2 diagnosis and before P3 development execution",
+  "development_variants": [
+    {"name": "p2_objective", "anchor_kl": 0.5, "anchor_margin": 0.0},
+    {"name": "strong_kl", "anchor_kl": 5.0, "anchor_margin": 0.0},
+    {"name": "margin", "anchor_kl": 0.5, "anchor_margin": 1.0}
+  ],
+  "gate": {
+    "teacher_known_min": 0.95,
+    "known_reset_and_retained_min": 0.95,
+    "anchor_reset_and_retained_min": 0.95,
+    "correction_min": 0.95,
+    "post_correction_unrelated_min": 0.95,
+    "restart": "identical answers in new process",
+    "on_failure": "retain the previous individual and stop its deployment chain"
+  },
+  "selection": "Development only: maximize passing stages, then weakest criterion; prefer cheaper if tied",
+  "controls": ["no consolidation", "exact delta rebasing without compression"],
+  "publication": "Candidate files only; do not overwrite default or P2 candidate",
+  "boundaries": [
+    "Known facts and unknown-key teacher preferences measured separately",
+    "Exact rebasing is parameter transfer, not new information capacity or abstraction",
+    "Time-conditioned queries and expanded vocabulary are later stages"
+  ]
+}

@@ -1,0 +1,4490 @@
+{
+  "date": "2026-11-05",
+  "development": {
+    "phase": "development",
+    "checkpoint": "checkpoints/p2-v1-delta-seed7.pt",
+    "sha256": "5e05cf528c96a8fad84b8a8a4aa614540515cc9e99b1dd302578142e6474c330",
+    "selected": {
+      "variant": {
+        "name": "margin",
+        "anchor_kl": 0.5,
+        "anchor_margin": 1.0
+      },
+      "writer": "residual"
+    },
+    "candidates": [
+      {
+        "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed7.pt",
+        "variant": {
+          "name": "p2_objective",
+          "anchor_kl": 0.5,
+          "anchor_margin": 0.0
+        },
+        "writer": "direct",
+        "worlds": [
+          {
+            "world": 0,
+            "stages": [
+              {
+                "world": 0,
+                "stage": 1,
+                "facts": 8,
+                "variant": "p2_objective",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.008501298725605011,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9285714626312256,
+                "anchor_retained": 0.9821429252624512,
+                "anchor_kl_reset": 0.014891897328197956,
+                "correction": 0.5,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.5,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              },
+              {
+                "world": 0,
+                "stage": 2,
+                "facts": 16,
+                "variant": "p2_objective",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.005699394270777702,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9791666865348816,
+                "anchor_retained": 0.9166666865348816,
+                "anchor_kl_reset": 0.011053545400500298,
+                "correction": 0.25,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.25,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          },
+          {
+            "world": 1,
+            "stages": [
+              {
+                "world": 1,
+                "stage": 1,
+                "facts": 8,
+                "variant": "p2_objective",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.009470646269619465,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9285714626312256,
+                "anchor_retained": 0.9642857313156128,
+                "anchor_kl_reset": 0.01580430567264557,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9285714626312256,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              },
+              {
+                "world": 1,
+                "stage": 2,
+                "facts": 16,
+                "variant": "p2_objective",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.00824546068906784,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.8541666865348816,
+                "anchor_retained": 0.9583333730697632,
+                "anchor_kl_reset": 0.011137495748698711,
+                "correction": 0.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.0,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          },
+          {
+            "world": 2,
+            "stages": [
+              {
+                "world": 2,
+                "stage": 1,
+                "facts": 8,
+                "variant": "p2_objective",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.00931425392627716,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 0.9464285969734192,
+                "anchor_kl_reset": 0.014648282900452614,
+                "correction": 0.75,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.75,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              },
+              {
+                "world": 2,
+                "stage": 2,
+                "facts": 16,
+                "variant": "p2_objective",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.006262731272727251,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9583333730697632,
+                "anchor_retained": 0.9583333730697632,
+                "anchor_kl_reset": 0.012143708765506744,
+                "correction": 0.25,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.25,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          }
+        ],
+        "seconds": 111.92786180006806,
+        "score": [
+          0,
+          0.4464285771052043
+        ]
+      },
+      {
+        "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed7.pt",
+        "variant": {
+          "name": "p2_objective",
+          "anchor_kl": 0.5,
+          "anchor_margin": 0.0
+        },
+        "writer": "residual",
+        "worlds": [
+          {
+            "world": 0,
+            "stages": [
+              {
+                "world": 0,
+                "stage": 1,
+                "facts": 8,
+                "variant": "p2_objective",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.008501298725605011,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9285714626312256,
+                "anchor_retained": 0.9821429252624512,
+                "anchor_kl_reset": 0.014891897328197956,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9285714626312256,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              },
+              {
+                "world": 0,
+                "stage": 2,
+                "facts": 16,
+                "variant": "p2_objective",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.006608523428440094,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9375,
+                "anchor_retained": 0.9166666865348816,
+                "anchor_kl_reset": 0.014035709202289581,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9166666865348816,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          },
+          {
+            "world": 1,
+            "stages": [
+              {
+                "world": 1,
+                "stage": 1,
+                "facts": 8,
+                "variant": "p2_objective",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.009470646269619465,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9285714626312256,
+                "anchor_retained": 0.9642857313156128,
+                "anchor_kl_reset": 0.01580430567264557,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9285714626312256,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              },
+              {
+                "world": 1,
+                "stage": 2,
+                "facts": 16,
+                "variant": "p2_objective",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.00630658445879817,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9166666865348816,
+                "anchor_retained": 0.9583333730697632,
+                "anchor_kl_reset": 0.011337770149111748,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9166666865348816,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          },
+          {
+            "world": 2,
+            "stages": [
+              {
+                "world": 2,
+                "stage": 1,
+                "facts": 8,
+                "variant": "p2_objective",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.00931425392627716,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 0.9464285969734192,
+                "anchor_kl_reset": 0.014648282900452614,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9464285969734192,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              },
+              {
+                "world": 2,
+                "stage": 2,
+                "facts": 16,
+                "variant": "p2_objective",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.007094924338161945,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 0.9375,
+                "anchor_kl_reset": 0.017181623727083206,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9375,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          }
+        ],
+        "seconds": 113.32626350002829,
+        "score": [
+          0,
+          0.929067482550939
+        ]
+      },
+      {
+        "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed7.pt",
+        "variant": {
+          "name": "strong_kl",
+          "anchor_kl": 5.0,
+          "anchor_margin": 0.0
+        },
+        "writer": "direct",
+        "worlds": [
+          {
+            "world": 0,
+            "stages": [
+              {
+                "world": 0,
+                "stage": 1,
+                "facts": 8,
+                "variant": "strong_kl",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.028828829526901245,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9285714626312256,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.0050656176172196865,
+                "correction": 0.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.0,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              },
+              {
+                "world": 0,
+                "stage": 2,
+                "facts": 16,
+                "variant": "strong_kl",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.01950511708855629,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9375,
+                "anchor_retained": 0.9791666865348816,
+                "anchor_kl_reset": 0.003012829925864935,
+                "correction": 0.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.0,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          },
+          {
+            "world": 1,
+            "stages": [
+              {
+                "world": 1,
+                "stage": 1,
+                "facts": 8,
+                "variant": "strong_kl",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.031231997534632683,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9642857313156128,
+                "anchor_retained": 0.9821429252624512,
+                "anchor_kl_reset": 0.005652985535562038,
+                "correction": 0.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.0,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              },
+              {
+                "world": 1,
+                "stage": 2,
+                "facts": 16,
+                "variant": "strong_kl",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.03386036679148674,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9583333730697632,
+                "anchor_retained": 0.9166666865348816,
+                "anchor_kl_reset": 0.00363755295984447,
+                "correction": 0.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.0,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          },
+          {
+            "world": 2,
+            "stages": [
+              {
+                "world": 2,
+                "stage": 1,
+                "facts": 8,
+                "variant": "strong_kl",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.028617890551686287,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9821429252624512,
+                "anchor_retained": 0.9464285969734192,
+                "anchor_kl_reset": 0.005036201328039169,
+                "correction": 0.25,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.25,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              },
+              {
+                "world": 2,
+                "stage": 2,
+                "facts": 16,
+                "variant": "strong_kl",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.039034653455019,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 0.9583333730697632,
+                "anchor_kl_reset": 0.00320184463635087,
+                "correction": 0.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.0,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          }
+        ],
+        "seconds": 102.65691230003722,
+        "score": [
+          0,
+          0.041666666666666664
+        ]
+      },
+      {
+        "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed7.pt",
+        "variant": {
+          "name": "strong_kl",
+          "anchor_kl": 5.0,
+          "anchor_margin": 0.0
+        },
+        "writer": "residual",
+        "worlds": [
+          {
+            "world": 0,
+            "stages": [
+              {
+                "world": 0,
+                "stage": 1,
+                "facts": 8,
+                "variant": "strong_kl",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.028828829526901245,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9285714626312256,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.0050656176172196865,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9285714626312256,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              },
+              {
+                "world": 0,
+                "stage": 2,
+                "facts": 16,
+                "variant": "strong_kl",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.022244911640882492,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9583333730697632,
+                "anchor_retained": 0.9791666865348816,
+                "anchor_kl_reset": 0.004582338035106659,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9583333730697632,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 1,
+            "stages": [
+              {
+                "world": 1,
+                "stage": 1,
+                "facts": 8,
+                "variant": "strong_kl",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.031231997534632683,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9642857313156128,
+                "anchor_retained": 0.9821429252624512,
+                "anchor_kl_reset": 0.005652985535562038,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9642857313156128,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 1,
+                "stage": 2,
+                "facts": 16,
+                "variant": "strong_kl",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.02287839911878109,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9791666865348816,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.004324048757553101,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9791666865348816,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 2,
+            "stages": [
+              {
+                "world": 2,
+                "stage": 1,
+                "facts": 8,
+                "variant": "strong_kl",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.028617890551686287,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 0.9821429252624512,
+                "anchor_retained": 0.9464285969734192,
+                "anchor_kl_reset": 0.005036201328039169,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.9464285969734192,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              },
+              {
+                "world": 2,
+                "stage": 2,
+                "facts": 16,
+                "variant": "strong_kl",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.024563228711485863,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.005557757802307606,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          }
+        ],
+        "seconds": 106.29152690002229,
+        "score": [
+          4,
+          0.9627976417541504
+        ]
+      },
+      {
+        "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed7.pt",
+        "variant": {
+          "name": "margin",
+          "anchor_kl": 0.5,
+          "anchor_margin": 1.0
+        },
+        "writer": "direct",
+        "worlds": [
+          {
+            "world": 0,
+            "stages": [
+              {
+                "world": 0,
+                "stage": 1,
+                "facts": 8,
+                "variant": "margin",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.015918349847197533,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.03456559032201767,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 0,
+                "stage": 2,
+                "facts": 16,
+                "variant": "margin",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.011689826846122742,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.02722116932272911,
+                "correction": 0.25,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.25,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          },
+          {
+            "world": 1,
+            "stages": [
+              {
+                "world": 1,
+                "stage": 1,
+                "facts": 8,
+                "variant": "margin",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.02458132430911064,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.04764775559306145,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 1,
+                "stage": 2,
+                "facts": 16,
+                "variant": "margin",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.01538332924246788,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.027981679886579514,
+                "correction": 0.25,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.25,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          },
+          {
+            "world": 2,
+            "stages": [
+              {
+                "world": 2,
+                "stage": 1,
+                "facts": 8,
+                "variant": "margin",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.019380072131752968,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.04277912899851799,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 2,
+                "stage": 2,
+                "facts": 16,
+                "variant": "margin",
+                "writer": "direct",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.01159721240401268,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.0207500122487545,
+                "correction": 0.25,
+                "post_correction_unrelated": 1.0,
+                "weakest": 0.25,
+                "gate": false,
+                "chain_action": "candidate continuation only"
+              }
+            ]
+          }
+        ],
+        "seconds": 102.43428579997271,
+        "score": [
+          3,
+          0.625
+        ]
+      },
+      {
+        "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed7.pt",
+        "variant": {
+          "name": "margin",
+          "anchor_kl": 0.5,
+          "anchor_margin": 1.0
+        },
+        "writer": "residual",
+        "worlds": [
+          {
+            "world": 0,
+            "stages": [
+              {
+                "world": 0,
+                "stage": 1,
+                "facts": 8,
+                "variant": "margin",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.015918349847197533,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.03456559032201767,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 0,
+                "stage": 2,
+                "facts": 16,
+                "variant": "margin",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.012408928945660591,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.03386932983994484,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 1,
+            "stages": [
+              {
+                "world": 1,
+                "stage": 1,
+                "facts": 8,
+                "variant": "margin",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.02458132430911064,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.04764775559306145,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 1,
+                "stage": 2,
+                "facts": 16,
+                "variant": "margin",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.015430026687681675,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.02434135042130947,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 2,
+            "stages": [
+              {
+                "world": 2,
+                "stage": 1,
+                "facts": 8,
+                "variant": "margin",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.019380072131752968,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.04277912899851799,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 2,
+                "stage": 2,
+                "facts": 16,
+                "variant": "margin",
+                "writer": "residual",
+                "steps": 400,
+                "P_only": true,
+                "loss": 0.012823611497879028,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 0.028169069439172745,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          }
+        ],
+        "seconds": 102.23791610007174,
+        "score": [
+          6,
+          1.0
+        ]
+      }
+    ]
+  },
+  "selection_lock": {
+    "selection_sha256": "5e1edaee3c87a72b35000c23521e39b36c3dbfe932c3e7910c7a23326d7e444b",
+    "selected": {
+      "variant": {
+        "name": "margin",
+        "anchor_kl": 0.5,
+        "anchor_margin": 1.0
+      },
+      "writer": "residual"
+    },
+    "plan_sha256": "4d86cd356bcbf5bffbf68590d9f3efee38d13fb51df4ffa4e8f656b807845270",
+    "audit_seed": 910000,
+    "seeds": [
+      7,
+      11,
+      23
+    ]
+  },
+  "audits": {
+    "7": {
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed7.pt",
+      "variant": {
+        "name": "margin",
+        "anchor_kl": 0.5,
+        "anchor_margin": 1.0
+      },
+      "writer": "residual",
+      "worlds": [
+        {
+          "world": 0,
+          "stages": [
+            {
+              "world": 0,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.013924331404268742,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.03262036293745041,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "restart_match": true,
+              "retained_restart_match": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 0,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.010230694897472858,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.023536141961812973,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "restart_match": true,
+              "retained_restart_match": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 0,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.010052780620753765,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.01684044860303402,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "restart_match": true,
+              "retained_restart_match": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        },
+        {
+          "world": 1,
+          "stages": [
+            {
+              "world": 1,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.02019847370684147,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.047817930579185486,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 1,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.017200695350766182,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.02710128389298916,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 1,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.01328800618648529,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.020129293203353882,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        },
+        {
+          "world": 2,
+          "stages": [
+            {
+              "world": 2,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.021698687225580215,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.0421772375702858,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 2,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.012335599400103092,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.032450444996356964,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 2,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.009124433621764183,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.016977999359369278,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        },
+        {
+          "world": 3,
+          "stages": [
+            {
+              "world": 3,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.015997841954231262,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.032616451382637024,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 3,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.011987351812422276,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.03722572326660156,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 3,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.01172756589949131,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.024200405925512314,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        }
+      ],
+      "seconds": 251.05566360009834,
+      "phase": "audit",
+      "selection_source": "runs\\p3-development\\development.json",
+      "selection_sha256": "5e1edaee3c87a72b35000c23521e39b36c3dbfe932c3e7910c7a23326d7e444b"
+    },
+    "11": {
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed11.pt",
+      "variant": {
+        "name": "margin",
+        "anchor_kl": 0.5,
+        "anchor_margin": 1.0
+      },
+      "writer": "residual",
+      "worlds": [
+        {
+          "world": 0,
+          "stages": [
+            {
+              "world": 0,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.021465180441737175,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.04836083576083183,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "restart_match": true,
+              "retained_restart_match": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 0,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.014195320196449757,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.028341274708509445,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "restart_match": true,
+              "retained_restart_match": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 0,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.020975856110453606,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.02242119237780571,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "restart_match": true,
+              "retained_restart_match": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        },
+        {
+          "world": 1,
+          "stages": [
+            {
+              "world": 1,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.026806294918060303,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.04174317046999931,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 1,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.01448469515889883,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 0.9791666865348816,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.0288167055696249,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 0.9791666865348816,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 1,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.009342902339994907,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.020675214007496834,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        },
+        {
+          "world": 2,
+          "stages": [
+            {
+              "world": 2,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.02438654750585556,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.04331505671143532,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 2,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.01010548509657383,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.02112666517496109,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 2,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.017624763771891594,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.01805528998374939,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        },
+        {
+          "world": 3,
+          "stages": [
+            {
+              "world": 3,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.023927733302116394,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.044325392693281174,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 3,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.015260152518749237,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.030873607844114304,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 3,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.010638715699315071,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.019880743697285652,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        }
+      ],
+      "seconds": 219.2757935000118,
+      "phase": "audit",
+      "selection_source": "runs\\p3-development\\development.json",
+      "selection_sha256": "5e1edaee3c87a72b35000c23521e39b36c3dbfe932c3e7910c7a23326d7e444b"
+    },
+    "23": {
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed23.pt",
+      "variant": {
+        "name": "margin",
+        "anchor_kl": 0.5,
+        "anchor_margin": 1.0
+      },
+      "writer": "residual",
+      "worlds": [
+        {
+          "world": 0,
+          "stages": [
+            {
+              "world": 0,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.024524327367544174,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.0425608828663826,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "restart_match": true,
+              "retained_restart_match": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 0,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.01177202071994543,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.022894561290740967,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "restart_match": true,
+              "retained_restart_match": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 0,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.01030071172863245,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.017959190532565117,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "restart_match": true,
+              "retained_restart_match": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        },
+        {
+          "world": 1,
+          "stages": [
+            {
+              "world": 1,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.01408520620316267,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.03526431322097778,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 1,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.014711951836943626,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.028027016669511795,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 1,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.01002245582640171,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.023100340738892555,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        },
+        {
+          "world": 2,
+          "stages": [
+            {
+              "world": 2,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.018065830692648888,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.03882971033453941,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 2,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.0121294055134058,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.02087455242872238,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 2,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.010201448574662209,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.014485116116702557,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        },
+        {
+          "world": 3,
+          "stages": [
+            {
+              "world": 3,
+              "stage": 1,
+              "facts": 8,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.01593763567507267,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": null,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.04343976452946663,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 3,
+              "stage": 2,
+              "facts": 16,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.015383698977530003,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.026385150849819183,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            },
+            {
+              "world": 3,
+              "stage": 3,
+              "facts": 24,
+              "variant": "margin",
+              "writer": "residual",
+              "steps": 400,
+              "P_only": true,
+              "loss": 0.008082985877990723,
+              "teacher_known": 1.0,
+              "known_reset": 1.0,
+              "known_retained": 1.0,
+              "old_known_reset": 1.0,
+              "new_known_reset": 1.0,
+              "anchor_reset": 1.0,
+              "anchor_retained": 1.0,
+              "anchor_kl_reset": 0.01519207376986742,
+              "correction": 1.0,
+              "post_correction_unrelated": 1.0,
+              "weakest": 1.0,
+              "gate": true,
+              "chain_action": "accepted within isolated experiment"
+            }
+          ]
+        }
+      ],
+      "seconds": 194.50092800008133,
+      "phase": "audit",
+      "selection_source": "runs\\p3-development\\development.json",
+      "selection_sha256": "5e1edaee3c87a72b35000c23521e39b36c3dbfe932c3e7910c7a23326d7e444b"
+    }
+  },
+  "plasticity": {
+    "7": {
+      "audit": "runs/p3-audit-seed7",
+      "results": [
+        {
+          "world": 0,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        },
+        {
+          "world": 1,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        },
+        {
+          "world": 2,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        },
+        {
+          "world": 3,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    "11": {
+      "audit": "runs/p3-audit-seed11",
+      "results": [
+        {
+          "world": 0,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        },
+        {
+          "world": 1,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        },
+        {
+          "world": 2,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        },
+        {
+          "world": 3,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    "23": {
+      "audit": "runs/p3-audit-seed23",
+      "results": [
+        {
+          "world": 0,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        },
+        {
+          "world": 1,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        },
+        {
+          "world": 2,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        },
+        {
+          "world": 3,
+          "stage": 3,
+          "facts": 24,
+          "before": 1.0,
+          "correction_success": 1.0,
+          "final_all_known": 1.0,
+          "revisions": [
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            },
+            {
+              "target": true,
+              "all_known": 1.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "controls": [
+    {
+      "foundation_seed": 7,
+      "exact": {
+        "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed7.pt",
+        "variant": {
+          "name": "exact_rebase"
+        },
+        "writer": "direct",
+        "worlds": [
+          {
+            "world": 0,
+            "stages": [
+              {
+                "world": 0,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -2.2493102935783327e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "restart_match": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 0,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -6.536235441778615e-10,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "restart_match": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 0,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 4.554749355456522e-10,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "restart_match": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 1,
+            "stages": [
+              {
+                "world": 1,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 7.78111708399365e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 1,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -7.396617096588898e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 1,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 6.628397386521101e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 2,
+            "stages": [
+              {
+                "world": 2,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -3.3565552559622347e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 2,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 3.7471181713044643e-10,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 2,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 2.0329025129939282e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 3,
+            "stages": [
+              {
+                "world": 3,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 5.065365904499686e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 3,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 7.62399121612134e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 3,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -6.320624468258984e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          }
+        ],
+        "seconds": 19.51952060009353
+      },
+      "no_consolidation": [
+        {
+          "world": 0,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.0
+        },
+        {
+          "world": 0,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.0625
+        },
+        {
+          "world": 0,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0833333358168602
+        },
+        {
+          "world": 1,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.0
+        },
+        {
+          "world": 1,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.0
+        },
+        {
+          "world": 1,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0416666679084301
+        },
+        {
+          "world": 2,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.125
+        },
+        {
+          "world": 2,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.0625
+        },
+        {
+          "world": 2,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0416666679084301
+        },
+        {
+          "world": 3,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.0
+        },
+        {
+          "world": 3,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.0625
+        },
+        {
+          "world": 3,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0833333358168602
+        }
+      ]
+    },
+    {
+      "foundation_seed": 11,
+      "exact": {
+        "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed11.pt",
+        "variant": {
+          "name": "exact_rebase"
+        },
+        "writer": "direct",
+        "worlds": [
+          {
+            "world": 0,
+            "stages": [
+              {
+                "world": 0,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -1.302266516844952e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "restart_match": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 0,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -3.373694879016398e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "restart_match": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 0,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -2.3560915440867802e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "restart_match": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 1,
+            "stages": [
+              {
+                "world": 1,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -6.357237847254282e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 1,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 9.490274344159388e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 1,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -5.951733328402042e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 2,
+            "stages": [
+              {
+                "world": 2,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -6.220943760126829e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 2,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -7.753745201455331e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 2,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -2.728302250787351e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 3,
+            "stages": [
+              {
+                "world": 3,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -2.6957422960549593e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 3,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -2.352559536067389e-10,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 3,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 2.69501465588462e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          }
+        ],
+        "seconds": 19.660120700020343
+      },
+      "no_consolidation": [
+        {
+          "world": 0,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.125
+        },
+        {
+          "world": 0,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.0625
+        },
+        {
+          "world": 0,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0833333358168602
+        },
+        {
+          "world": 1,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.0
+        },
+        {
+          "world": 1,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.0
+        },
+        {
+          "world": 1,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0
+        },
+        {
+          "world": 2,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.0
+        },
+        {
+          "world": 2,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.0
+        },
+        {
+          "world": 2,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0416666679084301
+        },
+        {
+          "world": 3,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.125
+        },
+        {
+          "world": 3,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.125
+        },
+        {
+          "world": 3,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0833333358168602
+        }
+      ]
+    },
+    {
+      "foundation_seed": 23,
+      "exact": {
+        "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed23.pt",
+        "variant": {
+          "name": "exact_rebase"
+        },
+        "writer": "direct",
+        "worlds": [
+          {
+            "world": 0,
+            "stages": [
+              {
+                "world": 0,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 1.5534169506281614e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "restart_match": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 0,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 4.90384399753907e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "restart_match": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 0,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 7.933522172542951e-10,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "restart_match": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 1,
+            "stages": [
+              {
+                "world": 1,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -2.3841753571396396e-10,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 1,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -4.4997250370215625e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 1,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 5.10772202311216e-10,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 2,
+            "stages": [
+              {
+                "world": 2,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -2.5320332497358322e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 2,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": 1.646791703002748e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 2,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -3.66599128831524e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          },
+          {
+            "world": 3,
+            "stages": [
+              {
+                "world": 3,
+                "stage": 1,
+                "facts": 8,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": null,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -2.4286106459214807e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 3,
+                "stage": 2,
+                "facts": 16,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -1.7071215552277863e-09,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              },
+              {
+                "world": 3,
+                "stage": 3,
+                "facts": 24,
+                "variant": "exact_rebase",
+                "writer": "direct",
+                "steps": 0,
+                "exact_transfer": true,
+                "teacher_known": 1.0,
+                "known_reset": 1.0,
+                "known_retained": 1.0,
+                "old_known_reset": 1.0,
+                "new_known_reset": 1.0,
+                "anchor_reset": 1.0,
+                "anchor_retained": 1.0,
+                "anchor_kl_reset": -1.0327130262055562e-08,
+                "correction": 1.0,
+                "post_correction_unrelated": 1.0,
+                "weakest": 1.0,
+                "gate": true,
+                "chain_action": "accepted within isolated experiment"
+              }
+            ]
+          }
+        ],
+        "seconds": 17.964284000103362
+      },
+      "no_consolidation": [
+        {
+          "world": 0,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.0
+        },
+        {
+          "world": 0,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.0625
+        },
+        {
+          "world": 0,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0833333358168602
+        },
+        {
+          "world": 1,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.125
+        },
+        {
+          "world": 1,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.125
+        },
+        {
+          "world": 1,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0833333358168602
+        },
+        {
+          "world": 2,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.125
+        },
+        {
+          "world": 2,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.0625
+        },
+        {
+          "world": 2,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0416666679084301
+        },
+        {
+          "world": 3,
+          "stage": 1,
+          "retained_F": 1.0,
+          "reset_F": 0.125
+        },
+        {
+          "world": 3,
+          "stage": 2,
+          "retained_F": 1.0,
+          "reset_F": 0.0625
+        },
+        {
+          "world": 3,
+          "stage": 3,
+          "retained_F": 1.0,
+          "reset_F": 0.0416666679084301
+        }
+      ]
+    }
+  ],
+  "diagnosis": {
+    "source": "Read-only saved P2 candidates; future audit remains unused",
+    "rows": [
+      {
+        "world": 0,
+        "stage": 1,
+        "known_reset_accuracy": 1.0,
+        "anchor_disagreements": 4,
+        "anchors": 56,
+        "anchor_kl": 0.018775155767798424,
+        "changed_teacher_margins": [
+          0.026323318481445312,
+          0.008843988180160522,
+          0.024214237928390503,
+          0.04164484143257141
+        ],
+        "changed_teacher_confidence": [
+          0.24009469151496887,
+          0.36966410279273987,
+          0.4977032542228699,
+          0.42159131169319153
+        ],
+        "retained_F_agreement": 0.9285714030265808,
+        "post_consolidation_one_write_correction": 1,
+        "post_correction_other_known": 1.0
+      },
+      {
+        "world": 0,
+        "stage": 2,
+        "known_reset_accuracy": 1.0,
+        "anchor_disagreements": 4,
+        "anchors": 48,
+        "anchor_kl": 0.010298684239387512,
+        "changed_teacher_margins": [
+          0.03131207823753357,
+          0.06723368167877197,
+          0.08268430829048157,
+          0.022975265979766846
+        ],
+        "changed_teacher_confidence": [
+          0.40918028354644775,
+          0.3867686986923218,
+          0.40196821093559265,
+          0.2979881465435028
+        ],
+        "retained_F_agreement": 0.9375,
+        "post_consolidation_one_write_correction": 0,
+        "post_correction_other_known": 1.0
+      },
+      {
+        "world": 1,
+        "stage": 1,
+        "known_reset_accuracy": 1.0,
+        "anchor_disagreements": 4,
+        "anchors": 56,
+        "anchor_kl": 0.01832403801381588,
+        "changed_teacher_margins": [
+          0.015241742134094238,
+          0.04405221343040466,
+          0.02213186025619507,
+          0.0035451650619506836
+        ],
+        "changed_teacher_confidence": [
+          0.3736463785171509,
+          0.3818356990814209,
+          0.3059583008289337,
+          0.35090675950050354
+        ],
+        "retained_F_agreement": 0.9464285969734192,
+        "post_consolidation_one_write_correction": 1,
+        "post_correction_other_known": 1.0
+      },
+      {
+        "world": 1,
+        "stage": 2,
+        "known_reset_accuracy": 1.0,
+        "anchor_disagreements": 3,
+        "anchors": 48,
+        "anchor_kl": 0.010620283894240856,
+        "changed_teacher_margins": [
+          0.026227593421936035,
+          0.014546394348144531,
+          0.02117699384689331
+        ],
+        "changed_teacher_confidence": [
+          0.31846657395362854,
+          0.30204272270202637,
+          0.3251241147518158
+        ],
+        "retained_F_agreement": 1.0,
+        "post_consolidation_one_write_correction": 0,
+        "post_correction_other_known": 1.0
+      },
+      {
+        "world": 2,
+        "stage": 1,
+        "known_reset_accuracy": 1.0,
+        "anchor_disagreements": 6,
+        "anchors": 56,
+        "anchor_kl": 0.015412965789437294,
+        "changed_teacher_margins": [
+          0.032481878995895386,
+          0.0012270212173461914,
+          0.027887821197509766,
+          0.018830925226211548,
+          0.10693144798278809,
+          0.021700918674468994
+        ],
+        "changed_teacher_confidence": [
+          0.4160493314266205,
+          0.45873013138771057,
+          0.47761744260787964,
+          0.3751835227012634,
+          0.3096695840358734,
+          0.28037387132644653
+        ],
+        "retained_F_agreement": 0.9285714030265808,
+        "post_consolidation_one_write_correction": 0,
+        "post_correction_other_known": 1.0
+      },
+      {
+        "world": 2,
+        "stage": 2,
+        "known_reset_accuracy": 1.0,
+        "anchor_disagreements": 0,
+        "anchors": 48,
+        "anchor_kl": 0.013184376992285252,
+        "changed_teacher_margins": [],
+        "changed_teacher_confidence": [],
+        "retained_F_agreement": 0.875,
+        "post_consolidation_one_write_correction": 0,
+        "post_correction_other_known": 1.0
+      }
+    ]
+  },
+  "write_cost": {
+    "single_individual": true,
+    "rows": [
+      {
+        "writer": "direct",
+        "covered_flops": 124560,
+        "internal_updates": 1,
+        "operators": {
+          "aten.addmm": 92160,
+          "aten.bmm": 32400
+        }
+      },
+      {
+        "writer": "residual",
+        "covered_flops": 4988704,
+        "internal_updates": 1,
+        "operators": {
+          "aten.addmm": 4905472,
+          "aten.bmm": 83232
+        }
+      }
+    ],
+    "read_covered_flops": 4890256,
+    "limits": "Matrix arithmetic only; extra nonlinear operations and memory traffic are not fully counted; no wall-clock claim"
+  },
+  "capacity_pressure": {
+    "7": {
+      "foundation_seed": 7,
+      "worlds": 4,
+      "results": [
+        {
+          "world": 0,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 0,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 0,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 0,
+          "total_facts": 64,
+          "consolidated24": 0.9583333134651184,
+          "new_facts": 1.0
+        },
+        {
+          "world": 1,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 1,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 1,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 0.9583333134651184
+        },
+        {
+          "world": 1,
+          "total_facts": 64,
+          "consolidated24": 1.0,
+          "new_facts": 0.9750000238418579
+        },
+        {
+          "world": 2,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 2,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 2,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 2,
+          "total_facts": 64,
+          "consolidated24": 0.9583333134651184,
+          "new_facts": 0.9750000238418579
+        },
+        {
+          "world": 3,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 3,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 3,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 3,
+          "total_facts": 64,
+          "consolidated24": 0.9583333134651184,
+          "new_facts": 0.9750000238418579
+        }
+      ],
+      "limits": [
+        "Post-selection pressure probe; not used to select thresholds",
+        "Same 64-key vocabulary, not an expanded model or proven new capacity",
+        "No extra consolidation during pressure; default unchanged"
+      ]
+    },
+    "11": {
+      "foundation_seed": 11,
+      "worlds": 4,
+      "results": [
+        {
+          "world": 0,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 0,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 0,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 0,
+          "total_facts": 64,
+          "consolidated24": 0.9583333134651184,
+          "new_facts": 0.949999988079071
+        },
+        {
+          "world": 1,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 1,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 1,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 1,
+          "total_facts": 64,
+          "consolidated24": 1.0,
+          "new_facts": 0.949999988079071
+        },
+        {
+          "world": 2,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 2,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 2,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 2,
+          "total_facts": 64,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 3,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 3,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 3,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 3,
+          "total_facts": 64,
+          "consolidated24": 0.9583333134651184,
+          "new_facts": 1.0
+        }
+      ],
+      "limits": [
+        "Post-selection pressure probe; not used to select thresholds",
+        "Same 64-key vocabulary, not an expanded model or proven new capacity",
+        "No extra consolidation during pressure; default unchanged"
+      ]
+    },
+    "23": {
+      "foundation_seed": 23,
+      "worlds": 4,
+      "results": [
+        {
+          "world": 0,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 0,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 0,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 0.9583333134651184
+        },
+        {
+          "world": 0,
+          "total_facts": 64,
+          "consolidated24": 1.0,
+          "new_facts": 0.949999988079071
+        },
+        {
+          "world": 1,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 1,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 1,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 1,
+          "total_facts": 64,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 2,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 2,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 2,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 2,
+          "total_facts": 64,
+          "consolidated24": 1.0,
+          "new_facts": 0.9750000238418579
+        },
+        {
+          "world": 3,
+          "total_facts": 24,
+          "consolidated24": 1.0,
+          "new_facts": null
+        },
+        {
+          "world": 3,
+          "total_facts": 32,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        },
+        {
+          "world": 3,
+          "total_facts": 48,
+          "consolidated24": 1.0,
+          "new_facts": 0.9583333134651184
+        },
+        {
+          "world": 3,
+          "total_facts": 64,
+          "consolidated24": 1.0,
+          "new_facts": 1.0
+        }
+      ],
+      "limits": [
+        "Post-selection pressure probe; not used to select thresholds",
+        "Same 64-key vocabulary, not an expanded model or proven new capacity",
+        "No extra consolidation during pressure; default unchanged"
+      ]
+    }
+  },
+  "integrity": {
+    "default": {
+      "path": "checkpoints/individual.pt",
+      "sha256": "85b34a36ab567586740e895411d3569facac9312cdeb4504d1f168f4098be037",
+      "unchanged": true
+    },
+    "candidate": {
+      "path": "checkpoints/individual-p2-candidate.pt",
+      "sha256": "2c94e6de0cc20054407828a158396804115b872fffd4edb81dda6726bd4e6961",
+      "unchanged": true
+    },
+    "foundation7": {
+      "sha256": "5e05cf528c96a8fad84b8a8a4aa614540515cc9e99b1dd302578142e6474c330",
+      "unchanged": true
+    },
+    "foundation11": {
+      "sha256": "5a7b92242600b8163a5c1be0bc961c926c2231d76f871e98bc8490b0bc619798",
+      "unchanged": true
+    },
+    "foundation23": {
+      "sha256": "abc6b0a918d9f8cc5c24cd853261810be6876d9ac09f85922ecac3aed1e8a060",
+      "unchanged": true
+    }
+  },
+  "complete_passing_chains": [
+    {
+      "seed": 7,
+      "world": 0,
+      "path": "runs/p3-audit-seed7/world0-stage3-candidate.pt"
+    },
+    {
+      "seed": 7,
+      "world": 1,
+      "path": "runs/p3-audit-seed7/world1-stage3-candidate.pt"
+    },
+    {
+      "seed": 7,
+      "world": 2,
+      "path": "runs/p3-audit-seed7/world2-stage3-candidate.pt"
+    },
+    {
+      "seed": 7,
+      "world": 3,
+      "path": "runs/p3-audit-seed7/world3-stage3-candidate.pt"
+    },
+    {
+      "seed": 11,
+      "world": 0,
+      "path": "runs/p3-audit-seed11/world0-stage3-candidate.pt"
+    },
+    {
+      "seed": 11,
+      "world": 1,
+      "path": "runs/p3-audit-seed11/world1-stage3-candidate.pt"
+    },
+    {
+      "seed": 11,
+      "world": 2,
+      "path": "runs/p3-audit-seed11/world2-stage3-candidate.pt"
+    },
+    {
+      "seed": 11,
+      "world": 3,
+      "path": "runs/p3-audit-seed11/world3-stage3-candidate.pt"
+    },
+    {
+      "seed": 23,
+      "world": 0,
+      "path": "runs/p3-audit-seed23/world0-stage3-candidate.pt"
+    },
+    {
+      "seed": 23,
+      "world": 1,
+      "path": "runs/p3-audit-seed23/world1-stage3-candidate.pt"
+    },
+    {
+      "seed": 23,
+      "world": 2,
+      "path": "runs/p3-audit-seed23/world2-stage3-candidate.pt"
+    },
+    {
+      "seed": 23,
+      "world": 3,
+      "path": "runs/p3-audit-seed23/world3-stage3-candidate.pt"
+    }
+  ],
+  "tests": {
+    "command": "python -m unittest discover -s tests -v",
+    "passed": 24
+  },
+  "limits": [
+    "Finite 64-key, 16-value vocabulary",
+    "Training replay is required by P-only transfer",
+    "Unknown-key teacher guesses are not established facts",
+    "Exact matrix rebase does not compress information or expand capacity",
+    "Default and P2 candidate not promoted or modified",
+    "Historical time queries and larger vocabulary not implemented this round"
+  ],
+  "exported_candidate": {
+    "source": "D:\\SPORA\\runs\\p3-audit-seed7\\world0-stage3-candidate.pt",
+    "candidate": "D:\\SPORA\\checkpoints\\individual-p3-candidate.pt",
+    "sha256": "9709fd47df9d17d173dbdb2bd4536966361791b2ec1ad24c8dc997eb547edf1a",
+    "foundation_seed": 7,
+    "world": 0,
+    "facts": 24,
+    "cursor": 24,
+    "residual_write": true,
+    "restart_match": true,
+    "evaluation_manifest_only": true,
+    "queries": [
+      56,
+      15,
+      25,
+      51,
+      12,
+      47,
+      27,
+      50,
+      49,
+      31,
+      4,
+      10,
+      11,
+      21,
+      6,
+      20,
+      28,
+      53,
+      14,
+      22,
+      58,
+      9,
+      17,
+      34
+    ],
+    "expected": [
+      4,
+      6,
+      2,
+      8,
+      0,
+      11,
+      12,
+      15,
+      11,
+      5,
+      10,
+      8,
+      12,
+      7,
+      3,
+      7,
+      7,
+      5,
+      11,
+      9,
+      10,
+      4,
+      7,
+      5
+    ],
+    "limits": [
+      "Independent research branch; not default individual migration",
+      "This manifest is test evidence and is never read by model inference",
+      "Future writes can still interfere; do not claim unlimited retention"
+    ]
+  }
+}

@@ -21,10 +21,13 @@ class ModelConfig:
     max_length: int = 256
     memory_layers: tuple = (1, 3)
     memory_kind: str = 'mlp'
+    residual_write: bool = False
 
     def validate(self):
         if self.memory_kind not in ('mlp','delta'):
             raise ValueError('Unsupported neural memory kind')
+        if self.residual_write and self.memory_kind!='delta':
+            raise ValueError('Residual writing is currently a delta-only candidate')
         if self.width % self.heads or self.layers < 1:
             raise ValueError('Invalid backbone dimensions')
         if any(x < 0 or x >= self.layers for x in self.memory_layers):
@@ -95,11 +98,14 @@ class MemorySite(nn.Module):
 
     def read(self, x, query, fast):
         recent = self.retrieve(fast, query)
-        slow = torch.stack([expert(query) for expert in self.experts], dim=1)
-        routing = self.router(x[:, -1]).softmax(-1).unsqueeze(-1)
-        signal = recent + (routing * slow).sum(1)
+        signal = recent + self.slow_signal(x,query)
         residual = torch.sigmoid(self.read_gate(x[:, -1])) * self.read_out(signal)
         return torch.cat([x[:, :-1], (x[:, -1]+residual).unsqueeze(1)], dim=1)
+
+    def slow_signal(self,x,query):
+        slow = torch.stack([expert(query) for expert in self.experts], dim=1)
+        routing = self.router(x[:, -1]).softmax(-1).unsqueeze(-1)
+        return (routing * slow).sum(1)
 
     def retrieve(self, fast, query):
         return fast_forward(fast, query)
@@ -211,6 +217,21 @@ class SPORA(nn.Module):
         key_embed = self.embedding(keys+self.config.key_start)
         value_embed = self.embedding(values+self.config.value_start)
         new_fast, new_velocity = [], []
+        if self.config.residual_write:
+            tokens=self.query_tokens(keys)
+            x=self.embedding(tokens)+self.position(torch.arange(tokens.shape[1],device=keys.device))
+            site_index=0
+            for index,block in enumerate(self.blocks):
+                x=block(x)
+                if index in self.config.memory_layers:
+                    site=self.memories[site_index]
+                    query=site.address(key_embed)
+                    target=site.target(value_embed)-site.slow_signal(x,query)
+                    p,u=site.write(fast[site_index],velocity[site_index],query,target,gate,differentiable)
+                    new_fast.append(p);new_velocity.append(u)
+                    x=site.read(x,query,p)
+                    site_index+=1
+            return new_fast,new_velocity
         for site, params, momentum in zip(self.memories, fast, velocity):
             p, u = site.write(params, momentum, site.address(key_embed),
                               site.target(value_embed), gate, differentiable)
