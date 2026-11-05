@@ -28,6 +28,8 @@ def main():
         if path.exists():
             raise FileExistsError('Individual exists; choose another path to create a branch')
         model,_,_,_=load_checkpoint(args.foundation)
+        if hasattr(model.config,'temporal_kind'):
+            raise ValueError('Use spora.temporal_cli for temporal individuals')
         fast,velocity=model.initial_state(1)
         parent_hash=hashlib.sha256(Path(args.foundation).read_bytes()).hexdigest()
         save_checkpoint(path,model,fast,velocity,cursor=0,
@@ -36,6 +38,8 @@ def main():
         print('Created',path.resolve())
         return
     model,fast,velocity,data=load_checkpoint(path)
+    if hasattr(model.config,'temporal_kind'):
+        raise ValueError('Use spora.temporal_cli for temporal individuals')
     if args.command=='learn':
         if path.with_suffix('.lock').exists():
             raise RuntimeError('Another writer holds this individual')

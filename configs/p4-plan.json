@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-05",
+  "parent_commit": "1955d01",
+  "scope": "Current truth versus remembered observation; finite temporal query experiment",
+  "training_seeds": [7, 11, 23],
+  "development_seed": 1010000,
+  "audit_seed": 1110000,
+  "development_worlds": 32,
+  "audit_worlds": 64,
+  "training": {"warmup_steps": 200, "steps_per_length": 60, "lengths": [8,16,32], "batch":4, "segment":8},
+  "architectures": {
+    "split": {"width":90,"fast_parameters":32400},
+    "shared": {"width":127,"fast_parameters":32258}
+  },
+  "semantics": {
+    "current": "Most recent trusted value for key, or unknown if none",
+    "event": "Value actually observed at exact key and event time, including untrusted statements",
+    "missing": "Unknown for unobserved key-time pairs; future timestamps within finite vocabulary included",
+    "trust": "External environment bit, not learned source credibility",
+    "time": "Unique monotonic event index, 0 through 63; no overwriting or wraparound"
+  },
+  "selection": "No hyperparameter selection on audit; fixed architecture comparison",
+  "candidate_gate": {"current":0.95,"history":0.95,"invalid_pair_unknown":0.95,"future_unknown":0.95,"cold_restart":"identical"},
+  "publication": "Preserve existing individuals; export only fixed seed7 split candidate if it passes",
+  "limits": ["Finite symbolic task, not language or autobiographical consciousness", "P3 consolidation is not integrated into this changed architecture"]
+}

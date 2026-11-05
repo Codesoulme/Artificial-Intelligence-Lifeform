@@ -2,7 +2,7 @@
 
 探索从随机初始化的小型神经网络出发，形成可持续学习、保留自身经历并逐步扩展能力的人工生命候选系统。
 
-当前完成 **P3 巩固后修订与保留的有限实验**（2026-11-05）。保留 P1 默认个体和 P2 候选，新增独立 P3 研究个体；所有基础谱系均从随机参数开始，没有采用预训练语言模型。
+当前保留 P1 默认个体、P2 与 P3 候选，新增 **P4 当前判断与历史经历分离的研究实现**（2026-11-05）。P4 另起随机权重谱系，不自动迁移旧个体；所有基础谱系没有采用预训练语言模型。
 
 - [在线阅读完整设计](docs/SPORA-v2.md)
 - [下载 Word 文档](SPORA%20%E6%9E%B6%E6%9E%84%EF%BC%9A%E9%9D%A2%E5%90%91%E6%8C%81%E7%BB%AD%E5%AD%A6%E4%B9%A0%E4%B8%8E%E7%94%9F%E6%80%81%E6%BC%94%E5%8C%96%E7%9A%84%E6%99%BA%E8%83%BD%E4%BD%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1.docx)
@@ -13,7 +13,7 @@
 
 设计包含最小网络规格、读写时序、从零课程、资源估算、对照实验和阶段门槛。参考文献支持局部机制，完整方案的有效性、长期成长与生命性仍是待研究问题。
 
-当前原型能训练、保存个体、重新启动及进行只读查询。慢速巩固和后续修订已通过有限符号检查，但高负荷下仍有干扰；语言、历史时刻查询、环境行动和结构增长尚未完成。
+当前原型能训练、保存个体、重新启动及进行只读查询。P3 慢速巩固和后续修订已通过有限符号检查；P4 增加有限时刻查询与 unknown 类别，高负荷历史仍可能遗忘。语言、环境行动和结构增长尚未完成，两个阶段的机制尚未合并。
 
 当前仓库不包含权重文件。在本工作目录内模型已保存在 `checkpoints/`；在另一台电脑克隆源码后，需要从随机初始化运行训练，再通过 `create` 建立个体。
 
@@ -71,7 +71,38 @@ P2 入口包括 spora/train_p2.py、compare_p2.py、stress_p2.py、protection_p2
 
 当前此查询应回答 4。后续主动使用 learn 会改变该候选；残差写入按其检查点配置启用，无需每次传入策略。
 
-## 文件
+## P4 时间记忆实验
+
+新结构支持 current(k) 与 event(k,t)：前者回答最后一次可信赋值，后者回答在指定时刻实际收到的内容。历史包含不可信观察；记得某句话不等于认定它为真。可信度仍由外部环境提供。
+
+- 实验方案见 [P4 协议](docs/P4-protocol.md)与 [固定配置](configs/p4-plan.json)；完成结果见 [P4 报告](reports/P4-report.md)。
+- 两种结构均重新随机训练：split 分开当前及历史神经矩阵，shared 共用矩阵。两者近似匹配活动快参数，未匹配总计算量。
+- 普通查询只输入键、模式和时间；经历在个体神经参数中持久保存，不读取事件表。当前时间词表只有 0–63，容量满时明确拒绝继续写入。
+- 六个研究底座与审计用状态保存在本地 checkpoints/、runs/，不随源码上传。未过门槛的底座不能视为新的发布个体。
+
+本轮审计已完成：split 在 8、16、32 事件上的历史准确率分别为 98.89%、96.42%、84.99%，相应当前值均为 100%；64 事件压力下历史降至 60.21%。以上为三种子的有限任务汇总，单个种子更早也可能失败。六个模型均未通过全部预定门槛，因此未导出 P4 发布候选。38 项回归检查通过，原有三份个体校验值不变。
+
+复现实验（使用新的运行目录；已有结果不会覆盖）：
+
+~~~powershell
+.\.venv\Scripts\python.exe -m spora.train_p4 --kind split --seed 31 --run-dir runs/p4-split-seed31 --checkpoint checkpoints/p4-split-seed31.pt
+.\.venv\Scripts\python.exe -m spora.audit_p4 --checkpoint checkpoints/p4-split-seed31.pt --output-dir runs/p4-split-seed31-audit
+~~~
+
+只在独立研究路径试用交互入口；不会自动升级现有默认个体：
+
+~~~powershell
+.\.venv\Scripts\python.exe -m spora.temporal_cli --individual checkpoints/my-p4-experiment.pt create --foundation checkpoints/p4-split-seed7.pt
+.\.venv\Scripts\python.exe -m spora.temporal_cli --individual checkpoints/my-p4-experiment.pt learn 12 5
+.\.venv\Scripts\python.exe -m spora.temporal_cli --individual checkpoints/my-p4-experiment.pt learn 12 9
+.\.venv\Scripts\python.exe -m spora.temporal_cli --individual checkpoints/my-p4-experiment.pt learn 12 3 --trusted 0
+.\.venv\Scripts\python.exe -m spora.temporal_cli --individual checkpoints/my-p4-experiment.pt ask 12
+.\.venv\Scripts\python.exe -m spora.temporal_cli --individual checkpoints/my-p4-experiment.pt ask 12 --time 0
+~~~
+
+上述目标分别为当前 9、t0 观察为 5；具体回答属于模型预测，不能保证正确。无 --time 为当前查询；提供 --time 则询问过去观察。每次 learn 推进一次事件计数；ask 不保存。
+
+## 文件索引
 
 - `spora/model.py`：因果骨干、快速神经权重及慢速专家。
 - `spora/train.py`：短展开元训练；`spora/evaluate.py`：独立随机世界与重启审计。

@@ -47,7 +47,13 @@ def load_checkpoint(path, device='cpu', reset_fast=False):
     data = torch.load(Path(path), map_location='cpu', weights_only=True)
     if data.get('format_version') != 1:
         raise ValueError('Unsupported checkpoint schema')
-    model = SPORA(ModelConfig(**data['config'])).to(device)
+    if 'temporal_kind' in data['config']:
+        from .temporal import TemporalSPORA,TemporalConfig
+        model=TemporalSPORA(TemporalConfig(**data['config'])).to(device)
+        if type(data['cursor']) is not int or not 0<=data['cursor']<=model.config.time_count:
+            raise ValueError('Invalid temporal event cursor')
+    else:
+        model = SPORA(ModelConfig(**data['config'])).to(device)
     model.load_state_dict(data['model'], strict=True)
     model.eval()
     if data['fast'] is None or reset_fast:
