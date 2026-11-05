@@ -1,0 +1,241 @@
+{
+  "date": "2026-11-05",
+  "purpose": "development diagnosis, not a sealed final evaluation",
+  "generator_seed": 400001,
+  "chosen_after": "32-world seed7 exploratory probe at seed400000",
+  "same_observation_reused": true,
+  "no_external_teacher": true,
+  "no_checkpoint_writes": true,
+  "caveats": [
+    "More inner steps consume additional compute; not an equal-compute comparison",
+    "Results only cover 8 symbolic associations and correction of the first",
+    "Not evidence that capacity saturation or general correction is solved"
+  ],
+  "training_seeds": [
+    {
+      "seed": 7,
+      "checkpoint_sha256": "fb81a75a8eb3859dc027012fb60224aaf0551e4826577c2aebe70ae00f228a71",
+      "worlds": 128,
+      "results": [
+        {
+          "gradient_steps_per_event": 1,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 0.171875,
+          "unrelated_accuracy": 1.0
+        },
+        {
+          "gradient_steps_per_event": 1,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 0.140625,
+          "unrelated_accuracy": 1.0
+        },
+        {
+          "gradient_steps_per_event": 2,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 0.9921875,
+          "unrelated_accuracy": 0.9988839285714286
+        },
+        {
+          "gradient_steps_per_event": 2,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 0.9921875,
+          "unrelated_accuracy": 1.0
+        },
+        {
+          "gradient_steps_per_event": 4,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9921875
+        },
+        {
+          "gradient_steps_per_event": 4,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9866071428571429
+        },
+        {
+          "gradient_steps_per_event": 8,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9955357142857143
+        },
+        {
+          "gradient_steps_per_event": 8,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9899553571428571
+        }
+      ],
+      "diagnostics": [
+        {
+          "site": 0,
+          "learned_rate": 0.05389288440346718,
+          "mean_correction_gradient_norm": 100.28890228271484,
+          "fraction_clipped": 1.0,
+          "mean_clip_scale": 0.10366732627153397,
+          "mean_abs_key_cosine": 0.11047019809484482,
+          "max_abs_key_cosine": 0.4152882397174835
+        },
+        {
+          "site": 1,
+          "learned_rate": 0.05277027562260628,
+          "mean_correction_gradient_norm": 90.41075134277344,
+          "fraction_clipped": 1.0,
+          "mean_clip_scale": 0.11641531437635422,
+          "mean_abs_key_cosine": 0.13214032351970673,
+          "max_abs_key_cosine": 0.5342128276824951
+        }
+      ]
+    },
+    {
+      "seed": 11,
+      "checkpoint_sha256": "5f49bfebd12d4cd76be5e46888783785c07000be0bae4ed94ffbf76e3d51944d",
+      "worlds": 128,
+      "results": [
+        {
+          "gradient_steps_per_event": 1,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 0.1796875,
+          "unrelated_accuracy": 1.0
+        },
+        {
+          "gradient_steps_per_event": 1,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 0.15625,
+          "unrelated_accuracy": 1.0
+        },
+        {
+          "gradient_steps_per_event": 2,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 0.984375,
+          "unrelated_accuracy": 1.0
+        },
+        {
+          "gradient_steps_per_event": 2,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 0.984375,
+          "unrelated_accuracy": 1.0
+        },
+        {
+          "gradient_steps_per_event": 4,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9944196428571429
+        },
+        {
+          "gradient_steps_per_event": 4,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9888392857142857
+        },
+        {
+          "gradient_steps_per_event": 8,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9933035714285714
+        },
+        {
+          "gradient_steps_per_event": 8,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9899553571428571
+        }
+      ],
+      "diagnostics": [
+        {
+          "site": 0,
+          "learned_rate": 0.054436441510915756,
+          "mean_correction_gradient_norm": 103.15546417236328,
+          "fraction_clipped": 1.0,
+          "mean_clip_scale": 0.1011635959148407,
+          "mean_abs_key_cosine": 0.10892945528030396,
+          "max_abs_key_cosine": 0.45657095313072205
+        },
+        {
+          "site": 1,
+          "learned_rate": 0.05101454257965088,
+          "mean_correction_gradient_norm": 80.11012268066406,
+          "fraction_clipped": 1.0,
+          "mean_clip_scale": 0.13669995963573456,
+          "mean_abs_key_cosine": 0.14989957213401794,
+          "max_abs_key_cosine": 0.5653207302093506
+        }
+      ]
+    },
+    {
+      "seed": 23,
+      "checkpoint_sha256": "f53ba42944a6c96c0163c54f4d10a8fa3ecd19e46c9a246d7339ba6876e5af02",
+      "worlds": 128,
+      "results": [
+        {
+          "gradient_steps_per_event": 1,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 0.1796875,
+          "unrelated_accuracy": 1.0
+        },
+        {
+          "gradient_steps_per_event": 1,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 0.171875,
+          "unrelated_accuracy": 1.0
+        },
+        {
+          "gradient_steps_per_event": 2,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9988839285714286
+        },
+        {
+          "gradient_steps_per_event": 2,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9988839285714286
+        },
+        {
+          "gradient_steps_per_event": 4,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9955357142857143
+        },
+        {
+          "gradient_steps_per_event": 4,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9899553571428571
+        },
+        {
+          "gradient_steps_per_event": 8,
+          "reset_initial_momentum": false,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9955357142857143
+        },
+        {
+          "gradient_steps_per_event": 8,
+          "reset_initial_momentum": true,
+          "correction_accuracy": 1.0,
+          "unrelated_accuracy": 0.9933035714285714
+        }
+      ],
+      "diagnostics": [
+        {
+          "site": 0,
+          "learned_rate": 0.05421162396669388,
+          "mean_correction_gradient_norm": 98.35479736328125,
+          "fraction_clipped": 1.0,
+          "mean_clip_scale": 0.1048288643360138,
+          "mean_abs_key_cosine": 0.11364927887916565,
+          "max_abs_key_cosine": 0.5256535410881042
+        },
+        {
+          "site": 1,
+          "learned_rate": 0.05405506119132042,
+          "mean_correction_gradient_norm": 98.2372817993164,
+          "fraction_clipped": 1.0,
+          "mean_clip_scale": 0.10871864855289459,
+          "mean_abs_key_cosine": 0.12654204666614532,
+          "max_abs_key_cosine": 0.5204169750213623
+        }
+      ]
+    }
+  ]
+}
