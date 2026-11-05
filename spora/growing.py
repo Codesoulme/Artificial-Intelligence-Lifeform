@@ -8,6 +8,7 @@ from pathlib import Path
 import hashlib,os
 import torch
 from .temporal import TemporalSPORA,TemporalConfig
+from .sleep_memory import history_site,SealedPage
 
 
 @dataclass
@@ -41,6 +42,7 @@ def observe(model,state,key,value,trusted,time=None):
     if state.cursor>=capacity(model,state):raise ValueError('Explicit growth required; original state unchanged')
     device=next(model.parameters()).device
     page=state.cursor//model.config.time_count;local=state.cursor%model.config.time_count
+    if not isinstance(state.pages[page],list):raise ValueError('Sealed history cannot accept new writes')
     fast=[[current]+history for current,history in zip(state.current,state.pages[page])]
     velocity=[[torch.zeros_like(p) for p in site] for site in fast]
     fast,_=model.write_temporal(fast,velocity,torch.tensor([key],device=device),torch.tensor([value],device=device),
@@ -56,18 +58,31 @@ def query(model,state,keys,modes,times):
     indices=(times//model.config.time_count).tolist();batch=keys.numel()
     fast=[]
     for site,current in enumerate(state.current):
-        history=[torch.cat([state.pages[p][site][j] for p in indices],0) for j in range(len(state.pages[0][site]))]
+        selected={p:history_site(state.pages[p],site) for p in set(indices)}
+        history=[torch.cat([selected[p][j] for p in indices],0) for j in range(len(model.memories[site].initial)-1)]
         fast.append([current.expand(batch,*current.shape[1:])]+history)
     return model(keys,fast,modes,times%model.config.time_count)
 
 
 def scalars(state):
     current=sum(p.numel() for p in state.current)
-    history=sum(p.numel() for page in state.pages for site in page for p in site)
+    history=sum(page.scalar_count() if isinstance(page,SealedPage) else sum(p.numel() for site in page for p in site) for page in state.pages)
     return {'current':current,'history_including_optimizer_evidence':history,'total':current+history}
 
 
 def save(path,model,state,metadata=None):
+    if any(isinstance(page,SealedPage) for page in state.pages):
+        from .state_codec import flatten
+        schema,tensors=flatten(model,state)
+        if not all(bool(torch.isfinite(x).all()) for x in tensors.values()):raise ValueError('Nonfinite state; preserve old file')
+        path=Path(path);path.parent.mkdir(parents=True,exist_ok=True);temporary=path.with_suffix(path.suffix+'.tmp')
+        data={'format':'spora-growing-v2','schema':schema,'tensors':{k:v.detach().cpu().clone() for k,v in tensors.items()},'metadata':metadata or {}}
+        try:
+            with temporary.open('wb') as stream:torch.save(data,stream);stream.flush();os.fsync(stream.fileno())
+            os.replace(temporary,path)
+        finally:
+            if temporary.exists():temporary.unlink()
+        return
     if model.config.temporal_kind!='split' or not 1<=len(state.pages)<=16:
         raise ValueError('Growing state requires one to sixteen split pages')
     if type(state.cursor) is not int:raise ValueError('Integer cursor required')
@@ -91,6 +106,10 @@ def save(path,model,state,metadata=None):
 
 def load(path,device='cpu'):
     data=torch.load(path,map_location='cpu',weights_only=True)
+    if data.get('format')=='spora-growing-v2':
+        from .state_codec import restore
+        model,state=restore(data['schema'],data['tensors'],device)
+        return model,state,data['metadata']
     if data.get('format')!='spora-growing-v1':raise ValueError('Unknown growing format')
     model=TemporalSPORA(TemporalConfig(**data['config'])).to(device);model.load_state_dict(data['model']);model.eval()
     if model.config.temporal_kind!='split':raise ValueError('Growing state must use split architecture')

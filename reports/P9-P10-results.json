@@ -1,0 +1,3497 @@
+{
+  "date": "2026-11-05",
+  "parent": "a8b0774",
+  "plan": {
+    "date": "2026-11-05",
+    "parent": "a8b0774",
+    "language_training": false,
+    "storage": {
+      "format": "SQLite WAL with synchronous FULL",
+      "page_counts": [
+        1,
+        4,
+        8,
+        16
+      ],
+      "commit_repetitions": 12,
+      "crash_stages": [
+        "before_begin",
+        "after_begin",
+        "after_first_tensor",
+        "after_tensors",
+        "after_manifest",
+        "before_commit",
+        "after_commit"
+      ],
+      "requirements": [
+        "old or new complete state",
+        "same next write after recovery",
+        "stale writer rejected",
+        "reader snapshot consistent",
+        "backup independently restorable",
+        "original files unchanged"
+      ]
+    },
+    "sleep": {
+      "development_seed": 2210000,
+      "audit_seed": 2220000,
+      "foundation_seeds": [
+        7,
+        11,
+        23
+      ],
+      "worlds_per_seed": 2,
+      "stages": 3,
+      "events_per_stage": 64,
+      "ranks_to_develop": [
+        16,
+        24,
+        32
+      ],
+      "maximum_steps_per_candidate": 600,
+      "threshold": 0.95,
+      "minimum_state_reduction": 0.2,
+      "requirements": [
+        "sealed pages only",
+        "frozen coordinates and backbone",
+        "teacher from actual individual",
+        "old history after removal of dense source",
+        "unknown and low-trust history",
+        "subsequent corrections and new events",
+        "cold restart",
+        "real tensor/storage accounting",
+        "failed student never replaces parent"
+      ]
+    }
+  },
+  "development": [
+    {
+      "rank": 16,
+      "method": "svd",
+      "training": {
+        "method": "svd",
+        "rank": 16,
+        "steps": 0,
+        "teacher_probe_queries_per_site": 4096,
+        "initial_mse": [
+          1.899305425467901e-05,
+          6.426860636565834e-05
+        ],
+        "final_mse": [
+          1.899299240903929e-05,
+          6.426862819353119e-05
+        ],
+        "source_scalars": 32400,
+        "student_scalars": 13950,
+        "state_reduction": 0.5694444444444444,
+        "seconds": 0.16403520002495497,
+        "student_forward_macs_per_step": 23592960,
+        "student_forward_macs_total": 0,
+        "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+      },
+      "gate": {
+        "groups": {
+          "all": {
+            "count": 4096,
+            "agreement": 1.0
+          },
+          "teacher_known": {
+            "count": 70,
+            "agreement": 1.0
+          },
+          "teacher_unknown": {
+            "count": 4026,
+            "agreement": 1.0
+          }
+        },
+        "current_logits_exact": true,
+        "max_probability_difference": 0.0016170889139175415,
+        "passed": true
+      },
+      "history": 1.0,
+      "untrusted_history": 1.0
+    },
+    {
+      "rank": 16,
+      "method": "distill",
+      "training": {
+        "method": "distill",
+        "rank": 16,
+        "steps": 600,
+        "teacher_probe_queries_per_site": 4096,
+        "initial_mse": [
+          2.1058175563812256,
+          2.345712184906006
+        ],
+        "final_mse": [
+          6.557165761478245e-05,
+          6.50134461466223e-05
+        ],
+        "source_scalars": 32400,
+        "student_scalars": 13950,
+        "state_reduction": 0.5694444444444444,
+        "seconds": 3.539510599919595,
+        "student_forward_macs_per_step": 23592960,
+        "student_forward_macs_total": 14155776000,
+        "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+      },
+      "gate": {
+        "groups": {
+          "all": {
+            "count": 4096,
+            "agreement": 1.0
+          },
+          "teacher_known": {
+            "count": 70,
+            "agreement": 1.0
+          },
+          "teacher_unknown": {
+            "count": 4026,
+            "agreement": 1.0
+          }
+        },
+        "current_logits_exact": true,
+        "max_probability_difference": 0.0061505138874053955,
+        "passed": true
+      },
+      "history": 1.0,
+      "untrusted_history": 1.0
+    },
+    {
+      "rank": 24,
+      "method": "svd",
+      "training": {
+        "method": "svd",
+        "rank": 24,
+        "steps": 0,
+        "teacher_probe_queries_per_site": 4096,
+        "initial_mse": [
+          1.0703099178499542e-05,
+          3.0010509362909943e-05
+        ],
+        "final_mse": [
+          1.0703027328418102e-05,
+          3.0010520276846364e-05
+        ],
+        "source_scalars": 32400,
+        "student_scalars": 16830,
+        "state_reduction": 0.4805555555555555,
+        "seconds": 0.01397610001731664,
+        "student_forward_macs_per_step": 35389440,
+        "student_forward_macs_total": 0,
+        "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+      },
+      "gate": {
+        "groups": {
+          "all": {
+            "count": 4096,
+            "agreement": 1.0
+          },
+          "teacher_known": {
+            "count": 70,
+            "agreement": 1.0
+          },
+          "teacher_unknown": {
+            "count": 4026,
+            "agreement": 1.0
+          }
+        },
+        "current_logits_exact": true,
+        "max_probability_difference": 0.0015257298946380615,
+        "passed": true
+      },
+      "history": 1.0,
+      "untrusted_history": 1.0
+    },
+    {
+      "rank": 24,
+      "method": "distill",
+      "training": {
+        "method": "distill",
+        "rank": 24,
+        "steps": 600,
+        "teacher_probe_queries_per_site": 4096,
+        "initial_mse": [
+          2.105769157409668,
+          2.3458690643310547
+        ],
+        "final_mse": [
+          0.0003644691314548254,
+          4.977559729013592e-05
+        ],
+        "source_scalars": 32400,
+        "student_scalars": 16830,
+        "state_reduction": 0.4805555555555555,
+        "seconds": 1.9407110000029206,
+        "student_forward_macs_per_step": 35389440,
+        "student_forward_macs_total": 21233664000,
+        "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+      },
+      "gate": {
+        "groups": {
+          "all": {
+            "count": 4096,
+            "agreement": 1.0
+          },
+          "teacher_known": {
+            "count": 70,
+            "agreement": 1.0
+          },
+          "teacher_unknown": {
+            "count": 4026,
+            "agreement": 1.0
+          }
+        },
+        "current_logits_exact": true,
+        "max_probability_difference": 0.010463163256645203,
+        "passed": true
+      },
+      "history": 1.0,
+      "untrusted_history": 1.0
+    },
+    {
+      "rank": 32,
+      "method": "svd",
+      "training": {
+        "method": "svd",
+        "rank": 32,
+        "steps": 0,
+        "teacher_probe_queries_per_site": 4096,
+        "initial_mse": [
+          6.3729080466146115e-06,
+          9.963803677237593e-06
+        ],
+        "final_mse": [
+          6.37284574622754e-06,
+          9.963798220269382e-06
+        ],
+        "source_scalars": 32400,
+        "student_scalars": 19710,
+        "state_reduction": 0.3916666666666667,
+        "seconds": 0.016037499997764826,
+        "student_forward_macs_per_step": 47185920,
+        "student_forward_macs_total": 0,
+        "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+      },
+      "gate": {
+        "groups": {
+          "all": {
+            "count": 4096,
+            "agreement": 1.0
+          },
+          "teacher_known": {
+            "count": 70,
+            "agreement": 1.0
+          },
+          "teacher_unknown": {
+            "count": 4026,
+            "agreement": 1.0
+          }
+        },
+        "current_logits_exact": true,
+        "max_probability_difference": 0.0009869635105133057,
+        "passed": true
+      },
+      "history": 1.0,
+      "untrusted_history": 1.0
+    },
+    {
+      "rank": 32,
+      "method": "distill",
+      "training": {
+        "method": "distill",
+        "rank": 32,
+        "steps": 600,
+        "teacher_probe_queries_per_site": 4096,
+        "initial_mse": [
+          2.105337142944336,
+          2.3455698490142822
+        ],
+        "final_mse": [
+          0.00020990960183553398,
+          3.8061829400248826e-05
+        ],
+        "source_scalars": 32400,
+        "student_scalars": 19710,
+        "state_reduction": 0.3916666666666667,
+        "seconds": 2.0399761999724433,
+        "student_forward_macs_per_step": 47185920,
+        "student_forward_macs_total": 28311552000,
+        "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+      },
+      "gate": {
+        "groups": {
+          "all": {
+            "count": 4096,
+            "agreement": 1.0
+          },
+          "teacher_known": {
+            "count": 70,
+            "agreement": 1.0
+          },
+          "teacher_unknown": {
+            "count": 4026,
+            "agreement": 1.0
+          }
+        },
+        "current_logits_exact": true,
+        "max_probability_difference": 0.01093718409538269,
+        "passed": true
+      },
+      "history": 1.0,
+      "untrusted_history": 1.0
+    }
+  ],
+  "selection": {
+    "rank": 16,
+    "steps": 600,
+    "method": "distill",
+    "seed": 2210000,
+    "development_only": true,
+    "threshold": 0.95
+  },
+  "durable": {
+    "sqlite_policy": "WAL, synchronous=FULL, autocheckpoint=256",
+    "parent_sha256": "5861aa345c24e69f90b376a41bde12bb432464c762955323458f86d5881b9c17",
+    "crashes": [
+      {
+        "stage": "before_begin",
+        "expected_cursor": 3,
+        "recovered_cursor": 3,
+        "revision": 0,
+        "exact": true,
+        "next_write_exact": true,
+        "reader_snapshot_exact": true,
+        "backup_exact": true,
+        "integrity": "ok",
+        "checkpoint": [
+          0,
+          0,
+          0
+        ],
+        "exit_code": 1
+      },
+      {
+        "stage": "after_begin",
+        "expected_cursor": 3,
+        "recovered_cursor": 3,
+        "revision": 0,
+        "exact": true,
+        "next_write_exact": true,
+        "reader_snapshot_exact": true,
+        "backup_exact": true,
+        "integrity": "ok",
+        "checkpoint": [
+          0,
+          0,
+          0
+        ],
+        "exit_code": 1
+      },
+      {
+        "stage": "after_first_tensor",
+        "expected_cursor": 3,
+        "recovered_cursor": 3,
+        "revision": 0,
+        "exact": true,
+        "next_write_exact": true,
+        "reader_snapshot_exact": true,
+        "backup_exact": true,
+        "integrity": "ok",
+        "checkpoint": [
+          0,
+          0,
+          0
+        ],
+        "exit_code": 1
+      },
+      {
+        "stage": "after_tensors",
+        "expected_cursor": 3,
+        "recovered_cursor": 3,
+        "revision": 0,
+        "exact": true,
+        "next_write_exact": true,
+        "reader_snapshot_exact": true,
+        "backup_exact": true,
+        "integrity": "ok",
+        "checkpoint": [
+          0,
+          0,
+          0
+        ],
+        "exit_code": 1
+      },
+      {
+        "stage": "after_manifest",
+        "expected_cursor": 3,
+        "recovered_cursor": 3,
+        "revision": 0,
+        "exact": true,
+        "next_write_exact": true,
+        "reader_snapshot_exact": true,
+        "backup_exact": true,
+        "integrity": "ok",
+        "checkpoint": [
+          0,
+          0,
+          0
+        ],
+        "exit_code": 1
+      },
+      {
+        "stage": "before_commit",
+        "expected_cursor": 3,
+        "recovered_cursor": 3,
+        "revision": 0,
+        "exact": true,
+        "next_write_exact": true,
+        "reader_snapshot_exact": true,
+        "backup_exact": true,
+        "integrity": "ok",
+        "checkpoint": [
+          0,
+          0,
+          0
+        ],
+        "exit_code": 1
+      },
+      {
+        "stage": "after_commit",
+        "expected_cursor": 4,
+        "recovered_cursor": 4,
+        "revision": 1,
+        "exact": true,
+        "next_write_exact": true,
+        "reader_snapshot_exact": true,
+        "backup_exact": true,
+        "integrity": "ok",
+        "checkpoint": [
+          0,
+          0,
+          0
+        ],
+        "exit_code": 1
+      }
+    ],
+    "benchmarks": [
+      {
+        "pages": 1,
+        "commits": 12,
+        "full_median_ms": 96.3878000038676,
+        "incremental_median_ms": 9.402249997947365,
+        "full_file_bytes": 4445000,
+        "tensor_payload_bytes": [
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400
+        ],
+        "changed_tensors": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "database_with_wal_before_checkpoint": 9037560,
+        "database_with_wal_after_checkpoint": 4517888,
+        "checkpoint_ms": 9.69860004261136,
+        "checkpoint": [
+          0,
+          0,
+          0
+        ],
+        "raw_full_ms": [
+          106.36480001267046,
+          100.86520004551858,
+          111.59849993418902,
+          94.86970002762973,
+          103.09290001168847,
+          94.03809998184443,
+          102.57260000798851,
+          93.96840003319085,
+          93.2973000453785,
+          96.42459999304265,
+          92.71730005275458,
+          96.35100001469254
+        ],
+        "raw_incremental_ms": [
+          9.418900008313358,
+          8.924199966713786,
+          9.385599987581372,
+          10.127799934707582,
+          16.231499961577356,
+          11.563099920749664,
+          9.058100054971874,
+          7.7439999440684915,
+          8.680799975991249,
+          13.577900012023747,
+          10.133700096048415,
+          8.660800056532025
+        ]
+      },
+      {
+        "pages": 4,
+        "commits": 12,
+        "full_median_ms": 107.0833999547176,
+        "incremental_median_ms": 9.163250040728599,
+        "full_file_bytes": 4836976,
+        "tensor_payload_bytes": [
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400
+        ],
+        "changed_tensors": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "database_with_wal_before_checkpoint": 9855040,
+        "database_with_wal_after_checkpoint": 4927488,
+        "checkpoint_ms": 12.26470002438873,
+        "checkpoint": [
+          0,
+          0,
+          0
+        ],
+        "raw_full_ms": [
+          97.08650002721697,
+          106.31810000631958,
+          109.82790007255971,
+          105.31999997328967,
+          99.19799992348999,
+          111.1611999804154,
+          109.95439998805523,
+          108.9273999677971,
+          99.04280002228916,
+          105.92790006194264,
+          116.25319998711348,
+          107.84869990311563
+        ],
+        "raw_incremental_ms": [
+          10.484099970199168,
+          9.10760008264333,
+          8.765399921685457,
+          8.934900048188865,
+          18.611600040458143,
+          10.047500021755695,
+          8.6882000323385,
+          8.040399989113212,
+          8.953499956987798,
+          18.66840000730008,
+          10.091800009831786,
+          9.218899998813868
+        ]
+      },
+      {
+        "pages": 8,
+        "commits": 12,
+        "full_median_ms": 112.76109999744222,
+        "incremental_median_ms": 11.08550000935793,
+        "full_file_bytes": 5359568,
+        "tensor_payload_bytes": [
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400
+        ],
+        "changed_tensors": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "database_with_wal_before_checkpoint": 10906688,
+        "database_with_wal_after_checkpoint": 5451776,
+        "checkpoint_ms": 11.201299959793687,
+        "checkpoint": [
+          0,
+          0,
+          0
+        ],
+        "raw_full_ms": [
+          113.15560003276914,
+          105.21079995669425,
+          115.1793000753969,
+          115.67259998992085,
+          112.36659996211529,
+          103.54969999752939,
+          111.53570003807545,
+          108.82389999460429,
+          117.79789999127388,
+          165.43040005490184,
+          107.18209994956851,
+          114.97520003467798
+        ],
+        "raw_incremental_ms": [
+          9.727199911139905,
+          9.567399974912405,
+          11.274199932813644,
+          11.946999933570623,
+          17.128999927081168,
+          9.875699994154274,
+          10.99350000731647,
+          9.88049991428852,
+          11.177500011399388,
+          20.251800073310733,
+          11.299800011329353,
+          9.912700043059886
+        ]
+      },
+      {
+        "pages": 16,
+        "commits": 12,
+        "full_median_ms": 120.59315002989024,
+        "incremental_median_ms": 10.389900067821145,
+        "full_file_bytes": 6404752,
+        "tensor_payload_bytes": [
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400,
+          194400
+        ],
+        "changed_tensors": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "database_with_wal_before_checkpoint": 13022296,
+        "database_with_wal_after_checkpoint": 6508544,
+        "checkpoint_ms": 11.102700023911893,
+        "checkpoint": [
+          0,
+          0,
+          0
+        ],
+        "raw_full_ms": [
+          145.8194999722764,
+          127.83209991175681,
+          121.85320002026856,
+          117.45130002964288,
+          117.1250999905169,
+          117.60479991789907,
+          119.53800008632243,
+          123.57669998891652,
+          119.33159991167486,
+          120.59369997587055,
+          126.25469989143312,
+          120.59260008390993
+        ],
+        "raw_incremental_ms": [
+          12.347299954853952,
+          11.539699975401163,
+          10.82920003682375,
+          9.638700052164495,
+          19.160499912686646,
+          10.222100070677698,
+          10.022599948570132,
+          9.295900003053248,
+          9.088800055906177,
+          19.9183999793604,
+          10.557700064964592,
+          9.336600080132484
+        ]
+      }
+    ],
+    "limitations": [
+      "process termination, not actual power-cut testing",
+      "timing includes WAL and periodic checkpoint work",
+      "payload counters exclude SQLite page/journal amplification",
+      "eight/sixteen page states include empty allocation"
+    ],
+    "parent_unchanged": true,
+    "passed": true
+  },
+  "sleep": {
+    "selection": {
+      "rank": 16,
+      "steps": 600,
+      "method": "distill",
+      "seed": 2210000,
+      "development_only": true,
+      "threshold": 0.95
+    },
+    "selection_sha256": "aa09da8e0e6e92cc48d49ee09271201cee137fe9b592d503146ba513a3ebc01d",
+    "audit_seed": 2220000,
+    "chains": [
+      {
+        "seed": 7,
+        "world": 0,
+        "stages": [
+          {
+            "stage": 0,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 0.984375,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 0.984375,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.714804768562317,
+                2.1123056411743164
+              ],
+              "final_mse": [
+                2.4908449631766416e-05,
+                6.891763769090176e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.096868699998595,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 75,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4021,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.0031905770301818848,
+              "passed": true
+            },
+            "corrections": [],
+            "controls": {
+              "svd": {
+                "cost": {
+                  "method": "svd",
+                  "rank": 16,
+                  "steps": 0,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    1.747805072227493e-05,
+                    6.693277100566775e-05
+                  ],
+                  "final_mse": [
+                    1.747801434248686e-05,
+                    6.693277100566775e-05
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 13950,
+                  "state_reduction": 0.5694444444444444,
+                  "seconds": 0.04790020000655204,
+                  "student_forward_macs_per_step": 23592960,
+                  "student_forward_macs_total": 0,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 0.984375,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "dense-control": {
+                "cost": {
+                  "method": "dense-control",
+                  "rank": 16,
+                  "steps": 600,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "final_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 32400,
+                  "state_reduction": 0.0,
+                  "seconds": 3.5209534999448806,
+                  "student_forward_macs_per_step": 66355200,
+                  "student_forward_macs_total": 39813120000,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 0.984375,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "no-transfer-reset": {
+                "metrics": {
+                  "history": 0.0,
+                  "oldest64": 0.0,
+                  "untrusted_history": 0.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              }
+            },
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 129600,
+              "total": 145800
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "passed": true,
+            "commit": {
+              "revision": 65,
+              "cursor": 64,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13044
+            },
+            "before_file_bytes": 4836528,
+            "after_file_bytes": 4764268,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 0.984375,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 1,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 0.9921875,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 0.9921875,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.8287216424942017,
+                2.3316009044647217
+              ],
+              "final_mse": [
+                6.009217395330779e-05,
+                6.858210690552369e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.090741000021808,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 71,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4025,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.005481213331222534,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "passed": true,
+            "commit": {
+              "revision": 130,
+              "cursor": 128,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13215
+            },
+            "before_file_bytes": 4764268,
+            "after_file_bytes": 4690984,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 0.9921875,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 2,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 0.9999999403953552,
+              "invalid_unknown": 0.9947916865348816,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 0.9999999403953552,
+              "invalid_unknown": 0.9947916865348816,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                2.0282983779907227,
+                2.6499640941619873
+              ],
+              "final_mse": [
+                5.787882400909439e-05,
+                6.622714863624424e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.005603599944152,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 69,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4027,
+                  "agreement": 0.9999999403953552
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.004493139684200287,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 74250,
+              "total": 90450
+            },
+            "passed": true,
+            "commit": {
+              "revision": 195,
+              "cursor": 192,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13385
+            },
+            "before_file_bytes": 4690984,
+            "after_file_bytes": 4617700,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 0.9999999403953552,
+              "invalid_unknown": 0.9947916865348816,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          }
+        ],
+        "backbone_exact": true,
+        "passed": true
+      },
+      {
+        "seed": 7,
+        "world": 1,
+        "stages": [
+          {
+            "stage": 0,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.7582371234893799,
+                2.0904929637908936
+              ],
+              "final_mse": [
+                0.001351078157313168,
+                6.408540502889082e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.2293426000978798,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 0.99951171875
+                },
+                "teacher_known": {
+                  "count": 75,
+                  "agreement": 0.9733333587646484
+                },
+                "teacher_unknown": {
+                  "count": 4021,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.07881146669387817,
+              "passed": true
+            },
+            "corrections": [],
+            "controls": {
+              "svd": {
+                "cost": {
+                  "method": "svd",
+                  "rank": 16,
+                  "steps": 0,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    2.1239055058686063e-05,
+                    6.83028920320794e-05
+                  ],
+                  "final_mse": [
+                    2.1239091438474134e-05,
+                    6.830289930803701e-05
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 13950,
+                  "state_reduction": 0.5694444444444444,
+                  "seconds": 0.019088399945758283,
+                  "student_forward_macs_per_step": 23592960,
+                  "student_forward_macs_total": 0,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "dense-control": {
+                "cost": {
+                  "method": "dense-control",
+                  "rank": 16,
+                  "steps": 600,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "final_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 32400,
+                  "state_reduction": 0.0,
+                  "seconds": 1.7723659999901429,
+                  "student_forward_macs_per_step": 66355200,
+                  "student_forward_macs_total": 39813120000,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "no-transfer-reset": {
+                "metrics": {
+                  "history": 0.0,
+                  "oldest64": 0.0,
+                  "untrusted_history": 0.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              }
+            },
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 129600,
+              "total": 145800
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "passed": true,
+            "commit": {
+              "revision": 65,
+              "cursor": 64,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13044
+            },
+            "before_file_bytes": 4836528,
+            "after_file_bytes": 4764268,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 1,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                2.1703386306762695,
+                2.6812219619750977
+              ],
+              "final_mse": [
+                0.00047660263953730464,
+                6.39188292552717e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.4446284999139607,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 73,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4023,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.01863810420036316,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "passed": true,
+            "commit": {
+              "revision": 130,
+              "cursor": 128,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13215
+            },
+            "before_file_bytes": 4764268,
+            "after_file_bytes": 4690984,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 2,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.8866400718688965,
+                2.4008255004882812
+              ],
+              "final_mse": [
+                6.839509296696633e-05,
+                6.177313480293378e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.3459326999727637,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 69,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4027,
+                  "agreement": 0.9999999403953552
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.006737083196640015,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 74250,
+              "total": 90450
+            },
+            "passed": true,
+            "commit": {
+              "revision": 195,
+              "cursor": 192,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13385
+            },
+            "before_file_bytes": 4690984,
+            "after_file_bytes": 4617700,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          }
+        ],
+        "backbone_exact": true,
+        "passed": true
+      },
+      {
+        "seed": 11,
+        "world": 0,
+        "stages": [
+          {
+            "stage": 0,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.7900131940841675,
+                2.3279573917388916
+              ],
+              "final_mse": [
+                5.8745212299982086e-05,
+                6.499258597614244e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.076084000058472,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 67,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4029,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.008256644010543823,
+              "passed": true
+            },
+            "corrections": [],
+            "controls": {
+              "svd": {
+                "cost": {
+                  "method": "svd",
+                  "rank": 16,
+                  "steps": 0,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    1.91702874872135e-05,
+                    6.503626354970038e-05
+                  ],
+                  "final_mse": [
+                    1.917030749609694e-05,
+                    6.503624899778515e-05
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 13950,
+                  "state_reduction": 0.5694444444444444,
+                  "seconds": 0.020040499977767467,
+                  "student_forward_macs_per_step": 23592960,
+                  "student_forward_macs_total": 0,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "dense-control": {
+                "cost": {
+                  "method": "dense-control",
+                  "rank": 16,
+                  "steps": 600,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "final_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 32400,
+                  "state_reduction": 0.0,
+                  "seconds": 1.7773467999650165,
+                  "student_forward_macs_per_step": 66355200,
+                  "student_forward_macs_total": 39813120000,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "no-transfer-reset": {
+                "metrics": {
+                  "history": 0.0,
+                  "oldest64": 0.0,
+                  "untrusted_history": 0.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              }
+            },
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 129600,
+              "total": 145800
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "passed": true,
+            "commit": {
+              "revision": 65,
+              "cursor": 64,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13045
+            },
+            "before_file_bytes": 4836528,
+            "after_file_bytes": 4764268,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 1,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.7758393287658691,
+                2.1585378646850586
+              ],
+              "final_mse": [
+                4.582717883749865e-05,
+                6.232912710402161e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.017148399958387,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 69,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4027,
+                  "agreement": 0.9999999403953552
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.004246816039085388,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "passed": true,
+            "commit": {
+              "revision": 130,
+              "cursor": 128,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13216
+            },
+            "before_file_bytes": 4764268,
+            "after_file_bytes": 4690984,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 2,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 0.9999999403953552,
+              "invalid_unknown": 0.9947916865348816,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 0.9999999403953552,
+              "invalid_unknown": 0.9947916865348816,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.7615185976028442,
+                2.2640340328216553
+              ],
+              "final_mse": [
+                5.539624908124097e-05,
+                6.888601637911052e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.1898481999523938,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 72,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4024,
+                  "agreement": 0.9999999403953552
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.007983773946762085,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 74250,
+              "total": 90450
+            },
+            "passed": true,
+            "commit": {
+              "revision": 195,
+              "cursor": 192,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13386
+            },
+            "before_file_bytes": 4690984,
+            "after_file_bytes": 4617700,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 0.9999999403953552,
+              "invalid_unknown": 0.9947916865348816,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          }
+        ],
+        "backbone_exact": true,
+        "passed": true
+      },
+      {
+        "seed": 11,
+        "world": 1,
+        "stages": [
+          {
+            "stage": 0,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.7900060415267944,
+                2.2524280548095703
+              ],
+              "final_mse": [
+                0.0005083981086499989,
+                6.374444637913257e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.124978700070642,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 66,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4030,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.036407023668289185,
+              "passed": true
+            },
+            "corrections": [],
+            "controls": {
+              "svd": {
+                "cost": {
+                  "method": "svd",
+                  "rank": 16,
+                  "steps": 0,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    1.918103953357786e-05,
+                    6.834947998868302e-05
+                  ],
+                  "final_mse": [
+                    1.9181008610758e-05,
+                    6.834944360889494e-05
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 13950,
+                  "state_reduction": 0.5694444444444444,
+                  "seconds": 0.015417000045999885,
+                  "student_forward_macs_per_step": 23592960,
+                  "student_forward_macs_total": 0,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "dense-control": {
+                "cost": {
+                  "method": "dense-control",
+                  "rank": 16,
+                  "steps": 600,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "final_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 32400,
+                  "state_reduction": 0.0,
+                  "seconds": 1.8034747999627143,
+                  "student_forward_macs_per_step": 66355200,
+                  "student_forward_macs_total": 39813120000,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "no-transfer-reset": {
+                "metrics": {
+                  "history": 0.0,
+                  "oldest64": 0.0,
+                  "untrusted_history": 0.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              }
+            },
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 129600,
+              "total": 145800
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "passed": true,
+            "commit": {
+              "revision": 65,
+              "cursor": 64,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13045
+            },
+            "before_file_bytes": 4836528,
+            "after_file_bytes": 4764268,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 1,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.6930752992630005,
+                2.269033908843994
+              ],
+              "final_mse": [
+                0.00012243555102031678,
+                6.29214700893499e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.071160899940878,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 71,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4025,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.005135953426361084,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "passed": true,
+            "commit": {
+              "revision": 130,
+              "cursor": 128,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13216
+            },
+            "before_file_bytes": 4764268,
+            "after_file_bytes": 4690984,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 2,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.9335535764694214,
+                2.4133388996124268
+              ],
+              "final_mse": [
+                4.450295091373846e-05,
+                6.608899275306612e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.324240399990231,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 68,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4028,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.005272477865219116,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 74250,
+              "total": 90450
+            },
+            "passed": true,
+            "commit": {
+              "revision": 195,
+              "cursor": 192,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13386
+            },
+            "before_file_bytes": 4690984,
+            "after_file_bytes": 4617700,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          }
+        ],
+        "backbone_exact": true,
+        "passed": true
+      },
+      {
+        "seed": 23,
+        "world": 0,
+        "stages": [
+          {
+            "stage": 0,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.8090964555740356,
+                2.5027480125427246
+              ],
+              "final_mse": [
+                0.002101297490298748,
+                6.79114309605211e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.281716499943286,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 0.999755859375
+                },
+                "teacher_known": {
+                  "count": 68,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4028,
+                  "agreement": 0.9997517466545105
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.051809415221214294,
+              "passed": true
+            },
+            "corrections": [],
+            "controls": {
+              "svd": {
+                "cost": {
+                  "method": "svd",
+                  "rank": 16,
+                  "steps": 0,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    1.785588392522186e-05,
+                    6.628313713008538e-05
+                  ],
+                  "final_mse": [
+                    1.785587301128544e-05,
+                    6.628315168200061e-05
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 13950,
+                  "state_reduction": 0.5694444444444444,
+                  "seconds": 0.016384700080379844,
+                  "student_forward_macs_per_step": 23592960,
+                  "student_forward_macs_total": 0,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "dense-control": {
+                "cost": {
+                  "method": "dense-control",
+                  "rank": 16,
+                  "steps": 600,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "final_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 32400,
+                  "state_reduction": 0.0,
+                  "seconds": 1.9447450999869034,
+                  "student_forward_macs_per_step": 66355200,
+                  "student_forward_macs_total": 39813120000,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "no-transfer-reset": {
+                "metrics": {
+                  "history": 0.0,
+                  "oldest64": 0.0,
+                  "untrusted_history": 0.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              }
+            },
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 129600,
+              "total": 145800
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "passed": true,
+            "commit": {
+              "revision": 65,
+              "cursor": 64,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13045
+            },
+            "before_file_bytes": 4836528,
+            "after_file_bytes": 4764268,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 1,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.7951948642730713,
+                2.5397191047668457
+              ],
+              "final_mse": [
+                0.000220204092329368,
+                6.59405195619911e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.616271400009282,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 0.999755859375
+                },
+                "teacher_known": {
+                  "count": 71,
+                  "agreement": 0.98591548204422
+                },
+                "teacher_unknown": {
+                  "count": 4025,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.008680462837219238,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "passed": true,
+            "commit": {
+              "revision": 130,
+              "cursor": 128,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13216
+            },
+            "before_file_bytes": 4764268,
+            "after_file_bytes": 4690984,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 2,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 0.9999999403953552,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 0.9999999403953552,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.9211151599884033,
+                2.4218437671661377
+              ],
+              "final_mse": [
+                0.00015641632489860058,
+                6.780919648008421e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.666176600032486,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 67,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4029,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.011684805154800415,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 74250,
+              "total": 90450
+            },
+            "passed": true,
+            "commit": {
+              "revision": 195,
+              "cursor": 192,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13386
+            },
+            "before_file_bytes": 4690984,
+            "after_file_bytes": 4617700,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 0.9999999403953552,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          }
+        ],
+        "backbone_exact": true,
+        "passed": true
+      },
+      {
+        "seed": 23,
+        "world": 1,
+        "stages": [
+          {
+            "stage": 0,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.9953601360321045,
+                2.3572897911071777
+              ],
+              "final_mse": [
+                3.228448986192234e-05,
+                6.616965401917696e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.6105321999639273,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 71,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4025,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.004626348614692688,
+              "passed": true
+            },
+            "corrections": [],
+            "controls": {
+              "svd": {
+                "cost": {
+                  "method": "svd",
+                  "rank": 16,
+                  "steps": 0,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    2.0214711184962653e-05,
+                    7.065044337650761e-05
+                  ],
+                  "final_mse": [
+                    2.021464752033353e-05,
+                    7.065044337650761e-05
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 13950,
+                  "state_reduction": 0.5694444444444444,
+                  "seconds": 0.024751099990680814,
+                  "student_forward_macs_per_step": 23592960,
+                  "student_forward_macs_total": 0,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "dense-control": {
+                "cost": {
+                  "method": "dense-control",
+                  "rank": 16,
+                  "steps": 600,
+                  "teacher_probe_queries_per_site": 4096,
+                  "initial_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "final_mse": [
+                    0.0,
+                    0.0
+                  ],
+                  "source_scalars": 32400,
+                  "student_scalars": 32400,
+                  "state_reduction": 0.0,
+                  "seconds": 2.3224717000266537,
+                  "student_forward_macs_per_step": 66355200,
+                  "student_forward_macs_total": 39813120000,
+                  "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+                },
+                "metrics": {
+                  "history": 1.0,
+                  "oldest64": 1.0,
+                  "untrusted_history": 1.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              },
+              "no-transfer-reset": {
+                "metrics": {
+                  "history": 0.0,
+                  "oldest64": 0.0,
+                  "untrusted_history": 0.0,
+                  "invalid_unknown": 1.0,
+                  "current": 1.0,
+                  "current_unknown": 1.0
+                }
+              }
+            },
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 129600,
+              "total": 145800
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "passed": true,
+            "commit": {
+              "revision": 65,
+              "cursor": 64,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13045
+            },
+            "before_file_bytes": 4836528,
+            "after_file_bytes": 4764268,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 1,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.9760764837265015,
+                2.2557084560394287
+              ],
+              "final_mse": [
+                2.691790541575756e-05,
+                6.413534720195457e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.6712304999819025,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 68,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4028,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.004013627767562866,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 111150,
+              "total": 127350
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "passed": true,
+            "commit": {
+              "revision": 130,
+              "cursor": 128,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13216
+            },
+            "before_file_bytes": 4764268,
+            "after_file_bytes": 4690984,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          },
+          {
+            "stage": 2,
+            "before": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "after": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "training": {
+              "method": "distill",
+              "rank": 16,
+              "steps": 600,
+              "teacher_probe_queries_per_site": 4096,
+              "initial_mse": [
+                1.6507253646850586,
+                2.1017515659332275
+              ],
+              "final_mse": [
+                0.00015905010513961315,
+                6.630681309616193e-05
+              ],
+              "source_scalars": 32400,
+              "student_scalars": 13950,
+              "state_reduction": 0.5694444444444444,
+              "seconds": 2.4775594999082386,
+              "student_forward_macs_per_step": 23592960,
+              "student_forward_macs_total": 14155776000,
+              "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+            },
+            "gate": {
+              "groups": {
+                "all": {
+                  "count": 4096,
+                  "agreement": 1.0
+                },
+                "teacher_known": {
+                  "count": 70,
+                  "agreement": 1.0
+                },
+                "teacher_unknown": {
+                  "count": 4026,
+                  "agreement": 1.0
+                }
+              },
+              "current_logits_exact": true,
+              "max_probability_difference": 0.014108449220657349,
+              "passed": true
+            },
+            "corrections": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "controls": {},
+            "state_before": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 92700,
+              "total": 108900
+            },
+            "state_after": {
+              "current": 16200,
+              "history_including_optimizer_evidence": 74250,
+              "total": 90450
+            },
+            "passed": true,
+            "commit": {
+              "revision": 195,
+              "cursor": 192,
+              "changed_tensors": 6,
+              "tensor_bytes_written": 55800,
+              "manifest_bytes": 13386
+            },
+            "before_file_bytes": 4690984,
+            "after_file_bytes": 4617700,
+            "restored_metrics": {
+              "history": 1.0,
+              "oldest64": 1.0,
+              "untrusted_history": 1.0,
+              "invalid_unknown": 1.0,
+              "current": 1.0,
+              "current_unknown": 1.0
+            },
+            "cold_exact": true
+          }
+        ],
+        "backbone_exact": true,
+        "passed": true
+      }
+    ],
+    "language_training_steps": 0,
+    "limitations": [
+      "teacher probes cover finite address domain; not unseen-fact generalization",
+      "dense replay is step-matched, MAC counts differ",
+      "SVD is a strong non-learning compression control, no superiority assumed",
+      "current bank remains active; sleep seals history only",
+      "disk file can retain free pages; VACUUM is separate maintenance"
+    ],
+    "passed": true,
+    "selection_unchanged": true
+  },
+  "sleep_transaction": {
+    "cases": [
+      {
+        "stage": "before_begin",
+        "exact": true,
+        "next_write_exact": true,
+        "reader_exact": true,
+        "compaction_exact": true,
+        "bytes_before_compaction": 5166552,
+        "bytes_after_compaction": 4915200,
+        "free_pages_before": 3,
+        "compaction_ms": 255.83599996753037
+      },
+      {
+        "stage": "after_begin",
+        "exact": true,
+        "next_write_exact": true,
+        "reader_exact": true,
+        "compaction_exact": true,
+        "bytes_before_compaction": 5166552,
+        "bytes_after_compaction": 4915200,
+        "free_pages_before": 3,
+        "compaction_ms": 261.0762999393046
+      },
+      {
+        "stage": "after_first_tensor",
+        "exact": true,
+        "next_write_exact": true,
+        "reader_exact": true,
+        "compaction_exact": true,
+        "bytes_before_compaction": 5166552,
+        "bytes_after_compaction": 4915200,
+        "free_pages_before": 3,
+        "compaction_ms": 261.416400084272
+      },
+      {
+        "stage": "after_tensors",
+        "exact": true,
+        "next_write_exact": true,
+        "reader_exact": true,
+        "compaction_exact": true,
+        "bytes_before_compaction": 5166552,
+        "bytes_after_compaction": 4915200,
+        "free_pages_before": 3,
+        "compaction_ms": 276.3366000726819
+      },
+      {
+        "stage": "after_manifest",
+        "exact": true,
+        "next_write_exact": true,
+        "reader_exact": true,
+        "compaction_exact": true,
+        "bytes_before_compaction": 5166552,
+        "bytes_after_compaction": 4915200,
+        "free_pages_before": 3,
+        "compaction_ms": 264.8297999985516
+      },
+      {
+        "stage": "before_commit",
+        "exact": true,
+        "next_write_exact": true,
+        "reader_exact": true,
+        "compaction_exact": true,
+        "bytes_before_compaction": 5166552,
+        "bytes_after_compaction": 4915200,
+        "free_pages_before": 3,
+        "compaction_ms": 286.3719000015408
+      },
+      {
+        "stage": "after_commit",
+        "exact": true,
+        "next_write_exact": true,
+        "reader_exact": true,
+        "compaction_exact": true,
+        "bytes_before_compaction": 5257192,
+        "bytes_after_compaction": 4841472,
+        "free_pages_before": 18,
+        "compaction_ms": 268.12230003997684
+      }
+    ],
+    "limitation": "Forced process termination, not physical power loss",
+    "passed": true
+  },
+  "profile": {
+    "rows": [
+      {
+        "device": "cpu",
+        "query_count": 1,
+        "materialized_equivalent_exact": true,
+        "timing": {
+          "original_dense": {
+            "median_ms": 5.122800008393824,
+            "samples": [
+              4.498400026932359,
+              6.047900067642331,
+              4.752699984237552,
+              4.952199989929795,
+              5.023100064136088,
+              4.551499965600669,
+              4.918099963106215,
+              3.973799990490079,
+              6.7047999473288655,
+              6.630900083109736,
+              6.317900028079748,
+              5.671999999321997,
+              6.6365000093355775,
+              5.082099931314588,
+              5.342000047676265,
+              5.308800027705729,
+              5.122800008393824,
+              5.235599935986102,
+              5.231800023466349,
+              4.560000030323863,
+              4.937099991366267
+            ]
+          },
+          "sealed": {
+            "median_ms": 5.422400077804923,
+            "samples": [
+              5.723800044506788,
+              6.191799999214709,
+              4.677999997511506,
+              4.889700096100569,
+              6.311999983154237,
+              5.226799985393882,
+              5.332399974577129,
+              5.014399997889996,
+              7.597999996505678,
+              7.26580002810806,
+              5.307400017045438,
+              5.477399914525449,
+              7.111600018106401,
+              4.979100078344345,
+              5.382599891163409,
+              5.20800007507205,
+              5.669699981808662,
+              5.688700010068715,
+              5.482899956405163,
+              4.966599983163178,
+              5.422400077804923
+            ]
+          }
+        }
+      },
+      {
+        "device": "cpu",
+        "query_count": 64,
+        "materialized_equivalent_exact": true,
+        "timing": {
+          "original_dense": {
+            "median_ms": 15.970399952493608,
+            "samples": [
+              15.070299967192113,
+              17.329199938103557,
+              21.926800021901727,
+              16.723699984140694,
+              15.490800025872886,
+              17.947299988009036,
+              13.034899951890111,
+              13.686100021004677,
+              16.98519999627024,
+              17.36149995122105,
+              16.35229995008558,
+              13.729400001466274,
+              18.02660000976175,
+              16.809600056149065,
+              14.777300064451993,
+              15.528500080108643,
+              14.09160008188337,
+              14.973600045777857,
+              17.553600016981363,
+              15.970399952493608,
+              12.647700030356646
+            ]
+          },
+          "sealed": {
+            "median_ms": 16.07550005428493,
+            "samples": [
+              20.848900079727173,
+              16.07550005428493,
+              19.726999918930233,
+              13.308400055393577,
+              16.156499972566962,
+              18.270500004291534,
+              13.931000023148954,
+              16.85779995750636,
+              20.26830008253455,
+              23.382200044579804,
+              17.544300062581897,
+              20.885000005364418,
+              14.826199971139431,
+              14.302099938504398,
+              17.47870002873242,
+              15.577799989841878,
+              14.286599936895072,
+              15.998899936676025,
+              14.151300070807338,
+              13.783100061118603,
+              14.079199987463653
+            ]
+          }
+        }
+      },
+      {
+        "device": "cpu",
+        "query_count": "untrained byte interface 4x128",
+        "max_abs_logit_error": 0.0,
+        "timing": {
+          "expanded_same_memory": {
+            "median_ms": 20.952300052158535,
+            "samples": [
+              21.18969999719411,
+              21.664300002157688,
+              19.45479994174093,
+              20.427600014954805,
+              19.609700073488057,
+              21.28330001141876,
+              20.952300052158535,
+              21.86420001089573,
+              20.718200015835464
+            ]
+          },
+          "sealed": {
+            "median_ms": 21.95610001217574,
+            "samples": [
+              21.93359995726496,
+              21.307199960574508,
+              24.465200025588274,
+              29.071400058455765,
+              21.95610001217574,
+              21.103700040839612,
+              24.294600007124245,
+              22.13840000331402,
+              20.733799901790917
+            ]
+          }
+        }
+      },
+      {
+        "device": "cuda",
+        "query_count": 1,
+        "materialized_equivalent_exact": true,
+        "timing": {
+          "original_dense": {
+            "median_ms": 11.460999958217144,
+            "samples": [
+              11.082799988798797,
+              11.270899907685816,
+              10.534900007769465,
+              11.8101000552997,
+              12.415500008501112,
+              11.612500064074993,
+              12.219799915328622,
+              11.5609000204131,
+              12.400500010699034,
+              11.57129998318851,
+              11.302700033411384,
+              10.794200003147125,
+              11.179500026628375,
+              12.143100029788911,
+              11.460999958217144,
+              11.406799894757569,
+              11.307600070722401,
+              12.441400089301169,
+              12.678999919444323,
+              10.845799930393696,
+              11.033400078304112
+            ]
+          },
+          "sealed": {
+            "median_ms": 11.532200034707785,
+            "samples": [
+              11.039900011382997,
+              12.262100004591048,
+              11.562499916180968,
+              11.225500027649105,
+              11.532200034707785,
+              11.148000019602478,
+              11.12079992890358,
+              11.284500011242926,
+              13.693999964743853,
+              12.532500084489584,
+              10.841200011782348,
+              11.35639997664839,
+              11.244099936448038,
+              11.767499963752925,
+              13.657900039106607,
+              11.920499964617193,
+              11.801499989815056,
+              12.280700029805303,
+              12.428699992597103,
+              10.74289996176958,
+              11.498300009407103
+            ]
+          }
+        }
+      },
+      {
+        "device": "cuda",
+        "query_count": 64,
+        "materialized_equivalent_exact": true,
+        "timing": {
+          "original_dense": {
+            "median_ms": 11.768799973651767,
+            "samples": [
+              12.383699999190867,
+              12.578300083987415,
+              13.004999957047403,
+              11.718900059349835,
+              11.498100007884204,
+              13.1224999204278,
+              13.262800057418644,
+              12.299699941650033,
+              16.379900043830276,
+              11.671699932776392,
+              11.743800016120076,
+              11.768799973651767,
+              11.269400012679398,
+              10.902400012128055,
+              11.677499976940453,
+              11.181799927726388,
+              11.836599907837808,
+              11.852600029669702,
+              11.633999994955957,
+              11.708299978636205,
+              12.818000046536326
+            ]
+          },
+          "sealed": {
+            "median_ms": 13.558599981479347,
+            "samples": [
+              13.780399924144149,
+              14.83400003053248,
+              13.9626000309363,
+              13.558599981479347,
+              12.915900093503296,
+              13.519599917344749,
+              14.041800051927567,
+              13.138499925844371,
+              14.815100003033876,
+              13.490799930877984,
+              12.917099986225367,
+              12.694699922576547,
+              14.765400090254843,
+              12.46170001104474,
+              12.9549999255687,
+              13.60549998935312,
+              17.025899956934154,
+              14.629099983721972,
+              13.244799920357764,
+              12.734900112263858,
+              14.72880004439503
+            ]
+          }
+        }
+      },
+      {
+        "device": "cuda",
+        "query_count": "untrained byte interface 4x128",
+        "max_abs_logit_error": 0.0,
+        "timing": {
+          "expanded_same_memory": {
+            "median_ms": 11.525199981406331,
+            "samples": [
+              13.243000023066998,
+              11.77890005055815,
+              6.610400043427944,
+              11.525199981406331,
+              6.730900029651821,
+              18.438200000673532,
+              8.18409991916269,
+              11.962800053879619,
+              6.940399995073676
+            ]
+          },
+          "sealed": {
+            "median_ms": 14.136399957351387,
+            "samples": [
+              13.986799982376397,
+              14.136399957351387,
+              12.481999932788312,
+              14.540300006046891,
+              14.950599987059832,
+              15.123000019229949,
+              13.55959998909384,
+              14.245699974708259,
+              13.6044000973925
+            ]
+          }
+        }
+      }
+    ],
+    "files": {
+      "dense_bytes": 4836528,
+      "sealed_bytes": 4617700,
+      "dense_scalars": {
+        "current": 16200,
+        "history_including_optimizer_evidence": 129600,
+        "total": 145800
+      },
+      "sealed_scalars": {
+        "current": 16200,
+        "history_including_optimizer_evidence": 74250,
+        "total": 90450
+      },
+      "dense_sqlite_bytes": 4882432,
+      "sealed_sqlite_bytes": 4661248
+    },
+    "training_steps": 0,
+    "limitations": [
+      "reconstructing a selected low-rank page costs compute",
+      "byte interface eagerly materializes sealed pages; no semantic language claim"
+    ],
+    "passed": true
+  },
+  "candidate": {
+    "original_source": "D:\\SPORA\\checkpoints\\individual-prelanguage.pt",
+    "source_sha256": "5861aa345c24e69f90b376a41bde12bb432464c762955323458f86d5881b9c17",
+    "preserved_database": "D:\\SPORA\\checkpoints\\individual-durable.sqlite",
+    "sleep_candidate": "D:\\SPORA\\checkpoints\\individual-sleep-candidate.sqlite",
+    "portable_candidate": "D:\\SPORA\\checkpoints\\individual-sleep-candidate.pt",
+    "observations": 72,
+    "original_observations": 3,
+    "additional_synthetic_observations": 69,
+    "sleep": {
+      "accepted": true,
+      "training": {
+        "method": "distill",
+        "rank": 16,
+        "steps": 600,
+        "teacher_probe_queries_per_site": 4096,
+        "initial_mse": [
+          1.8017092943191528,
+          2.261674404144287
+        ],
+        "final_mse": [
+          9.324846905656159e-05,
+          6.691788439638913e-05
+        ],
+        "source_scalars": 32400,
+        "student_scalars": 13950,
+        "state_reduction": 0.5694444444444444,
+        "seconds": 5.070120499935001,
+        "student_forward_macs_per_step": 23592960,
+        "student_forward_macs_total": 14155776000,
+        "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+      },
+      "gate": {
+        "groups": {
+          "all": {
+            "count": 4096,
+            "agreement": 1.0
+          },
+          "teacher_known": {
+            "count": 73,
+            "agreement": 1.0
+          },
+          "teacher_unknown": {
+            "count": 4023,
+            "agreement": 1.0
+          }
+        },
+        "current_logits_exact": true,
+        "max_probability_difference": 0.010488182306289673,
+        "passed": true
+      },
+      "parent_revision": 61,
+      "commit": {
+        "revision": 62,
+        "cursor": 64,
+        "changed_tensors": 6,
+        "tensor_bytes_written": 55800,
+        "manifest_bytes": 13716
+      }
+    },
+    "before_state": {
+      "current": 16200,
+      "history_including_optimizer_evidence": 129600,
+      "total": 145800
+    },
+    "after_state": {
+      "current": 16200,
+      "history_including_optimizer_evidence": 111150,
+      "total": 127350
+    },
+    "final_metrics": {
+      "history": 1.0,
+      "oldest64": 1.0,
+      "untrusted_history": 1.0,
+      "invalid_unknown": 1.0,
+      "current": 1.0,
+      "current_unknown": 1.0
+    },
+    "demonstration": [
+      7,
+      5,
+      9,
+      3
+    ],
+    "revision": 71,
+    "files": {
+      "individual-durable.sqlite": {
+        "bytes": 4882432,
+        "sha256": "cd34d965f55c38e047c1d133af543858ee4f415d985d610ffc3afb9f3f652582"
+      },
+      "individual-sleep-candidate.sqlite": {
+        "bytes": 4808704,
+        "sha256": "f07f485876b461eb662a67277c88672ebf44a5dd318bd7588fc3db60ae79ce21"
+      },
+      "individual-sleep-candidate.pt": {
+        "bytes": 4765420,
+        "sha256": "2f7abe8cd3f9f14302954174a51aa9d3fd1e231dfbb8f4ea3595856d8bdad6af"
+      }
+    },
+    "source_unchanged": true,
+    "Chinese_training_started": false
+  },
+  "protected_hashes": {
+    "checkpoints\\individual.pt": "85b34a36ab567586740e895411d3569facac9312cdeb4504d1f168f4098be037",
+    "checkpoints\\individual-p2-candidate.pt": "2c94e6de0cc20054407828a158396804115b872fffd4edb81dda6726bd4e6961",
+    "checkpoints\\individual-p3-candidate.pt": "9709fd47df9d17d173dbdb2bd4536966361791b2ec1ad24c8dc997eb547edf1a",
+    "checkpoints\\individual-p5b-candidate.pt": "4101e6dd242dee4a97cb02f3dab1c297b1026deff64eae46a273cd07fdbdd0b4",
+    "checkpoints\\individual-prelanguage.pt": "5861aa345c24e69f90b376a41bde12bb432464c762955323458f86d5881b9c17",
+    "runs\\p7-preparation\\untrained-interface.pt": "519995001955c54edcabbb74b17eb1d38d9cde0ae17a308280cc498a71c3bc56"
+  },
+  "regression": {
+    "count": 74,
+    "seconds": 16.467,
+    "passed": true
+  },
+  "consolidation_training": {
+    "optimizer_steps_including_controls": 16800,
+    "measured_seconds_including_controls": 67.40937129955273
+  },
+  "Chinese_training_started": false
+}

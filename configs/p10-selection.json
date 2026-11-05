@@ -1,0 +1,8 @@
+{
+  "rank": 16,
+  "steps": 600,
+  "method": "distill",
+  "seed": 2210000,
+  "development_only": true,
+  "threshold": 0.95
+}

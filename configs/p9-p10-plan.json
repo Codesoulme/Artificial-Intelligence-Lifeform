@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-05",
+  "parent": "a8b0774",
+  "language_training": false,
+  "storage": {
+    "format": "SQLite WAL with synchronous FULL",
+    "page_counts": [1, 4, 8, 16],
+    "commit_repetitions": 12,
+    "crash_stages": ["before_begin", "after_begin", "after_first_tensor", "after_tensors", "after_manifest", "before_commit", "after_commit"],
+    "requirements": ["old or new complete state", "same next write after recovery", "stale writer rejected", "reader snapshot consistent", "backup independently restorable", "original files unchanged"]
+  },
+  "sleep": {
+    "development_seed": 2210000,
+    "audit_seed": 2220000,
+    "foundation_seeds": [7, 11, 23],
+    "worlds_per_seed": 2,
+    "stages": 3,
+    "events_per_stage": 64,
+    "ranks_to_develop": [16, 24, 32],
+    "maximum_steps_per_candidate": 600,
+    "threshold": 0.95,
+    "minimum_state_reduction": 0.2,
+    "requirements": ["sealed pages only", "frozen coordinates and backbone", "teacher from actual individual", "old history after removal of dense source", "unknown and low-trust history", "subsequent corrections and new events", "cold restart", "real tensor/storage accounting", "failed student never replaces parent"]
+  }
+}

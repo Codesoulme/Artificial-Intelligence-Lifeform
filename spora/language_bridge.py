@@ -8,6 +8,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from .memory_read import MemoryReadPlan
+from .sleep_memory import history_site
 
 BOS=256
 EOS=257
@@ -54,7 +55,7 @@ class LanguageBridge(nn.Module):
             x=block(x)
             if i in self.organism.config.memory_layers:
                 q=F.normalize(self.query_projection(x),dim=-1)
-                matrices=[state.current[layer_site]]+[page[layer_site][0] for page in state.pages]
+                matrices=[state.current[layer_site]]+[history_site(page,layer_site)[0] for page in state.pages]
                 # Read-only access to value-bearing neural matrices; no raw observations.
                 page_keys=self.page_key(torch.arange(len(matrices),device=device))
                 # Preserve the existing gradient path for all training. Prepared
