@@ -20,8 +20,11 @@ class ModelConfig:
     value_start: int = 128
     max_length: int = 256
     memory_layers: tuple = (1, 3)
+    memory_kind: str = 'mlp'
 
     def validate(self):
+        if self.memory_kind not in ('mlp','delta'):
+            raise ValueError('Unsupported neural memory kind')
         if self.width % self.heads or self.layers < 1:
             raise ValueError('Invalid backbone dimensions')
         if any(x < 0 or x >= self.layers for x in self.memory_layers):
@@ -91,12 +94,15 @@ class MemorySite(nn.Module):
         return F.normalize(self.value(value_embedding), dim=-1) * math.sqrt(self.initial[0].shape[0])
 
     def read(self, x, query, fast):
-        recent = fast_forward(fast, query)
+        recent = self.retrieve(fast, query)
         slow = torch.stack([expert(query) for expert in self.experts], dim=1)
         routing = self.router(x[:, -1]).softmax(-1).unsqueeze(-1)
         signal = recent + (routing * slow).sum(1)
         residual = torch.sigmoid(self.read_gate(x[:, -1])) * self.read_out(signal)
         return torch.cat([x[:, :-1], (x[:, -1]+residual).unsqueeze(1)], dim=1)
+
+    def retrieve(self, fast, query):
+        return fast_forward(fast, query)
 
     def write(self, fast, velocity, key, target, gate, differentiable):
         # Each row is an independent world; sum retains batch-independent step size.
@@ -121,6 +127,28 @@ class MemorySite(nn.Module):
         return updated, moments
 
 
+class DeltaMemorySite(MemorySite):
+    """A normalized-key delta reference, not a Gated DeltaNet replication."""
+    def __init__(self, config):
+        super().__init__(config)
+        m=config.memory_width
+        self.initial=nn.ParameterList([nn.Parameter(torch.randn(m,m)*.02)])
+        with torch.no_grad(): self.log_lr.fill_(2.1972246)
+
+    def address(self, key_embedding):
+        return F.normalize(super().address(key_embedding),dim=-1)
+
+    def retrieve(self, fast, query):
+        return torch.bmm(fast[0],query.unsqueeze(-1)).squeeze(-1)
+
+    def write(self, fast, velocity, key, target, gate, differentiable):
+        residual=target.detach()-self.retrieve(fast,key)
+        delta=residual.unsqueeze(-1)*key.unsqueeze(1)
+        updated=fast[0]+gate[:,None,None]*torch.sigmoid(self.log_lr)*delta
+        if not differentiable: updated=updated.detach().requires_grad_(True)
+        return [updated],[velocity[0]]
+
+
 class SPORA(nn.Module):
     def __init__(self, config=None):
         super().__init__()
@@ -130,7 +158,8 @@ class SPORA(nn.Module):
         self.embedding = nn.Embedding(c.vocab_size, c.width)
         self.position = nn.Embedding(c.max_length, c.width)
         self.blocks = nn.ModuleList([CausalBlock(c) for _ in range(c.layers)])
-        self.memories = nn.ModuleList([MemorySite(c) for _ in c.memory_layers])
+        site_type=MemorySite if c.memory_kind=='mlp' else DeltaMemorySite
+        self.memories = nn.ModuleList([site_type(c) for _ in c.memory_layers])
         self.final_norm = nn.LayerNorm(c.width)
         nn.init.normal_(self.embedding.weight, std=.1)
         nn.init.normal_(self.position.weight, std=.02)

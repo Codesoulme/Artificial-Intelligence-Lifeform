@@ -1,0 +1,3592 @@
+{
+  "date": "2026-11-05",
+  "scope": "finite symbolic P2 research; no default promotion",
+  "audits": {
+    "p1-seed7": {
+      "phase": "audit",
+      "checkpoint": "D:\\SPORA\\checkpoints\\p1-seed7.pt",
+      "checkpoint_sha256": "fb81a75a8eb3859dc027012fb60224aaf0551e4826577c2aebe70ae00f228a71",
+      "training": {
+        "stage": "P1 foundation",
+        "seed": 7,
+        "step": 1000
+      },
+      "worlds": 64,
+      "selected": {
+        "policy": "adaptive-max4",
+        "threshold": 0.5
+      },
+      "results": [
+        {
+          "policy": "one",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 0.13671875,
+              "unrelated": 0.98046875,
+              "final": 0.97265625,
+              "oldest8": 0.97265625,
+              "latest8": 0.97265625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 0.3671875,
+              "unrelated": 0.9583333333333334,
+              "final": 0.962890625,
+              "oldest8": 0.9609375,
+              "latest8": 0.96484375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.9765625,
+              "corrected": 0.703125,
+              "unrelated": 0.8549107142857143,
+              "final": 0.8720703125,
+              "oldest8": 0.8828125,
+              "latest8": 0.92578125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.82373046875,
+              "corrected": 0.86328125,
+              "unrelated": 0.6583333333333333,
+              "final": 0.6796875,
+              "oldest8": 0.69921875,
+              "latest8": 0.88671875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "two",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 0.998046875,
+              "corrected": 0.46484375,
+              "unrelated": 0.91796875,
+              "final": 0.93359375,
+              "oldest8": 0.93359375,
+              "latest8": 0.93359375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.9736328125,
+              "corrected": 0.73046875,
+              "unrelated": 0.8997395833333334,
+              "final": 0.91796875,
+              "oldest8": 0.931640625,
+              "latest8": 0.904296875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.89453125,
+              "corrected": 0.9296875,
+              "unrelated": 0.8169642857142857,
+              "final": 0.83642578125,
+              "oldest8": 0.841796875,
+              "latest8": 0.93359375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.68408203125,
+              "corrected": 0.9921875,
+              "unrelated": 0.6291666666666667,
+              "final": 0.64990234375,
+              "oldest8": 0.65625,
+              "latest8": 0.9453125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "adaptive-max4",
+          "threshold": 0.5,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 0.91015625,
+              "final": 0.953125,
+              "oldest8": 0.953125,
+              "latest8": 0.953125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.2109375,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 0.88671875,
+              "final": 0.9111328125,
+              "oldest8": 0.935546875,
+              "latest8": 0.88671875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.1067708333333333,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.97216796875,
+              "corrected": 1.0,
+              "unrelated": 0.8119419642857143,
+              "final": 0.83447265625,
+              "oldest8": 0.84765625,
+              "latest8": 0.900390625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.03828125,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.8037109375,
+              "corrected": 1.0,
+              "unrelated": 0.6255208333333333,
+              "final": 0.64892578125,
+              "oldest8": 0.677734375,
+              "latest8": 0.8984375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0377604166666667,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        }
+      ],
+      "seconds": 119.17786509997677,
+      "restart": {
+        "match": true,
+        "expected": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          7,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "restored": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          7,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "reset_fast": [
+          2,
+          8,
+          0,
+          8,
+          11,
+          3,
+          9,
+          8,
+          9,
+          6,
+          11,
+          11,
+          7,
+          12,
+          7,
+          4
+        ],
+        "truth": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ]
+      },
+      "caveats": [
+        "Environmental trust gate is not learned source judgment",
+        "Current-value semantics; no historical version query implemented",
+        "Per-seed exploratory comparisons; do not count events as independent training seeds"
+      ]
+    },
+    "matched-mlp-seed7": {
+      "phase": "audit",
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-matched-mlp-seed7.pt",
+      "checkpoint_sha256": "d09f84ffcf4b148758424e587da4025fe5fbc6d4afae146ad9e8926dff5a5846",
+      "training": {
+        "stage": "P2 curriculum",
+        "seed": 7,
+        "completed_pairs": 64,
+        "policy": "one",
+        "parent": "random",
+        "geometry": 0.0
+      },
+      "worlds": 64,
+      "selected": {
+        "policy": "adaptive-max4",
+        "threshold": 0.5
+      },
+      "results": [
+        {
+          "policy": "one",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 0.18359375,
+              "unrelated": 0.97265625,
+              "final": 0.978515625,
+              "oldest8": 0.978515625,
+              "latest8": 0.978515625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 0.48046875,
+              "unrelated": 0.953125,
+              "final": 0.962890625,
+              "oldest8": 0.962890625,
+              "latest8": 0.962890625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.98828125,
+              "corrected": 0.76171875,
+              "unrelated": 0.8928571428571429,
+              "final": 0.90625,
+              "oldest8": 0.904296875,
+              "latest8": 0.955078125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.880859375,
+              "corrected": 0.921875,
+              "unrelated": 0.7442708333333333,
+              "final": 0.76025390625,
+              "oldest8": 0.728515625,
+              "latest8": 0.966796875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "two",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 0.54296875,
+              "unrelated": 0.94140625,
+              "final": 0.947265625,
+              "oldest8": 0.947265625,
+              "latest8": 0.947265625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.9921875,
+              "corrected": 0.84375,
+              "unrelated": 0.9401041666666666,
+              "final": 0.951171875,
+              "oldest8": 0.943359375,
+              "latest8": 0.958984375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.94091796875,
+              "corrected": 0.99609375,
+              "unrelated": 0.8934151785714286,
+              "final": 0.9052734375,
+              "oldest8": 0.892578125,
+              "latest8": 0.982421875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.75341796875,
+              "corrected": 1.0,
+              "unrelated": 0.73046875,
+              "final": 0.74658203125,
+              "oldest8": 0.69140625,
+              "latest8": 0.9921875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "adaptive-max4",
+          "threshold": 0.5,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 0.94921875,
+              "final": 0.96875,
+              "oldest8": 0.96875,
+              "latest8": 0.96875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.203125,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 0.91796875,
+              "final": 0.9365234375,
+              "oldest8": 0.9453125,
+              "latest8": 0.927734375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.095703125,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.98828125,
+              "corrected": 1.0,
+              "unrelated": 0.8722098214285714,
+              "final": 0.88818359375,
+              "oldest8": 0.896484375,
+              "latest8": 0.9375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.028515625,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.87646484375,
+              "corrected": 1.0,
+              "unrelated": 0.7328125,
+              "final": 0.74951171875,
+              "oldest8": 0.7109375,
+              "latest8": 0.970703125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0132378472222223,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        }
+      ],
+      "seconds": 93.37320919998456,
+      "restart": {
+        "match": true,
+        "expected": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          7,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "restored": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          7,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "reset_fast": [
+          5,
+          10,
+          5,
+          5,
+          5,
+          5,
+          5,
+          0,
+          11,
+          5,
+          5,
+          0,
+          10,
+          5,
+          12,
+          10
+        ],
+        "truth": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ]
+      },
+      "caveats": [
+        "Environmental trust gate is not learned source judgment",
+        "Current-value semantics; no historical version query implemented",
+        "Per-seed exploratory comparisons; do not count events as independent training seeds"
+      ]
+    },
+    "short-control-seed7": {
+      "phase": "audit",
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-short-control-seed7.pt",
+      "checkpoint_sha256": "61fbc3d9c9e0dcc05c0bbbe4d525bf6ac1193c92a870897ac36f3cc7d4b63380",
+      "training": {
+        "stage": "P2 curriculum",
+        "seed": 7,
+        "completed_pairs": 64,
+        "policy": "one",
+        "parent": "checkpoints/p1-seed7.pt",
+        "geometry": 0.0
+      },
+      "worlds": 64,
+      "selected": {
+        "policy": "adaptive-max4",
+        "threshold": 0.5
+      },
+      "results": [
+        {
+          "policy": "one",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 0.998046875,
+              "corrected": 0.1484375,
+              "unrelated": 0.98828125,
+              "final": 0.966796875,
+              "oldest8": 0.966796875,
+              "latest8": 0.966796875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.9970703125,
+              "corrected": 0.390625,
+              "unrelated": 0.9557291666666666,
+              "final": 0.95703125,
+              "oldest8": 0.947265625,
+              "latest8": 0.966796875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.97314453125,
+              "corrected": 0.62890625,
+              "unrelated": 0.8627232142857143,
+              "final": 0.8798828125,
+              "oldest8": 0.880859375,
+              "latest8": 0.931640625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.8271484375,
+              "corrected": 0.83984375,
+              "unrelated": 0.6671875,
+              "final": 0.68798828125,
+              "oldest8": 0.720703125,
+              "latest8": 0.88671875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "two",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 0.998046875,
+              "corrected": 0.453125,
+              "unrelated": 0.92578125,
+              "final": 0.9375,
+              "oldest8": 0.9375,
+              "latest8": 0.9375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.9814453125,
+              "corrected": 0.73046875,
+              "unrelated": 0.8997395833333334,
+              "final": 0.9189453125,
+              "oldest8": 0.93359375,
+              "latest8": 0.904296875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.90380859375,
+              "corrected": 0.9375,
+              "unrelated": 0.82421875,
+              "final": 0.841796875,
+              "oldest8": 0.83203125,
+              "latest8": 0.931640625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.679931640625,
+              "corrected": 0.98828125,
+              "unrelated": 0.6421875,
+              "final": 0.66259765625,
+              "oldest8": 0.6796875,
+              "latest8": 0.955078125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "adaptive-max4",
+          "threshold": 0.5,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 0.93359375,
+              "final": 0.962890625,
+              "oldest8": 0.962890625,
+              "latest8": 0.962890625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.2119140625,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.9970703125,
+              "corrected": 1.0,
+              "unrelated": 0.8932291666666666,
+              "final": 0.9150390625,
+              "oldest8": 0.935546875,
+              "latest8": 0.89453125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.1028645833333333,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.96826171875,
+              "corrected": 1.0,
+              "unrelated": 0.81640625,
+              "final": 0.83837890625,
+              "oldest8": 0.85546875,
+              "latest8": 0.908203125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.04609375,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.810302734375,
+              "corrected": 1.0,
+              "unrelated": 0.6328125,
+              "final": 0.65576171875,
+              "oldest8": 0.701171875,
+              "latest8": 0.89453125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0381944444444444,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        }
+      ],
+      "seconds": 82.96076110005379,
+      "restart": {
+        "match": true,
+        "expected": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          7,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "restored": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          7,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "reset_fast": [
+          0,
+          8,
+          0,
+          4,
+          0,
+          3,
+          13,
+          0,
+          9,
+          5,
+          12,
+          4,
+          5,
+          5,
+          0,
+          13
+        ],
+        "truth": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ]
+      },
+      "caveats": [
+        "Environmental trust gate is not learned source judgment",
+        "Current-value semantics; no historical version query implemented",
+        "Per-seed exploratory comparisons; do not count events as independent training seeds"
+      ]
+    },
+    "v1-mlp-seed7": {
+      "phase": "audit",
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-mlp-seed7.pt",
+      "checkpoint_sha256": "0c7b38654d5a3f53cb5f969335df49f7d6f8d4ff774e6d7f46f9f8cdefb4b652",
+      "training": {
+        "stage": "P2 curriculum",
+        "seed": 7,
+        "completed_pairs": 64,
+        "policy": "one",
+        "parent": "checkpoints/p1-seed7.pt",
+        "geometry": 0.0
+      },
+      "worlds": 64,
+      "selected": {
+        "policy": "adaptive-max4",
+        "threshold": 0.5
+      },
+      "results": [
+        {
+          "policy": "one",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 0.12109375,
+              "unrelated": 0.98828125,
+              "final": 0.98046875,
+              "oldest8": 0.98046875,
+              "latest8": 0.98046875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 0.390625,
+              "unrelated": 0.97265625,
+              "final": 0.9775390625,
+              "oldest8": 0.984375,
+              "latest8": 0.970703125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.98681640625,
+              "corrected": 0.7109375,
+              "unrelated": 0.8967633928571429,
+              "final": 0.90966796875,
+              "oldest8": 0.904296875,
+              "latest8": 0.947265625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.864990234375,
+              "corrected": 0.9296875,
+              "unrelated": 0.7036458333333333,
+              "final": 0.72216796875,
+              "oldest8": 0.708984375,
+              "latest8": 0.9296875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "two",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 0.48046875,
+              "unrelated": 0.9296875,
+              "final": 0.943359375,
+              "oldest8": 0.943359375,
+              "latest8": 0.943359375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.98828125,
+              "corrected": 0.8046875,
+              "unrelated": 0.9192708333333334,
+              "final": 0.9326171875,
+              "oldest8": 0.9375,
+              "latest8": 0.927734375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.92822265625,
+              "corrected": 0.9765625,
+              "unrelated": 0.8705357142857143,
+              "final": 0.88671875,
+              "oldest8": 0.890625,
+              "latest8": 0.951171875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.714599609375,
+              "corrected": 0.99609375,
+              "unrelated": 0.67734375,
+              "final": 0.696044921875,
+              "oldest8": 0.662109375,
+              "latest8": 0.982421875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "adaptive-max4",
+          "threshold": 0.5,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 0.95703125,
+              "final": 0.9765625,
+              "oldest8": 0.9765625,
+              "latest8": 0.9765625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.21875,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 0.9127604166666666,
+              "final": 0.931640625,
+              "oldest8": 0.953125,
+              "latest8": 0.91015625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.1041666666666667,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.98486328125,
+              "corrected": 1.0,
+              "unrelated": 0.8649553571428571,
+              "final": 0.88134765625,
+              "oldest8": 0.880859375,
+              "latest8": 0.9296875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.034765625,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.84912109375,
+              "corrected": 1.0,
+              "unrelated": 0.6729166666666667,
+              "final": 0.693359375,
+              "oldest8": 0.69140625,
+              "latest8": 0.921875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0243055555555556,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        }
+      ],
+      "seconds": 152.5285776000237,
+      "restart": {
+        "match": true,
+        "expected": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          7,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "restored": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          7,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "reset_fast": [
+          10,
+          11,
+          11,
+          11,
+          11,
+          10,
+          9,
+          13,
+          9,
+          6,
+          11,
+          12,
+          7,
+          12,
+          7,
+          13
+        ],
+        "truth": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ]
+      },
+      "caveats": [
+        "Environmental trust gate is not learned source judgment",
+        "Current-value semantics; no historical version query implemented",
+        "Per-seed exploratory comparisons; do not count events as independent training seeds"
+      ]
+    },
+    "v1-mlp-seed11": {
+      "phase": "audit",
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-mlp-seed11.pt",
+      "checkpoint_sha256": "6cf97c1268c4bb9d7787a0849c8ca85aacfa498c7f0f758bfa9cf5ad2a3ae262",
+      "training": {
+        "stage": "P2 curriculum",
+        "seed": 11,
+        "completed_pairs": 64,
+        "policy": "one",
+        "parent": "checkpoints/p1-seed11.pt",
+        "geometry": 0.0
+      },
+      "worlds": 64,
+      "selected": {
+        "policy": "adaptive-max4",
+        "threshold": 0.5
+      },
+      "results": [
+        {
+          "policy": "one",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 0.1328125,
+              "unrelated": 0.97265625,
+              "final": 0.970703125,
+              "oldest8": 0.970703125,
+              "latest8": 0.970703125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.9990234375,
+              "corrected": 0.33984375,
+              "unrelated": 0.96484375,
+              "final": 0.9697265625,
+              "oldest8": 0.95703125,
+              "latest8": 0.982421875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.98193359375,
+              "corrected": 0.66015625,
+              "unrelated": 0.9029017857142857,
+              "final": 0.91455078125,
+              "oldest8": 0.91796875,
+              "latest8": 0.951171875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.850341796875,
+              "corrected": 0.9140625,
+              "unrelated": 0.7130208333333333,
+              "final": 0.73095703125,
+              "oldest8": 0.732421875,
+              "latest8": 0.9296875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "two",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 0.9921875,
+              "corrected": 0.47265625,
+              "unrelated": 0.9140625,
+              "final": 0.9296875,
+              "oldest8": 0.9296875,
+              "latest8": 0.9296875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.9755859375,
+              "corrected": 0.75,
+              "unrelated": 0.9205729166666666,
+              "final": 0.931640625,
+              "oldest8": 0.927734375,
+              "latest8": 0.935546875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.92529296875,
+              "corrected": 0.9453125,
+              "unrelated": 0.8571428571428571,
+              "final": 0.8720703125,
+              "oldest8": 0.8671875,
+              "latest8": 0.943359375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.694580078125,
+              "corrected": 0.99609375,
+              "unrelated": 0.6736979166666667,
+              "final": 0.691650390625,
+              "oldest8": 0.66015625,
+              "latest8": 0.962890625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "adaptive-max4",
+          "threshold": 0.5,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 0.94140625,
+              "final": 0.958984375,
+              "oldest8": 0.958984375,
+              "latest8": 0.958984375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.2119140625,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.9990234375,
+              "corrected": 1.0,
+              "unrelated": 0.9244791666666666,
+              "final": 0.9404296875,
+              "oldest8": 0.939453125,
+              "latest8": 0.94140625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.1126302083333333,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.97802734375,
+              "corrected": 1.0,
+              "unrelated": 0.8465401785714286,
+              "final": 0.86572265625,
+              "oldest8": 0.890625,
+              "latest8": 0.900390625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0453125,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.8359375,
+              "corrected": 1.0,
+              "unrelated": 0.6828125,
+              "final": 0.70263671875,
+              "oldest8": 0.716796875,
+              "latest8": 0.91015625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0238715277777777,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        }
+      ],
+      "seconds": 157.54918349999934,
+      "restart": {
+        "match": true,
+        "expected": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          7,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "restored": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          7,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "reset_fast": [
+          0,
+          10,
+          1,
+          1,
+          10,
+          15,
+          8,
+          11,
+          1,
+          3,
+          7,
+          7,
+          0,
+          14,
+          0,
+          6
+        ],
+        "truth": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ]
+      },
+      "caveats": [
+        "Environmental trust gate is not learned source judgment",
+        "Current-value semantics; no historical version query implemented",
+        "Per-seed exploratory comparisons; do not count events as independent training seeds"
+      ]
+    },
+    "v1-mlp-seed23": {
+      "phase": "audit",
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-mlp-seed23.pt",
+      "checkpoint_sha256": "e2183c5e90ae536e11709ff3ae3fc557f9c5e29b07e962801bd39ebdaa51bf27",
+      "training": {
+        "stage": "P2 curriculum",
+        "seed": 23,
+        "completed_pairs": 64,
+        "policy": "one",
+        "parent": "checkpoints/p1-seed23.pt",
+        "geometry": 0.0
+      },
+      "worlds": 64,
+      "selected": {
+        "policy": "adaptive-max4",
+        "threshold": 0.5
+      },
+      "results": [
+        {
+          "policy": "one",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 0.16015625,
+              "unrelated": 0.984375,
+              "final": 0.97265625,
+              "oldest8": 0.97265625,
+              "latest8": 0.97265625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.998046875,
+              "corrected": 0.390625,
+              "unrelated": 0.9544270833333334,
+              "final": 0.9609375,
+              "oldest8": 0.951171875,
+              "latest8": 0.970703125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.9814453125,
+              "corrected": 0.7578125,
+              "unrelated": 0.8878348214285714,
+              "final": 0.9013671875,
+              "oldest8": 0.904296875,
+              "latest8": 0.951171875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.853759765625,
+              "corrected": 0.92578125,
+              "unrelated": 0.7229166666666667,
+              "final": 0.740234375,
+              "oldest8": 0.74609375,
+              "latest8": 0.951171875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "two",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 0.998046875,
+              "corrected": 0.48828125,
+              "unrelated": 0.94921875,
+              "final": 0.947265625,
+              "oldest8": 0.947265625,
+              "latest8": 0.947265625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.9775390625,
+              "corrected": 0.84375,
+              "unrelated": 0.9244791666666666,
+              "final": 0.935546875,
+              "oldest8": 0.92578125,
+              "latest8": 0.9453125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.91943359375,
+              "corrected": 0.98046875,
+              "unrelated": 0.8627232142857143,
+              "final": 0.87744140625,
+              "oldest8": 0.86328125,
+              "latest8": 0.966796875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.708740234375,
+              "corrected": 1.0,
+              "unrelated": 0.6752604166666667,
+              "final": 0.69482421875,
+              "oldest8": 0.6796875,
+              "latest8": 0.97265625,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "adaptive-max4",
+          "threshold": 0.5,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 0.94921875,
+              "final": 0.96484375,
+              "oldest8": 0.96484375,
+              "latest8": 0.96484375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.2080078125,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 0.998046875,
+              "corrected": 1.0,
+              "unrelated": 0.9140625,
+              "final": 0.93359375,
+              "oldest8": 0.9375,
+              "latest8": 0.9296875,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.1028645833333333,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.98193359375,
+              "corrected": 1.0,
+              "unrelated": 0.8498883928571429,
+              "final": 0.8681640625,
+              "oldest8": 0.869140625,
+              "latest8": 0.923828125,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.029296875,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.843994140625,
+              "corrected": 1.0,
+              "unrelated": 0.6890625,
+              "final": 0.70849609375,
+              "oldest8": 0.73828125,
+              "latest8": 0.927734375,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0206163194444444,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        }
+      ],
+      "seconds": 72.31284519995097,
+      "restart": {
+        "match": true,
+        "expected": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          12,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          3,
+          15
+        ],
+        "restored": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          12,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          3,
+          15
+        ],
+        "reset_fast": [
+          13,
+          1,
+          7,
+          10,
+          1,
+          10,
+          3,
+          4,
+          1,
+          13,
+          1,
+          1,
+          1,
+          13,
+          7,
+          5
+        ],
+        "truth": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ]
+      },
+      "caveats": [
+        "Environmental trust gate is not learned source judgment",
+        "Current-value semantics; no historical version query implemented",
+        "Per-seed exploratory comparisons; do not count events as independent training seeds"
+      ]
+    },
+    "v1-delta-seed7": {
+      "phase": "audit",
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed7.pt",
+      "checkpoint_sha256": "5e05cf528c96a8fad84b8a8a4aa614540515cc9e99b1dd302578142e6474c330",
+      "training": {
+        "stage": "P2 curriculum",
+        "seed": 7,
+        "completed_pairs": 64,
+        "policy": "one",
+        "parent": "random",
+        "geometry": 0.0
+      },
+      "worlds": 64,
+      "selected": {
+        "policy": "one",
+        "threshold": 0.8
+      },
+      "results": [
+        {
+          "policy": "one",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.99951171875,
+              "corrected": 1.0,
+              "unrelated": 0.9994419642857143,
+              "final": 0.99951171875,
+              "oldest8": 0.998046875,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.993896484375,
+              "corrected": 1.0,
+              "unrelated": 0.9916666666666667,
+              "final": 0.9921875,
+              "oldest8": 0.986328125,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "two",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 0.99951171875,
+              "corrected": 1.0,
+              "unrelated": 0.9994419642857143,
+              "final": 0.99951171875,
+              "oldest8": 0.998046875,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.989990234375,
+              "corrected": 1.0,
+              "unrelated": 0.9893229166666667,
+              "final": 0.989990234375,
+              "oldest8": 0.982421875,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        }
+      ],
+      "seconds": 16.84274369990453,
+      "restart": {
+        "match": true,
+        "expected": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "restored": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "reset_fast": [
+          4,
+          0,
+          2,
+          4,
+          15,
+          10,
+          0,
+          3,
+          10,
+          0,
+          13,
+          4,
+          10,
+          15,
+          4,
+          0
+        ],
+        "truth": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ]
+      },
+      "caveats": [
+        "Environmental trust gate is not learned source judgment",
+        "Current-value semantics; no historical version query implemented",
+        "Per-seed exploratory comparisons; do not count events as independent training seeds"
+      ]
+    },
+    "v1-delta-seed11": {
+      "phase": "audit",
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed11.pt",
+      "checkpoint_sha256": "5a7b92242600b8163a5c1be0bc961c926c2231d76f871e98bc8490b0bc619798",
+      "training": {
+        "stage": "P2 curriculum",
+        "seed": 11,
+        "completed_pairs": 64,
+        "policy": "one",
+        "parent": "random",
+        "geometry": 0.0
+      },
+      "worlds": 64,
+      "selected": {
+        "policy": "one",
+        "threshold": 0.8
+      },
+      "results": [
+        {
+          "policy": "one",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.9931640625,
+              "corrected": 1.0,
+              "unrelated": 0.9893229166666667,
+              "final": 0.989990234375,
+              "oldest8": 0.97265625,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "two",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.990478515625,
+              "corrected": 1.0,
+              "unrelated": 0.9861979166666667,
+              "final": 0.987060546875,
+              "oldest8": 0.966796875,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        }
+      ],
+      "seconds": 52.75936919997912,
+      "restart": {
+        "match": true,
+        "expected": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "restored": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "reset_fast": [
+          14,
+          9,
+          6,
+          4,
+          7,
+          5,
+          14,
+          14,
+          9,
+          14,
+          4,
+          9,
+          4,
+          9,
+          4,
+          9
+        ],
+        "truth": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ]
+      },
+      "caveats": [
+        "Environmental trust gate is not learned source judgment",
+        "Current-value semantics; no historical version query implemented",
+        "Per-seed exploratory comparisons; do not count events as independent training seeds"
+      ]
+    },
+    "v1-delta-seed23": {
+      "phase": "audit",
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed23.pt",
+      "checkpoint_sha256": "abc6b0a918d9f8cc5c24cd853261810be6876d9ac09f85922ecac3aed1e8a060",
+      "training": {
+        "stage": "P2 curriculum",
+        "seed": 23,
+        "completed_pairs": 64,
+        "policy": "one",
+        "parent": "random",
+        "geometry": 0.0
+      },
+      "worlds": 64,
+      "selected": {
+        "policy": "one",
+        "threshold": 0.8
+      },
+      "results": [
+        {
+          "policy": "one",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.989501953125,
+              "corrected": 1.0,
+              "unrelated": 0.9861979166666667,
+              "final": 0.987060546875,
+              "oldest8": 0.95703125,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 1.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        },
+        {
+          "policy": "two",
+          "threshold": 0.8,
+          "scores": [
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 8
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 16
+            },
+            {
+              "initial": 1.0,
+              "corrected": 1.0,
+              "unrelated": 1.0,
+              "final": 1.0,
+              "oldest8": 1.0,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 32
+            },
+            {
+              "initial": 0.986083984375,
+              "corrected": 1.0,
+              "unrelated": 0.98359375,
+              "final": 0.984619140625,
+              "oldest8": 0.955078125,
+              "latest8": 1.0,
+              "untrusted_unchanged": 1.0,
+              "inner_updates_per_trusted_event": 2.0,
+              "worlds": 64,
+              "pairs": 64
+            }
+          ]
+        }
+      ],
+      "seconds": 21.472084400011227,
+      "restart": {
+        "match": true,
+        "expected": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "restored": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ],
+        "reset_fast": [
+          14,
+          7,
+          7,
+          5,
+          3,
+          7,
+          5,
+          5,
+          14,
+          7,
+          7,
+          7,
+          14,
+          14,
+          7,
+          3
+        ],
+        "truth": [
+          7,
+          3,
+          3,
+          12,
+          11,
+          8,
+          3,
+          2,
+          10,
+          14,
+          5,
+          6,
+          9,
+          12,
+          6,
+          15
+        ]
+      },
+      "caveats": [
+        "Environmental trust gate is not learned source judgment",
+        "Current-value semantics; no historical version query implemented",
+        "Per-seed exploratory comparisons; do not count events as independent training seeds"
+      ]
+    }
+  },
+  "training": {
+    "p2-matched-mlp-seed7": {
+      "outer_steps": 460,
+      "event_presentations": 36480,
+      "inner_updates": 33920.0,
+      "elapsed_seconds": 524.6153254000237,
+      "peak_cuda_allocated_bytes": 89968640,
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-matched-mlp-seed7.pt",
+      "development_final": {
+        "initial": 0.876953125,
+        "corrected": 0.96875,
+        "unrelated": 0.7229166666666667,
+        "final": 0.740234375,
+        "oldest8": 0.7578125,
+        "latest8": 0.9296875,
+        "untrusted_unchanged": 1.0,
+        "inner_updates_per_trusted_event": 1.0,
+        "worlds": 16,
+        "pairs": 64
+      }
+    },
+    "p2-mlp-seed7": {
+      "outer_steps": 160,
+      "event_presentations": 26880,
+      "inner_updates": 24320.0,
+      "elapsed_seconds": 186.95067920000292,
+      "peak_cuda_allocated_bytes": 89968128,
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-mlp-seed7.pt",
+      "development_final": {
+        "initial": 0.8759765625,
+        "corrected": 0.90625,
+        "unrelated": 0.721875,
+        "final": 0.7392578125,
+        "oldest8": 0.7734375,
+        "latest8": 0.921875,
+        "untrusted_unchanged": 1.0,
+        "inner_updates_per_trusted_event": 1.0,
+        "worlds": 16,
+        "pairs": 64
+      }
+    },
+    "p2-short-control-seed7": {
+      "outer_steps": 160,
+      "event_presentations": 5120,
+      "inner_updates": 5120.0,
+      "elapsed_seconds": 63.08458709996194,
+      "peak_cuda_allocated_bytes": 82953728,
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-short-control-seed7.pt",
+      "development_final": {
+        "initial": 0.8095703125,
+        "corrected": 0.78125,
+        "unrelated": 0.6479166666666667,
+        "final": 0.669921875,
+        "oldest8": 0.7578125,
+        "latest8": 0.8359375,
+        "untrusted_unchanged": 1.0,
+        "inner_updates_per_trusted_event": 1.0,
+        "worlds": 16,
+        "pairs": 64
+      }
+    },
+    "p2-v1-delta-seed11": {
+      "outer_steps": 460,
+      "event_presentations": 36480,
+      "inner_updates": 33920.0,
+      "elapsed_seconds": 230.73088249994908,
+      "peak_cuda_allocated_bytes": 90822656,
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed11.pt",
+      "development_final": {
+        "initial": 0.994140625,
+        "corrected": 1.0,
+        "unrelated": 0.990625,
+        "final": 0.9912109375,
+        "oldest8": 0.96875,
+        "latest8": 1.0,
+        "untrusted_unchanged": 1.0,
+        "inner_updates_per_trusted_event": 1.0,
+        "worlds": 16,
+        "pairs": 64
+      }
+    },
+    "p2-v1-delta-seed23": {
+      "outer_steps": 460,
+      "event_presentations": 36480,
+      "inner_updates": 33920.0,
+      "elapsed_seconds": 304.0526317000622,
+      "peak_cuda_allocated_bytes": 90822656,
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed23.pt",
+      "development_final": {
+        "initial": 0.9912109375,
+        "corrected": 1.0,
+        "unrelated": 0.9875,
+        "final": 0.98828125,
+        "oldest8": 0.9765625,
+        "latest8": 1.0,
+        "untrusted_unchanged": 1.0,
+        "inner_updates_per_trusted_event": 1.0,
+        "worlds": 16,
+        "pairs": 64
+      }
+    },
+    "p2-v1-delta-seed7": {
+      "outer_steps": 460,
+      "event_presentations": 36480,
+      "inner_updates": 33920.0,
+      "elapsed_seconds": 203.9407426000107,
+      "peak_cuda_allocated_bytes": 90822656,
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed7.pt",
+      "development_final": {
+        "initial": 0.9873046875,
+        "corrected": 1.0,
+        "unrelated": 0.9875,
+        "final": 0.98828125,
+        "oldest8": 0.9609375,
+        "latest8": 1.0,
+        "untrusted_unchanged": 1.0,
+        "inner_updates_per_trusted_event": 1.0,
+        "worlds": 16,
+        "pairs": 64
+      }
+    },
+    "p2-v1-mlp-seed11": {
+      "outer_steps": 160,
+      "event_presentations": 26880,
+      "inner_updates": 24320.0,
+      "elapsed_seconds": 316.65166209999006,
+      "peak_cuda_allocated_bytes": 89968128,
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-mlp-seed11.pt",
+      "development_final": {
+        "initial": 0.880859375,
+        "corrected": 0.859375,
+        "unrelated": 0.7447916666666666,
+        "final": 0.7607421875,
+        "oldest8": 0.7578125,
+        "latest8": 0.9375,
+        "untrusted_unchanged": 1.0,
+        "inner_updates_per_trusted_event": 1.0,
+        "worlds": 16,
+        "pairs": 64
+      }
+    },
+    "p2-v1-mlp-seed23": {
+      "outer_steps": 160,
+      "event_presentations": 26880,
+      "inner_updates": 24320.0,
+      "elapsed_seconds": 424.6363708000863,
+      "peak_cuda_allocated_bytes": 89968128,
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-mlp-seed23.pt",
+      "development_final": {
+        "initial": 0.84375,
+        "corrected": 0.90625,
+        "unrelated": 0.703125,
+        "final": 0.7216796875,
+        "oldest8": 0.7578125,
+        "latest8": 0.9453125,
+        "untrusted_unchanged": 1.0,
+        "inner_updates_per_trusted_event": 1.0,
+        "worlds": 16,
+        "pairs": 64
+      }
+    },
+    "p2-v1-mlp-seed7": {
+      "outer_steps": 160,
+      "event_presentations": 26880,
+      "inner_updates": 24320.0,
+      "elapsed_seconds": 239.04694989998825,
+      "peak_cuda_allocated_bytes": 89968128,
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-mlp-seed7.pt",
+      "development_final": {
+        "initial": 0.84765625,
+        "corrected": 0.890625,
+        "unrelated": 0.7052083333333333,
+        "final": 0.7236328125,
+        "oldest8": 0.7578125,
+        "latest8": 0.8984375,
+        "untrusted_unchanged": 1.0,
+        "inner_updates_per_trusted_event": 1.0,
+        "worlds": 16,
+        "pairs": 64
+      }
+    }
+  },
+  "training_configs": {
+    "p2-matched-mlp-seed7": {
+      "arguments": {
+        "seed": 7,
+        "parent": null,
+        "kind": "mlp",
+        "policy": "one",
+        "threshold": 0.8,
+        "steps_per_length": 40,
+        "warmup": 300,
+        "batch_size": 4,
+        "geometry": 0.0,
+        "short_control": false,
+        "device": "cuda",
+        "run_dir": "runs/p2-matched-mlp-seed7",
+        "checkpoint": "checkpoints/p2-matched-mlp-seed7.pt"
+      },
+      "config": {
+        "vocab_size": 512,
+        "width": 128,
+        "layers": 4,
+        "heads": 4,
+        "memory_width": 64,
+        "expert_rank": 16,
+        "key_count": 64,
+        "value_count": 16,
+        "key_start": 16,
+        "value_start": 128,
+        "max_length": 256,
+        "memory_layers": [
+          1,
+          3
+        ],
+        "memory_kind": "mlp"
+      },
+      "parameters": 969576,
+      "fast_parameters": 16640,
+      "source": "random initialization"
+    },
+    "p2-mlp-seed7": {
+      "arguments": {
+        "seed": 7,
+        "parent": "checkpoints/p1-seed7.pt",
+        "kind": "mlp",
+        "policy": "one",
+        "threshold": 0.8,
+        "steps_per_length": 40,
+        "warmup": 0,
+        "batch_size": 4,
+        "geometry": 0.0,
+        "device": "cuda",
+        "run_dir": "runs/p2-mlp-seed7",
+        "checkpoint": "checkpoints/p2-mlp-seed7.pt"
+      },
+      "config": {
+        "vocab_size": 512,
+        "width": 128,
+        "layers": 4,
+        "heads": 4,
+        "memory_width": 64,
+        "expert_rank": 16,
+        "key_count": 64,
+        "value_count": 16,
+        "key_start": 16,
+        "value_start": 128,
+        "max_length": 256,
+        "memory_layers": [
+          1,
+          3
+        ],
+        "memory_kind": "mlp"
+      },
+      "parameters": 969576,
+      "fast_parameters": 16640,
+      "source": "P1 lineage continuation"
+    },
+    "p2-short-control-seed7": {
+      "arguments": {
+        "seed": 7,
+        "parent": "checkpoints/p1-seed7.pt",
+        "kind": "mlp",
+        "policy": "one",
+        "threshold": 0.8,
+        "steps_per_length": 40,
+        "warmup": 0,
+        "batch_size": 4,
+        "geometry": 0.0,
+        "short_control": true,
+        "device": "cuda",
+        "run_dir": "runs/p2-short-control-seed7",
+        "checkpoint": "checkpoints/p2-short-control-seed7.pt"
+      },
+      "config": {
+        "vocab_size": 512,
+        "width": 128,
+        "layers": 4,
+        "heads": 4,
+        "memory_width": 64,
+        "expert_rank": 16,
+        "key_count": 64,
+        "value_count": 16,
+        "key_start": 16,
+        "value_start": 128,
+        "max_length": 256,
+        "memory_layers": [
+          1,
+          3
+        ],
+        "memory_kind": "mlp"
+      },
+      "parameters": 969576,
+      "fast_parameters": 16640,
+      "source": "P1 lineage continuation"
+    },
+    "p2-v1-delta-seed11": {
+      "arguments": {
+        "seed": 11,
+        "parent": null,
+        "kind": "delta",
+        "policy": "one",
+        "threshold": 0.8,
+        "steps_per_length": 40,
+        "warmup": 300,
+        "batch_size": 4,
+        "geometry": 0.0,
+        "short_control": false,
+        "device": "cuda",
+        "run_dir": "runs/p2-v1-delta-seed11",
+        "checkpoint": "checkpoints/p2-v1-delta-seed11.pt"
+      },
+      "config": {
+        "vocab_size": 512,
+        "width": 128,
+        "layers": 4,
+        "heads": 4,
+        "memory_width": 90,
+        "expert_rank": 16,
+        "key_count": 64,
+        "value_count": 16,
+        "key_start": 16,
+        "value_start": 128,
+        "max_length": 256,
+        "memory_layers": [
+          1,
+          3
+        ],
+        "memory_kind": "delta"
+      },
+      "parameters": 993576,
+      "fast_parameters": 16200,
+      "source": "random initialization"
+    },
+    "p2-v1-delta-seed23": {
+      "arguments": {
+        "seed": 23,
+        "parent": null,
+        "kind": "delta",
+        "policy": "one",
+        "threshold": 0.8,
+        "steps_per_length": 40,
+        "warmup": 300,
+        "batch_size": 4,
+        "geometry": 0.0,
+        "short_control": false,
+        "device": "cuda",
+        "run_dir": "runs/p2-v1-delta-seed23",
+        "checkpoint": "checkpoints/p2-v1-delta-seed23.pt"
+      },
+      "config": {
+        "vocab_size": 512,
+        "width": 128,
+        "layers": 4,
+        "heads": 4,
+        "memory_width": 90,
+        "expert_rank": 16,
+        "key_count": 64,
+        "value_count": 16,
+        "key_start": 16,
+        "value_start": 128,
+        "max_length": 256,
+        "memory_layers": [
+          1,
+          3
+        ],
+        "memory_kind": "delta"
+      },
+      "parameters": 993576,
+      "fast_parameters": 16200,
+      "source": "random initialization"
+    },
+    "p2-v1-delta-seed7": {
+      "arguments": {
+        "seed": 7,
+        "parent": null,
+        "kind": "delta",
+        "policy": "one",
+        "threshold": 0.8,
+        "steps_per_length": 40,
+        "warmup": 300,
+        "batch_size": 4,
+        "geometry": 0.0,
+        "short_control": false,
+        "device": "cuda",
+        "run_dir": "runs/p2-v1-delta-seed7",
+        "checkpoint": "checkpoints/p2-v1-delta-seed7.pt"
+      },
+      "config": {
+        "vocab_size": 512,
+        "width": 128,
+        "layers": 4,
+        "heads": 4,
+        "memory_width": 90,
+        "expert_rank": 16,
+        "key_count": 64,
+        "value_count": 16,
+        "key_start": 16,
+        "value_start": 128,
+        "max_length": 256,
+        "memory_layers": [
+          1,
+          3
+        ],
+        "memory_kind": "delta"
+      },
+      "parameters": 993576,
+      "fast_parameters": 16200,
+      "source": "random initialization"
+    },
+    "p2-v1-mlp-seed11": {
+      "arguments": {
+        "seed": 11,
+        "parent": "checkpoints/p1-seed11.pt",
+        "kind": "mlp",
+        "policy": "one",
+        "threshold": 0.8,
+        "steps_per_length": 40,
+        "warmup": 0,
+        "batch_size": 4,
+        "geometry": 0.0,
+        "short_control": false,
+        "device": "cuda",
+        "run_dir": "runs/p2-v1-mlp-seed11",
+        "checkpoint": "checkpoints/p2-v1-mlp-seed11.pt"
+      },
+      "config": {
+        "vocab_size": 512,
+        "width": 128,
+        "layers": 4,
+        "heads": 4,
+        "memory_width": 64,
+        "expert_rank": 16,
+        "key_count": 64,
+        "value_count": 16,
+        "key_start": 16,
+        "value_start": 128,
+        "max_length": 256,
+        "memory_layers": [
+          1,
+          3
+        ],
+        "memory_kind": "mlp"
+      },
+      "parameters": 969576,
+      "fast_parameters": 16640,
+      "source": "P1 lineage continuation"
+    },
+    "p2-v1-mlp-seed23": {
+      "arguments": {
+        "seed": 23,
+        "parent": "checkpoints/p1-seed23.pt",
+        "kind": "mlp",
+        "policy": "one",
+        "threshold": 0.8,
+        "steps_per_length": 40,
+        "warmup": 0,
+        "batch_size": 4,
+        "geometry": 0.0,
+        "short_control": false,
+        "device": "cuda",
+        "run_dir": "runs/p2-v1-mlp-seed23",
+        "checkpoint": "checkpoints/p2-v1-mlp-seed23.pt"
+      },
+      "config": {
+        "vocab_size": 512,
+        "width": 128,
+        "layers": 4,
+        "heads": 4,
+        "memory_width": 64,
+        "expert_rank": 16,
+        "key_count": 64,
+        "value_count": 16,
+        "key_start": 16,
+        "value_start": 128,
+        "max_length": 256,
+        "memory_layers": [
+          1,
+          3
+        ],
+        "memory_kind": "mlp"
+      },
+      "parameters": 969576,
+      "fast_parameters": 16640,
+      "source": "P1 lineage continuation"
+    },
+    "p2-v1-mlp-seed7": {
+      "arguments": {
+        "seed": 7,
+        "parent": "checkpoints/p1-seed7.pt",
+        "kind": "mlp",
+        "policy": "one",
+        "threshold": 0.8,
+        "steps_per_length": 40,
+        "warmup": 0,
+        "batch_size": 4,
+        "geometry": 0.0,
+        "short_control": false,
+        "device": "cuda",
+        "run_dir": "runs/p2-v1-mlp-seed7",
+        "checkpoint": "checkpoints/p2-v1-mlp-seed7.pt"
+      },
+      "config": {
+        "vocab_size": 512,
+        "width": 128,
+        "layers": 4,
+        "heads": 4,
+        "memory_width": 64,
+        "expert_rank": 16,
+        "key_count": 64,
+        "value_count": 16,
+        "key_start": 16,
+        "value_start": 128,
+        "max_length": 256,
+        "memory_layers": [
+          1,
+          3
+        ],
+        "memory_kind": "mlp"
+      },
+      "parameters": 969576,
+      "fast_parameters": 16640,
+      "source": "P1 lineage continuation"
+    }
+  },
+  "protection": {
+    "mlp": {
+      "checkpoint": "checkpoints/p2-v1-mlp-seed7.pt",
+      "worlds": 32,
+      "results": [
+        {
+          "method": "none",
+          "pairs": 16,
+          "correction": 0.390625,
+          "unrelated": 0.9557291666666666,
+          "final": 0.962890625,
+          "inner_updates": 768.0,
+          "seconds": 1.9202371999854222
+        },
+        {
+          "method": "none",
+          "pairs": 64,
+          "correction": 0.9375,
+          "unrelated": 0.7046875,
+          "final": 0.72314453125,
+          "inner_updates": 2304.0,
+          "seconds": 4.5309954000404105
+        },
+        {
+          "method": "replay",
+          "pairs": 16,
+          "correction": 0.515625,
+          "unrelated": 0.9791666666666666,
+          "final": 0.97265625,
+          "inner_updates": 2688.0,
+          "seconds": 5.70899139996618
+        },
+        {
+          "method": "replay",
+          "pairs": 64,
+          "correction": 0.515625,
+          "unrelated": 0.9770833333333333,
+          "final": 0.97509765625,
+          "inner_updates": 10368.0,
+          "seconds": 21.242786700022407
+        }
+      ],
+      "scope": "Development-only ablation; no tuning or checkpoint writes",
+      "caveats": [
+        "Replay explicitly consumes historical training samples and extra compute",
+        "Soft projection is a small linear-memory adaptation, not AlphaEdit replication",
+        "Projection uses previously observed keys during learning only; not a query answer database"
+      ]
+    },
+    "delta": {
+      "checkpoint": "checkpoints/p2-v1-delta-seed7.pt",
+      "worlds": 32,
+      "results": [
+        {
+          "method": "none",
+          "pairs": 16,
+          "correction": 1.0,
+          "unrelated": 1.0,
+          "final": 1.0,
+          "inner_updates": 768.0,
+          "seconds": 1.2933897000038996
+        },
+        {
+          "method": "none",
+          "pairs": 64,
+          "correction": 1.0,
+          "unrelated": 0.9890625,
+          "final": 0.98974609375,
+          "inner_updates": 2304.0,
+          "seconds": 2.152666899957694
+        },
+        {
+          "method": "replay",
+          "pairs": 16,
+          "correction": 1.0,
+          "unrelated": 1.0,
+          "final": 1.0,
+          "inner_updates": 2688.0,
+          "seconds": 2.1030486000236124
+        },
+        {
+          "method": "replay",
+          "pairs": 64,
+          "correction": 0.96875,
+          "unrelated": 1.0,
+          "final": 1.0,
+          "inner_updates": 10368.0,
+          "seconds": 7.879329900024459
+        },
+        {
+          "method": "soft_projection",
+          "pairs": 16,
+          "correction": 1.0,
+          "unrelated": 1.0,
+          "final": 1.0,
+          "inner_updates": 768.0,
+          "seconds": 0.5989569999510422
+        },
+        {
+          "method": "soft_projection",
+          "pairs": 64,
+          "correction": 1.0,
+          "unrelated": 0.99375,
+          "final": 0.994140625,
+          "inner_updates": 2304.0,
+          "seconds": 2.0593827000120655
+        }
+      ],
+      "scope": "Development-only ablation; no tuning or checkpoint writes",
+      "caveats": [
+        "Replay explicitly consumes historical training samples and extra compute",
+        "Soft projection is a small linear-memory adaptation, not AlphaEdit replication",
+        "Projection uses previously observed keys during learning only; not a query answer database"
+      ]
+    }
+  },
+  "consolidation": {
+    "mlp": {
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-mlp-seed7.pt",
+      "worlds": [
+        {
+          "world": 0,
+          "stages": [
+            {
+              "stage": 1,
+              "facts": 8,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.25,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 1.0,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.0357142873108387,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": true,
+              "final_loss": 0.0017032265895977616,
+              "restart_match": true
+            },
+            {
+              "stage": 2,
+              "facts": 16,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.5,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 0.9791666865348816,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.6666666865348816,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": true,
+              "final_loss": 0.006921839900314808,
+              "restart_match": true
+            }
+          ]
+        },
+        {
+          "world": 1,
+          "stages": [
+            {
+              "stage": 1,
+              "facts": 8,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.125,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 0.9642857313156128,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.0535714291036129,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": true,
+              "final_loss": 0.0018098328728228807
+            },
+            {
+              "stage": 2,
+              "facts": 16,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.5,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 0.9583333134651184,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.5208333134651184,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": true,
+              "final_loss": 0.009435582906007767
+            }
+          ]
+        },
+        {
+          "world": 2,
+          "stages": [
+            {
+              "stage": 1,
+              "facts": 8,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.0,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 1.0,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.1964285671710968,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": true,
+              "final_loss": 0.0015676626935601234
+            },
+            {
+              "stage": 2,
+              "facts": 16,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.5,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 1.0,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.3125,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": true,
+              "final_loss": 0.00888513308018446
+            }
+          ]
+        }
+      ],
+      "seconds": 212.02760469994973,
+      "protocol": "Fixed steps, training-only replay; whole-model frozen teacher; P-only candidate",
+      "limits": [
+        "Finite fact transfer is not semantic generalization",
+        "Anchor agreement is behavior preservation, not truth accuracy",
+        "Candidate chains retained even after gate failure; no default individual replaced"
+      ]
+    },
+    "delta": {
+      "checkpoint": "D:\\SPORA\\checkpoints\\p2-v1-delta-seed7.pt",
+      "write_policy": "one",
+      "worlds": [
+        {
+          "world": 0,
+          "stages": [
+            {
+              "stage": 1,
+              "facts": 8,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.0,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 0.9285714626312256,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.3392857313156128,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": false,
+              "final_loss": 0.009599609300494194,
+              "restart_match": true,
+              "retained_fast_restart_match": true,
+              "next_stage_status": "candidate continuation only; default unchanged"
+            },
+            {
+              "stage": 2,
+              "facts": 16,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.5,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 0.9166666865348816,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.7291666865348816,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": false,
+              "final_loss": 0.008941223844885826,
+              "restart_match": true,
+              "retained_fast_restart_match": true,
+              "next_stage_status": "candidate continuation only; default unchanged"
+            }
+          ]
+        },
+        {
+          "world": 1,
+          "stages": [
+            {
+              "stage": 1,
+              "facts": 8,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.125,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 0.9285714626312256,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.3392857313156128,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": false,
+              "final_loss": 0.009846539236605167,
+              "next_stage_status": "candidate continuation only; default unchanged"
+            },
+            {
+              "stage": 2,
+              "facts": 16,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.5625,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 0.9375,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.7916666865348816,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": false,
+              "final_loss": 0.007239555008709431,
+              "next_stage_status": "candidate continuation only; default unchanged"
+            }
+          ]
+        },
+        {
+          "world": 2,
+          "stages": [
+            {
+              "stage": 1,
+              "facts": 8,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.125,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 0.8928571939468384,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.2142857313156128,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": false,
+              "final_loss": 0.008273008279502392,
+              "next_stage_status": "candidate continuation only; default unchanged"
+            },
+            {
+              "stage": 2,
+              "facts": 16,
+              "teacher_with_F": 1.0,
+              "before_reset_F": 0.5,
+              "after_reset_F": 1.0,
+              "unrelated_teacher_agreement": 1.0,
+              "after_preserved_F": 1.0,
+              "before_unrelated_agreement": 0.7708333730697632,
+              "steps": 400,
+              "P_only": true,
+              "strict_gate": true,
+              "final_loss": 0.021574392914772034
+            }
+          ]
+        }
+      ],
+      "seconds": 210.58054220001213,
+      "protocol": "Fixed steps, training-only replay; whole-model frozen teacher; P-only candidate",
+      "limits": [
+        "Finite fact transfer is not semantic generalization",
+        "Anchor agreement is behavior preservation, not truth accuracy",
+        "Candidate chains retained even after gate failure; no default individual replaced"
+      ]
+    }
+  },
+  "stress": {
+    "mlp-7": {
+      "checkpoint": "checkpoints/p2-v1-mlp-seed7.pt",
+      "sha256": "0c7b38654d5a3f53cb5f969335df49f7d6f8d4ff774e6d7f46f9f8cdefb4b652",
+      "selected": {
+        "policy": "adaptive-max4",
+        "threshold": 0.5
+      },
+      "results": [
+        {
+          "mode": "same_key",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 0.9462890625,
+          "unrelated": 0.7154459635416667,
+          "final": 0.6474609375,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.1962890625
+        },
+        {
+          "mode": "alternating_four",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 0.9658203125,
+          "unrelated": 0.7163736979166667,
+          "final": 0.671630859375,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.1589543269230769
+        }
+      ],
+      "limits": "Current-value queries only; finite vocabulary; no hyperparameter selection on this stream"
+    },
+    "mlp-11": {
+      "checkpoint": "checkpoints/p2-v1-mlp-seed11.pt",
+      "sha256": "6cf97c1268c4bb9d7787a0849c8ca85aacfa498c7f0f758bfa9cf5ad2a3ae262",
+      "selected": {
+        "policy": "adaptive-max4",
+        "threshold": 0.5
+      },
+      "results": [
+        {
+          "mode": "same_key",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 0.9306640625,
+          "unrelated": 0.7027994791666666,
+          "final": 0.626953125,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.2203275240384615
+        },
+        {
+          "mode": "alternating_four",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 0.9375,
+          "unrelated": 0.7056966145833333,
+          "final": 0.65380859375,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.1799879807692308
+        }
+      ],
+      "limits": "Current-value queries only; finite vocabulary; no hyperparameter selection on this stream"
+    },
+    "mlp-23": {
+      "checkpoint": "checkpoints/p2-v1-mlp-seed23.pt",
+      "sha256": "e2183c5e90ae536e11709ff3ae3fc557f9c5e29b07e962801bd39ebdaa51bf27",
+      "selected": {
+        "policy": "adaptive-max4",
+        "threshold": 0.5
+      },
+      "results": [
+        {
+          "mode": "same_key",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 0.94921875,
+          "unrelated": 0.7206868489583333,
+          "final": 0.65625,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.1859975961538463
+        },
+        {
+          "mode": "alternating_four",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 0.96484375,
+          "unrelated": 0.72509765625,
+          "final": 0.69677734375,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.1467097355769231
+        }
+      ],
+      "limits": "Current-value queries only; finite vocabulary; no hyperparameter selection on this stream"
+    },
+    "delta-7": {
+      "checkpoint": "checkpoints/p2-v1-delta-seed7.pt",
+      "sha256": "5e05cf528c96a8fad84b8a8a4aa614540515cc9e99b1dd302578142e6474c330",
+      "selected": {
+        "policy": "one",
+        "threshold": 0.8
+      },
+      "results": [
+        {
+          "mode": "same_key",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 1.0,
+          "unrelated": 0.9864908854166666,
+          "final": 0.97314453125,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.0
+        },
+        {
+          "mode": "alternating_four",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 1.0,
+          "unrelated": 0.9833821614583333,
+          "final": 0.98291015625,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.0
+        }
+      ],
+      "limits": "Current-value queries only; finite vocabulary; no hyperparameter selection on this stream"
+    },
+    "delta-11": {
+      "checkpoint": "checkpoints/p2-v1-delta-seed11.pt",
+      "sha256": "5a7b92242600b8163a5c1be0bc961c926c2231d76f871e98bc8490b0bc619798",
+      "selected": {
+        "policy": "one",
+        "threshold": 0.8
+      },
+      "results": [
+        {
+          "mode": "same_key",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 1.0,
+          "unrelated": 0.9870768229166667,
+          "final": 0.975341796875,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.0
+        },
+        {
+          "mode": "alternating_four",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 1.0,
+          "unrelated": 0.9845377604166666,
+          "final": 0.98095703125,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.0
+        }
+      ],
+      "limits": "Current-value queries only; finite vocabulary; no hyperparameter selection on this stream"
+    },
+    "delta-23": {
+      "checkpoint": "checkpoints/p2-v1-delta-seed23.pt",
+      "sha256": "abc6b0a918d9f8cc5c24cd853261810be6876d9ac09f85922ecac3aed1e8a060",
+      "selected": {
+        "policy": "one",
+        "threshold": 0.8
+      },
+      "results": [
+        {
+          "mode": "same_key",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 1.0,
+          "unrelated": 0.9847493489583333,
+          "final": 0.96435546875,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.0
+        },
+        {
+          "mode": "alternating_four",
+          "worlds": 64,
+          "rounds": 16,
+          "immediate": 1.0,
+          "after_gap": 1.0,
+          "unrelated": 0.980517578125,
+          "final": 0.9775390625,
+          "untrusted_unchanged": 1.0,
+          "inner_updates_per_trusted_event": 1.0
+        }
+      ],
+      "limits": "Current-value queries only; finite vocabulary; no hyperparameter selection on this stream"
+    }
+  },
+  "compute": {
+    "profile": {
+      "batch_size": 4,
+      "rows": {
+        "mlp": {
+          "per_step": {
+            "warmup": {
+              "covered_flops": 488732215,
+              "operators": {
+                "aten::add": 1845140,
+                "aten::mul": 6753955,
+                "aten::addmm": 156352512,
+                "aten::bmm": 12779520,
+                "aten::mm": 311001088
+              }
+            },
+            "8": {
+              "covered_flops": 1686321561,
+              "operators": {
+                "aten::add": 5620692,
+                "aten::mul": 13309381,
+                "aten::addmm": 544710656,
+                "aten::bmm": 32931840,
+                "aten::mm": 1089748992
+              }
+            },
+            "16": {
+              "covered_flops": 3572685401,
+              "operators": {
+                "aten::add": 7859156,
+                "aten::mul": 20156037,
+                "aten::addmm": 1161469952,
+                "aten::bmm": 60456960,
+                "aten::mm": 2322743296
+              }
+            },
+            "32": {
+              "covered_flops": 8744820345,
+              "operators": {
+                "aten::add": 12729396,
+                "aten::mul": 33948229,
+                "aten::addmm": 2855985152,
+                "aten::bmm": 130252800,
+                "aten::mm": 5711904768
+              }
+            },
+            "64": {
+              "covered_flops": 24686719289,
+              "operators": {
+                "aten::add": 24043124,
+                "aten::mul": 61928133,
+                "aten::addmm": 8089001984,
+                "aten::bmm": 328826880,
+                "aten::mm": 16182919168
+              }
+            }
+          },
+          "matched_event_run_covered_flops": 1694241528340
+        },
+        "delta": {
+          "per_step": {
+            "warmup": {
+              "covered_flops": 483843691,
+              "operators": {
+                "aten::add": 736872,
+                "aten::mul": 2145283,
+                "aten::addmm": 158509056,
+                "aten::bmm": 7990272,
+                "aten::mm": 314462208
+              }
+            },
+            "8": {
+              "covered_flops": 1684694981,
+              "operators": {
+                "aten::add": 3402848,
+                "aten::mul": 4389477,
+                "aten::addmm": 551233536,
+                "aten::bmm": 23300352,
+                "aten::mm": 1102368768
+              }
+            },
+            "16": {
+              "covered_flops": 3574945465,
+              "operators": {
+                "aten::add": 4513460,
+                "aten::mul": 6662405,
+                "aten::addmm": 1173104640,
+                "aten::bmm": 45930240,
+                "aten::mm": 2344734720
+              }
+            },
+            "32": {
+              "covered_flops": 8764350209,
+              "operators": {
+                "aten::add": 7108412,
+                "aten::mul": 11344581,
+                "aten::addmm": 2881038336,
+                "aten::bmm": 105829632,
+                "aten::mm": 5759029248
+              }
+            },
+            "64": {
+              "covered_flops": 24778774801,
+              "operators": {
+                "aten::add": 13793228,
+                "aten::mul": 21254213,
+                "aten::addmm": 8153671680,
+                "aten::bmm": 284186880,
+                "aten::mm": 16305868800
+              }
+            }
+          },
+          "matched_event_run_covered_flops": 1697263725540
+        }
+      },
+      "limitations": [
+        "PyTorch profiler counts supported arithmetic only; nonlinear ops, memory traffic and kernel overhead are incomplete",
+        "CPU trace used for arithmetic shapes; concurrent wall times are not equal-compute evidence",
+        "Same counts assumed per shape; clipped-gradient numeric values do not change tensor shapes"
+      ]
+    },
+    "counter": {
+      "batch_size": 4,
+      "method": "dispatch",
+      "rows": {
+        "mlp": {
+          "per_step": {
+            "warmup": {
+              "covered_flops": 480133120,
+              "operators": {
+                "aten.addmm": 156352512,
+                "aten.bmm": 12779520,
+                "aten.mm": 311001088
+              }
+            },
+            "8": {
+              "covered_flops": 1667391488,
+              "operators": {
+                "aten.addmm": 544710656,
+                "aten.bmm": 32931840,
+                "aten.mm": 1089748992
+              }
+            },
+            "16": {
+              "covered_flops": 3544670208,
+              "operators": {
+                "aten.addmm": 1161469952,
+                "aten.bmm": 60456960,
+                "aten.mm": 2322743296
+              }
+            },
+            "32": {
+              "covered_flops": 8698142720,
+              "operators": {
+                "aten.addmm": 2855985152,
+                "aten.bmm": 130252800,
+                "aten.mm": 5711904768
+              }
+            },
+            "64": {
+              "covered_flops": 24600748032,
+              "operators": {
+                "aten.addmm": 8089001984,
+                "aten.bmm": 328826880,
+                "aten.mm": 16182919168
+              }
+            }
+          },
+          "matched_event_run_covered_flops": 1684478033920
+        },
+        "delta": {
+          "per_step": {
+            "warmup": {
+              "covered_flops": 480961536,
+              "operators": {
+                "aten.addmm": 158509056,
+                "aten.bmm": 7990272,
+                "aten.mm": 314462208
+              }
+            },
+            "8": {
+              "covered_flops": 1676902656,
+              "operators": {
+                "aten.addmm": 551233536,
+                "aten.bmm": 23300352,
+                "aten.mm": 1102368768
+              }
+            },
+            "16": {
+              "covered_flops": 3563769600,
+              "operators": {
+                "aten.addmm": 1173104640,
+                "aten.bmm": 45930240,
+                "aten.mm": 2344734720
+              }
+            },
+            "32": {
+              "covered_flops": 8745897216,
+              "operators": {
+                "aten.addmm": 2881038336,
+                "aten.bmm": 105829632,
+                "aten.mm": 5759029248
+              }
+            },
+            "64": {
+              "covered_flops": 24743727360,
+              "operators": {
+                "aten.addmm": 8153671680,
+                "aten.bmm": 284186880,
+                "aten.mm": 16305868800
+              }
+            }
+          },
+          "matched_event_run_covered_flops": 1693500334080
+        }
+      },
+      "limitations": [
+        "PyTorch counts supported arithmetic only; nonlinear ops, memory traffic and kernel overhead are incomplete",
+        "CPU trace used for arithmetic shapes; concurrent wall times are not equal-compute evidence",
+        "Same counts assumed per shape; clipped-gradient numeric values do not change tensor shapes"
+      ]
+    }
+  },
+  "integrity": {
+    "checkpoints/p1-seed7.pt": {
+      "sha256": "fb81a75a8eb3859dc027012fb60224aaf0551e4826577c2aebe70ae00f228a71",
+      "unchanged": true
+    },
+    "checkpoints/p1-seed11.pt": {
+      "sha256": "5f49bfebd12d4cd76be5e46888783785c07000be0bae4ed94ffbf76e3d51944d",
+      "unchanged": true
+    },
+    "checkpoints/p1-seed23.pt": {
+      "sha256": "f53ba42944a6c96c0163c54f4d10a8fa3ecd19e46c9a246d7339ba6876e5af02",
+      "unchanged": true
+    },
+    "checkpoints/individual.pt": {
+      "sha256": "85b34a36ab567586740e895411d3569facac9312cdeb4504d1f168f4098be037",
+      "unchanged": true
+    },
+    "default": {
+      "path": "checkpoints/individual.pt",
+      "sha256": "85b34a36ab567586740e895411d3569facac9312cdeb4504d1f168f4098be037",
+      "cursor": 1,
+      "key12_answer": 5,
+      "restart_match": true,
+      "memory_kind": "mlp"
+    },
+    "candidate": {
+      "path": "checkpoints/individual-p2-candidate.pt",
+      "sha256": "2c94e6de0cc20054407828a158396804115b872fffd4edb81dda6726bd4e6961",
+      "cursor": 2,
+      "key12_answer": 9,
+      "restart_match": true,
+      "memory_kind": "delta"
+    }
+  },
+  "mean_64": {
+    "mlp-one": {
+      "initial": 0.8563639322916666,
+      "corrected": 0.9231770833333334,
+      "unrelated": 0.7131944444444445,
+      "final": 0.7311197916666666,
+      "oldest8": 0.7291666666666666,
+      "latest8": 0.9368489583333334,
+      "inner_updates_per_trusted_event": 1.0
+    },
+    "mlp-selected": {
+      "initial": 0.843017578125,
+      "corrected": 1.0,
+      "unrelated": 0.6815972222222223,
+      "final": 0.7014973958333334,
+      "oldest8": 0.7154947916666666,
+      "latest8": 0.919921875,
+      "inner_updates_per_trusted_event": 1.0229311342592593
+    },
+    "delta-one": {
+      "initial": 0.9921875,
+      "corrected": 1.0,
+      "unrelated": 0.9890625000000001,
+      "final": 0.98974609375,
+      "oldest8": 0.9720052083333334,
+      "latest8": 1.0,
+      "inner_updates_per_trusted_event": 1.0
+    },
+    "delta-selected": {
+      "initial": 0.9921875,
+      "corrected": 1.0,
+      "unrelated": 0.9890625000000001,
+      "final": 0.98974609375,
+      "oldest8": 0.9720052083333334,
+      "latest8": 1.0,
+      "inner_updates_per_trusted_event": 1.0
+    }
+  },
+  "tests": {
+    "command": "python -m unittest discover -s tests -v",
+    "passed": 17
+  },
+  "limits": [
+    "Historical event queries specified but not implemented",
+    "Trust bit externally supplied",
+    "Only 64 keys and 16 values; symbols are seen during training",
+    "No exact hardware-cost-matched trial; covered arithmetic differs by less than one percent",
+    "Only one matched-event seed and one consolidation foundation per architecture",
+    "Five delta consolidation gates failed; no safe default migration demonstrated"
+  ]
+}

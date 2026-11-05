@@ -1,0 +1,32 @@
+{
+  "stage": "P2 bounded correction, interference and consolidation experiments",
+  "date": "2026-11-05",
+  "training_seeds": [7, 11, 23],
+  "development_seed": 510000,
+  "audit_seed": 610000,
+  "audit_worlds_per_seed": 64,
+  "training": {
+    "curriculum_lengths": [8, 16, 32, 64],
+    "steps_per_length": 40,
+    "batch_size": 4,
+    "segment_events": 8,
+    "truth": "current value follows last trusted correction; historical event is a distinct future query type",
+    "source": "environment-supplied trust bit; not learned source reasoning",
+    "update_boundary": "outer parameters update only after the full world",
+    "long_gradient": "exact within segments, truncated across segments; fast values persist",
+    "parent": "MLP candidates continue the corresponding randomly initialized P1 lineage"
+  },
+  "writing_policies": ["one", "two", "adaptive-max4"],
+  "development_thresholds": [0.5, 0.8, 0.95],
+  "delta_control": "normalized-key two-matrix delta update; train from random initialization; equal fast-weight budget approximately",
+  "protection_controls": ["no protection", "current-world training-only replay", "soft protected-subspace update"],
+  "geometry_penalty": "implemented option, not evaluated in this round",
+  "consolidation": {
+    "trainable": "slow experts only",
+    "teacher": "frozen whole pre-consolidation model with fast memory",
+    "replay": "known experience keys, values for training only",
+    "publish_gate": "reset-fast accuracy >= teacher minus 0.05; unrelated loss <= 0.05; restart identical"
+  },
+  "publication": "do not replace the default individual; retain all seeds and failures",
+  "scope": "finite symbolic research, no language or artificial-life claim"
+}
