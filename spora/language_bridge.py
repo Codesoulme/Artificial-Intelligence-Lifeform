@@ -7,6 +7,7 @@ teach semantic access. This file does not claim language ability.
 import torch
 from torch import nn
 from torch.nn import functional as F
+from .memory_read import MemoryReadPlan
 
 BOS=256
 EOS=257
@@ -24,8 +25,11 @@ def decode(tokens):
 
 
 class LanguageBridge(nn.Module):
-    def __init__(self,organism):
+    def __init__(self,organism,read_mode='exact',read_error_l2=1e-4):
         super().__init__();self.organism=organism
+        if read_mode not in ('legacy','exact','bounded'):raise ValueError('Invalid read mode')
+        self.read_mode=read_mode;self.read_error_l2=read_error_l2
+        self._read_plans={};self.last_read_stats=[]
         for p in organism.parameters():p.requires_grad_(False)
         d=organism.config.width;m=organism.config.memory_width
         self.byte_embedding=nn.Embedding(VOCAB,d,padding_idx=PAD)
@@ -43,6 +47,7 @@ class LanguageBridge(nn.Module):
         if tokens.shape[1]<1 or tokens.shape[1]>self.organism.config.max_length:raise ValueError('Context extent invalid')
         if bool(((tokens<0)|(tokens>=VOCAB)).any()):raise ValueError('Byte token out of range')
         b,n=tokens.shape;device=tokens.device
+        self.last_read_stats=[]
         x=self.byte_embedding(tokens)+self.byte_position(torch.arange(n,device=device))
         layer_site=0
         for i,block in enumerate(self.organism.blocks):
@@ -51,12 +56,24 @@ class LanguageBridge(nn.Module):
                 q=F.normalize(self.query_projection(x),dim=-1)
                 matrices=[state.current[layer_site]]+[page[layer_site][0] for page in state.pages]
                 # Read-only access to value-bearing neural matrices; no raw observations.
-                retrieved=torch.stack([torch.einsum('bmd,bnd->bnm',matrix.expand(b,-1,-1).detach(),q) for matrix in matrices],2)
-                # Content-based mixture; page index is not used as an answer lookup.
-                scores=(retrieved*q.unsqueeze(2)).sum(-1)/(q.shape[-1]**.5)
                 page_keys=self.page_key(torch.arange(len(matrices),device=device))
-                scores=scores+torch.einsum('bnm,pm->bnp',q,page_keys)/(q.shape[-1]**.5)
-                mixed=(retrieved*scores.softmax(2).unsqueeze(-1)).sum(2)
+                # Preserve the existing gradient path for all training. Prepared
+                # read plans are derived, disposable inference state only.
+                unversioned=any(torch.is_inference(matrix) for matrix in matrices)
+                if torch.is_grad_enabled() or self.read_mode=='legacy' or unversioned:
+                    retrieved=torch.stack([torch.einsum('bmd,bnd->bnm',matrix.expand(b,-1,-1).detach(),q) for matrix in matrices],2)
+                    scores=(retrieved*q.unsqueeze(2)).sum(-1)/(q.shape[-1]**.5)
+                    scores=scores+torch.einsum('bnm,pm->bnp',q,page_keys)/(q.shape[-1]**.5)
+                    mixed=(retrieved*scores.softmax(2).unsqueeze(-1)).sum(2)
+                    stats={'mode':'training' if torch.is_grad_enabled() else ('legacy-unversioned' if unversioned else 'legacy'),
+                           'matrix_vectors':b*n*len(matrices),'baseline_matrix_vectors':b*n*len(matrices)}
+                else:
+                    plan=self._read_plans.get(layer_site)
+                    rebuild=plan is None or not plan.matches(matrices)
+                    if rebuild:plan=MemoryReadPlan(matrices);self._read_plans[layer_site]=plan
+                    mixed,stats=plan.read(q,page_keys,self.read_mode,self.read_error_l2)
+                    stats.update(plan_rebuilt=rebuild,plan_tensor_bytes=plan.tensor_bytes)
+                self.last_read_stats.append(stats)
                 x=x+torch.sigmoid(self.read_strength)*self.read_projection(mixed)
                 layer_site+=1
         x=x+self.adapter(x)
