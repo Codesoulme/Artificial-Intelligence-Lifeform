@@ -1,0 +1,7 @@
+{
+  "initial_audit": "runs/p14-p15-audit/audit.json",
+  "failure": "Incorrect test assumption: one exception on the even-parity subset is linearly separable, so its acceptance is legitimate. Original audit marked all six worlds failed.",
+  "revision": "Retain the exception/prioritization check and add XOR on independent supplied attributes as the explicitly nonseparable consolidation-rejection task. No learning hyperparameters changed.",
+  "new_audit_seed": 2530000,
+  "limitation": "Agreement and high output scores on observed facts do not guarantee the inferred rule is true on unseen keys. Semantic output always remains inference."
+}

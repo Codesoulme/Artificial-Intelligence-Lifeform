@@ -1,0 +1,8 @@
+{
+  "initial_attempt": "runs/p16-runtime-audit; runs/p16-runtime.log",
+  "failures": [
+    "Stress fixture changed the first dictionary tensor; serialized key order differed on restart, so the post-commit continuation comparison changed two different tensors. All seven recovery snapshots were exact. Fix: explicitly mutate observed, a named tensor.",
+    "The inherited first history page was already sealed; attempting to consolidate it correctly raised ValueError. Fix: fill the next active page using labeled simulated observations, then test actual consolidation of that page."
+  ],
+  "revision": "runs/p16-runtime-audit-v2, no production persistence behavior or acceptance thresholds changed"
+}

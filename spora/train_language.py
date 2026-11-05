@@ -1,51 +1,98 @@
-"""Finite future language training. Explicit flag required; not run by readiness."""
-import argparse,hashlib,json,os,time
+"""Finite future language training; explicit launch, strict lineage, resumable."""
+import argparse
+import hashlib
+import json
+import time
 from pathlib import Path
 import torch
 from .growing import load
-from .language_bridge import LanguageBridge,causal_loss,PAD
-from .text_data import read_manifest,windows
+from .language_bridge import LanguageBridge, causal_loss, PAD
+from .language_training import ByteTrainer, load_interface, atomic_save, frozen_digest
+from .text_data import read_manifest, windows, overlap_audit
+
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--individual',required=True);p.add_argument('--interface',required=True)
-    p.add_argument('--manifest',required=True);p.add_argument('--output',required=True)
-    p.add_argument('--start-language-training',action='store_true');p.add_argument('--steps',type=int,default=100)
-    p.add_argument('--batch',type=int,default=4);p.add_argument('--length',type=int,default=128)
-    p.add_argument('--seed',type=int,default=1910000);p.add_argument('--device',choices=['cpu','cuda'],default='cuda')
-    a=p.parse_args()
-    if not a.start_language_training:p.error('Explicit --start-language-training required; readiness does not train text')
-    if not 1<=a.steps<=10000 or not 1<=a.batch<=16 or not 2<=a.length<=256:p.error('Invalid finite budget')
-    output=Path(a.output)
-    if output.exists():raise FileExistsError('Choose a new trial directory')
-    documents=read_manifest(a.manifest);train=windows(documents,'train',a.length);dev=windows(documents,'development',a.length)
-    # Test text is validated for provenance/deduplication, never used for updates or model selection here.
-    digest=hashlib.sha256(Path(a.individual).read_bytes()).hexdigest()
-    payload=torch.load(a.interface,map_location='cpu',weights_only=True)
-    if payload['organism_sha256']!=digest:raise ValueError('Interface belongs to a different individual')
-    torch.set_num_threads(2);torch.manual_seed(a.seed);generator=torch.Generator().manual_seed(a.seed)
-    organism,state,_=load(a.individual,a.device);model=LanguageBridge(organism).to(a.device)
-    merged=model.state_dict();merged.update(payload['state']);model.load_state_dict(merged)
-    optimizer=torch.optim.AdamW(model.trainable_parameters(),lr=3e-4,weight_decay=.01)
-    output.mkdir(parents=True);started=time.perf_counter();tokens_seen=0
-    metadata={'arguments':vars(a),'parent_sha256':digest,'source_interface_sha256':hashlib.sha256(Path(a.interface).read_bytes()).hexdigest(),
-              'manifest_sha256':hashlib.sha256(Path(a.manifest).read_bytes()).hexdigest(),
-              'documents':[{k:v for k,v in d.items() if k!='text'} for d in documents],
-              'limitations':'Local byte prediction trial; no semantic event writer, frozen organism'}
-    (output/'config.json').write_text(json.dumps(metadata,ensure_ascii=False,indent=2),encoding='utf-8')
-    with (output/'metrics.jsonl').open('w') as log:
-        for step in range(a.steps):
-            ids=torch.randint(len(train),(a.batch,),generator=generator);batch=train[ids].to(a.device)
-            optimizer.zero_grad(set_to_none=True);loss=causal_loss(model(batch,state),batch)
-            loss.backward();torch.nn.utils.clip_grad_norm_(model.trainable_parameters(),1.,error_if_nonfinite=True);optimizer.step()
-            tokens_seen+=int((batch[:,1:]!=PAD).sum())
-            if (step+1)%10==0 or step==a.steps-1:
-                with torch.no_grad():validation=sum(float(causal_loss(model(d[None].to(a.device),state),d[None].to(a.device))) for d in dev)/len(dev)
-                row={'step':step+1,'train_loss':float(loss.detach()),'development_loss':validation,'tokens_seen':tokens_seen,'seconds':time.perf_counter()-started}
-                log.write(json.dumps(row)+'\n');log.flush();print(json.dumps(row),flush=True)
-    state_dict={k:v.detach().cpu() for k,v in model.state_dict().items() if not k.startswith('organism.')}
-    temporary=output/'interface.pt.tmp';torch.save({'format':'spora-byte-interface-v1','organism_sha256':digest,'state':state_dict,
-        'trained_tokens':tokens_seen,'optimizer':optimizer.state_dict()},temporary);os.replace(temporary,output/'interface.pt')
-    if hashlib.sha256(Path(a.individual).read_bytes()).hexdigest()!=digest:raise AssertionError('Parent file changed')
-    (output/'complete.json').write_text(json.dumps({'steps':a.steps,'tokens_seen':tokens_seen,'parent_unchanged':True}))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--individual', required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument('--interface')
+    source.add_argument('--resume')
+    parser.add_argument('--manifest', required=True)
+    parser.add_argument('--output', required=True)
+    parser.add_argument('--start-language-training', action='store_true')
+    parser.add_argument('--steps', type=int, default=100, help='Additional steps; total must be <=10000')
+    parser.add_argument('--batch', type=int, default=4)
+    parser.add_argument('--length', type=int, default=128)
+    parser.add_argument('--seed', type=int, default=1910000)
+    parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda')
+    parser.add_argument('--save-every', type=int, default=10)
+    args = parser.parse_args()
+    if not args.start_language_training:
+        parser.error('Explicit --start-language-training required; readiness does not train text')
+    if not 1 <= args.steps <= 10000 or not 1 <= args.batch <= 16 or not 2 <= args.length <= 256 or not 1 <= args.save_every <= 100:
+        parser.error('Invalid finite budget')
+    output = Path(args.output)
+    if output.exists():
+        raise FileExistsError('Choose a new trial directory, including on resume')
+    documents = read_manifest(args.manifest)
+    train, dev = [windows(documents, split, args.length) for split in ('train', 'development')]
+    # Test documents are checked for provenance/overlap, not used for selection.
+    digest = hashlib.sha256(Path(args.individual).read_bytes()).hexdigest()
+    source_file = Path(args.resume or args.interface)
+    payload = torch.load(source_file, map_location='cpu', weights_only=True)
+    provenance = {'manifest_sha256': hashlib.sha256(Path(args.manifest).read_bytes()).hexdigest(),
+        'documents': [{k: v for k, v in d.items() if k != 'text'} for d in documents],
+        'seed': args.seed, 'batch': args.batch, 'length': args.length, 'device': args.device}
+    torch.set_num_threads(2)
+    torch.manual_seed(args.seed)
+    organism, state, _ = load(args.individual, args.device)
+    original_tensors = frozen_digest(organism, state)
+    model = LanguageBridge(organism).to(args.device)
+    if args.length > organism.config.max_length:
+        raise ValueError('Context exceeds this organism configuration')
+    trainer = ByteTrainer(model, state, digest, provenance, args.seed)
+    if args.resume:
+        trainer.restore(payload)
+    else:
+        if payload.get('format') != 'spora-byte-interface-v1' or payload.get('trained_tokens') != 0:
+            raise ValueError('Use --resume with a v2 checkpoint for trained interfaces')
+        load_interface(model, payload, digest)
+    if trainer.steps+args.steps > 10000:
+        raise ValueError('Total pilot budget exceeds 10000 steps')
+    output.mkdir(parents=True)
+    metadata = {'arguments': vars(args), 'parent_sha256': digest, 'provenance': provenance,
+        'source_checkpoint_sha256': hashlib.sha256(source_file.read_bytes()).hexdigest(),
+        'overlap': overlap_audit(documents),
+        'limitations': 'Byte prediction; entire organism frozen; no text-to-event writer or skill alignment'}
+    (output/'config.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding='utf-8')
+    started = time.perf_counter()
+    with (output/'metrics.jsonl').open('w', encoding='utf-8') as log:
+        for additional in range(args.steps):
+            loss = trainer.step(train, args.batch)
+            final = additional == args.steps-1
+            if trainer.steps % args.save_every == 0 or final:
+                atomic_save(trainer.snapshot(), output/'checkpoint.pt')
+            if trainer.steps % 10 == 0 or final:
+                with torch.no_grad():
+                    total, count = 0., 0
+                    for row in dev:
+                        batch = row[None].to(args.device)
+                        weight = int((batch[:, 1:] != PAD).sum())
+                        total += float(causal_loss(model(batch, state), batch))*weight
+                        count += weight
+                    validation = total/count
+                record = {'step': trainer.steps, 'train_loss': loss, 'development_loss': validation,
+                    'tokens_seen': trainer.tokens_seen, 'seconds_this_run': time.perf_counter()-started}
+                log.write(json.dumps(record)+'\n')
+                log.flush()
+                print(json.dumps(record), flush=True)
+    if hashlib.sha256(Path(args.individual).read_bytes()).hexdigest() != digest:
+        raise AssertionError('Parent file changed')
+    if frozen_digest(organism, state) != original_tensors:
+        raise AssertionError('Frozen organism or experience tensors changed during training')
+    (output/'complete.json').write_text(json.dumps({'steps': trainer.steps, 'tokens_seen': trainer.tokens_seen,
+        'parent_unchanged': True, 'all_organism_tensors_unchanged': True, 'organism_tensor_digest': original_tensors}))
 
-if __name__=='__main__':main()
+
+if __name__ == '__main__':
+    main()

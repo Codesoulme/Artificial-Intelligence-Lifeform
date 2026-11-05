@@ -1,0 +1,1291 @@
+{
+  "concepts_skills": {
+    "concepts": [
+      {
+        "seed": 7,
+        "world": 0,
+        "rule_axes": [
+          4,
+          0,
+          3,
+          5
+        ],
+        "rule_complements": [
+          1,
+          1,
+          0,
+          1
+        ],
+        "gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.00237583601847291,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9973125457763672,
+          "reason": "accepted"
+        },
+        "held_out_combinations": 32,
+        "held_out_accuracy": 1.0,
+        "inferred_fraction": 1.0,
+        "episodic_unknown_unchanged": true,
+        "ablation_unknown": true,
+        "stale_abstains": true,
+        "nonfactual_exclusion_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 9.26324719330296e-06,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9999895095825195,
+          "reason": "accepted"
+        },
+        "after_nonfactual_accuracy": 1.0,
+        "correction_observed_priority": true,
+        "single_exception_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.0013754991814494133,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9844801425933838,
+          "reason": "accepted"
+        },
+        "conflict_gate": {
+          "accepted": false,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.17328748106956482,
+          "bit_accuracy": 0.875,
+          "minimum_correct_bit_confidence": 0.4984019994735718,
+          "reason": "conflicting_or_unlearned_facts"
+        },
+        "rejected_candidate_preserves_previous": true,
+        "history_accuracy": 1.0,
+        "sources_exact": true,
+        "restart_exact": true,
+        "passed": true
+      },
+      {
+        "seed": 7,
+        "world": 1,
+        "rule_axes": [
+          4,
+          1,
+          3,
+          5
+        ],
+        "rule_complements": [
+          0,
+          0,
+          1,
+          0
+        ],
+        "gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.002383190207183361,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9972133636474609,
+          "reason": "accepted"
+        },
+        "held_out_combinations": 32,
+        "held_out_accuracy": 1.0,
+        "inferred_fraction": 1.0,
+        "episodic_unknown_unchanged": true,
+        "ablation_unknown": true,
+        "stale_abstains": true,
+        "nonfactual_exclusion_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 9.157762178801931e-06,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9999891519546509,
+          "reason": "accepted"
+        },
+        "after_nonfactual_accuracy": 1.0,
+        "correction_observed_priority": true,
+        "single_exception_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.0013759216526523232,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9844614863395691,
+          "reason": "accepted"
+        },
+        "conflict_gate": {
+          "accepted": false,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.17328684031963348,
+          "bit_accuracy": 0.875,
+          "minimum_correct_bit_confidence": 0.4996573328971863,
+          "reason": "conflicting_or_unlearned_facts"
+        },
+        "rejected_candidate_preserves_previous": true,
+        "history_accuracy": 1.0,
+        "sources_exact": true,
+        "restart_exact": true,
+        "passed": true
+      },
+      {
+        "seed": 11,
+        "world": 0,
+        "rule_axes": [
+          4,
+          0,
+          3,
+          5
+        ],
+        "rule_complements": [
+          1,
+          1,
+          0,
+          1
+        ],
+        "gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.0025194291956722736,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9974594116210938,
+          "reason": "accepted"
+        },
+        "held_out_combinations": 32,
+        "held_out_accuracy": 1.0,
+        "inferred_fraction": 1.0,
+        "episodic_unknown_unchanged": true,
+        "ablation_unknown": true,
+        "stale_abstains": true,
+        "nonfactual_exclusion_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 9.661855074227788e-06,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9999901056289673,
+          "reason": "accepted"
+        },
+        "after_nonfactual_accuracy": 1.0,
+        "correction_observed_priority": true,
+        "single_exception_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.0013791096862405539,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9845101833343506,
+          "reason": "accepted"
+        },
+        "conflict_gate": {
+          "accepted": false,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.1732873022556305,
+          "bit_accuracy": 0.875,
+          "minimum_correct_bit_confidence": 0.4988878071308136,
+          "reason": "conflicting_or_unlearned_facts"
+        },
+        "rejected_candidate_preserves_previous": true,
+        "history_accuracy": 1.0,
+        "sources_exact": true,
+        "restart_exact": true,
+        "passed": true
+      },
+      {
+        "seed": 11,
+        "world": 1,
+        "rule_axes": [
+          4,
+          1,
+          3,
+          5
+        ],
+        "rule_complements": [
+          0,
+          0,
+          1,
+          0
+        ],
+        "gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.0025130335707217455,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9970691800117493,
+          "reason": "accepted"
+        },
+        "held_out_combinations": 32,
+        "held_out_accuracy": 1.0,
+        "inferred_fraction": 1.0,
+        "episodic_unknown_unchanged": true,
+        "ablation_unknown": true,
+        "stale_abstains": true,
+        "nonfactual_exclusion_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 9.885588042379823e-06,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9999885559082031,
+          "reason": "accepted"
+        },
+        "after_nonfactual_accuracy": 1.0,
+        "correction_observed_priority": true,
+        "single_exception_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.0013786989729851484,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9844363927841187,
+          "reason": "accepted"
+        },
+        "conflict_gate": {
+          "accepted": false,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.17328695952892303,
+          "bit_accuracy": 0.875,
+          "minimum_correct_bit_confidence": 0.4992174208164215,
+          "reason": "conflicting_or_unlearned_facts"
+        },
+        "rejected_candidate_preserves_previous": true,
+        "history_accuracy": 1.0,
+        "sources_exact": true,
+        "restart_exact": true,
+        "passed": true
+      },
+      {
+        "seed": 23,
+        "world": 0,
+        "rule_axes": [
+          4,
+          0,
+          3,
+          5
+        ],
+        "rule_complements": [
+          1,
+          1,
+          0,
+          1
+        ],
+        "gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.002529481425881386,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9969443678855896,
+          "reason": "accepted"
+        },
+        "held_out_combinations": 32,
+        "held_out_accuracy": 1.0,
+        "inferred_fraction": 1.0,
+        "episodic_unknown_unchanged": true,
+        "ablation_unknown": true,
+        "stale_abstains": true,
+        "nonfactual_exclusion_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 9.680454240879044e-06,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9999880790710449,
+          "reason": "accepted"
+        },
+        "after_nonfactual_accuracy": 1.0,
+        "correction_observed_priority": true,
+        "single_exception_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.0013782422756776214,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9844159483909607,
+          "reason": "accepted"
+        },
+        "conflict_gate": {
+          "accepted": false,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.17328684031963348,
+          "bit_accuracy": 0.875,
+          "minimum_correct_bit_confidence": 0.4995152950286865,
+          "reason": "conflicting_or_unlearned_facts"
+        },
+        "rejected_candidate_preserves_previous": true,
+        "history_accuracy": 1.0,
+        "sources_exact": true,
+        "restart_exact": true,
+        "passed": true
+      },
+      {
+        "seed": 23,
+        "world": 1,
+        "rule_axes": [
+          4,
+          1,
+          3,
+          5
+        ],
+        "rule_complements": [
+          0,
+          0,
+          1,
+          0
+        ],
+        "gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.0021946667693555355,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9971650242805481,
+          "reason": "accepted"
+        },
+        "held_out_combinations": 32,
+        "held_out_accuracy": 1.0,
+        "inferred_fraction": 1.0,
+        "episodic_unknown_unchanged": true,
+        "ablation_unknown": true,
+        "stale_abstains": true,
+        "nonfactual_exclusion_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 8.67315520736156e-06,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.9999889731407166,
+          "reason": "accepted"
+        },
+        "after_nonfactual_accuracy": 1.0,
+        "correction_observed_priority": true,
+        "single_exception_gate": {
+          "accepted": true,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.001370669575408101,
+          "bit_accuracy": 1.0,
+          "minimum_correct_bit_confidence": 0.984453022480011,
+          "reason": "accepted"
+        },
+        "conflict_gate": {
+          "accepted": false,
+          "facts": 32,
+          "steps": 800,
+          "loss": 0.1732867956161499,
+          "bit_accuracy": 0.875,
+          "minimum_correct_bit_confidence": 0.4999077320098877,
+          "reason": "conflicting_or_unlearned_facts"
+        },
+        "rejected_candidate_preserves_previous": true,
+        "history_accuracy": 1.0,
+        "sources_exact": true,
+        "restart_exact": true,
+        "passed": true
+      }
+    ],
+    "skills": [
+      {
+        "seed": 7,
+        "updates": 1500,
+        "feedback_presentations": 192000,
+        "last_loss": 1.7966991826615097e-14,
+        "training_seconds": 2.1175883000250906,
+        "held_out_episodes": 512,
+        "controls": {
+          "learned": {
+            "success_rate": 0.99609375,
+            "mean_distance": 0.09249192476272583,
+            "mean_steps_capped13": 7.5546875
+          },
+          "untrained": {
+            "success_rate": 0.404296875,
+            "mean_distance": 0.8982717990875244,
+            "mean_steps_capped13": 10.80078125
+          },
+          "random": {
+            "success_rate": 0.001953125,
+            "mean_distance": 1.2138166427612305,
+            "mean_steps_capped13": 12.998046875
+          },
+          "oracle": {
+            "success_rate": 0.99609375,
+            "mean_distance": 0.09249192476272583,
+            "mean_steps_capped13": 7.5546875
+          }
+        },
+        "translated_action_agreement": 1.0,
+        "parameters": 30,
+        "passed": true
+      },
+      {
+        "seed": 11,
+        "updates": 1500,
+        "feedback_presentations": 192000,
+        "last_loss": 9.382170604657625e-15,
+        "training_seconds": 1.9747839999618009,
+        "held_out_episodes": 512,
+        "controls": {
+          "learned": {
+            "success_rate": 0.994140625,
+            "mean_distance": 0.0991642028093338,
+            "mean_steps_capped13": 7.46484375
+          },
+          "untrained": {
+            "success_rate": 0.0,
+            "mean_distance": 1.5219056606292725,
+            "mean_steps_capped13": 13.0
+          },
+          "random": {
+            "success_rate": 0.005859375,
+            "mean_distance": 1.2357856035232544,
+            "mean_steps_capped13": 12.984375
+          },
+          "oracle": {
+            "success_rate": 0.994140625,
+            "mean_distance": 0.0991642028093338,
+            "mean_steps_capped13": 7.46484375
+          }
+        },
+        "translated_action_agreement": 1.0,
+        "parameters": 30,
+        "passed": true
+      },
+      {
+        "seed": 23,
+        "updates": 1500,
+        "feedback_presentations": 192000,
+        "last_loss": 1.8141467061222327e-14,
+        "training_seconds": 2.0160456999437883,
+        "held_out_episodes": 512,
+        "controls": {
+          "learned": {
+            "success_rate": 0.998046875,
+            "mean_distance": 0.09384474903345108,
+            "mean_steps_capped13": 7.583984375
+          },
+          "untrained": {
+            "success_rate": 0.0,
+            "mean_distance": 1.5291433334350586,
+            "mean_steps_capped13": 13.0
+          },
+          "random": {
+            "success_rate": 0.00390625,
+            "mean_distance": 1.216190218925476,
+            "mean_steps_capped13": 12.986328125
+          },
+          "oracle": {
+            "success_rate": 0.998046875,
+            "mean_distance": 0.09384474903345108,
+            "mean_steps_capped13": 7.583984375
+          }
+        },
+        "translated_action_agreement": 1.0,
+        "parameters": 30,
+        "passed": true
+      }
+    ],
+    "audit_seed": 2530000,
+    "passed": true
+  },
+  "head_ablation": {
+    "rows": [
+      {
+        "seed": 7,
+        "world": 0,
+        "trained_head_accuracy": 1.0,
+        "zero_head_all_bits_half": true,
+        "counters_unchanged": true,
+        "restored_exact": true,
+        "note": "Direct head probe; the saved corrected individual deliberately keeps this old rule stale",
+        "passed": true
+      },
+      {
+        "seed": 7,
+        "world": 1,
+        "trained_head_accuracy": 1.0,
+        "zero_head_all_bits_half": true,
+        "counters_unchanged": true,
+        "restored_exact": true,
+        "note": "Direct head probe; the saved corrected individual deliberately keeps this old rule stale",
+        "passed": true
+      },
+      {
+        "seed": 11,
+        "world": 0,
+        "trained_head_accuracy": 1.0,
+        "zero_head_all_bits_half": true,
+        "counters_unchanged": true,
+        "restored_exact": true,
+        "note": "Direct head probe; the saved corrected individual deliberately keeps this old rule stale",
+        "passed": true
+      },
+      {
+        "seed": 11,
+        "world": 1,
+        "trained_head_accuracy": 1.0,
+        "zero_head_all_bits_half": true,
+        "counters_unchanged": true,
+        "restored_exact": true,
+        "note": "Direct head probe; the saved corrected individual deliberately keeps this old rule stale",
+        "passed": true
+      },
+      {
+        "seed": 23,
+        "world": 0,
+        "trained_head_accuracy": 1.0,
+        "zero_head_all_bits_half": true,
+        "counters_unchanged": true,
+        "restored_exact": true,
+        "note": "Direct head probe; the saved corrected individual deliberately keeps this old rule stale",
+        "passed": true
+      },
+      {
+        "seed": 23,
+        "world": 1,
+        "trained_head_accuracy": 1.0,
+        "zero_head_all_bits_half": true,
+        "counters_unchanged": true,
+        "restored_exact": true,
+        "note": "Direct head probe; the saved corrected individual deliberately keeps this old rule stale",
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "integration": {
+    "originals": {
+      "checkpoints\\individual.pt": "85b34a36ab567586740e895411d3569facac9312cdeb4504d1f168f4098be037",
+      "checkpoints\\individual-p2-candidate.pt": "2c94e6de0cc20054407828a158396804115b872fffd4edb81dda6726bd4e6961",
+      "checkpoints\\individual-p3-candidate.pt": "9709fd47df9d17d173dbdb2bd4536966361791b2ec1ad24c8dc997eb547edf1a",
+      "checkpoints\\individual-p5b-candidate.pt": "4101e6dd242dee4a97cb02f3dab1c297b1026deff64eae46a273cd07fdbdd0b4",
+      "checkpoints\\individual-prelanguage.pt": "5861aa345c24e69f90b376a41bde12bb432464c762955323458f86d5881b9c17",
+      "runs\\p7-preparation\\untrained-interface.pt": "519995001955c54edcabbb74b17eb1d38d9cde0ae17a308280cc498a71c3bc56",
+      "checkpoints/individual-durable.sqlite": "cd34d965f55c38e047c1d133af543858ee4f415d985d610ffc3afb9f3f652582",
+      "checkpoints/individual-sleep-candidate.sqlite": "f07f485876b461eb662a67277c88672ebf44a5dd318bd7588fc3db60ae79ce21",
+      "checkpoints/individual-sleep-candidate.pt": "2f7abe8cd3f9f14302954174a51aa9d3fd1e231dfbb8f4ea3595856d8bdad6af",
+      "checkpoints\\individual-time-candidate.sqlite": "d491d69c09ecbeb2d254590c37f29ff56f49715b4ba27ab7f0e1614e89e695e9",
+      "checkpoints\\individual-time-candidate.pt": "8a2563f053a7cd4c297208c6bc346014c5efa817a45eed9009a68a24b6d7a1c0",
+      "checkpoints\\individual-internal-v2-candidate.sqlite": "919ab6e5b09160d0f164f31b9cf307128bcef957a1a87091969d0f5b357561f2",
+      "checkpoints\\individual-internal-v2-candidate.pt": "c115de607adf45b8eafbae596aff1139b1ea6c52a9a53c3dc5fad267170701ff"
+    },
+    "old_tensors_exact": true,
+    "old_history_logits_exact": true,
+    "crashes": [
+      {
+        "stage": "before_begin",
+        "concurrent_exact": true,
+        "recovery_exact": true,
+        "continuation_exact": true
+      },
+      {
+        "stage": "after_begin",
+        "concurrent_exact": true,
+        "recovery_exact": true,
+        "continuation_exact": true
+      },
+      {
+        "stage": "after_first_tensor",
+        "concurrent_exact": true,
+        "recovery_exact": true,
+        "continuation_exact": true
+      },
+      {
+        "stage": "after_tensors",
+        "concurrent_exact": true,
+        "recovery_exact": true,
+        "continuation_exact": true
+      },
+      {
+        "stage": "after_manifest",
+        "concurrent_exact": true,
+        "recovery_exact": true,
+        "continuation_exact": true
+      },
+      {
+        "stage": "before_commit",
+        "concurrent_exact": true,
+        "recovery_exact": true,
+        "continuation_exact": true
+      },
+      {
+        "stage": "after_commit",
+        "concurrent_exact": true,
+        "recovery_exact": true,
+        "continuation_exact": true
+      }
+    ],
+    "byte_training": {
+      "random_byte_updates": 6,
+      "synthetic_token_presentations": 372,
+      "resume_losses_and_tensors_exact": true,
+      "organism_all_tensors_exact": true,
+      "frozen_gradients_absent": true,
+      "Chinese_training_started": false
+    },
+    "sleep": {
+      "accepted": true,
+      "modules_exact": true,
+      "gate": {
+        "groups": {
+          "all": {
+            "count": 4096,
+            "agreement": 1.0
+          },
+          "teacher_known": {
+            "count": 68,
+            "agreement": 1.0
+          },
+          "teacher_unknown": {
+            "count": 4028,
+            "agreement": 1.0
+          }
+        },
+        "current_logits_exact": true,
+        "max_probability_difference": 0.012535825371742249,
+        "passed": true
+      }
+    },
+    "semantic_publication": {
+      "accepted": true,
+      "active_after_restore": true,
+      "gate": {
+        "accepted": true,
+        "facts": 31,
+        "steps": 800,
+        "loss": 0.0008320964407175779,
+        "bit_accuracy": 1.0,
+        "minimum_correct_bit_confidence": 0.9986693859100342,
+        "reason": "accepted",
+        "commit": {
+          "revision": 1,
+          "cursor": 159,
+          "changed_tensors": 4,
+          "tensor_bytes_written": 128,
+          "manifest_bytes": 17585
+        }
+      },
+      "source_preserved": true
+    },
+    "passed": true
+  },
+  "candidate": {
+    "passed": true,
+    "original_observations": 72,
+    "old_tensors_exact": true,
+    "semantic_active": false,
+    "semantic_parameters": 28,
+    "skill_parameters": 30,
+    "tensor_payload_increase": 256,
+    "files": {
+      "checkpoints\\individual-prechinese-v3.pt": {
+        "bytes": 4858794,
+        "sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9"
+      },
+      "checkpoints\\individual-prechinese-v3.sqlite": {
+        "bytes": 4902912,
+        "sha256": "a6adb3ff851a7045cd9c1d3260383b21fa3f54f0fffff42efc1c8ec9e5110bb5"
+      }
+    },
+    "note": "Concept mechanism is inactive on the original lineage; no transfer of another synthetic individual facts. Numeric feedback policy is learned and stored."
+  },
+  "language_readiness": {
+    "trained_language_tokens": 0,
+    "Chinese_training_started": false,
+    "causal_prefix_exact": true,
+    "trainable_gradients_finite": true,
+    "organism_frozen": true,
+    "interface_restart_exact": true,
+    "organism_file_unchanged": true,
+    "organism_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+    "interface_parameters": 190037,
+    "organism_parameters": 1052725,
+    "individual_state_scalars": {
+      "current": 16200,
+      "history_including_optimizer_evidence": 111150,
+      "internal_controls": 9990,
+      "total": 137340
+    },
+    "random_byte_loss_not_language_score": 5.723654747009277,
+    "cpu_forward_backward_seconds": 0.14207970001734793,
+    "notes": [
+      "Memory access has a gradient, but byte-to-fact semantic alignment is untrained",
+      "Frozen organism preserves old answers by construction; new language ability must be measured later",
+      "Published adapter remains pristine; disposable GPU trial uses one random-byte optimizer step"
+    ],
+    "gpu_smoke": {
+      "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+      "batch": 4,
+      "length": 128,
+      "forward_backward_seconds": 1.9320783000439405,
+      "peak_allocated_bytes": 43870208,
+      "peak_reserved_bytes": 50331648,
+      "timing_includes_optimizer": true,
+      "timing_is_cold_start": true,
+      "memory_excludes_driver_context": true,
+      "finite": true,
+      "optimizer_steps": 1,
+      "random_byte_updates_only": true,
+      "published_interface_optimizer_steps": 0
+    },
+    "passed": true
+  },
+  "data_readiness": {
+    "passed": true,
+    "source_sha256": "48900e0acfda0ddb5f8ad9140832d40bc95099bb03915fd9180d3b5dc8846592",
+    "manifest_sha256": "c869c031d45fc94cffac77584fc458072fb06f348114ec53ed3d073a01ba38b1",
+    "splits": {
+      "train": {
+        "documents": 24,
+        "utf8_bytes": 3531,
+        "windows128": 48
+      },
+      "development": {
+        "documents": 6,
+        "utf8_bytes": 828,
+        "windows128": 12
+      },
+      "test": {
+        "documents": 6,
+        "utf8_bytes": 831,
+        "windows128": 12
+      }
+    },
+    "overlap": {
+      "shingle_characters": 13,
+      "minimum_shared": 24,
+      "containment_threshold": 0.8,
+      "candidate_pairs": 0,
+      "maximum_containment": 0.0,
+      "passed": true
+    },
+    "Chinese_training_started": false,
+    "optimizer_steps": 0,
+    "limitation": "Tiny synthetic corpus for pipeline checks. Not evidence of broad Chinese comprehension; repeated short training texts risk overfitting."
+  },
+  "regression": {
+    "full_tests": 106,
+    "subsequent_targeted_tests": 11,
+    "reason_for_targeted_rerun": "Added full frozen-tensor digest; preserve configured semantic confidence across proposals",
+    "passed": true
+  },
+  "date": "2026-11-05",
+  "parent_commit": "87ee56c1761db8808dc55e16bdfab86c4b18344d",
+  "original_files_unchanged": 13,
+  "Chinese_training_started": false,
+  "failures": {
+    "first_concept_audit": {
+      "concepts": [
+        {
+          "seed": 7,
+          "world": 0,
+          "rule_axes": [
+            1,
+            4,
+            2,
+            5
+          ],
+          "rule_complements": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.0021948679350316525,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9974976181983948,
+            "reason": "accepted"
+          },
+          "held_out_combinations": 32,
+          "held_out_accuracy": 1.0,
+          "inferred_fraction": 1.0,
+          "episodic_unknown_unchanged": true,
+          "ablation_unknown": true,
+          "stale_abstains": true,
+          "nonfactual_exclusion_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 8.434449227934238e-06,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9999902248382568,
+            "reason": "accepted"
+          },
+          "after_nonfactual_accuracy": 1.0,
+          "correction_observed_priority": true,
+          "conflict_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.0013715865788981318,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9845184087753296,
+            "reason": "accepted"
+          },
+          "rejected_candidate_preserves_previous": true,
+          "history_accuracy": 1.0,
+          "sources_exact": true,
+          "restart_exact": true,
+          "passed": false
+        },
+        {
+          "seed": 7,
+          "world": 1,
+          "rule_axes": [
+            1,
+            0,
+            3,
+            2
+          ],
+          "rule_complements": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.0023745715152472258,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9971781373023987,
+            "reason": "accepted"
+          },
+          "held_out_combinations": 32,
+          "held_out_accuracy": 1.0,
+          "inferred_fraction": 1.0,
+          "episodic_unknown_unchanged": true,
+          "ablation_unknown": true,
+          "stale_abstains": true,
+          "nonfactual_exclusion_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 9.259950275009032e-06,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9999890327453613,
+            "reason": "accepted"
+          },
+          "after_nonfactual_accuracy": 1.0,
+          "correction_observed_priority": true,
+          "conflict_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.0013751243241131306,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9844549894332886,
+            "reason": "accepted"
+          },
+          "rejected_candidate_preserves_previous": true,
+          "history_accuracy": 1.0,
+          "sources_exact": true,
+          "restart_exact": true,
+          "passed": false
+        },
+        {
+          "seed": 11,
+          "world": 0,
+          "rule_axes": [
+            1,
+            4,
+            2,
+            5
+          ],
+          "rule_complements": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.0024028520565479994,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9972642064094543,
+            "reason": "accepted"
+          },
+          "held_out_combinations": 32,
+          "held_out_accuracy": 1.0,
+          "inferred_fraction": 1.0,
+          "episodic_unknown_unchanged": true,
+          "ablation_unknown": true,
+          "stale_abstains": true,
+          "nonfactual_exclusion_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 9.434838830202352e-06,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.99998939037323,
+            "reason": "accepted"
+          },
+          "after_nonfactual_accuracy": 1.0,
+          "correction_observed_priority": true,
+          "conflict_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.0013763849856331944,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9844709634780884,
+            "reason": "accepted"
+          },
+          "rejected_candidate_preserves_previous": true,
+          "history_accuracy": 1.0,
+          "sources_exact": true,
+          "restart_exact": true,
+          "passed": false
+        },
+        {
+          "seed": 11,
+          "world": 1,
+          "rule_axes": [
+            1,
+            0,
+            3,
+            2
+          ],
+          "rule_complements": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.0022956044413149357,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9975724816322327,
+            "reason": "accepted"
+          },
+          "held_out_combinations": 32,
+          "held_out_accuracy": 1.0,
+          "inferred_fraction": 1.0,
+          "episodic_unknown_unchanged": true,
+          "ablation_unknown": true,
+          "stale_abstains": true,
+          "nonfactual_exclusion_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 8.989338311948813e-06,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9999905824661255,
+            "reason": "accepted"
+          },
+          "after_nonfactual_accuracy": 1.0,
+          "correction_observed_priority": true,
+          "conflict_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.0013740690192207694,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.984535276889801,
+            "reason": "accepted"
+          },
+          "rejected_candidate_preserves_previous": true,
+          "history_accuracy": 1.0,
+          "sources_exact": true,
+          "restart_exact": true,
+          "passed": false
+        },
+        {
+          "seed": 23,
+          "world": 0,
+          "rule_axes": [
+            1,
+            4,
+            2,
+            5
+          ],
+          "rule_complements": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.0024329465813934803,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9971650242805481,
+            "reason": "accepted"
+          },
+          "held_out_combinations": 32,
+          "held_out_accuracy": 1.0,
+          "inferred_fraction": 1.0,
+          "episodic_unknown_unchanged": true,
+          "ablation_unknown": true,
+          "stale_abstains": true,
+          "nonfactual_exclusion_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 9.493003744864836e-06,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9999889731407166,
+            "reason": "accepted"
+          },
+          "after_nonfactual_accuracy": 1.0,
+          "correction_observed_priority": true,
+          "conflict_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.001376887783408165,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.984453022480011,
+            "reason": "accepted"
+          },
+          "rejected_candidate_preserves_previous": true,
+          "history_accuracy": 1.0,
+          "sources_exact": true,
+          "restart_exact": true,
+          "passed": false
+        },
+        {
+          "seed": 23,
+          "world": 1,
+          "rule_axes": [
+            1,
+            0,
+            3,
+            2
+          ],
+          "rule_complements": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.0024900995194911957,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9972114562988281,
+            "reason": "accepted"
+          },
+          "held_out_combinations": 32,
+          "held_out_accuracy": 1.0,
+          "inferred_fraction": 1.0,
+          "episodic_unknown_unchanged": true,
+          "ablation_unknown": true,
+          "stale_abstains": true,
+          "nonfactual_exclusion_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 9.604148544894997e-06,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9999891519546509,
+            "reason": "accepted"
+          },
+          "after_nonfactual_accuracy": 1.0,
+          "correction_observed_priority": true,
+          "conflict_gate": {
+            "accepted": true,
+            "facts": 32,
+            "steps": 800,
+            "loss": 0.001378065557219088,
+            "bit_accuracy": 1.0,
+            "minimum_correct_bit_confidence": 0.9844613671302795,
+            "reason": "accepted"
+          },
+          "rejected_candidate_preserves_previous": true,
+          "history_accuracy": 1.0,
+          "sources_exact": true,
+          "restart_exact": true,
+          "passed": false
+        }
+      ],
+      "skills": [
+        {
+          "seed": 7,
+          "updates": 1500,
+          "feedback_presentations": 192000,
+          "last_loss": 1.7966991826615097e-14,
+          "training_seconds": 2.357668999931775,
+          "held_out_episodes": 512,
+          "controls": {
+            "learned": {
+              "success_rate": 0.98828125,
+              "mean_distance": 0.10260286927223206,
+              "mean_steps_capped13": 7.537109375
+            },
+            "untrained": {
+              "success_rate": 0.44140625,
+              "mean_distance": 0.8688790798187256,
+              "mean_steps_capped13": 10.599609375
+            },
+            "random": {
+              "success_rate": 0.0,
+              "mean_distance": 1.2205736637115479,
+              "mean_steps_capped13": 13.0
+            },
+            "oracle": {
+              "success_rate": 0.98828125,
+              "mean_distance": 0.10260286927223206,
+              "mean_steps_capped13": 7.537109375
+            }
+          },
+          "translated_action_agreement": 1.0,
+          "parameters": 30,
+          "passed": true
+        },
+        {
+          "seed": 11,
+          "updates": 1500,
+          "feedback_presentations": 192000,
+          "last_loss": 9.382170604657625e-15,
+          "training_seconds": 2.2671721999067813,
+          "held_out_episodes": 512,
+          "controls": {
+            "learned": {
+              "success_rate": 0.994140625,
+              "mean_distance": 0.09798162430524826,
+              "mean_steps_capped13": 7.66015625
+            },
+            "untrained": {
+              "success_rate": 0.0,
+              "mean_distance": 1.5357685089111328,
+              "mean_steps_capped13": 13.0
+            },
+            "random": {
+              "success_rate": 0.001953125,
+              "mean_distance": 1.2504171133041382,
+              "mean_steps_capped13": 12.994140625
+            },
+            "oracle": {
+              "success_rate": 0.994140625,
+              "mean_distance": 0.09798162430524826,
+              "mean_steps_capped13": 7.66015625
+            }
+          },
+          "translated_action_agreement": 1.0,
+          "parameters": 30,
+          "passed": true
+        },
+        {
+          "seed": 23,
+          "updates": 1500,
+          "feedback_presentations": 192000,
+          "last_loss": 1.8141467061222327e-14,
+          "training_seconds": 2.0589409000240266,
+          "held_out_episodes": 512,
+          "controls": {
+            "learned": {
+              "success_rate": 0.990234375,
+              "mean_distance": 0.09864934533834457,
+              "mean_steps_capped13": 7.55078125
+            },
+            "untrained": {
+              "success_rate": 0.0,
+              "mean_distance": 1.529662013053894,
+              "mean_steps_capped13": 13.0
+            },
+            "random": {
+              "success_rate": 0.0078125,
+              "mean_distance": 1.229369044303894,
+              "mean_steps_capped13": 12.974609375
+            },
+            "oracle": {
+              "success_rate": 0.990234375,
+              "mean_distance": 0.09864934533834457,
+              "mean_steps_capped13": 7.55078125
+            }
+          },
+          "translated_action_agreement": 1.0,
+          "parameters": 30,
+          "passed": true
+        }
+      ],
+      "audit_seed": 2520000,
+      "passed": false
+    },
+    "concept_audit_revision": {
+      "initial_audit": "runs/p14-p15-audit/audit.json",
+      "failure": "Incorrect test assumption: one exception on the even-parity subset is linearly separable, so its acceptance is legitimate. Original audit marked all six worlds failed.",
+      "revision": "Retain the exception/prioritization check and add XOR on independent supplied attributes as the explicitly nonseparable consolidation-rejection task. No learning hyperparameters changed.",
+      "new_audit_seed": 2530000,
+      "limitation": "Agreement and high output scores on observed facts do not guarantee the inferred rule is true on unseen keys. Semantic output always remains inference."
+    },
+    "runtime_fixture_revision": {
+      "initial_attempt": "runs/p16-runtime-audit; runs/p16-runtime.log",
+      "failures": [
+        "Stress fixture changed the first dictionary tensor; serialized key order differed on restart, so the post-commit continuation comparison changed two different tensors. All seven recovery snapshots were exact. Fix: explicitly mutate observed, a named tensor.",
+        "The inherited first history page was already sealed; attempting to consolidate it correctly raised ValueError. Fix: fill the next active page using labeled simulated observations, then test actual consolidation of that page."
+      ],
+      "revision": "runs/p16-runtime-audit-v2, no production persistence behavior or acceptance thresholds changed"
+    }
+  },
+  "pilot": {
+    "status": "prepared, not executed",
+    "individual": "checkpoints/individual-prechinese-v3.pt",
+    "individual_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+    "interface": "runs/p16-language-ready-v2/untrained-interface.pt",
+    "manifest": "runs/chinese-pilot-v1/manifest.json",
+    "manifest_sha256": "c869c031d45fc94cffac77584fc458072fb06f348114ec53ed3d073a01ba38b1",
+    "source": "data/chinese-pilot/source.json",
+    "steps": 100,
+    "batch": 4,
+    "length": 128,
+    "seed": 1910000,
+    "device": "cuda",
+    "learning_rate": 0.0003,
+    "checkpoint_interval": 10,
+    "budget_upper_bound_nonpad_targets": 50800,
+    "trainable": "190037 newly initialized interface parameters only",
+    "evaluation": [
+      "untrained development baseline",
+      "final development NLL and bits per byte-or-EOS target",
+      "one final sealed-test measurement; no tuning against it",
+      "fixed prompts with raw UTF-8 validity and byte outputs",
+      "original individual digest and all in-memory organism tensors unchanged"
+    ],
+    "fixed_prompts": [
+      "清晨，",
+      "桌上有",
+      "如果下雨，"
+    ],
+    "halt_conditions": [
+      "nonfinite loss or gradients",
+      "changed parent or frozen tensors",
+      "data or interface lineage mismatch",
+      "budget exceeded"
+    ],
+    "interpretation": "Engineering pilot on 3531 training bytes with repetition, not evidence of general Chinese ability. No automatic unfreezing, factual writes, skill execution, or further corpus expansion."
+  },
+  "evidence_sha256": {
+    "runs/p14-p15-audit-v2/audit.json": "89a1623f64ee7819812818f7a243d210e8cba4b697091f1a11b5641d67680825",
+    "runs/p14-head-ablation.json": "70ffcbaa8688fa16ecea51e7a3519a8bcdbe714e7afb6a5b7810f4cde431e8a7",
+    "runs/p16-runtime-audit-v2/audit.json": "6465e81f756082e253d16998af667246b86bd068f4ab7ff5ff4fecccd76aabe0",
+    "runs/p16-candidate.json": "2e8090b13473120adcdb1733dbfc211f0793ee0edd37a0d60c76b297b141f508",
+    "runs/p16-language-ready-v2/readiness.json": "f9f436fe509f7bdbab3005e822f09a19f13f07a62026a36819b3bf249e102c96",
+    "runs/chinese-pilot-v1/readiness.json": "d3e6c8efb9d78726925cb6bbcaa44a64005273042f269bdd5d3d9f82e7b0df10"
+  },
+  "ready_for": "Small frozen-organism Chinese engineering pilot only",
+  "passed": true
+}

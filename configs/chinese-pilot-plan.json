@@ -1,0 +1,22 @@
+{
+  "status": "prepared, not executed",
+  "individual": "checkpoints/individual-prechinese-v3.pt",
+  "individual_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "interface": "runs/p16-language-ready-v2/untrained-interface.pt",
+  "manifest": "runs/chinese-pilot-v1/manifest.json",
+  "manifest_sha256": "c869c031d45fc94cffac77584fc458072fb06f348114ec53ed3d073a01ba38b1",
+  "source": "data/chinese-pilot/source.json",
+  "steps": 100,
+  "batch": 4,
+  "length": 128,
+  "seed": 1910000,
+  "device": "cuda",
+  "learning_rate": 0.0003,
+  "checkpoint_interval": 10,
+  "budget_upper_bound_nonpad_targets": 50800,
+  "trainable": "190037 newly initialized interface parameters only",
+  "evaluation": ["untrained development baseline", "final development NLL and bits per byte-or-EOS target", "one final sealed-test measurement; no tuning against it", "fixed prompts with raw UTF-8 validity and byte outputs", "original individual digest and all in-memory organism tensors unchanged"],
+  "fixed_prompts": ["清晨，", "桌上有", "如果下雨，"],
+  "halt_conditions": ["nonfinite loss or gradients", "changed parent or frozen tensors", "data or interface lineage mismatch", "budget exceeded"],
+  "interpretation": "Engineering pilot on 3531 training bytes with repetition, not evidence of general Chinese ability. No automatic unfreezing, factual writes, skill execution, or further corpus expansion."
+}

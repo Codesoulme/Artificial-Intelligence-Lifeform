@@ -43,6 +43,15 @@ def flatten(model, state):
     config['memory_layers'] = list(config['memory_layers'])
     schema = {'format': 'spora-tensors-v1', 'config': config,
               'cursor': state.cursor, 'pages': pages}
+    if hasattr(model, 'semantic_memory'):
+        module = model.semantic_memory
+        if not -1 <= int(module.trained_cursor) <= state.cursor or not 0 <= int(module.evidence_count) <= 64:
+            raise ValueError('Invalid semantic revision')
+        schema['semantic_memory'] = module.config_dict()
+    if hasattr(model, 'skill_policy'):
+        if int(model.skill_policy.feedback_steps) < 0:
+            raise ValueError('Invalid skill training counter')
+        schema['skill_policy'] = model.skill_policy.config_dict()
     if hasattr(model, 'time_world') != (state.runtime is not None):
         raise ValueError('Time module and runtime state must travel together')
     if state.runtime is not None:
@@ -71,6 +80,12 @@ def restore(schema, tensors, device='cpu'):
     if schema.get('format') != 'spora-tensors-v1':
         raise ValueError('Unsupported tensor state')
     model = TemporalSPORA(TemporalConfig(**schema['config'])).to(device)
+    if 'semantic_memory' in schema:
+        from .semantic_memory import SemanticMemory
+        model.semantic_memory = SemanticMemory(**schema['semantic_memory']).to(device)
+    if 'skill_policy' in schema:
+        from .skills import FeedbackPolicy
+        model.skill_policy = FeedbackPolicy(**schema['skill_policy']).to(device)
     if ('time_world' in schema) != ('runtime' in schema):
         raise ValueError('Incomplete time extension')
     if 'time_world' in schema:

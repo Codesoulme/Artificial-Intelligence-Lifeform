@@ -1,0 +1,27 @@
+{
+  "stage": "P14-P16 pre-Chinese preparation",
+  "parent": "checkpoints/individual-internal-v2-candidate.pt",
+  "seeds": [7, 11, 23],
+  "development_seed": 2510000,
+  "audit_seed": 2520000,
+  "semantic": {
+    "prior": "64 symbols expose six binary attributes; four binary output attributes; linear neural heads",
+    "training": "Read accepted current facts from neural matrices only; minimum 16 supplied-quality facts; no persisted answer table",
+    "split": "32 even-parity keys observed, 32 odd-parity combinations withheld; random four-attribute rule and complements per world",
+    "steps": 800,
+    "gate": "All eligible current facts agree, minimum bit confidence 0.9; reject otherwise; known facts take precedence; stale hypotheses abstain",
+    "audit": "3 seeds x 2 new rules; held-out accuracy >=0.95; source exclusion, contradictory correction rejection, stale suppression, no mutation of episodic state"
+  },
+  "skill": {
+    "environment": "2D bounded numeric reaching, five actions, step 0.2, reward minus squared next-distance minus 0.01 action cost",
+    "prior": "Relative displacement and its quadratic features supplied; linear action-value heads from random weights",
+    "training": "Uniform exploratory actions; update selected action prediction using observed outcome and scalar feedback; no target action labels",
+    "steps": 1500,
+    "batch": 128,
+    "split": "Train excludes same-sign corners |dx|,|dy|>0.6; audit includes excluded corners and translated goals",
+    "audit": "3 seeds; 512 unseen episodes, <=12 steps, success radius 0.16, success >=0.95; random/untrained/oracle controls"
+  },
+  "integration": ["preserve all original files", "atomic neural persistence", "seven process-kill boundaries", "cold restore", "grow and sleep compatibility", "current/history/source preservation"],
+  "language_readiness": ["strict interface and parent binding", "all organism tensors frozen", "atomic optimizer/RNG checkpoint and exact CPU continuation", "cross-split character-shingle overlap check", "explicit launch required", "random-byte tests only", "GPU memory check", "no Chinese corpus updates"],
+  "deferred": ["full sleep imagination", "Chinese training and semantic alignment", "language-conditioned skills", "task-aligned selective retrieval", "open-world concept discovery"]
+}
