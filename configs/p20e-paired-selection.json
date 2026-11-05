@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-06",
+  "parent": "checkpoints/individual-prechinese-v3.pt",
+  "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "source": "runs/chinese-curriculum-1000/checkpoint.pt",
+  "source_sha256": "dfd7bfa613a15fac9df47636040aef00e79261a16442b0cd151f52fb07a06ad7",
+  "arms": [
+    "original",
+    "cortex"
+  ],
+  "seeds": [
+    7,
+    11,
+    23
+  ],
+  "stages": {
+    "single": 1800,
+    "select": 6000,
+    "update": 8000
+  },
+  "check_every": 300,
+  "task_batch": 16,
+  "replay_batch": 8,
+  "learning_rate": 0.001,
+  "replay_weight": 0.5,
+  "distillation_weight": 0.5,
+  "replay_schedule": [
+    "focus",
+    "basic",
+    "basic",
+    "basic"
+  ],
+  "source_development_nll": 2.891580795369497,
+  "retention_ratio_max": 1.05,
+  "development_seed": 2920000,
+  "test_seed": 2930000,
+  "gate": "Two consecutive checks >=95% on train/development answers, changed-query pairs and both reversal groups; previous stages >=95%; Chinese development NLL <= source*1.05. Single stage is vocabulary-fit only. All earlier and current full development partitions must also pass before stage promotion; later final audit verifies full development retention.",
+  "selection": "P20e keeps P20d architecture and data, pairs two questions for each world in each batch, and multiplies task CE by4. These two optimization changes are a combined candidate, not individually attributable. Full development gate unchanged; final test unopened. Seed7 first; successful recipe repeated on11/23.",
+  "scope": "Answer-only ladder first; short evidence retraining comes only after selection succeeds. P19 pair partition is reused as a known benchmark, not a newly secret evaluation. No automatic default promotion.",
+  "depth": 4,
+  "local_bytes": true,
+  "expanded_objects": true,
+  "full_development_gate": true,
+  "paired_batches": true,
+  "task_weight": 4.0
+}

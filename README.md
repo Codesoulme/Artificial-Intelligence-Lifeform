@@ -4,10 +4,11 @@
 
 **本机试聊**：在 `D:\SPORA` 双击 `chat.cmd`，输入短句后回车。默认加载P18版本，当前回答仍可能错误；可用 `/memory 12` 查看已有符号记忆，`/quit` 退出。详见[使用说明](docs/local-conversation.md)。此入口只读，不启动训练。
 
-当前完成 **P19 短步骤与可训练循环层对照**（2026-11-06）：三组各三个种子，每份1200步。答案正确率25%–36.46%，改问物品的成对正确率均为0；尚未形成可靠推理或自由聊天能力。旧个体保持，116项回归通过。研究副本出现旧中文开发损失退化，未晋升；默认聊天仍使用累计1100步的P18。此次固定预算已结束。
+当前完成 **P20 有限文本选择阶梯**（2026-11-06）：最终三个种子在未见物品组合上的答案正确率99.88%–100%，改问／倒序成对指标99.54%–100%，旧神经状态精确保持，119项回归通过。新增局部匹配、字节复制、近因偏置与训练专用辅助标签；没有外部预训练权重。未训练问法仅26.39%–99.54%，重点中文诊断0–1/24，尚不能自由聊天，默认仍为P18。全部失败修订及成本保留。
 
 - [中文训练前交付报告](reports/prelanguage-report.md)与[完整结果，包括失败版本](reports/prelanguage-results.json)
-- **最新：[P19对照报告](reports/P19-report.md)、[全部输出与测量](reports/P19-results.json)、[结构与复现](docs/short-reasoning-implementation.md)及[固定配置](configs/p19-short-reasoning.json)。**
+- **最新：[P20报告](reports/P20-report.md)、[完整输出与成本](reports/P20-results.json)、[开发失败记录](reports/P20-development-notes.md)、[结构与复现](docs/language-ladder-implementation.md)及[最终配方](configs/p20j-content-matching.json)。**
+- [P19对照报告](reports/P19-report.md)、[全部输出与测量](reports/P19-results.json)、[结构与复现](docs/short-reasoning-implementation.md)及[固定配置](configs/p19-short-reasoning.json)。
 - [P18课程报告](reports/P18-report.md)、[完整结果](reports/P18-results.json)、[实现说明](docs/chinese-curriculum-implementation.md)及[固定配置](configs/chinese-curriculum-1000.json)。
 - [P17首次中文试验](reports/P17-report.md)、[全部测量](reports/P17-results.json)与[用户指定重点课程](data/chinese-pilot/values-focus.json)。
 - [P14–P16准备报告](reports/P14-P16-report.md)、[准备结果](reports/P14-P16-results.json)与[实现说明](docs/pre-chinese-implementation.md)。

@@ -49,11 +49,11 @@ class LanguageBridge(nn.Module):
         if bool(((tokens<0)|(tokens>=VOCAB)).any()):raise ValueError('Byte token out of range')
         b,n=tokens.shape;device=tokens.device
         self.last_read_stats=[]
-        x=self.byte_embedding(tokens)+self.byte_position(torch.arange(n,device=device))
+        x=self.embed_tokens(tokens)
         layer_site=0
-        for i,block in enumerate(self.organism.blocks):
+        for i,block in enumerate(self.language_blocks()):
             x=block(x)
-            if i in self.organism.config.memory_layers:
+            if i in self.language_memory_layers():
                 q=F.normalize(self.query_projection(x),dim=-1)
                 matrices=[state.current[layer_site]]+[history_site(page,layer_site)[0] for page in state.pages]
                 # Read-only access to value-bearing neural matrices; no raw observations.
@@ -96,6 +96,15 @@ class LanguageBridge(nn.Module):
     def contextualize(self,x):
         """Identity in the original interface; optional research extension point."""
         return x
+
+    def language_blocks(self):
+        return self.organism.blocks
+
+    def embed_tokens(self,tokens):
+        return self.byte_embedding(tokens)+self.byte_position(torch.arange(tokens.shape[1],device=tokens.device))
+
+    def language_memory_layers(self):
+        return self.organism.config.memory_layers
 
     def trainable_parameters(self):return [p for p in self.parameters() if p.requires_grad]
 
