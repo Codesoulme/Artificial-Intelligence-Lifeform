@@ -104,4 +104,4 @@ AlphaEdit 的基本约束是更新量乘旧键矩阵接近零。若把需要纠�
 
 [10] Hatamizadeh A, Choi Y, Kautz J. Gated DeltaNet-2: Decoupling Erase and Write in Linear Attention. 2026-05-21；作者官方仓库注明 NeurIPS 2026 接收。https://arxiv.org/abs/2605.22791
 
-[11] K S A, Hariharan A. Reproducibility Study of “AlphaEdit: Null-Space Constrained Knowledge Editing for Language Models”. 2026-06-25 预印本。https://arxiv.org/abs/2606.26783
+[11] Ananth K Suresh, Arya Hariharan. Reproducibility Study of “AlphaEdit: Null-Space Constrained Knowledge Editing for Language Models”. 首次提交 2026-06-25；v2 修订 2026-07-07。https://arxiv.org/abs/2606.26783
