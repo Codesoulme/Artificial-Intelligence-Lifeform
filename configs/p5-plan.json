@@ -1,0 +1,10 @@
+{
+  "parent":"95c2956", "date":"2026-11-05",
+  "development_seed":1210000,"audit_seed":1310000,
+  "development_worlds":32,"audit_worlds":64,"training_seeds":[7,11,23],
+  "candidates":[{"name":"rls90","width":90,"writer":"rls","ridge":0.01,"fast_scalars":48600},{"name":"delta110","width":110,"writer":"delta","fast_scalars":48400}],
+  "training":{"warmup":200,"steps_per_length":100,"lengths":[8,16,32,64],"batch":4,"segment":8,"lr":0.0003},
+  "selection":"seed7 development only; retain failed variants; lock before audit",
+  "gate":{"each_seed_each_length":{"current":0.95,"history":0.95,"invalid_pair_unknown":0.95,"future_unknown_if_defined":0.95}},
+  "cost":"RLS persists an extra inverse covariance per layer, counted in fast scalars; knownness head learns threshold/scale. No raw examples stored."
+}

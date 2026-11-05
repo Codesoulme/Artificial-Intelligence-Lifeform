@@ -1,0 +1,9 @@
+{
+ "date":"2026-11-05","development_seed":1400000,"audit_seed":1810000,
+ "seeds":[7,11,23],"worlds_per_seed_and_entity_count":8,"entity_counts":[4,64],
+ "events":256,"page_length":64,"stage_lengths":[64,128,192,256],
+ "threshold":0.95,
+ "metrics":["current","history","oldest64","invalid_unknown"],
+ "requirements":["growth leaves prior logits exactly unchanged","restore after every page","fresh process results equal","parameters grow and cost reported","no event table in checkpoint"],
+ "prerequisite":"P5b development and independent audit pass"
+}

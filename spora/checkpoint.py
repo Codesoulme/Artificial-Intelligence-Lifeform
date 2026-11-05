@@ -71,7 +71,7 @@ def load_checkpoint(path, device='cpu', reset_fast=False):
             for p, u, init in zip(params, moments, site.initial):
                 if p.shape[1:] != init.shape or p.shape != u.shape or p.shape[0] != batch_size:
                     raise ValueError('Memory tensor shape mismatch')
-    if not all(bool(torch.isfinite(p).all()) for p in list(model.parameters()) +
+    if not all(bool(torch.isfinite(p).all()) for p in list(model.state_dict().values()) +
                [p for s in fast+velocity for p in s]):
         raise ValueError('Nonfinite checkpoint tensors')
     return model, fast, velocity, data

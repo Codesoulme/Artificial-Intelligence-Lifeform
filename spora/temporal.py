@@ -15,6 +15,9 @@ class TemporalConfig(ModelConfig):
     temporal_kind:str='split'
     time_count:int=64
     time_start:int=192
+    history_writer:str='delta'
+    history_ridge:float=.01
+    current_address:str='learned'
 
     @property
     def unknown(self):return self.value_count-1
@@ -22,6 +25,12 @@ class TemporalConfig(ModelConfig):
     def validate(self):
         super().validate()
         if self.temporal_kind not in ('split','shared'):raise ValueError('Invalid temporal architecture')
+        if self.history_writer not in ('delta','rls'):raise ValueError('Invalid history writer')
+        if self.history_writer=='rls' and self.temporal_kind!='split':raise ValueError('RLS requires split current/history')
+        if self.history_ridge<=0:raise ValueError('Positive ridge required')
+        if self.current_address not in ('learned','orthogonal'):raise ValueError('Bad current address')
+        if self.current_address=='orthogonal' and self.temporal_kind!='split':raise ValueError('Orthogonal current requires split banks')
+        if self.current_address=='orthogonal' and self.memory_width<self.key_count:raise ValueError('Insufficient orthogonal dimensions')
         if self.memory_kind!='delta' or self.residual_write:raise ValueError('Temporal reference uses direct delta')
         if self.time_count<2 or self.time_start<self.value_start+self.value_count:
             raise ValueError('Time vocabulary overlaps values')
@@ -32,9 +41,12 @@ class TemporalSite(DeltaMemorySite):
     def __init__(self,config):
         super().__init__(config)
         self.split=config.temporal_kind=='split'
+        self.rls=config.history_writer=='rls'
         if self.split:
             m=config.memory_width
             self.initial.append(nn.Parameter(torch.randn(m,m)*.02))
+        if self.rls:
+            self.initial.append(nn.Parameter(torch.eye(config.memory_width)/config.history_ridge,requires_grad=False))
 
     def selected(self,params,mode):
         if not self.split:return params[0]
@@ -44,6 +56,16 @@ class TemporalSite(DeltaMemorySite):
         return super().read(x,query,[self.selected(params,mode)])
 
     def write_temporal(self,params,velocity,key,target,gate,mode,differentiable):
+        if self.rls and bool((mode==1).all()):
+            precision=params[2]
+            projected=torch.bmm(precision,key.unsqueeze(-1)).squeeze(-1)
+            denominator=1+(key*projected).sum(-1)
+            gain=projected/denominator[:,None]
+            matrix=params[1]+gate[:,None,None]*(target.detach()-self.retrieve([params[1]],key)).unsqueeze(-1)*gain.unsqueeze(1)
+            inverse=precision-gate[:,None,None]*projected.unsqueeze(-1)*gain.unsqueeze(1)
+            inverse=(inverse+inverse.transpose(-1,-2))*.5
+            updated=[params[0],matrix,inverse]
+            return ([x if differentiable else x.detach().requires_grad_(True) for x in updated],velocity)
         matrix=self.selected(params,mode)
         update=gate[:,None,None]*torch.sigmoid(self.log_lr)*(target.detach()-self.retrieve([matrix],key)).unsqueeze(-1)*key.unsqueeze(1)
         updated=[]
@@ -60,9 +82,24 @@ class TemporalSPORA(SPORA):
         super().__init__(config)
         self.memories=nn.ModuleList([TemporalSite(config) for _ in config.memory_layers])
         self.history_binding=nn.Linear(config.width,config.width,bias=False)
+        if config.current_address=='orthogonal':
+            for site in self.memories:
+                basis=torch.linalg.qr(torch.randn(config.memory_width,config.key_count),mode='reduced').Q.T
+                site.register_buffer('current_basis',basis)
+            self.current_unknown_offset=nn.Parameter(torch.tensor(-1.4))
+            self.current_unknown_log_scale=nn.Parameter(torch.tensor(3.5))
+        if config.history_writer=='rls':
+            self.novelty_offset=nn.Parameter(torch.tensor(-2.2))
+            self.novelty_log_scale=nn.Parameter(torch.tensor(3.5))
 
     def write_event(self,*args,**kwargs):
         raise ValueError('Temporal models require an explicit event time; use write_temporal or spora.temporal_cli')
+
+    def memory_address(self,site,bound,keys,modes):
+        learned=site.address(bound)
+        if self.config.current_address=='orthogonal':
+            return torch.where(modes[:,None].bool(),learned,site.current_basis[keys])
+        return learned
 
     def validate_query(self,keys,modes,times):
         if keys.ndim!=1 or modes.shape!=keys.shape or times.shape!=keys.shape:
@@ -94,10 +131,24 @@ class TemporalSPORA(SPORA):
             x=block(x)
             if index in self.config.memory_layers:
                 site=self.memories[site_index]
-                x=site.read_temporal(x,site.address(bound),fast[site_index],modes)
+                x=site.read_temporal(x,self.memory_address(site,bound,keys,modes),fast[site_index],modes)
                 site_index+=1
         c=self.config
-        return F.linear(self.final_norm(x[:,-1]),self.embedding.weight[c.value_start:c.value_start+c.value_count])
+        logits=F.linear(self.final_norm(x[:,-1]),self.embedding.weight[c.value_start:c.value_start+c.value_count])
+        if c.history_writer=='rls':
+            q=self.memory_address(self.memories[-1],bound,keys,modes)
+            novelty=c.history_ridge*(q*torch.bmm(fast[-1][2],q.unsqueeze(-1)).squeeze(-1)).sum(-1)
+            evidence=(novelty-torch.sigmoid(self.novelty_offset))*self.novelty_log_scale.exp()
+            unknown=torch.logsumexp(logits[:,:-1],-1)+evidence
+            logits=torch.cat([logits[:,:-1],torch.where(modes.bool(),unknown,logits[:,-1])[:,None]],-1)
+        if c.current_address=='orthogonal':
+            q=self.memory_address(self.memories[-1],bound,keys,modes)
+            signal=self.memories[-1].retrieve([fast[-1][0]],q)
+            energy=signal.square().mean(-1)
+            evidence=(torch.sigmoid(self.current_unknown_offset)-energy)*self.current_unknown_log_scale.exp()
+            unknown=torch.logsumexp(logits[:,:-1],-1)+evidence
+            logits=torch.cat([logits[:,:-1],torch.where(modes.bool(),logits[:,-1],unknown)[:,None]],-1)
+        return logits
 
     def predict_many(self,keys,fast,modes=None,times=None):
         b,n=keys.shape
@@ -121,7 +172,7 @@ class TemporalSPORA(SPORA):
             gate=trusted if mode_index==0 else torch.ones_like(trusted)
             ff=[];vv=[]
             for site,params,moments in zip(self.memories,fast,velocity):
-                p,u=site.write_temporal(params,moments,site.address(bound),site.target(value),gate,modes,differentiable)
+                p,u=site.write_temporal(params,moments,self.memory_address(site,bound,keys,modes),site.target(value),gate,modes,differentiable)
                 ff.append(p);vv.append(u)
             fast,velocity=ff,vv
         return fast,velocity
@@ -131,4 +182,4 @@ def reset_bank(model,fast,bank):
     if model.config.temporal_kind!='split':raise ValueError('Selective reset requires split architecture')
     if bank not in (0,1):raise ValueError('Bank must be current=0 or history=1')
     reset,_=model.initial_state(fast[0][0].shape[0])
-    return [[reset[i][j] if j==bank else p.clone() for j,p in enumerate(site)] for i,site in enumerate(fast)]
+    return [[reset[i][j] if j==bank or (bank==1 and j==2) else p.clone() for j,p in enumerate(site)] for i,site in enumerate(fast)]

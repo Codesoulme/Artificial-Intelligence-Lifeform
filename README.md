@@ -2,9 +2,10 @@
 
 探索从随机初始化的小型神经网络出发，形成可持续学习、保留自身经历并逐步扩展能力的人工生命候选系统。
 
-当前保留 P1 默认个体、P2 与 P3 候选，新增 **P4 当前判断与历史经历分离的研究实现**（2026-11-05）。P4 另起随机权重谱系，不自动迁移旧个体；所有基础谱系没有采用预训练语言模型。
+当前完成 **P5–P7 中文训练前的连续迭代**（2026-11-05）：历史写入保护、多实体纠错、同个体分段扩容，以及尚未训练的字节语言接口。达到小规模语言试验的工程准备门槛，实际中文训练尚未开始。所有基础谱系来自随机初始化；原有 P1 默认个体、P2 与 P3 候选继续保留。
 
-- [在线阅读完整设计](docs/SPORA-v2.md)
+- [中文训练前交付报告](reports/prelanguage-report.md)与[完整结果，包括失败版本](reports/prelanguage-results.json)
+- [在线阅读总体设计](docs/SPORA-v2.md)及[P5–P7 结构补充](docs/P5-P7-design.md)；下列 Word 文件保留为设计基线。
 - [下载 Word 文档](SPORA%20%E6%9E%B6%E6%9E%84%EF%BC%9A%E9%9D%A2%E5%90%91%E6%8C%81%E7%BB%AD%E5%AD%A6%E4%B9%A0%E4%B8%8E%E7%94%9F%E6%80%81%E6%BC%94%E5%8C%96%E7%9A%84%E6%99%BA%E8%83%BD%E4%BD%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1.docx)
 - [首轮实践结果与已知问题](reports/P1-report.md)
 - [第二轮实测结果、失败与边界](reports/P2-report.md)及[实验协议](docs/P2-protocol.md)
@@ -13,9 +14,34 @@
 
 设计包含最小网络规格、读写时序、从零课程、资源估算、对照实验和阶段门槛。参考文献支持局部机制，完整方案的有效性、长期成长与生命性仍是待研究问题。
 
-当前原型能训练、保存个体、重新启动及进行只读查询。P3 慢速巩固和后续修订已通过有限符号检查；P4 增加有限时刻查询与 unknown 类别，高负荷历史仍可能遗忘。语言、环境行动和结构增长尚未完成，两个阶段的机制尚未合并。
+当前原型能训练、保存个体、重新启动及进行只读查询。最新候选在有限符号任务中通过历史保持、未知拒答和四段连续成长检查；语言、开放实体理解与环境行动尚未形成。P3 慢速巩固还未与新结构合并，早期谱系也没有自动迁入最新候选。
 
 当前仓库不包含权重文件。在本工作目录内模型已保存在 `checkpoints/`；在另一台电脑克隆源码后，需要从随机初始化运行训练，再通过 `create` 建立个体。
+
+## 最新阶段：中文训练前停止点
+
+本轮完成七个有限训练实验，共 4,200 个外层更新、380,800 次事件呈现。先发现 P5 在 64 个不同实体下的当前值与未知判断失败，再以 P5b 新开发流修订，并用新的审计流验收。
+
+- 三个随机种子在 8/16/32/64 次事件审计中的当前值、历史和早期历史均为 100%；64 次事件错误组合拒答为 99.88%–99.90%。这些是有限符号任务结果，不是自然语言成绩。
+- 连续成长覆盖三个种子、两种实体分布、各八个世界；每次连续经历 256 个事件，逐段保存与恢复，所有预定指标通过。增加容量需要增加内部矩阵和优化器状态。
+- 另测同键错误时刻，拒答率为 98.44%–98.83%；并非所有未知问题都能正确识别。
+- 56 项回归通过，三份旧个体文件摘要不变；新候选从通过验收的 P5b 谱系精确迁入增长格式，已有经历无需重放。
+- 新字节接口只完成随机输入的机制检查，实际语言训练 token 数为零；首次中文数据方案见[数据准备文档](docs/chinese-data-plan.md)。
+
+本地候选位于 checkpoints/individual-prelanguage.pt，共 1,042,546 个模型参数、11,520 个固定地址标量和 145,800 个活动状态标量；四段已分配容量为 256 次经历。未训练接口位于 runs/p7-preparation/untrained-interface.pt，另含 190,037 个可训练参数。它共享并冻结候选的因果骨干，只读访问记忆；中文与实体、关系和时间的对齐仍未学习。
+
+只读查看这个候选：
+
+~~~powershell
+.\.venv\Scripts\python.exe -m spora.growing_cli --individual checkpoints/individual-prelanguage.pt info
+.\.venv\Scripts\python.exe -m spora.growing_cli --individual checkpoints/individual-prelanguage.pt ask 12
+.\.venv\Scripts\python.exe -m spora.growing_cli --individual checkpoints/individual-prelanguage.pt ask 12 --time 0
+.\.venv\Scripts\python.exe -m spora.growing_cli --individual checkpoints/individual-prelanguage.pt ask 12 --time 2
+~~~
+
+后三条依次回答当前 9、早期观察 5、不可信观察 3。候选只携带三次演示经历；256 次连续成长是在独立审计状态上验证，并非声称交付个体已经经历了这些事件。全部成绩、消融、参数成本和未解决问题见报告。
+
+本轮停在实际中文语料训练之前。spora.train_language 的启动参数不是语言能力证明；准备接口不会触发训练。实现与验收顺序见[阶段路线](docs/pre-language-roadmap.md)，复现实验入口为 scripts/batch_p5.py 和 scripts/batch_p5b.py，均应使用独立的本地实验目录。
 
 ## 本地运行
 
@@ -31,7 +57,7 @@ Set-Location 'D:\SPORA'
 
 `learn 12 5` 表示亲历一次“符号 12 对应结果 5”。`ask 12` 在新进程中读取参数，不读取前次命令或事件文本。当前键范围 0–63，结果范围 0–15；默认操作同一份 `checkpoints/individual.pt`。模型容量有限，不承诺无限记忆。
 
-已知限制：初次学新关联与纠正旧关联并不等价。当前模型的一次纠错成功率较低，不能用于要求可靠覆盖旧事实的任务；增加经历数量会干扰早期记忆。默认个体已经历一次演示映射 `12 → 5`。
+本节默认 P1 的已知限制：初次学新关联与纠正旧关联并不等价，其一次纠错成功率较低，不能用于要求可靠覆盖旧事实的任务；增加经历数量会干扰早期记忆。默认个体已经历一次演示映射 `12 → 5`。最新候选须使用前述 growing_cli 路径查询。
 
 新建分支个体，或运行新的有限训练：
 
@@ -104,6 +130,9 @@ P2 入口包括 spora/train_p2.py、compare_p2.py、stress_p2.py、protection_p2
 
 ## 文件索引
 
+- spora/temporal.py：当前与历史分离、RLS 写入及未知判别；spora/growing.py：有限分段成长；spora/growing_cli.py：新个体交互入口。
+- spora/language_bridge.py：未训练字节接口；spora/text_data.py 与 spora/train_language.py：待启用的数据检查和训练入口。
+- scripts/report_prelanguage.py：汇总各轮证据并检查停止条件。
 - `spora/model.py`：因果骨干、快速神经权重及慢速专家。
 - `spora/train.py`：短展开元训练；`spora/evaluate.py`：独立随机世界与重启审计。
 - `spora/checkpoint.py`：原子保存、恢复与学习状态；`spora/cli.py`：符号交互入口。

@@ -1,0 +1,8 @@
+{
+ "date":"2026-11-05","reason":"P5 varied-entity development: current 91.43%, untrusted-only unknown 7.28%; historical recall 100%",
+ "development_seed":1510000,"audit_seed":1610000,"seeds":[7,11,23],
+ "changes":["fixed random orthonormal current addresses for 64 finite symbols","current unknown uses learned read-energy evidence","retain history RLS+novelty evidence","mixed four-entity and distinct-entity training"],
+ "training":{"steps":600,"warmup":200,"steps_per_length":100,"lengths":[8,16,32,64],"batch":4,"segment":8},
+ "gate":"All old gates plus varied-entity current/unknown/history/invalid at least 95% per seed; new audit stream, no selection on held-out results",
+ "disclosure":"Orthogonality is an explicit finite-vocabulary prior, not learned open-world entity discovery. Buffer cost 2*64*90 scalars, charged separately. No raw event table."
+}
