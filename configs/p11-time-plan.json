@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-05",
+  "parent": "3273282",
+  "language_training": false,
+  "seeds": [7, 11, 23],
+  "training_seed": 2310000,
+  "development_seed": 2320000,
+  "audit_seed": 2330000,
+  "training_steps": 2000,
+  "batch": 256,
+  "hidden": 64,
+  "learning_rate": 0.003,
+  "max_prediction_seconds": 2.0,
+  "integration_step_seconds": 0.1,
+  "world_state": ["position", "velocity", "temperature_offset"],
+  "observed_environment": ["drag", "cooling_rate"],
+  "actions": ["force", "heater"],
+  "training_intervals": [0.02, 0.5],
+  "signal_period_range": [0.2, 2.0],
+  "thresholds": {
+    "world_rmse_each_component": 0.05,
+    "period_relative_mae": 0.03,
+    "time_ablation_error_ratio_min": 2.0,
+    "partition_prediction_max_abs": 0.00001,
+    "restart_max_abs": 0.0
+  },
+  "requirements": [
+    "new module randomly initialized; original individual parameters unchanged",
+    "monotonic elapsed time independent of event count",
+    "UTC rollback cannot reduce accumulated online time",
+    "reboot gap is an estimate, never fabricated observations",
+    "idle ticks do not append symbolic history",
+    "unknown before observations or beyond prediction horizon",
+    "clock, recurrent state and weights persisted in one transaction",
+    "real bounded idle run without user messages",
+    "measured resource and prediction limits, no subjective-time claim"
+  ]
+}

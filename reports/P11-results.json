@@ -1,0 +1,605 @@
+{
+  "date": "2026-11-05",
+  "parent_commit": "327328299d9f290cf4a77d33a3efcde7458168de",
+  "neural": {
+    "plan": {
+      "date": "2026-11-05",
+      "parent": "3273282",
+      "language_training": false,
+      "seeds": [
+        7,
+        11,
+        23
+      ],
+      "training_seed": 2310000,
+      "development_seed": 2320000,
+      "audit_seed": 2330000,
+      "training_steps": 2000,
+      "batch": 256,
+      "hidden": 64,
+      "learning_rate": 0.003,
+      "max_prediction_seconds": 2.0,
+      "integration_step_seconds": 0.1,
+      "world_state": [
+        "position",
+        "velocity",
+        "temperature_offset"
+      ],
+      "observed_environment": [
+        "drag",
+        "cooling_rate"
+      ],
+      "actions": [
+        "force",
+        "heater"
+      ],
+      "training_intervals": [
+        0.02,
+        0.5
+      ],
+      "signal_period_range": [
+        0.2,
+        2.0
+      ],
+      "thresholds": {
+        "world_rmse_each_component": 0.05,
+        "period_relative_mae": 0.03,
+        "time_ablation_error_ratio_min": 2.0,
+        "partition_prediction_max_abs": 1e-05,
+        "restart_max_abs": 0.0
+      },
+      "requirements": [
+        "new module randomly initialized; original individual parameters unchanged",
+        "monotonic elapsed time independent of event count",
+        "UTC rollback cannot reduce accumulated online time",
+        "reboot gap is an estimate, never fabricated observations",
+        "idle ticks do not append symbolic history",
+        "unknown before observations or beyond prediction horizon",
+        "clock, recurrent state and weights persisted in one transaction",
+        "real bounded idle run without user messages",
+        "measured resource and prediction limits, no subjective-time claim"
+      ]
+    },
+    "seeds": [
+      {
+        "seed": 7,
+        "training": {
+          "seed": 7,
+          "steps": 2000,
+          "transitions": 512000,
+          "parameters": 4932,
+          "seconds": 7.875159199931659,
+          "development_rmse": [
+            0.013259480707347393,
+            0.013378242030739784,
+            0.01190840732306242
+          ],
+          "development_period_relative_mae": 0.007866757921874523,
+          "language_tokens": 0
+        },
+        "audit": {
+          "cases": 4096,
+          "rmse": [
+            0.014480257406830788,
+            0.013516025617718697,
+            0.009226757101714611
+          ],
+          "horizon_rmse": {
+            "0.1": [
+              0.0008434319752268493,
+              0.0015407947357743979,
+              0.001147412578575313
+            ],
+            "0.5": [
+              0.0041823964565992355,
+              0.006604363210499287,
+              0.004776025656610727
+            ],
+            "1.0": [
+              0.00945452880114317,
+              0.011886918917298317,
+              0.008173773996531963
+            ],
+            "2.0": [
+              0.02922200784087181,
+              0.022252282127738,
+              0.014320739544928074
+            ]
+          },
+          "persistence_rmse": [
+            1.06741201877594,
+            0.6811225414276123,
+            0.6773938536643982
+          ],
+          "fixed_250ms_rmse": [
+            0.8487607836723328,
+            0.5124022364616394,
+            0.5096527934074402
+          ],
+          "zero_action_rmse": [
+            0.41277170181274414,
+            0.4939127564430237,
+            0.501762330532074
+          ],
+          "time_ablation_error_ratio": 51.01509475708008,
+          "period_relative_mae": 0.008075504563748837,
+          "interval_mean_baseline_relative_mae": 0.00673759076744318,
+          "action_direction_agreement": 1.0,
+          "partition_max_abs": 0.0,
+          "long_horizon_rejected": true,
+          "passed": true
+        }
+      },
+      {
+        "seed": 11,
+        "training": {
+          "seed": 11,
+          "steps": 2000,
+          "transitions": 512000,
+          "parameters": 4932,
+          "seconds": 7.700451400014572,
+          "development_rmse": [
+            0.015966439619660378,
+            0.011321739293634892,
+            0.016101548448204994
+          ],
+          "development_period_relative_mae": 0.0077048917300999165,
+          "language_tokens": 0
+        },
+        "audit": {
+          "cases": 4096,
+          "rmse": [
+            0.016521219164133072,
+            0.011774331331253052,
+            0.016686251387000084
+          ],
+          "horizon_rmse": {
+            "0.1": [
+              0.0010988531867042184,
+              0.0013420270988717675,
+              0.0020252151880413294
+            ],
+            "0.5": [
+              0.005729515105485916,
+              0.005685846786946058,
+              0.00892446469515562
+            ],
+            "1.0": [
+              0.01231023296713829,
+              0.010243556462228298,
+              0.015654072165489197
+            ],
+            "2.0": [
+              0.03184417635202408,
+              0.019620371982455254,
+              0.025546107441186905
+            ]
+          },
+          "persistence_rmse": [
+            1.06741201877594,
+            0.6811225414276123,
+            0.6773938536643982
+          ],
+          "fixed_250ms_rmse": [
+            0.848359227180481,
+            0.513073742389679,
+            0.5097020864486694
+          ],
+          "zero_action_rmse": [
+            0.4127901494503021,
+            0.4936468005180359,
+            0.5022177696228027
+          ],
+          "time_ablation_error_ratio": 42.438777923583984,
+          "period_relative_mae": 0.007884622551500797,
+          "interval_mean_baseline_relative_mae": 0.00673759076744318,
+          "action_direction_agreement": 1.0,
+          "partition_max_abs": 0.0,
+          "long_horizon_rejected": true,
+          "passed": true
+        }
+      },
+      {
+        "seed": 23,
+        "training": {
+          "seed": 23,
+          "steps": 2000,
+          "transitions": 512000,
+          "parameters": 4932,
+          "seconds": 7.650388500071131,
+          "development_rmse": [
+            0.015046744607388973,
+            0.009317388758063316,
+            0.011845470406115055
+          ],
+          "development_period_relative_mae": 0.008753914386034012,
+          "language_tokens": 0
+        },
+        "audit": {
+          "cases": 4096,
+          "rmse": [
+            0.01565941795706749,
+            0.009543049149215221,
+            0.007834144867956638
+          ],
+          "horizon_rmse": {
+            "0.1": [
+              0.0012331227771937847,
+              0.0010763092432171106,
+              0.00104438082780689
+            ],
+            "0.5": [
+              0.005951835308223963,
+              0.004464160185307264,
+              0.0042944704182446
+            ],
+            "1.0": [
+              0.011795107275247574,
+              0.007979494519531727,
+              0.0070703718811273575
+            ],
+            "2.0": [
+              0.029327990487217903,
+              0.017027076333761215,
+              0.011817565187811852
+            ]
+          },
+          "persistence_rmse": [
+            1.06741201877594,
+            0.6811225414276123,
+            0.6773938536643982
+          ],
+          "fixed_250ms_rmse": [
+            0.8485821485519409,
+            0.5122562646865845,
+            0.5097228288650513
+          ],
+          "zero_action_rmse": [
+            0.4126189351081848,
+            0.4935593605041504,
+            0.5017708539962769
+          ],
+          "time_ablation_error_ratio": 55.89326095581055,
+          "period_relative_mae": 0.008932149969041348,
+          "interval_mean_baseline_relative_mae": 0.00673759076744318,
+          "action_direction_agreement": 1.0,
+          "partition_max_abs": 0.0,
+          "long_horizon_rejected": true,
+          "passed": true
+        }
+      }
+    ],
+    "selected_seed_fixed_before_audit": 7,
+    "passed": true
+  },
+  "runtime": {
+    "protected_hashes": {
+      "checkpoints\\individual.pt": "85b34a36ab567586740e895411d3569facac9312cdeb4504d1f168f4098be037",
+      "checkpoints\\individual-p2-candidate.pt": "2c94e6de0cc20054407828a158396804115b872fffd4edb81dda6726bd4e6961",
+      "checkpoints\\individual-p3-candidate.pt": "9709fd47df9d17d173dbdb2bd4536966361791b2ec1ad24c8dc997eb547edf1a",
+      "checkpoints\\individual-p5b-candidate.pt": "4101e6dd242dee4a97cb02f3dab1c297b1026deff64eae46a273cd07fdbdd0b4",
+      "checkpoints\\individual-prelanguage.pt": "5861aa345c24e69f90b376a41bde12bb432464c762955323458f86d5881b9c17",
+      "runs\\p7-preparation\\untrained-interface.pt": "519995001955c54edcabbb74b17eb1d38d9cde0ae17a308280cc498a71c3bc56",
+      "checkpoints/individual-durable.sqlite": "cd34d965f55c38e047c1d133af543858ee4f415d985d610ffc3afb9f3f652582",
+      "checkpoints/individual-sleep-candidate.sqlite": "f07f485876b461eb662a67277c88672ebf44a5dd318bd7588fc3db60ae79ce21",
+      "checkpoints/individual-sleep-candidate.pt": "2f7abe8cd3f9f14302954174a51aa9d3fd1e231dfbb8f4ea3595856d8bdad6af"
+    },
+    "restart_exact": true,
+    "history_logits_exact_after_attachment": true,
+    "crashes": [
+      {
+        "stage": "before_begin",
+        "reader_exact": true,
+        "recovery_exact": true,
+        "next_write_exact": true
+      },
+      {
+        "stage": "after_begin",
+        "reader_exact": true,
+        "recovery_exact": true,
+        "next_write_exact": true
+      },
+      {
+        "stage": "after_first_tensor",
+        "reader_exact": true,
+        "recovery_exact": true,
+        "next_write_exact": true
+      },
+      {
+        "stage": "after_tensors",
+        "reader_exact": true,
+        "recovery_exact": true,
+        "next_write_exact": true
+      },
+      {
+        "stage": "after_manifest",
+        "reader_exact": true,
+        "recovery_exact": true,
+        "next_write_exact": true
+      },
+      {
+        "stage": "before_commit",
+        "reader_exact": true,
+        "recovery_exact": true,
+        "next_write_exact": true
+      },
+      {
+        "stage": "after_commit",
+        "reader_exact": true,
+        "recovery_exact": true,
+        "next_write_exact": true
+      }
+    ],
+    "history_logits_exact_after_idle": true,
+    "runtime_portable_exact": true,
+    "real_run": {
+      "wall_seconds": 2.209097700077109,
+      "cpu_seconds": 0.515625,
+      "ticks": 39,
+      "tick_ms_mean": 5.718812818089739,
+      "tick_ms_max": 11.79649995174259,
+      "events": [
+        {
+          "elapsed_seconds": 0.9924311001086608,
+          "kind": "expected_signal_due",
+          "is_observation": false
+        }
+      ],
+      "commits": [
+        {
+          "revision": 1,
+          "cursor": 72,
+          "changed_tensors": 5,
+          "tensor_bytes_written": 48,
+          "manifest_bytes": 15709,
+          "ms": 15.46639995649457,
+          "world_observations": 1,
+          "observed_pulses": 2,
+          "idle_without_new_observations": false
+        },
+        {
+          "revision": 2,
+          "cursor": 72,
+          "changed_tensors": 2,
+          "tensor_bytes_written": 20,
+          "manifest_bytes": 15710,
+          "ms": 10.664600064046681,
+          "world_observations": 1,
+          "observed_pulses": 3,
+          "idle_without_new_observations": false
+        },
+        {
+          "revision": 3,
+          "cursor": 72,
+          "changed_tensors": 1,
+          "tensor_bytes_written": 12,
+          "manifest_bytes": 15710,
+          "ms": 17.781500006094575,
+          "world_observations": 1,
+          "observed_pulses": 3,
+          "idle_without_new_observations": true
+        },
+        {
+          "revision": 4,
+          "cursor": 72,
+          "changed_tensors": 1,
+          "tensor_bytes_written": 12,
+          "manifest_bytes": 15712,
+          "ms": 3.9779999060556293,
+          "world_observations": 1,
+          "observed_pulses": 3,
+          "idle_without_new_observations": true
+        },
+        {
+          "revision": 5,
+          "cursor": 72,
+          "changed_tensors": 0,
+          "tensor_bytes_written": 0,
+          "manifest_bytes": 15712,
+          "ms": 8.021899964660406,
+          "world_observations": 1,
+          "observed_pulses": 3,
+          "idle_without_new_observations": true
+        }
+      ],
+      "cursor": 72,
+      "starting_revision": 0,
+      "final_revision": 5,
+      "status": {
+        "online_seconds": 2.2060636,
+        "gap_estimate_seconds": null,
+        "world_status": "needs_observation",
+        "world_prediction": null,
+        "world_age_seconds": 2.2050828,
+        "world_observations": 1,
+        "world_source": "synthetic",
+        "observed_pulses": 3,
+        "signal_status": "due",
+        "signal_period_seconds": 0.32075604796409607,
+        "signal_remaining_seconds": -1.230523352035904,
+        "signal_source": "synthetic"
+      },
+      "source_note": "Optional demo observations are synthetic; scheduling uses the real OS clock.",
+      "passed": true
+    },
+    "cost": {
+      "new_parameters": 4932,
+      "new_weight_bytes": 19728,
+      "working_state_tensor_bytes": 48,
+      "total_tensor_bytes": 4745440,
+      "metadata_note": "JSON clocks, tensor manifest and SQLite page/WAL overhead are additional."
+    },
+    "sleep_compatibility": {
+      "accepted": true,
+      "training": {
+        "method": "distill",
+        "rank": 16,
+        "steps": 600,
+        "teacher_probe_queries_per_site": 4096,
+        "initial_mse": [
+          1.8435214757919312,
+          2.266972780227661
+        ],
+        "final_mse": [
+          6.290868623182178e-05,
+          6.669566937489435e-05
+        ],
+        "source_scalars": 32400,
+        "student_scalars": 13950,
+        "state_reduction": 0.5694444444444444,
+        "seconds": 4.723761299974285,
+        "student_forward_macs_per_step": 23592960,
+        "student_forward_macs_total": 14155776000,
+        "limitation": "Behavioral probe distillation, not unseen-fact generalization; dense control is step-matched, not FLOP-matched"
+      },
+      "gate": {
+        "groups": {
+          "all": {
+            "count": 4096,
+            "agreement": 1.0
+          },
+          "teacher_known": {
+            "count": 68,
+            "agreement": 1.0
+          },
+          "teacher_unknown": {
+            "count": 4028,
+            "agreement": 1.0
+          }
+        },
+        "current_logits_exact": true,
+        "max_probability_difference": 0.005771279335021973,
+        "passed": true
+      },
+      "parent_revision": 1,
+      "commit": {
+        "revision": 2,
+        "cursor": 128,
+        "changed_tensors": 6,
+        "tensor_bytes_written": 55800,
+        "manifest_bytes": 15828
+      },
+      "time_weights_exact": true,
+      "runtime_exact": true
+    },
+    "originals_unchanged": true,
+    "passed": true
+  },
+  "candidate": {
+    "parent": "checkpoints\\individual-sleep-candidate.pt",
+    "parent_sha256": "2f7abe8cd3f9f14302954174a51aa9d3fd1e231dfbb8f4ea3595856d8bdad6af",
+    "selected_seed": 7,
+    "symbolic_observations": 72,
+    "world_observations": 0,
+    "observed_pulses": 0,
+    "existing_tensors_exact": true,
+    "history_logits_exact": true,
+    "demo_answers": [
+      7,
+      5,
+      9,
+      3
+    ],
+    "tensor_bytes_before": 4725664,
+    "tensor_bytes_after": 4745440,
+    "parent_portable_bytes": 4765420,
+    "new_module_parameters": 4932,
+    "revision": 0,
+    "files": {
+      "checkpoints\\individual-time-candidate.sqlite": {
+        "bytes": 4833280,
+        "sha256": "d491d69c09ecbeb2d254590c37f29ff56f49715b4ba27ab7f0e1614e89e695e9"
+      },
+      "checkpoints\\individual-time-candidate.pt": {
+        "bytes": 4790670,
+        "sha256": "8a2563f053a7cd4c297208c6bc346014c5efa817a45eed9009a68a24b6d7a1c0"
+      }
+    },
+    "Chinese_training_started": false,
+    "passed": true
+  },
+  "initial_audit_failure": {
+    "passed": false,
+    "real_run": {
+      "wall_seconds": 2.204465200076811,
+      "cpu_seconds": 0.390625,
+      "ticks": 39,
+      "tick_ms_mean": 5.051074352545234,
+      "tick_ms_max": 10.927499970421195,
+      "events": [
+        {
+          "elapsed_seconds": 0.980273500084877,
+          "kind": "expected_signal_due",
+          "is_observation": false
+        }
+      ],
+      "commits": [
+        {
+          "revision": 1,
+          "cursor": 72,
+          "changed_tensors": 5,
+          "tensor_bytes_written": 48,
+          "manifest_bytes": 15709,
+          "ms": 9.946899954229593
+        },
+        {
+          "revision": 2,
+          "cursor": 72,
+          "changed_tensors": 2,
+          "tensor_bytes_written": 20,
+          "manifest_bytes": 15710,
+          "ms": 13.570799957960844
+        },
+        {
+          "revision": 3,
+          "cursor": 72,
+          "changed_tensors": 1,
+          "tensor_bytes_written": 12,
+          "manifest_bytes": 15710,
+          "ms": 15.85330010857433
+        },
+        {
+          "revision": 4,
+          "cursor": 72,
+          "changed_tensors": 1,
+          "tensor_bytes_written": 12,
+          "manifest_bytes": 15712,
+          "ms": 6.935400073416531
+        },
+        {
+          "revision": 5,
+          "cursor": 72,
+          "changed_tensors": 0,
+          "tensor_bytes_written": 0,
+          "manifest_bytes": 15712,
+          "ms": 3.9970000507310033
+        }
+      ],
+      "cursor": 72,
+      "starting_revision": 0,
+      "final_revision": 5,
+      "status": {
+        "online_seconds": 2.187,
+        "gap_estimate_seconds": null,
+        "world_status": "needs_observation",
+        "world_prediction": null,
+        "world_age_seconds": 2.187,
+        "world_observations": 1,
+        "world_source": "synthetic",
+        "observed_pulses": 3,
+        "signal_status": "due",
+        "signal_period_seconds": 0.31453758478164673,
+        "signal_remaining_seconds": -1.2324624152183532,
+        "signal_source": "synthetic"
+      },
+      "source_note": "Optional demo observations are synthetic; scheduling uses the real OS clock.",
+      "passed": false
+    },
+    "cause": "Audit incorrectly applied the idle-only <=12 byte threshold to initial observations and incoming pulses.",
+    "fix": "Classify commits by newly observed input counts; retain <=12 bytes for idle, <=48 bytes for new input. Original neural gates unchanged.",
+    "clock_refinement": "Use monotonic high-resolution perf_counter_ns rather than lower-resolution Windows monotonic_ns."
+  },
+  "regression_tests_passed": 85,
+  "Chinese_training_started": false,
+  "passed": true
+}

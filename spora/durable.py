@@ -1,6 +1,7 @@
 """Incremental, versioned neural tensors committed atomically with the cursor.
 
-Database rows contain weights/state, never symbolic answers or raw experiences.
+Database rows contain weights/state, never symbolic answer tables. The optional
+time extension includes the latest numeric sensor working state, not an event log.
 Only single-writer transactions are supported; stale revisions are rejected.
 """
 import hashlib

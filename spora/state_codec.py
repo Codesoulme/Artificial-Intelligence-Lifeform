@@ -43,6 +43,13 @@ def flatten(model, state):
     config['memory_layers'] = list(config['memory_layers'])
     schema = {'format': 'spora-tensors-v1', 'config': config,
               'cursor': state.cursor, 'pages': pages}
+    if hasattr(model, 'time_world') != (state.runtime is not None):
+        raise ValueError('Time module and runtime state must travel together')
+    if state.runtime is not None:
+        state.runtime.validate()
+        schema['time_world'] = model.time_world.config_dict()
+        schema['runtime'] = state.runtime.metadata()
+        tensors.update({'runtime/'+k: v for k, v in state.runtime.tensors.items()})
     return schema, tensors
 
 
@@ -50,6 +57,11 @@ def restore(schema, tensors, device='cpu'):
     if schema.get('format') != 'spora-tensors-v1':
         raise ValueError('Unsupported tensor state')
     model = TemporalSPORA(TemporalConfig(**schema['config'])).to(device)
+    if ('time_world' in schema) != ('runtime' in schema):
+        raise ValueError('Incomplete time extension')
+    if 'time_world' in schema:
+        from .world_time import TimeWorld, WorldTimeConfig
+        model.time_world = TimeWorld(WorldTimeConfig(**schema['time_world'])).to(device)
     model.load_state_dict({k[6:]: v for k, v in tensors.items() if k.startswith('model/')})
     model.eval()
     current = [tensors[f'current/{site}'].to(device) for site in range(len(model.memories))]
@@ -66,6 +78,9 @@ def restore(schema, tensors, device='cpu'):
         else:
             raise ValueError('Unknown stored page kind')
     state = GrowingState(current, pages, schema['cursor'])
+    if 'runtime' in schema:
+        from .online_time import OnlineState
+        state.runtime = OnlineState(**schema['runtime'], tensors={k[8:]: v.to(device) for k, v in tensors.items() if k.startswith('runtime/')})
     check, expected = flatten(model, state)
     if set(tensors) != set(expected):
         raise ValueError('Missing or unexpected tensors')

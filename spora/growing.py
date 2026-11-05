@@ -16,6 +16,7 @@ class GrowingState:
     current:list
     pages:list
     cursor:int=0
+    runtime:object=None
 
 
 def new_state(model):
@@ -33,7 +34,7 @@ def grow(model,state,pages=1,max_pages=16):
     added=[]
     for _ in range(pages):
         f,_=model.initial_state(1);added.append([s[1:] for s in f])
-    return GrowingState(state.current,state.pages+added,state.cursor)
+    return GrowingState(state.current,state.pages+added,state.cursor,state.runtime)
 
 
 def observe(model,state,key,value,trusted,time=None):
@@ -48,7 +49,7 @@ def observe(model,state,key,value,trusted,time=None):
     fast,_=model.write_temporal(fast,velocity,torch.tensor([key],device=device),torch.tensor([value],device=device),
                               torch.tensor([local],device=device),torch.tensor([trusted],dtype=torch.float32,device=device))
     pages=list(state.pages);pages[page]=[s[1:] for s in fast]
-    return GrowingState([s[0] for s in fast],pages,state.cursor+1)
+    return GrowingState([s[0] for s in fast],pages,state.cursor+1,state.runtime)
 
 
 def query(model,state,keys,modes,times):
@@ -71,7 +72,7 @@ def scalars(state):
 
 
 def save(path,model,state,metadata=None):
-    if any(isinstance(page,SealedPage) for page in state.pages):
+    if state.runtime is not None or hasattr(model,'time_world') or any(isinstance(page,SealedPage) for page in state.pages):
         from .state_codec import flatten
         schema,tensors=flatten(model,state)
         if not all(bool(torch.isfinite(x).all()) for x in tensors.values()):raise ValueError('Nonfinite state; preserve old file')

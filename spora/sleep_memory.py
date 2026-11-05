@@ -127,7 +127,7 @@ def propose(model, state, page_index, **training):
         raise ValueError('Cannot consolidate an unfinished history page')
     student, report = train_page(model, state.pages[page_index], **training)
     pages = list(state.pages); pages[page_index] = student
-    return GrowingState(state.current, pages, state.cursor), report
+    return GrowingState(state.current, pages, state.cursor, state.runtime), report
 
 
 @torch.no_grad()
