@@ -1,0 +1,9 @@
+{
+  "reason": "Seed7 development support accuracy 90.19% guarded, below 95%; no independent audit opened",
+  "revision": "balanced resampling from a training-only pool; cosine learning rate",
+  "training_steps": 6000,
+  "training_pool": 262144,
+  "learning_rate": 0.003,
+  "audit_seed": 2430000,
+  "thresholds_changed": false
+}

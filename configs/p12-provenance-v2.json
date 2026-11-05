@@ -1,0 +1,11 @@
+{
+  "reason": "Additional source-field audit found continuous RLS timestamp errors up to 15 event steps and quality MAE about 0.013",
+  "encoding": "source4 + action5 + quality8 bits + effective_time10 bits = 27 associative outputs",
+  "quality_quantization": "nearest 1/255; tolerance 0.5/255 + 1e-6",
+  "time_range": [0, 1023],
+  "audit_seed": 2440000,
+  "require_exact_effective_time": true,
+  "require_quality_within_quantization": true,
+  "neural_classifier_changed": false,
+  "old_evidence_retained": true
+}

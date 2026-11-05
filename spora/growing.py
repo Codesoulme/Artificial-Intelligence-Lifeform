@@ -17,6 +17,7 @@ class GrowingState:
     pages:list
     cursor:int=0
     runtime:object=None
+    internal:object=None
 
 
 def new_state(model):
@@ -34,10 +35,19 @@ def grow(model,state,pages=1,max_pages=16):
     added=[]
     for _ in range(pages):
         f,_=model.initial_state(1);added.append([s[1:] for s in f])
-    return GrowingState(state.current,state.pages+added,state.cursor,state.runtime)
+    internal=state.internal
+    if internal is not None:
+        internal=internal.invalidate_router(provenance=internal.provenance+[torch.zeros_like(internal.provenance[0]) for _ in added])
+    return GrowingState(state.current,state.pages+added,state.cursor,state.runtime,internal)
 
 
 def observe(model,state,key,value,trusted,time=None):
+    if state.internal is not None:
+        raise ValueError('Controlled individuals require observe_sourced with explicit provenance')
+    return _observe_base(model,state,key,value,trusted,time)
+
+
+def _observe_base(model,state,key,value,trusted,time=None):
     if time is not None and (type(time) is not int or time!=state.cursor):
         raise ValueError('Observation time must be the next cursor; no rewrites or gaps')
     if state.cursor>=capacity(model,state):raise ValueError('Explicit growth required; original state unchanged')
@@ -49,7 +59,7 @@ def observe(model,state,key,value,trusted,time=None):
     fast,_=model.write_temporal(fast,velocity,torch.tensor([key],device=device),torch.tensor([value],device=device),
                               torch.tensor([local],device=device),torch.tensor([trusted],dtype=torch.float32,device=device))
     pages=list(state.pages);pages[page]=[s[1:] for s in fast]
-    return GrowingState([s[0] for s in fast],pages,state.cursor+1,state.runtime)
+    return GrowingState([s[0] for s in fast],pages,state.cursor+1,state.runtime,state.internal)
 
 
 def query(model,state,keys,modes,times):
@@ -68,11 +78,16 @@ def query(model,state,keys,modes,times):
 def scalars(state):
     current=sum(p.numel() for p in state.current)
     history=sum(page.scalar_count() if isinstance(page,SealedPage) else sum(p.numel() for site in page for p in site) for page in state.pages)
-    return {'current':current,'history_including_optimizer_evidence':history,'total':current+history}
+    internal=0
+    if state.internal is not None:
+        internal=state.internal.evidence.numel()+sum(p.numel() for p in state.internal.provenance)
+        if state.internal.router_factors is not None:
+            internal+=sum(t.numel() for site in state.internal.router_factors for pair in site for t in pair)
+    return {'current':current,'history_including_optimizer_evidence':history,'internal_controls':internal,'total':current+history+internal}
 
 
 def save(path,model,state,metadata=None):
-    if state.runtime is not None or hasattr(model,'time_world') or any(isinstance(page,SealedPage) for page in state.pages):
+    if state.internal is not None or hasattr(model,'write_control') or state.runtime is not None or hasattr(model,'time_world') or any(isinstance(page,SealedPage) for page in state.pages):
         from .state_codec import flatten
         schema,tensors=flatten(model,state)
         if not all(bool(torch.isfinite(x).all()) for x in tensors.values()):raise ValueError('Nonfinite state; preserve old file')

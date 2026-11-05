@@ -50,6 +50,20 @@ def flatten(model, state):
         schema['time_world'] = model.time_world.config_dict()
         schema['runtime'] = state.runtime.metadata()
         tensors.update({'runtime/'+k: v for k, v in state.runtime.tensors.items()})
+    if hasattr(model,'write_control') != (state.internal is not None):
+        raise ValueError('Write controller and internal state must travel together')
+    if state.internal is not None:
+        state.internal.validate(model,state)
+        schema['write_control']=model.write_control.config_dict()
+        schema['internal']=state.internal.metadata()
+        tensors['internal/evidence']=state.internal.evidence
+        for p,tensor in enumerate(state.internal.provenance):
+            tensors[f'internal/provenance/{p}']=tensor
+        if state.internal.router_factors is not None:
+            for site,pages in enumerate(state.internal.router_factors):
+                for page,pair in enumerate(pages):
+                    for i,tensor in enumerate(pair):
+                        tensors[f'internal/router/{site}/{page}/{i}']=tensor
     return schema, tensors
 
 
@@ -62,6 +76,11 @@ def restore(schema, tensors, device='cpu'):
     if 'time_world' in schema:
         from .world_time import TimeWorld, WorldTimeConfig
         model.time_world = TimeWorld(WorldTimeConfig(**schema['time_world'])).to(device)
+    if ('write_control' in schema) != ('internal' in schema):
+        raise ValueError('Incomplete internal extension')
+    if 'write_control' in schema:
+        from .internal_memory import WriteControl
+        model.write_control=WriteControl(**schema['write_control']).to(device)
     model.load_state_dict({k[6:]: v for k, v in tensors.items() if k.startswith('model/')})
     model.eval()
     current = [tensors[f'current/{site}'].to(device) for site in range(len(model.memories))]
@@ -81,6 +100,15 @@ def restore(schema, tensors, device='cpu'):
     if 'runtime' in schema:
         from .online_time import OnlineState
         state.runtime = OnlineState(**schema['runtime'], tensors={k[8:]: v.to(device) for k, v in tensors.items() if k.startswith('runtime/')})
+    if 'internal' in schema:
+        from .internal_memory import InternalState
+        factors=None
+        if schema['internal']['router_cursor'] >= 0:
+            factors=[[[tensors[f'internal/router/{site}/{page}/{i}'].to(device) for i in range(2)]
+                       for page in range(len(pages)+1)] for site in range(len(model.memories))]
+        state.internal=InternalState(evidence=tensors['internal/evidence'].to(device),
+            provenance=[tensors[f'internal/provenance/{p}'].to(device) for p in range(len(pages))],
+            router_factors=factors,**dict({'encoding':1},**schema['internal']))
     check, expected = flatten(model, state)
     if set(tensors) != set(expected):
         raise ValueError('Missing or unexpected tensors')

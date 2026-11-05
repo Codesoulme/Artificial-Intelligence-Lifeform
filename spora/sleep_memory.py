@@ -127,7 +127,8 @@ def propose(model, state, page_index, **training):
         raise ValueError('Cannot consolidate an unfinished history page')
     student, report = train_page(model, state.pages[page_index], **training)
     pages = list(state.pages); pages[page_index] = student
-    return GrowingState(state.current, pages, state.cursor, state.runtime), report
+    internal=state.internal.invalidate_router() if state.internal is not None else None
+    return GrowingState(state.current, pages, state.cursor, state.runtime,internal), report
 
 
 @torch.no_grad()
@@ -163,6 +164,8 @@ def consolidate_store(store, model, state, revision, page_index, rank=16, steps=
     accepted = gate['passed'] and training['state_reduction'] >= .2
     result = {'accepted': accepted, 'training': training, 'gate': gate, 'parent_revision': revision}
     if accepted:
+        if candidate.internal is not None:
+            candidate.internal=candidate.internal.invalidate_router(informative=0,corrections=0)
         metadata = dict(store.metadata or {})
         metadata['last_sleep'] = {'page': page_index, 'rank': rank, 'steps': steps,
                                   'parent_revision': revision, 'gate': gate}

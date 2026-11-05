@@ -28,7 +28,7 @@ def decode(tokens):
 class LanguageBridge(nn.Module):
     def __init__(self,organism,read_mode='exact',read_error_l2=1e-4):
         super().__init__();self.organism=organism
-        if read_mode not in ('legacy','exact','bounded'):raise ValueError('Invalid read mode')
+        if read_mode not in ('legacy','exact','bounded','learned'):raise ValueError('Invalid read mode')
         self.read_mode=read_mode;self.read_error_l2=read_error_l2
         self._read_plans={};self.last_read_stats=[]
         for p in organism.parameters():p.requires_grad_(False)
@@ -69,10 +69,22 @@ class LanguageBridge(nn.Module):
                     stats={'mode':'training' if torch.is_grad_enabled() else ('legacy-unversioned' if unversioned else 'legacy'),
                            'matrix_vectors':b*n*len(matrices),'baseline_matrix_vectors':b*n*len(matrices)}
                 else:
+                    factors=None
+                    mode=self.read_mode
+                    if mode=='learned':
+                        if state.internal is not None and state.internal.router_factors is not None and state.internal.router_cursor==state.cursor:
+                            factors=state.internal.router_factors[layer_site]
+                        else:mode='exact'
                     plan=self._read_plans.get(layer_site)
                     rebuild=plan is None or not plan.matches(matrices)
-                    if rebuild:plan=MemoryReadPlan(matrices);self._read_plans[layer_site]=plan
-                    mixed,stats=plan.read(q,page_keys,self.read_mode,self.read_error_l2)
+                    if factors is not None:
+                        from .learned_read import LearnedReadPlan
+                        rebuild=rebuild or not isinstance(plan,LearnedReadPlan) or not plan.matches_factors(factors)
+                        if rebuild:plan=LearnedReadPlan(matrices,factors)
+                    elif rebuild:plan=MemoryReadPlan(matrices)
+                    self._read_plans[layer_site]=plan
+                    mixed,stats=plan.read(q,page_keys,mode,self.read_error_l2)
+                    if self.read_mode=='learned' and factors is None:stats['router_unavailable']=True
                     stats.update(plan_rebuilt=rebuild,plan_tensor_bytes=plan.tensor_bytes)
                 self.last_read_stats.append(stats)
                 x=x+torch.sigmoid(self.read_strength)*self.read_projection(mixed)

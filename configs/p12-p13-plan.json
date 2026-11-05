@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-05",
+  "parent": "646e49d4294a2eb85415904f27039946a41f4b57",
+  "seeds": [7, 11, 23],
+  "training_seed": 2410000,
+  "development_seed": 2420000,
+  "audit_seed": 2430000,
+  "write_training": {"steps": 2400, "batch": 512, "hidden": 64, "learning_rate": 0.003},
+  "write_actions": ["new", "correct", "support", "repeat", "defer"],
+  "source_types": ["direct", "report", "inference", "simulation"],
+  "write_confidence_min": 0.8,
+  "write_accuracy_each_class_min": 0.95,
+  "memory_accuracy_min": 0.95,
+  "router": {"rank": 12, "steps": 400, "learning_rate": 0.01, "read_error_l2": 0.0001, "page_counts": [4, 8, 16], "max_selected": 2},
+  "requirements": [
+    "New modules start randomly; preserved individuals and time module unchanged",
+    "Source and quality are supplied sensor metadata, not inferred truth",
+    "Inference and simulation never replace current factual memory",
+    "Every received observation retains history even when not accepted as belief",
+    "Repeated low-quality reports cannot accumulate factual authority",
+    "Legacy provenance unknown; do not invent source labels for past events",
+    "No event tables in runtime; provenance persists as associative neural matrices",
+    "Router proposal must satisfy residual error certificate or fall back to full read",
+    "Benchmark 4/8/16 actually populated pages; include setup and failed speedups",
+    "Budgeted consolidation uses existing historical distillation only",
+    "Chinese training, full sleep imagination, external memory services remain deferred"
+  ]
+}
