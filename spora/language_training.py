@@ -67,7 +67,12 @@ class ByteTrainer:
         if examples.ndim != 2 or examples.shape[0] == 0 or type(batch_size) is not int or not 1 <= batch_size <= 16:
             raise ValueError('Nonempty finite batch required')
         ids = torch.randint(len(examples), (batch_size,), generator=self.generator)
-        batch = examples[ids].to(next(self.model.parameters()).device)
+        return self.step_batch(examples[ids])
+
+    def step_batch(self, batch):
+        if batch.ndim != 2 or batch.dtype != torch.long or not 1 <= batch.shape[0] <= 16:
+            raise ValueError('Finite batch of integer tokens required')
+        batch = batch.to(next(self.model.parameters()).device)
         self.optimizer.zero_grad(set_to_none=True)
         loss = causal_loss(self.model(batch, self.state), batch)
         if not bool(torch.isfinite(loss)):
@@ -89,6 +94,8 @@ class ByteTrainer:
             'cuda_rng': torch.cuda.get_rng_state_all() if on_cuda else []}
 
     def restore(self, payload):
+        if 'covering_sampler' in payload and not hasattr(self, 'sampler'):
+            raise ValueError('Covering curriculum requires its own resumable trainer')
         if payload.get('format') != 'spora-byte-training-v2' or payload.get('provenance') != self.provenance:
             raise ValueError('Resume requires identical data, seed, batch, context and device')
         if type(payload.get('steps')) is not int or not 0 <= payload['steps'] <= 10000 or type(payload.get('trained_tokens')) is not int or payload['trained_tokens'] < 0:

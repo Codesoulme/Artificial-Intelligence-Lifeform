@@ -1,0 +1,11 @@
+{
+  "purpose":"New familiar-fact question wording fixed before P18; these prompts are not training examples",
+  "probes":[
+    {"kind":"group","prompt":"在三个层面中，国家发展对应哪四个词？","expected":["富强","民主","文明","和谐"]},
+    {"kind":"group","prompt":"社会层面的价值取向可以用哪四个词概括？","expected":["自由","平等","公正","法治"]},
+    {"kind":"group","prompt":"个人应遵循的四项价值准则是什么？","expected":["爱国","敬业","诚信","友善"]},
+    {"kind":"example","prompt":"阿青答应归还借来的书，按约定送还。他体现了什么？","expected":["诚信"]},
+    {"kind":"example","prompt":"阿红看见陌生人需要帮助，耐心指路。这体现了什么？","expected":["友善"]},
+    {"kind":"example","prompt":"工人对自己的任务负责，认真完成检查。这体现了什么？","expected":["敬业"]}
+  ]
+}

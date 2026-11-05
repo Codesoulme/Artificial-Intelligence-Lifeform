@@ -1,0 +1,1915 @@
+{
+  "date": "2026-11-05",
+  "parent_commit": "a240d42ac19a3f153103a5894eceae6384259a18",
+  "plan": {
+    "stage": "P18 additional bounded Chinese curriculum",
+    "parent": "checkpoints/individual-prechinese-v3.pt",
+    "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+    "source_checkpoint": "runs/chinese-pilot-100-values/checkpoint.pt",
+    "source_sha256": "ad56d75046391f1269c6ef660d78de97a0e29850332ed48daf71c3d1f9675525",
+    "manifest": "runs/chinese-curriculum-v2/manifest.json",
+    "manifest_sha256": "3b53475fa0808a63a8443f2de01a9cf60328b54d1dc21c11b0e233b84671e1f8",
+    "output": "runs/chinese-curriculum-1000",
+    "new_steps": 1000,
+    "prior_steps": 100,
+    "batch": 4,
+    "length": 128,
+    "seed": 2710000,
+    "device": "cuda",
+    "learning_rate": 0.0003,
+    "optimizer_policy": "Inherit all interface weights; start fresh optimizer for explicit new curriculum",
+    "schedule": [
+      "focus",
+      "basic",
+      "basic",
+      "focus",
+      "basic"
+    ],
+    "sampling": "Shuffle within each group then traverse without replacement; every member covered before the next group pass",
+    "check_every": 100,
+    "checkpoint_every": 10,
+    "early_stop": "Stop immediately on nonfinite computations or changed protected organism; stop at a 100-step check if development NLL exceeds stage baseline by more than 20%. No automatic extra steps or structural changes.",
+    "generation": {
+      "max_new_bytes": 96,
+      "decoding": "Raw greedy; only BOS and PAD masked; no UTF-8 repair or restriction"
+    },
+    "monitor_prompts": [
+      "天亮了。",
+      "问：一加一等于几？答：",
+      "我不知道",
+      "国家层面：",
+      "社会层面：",
+      "个人层面："
+    ],
+    "diagnostics": "Previous 18 familiar-fact probes retained for continuity, plus 6 new prompts fixed before training. Full diagnostic and new sealed-test loss only after training; no model selection on them.",
+    "limitations": "Synthetic teaching fragments with strong templates; all results bounded to measured data; memorizing statements is not stable behavioral values or autobiographical memory alignment."
+  },
+  "data": {
+    "passed": true,
+    "manifest_sha256": "3b53475fa0808a63a8443f2de01a9cf60328b54d1dc21c11b0e233b84671e1f8",
+    "source_sha256": {
+      "data/chinese-pilot/source.json": "48900e0acfda0ddb5f8ad9140832d40bc95099bb03915fd9180d3b5dc8846592",
+      "data/chinese-pilot/values-focus.json": "938411069fcd0402b0864fd6929088f321f3b543c5990583882914af4549bd34",
+      "data/chinese-pilot/basic-curriculum-v2.json": "a5f25daae3316947c68aebbc8caa39ddfe77eaa7437a604c3f7e61e841160a75"
+    },
+    "splits": {
+      "train": {
+        "documents": 306,
+        "bytes": 15048,
+        "windows": 330
+      },
+      "development": {
+        "documents": 8,
+        "bytes": 484,
+        "windows": 8
+      },
+      "test": {
+        "documents": 8,
+        "bytes": 469,
+        "windows": 8
+      }
+    },
+    "training_characters": 564,
+    "focus_windows": 32,
+    "overlap": {
+      "shingle_characters": 13,
+      "minimum_shared": 24,
+      "containment_threshold": 0.8,
+      "candidate_pairs": 0,
+      "maximum_containment": 0.0,
+      "passed": true
+    },
+    "note": "New held-out documents; original P17 held-outs not added to training. Templates and isolated words are disclosed priors."
+  },
+  "baseline": {
+    "stage_steps": 0,
+    "total_lineage_steps": 100,
+    "development": {
+      "negative_log_likelihood": 3.9920861299444987,
+      "bits_per_target": 5.759362862472543,
+      "target_count": 492,
+      "target_unit": "UTF-8 byte or EOS; not Chinese character",
+      "uniform_259_token_nll": 5.556828061699537
+    },
+    "focus": {
+      "negative_log_likelihood": 3.8795481479331237,
+      "bits_per_target": 5.597004873913081,
+      "target_count": 1971,
+      "target_unit": "UTF-8 byte or EOS; not Chinese character",
+      "uniform_259_token_nll": 5.556828061699537
+    },
+    "generation": [
+      {
+        "text": "�����������������������������������������������������������������������������������������������",
+        "utf8_valid": false,
+        "ended_with_eos": false,
+        "budget_exhausted": true,
+        "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+        "prompt": "天亮了。",
+        "bytes_hex": "e5e5e5e4e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e5e5e5e5e7e5e580e4e5e4e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e4e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5",
+        "byte_count": 96,
+        "error_start": 0,
+        "error_reason": "invalid continuation byte",
+        "only_incomplete_tail": false
+      },
+      {
+        "text": "�����������������������������������������������������������������������������������������������",
+        "utf8_valid": false,
+        "ended_with_eos": false,
+        "budget_exhausted": true,
+        "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+        "prompt": "问：一加一等于几？答：",
+        "bytes_hex": "e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e5e5e5e5e7e5e580e4e5e4e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e4e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e4e5e5e5e5e5e5e7e5e5e5e5e5e5e5e5e5e5e4e5",
+        "byte_count": 96,
+        "error_start": 0,
+        "error_reason": "invalid continuation byte",
+        "only_incomplete_tail": false
+      },
+      {
+        "text": "�����������������������������������������������������������������������������������������������",
+        "utf8_valid": false,
+        "ended_with_eos": false,
+        "budget_exhausted": true,
+        "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+        "prompt": "我不知道",
+        "bytes_hex": "e5e5e5e4e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e5e5e5e5e7e5e580e4e5e4e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e4e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5",
+        "byte_count": 96,
+        "error_start": 0,
+        "error_reason": "invalid continuation byte",
+        "only_incomplete_tail": false
+      },
+      {
+        "text": "�����������������������������������������������������������������������������������������������",
+        "utf8_valid": false,
+        "ended_with_eos": false,
+        "budget_exhausted": true,
+        "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+        "prompt": "国家层面：",
+        "bytes_hex": "e4e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e5e5e5e5e7e5e580e4e5e4e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e4e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e4e5",
+        "byte_count": 96,
+        "error_start": 0,
+        "error_reason": "invalid continuation byte",
+        "only_incomplete_tail": false
+      },
+      {
+        "text": "�����������������������������������������������������������������������������������������������",
+        "utf8_valid": false,
+        "ended_with_eos": false,
+        "budget_exhausted": true,
+        "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+        "prompt": "社会层面：",
+        "bytes_hex": "e4e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e5e5e5e5e7e5e580e4e5e4e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e4e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e4e5",
+        "byte_count": 96,
+        "error_start": 0,
+        "error_reason": "invalid continuation byte",
+        "only_incomplete_tail": false
+      },
+      {
+        "text": "�����������������������������������������������������������������������������������������������",
+        "utf8_valid": false,
+        "ended_with_eos": false,
+        "budget_exhausted": true,
+        "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+        "prompt": "个人层面：",
+        "bytes_hex": "e4e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e5e5e5e5e7e5e580e4e5e4e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e5e5e5e4e4e5e5e5e5e5e5e5e5e5e5e4e5e5e5e5e5e4e5",
+        "byte_count": 96,
+        "error_start": 0,
+        "error_reason": "invalid continuation byte",
+        "only_incomplete_tail": false
+      }
+    ],
+    "valid_utf8": 0,
+    "prompts": 6
+  },
+  "periodic_checks": [
+    {
+      "stage_steps": 100,
+      "total_lineage_steps": 200,
+      "development": {
+        "negative_log_likelihood": 3.524953690970816,
+        "bits_per_target": 5.085433209326844,
+        "target_count": 492,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "focus": {
+        "negative_log_likelihood": 3.178057268511396,
+        "bits_per_target": 4.584967460942516,
+        "target_count": 1971,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "generation": [
+        {
+          "text": "帚倂�\n",
+          "utf8_valid": false,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "天亮了。",
+          "bytes_hex": "e5b89ae58082e50a",
+          "byte_count": 8,
+          "error_start": 6,
+          "error_reason": "invalid continuation byte",
+          "only_incomplete_tail": false
+        },
+        {
+          "text": "倚倂　倀�",
+          "utf8_valid": false,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "问：一加一等于几？答：",
+          "bytes_hex": "e5809ae58082e38080e58080e580",
+          "byte_count": 14,
+          "error_start": 12,
+          "error_reason": "unexpected end of data",
+          "only_incomplete_tail": true
+        },
+        {
+          "text": "帚倂�\n",
+          "utf8_valid": false,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "我不知道",
+          "bytes_hex": "e5b89ae58082e50a",
+          "byte_count": 8,
+          "error_start": 6,
+          "error_reason": "invalid continuation byte",
+          "only_incomplete_tail": false
+        },
+        {
+          "text": "倂�\n",
+          "utf8_valid": false,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "国家层面：",
+          "bytes_hex": "e58082e50a",
+          "byte_count": 5,
+          "error_start": 3,
+          "error_reason": "invalid continuation byte",
+          "only_incomplete_tail": false
+        },
+        {
+          "text": "倂�\n",
+          "utf8_valid": false,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "社会层面：",
+          "bytes_hex": "e58082e50a",
+          "byte_count": 5,
+          "error_start": 3,
+          "error_reason": "invalid continuation byte",
+          "only_incomplete_tail": false
+        },
+        {
+          "text": "倂�\n",
+          "utf8_valid": false,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "个人层面：",
+          "bytes_hex": "e58082e50a",
+          "byte_count": 5,
+          "error_start": 3,
+          "error_reason": "invalid continuation byte",
+          "only_incomplete_tail": false
+        }
+      ],
+      "valid_utf8": 0,
+      "prompts": 6,
+      "train_loss_last_batch": 3.3738954067230225,
+      "targets_seen": 20681,
+      "seconds": 4.162629800033756,
+      "frozen_organism_exact": true
+    },
+    {
+      "stage_steps": 200,
+      "total_lineage_steps": 300,
+      "development": {
+        "negative_log_likelihood": 3.3889007335755883,
+        "bits_per_target": 4.889150282394471,
+        "target_count": 492,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "focus": {
+        "negative_log_likelihood": 2.892247869543833,
+        "bits_per_target": 4.172631658412558,
+        "target_count": 1971,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "generation": [
+        {
+          "text": "囚倂\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "天亮了。",
+          "bytes_hex": "e59b9ae580820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "們之。。�\n",
+          "utf8_valid": false,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "问：一加一等于几？答：",
+          "bytes_hex": "e58091e4b98be38082e38082e50a",
+          "byte_count": 14,
+          "error_start": 12,
+          "error_reason": "invalid continuation byte",
+          "only_incomplete_tail": false
+        },
+        {
+          "text": "囚倂\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "我不知道",
+          "bytes_hex": "e59b9ae580820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "倂\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "国家层面：",
+          "bytes_hex": "e580820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "倂\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "社会层面：",
+          "bytes_hex": "e580820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "倂\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "个人层面：",
+          "bytes_hex": "e580820d0a",
+          "byte_count": 5
+        }
+      ],
+      "valid_utf8": 5,
+      "prompts": 6,
+      "train_loss_last_batch": 2.6591122150421143,
+      "targets_seen": 40826,
+      "seconds": 8.152365400106646,
+      "frozen_organism_exact": true
+    },
+    {
+      "stage_steps": 300,
+      "total_lineage_steps": 400,
+      "development": {
+        "negative_log_likelihood": 3.2763139169390607,
+        "bits_per_target": 4.726721840363478,
+        "target_count": 492,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "focus": {
+        "negative_log_likelihood": 2.682077322194928,
+        "bits_per_target": 3.8694196520113735,
+        "target_count": 1971,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "generation": [
+        {
+          "text": "囚倂\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "天亮了。",
+          "bytes_hex": "e59b9ae580820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "向之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "问：一加一等于几？答：",
+          "bytes_hex": "e59091e4b98be4b880e380820d0a",
+          "byte_count": 14
+        },
+        {
+          "text": "囚倂\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "我不知道",
+          "bytes_hex": "e59b9ae580820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "倂\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "国家层面：",
+          "bytes_hex": "e580820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "倂\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "社会层面：",
+          "bytes_hex": "e580820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "倂\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "个人层面：",
+          "bytes_hex": "e580820d0a",
+          "byte_count": 5
+        }
+      ],
+      "valid_utf8": 6,
+      "prompts": 6,
+      "train_loss_last_batch": 2.0821900367736816,
+      "targets_seen": 62342,
+      "seconds": 12.057635800098069,
+      "frozen_organism_exact": true
+    },
+    {
+      "stage_steps": 400,
+      "total_lineage_steps": 500,
+      "development": {
+        "negative_log_likelihood": 3.206759502248066,
+        "bits_per_target": 4.626376031216846,
+        "target_count": 492,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "focus": {
+        "negative_log_likelihood": 2.492662117361478,
+        "bits_per_target": 3.5961512753291878,
+        "target_count": 1971,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "generation": [
+        {
+          "text": "囚层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "天亮了。",
+          "bytes_hex": "e59b9ae5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "向之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "问：一加一等于几？答：",
+          "bytes_hex": "e59091e4b98be4b880e380820d0a",
+          "byte_count": 14
+        },
+        {
+          "text": "囚层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "我不知道",
+          "bytes_hex": "e59b9ae5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "国家层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "社会层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "个人层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        }
+      ],
+      "valid_utf8": 6,
+      "prompts": 6,
+      "train_loss_last_batch": 2.838726758956909,
+      "targets_seen": 82379,
+      "seconds": 16.364635900012217,
+      "frozen_organism_exact": true
+    },
+    {
+      "stage_steps": 500,
+      "total_lineage_steps": 600,
+      "development": {
+        "negative_log_likelihood": 3.1104420292668227,
+        "bits_per_target": 4.487419290595849,
+        "target_count": 492,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "focus": {
+        "negative_log_likelihood": 2.3094427063040537,
+        "bits_per_target": 3.331821539602045,
+        "target_count": 1971,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "generation": [
+        {
+          "text": "囚层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "天亮了。",
+          "bytes_hex": "e59b9ae5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "向之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "问：一加一等于几？答：",
+          "bytes_hex": "e59091e4b98be4b880e380820d0a",
+          "byte_count": 14
+        },
+        {
+          "text": "囚层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "我不知道",
+          "bytes_hex": "e59b9ae5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "国家层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "社会层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "个人层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        }
+      ],
+      "valid_utf8": 6,
+      "prompts": 6,
+      "train_loss_last_batch": 2.1152305603027344,
+      "targets_seen": 103204,
+      "seconds": 21.048484900034964,
+      "frozen_organism_exact": true
+    },
+    {
+      "stage_steps": 600,
+      "total_lineage_steps": 700,
+      "development": {
+        "negative_log_likelihood": 3.026570269247381,
+        "bits_per_target": 4.366417918345171,
+        "target_count": 492,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "focus": {
+        "negative_log_likelihood": 2.1322218929070136,
+        "bits_per_target": 3.076145950971827,
+        "target_count": 1971,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "generation": [
+        {
+          "text": "国层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "天亮了。",
+          "bytes_hex": "e59bbde5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "问：一加一等于几？答：",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14
+        },
+        {
+          "text": "国层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "我不知道",
+          "bytes_hex": "e59bbde5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "国家层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "社会层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "个人层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        }
+      ],
+      "valid_utf8": 6,
+      "prompts": 6,
+      "train_loss_last_batch": 2.2378714084625244,
+      "targets_seen": 123791,
+      "seconds": 25.78142320003826,
+      "frozen_organism_exact": true
+    },
+    {
+      "stage_steps": 700,
+      "total_lineage_steps": 800,
+      "development": {
+        "negative_log_likelihood": 2.996696587015943,
+        "bits_per_target": 4.323319305136783,
+        "target_count": 492,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "focus": {
+        "negative_log_likelihood": 1.9700349200987561,
+        "bits_per_target": 2.8421596096045607,
+        "target_count": 1971,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "generation": [
+        {
+          "text": "国层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "天亮了。",
+          "bytes_hex": "e59bbde5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "问：一加一等于几？答：",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14
+        },
+        {
+          "text": "国层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "我不知道",
+          "bytes_hex": "e59bbde5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "国家层面：",
+          "bytes_hex": "e380820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "社会层面：",
+          "bytes_hex": "e380820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "个人层面：",
+          "bytes_hex": "e380820d0a",
+          "byte_count": 5
+        }
+      ],
+      "valid_utf8": 6,
+      "prompts": 6,
+      "train_loss_last_batch": 1.578389048576355,
+      "targets_seen": 143990,
+      "seconds": 30.567281800089404,
+      "frozen_organism_exact": true
+    },
+    {
+      "stage_steps": 800,
+      "total_lineage_steps": 900,
+      "development": {
+        "negative_log_likelihood": 2.910326616066258,
+        "bits_per_target": 4.198713776365949,
+        "target_count": 492,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "focus": {
+        "negative_log_likelihood": 1.820682738288171,
+        "bits_per_target": 2.6266899575604827,
+        "target_count": 1971,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "generation": [
+        {
+          "text": "国层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "天亮了。",
+          "bytes_hex": "e59bbde5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "问：一加一等于几？答：",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14
+        },
+        {
+          "text": "人层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "我不知道",
+          "bytes_hex": "e4babae5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "国家层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "社会层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "个人层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        }
+      ],
+      "valid_utf8": 6,
+      "prompts": 6,
+      "train_loss_last_batch": 2.274813413619995,
+      "targets_seen": 164813,
+      "seconds": 34.89902260003146,
+      "frozen_organism_exact": true
+    },
+    {
+      "stage_steps": 900,
+      "total_lineage_steps": 1000,
+      "development": {
+        "negative_log_likelihood": 2.908336076794601,
+        "bits_per_target": 4.195842035230035,
+        "target_count": 492,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "focus": {
+        "negative_log_likelihood": 1.7209845632541487,
+        "bits_per_target": 2.482855894853219,
+        "target_count": 1971,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "generation": [
+        {
+          "text": "国层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "天亮了。",
+          "bytes_hex": "e59bbde5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "问：一加一等于几？答：",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14
+        },
+        {
+          "text": "国层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "我不知道",
+          "bytes_hex": "e59bbde5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "国家层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "社会层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "个人层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        }
+      ],
+      "valid_utf8": 6,
+      "prompts": 6,
+      "train_loss_last_batch": 1.066534399986267,
+      "targets_seen": 185030,
+      "seconds": 39.59572310000658,
+      "frozen_organism_exact": true
+    },
+    {
+      "stage_steps": 1000,
+      "total_lineage_steps": 1100,
+      "development": {
+        "negative_log_likelihood": 2.891580795369497,
+        "bits_per_target": 4.171669273809338,
+        "target_count": 492,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "focus": {
+        "negative_log_likelihood": 1.623290688661317,
+        "bits_per_target": 2.3419134264529125,
+        "target_count": 1971,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "generation": [
+        {
+          "text": "国层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "天亮了。",
+          "bytes_hex": "e59bbde5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "问：一加一等于几？答：",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14
+        },
+        {
+          "text": "国层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "我不知道",
+          "bytes_hex": "e59bbde5b1820d0a",
+          "byte_count": 8
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "国家层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "社会层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        },
+        {
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "prompt": "个人层面：",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5
+        }
+      ],
+      "valid_utf8": 6,
+      "prompts": 6,
+      "train_loss_last_batch": 1.6872397661209106,
+      "targets_seen": 206454,
+      "seconds": 44.267377700074576,
+      "frozen_organism_exact": true
+    }
+  ],
+  "completion": {
+    "status": "complete",
+    "new_steps": 1000,
+    "prior_steps": 100,
+    "total_steps": 1100,
+    "new_targets": 206454,
+    "prior_targets": 27960,
+    "sampler_draws": 4000,
+    "coverage": {
+      "basic-characters-000.txt": 9,
+      "basic-characters-001.txt": 8,
+      "basic-characters-002.txt": 8,
+      "basic-characters-003.txt": 8,
+      "basic-characters-004.txt": 8,
+      "basic-characters-005.txt": 8,
+      "basic-characters-006.txt": 8,
+      "basic-characters-007.txt": 8,
+      "basic-characters-008.txt": 8,
+      "basic-characters-009.txt": 9,
+      "basic-characters-010.txt": 8,
+      "basic-characters-011.txt": 8,
+      "basic-characters-012.txt": 8,
+      "basic-characters-013.txt": 8,
+      "basic-characters-014.txt": 8,
+      "basic-characters-015.txt": 8,
+      "basic-characters-016.txt": 8,
+      "basic-characters-017.txt": 8,
+      "basic-characters-018.txt": 8,
+      "basic-characters-019.txt": 8,
+      "basic-characters-020.txt": 8,
+      "basic-characters-021.txt": 8,
+      "basic-characters-022.txt": 8,
+      "basic-characters-023.txt": 8,
+      "basic-characters-024.txt": 8,
+      "basic-characters-025.txt": 8,
+      "basic-characters-026.txt": 8,
+      "basic-characters-027.txt": 8,
+      "basic-characters-028.txt": 8,
+      "basic-characters-029.txt": 8,
+      "basic-characters-030.txt": 9,
+      "basic-characters-031.txt": 8,
+      "basic-characters-032.txt": 9,
+      "basic-characters-033.txt": 8,
+      "basic-characters-034.txt": 8,
+      "basic-characters-035.txt": 8,
+      "basic-combination-00-00.txt": 8,
+      "basic-combination-00-01.txt": 8,
+      "basic-combination-00-02.txt": 8,
+      "basic-combination-00-03.txt": 8,
+      "basic-combination-00-04.txt": 9,
+      "basic-combination-00-05.txt": 8,
+      "basic-combination-00-06.txt": 9,
+      "basic-combination-00-07.txt": 8,
+      "basic-combination-00-08.txt": 8,
+      "basic-combination-00-09.txt": 8,
+      "basic-combination-00-10.txt": 9,
+      "basic-combination-00-11.txt": 8,
+      "basic-combination-01-00.txt": 8,
+      "basic-combination-01-01.txt": 8,
+      "basic-combination-01-02.txt": 8,
+      "basic-combination-01-03.txt": 8,
+      "basic-combination-01-04.txt": 9,
+      "basic-combination-01-05.txt": 8,
+      "basic-combination-01-06.txt": 8,
+      "basic-combination-01-07.txt": 8,
+      "basic-combination-01-08.txt": 8,
+      "basic-combination-01-09.txt": 8,
+      "basic-combination-01-10.txt": 8,
+      "basic-combination-01-11.txt": 9,
+      "basic-combination-02-00.txt": 9,
+      "basic-combination-02-01.txt": 8,
+      "basic-combination-02-02.txt": 8,
+      "basic-combination-02-03.txt": 8,
+      "basic-combination-02-04.txt": 8,
+      "basic-combination-02-05.txt": 8,
+      "basic-combination-02-06.txt": 8,
+      "basic-combination-02-07.txt": 8,
+      "basic-combination-02-08.txt": 8,
+      "basic-combination-02-09.txt": 8,
+      "basic-combination-02-10.txt": 8,
+      "basic-combination-02-11.txt": 8,
+      "basic-combination-03-00.txt": 8,
+      "basic-combination-03-01.txt": 8,
+      "basic-combination-03-02.txt": 8,
+      "basic-combination-03-03.txt": 8,
+      "basic-combination-03-04.txt": 9,
+      "basic-combination-03-05.txt": 8,
+      "basic-combination-03-06.txt": 8,
+      "basic-combination-03-07.txt": 8,
+      "basic-combination-03-08.txt": 8,
+      "basic-combination-03-09.txt": 8,
+      "basic-combination-03-10.txt": 8,
+      "basic-combination-03-11.txt": 8,
+      "basic-combination-04-00.txt": 8,
+      "basic-combination-04-01.txt": 8,
+      "basic-combination-04-02.txt": 9,
+      "basic-combination-04-03.txt": 8,
+      "basic-combination-04-04.txt": 8,
+      "basic-combination-04-05.txt": 8,
+      "basic-combination-04-06.txt": 8,
+      "basic-combination-04-07.txt": 8,
+      "basic-combination-04-08.txt": 8,
+      "basic-combination-04-09.txt": 8,
+      "basic-combination-04-10.txt": 8,
+      "basic-combination-04-11.txt": 9,
+      "basic-combination-05-00.txt": 8,
+      "basic-combination-05-01.txt": 8,
+      "basic-combination-05-02.txt": 8,
+      "basic-combination-05-03.txt": 8,
+      "basic-combination-05-04.txt": 8,
+      "basic-combination-05-05.txt": 8,
+      "basic-combination-05-06.txt": 8,
+      "basic-combination-05-07.txt": 8,
+      "basic-combination-05-08.txt": 8,
+      "basic-combination-05-09.txt": 8,
+      "basic-combination-05-10.txt": 8,
+      "basic-combination-05-11.txt": 8,
+      "basic-combination-06-00.txt": 8,
+      "basic-combination-06-01.txt": 8,
+      "basic-combination-06-02.txt": 8,
+      "basic-combination-06-03.txt": 8,
+      "basic-combination-06-04.txt": 8,
+      "basic-combination-06-05.txt": 8,
+      "basic-combination-06-06.txt": 8,
+      "basic-combination-06-07.txt": 8,
+      "basic-combination-06-08.txt": 8,
+      "basic-combination-06-09.txt": 8,
+      "basic-combination-06-10.txt": 8,
+      "basic-combination-06-11.txt": 8,
+      "basic-combination-07-00.txt": 8,
+      "basic-combination-07-01.txt": 8,
+      "basic-combination-07-02.txt": 8,
+      "basic-combination-07-03.txt": 8,
+      "basic-combination-07-04.txt": 8,
+      "basic-combination-07-05.txt": 8,
+      "basic-combination-07-06.txt": 8,
+      "basic-combination-07-07.txt": 8,
+      "basic-combination-07-08.txt": 8,
+      "basic-combination-07-09.txt": 8,
+      "basic-combination-07-10.txt": 8,
+      "basic-combination-07-11.txt": 8,
+      "basic-original-000.txt": 16,
+      "basic-original-001.txt": 16,
+      "basic-original-002.txt": 16,
+      "basic-original-003.txt": 16,
+      "basic-original-004.txt": 16,
+      "basic-original-005.txt": 16,
+      "basic-original-006.txt": 16,
+      "basic-original-007.txt": 16,
+      "basic-original-008.txt": 16,
+      "basic-original-009.txt": 16,
+      "basic-original-010.txt": 16,
+      "basic-original-011.txt": 16,
+      "basic-original-012.txt": 16,
+      "basic-original-013.txt": 16,
+      "basic-original-014.txt": 16,
+      "basic-original-015.txt": 16,
+      "basic-original-016.txt": 16,
+      "basic-original-017.txt": 16,
+      "basic-original-018.txt": 16,
+      "basic-original-019.txt": 16,
+      "basic-original-020.txt": 16,
+      "basic-original-021.txt": 16,
+      "basic-original-022.txt": 16,
+      "basic-original-023.txt": 16,
+      "basic-short-000.txt": 8,
+      "basic-short-001.txt": 9,
+      "basic-short-002.txt": 8,
+      "basic-short-003.txt": 8,
+      "basic-short-004.txt": 8,
+      "basic-short-005.txt": 8,
+      "basic-short-006.txt": 8,
+      "basic-short-007.txt": 9,
+      "basic-short-008.txt": 8,
+      "basic-short-009.txt": 8,
+      "basic-short-010.txt": 8,
+      "basic-short-011.txt": 8,
+      "basic-short-012.txt": 8,
+      "basic-short-013.txt": 8,
+      "basic-short-014.txt": 8,
+      "basic-short-015.txt": 8,
+      "basic-word-000.txt": 8,
+      "basic-word-001.txt": 8,
+      "basic-word-002.txt": 8,
+      "basic-word-003.txt": 8,
+      "basic-word-004.txt": 8,
+      "basic-word-005.txt": 8,
+      "basic-word-006.txt": 8,
+      "basic-word-007.txt": 8,
+      "basic-word-008.txt": 8,
+      "basic-word-009.txt": 8,
+      "basic-word-010.txt": 8,
+      "basic-word-011.txt": 8,
+      "basic-word-012.txt": 8,
+      "basic-word-013.txt": 8,
+      "basic-word-014.txt": 8,
+      "basic-word-015.txt": 8,
+      "basic-word-016.txt": 8,
+      "basic-word-017.txt": 8,
+      "basic-word-018.txt": 8,
+      "basic-word-019.txt": 8,
+      "basic-word-020.txt": 8,
+      "basic-word-021.txt": 8,
+      "basic-word-022.txt": 8,
+      "basic-word-023.txt": 8,
+      "basic-word-024.txt": 8,
+      "basic-word-025.txt": 8,
+      "basic-word-026.txt": 8,
+      "basic-word-027.txt": 8,
+      "basic-word-028.txt": 8,
+      "basic-word-029.txt": 8,
+      "basic-word-030.txt": 8,
+      "basic-word-031.txt": 8,
+      "basic-word-032.txt": 8,
+      "basic-word-033.txt": 8,
+      "basic-word-034.txt": 8,
+      "basic-word-035.txt": 8,
+      "basic-word-036.txt": 8,
+      "basic-word-037.txt": 8,
+      "basic-word-038.txt": 8,
+      "basic-word-039.txt": 8,
+      "basic-word-040.txt": 8,
+      "basic-word-041.txt": 8,
+      "basic-word-042.txt": 8,
+      "basic-word-043.txt": 8,
+      "basic-word-044.txt": 8,
+      "basic-word-045.txt": 8,
+      "basic-word-046.txt": 8,
+      "basic-word-047.txt": 8,
+      "basic-word-048.txt": 8,
+      "basic-word-049.txt": 8,
+      "basic-word-050.txt": 8,
+      "basic-word-051.txt": 8,
+      "basic-word-052.txt": 8,
+      "basic-word-053.txt": 8,
+      "basic-word-054.txt": 8,
+      "basic-word-055.txt": 8,
+      "basic-word-056.txt": 8,
+      "basic-word-057.txt": 8,
+      "basic-word-058.txt": 8,
+      "basic-word-059.txt": 8,
+      "basic-word-060.txt": 8,
+      "basic-word-061.txt": 8,
+      "basic-word-062.txt": 8,
+      "basic-word-063.txt": 8,
+      "basic-word-064.txt": 8,
+      "basic-word-065.txt": 8,
+      "basic-word-066.txt": 8,
+      "basic-word-067.txt": 8,
+      "basic-word-068.txt": 8,
+      "basic-word-069.txt": 8,
+      "basic-word-070.txt": 8,
+      "basic-word-071.txt": 8,
+      "basic-word-072.txt": 8,
+      "basic-word-073.txt": 8,
+      "basic-word-074.txt": 8,
+      "basic-word-075.txt": 8,
+      "basic-word-076.txt": 8,
+      "basic-word-077.txt": 8,
+      "basic-word-078.txt": 9,
+      "basic-word-079.txt": 8,
+      "basic-word-080.txt": 8,
+      "basic-word-081.txt": 8,
+      "basic-word-082.txt": 8,
+      "basic-word-083.txt": 8,
+      "basic-word-084.txt": 8,
+      "basic-word-085.txt": 8,
+      "basic-word-086.txt": 8,
+      "basic-word-087.txt": 8,
+      "basic-word-088.txt": 8,
+      "basic-word-089.txt": 8,
+      "basic-word-090.txt": 8,
+      "basic-word-091.txt": 8,
+      "basic-word-092.txt": 8,
+      "basic-word-093.txt": 8,
+      "basic-word-094.txt": 8,
+      "basic-word-095.txt": 8,
+      "basic-word-096.txt": 8,
+      "basic-word-097.txt": 8,
+      "basic-word-098.txt": 8,
+      "basic-word-099.txt": 8,
+      "basic-word-100.txt": 8,
+      "basic-word-101.txt": 8,
+      "focus-000.txt": 50,
+      "focus-001.txt": 50,
+      "focus-002.txt": 50,
+      "focus-003.txt": 50,
+      "focus-004.txt": 50,
+      "focus-005.txt": 50,
+      "focus-006.txt": 50,
+      "focus-007.txt": 50,
+      "focus-008.txt": 50,
+      "focus-009.txt": 50,
+      "focus-010.txt": 50,
+      "focus-011.txt": 50,
+      "focus-012.txt": 50,
+      "focus-013.txt": 50,
+      "focus-014.txt": 50,
+      "focus-015.txt": 50,
+      "focus-016.txt": 50,
+      "focus-017.txt": 50,
+      "focus-018.txt": 50,
+      "focus-019.txt": 50,
+      "focus-020.txt": 50,
+      "focus-021.txt": 50,
+      "focus-022.txt": 50,
+      "focus-023.txt": 50,
+      "focus-024.txt": 50,
+      "focus-025.txt": 50,
+      "focus-026.txt": 50,
+      "focus-027.txt": 50,
+      "focus-028.txt": 50,
+      "focus-029.txt": 50,
+      "focus-030.txt": 50,
+      "focus-031.txt": 50
+    },
+    "focus_min_presentations": 50,
+    "all_training_documents_covered": true,
+    "focus_presentations": 1600,
+    "memory": {
+      "actual": [
+        7,
+        5,
+        9,
+        3
+      ],
+      "expected": [
+        7,
+        5,
+        9,
+        3
+      ],
+      "passed": true
+    },
+    "old_tensors_exact": true,
+    "parent_file_exact": true,
+    "source_checkpoint_exact": true,
+    "optimizer_seconds": 25.856021501356736,
+    "seconds_including_periodic_evaluation": 44.449560600100085,
+    "cuda_peak_allocated_bytes": 46014976,
+    "cuda_peak_reserved_bytes": 52428800,
+    "memory_excludes_driver_context": true,
+    "further_training_started": false
+  },
+  "final": {
+    "new_steps": 1000,
+    "total_lineage_steps": 1100,
+    "checkpoint_sha256": "dfd7bfa613a15fac9df47636040aef00e79261a16442b0cd151f52fb07a06ad7",
+    "losses": {
+      "train": {
+        "negative_log_likelihood": 2.0343387312017662,
+        "bits_per_target": 2.934930398993134,
+        "target_count": 15354,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "development": {
+        "negative_log_likelihood": 2.891580795369497,
+        "bits_per_target": 4.171669273809338,
+        "target_count": 492,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      },
+      "test": {
+        "negative_log_likelihood": 3.1729999593218916,
+        "bits_per_target": 4.577671306054576,
+        "target_count": 477,
+        "target_unit": "UTF-8 byte or EOS; not Chinese character",
+        "uniform_259_token_nll": 5.556828061699537
+      }
+    },
+    "previous_probes": {
+      "rows": [
+        {
+          "kind": "group",
+          "prompt": "请列出国家层面的四个价值词：",
+          "expected": [
+            "富强",
+            "民主",
+            "文明",
+            "和谐"
+          ],
+          "text": "国尮、完、困、厰、中。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e59bbde5b0aee38081e5ae8ce38081e59bb0e38081e58eb0e38081e4b8ade380820d0a",
+          "byte_count": 35,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "group",
+          "prompt": "请列出社会层面的四个价值词：",
+          "expected": [
+            "自由",
+            "平等",
+            "公正",
+            "法治"
+          ],
+          "text": "国尮、完、困、厰、中。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e59bbde5b0aee38081e5ae8ce38081e59bb0e38081e58eb0e38081e4b8ade380820d0a",
+          "byte_count": 35,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "group",
+          "prompt": "请列出个人层面的四个价值词：",
+          "expected": [
+            "爱国",
+            "敬业",
+            "诚信",
+            "友善"
+          ],
+          "text": "国尮、完、困、厰、中。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e59bbde5b0aee38081e5ae8ce38081e59bb0e38081e58eb0e38081e4b8ade380820d0a",
+          "byte_count": 35,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "富强对应哪个层面？答：",
+          "expected": [
+            "国家"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "民主对应哪个层面？答：",
+          "expected": [
+            "国家"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "文明对应哪个层面？答：",
+          "expected": [
+            "国家"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "和谐对应哪个层面？答：",
+          "expected": [
+            "国家"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "自由对应哪个层面？答：",
+          "expected": [
+            "社会"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "平等对应哪个层面？答：",
+          "expected": [
+            "社会"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "公正对应哪个层面？答：",
+          "expected": [
+            "社会"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "法治对应哪个层面？答：",
+          "expected": [
+            "社会"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "爱国对应哪个层面？答：",
+          "expected": [
+            "个人"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "敬业对应哪个层面？答：",
+          "expected": [
+            "个人"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "诚信对应哪个层面？答：",
+          "expected": [
+            "个人"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "level",
+          "prompt": "友善对应哪个层面？答：",
+          "expected": [
+            "个人"
+          ],
+          "text": "发之一。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f91e4b98be4b880e380820d0a",
+          "byte_count": 14,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "example",
+          "prompt": "小雨发现自己记错了账，主动如实更正。这体现了：",
+          "expected": [
+            "诚信"
+          ],
+          "text": "中。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e4b8ade380820d0a",
+          "byte_count": 8,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "example",
+          "prompt": "小江耐心帮助邻居搬运重物，这种待人态度体现了：",
+          "expected": [
+            "友善"
+          ],
+          "text": "中。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e4b8ade380820d0a",
+          "byte_count": 8,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "example",
+          "prompt": "工作人员认真核对每个细节，负责地完成任务。这体现了：",
+          "expected": [
+            "敬业"
+          ],
+          "text": "、庎、同叁层、宎。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e38081e5ba8ee38081e5908ce58f81e5b182e38081e5ae8ee380820d0a",
+          "byte_count": 29,
+          "matched_terms": [],
+          "correct": false
+        }
+      ],
+      "correct": 0,
+      "count": 18,
+      "valid_utf8": 18
+    },
+    "new_probes": {
+      "rows": [
+        {
+          "kind": "group",
+          "prompt": "在三个层面中，国家发展对应哪四个词？",
+          "expected": [
+            "富强",
+            "民主",
+            "文明",
+            "和谐"
+          ],
+          "text": "、困、厰、中。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e38081e59bb0e38081e58eb0e38081e4b8ade380820d0a",
+          "byte_count": 23,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "group",
+          "prompt": "社会层面的价值取向可以用哪四个词概括？",
+          "expected": [
+            "自由",
+            "平等",
+            "公正",
+            "法治"
+          ],
+          "text": "困、厰、中。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e59bb0e38081e58eb0e38081e4b8ade380820d0a",
+          "byte_count": 20,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "group",
+          "prompt": "个人应遵循的四项价值准则是什么？",
+          "expected": [
+            "爱国",
+            "敬业",
+            "诚信",
+            "友善"
+          ],
+          "text": "层\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e5b1820d0a",
+          "byte_count": 5,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "example",
+          "prompt": "阿青答应归还借来的书，按约定送还。他体现了什么？",
+          "expected": [
+            "诚信"
+          ],
+          "text": "。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e380820d0a",
+          "byte_count": 5,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "example",
+          "prompt": "阿红看见陌生人需要帮助，耐心指路。这体现了什么？",
+          "expected": [
+            "友善"
+          ],
+          "text": "。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e380820d0a",
+          "byte_count": 5,
+          "matched_terms": [],
+          "correct": false
+        },
+        {
+          "kind": "example",
+          "prompt": "工人对自己的任务负责，认真完成检查。这体现了什么？",
+          "expected": [
+            "敬业"
+          ],
+          "text": "友、庎、同叁层、宎。\r\n",
+          "utf8_valid": true,
+          "ended_with_eos": true,
+          "budget_exhausted": false,
+          "decoding": "greedy raw bytes; BOS/PAD masked; no UTF-8 constraint or repair",
+          "bytes_hex": "e58f8be38081e5ba8ee38081e5908ce58f81e5b182e38081e5ae8ee380820d0a",
+          "byte_count": 32,
+          "matched_terms": [],
+          "correct": false
+        }
+      ],
+      "correct": 0,
+      "count": 6,
+      "valid_utf8": 6
+    },
+    "memory": {
+      "actual": [
+        7,
+        5,
+        9,
+        3
+      ],
+      "expected": [
+        7,
+        5,
+        9,
+        3
+      ],
+      "passed": true
+    },
+    "old_tensors_exact": true,
+    "sampler_restored": true,
+    "sealed_test_evaluations": 1,
+    "cold_process": true,
+    "integrity_passed": true
+  },
+  "exposure": {
+    "focus": {
+      "presentations": 1600,
+      "targets": 98550
+    },
+    "basic": {
+      "presentations": 2400,
+      "targets": 107904
+    }
+  },
+  "verification": {
+    "protected_previous_files": 15,
+    "source_checkpoint_unchanged": true,
+    "pristine_interface_unchanged": true,
+    "sampling_reconstruction_exact": true,
+    "regression_tests": 110,
+    "changed_interface_scalar_positions": 190037,
+    "old_tensor_checks_passed": true,
+    "sealed_test_evaluations": 1
+  },
+  "generation_limits": {
+    "diagnostic_valid_utf8": 24,
+    "diagnostic_prompts": 24,
+    "correct_content": 0,
+    "level_prompts": 12,
+    "unique_level_answers": 1,
+    "outputs_with_no_han_character": 2,
+    "note": "Valid byte strings and short EOS-terminated output do not establish meaningful words or answers."
+  },
+  "development_relative_reduction": 0.275671741228264,
+  "checkpoint": {
+    "path": "runs\\chinese-curriculum-1000\\checkpoint.pt",
+    "sha256": "dfd7bfa613a15fac9df47636040aef00e79261a16442b0cd151f52fb07a06ad7",
+    "bytes": 2316566,
+    "requires_parent": "checkpoints/individual-prechinese-v3.pt",
+    "requires_curriculum_trainer_for_resume": true
+  },
+  "engineering_passed": true,
+  "next_training_started": false,
+  "interpretation": "Fixed finite synthetic curriculum, no causal control separating data, coverage, optimizer reset or extra compute. Frozen backbone remains a possible limitation, not established cause."
+}
