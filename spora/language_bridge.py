@@ -89,8 +89,13 @@ class LanguageBridge(nn.Module):
                 self.last_read_stats.append(stats)
                 x=x+torch.sigmoid(self.read_strength)*self.read_projection(mixed)
                 layer_site+=1
+        x=self.contextualize(x)
         x=x+self.adapter(x)
         return self.head(self.organism.final_norm(x))
+
+    def contextualize(self,x):
+        """Identity in the original interface; optional research extension point."""
+        return x
 
     def trainable_parameters(self):return [p for p in self.parameters() if p.requires_grad]
 

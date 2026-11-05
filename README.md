@@ -4,16 +4,17 @@
 
 **本机试聊**：在 `D:\SPORA` 双击 `chat.cmd`，输入短句后回车。默认加载P18版本，当前回答仍可能错误；可用 `/memory 12` 查看已有符号记忆，`/quit` 退出。详见[使用说明](docs/local-conversation.md)。此入口只读，不启动训练。
 
-当前完成 **P18 新增1000步中文课程**（2026-11-05），累计1100步。重点材料各学习50次，全部训练文档覆盖；新开发集损失从3.99降至2.89，24条诊断输出均可合法解码，但内容仍0/24，尚无可用中文问答能力。旧个体保持，110项回归通过。本轮已结束，没有追加训练。
+当前完成 **P19 短步骤与可训练循环层对照**（2026-11-06）：三组各三个种子，每份1200步。答案正确率25%–36.46%，改问物品的成对正确率均为0；尚未形成可靠推理或自由聊天能力。旧个体保持，116项回归通过。研究副本出现旧中文开发损失退化，未晋升；默认聊天仍使用累计1100步的P18。此次固定预算已结束。
 
 - [中文训练前交付报告](reports/prelanguage-report.md)与[完整结果，包括失败版本](reports/prelanguage-results.json)
-- **最新：[P18课程报告](reports/P18-report.md)、[完整结果](reports/P18-results.json)、[实现说明](docs/chinese-curriculum-implementation.md)及[固定配置](configs/chinese-curriculum-1000.json)。**
+- **最新：[P19对照报告](reports/P19-report.md)、[全部输出与测量](reports/P19-results.json)、[结构与复现](docs/short-reasoning-implementation.md)及[固定配置](configs/p19-short-reasoning.json)。**
+- [P18课程报告](reports/P18-report.md)、[完整结果](reports/P18-results.json)、[实现说明](docs/chinese-curriculum-implementation.md)及[固定配置](configs/chinese-curriculum-1000.json)。
 - [P17首次中文试验](reports/P17-report.md)、[全部测量](reports/P17-results.json)与[用户指定重点课程](data/chinese-pilot/values-focus.json)。
 - [P14–P16准备报告](reports/P14-P16-report.md)、[准备结果](reports/P14-P16-results.json)与[实现说明](docs/pre-chinese-implementation.md)。
 - [P8 读取优化实测](reports/P8-read-report.md)与[睡眠、存储研究和实施顺序](docs/memory-read-sleep-storage.md)
 - [P9/P10 交付报告](reports/P9-P10-report.md)、[完整数值与对照](reports/P9-P10-results.json)及[实现与命令](docs/durable-sleep-implementation.md)
 - [P11 时间与环境预测报告](reports/P11-report.md)、[完整结果](reports/P11-results.json)及[设计、边界与命令](docs/time-world-implementation.md)
-- [后续待办](docs/TODO.md)：完整睡眠想象、中文语言能力训练；两项均尚未启动。
+- [后续待办](docs/TODO.md)：完整睡眠想象尚未实现；中文训练已启动，可靠语言能力及记忆语义对齐待完成。
 - [TencentDB Agent Memory 评审](docs/tencentdb-memory-review.md)：区分内部机制、后续学习内容与外部工具能力。
 - [P12/P13报告](reports/P12-P13-report.md)、[完整结果](reports/P12-P13-results.json)、[内部实施计划](docs/internal-memory-plan.md)及[命令与限制](docs/internal-memory-implementation.md)。
 - [在线阅读总体设计](docs/SPORA-v2.md)及[P5–P7 结构补充](docs/P5-P7-design.md)；下列 Word 文件保留为设计基线。
