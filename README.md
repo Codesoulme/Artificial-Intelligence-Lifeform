@@ -8,6 +8,8 @@
 - [P8 读取优化实测](reports/P8-read-report.md)与[睡眠、存储研究和实施顺序](docs/memory-read-sleep-storage.md)
 - [P9/P10 交付报告](reports/P9-P10-report.md)、[完整数值与对照](reports/P9-P10-results.json)及[实现与命令](docs/durable-sleep-implementation.md)
 - [P11 时间与环境预测报告](reports/P11-report.md)、[完整结果](reports/P11-results.json)及[设计、边界与命令](docs/time-world-implementation.md)
+- [后续待办](docs/TODO.md)：完整睡眠想象、中文语言能力训练；两项均尚未启动。
+- [TencentDB Agent Memory 评审](docs/tencentdb-memory-review.md)：区分内部机制、后续学习内容与外部工具能力。
 - [在线阅读总体设计](docs/SPORA-v2.md)及[P5–P7 结构补充](docs/P5-P7-design.md)；下列 Word 文件保留为设计基线。
 - [下载 Word 文档](SPORA%20%E6%9E%B6%E6%9E%84%EF%BC%9A%E9%9D%A2%E5%90%91%E6%8C%81%E7%BB%AD%E5%AD%A6%E4%B9%A0%E4%B8%8E%E7%94%9F%E6%80%81%E6%BC%94%E5%8C%96%E7%9A%84%E6%99%BA%E8%83%BD%E4%BD%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1.docx)
 - [首轮实践结果与已知问题](reports/P1-report.md)
