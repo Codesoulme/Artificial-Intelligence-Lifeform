@@ -1,0 +1,25 @@
+{
+  "purpose": "Fixed diagnostic prompts, not gradient targets; shared factual content is intentional, not independent-topic generalization",
+  "max_new_bytes": 96,
+  "general_prompts": ["清晨，", "桌上有", "如果下雨，"],
+  "probes": [
+    {"kind":"group","prompt":"请列出国家层面的四个价值词：","expected":["富强","民主","文明","和谐"]},
+    {"kind":"group","prompt":"请列出社会层面的四个价值词：","expected":["自由","平等","公正","法治"]},
+    {"kind":"group","prompt":"请列出个人层面的四个价值词：","expected":["爱国","敬业","诚信","友善"]},
+    {"kind":"level","prompt":"富强对应哪个层面？答：","expected":["国家"]},
+    {"kind":"level","prompt":"民主对应哪个层面？答：","expected":["国家"]},
+    {"kind":"level","prompt":"文明对应哪个层面？答：","expected":["国家"]},
+    {"kind":"level","prompt":"和谐对应哪个层面？答：","expected":["国家"]},
+    {"kind":"level","prompt":"自由对应哪个层面？答：","expected":["社会"]},
+    {"kind":"level","prompt":"平等对应哪个层面？答：","expected":["社会"]},
+    {"kind":"level","prompt":"公正对应哪个层面？答：","expected":["社会"]},
+    {"kind":"level","prompt":"法治对应哪个层面？答：","expected":["社会"]},
+    {"kind":"level","prompt":"爱国对应哪个层面？答：","expected":["个人"]},
+    {"kind":"level","prompt":"敬业对应哪个层面？答：","expected":["个人"]},
+    {"kind":"level","prompt":"诚信对应哪个层面？答：","expected":["个人"]},
+    {"kind":"level","prompt":"友善对应哪个层面？答：","expected":["个人"]},
+    {"kind":"example","prompt":"小雨发现自己记错了账，主动如实更正。这体现了：","expected":["诚信"]},
+    {"kind":"example","prompt":"小江耐心帮助邻居搬运重物，这种待人态度体现了：","expected":["友善"]},
+    {"kind":"example","prompt":"工作人员认真核对每个细节，负责地完成任务。这体现了：","expected":["敬业"]}
+  ]
+}

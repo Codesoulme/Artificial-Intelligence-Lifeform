@@ -2,10 +2,11 @@
 
 探索从随机初始化的小型神经网络出发，形成可持续学习、保留自身经历并逐步扩展能力的人工生命候选系统。
 
-当前完成 **P14–P16 中文训练前准备**（2026-11-05）：有限属性归纳、动作反馈学习、同个体存储兼容及可恢复的语言训练入口。106项完整检查与随后11项相关检查通过，13份旧文件不变。已准备小规模中文课程，但尚未用中文更新参数。新个体保留72次符号观察；慢层因原个体未经历相应概念课程而保持未启用，数值动作策略已学习并保存。
+当前完成 **P17 首轮100步中文试验**（2026-11-05），按用户要求加入社会主义核心价值观重点课程。开发损失从5.72降至4.01，旧个体保持；自由生成仍有非法字节，18道内容诊断未答对，尚无可用中文能力。已停在100步，下一批没有启动。P14–P16的有限内部机制与106项历史回归证据保留。
 
 - [中文训练前交付报告](reports/prelanguage-report.md)与[完整结果，包括失败版本](reports/prelanguage-results.json)
-- **最新：[P14–P16交付报告](reports/P14-P16-report.md)、[完整结果](reports/P14-P16-results.json)、[实现与命令](docs/pre-chinese-implementation.md)及[首轮中文小试验配置](configs/chinese-pilot-plan.json)。**
+- **最新：[P17中文试验报告](reports/P17-report.md)、[全部测量](reports/P17-results.json)、[重点课程](data/chinese-pilot/values-focus.json)及[本轮固定配置](configs/chinese-pilot-100-values.json)。**
+- [P14–P16准备报告](reports/P14-P16-report.md)、[准备结果](reports/P14-P16-results.json)与[实现说明](docs/pre-chinese-implementation.md)。
 - [P8 读取优化实测](reports/P8-read-report.md)与[睡眠、存储研究和实施顺序](docs/memory-read-sleep-storage.md)
 - [P9/P10 交付报告](reports/P9-P10-report.md)、[完整数值与对照](reports/P9-P10-results.json)及[实现与命令](docs/durable-sleep-implementation.md)
 - [P11 时间与环境预测报告](reports/P11-report.md)、[完整结果](reports/P11-results.json)及[设计、边界与命令](docs/time-world-implementation.md)
