@@ -1,0 +1,18 @@
+{
+  "phase": "P23b",
+  "parent": "checkpoints/individual-prechinese-v3.pt",
+  "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "data": "runs/conversation-data-v3",
+  "seed": 230007,
+  "model": {"vocabulary":8192,"width":256,"depth":8,"heads":8,"hidden":704,"context":512,"memory_layers":[3,7]},
+  "length": 256,
+  "batch": 8,
+  "learning_rate": 0.0005,
+  "warmup": 100,
+  "schedule_steps": 20000,
+  "check_every": 250,
+  "snapshot_every": 500,
+  "focus_every": 10,
+  "schedule": ["pretrain","pretrain","pretrain","dialogue"],
+  "scope": "Fresh random language candidate after first500-step A corpus audit. V2 filters more external identity statements and hash-subsamples before cap; owns new tokenizer trained only on train partition. Preserves original individual and all A artifacts. Segmented schedule with inspections, no automatic chat acceptance."
+}

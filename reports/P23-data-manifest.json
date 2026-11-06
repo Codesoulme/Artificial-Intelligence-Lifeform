@@ -1,0 +1,82 @@
+{
+  "manifest": {
+    "source_hashes": {
+      "pretrain_t2t_mini.jsonl": "6dd6716c84ab36897bdbfc7f88e04f4441c48c1ab7ecee88ce0b0e7d4685560c",
+      "sft_t2t_mini.jsonl": "abb1e76b2056e14728beb78db96b7b3c491a0bef1ed3e34a9b381b28f29fa518"
+    },
+    "stats": {
+      "pretrain_scanned": 106686,
+      "pretrain_train": 100000,
+      "pretrain_filtered": 4665,
+      "pretrain_test": 512,
+      "pretrain_development": 512,
+      "dialogue_scanned": 152645,
+      "dialogue_filtered": 51201,
+      "dialogue_train": 100000,
+      "dialogue_test": 512,
+      "dialogue_development": 512,
+      "exact_duplicates": 35,
+      "pretrain_train_tokens": 18033389,
+      "dialogue_train_encoded": 87227,
+      "dialogue_train_targets": 20725731,
+      "dialogue_train_token_length_filtered": 12773,
+      "pretrain_development_tokens": 89771,
+      "dialogue_development_encoded": 462,
+      "dialogue_development_targets": 113082,
+      "dialogue_development_token_length_filtered": 50,
+      "pretrain_test_tokens": 95346,
+      "dialogue_test_encoded": 449,
+      "dialogue_test_targets": 110615,
+      "dialogue_test_token_length_filtered": 63
+    },
+    "tokenizer_sha256": "44d183b84d7033b9a576501dfc0625167f749d5bca264657975e8dc8d5860dd9",
+    "vocabulary": 8192,
+    "source_code_sha256": "02a8f9e421336aece1d5e51a1214f3a55514ea6ef08ae566c29dba6c8e3d7865",
+    "sampling": "First accepted100k of each source; selection is order-biased, not random corpus sampling.",
+    "split": "Grouped by normalized leading96 characters; 98/1/1 hash split, max512 heldout per kind. Exact text dedup across sources. Not exhaustive semantic near-dedup.",
+    "files": {
+      "dialogue-development-tokens.jsonl": "1cdf04208a1c6b4be853929eb46ce8765ed19295847a350f6b57235145245a5b",
+      "dialogue-development.jsonl": "3f70f899dcd53f4203aecda0e303c9306b42b8db03b37c3fdcccd6a50569d1d3",
+      "dialogue-test-tokens.jsonl": "f4f49d017cbf44e2bdb4b989a7f266fbf5615fac2fcabbd664fd6cd78d3e5061",
+      "dialogue-test.jsonl": "141997f914988604b0f00724289114d49bf6a62c8950ef8b7d27bd3238d3ba3f",
+      "dialogue-train-tokens.jsonl": "f63475f99c411a3caf489f373fe5d1e555382221ebcd0e6b38adc6f6f6f727cb",
+      "dialogue-train.jsonl": "f7da253e6c7529776bee2b3696537d38778b8c741ae3fcfa1d333eb0ec7bd6d2",
+      "focus-tokens.json": "f9ff2421a7ad01513c1150f3db51d324258fe418e6be02a07945aed286e281c8",
+      "pretrain-development.bin": "dc7f0619213d455920a3e49cd2d175df678d49720d2e529f4cd663f8744c3ef6",
+      "pretrain-development.jsonl": "ce7ca004f3688edf5a8f4f1f20e4b7e7ef826c25a95f6d8e9133497a2c2d7dec",
+      "pretrain-test.bin": "01b25923a21989e52b0510134df49cfc68592b63dfc9b465fe630ac51f177278",
+      "pretrain-test.jsonl": "476665028a7028275b8beb08ebb11eaa3c159afb8a13f997898c87ad90cf76d5",
+      "pretrain-train.bin": "1779680ec363087efe422d4188551da0205b36ae018052ecc89cdf1945e4beeb",
+      "pretrain-train.jsonl": "315871264c983d35c933341136edc45c0e86d660278cbd776fb6860cf732a77d",
+      "tokenizer.json": "44d183b84d7033b9a576501dfc0625167f749d5bca264657975e8dc8d5860dd9"
+    },
+    "focus_segments": 32,
+    "license": "CC-BY-NC-4.0 as declared by corpus maintainer; local noncommercial research, source attribution in language-material provenance."
+  },
+  "provenance": {
+    "pretrain": {
+      "path": "pretrain_t2t_mini.jsonl",
+      "bytes": 1241043656,
+      "sha256": "6dd6716c84ab36897bdbfc7f88e04f4441c48c1ab7ecee88ce0b0e7d4685560c",
+      "url": "https://modelscope.cn/api/v1/datasets/gongjy/minimind_dataset/repo?Revision=21dd8c9258b6dc73971ff10d4dd3924caf32c644&FilePath=pretrain_t2t_mini.jsonl",
+      "revision": "21dd8c9258b6dc73971ff10d4dd3924caf32c644",
+      "repository": "gongjy/minimind_dataset",
+      "upstream": "https://www.modelscope.cn/datasets/gongjy/minimind_dataset",
+      "license_declared": "CC-BY-NC-4.0",
+      "use": "Local noncommercial research; attribution retained. Dataset card also describes upstream mixed licenses. Text only; no weights.",
+      "seconds": 250.59299999999348
+    },
+    "dialogue": {
+      "path": "sft_t2t_mini.jsonl",
+      "bytes": 1739201170,
+      "sha256": "abb1e76b2056e14728beb78db96b7b3c491a0bef1ed3e34a9b381b28f29fa518",
+      "url": "https://modelscope.cn/api/v1/datasets/gongjy/minimind_dataset/repo?Revision=833d262180bb2cddbba1284222ad4b5547b6b224&FilePath=sft_t2t_mini.jsonl",
+      "revision": "833d262180bb2cddbba1284222ad4b5547b6b224",
+      "repository": "gongjy/minimind_dataset",
+      "upstream": "https://www.modelscope.cn/datasets/gongjy/minimind_dataset",
+      "license_declared": "CC-BY-NC-4.0",
+      "use": "Local noncommercial research; attribution retained. Dataset card also describes upstream mixed licenses. Text only; no weights.",
+      "seconds": 243.39099999994505
+    }
+  }
+}

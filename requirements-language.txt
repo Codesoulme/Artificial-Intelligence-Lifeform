@@ -1,0 +1,2 @@
+# Optional larger-language research tools; no pretrained models required.
+tokenizers==0.22.1

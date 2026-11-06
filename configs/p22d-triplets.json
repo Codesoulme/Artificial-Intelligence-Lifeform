@@ -1,0 +1,17 @@
+{
+  "phase": "P22d",
+  "seeds": [7, 11, 23],
+  "arms": ["context"],
+  "steps": 3600,
+  "check_every": 300,
+  "learning_rate": 0.0002,
+  "gate": 0.95,
+  "source_sha256": {
+    "7": "70c9d409c4f6767d1ea4936ac52d14864af71862bbb68ebf2d720cde4855dd3a",
+    "11": "ffb430502e4dbfb381b51494150e124ac172a6d5a203f5243571c59b8b88ca57",
+    "23": "ae369e82ac90488d07214ff958792f6105f49f46c0473b370898bbe4ded01618"
+  },
+  "scope": "Restart from P21 using C architecture and supervision. D changes paired curriculum, learning rate and budget; not a single-factor ablation. Sources protected including earlier P22 files.",
+  "schedule": "Four worlds per batch: single,select,update,update. Each contributes present target, other present target (duplicate for singleton), absent target, reversed original. First2 short; third alternates short/long; fourth long. 16 task examples and8 old Chinese replay. No final-wording training.",
+  "selection": "Fixed last checkpoint; last two small development and full development >=95% all metrics, false unknown<=5%, old Chinese NLL<=P18*1.05, exact organism. All seeds required before final test."
+}

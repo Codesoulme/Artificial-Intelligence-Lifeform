@@ -1,0 +1,18 @@
+{
+  "phase": "P23a",
+  "parent": "checkpoints/individual-prechinese-v3.pt",
+  "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "data": "runs/conversation-data-v1",
+  "seed": 230007,
+  "model": {"vocabulary":8192,"width":256,"depth":8,"heads":8,"hidden":704,"context":512,"memory_layers":[3,7]},
+  "length": 256,
+  "batch": 8,
+  "learning_rate": 0.0005,
+  "warmup": 100,
+  "schedule_steps": 20000,
+  "check_every": 250,
+  "snapshot_every": 500,
+  "focus_every": 20,
+  "schedule": ["pretrain","pretrain","pretrain","dialogue"],
+  "scope": "Own random language path, preserves same frozen organism. No external weights, no P22 language-transfer claim. Fixed256-token initial batches;512 positional capacity is not proof of trained long-context ability. Run in bounded segments, keep periodic snapshots, inspect natural-language samples before increasing budget."
+}
