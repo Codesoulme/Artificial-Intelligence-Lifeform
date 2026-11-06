@@ -1,0 +1,92 @@
+{
+  "source_sha256": "37a62c11c8b7574b0e0a7584ecf9bb7ff13c321c8f8a22f841f2948748b0d1b5",
+  "source_steps": 6000,
+  "source_targets": 4372847,
+  "source_parameters": 8616194,
+  "grown_parameters": 30077442,
+  "config": {
+    "vocabulary": 8192,
+    "width": 512,
+    "depth": 8,
+    "heads": 16,
+    "hidden": 1408,
+    "context": 512,
+    "memory_layers": [
+      3,
+      7
+    ]
+  },
+  "device": "cpu",
+  "probes": [
+    {
+      "probe": 0,
+      "max_logit_difference": 1.3828277587890625e-05,
+      "logits_close": true,
+      "argmax_equal": true,
+      "generation_equal": true
+    },
+    {
+      "probe": 1,
+      "max_logit_difference": 1.1682510375976562e-05,
+      "logits_close": true,
+      "argmax_equal": true,
+      "generation_equal": true
+    },
+    {
+      "probe": 2,
+      "max_logit_difference": 1.239776611328125e-05,
+      "logits_close": true,
+      "argmax_equal": true,
+      "generation_equal": true
+    },
+    {
+      "probe": 3,
+      "max_logit_difference": 1.4781951904296875e-05,
+      "logits_close": true,
+      "argmax_equal": true,
+      "generation_equal": true
+    },
+    {
+      "probe": 4,
+      "max_logit_difference": 2.193450927734375e-05,
+      "logits_close": true,
+      "argmax_equal": true,
+      "generation_equal": true
+    },
+    {
+      "probe": 5,
+      "max_logit_difference": 1.3113021850585938e-05,
+      "logits_close": true,
+      "argmax_equal": true,
+      "generation_equal": true
+    },
+    {
+      "random_length": 16,
+      "max_logit_difference": 1.5497207641601562e-05,
+      "logits_close": true,
+      "argmax_equal": true
+    },
+    {
+      "random_length": 128,
+      "max_logit_difference": 2.7418136596679688e-05,
+      "logits_close": true,
+      "argmax_equal": true
+    },
+    {
+      "random_length": 512,
+      "max_logit_difference": 4.813075065612793e-05,
+      "logits_close": true,
+      "argmax_equal": true
+    }
+  ],
+  "individual_exact": true,
+  "source_unchanged": true,
+  "source_code_sha256": {
+    "spora/conversation_growth.py": "8643627b2e3fb48e7c4a4b76f1509275f0a5a33db8b2dc16c648b0dc684260b8",
+    "scripts/grow_conversation.py": "ec2e12f19514d529d7c725d096aa7d5a27a4e2668dcb1b564379e5c431702e5f",
+    "spora/conversation.py": "d3eb98c50237c8a79a9cfe7a9af23818e68d3fe1fc6cfb26ef33465a73ee8e3c"
+  },
+  "scope": "Finite numerical preservation probes, not proof of improved learning or chat ability. No optimizer inherited. No training updates.",
+  "passed": true,
+  "grown_sha256": "22e29b76144c1156f2e82e1e78c1ddb144c7c530d80f3c350337a60342af905a"
+}

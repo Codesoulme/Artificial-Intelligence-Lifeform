@@ -1,0 +1,921 @@
+{
+  "metric": "direct_and_numbered_lines_v2",
+  "scope": "Post-hoc observational rescore only. Raw generations preserved. Flags may still miss paraphrased loops; manual content review remains mandatory.",
+  "results": [
+    {
+      "path": "runs/p23d-conversation/multiturn-6000.json",
+      "sha256": "9bb8f77b28e1861089f1503417405006e0d9958107a14dbee1232dba1e7219af",
+      "original_summary": {
+        "turns": 36,
+        "eos_fraction": 0.8888888888888888,
+        "valid_utf8_fraction": 0.9722222222222222,
+        "obvious_loops": 4,
+        "history_trimmed_turns": 0,
+        "mean_seconds": 0.6088698805542663,
+        "useful_fraction": null,
+        "status": "ungraded_development_not_acceptance"
+      },
+      "new_obvious_loops": 5,
+      "rows": [
+        {
+          "scenario": "greeting",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "greeting",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "greeting",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "explanation",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "explanation",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "explanation",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "planning",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.9310344827586207,
+          "direct_loop": true,
+          "max_repeated_line_count": 1,
+          "obvious_loop": true
+        },
+        {
+          "scenario": "planning",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "planning",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.3508771929824561,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.21739130434782605,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.21739130434782605,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "instruction",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.9787234042553191,
+          "direct_loop": true,
+          "max_repeated_line_count": 1,
+          "obvious_loop": true
+        },
+        {
+          "scenario": "instruction",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.9787234042553191,
+          "direct_loop": true,
+          "max_repeated_line_count": 1,
+          "obvious_loop": true
+        },
+        {
+          "scenario": "instruction",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.10526315789473684,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "clarification",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.7205882352941176,
+          "direct_loop": false,
+          "max_repeated_line_count": 5,
+          "obvious_loop": true
+        },
+        {
+          "scenario": "clarification",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "clarification",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.15000000000000002,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "reference",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "reference",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "reference",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "correction",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "correction",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "correction",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "unknown",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "unknown",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "unknown",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "values",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "values",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "values",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "emotion",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.2592592592592593,
+          "direct_loop": true,
+          "max_repeated_line_count": 1,
+          "obvious_loop": true
+        },
+        {
+          "scenario": "emotion",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.18518518518518523,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "emotion",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "summary",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "summary",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "summary",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        }
+      ]
+    },
+    {
+      "path": "runs/p23d-conversation/multiturn-6000-sampled.json",
+      "sha256": "94952559d4bd91a2c530933586b5427e2a6908ae83614801f1c0c7421bbf4f78",
+      "original_summary": {
+        "turns": 36,
+        "eos_fraction": 0.9722222222222222,
+        "valid_utf8_fraction": 0.9444444444444444,
+        "obvious_loops": 3,
+        "history_trimmed_turns": 0,
+        "mean_seconds": 0.5731932416674681,
+        "useful_fraction": null,
+        "status": "ungraded_development_not_acceptance"
+      },
+      "new_obvious_loops": 3,
+      "rows": [
+        {
+          "scenario": "greeting",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "greeting",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "greeting",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "explanation",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "explanation",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.5666666666666667,
+          "direct_loop": true,
+          "max_repeated_line_count": 1,
+          "obvious_loop": true
+        },
+        {
+          "scenario": "explanation",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.7333333333333334,
+          "direct_loop": true,
+          "max_repeated_line_count": 1,
+          "obvious_loop": true
+        },
+        {
+          "scenario": "planning",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.054545454545454564,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "planning",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "planning",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "instruction",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.6311475409836065,
+          "direct_loop": false,
+          "max_repeated_line_count": 3,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "instruction",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.23809523809523814,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "instruction",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.09999999999999998,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "clarification",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.045454545454545414,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "clarification",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "clarification",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "reference",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "reference",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.052631578947368474,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "reference",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "correction",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "correction",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "correction",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "unknown",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "unknown",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "unknown",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "values",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.21250000000000002,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "values",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.07407407407407407,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "values",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "emotion",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.30000000000000004,
+          "direct_loop": true,
+          "max_repeated_line_count": 1,
+          "obvious_loop": true
+        },
+        {
+          "scenario": "emotion",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "emotion",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "summary",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.04761904761904767,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "summary",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "summary",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        }
+      ]
+    },
+    {
+      "path": "runs/p23e-conversation/multiturn-2000.json",
+      "sha256": "6d48ac7a47ca1abddb5873aaa7c79b9738d25f0ddae1e3bc6fd762c37e873677",
+      "original_summary": {
+        "turns": 36,
+        "eos_fraction": 0.9166666666666666,
+        "valid_utf8_fraction": 1.0,
+        "obvious_loops": 0,
+        "history_trimmed_turns": 0,
+        "mean_seconds": 0.6466273972214872,
+        "useful_fraction": null,
+        "status": "ungraded_development_not_acceptance"
+      },
+      "new_obvious_loops": 2,
+      "rows": [
+        {
+          "scenario": "greeting",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "greeting",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "greeting",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "explanation",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "explanation",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "explanation",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "planning",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.4,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "planning",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.4807692307692307,
+          "direct_loop": false,
+          "max_repeated_line_count": 3,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "planning",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "instruction",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.5528455284552846,
+          "direct_loop": false,
+          "max_repeated_line_count": 18,
+          "obvious_loop": true
+        },
+        {
+          "scenario": "instruction",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.07692307692307687,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "instruction",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.19999999999999996,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "clarification",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.65625,
+          "direct_loop": false,
+          "max_repeated_line_count": 8,
+          "obvious_loop": true
+        },
+        {
+          "scenario": "clarification",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.16666666666666663,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "clarification",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.4772727272727273,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "reference",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "reference",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "reference",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "correction",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "correction",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "correction",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "unknown",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "unknown",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "unknown",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "values",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "values",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "values",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "emotion",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "emotion",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "emotion",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.5263157894736843,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "summary",
+          "turn": 1,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "summary",
+          "turn": 2,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        },
+        {
+          "scenario": "summary",
+          "turn": 3,
+          "repeated_4gram_fraction": 0.0,
+          "direct_loop": false,
+          "max_repeated_line_count": 1,
+          "obvious_loop": false
+        }
+      ]
+    }
+  ]
+}

@@ -7,6 +7,7 @@ from tokenizers import Tokenizer
 from spora.growing import load
 from spora.conversation import restore_conversation, generate
 from spora.conversation_sampling import generate_sampled
+from spora.conversation_metrics import repetition_metrics
 from spora.language_training import frozen_digest
 from scripts.prepare_conversation_v2 import sha
 from scripts.converse_research import prefix_tokens
@@ -43,12 +44,9 @@ def main():
             else:value=generate_sampled(model,state,prefix,eos,args.budget,forbidden,temperature=.7,top_p=.9,seed=args.seed+len(rows))
             torch.cuda.synchronize()
             seconds=time.perf_counter()-start;text=tokenizer.decode(value['tokens'],skip_special_tokens=False)
-            grams=[text[i:i+4] for i in range(max(0,len(text)-3))]
-            duplicate_fraction=1-len(set(grams))/max(1,len(grams))
             row=dict(scenario=case['name'],turn=turn,prompt=prompt,text=text,**value,seconds=seconds,
                 input_tokens=len(prefix),removed_history_messages=removed,utf8_valid='\ufffd' not in text,
-                repeated_4gram_fraction=duplicate_fraction,
-                obvious_loop=bool(re.search(r'(.{2,20})\1{3,}',text)),useful=None)
+                **repetition_metrics(text),useful=None)
             rows.append(row);history.append(('assistant',text))
         print(json.dumps(dict(scenario=case['name'],turns=len(case['turns']))),flush=True)
     summary=dict(turns=len(rows),eos_fraction=sum(r['ended_with_eos'] for r in rows)/len(rows),
@@ -59,7 +57,8 @@ def main():
     result=dict(checkpoint_sha256=digest,step=payload['steps'],plan_sha256=sha(ROOT/args.plan),
         policy=args.policy,sampling=dict(temperature=.7,top_p=.9,seed_base=args.seed) if args.policy=='sampled' else None,
         tokenizer_sha256=sha(vocab),cases_sha256=sha(ROOT/args.cases),evaluator_sha256=sha(Path(__file__)),
-        generation_source_sha256={name:sha(ROOT/name) for name in ('spora/conversation.py','spora/conversation_sampling.py','scripts/converse_research.py')},
+        generation_source_sha256={name:sha(ROOT/name) for name in ('spora/conversation.py','spora/conversation_sampling.py','scripts/converse_research.py','spora/conversation_metrics.py')},
+        repetition_metric_version='direct_and_numbered_lines_v2',
         old_individual_exact=before==frozen_digest(organism,state),checkpoint_unchanged=sha(path)==digest,
         summary=summary,rows=rows)
     out.parent.mkdir(parents=True,exist_ok=True)
