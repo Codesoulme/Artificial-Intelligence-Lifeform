@@ -4,12 +4,12 @@
 
 **本机试聊**：在 `D:\SPORA` 双击 `chat.cmd`，输入短句后回车。默认加载P18版本，当前回答仍可能错误；可用 `/memory 12` 查看已有符号记忆，`/quit` 退出。详见[使用说明](docs/local-conversation.md)。此入口只读，不启动训练。
 
-最新研究为 **P23 广覆盖中文候选**（2026-11-06，进行中，尚不能正常聊天）：自建8192词元编码、约862万可训练参数，从随机初始化学习公开中文与对话文本，只读原个体。A／B／C失败均保留；C完成20000步仍不能可靠交流。D继承其权重，增加完整短回答与自写多轮课程；6000步仍未通过，两种解码均0/36可靠回答。E已按降低小教材权重、批量16的方案启动。132项回归及20步恢复重放通过，默认仍P18。没有使用外部预训练权重，不能把原符号记忆保持解释为完成了语言语义对齐。
+最新研究为 **P23 广覆盖中文候选**（2026-11-06，进行中，尚不能正常聊天）：自建8192词元编码、约862万可训练参数，从随机初始化学习公开中文与对话文本，只读原个体。A／B／C失败均保留；C完成20000步仍不能可靠交流。D继承其权重，增加完整短回答与自写多轮课程；6000步仍未通过，两种解码均0/36可靠回答。E完成4000步仍未通过；F开展同批数据的862万／3008万参数对照。132项回归及20步恢复重放通过，默认仍P18。没有使用外部预训练权重，不能把原符号记忆保持解释为完成了语言语义对齐。
 
 最新通过的研究里程碑仍为 **P21 短问法组合迁移**：三种子保留组合答案99.31%–100%，最低成对指标97.22%。没有外部预训练权重，不能自由聊天，前序实验和失败记录完整保留。
 
 - [中文训练前交付报告](reports/prelanguage-report.md)与[完整结果，包括失败版本](reports/prelanguage-results.json)
-- **最新研究：[E调整协议](docs/P23e-protocol.md)、[D教学阶段进度](reports/P23d-progress.md)、[C阶段进度与失败](reports/P23c-progress.md)、[P23协议](docs/P23-protocol.md)、[B多轮失败与后续调整](reports/P23b-report.md)、[实际交流验收标准](docs/conversation-goal.md)、[A试验与失败](reports/P23a-pilot-report.md)、[教材来源与限制](docs/language-data-attribution.md)。**
+- **最新研究：[E进度](reports/P23e-progress.md)、[F容量对照](docs/P23f-protocol.md)、[D教学阶段进度](reports/P23d-progress.md)、[C阶段进度与失败](reports/P23c-progress.md)、[P23协议](docs/P23-protocol.md)、[B多轮失败与后续调整](reports/P23b-report.md)、[实际交流验收标准](docs/conversation-goal.md)、[A试验与失败](reports/P23a-pilot-report.md)、[教材来源与限制](docs/language-data-attribution.md)。**
 - [P22d成对教学诊断（未通过）](reports/P22d-report.md)、[完整结果](reports/P22d-results.json)，以及[P22此前对照](reports/P22-report.md)、[完整输出与成本](reports/P22-results.json)、[协议及课程修订](docs/P22-protocol.md)。
 - [P21报告](reports/P21-report.md)、[完整输出与成本](reports/P21-results.json)、[训练前协议](docs/P21-protocol.md)及[配置](configs/p21-wording.json)。
 - [P20报告](reports/P20-report.md)、[完整输出与成本](reports/P20-results.json)、[开发失败记录](reports/P20-development-notes.md)、[结构与复现](docs/language-ladder-implementation.md)及[最终配方](configs/p20j-content-matching.json)。

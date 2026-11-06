@@ -1,0 +1,36 @@
+{
+  "sample_sha256": "dd64cff243d4b29f9c13b0f6df5567c8f56478c03fea12b95185f5ebc4c443e5",
+  "method": "One seeded reservoir sample per original source-byte decile, selected from v4 TRAIN only; ten examples, not an error-rate estimate.",
+  "findings": [
+    {
+      "bucket": 0,
+      "issue": "Question and answer are concatenated; story order inconsistent with the supplied fragments."
+    },
+    {
+      "bucket": 2,
+      "issue": "Multi-turn poem and product-design exchange concatenated without role boundaries."
+    },
+    {
+      "bucket": 3,
+      "issue": "Historical yoga dating asserted without qualification; long concatenated dialogue."
+    },
+    {
+      "bucket": 4,
+      "issue": "Programming answer and code text; not basic Chinese dialogue."
+    },
+    {
+      "bucket": 5,
+      "issue": "Programming exercise with merged formatting."
+    },
+    {
+      "bucket": 8,
+      "issue": "Claims modern football evolved by direct transmission from cuju; unsupported simplified history."
+    },
+    {
+      "bucket": 9,
+      "issue": "Exaggerates present industrial quantum-computing deployment."
+    }
+  ],
+  "decision": "Do not equate full-source expansion with quality improvement. v5 remains preparation; retain fixed v4 for capacity comparison. Consider separately filtered or attributed prose for later branch.",
+  "scope": "Manual development audit, not full source truth verification; source excerpts remain local."
+}
