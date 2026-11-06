@@ -4,10 +4,13 @@
 
 **本机试聊**：在 `D:\SPORA` 双击 `chat.cmd`，输入短句后回车。默认加载P18版本，当前回答仍可能错误；可用 `/memory 12` 查看已有符号记忆，`/quit` 退出。详见[使用说明](docs/local-conversation.md)。此入口只读，不启动训练。
 
-当前完成 **P21 短问法组合迁移**（2026-11-06）：三个P20j后代各续训600步，保留的新问法组合答案99.31%–100%，最低成对指标97.22%；旧任务全部通过，原神经状态与100份受保护文件保持，121项回归通过。结构参数不变，没有外部预训练权重。较长问题和未知对象诊断仍为0%，不能自由聊天，默认仍为P18。所有失败边界及前序实验保留。
+最新研究为 **P22 长问题与无证据回答**（2026-11-06，未通过发布门槛）：三版配方、四次种子7试验后，候选长题开发答案94.79%–96.88%、未知判断97.92%–98.96%，但成对变化仅84.38%–88.54%，且部分旧任务退化。目标选择分支有效，证据匹配仍不稳定；最终测试未打开、未扩展其他种子。125项回归与原个体保持检查通过，默认仍P18。
+
+最新通过的研究里程碑仍为 **P21 短问法组合迁移**：三种子保留组合答案99.31%–100%，最低成对指标97.22%。没有外部预训练权重，不能自由聊天，前序实验和失败记录完整保留。
 
 - [中文训练前交付报告](reports/prelanguage-report.md)与[完整结果，包括失败版本](reports/prelanguage-results.json)
-- **最新：[P21报告](reports/P21-report.md)、[完整输出与成本](reports/P21-results.json)、[训练前协议](docs/P21-protocol.md)及[配置](configs/p21-wording.json)。**
+- **最新研究：[P22报告（未通过）](reports/P22-report.md)、[完整输出与成本](reports/P22-results.json)、[协议及课程修订](docs/P22-protocol.md)。**
+- [P21报告](reports/P21-report.md)、[完整输出与成本](reports/P21-results.json)、[训练前协议](docs/P21-protocol.md)及[配置](configs/p21-wording.json)。
 - [P20报告](reports/P20-report.md)、[完整输出与成本](reports/P20-results.json)、[开发失败记录](reports/P20-development-notes.md)、[结构与复现](docs/language-ladder-implementation.md)及[最终配方](configs/p20j-content-matching.json)。
 - [P19对照报告](reports/P19-report.md)、[全部输出与测量](reports/P19-results.json)、[结构与复现](docs/short-reasoning-implementation.md)及[固定配置](configs/p19-short-reasoning.json)。
 - [P18课程报告](reports/P18-report.md)、[完整结果](reports/P18-results.json)、[实现说明](docs/chinese-curriculum-implementation.md)及[固定配置](configs/chinese-curriculum-1000.json)。

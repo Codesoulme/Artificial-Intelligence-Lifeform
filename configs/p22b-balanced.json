@@ -1,0 +1,17 @@
+{
+  "phase": "P22b",
+  "seeds": [7, 11, 23],
+  "arms": ["local", "context"],
+  "steps": 2400,
+  "check_every": 300,
+  "learning_rate": 0.0003,
+  "gate": 0.95,
+  "source_sha256": {
+    "7": "70c9d409c4f6767d1ea4936ac52d14864af71862bbb68ebf2d720cde4855dd3a",
+    "11": "ffb430502e4dbfb381b51494150e124ac172a6d5a203f5243571c59b8b88ca57",
+    "23": "ae369e82ac90488d07214ff958792f6105f49f46c0473b370898bbe4ded01618"
+  },
+  "scope": "Restart from P21, never overwrite A. Same contextual residual as A. Seed7 development feasibility before expansion. Local control uses identical examples/steps when run. Final wordings remain unopened after A failure.",
+  "schedule": "8 matched present/absent worlds per update: 4 short (single/select/update/select), 4 long (update). Each pair shares events and wording. 16 task examples, 8 old Chinese replay. All short stages have both answerability classes.",
+  "selection": "Final checkpoint, last two small development checks and full development >=95% known/unknown/pairs; false unknown <=5%; legacy >=95%; Chinese NLL<=P18*1.05; frozen individual. All context seeds must pass before final test."
+}
