@@ -1,0 +1,16 @@
+{
+  "phase": "P21a",
+  "seeds": [7, 11, 23],
+  "steps_max": 1800,
+  "check_every": 300,
+  "learning_rate": 0.0003,
+  "gate": 0.95,
+  "source_sha256": {
+    "7": "cc47b2022299114af28829dff1e77af76ba8da5c49095b6cc0af8680c8cf704f",
+    "11": "4aa7257fca1e5e1ce6544000e227c35ca08e0e9ca0bc41819fb99881dabbda99",
+    "23": "f365a9f6c8541f1d485620d8132dcd8e29fdeeba70498fe6127c4e12924a3e1a"
+  },
+  "scope": "Continuation from each P20j descendant; reset AdamW explicitly. Twelve training, two development, two final prefix/suffix combinations. Final object-pair benchmark was seen in P20, exact final wording combinations not used for selection. No open-language or new-world claim.",
+  "selection": "Two consecutive 48-row development gates, followed by complete development for both held-out combinations plus all legacy stages. Every paired metric >=95%, old Chinese NLL <= P18*1.05, old neural tensors exact. Freeze ALL seeds before final test.",
+  "diagnostics": "Long questions, four/six records with repeated locations, unknown objects: development-only, excluded from training and promotion; failures remain explicit."
+}

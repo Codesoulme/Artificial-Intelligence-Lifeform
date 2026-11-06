@@ -61,6 +61,8 @@ I种子7再次未通过后，J版保留结构，另在不含近因偏置的内�
 
 ## 方法来源与贡献范围
 
+P21在上述P20j权重上继续训练，保持结构和参数量不变。新入口为`train_wording.py`，从每个同种子后代载入严格研究格式，另开目录保存；重新初始化优化器，并在`continuation_*`字段保存上游摘要、本轮配置和更新次数。12种训练组合、2种开发、2种最终组合隔离；完整范围、运行命令及长问句／未知对象失败见[P21报告](../reports/P21-report.md)和[协议](P21-protocol.md)。旧P20脚本及检查点未改写。
+
 复制与生成混合是已有方法家族，不是本项目发明。See、Liu、Manning的[Get To The Point: Summarization with Pointer-Generator Networks（ACL 2017）](https://aclanthology.org/P17-1099/)明确将源文本指向复制和词表生成结合。本轮于2026-11-06核对官方摘要：它支持采用这一机制的依据，但论文的词级摘要任务、覆盖机制和ROUGE结论不能移用作本项目成绩。本实现使用字节级因果复制、位置及门监督，并在H版加入局部卷积和近因先验；并非该论文完整复现，也不称为新的基础架构突破。有效性由本地保留的失败实验及多种子审计决定。
 
 H版的距离线性惩罚也属于已有的近因偏置思路。[Train Short, Test Long: Attention with Linear Biases Enables Input Length Extrapolation](https://arxiv.org/abs/2108.12409)的官方摘要明确描述了对注意力得分施加与距离成比例的惩罚。本实现的可训练单一强度、局部匹配层和保留的位置嵌入与ALiBi不同；没有验证长输入外推，不能引用其论文成绩来宣称本模型具备该能力。
