@@ -1,0 +1,135 @@
+{
+  "teacher_original": {
+    "source_provenance": {
+      "repository": "Instruction-Tuning-with-GPT-4/GPT-4-LLM",
+      "commit": "80cda626ea305004be42426671c66efebbf22144",
+      "path": "data/alpaca_gpt4_data_zh.json",
+      "download_url": "https://raw.githubusercontent.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM/80cda626ea305004be42426671c66efebbf22144/data/alpaca_gpt4_data_zh.json",
+      "bytes": 35100559,
+      "git_blob_sha1": "af092742e9bc3b83fa6feb13203b793aafc9dffc",
+      "sha256": "6fcb98c6d79691d1f9a88ef513335da9124e7fdeef5103343f5d9f9a6e8f4903",
+      "license": "Research-only noncommercial per project/data notice; synthetic GPT-4 text only, no pretrained weights."
+    },
+    "authored_sha256": "fed5fcd04a3b46c2e81eac9d69db25179721ffb52710265e4b13b66c8aed7519",
+    "tokenizer_sha256": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+    "source_sha256": "61bfd818de1a5484c7ed9df75e31c7df1c380ed040f6a7b528e325347a29e158",
+    "stats": {
+      "teacher_dialogues": 38344,
+      "teacher_targets": 5410973,
+      "teacher_turns": 38344,
+      "identity": 1300,
+      "non_chinese": 6052,
+      "long_text": 1262,
+      "code_or_control": 1733,
+      "repetition": 105,
+      "possible_identity": 17,
+      "teacher_removed_held_question": 2,
+      "teacher_removed_held_group_or_exact": 2,
+      "teacher_overlength": 1,
+      "foundations_dialogues": 65,
+      "foundations_targets": 2166,
+      "foundations_turns": 166
+    },
+    "excluded_overlaps": [
+      {
+        "source": "teacher",
+        "sha256": "119c598f4f29f581836979833c7c2026aca8cba7950a418238c4c70be26571aa",
+        "reason": "held_question"
+      },
+      {
+        "source": "teacher",
+        "sha256": "79bf37a2a7c3956906ae03bc4b2480d41ddd8d71fbcaa11cf9f0580cc80f6ec4",
+        "reason": "held_group_or_exact"
+      },
+      {
+        "source": "teacher",
+        "sha256": "9cf24569ac1c250b9b14f0d7f87fb03fef8dec505b2c6ee4f7e56df8d6f951d5",
+        "reason": "held_group_or_exact"
+      },
+      {
+        "source": "teacher",
+        "sha256": "26d169ceb175ad49e2d73a0505d91cd6723aeb54b8f2b2be9918daa2b80b2e81",
+        "reason": "held_question"
+      }
+    ],
+    "held_manifests": {
+      "conversation-data-v3": "fc171587f223b4630de7803a790fca2dcd0569f062c4569d54bbbfd20ba02fad",
+      "conversation-data-v4": "51dd385e6db9aa92f8bbd1eac506ea13ca3076835c1f644b30d56899ff79e003"
+    },
+    "development_questions_sha256": "1edd05ca36e795efe726f608212948483b895feae954f1f3028aa9a1269ee499",
+    "limitations": "Training-only synthetic source, not independent truth verification. Excludes exact user prompts and finite lexical overlaps with held partitions; semantic paraphrases can remain. Authored examples are teaching, never final evaluation. No new tokenizer fitting.",
+    "files": {
+      "foundations-tokens.jsonl": "1735c795214c732cfa4be41b849a9da27dc7d2b33b796fc6d104126219ed1df7",
+      "foundations.jsonl": "4b54ce4f07692981c6ff640e4475ca685c78d0265855b0b5cce1d93a58b1250f",
+      "teacher-tokens.jsonl": "664c9f0e6ad09bdcd29941df5b8e1716264815f84ccfc2f13ccdce43ba5b3e42",
+      "teacher.jsonl": "1516754f8e4d862a81d0a8f4735bbe6672abeb57797ae331cb81ee9fa4ef7cfd"
+    }
+  },
+  "filtered": {
+    "parent_manifest_sha256": "0ea5141c8b999e65e1d6201e00789461bb497856dff9d19bf644b5c2b6d69d12",
+    "tokenizer_sha256": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+    "authored_sha256": "fed5fcd04a3b46c2e81eac9d69db25179721ffb52710265e4b13b66c8aed7519",
+    "source_sha256": "028bf5c541ff2b5a71f05caaa9c448e55f317a7eb1cb4a5949318347a1feb512",
+    "stats": {
+      "teacher_dialogues": 25704,
+      "teacher_targets": 2583404,
+      "removed_long_answer": 5589,
+      "removed_unbalanced_delimiter": 87,
+      "removed_unfinished_ending": 6717,
+      "removed_advanced_or_high_stakes_topic": 247
+    },
+    "foundations": 65,
+    "scope": "Subset of isolated training-only material; punctuation filter cannot prove factual correctness. Original rejected files retained.",
+    "source_provenance": {
+      "repository": "Instruction-Tuning-with-GPT-4/GPT-4-LLM",
+      "commit": "80cda626ea305004be42426671c66efebbf22144",
+      "path": "data/alpaca_gpt4_data_zh.json",
+      "download_url": "https://raw.githubusercontent.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM/80cda626ea305004be42426671c66efebbf22144/data/alpaca_gpt4_data_zh.json",
+      "bytes": 35100559,
+      "git_blob_sha1": "af092742e9bc3b83fa6feb13203b793aafc9dffc",
+      "sha256": "6fcb98c6d79691d1f9a88ef513335da9124e7fdeef5103343f5d9f9a6e8f4903",
+      "license": "Research-only noncommercial per project/data notice; synthetic GPT-4 text only, no pretrained weights."
+    },
+    "files": {
+      "foundations-tokens.jsonl": "1735c795214c732cfa4be41b849a9da27dc7d2b33b796fc6d104126219ed1df7",
+      "foundations.jsonl": "4b54ce4f07692981c6ff640e4475ca685c78d0265855b0b5cce1d93a58b1250f",
+      "teacher-tokens.jsonl": "340f5d9841a37c1ecc9c56e2324fae1f86cada3372d916fde93e50f36637439c",
+      "teacher.jsonl": "65b68071a20c6545c40cb18d45cccfba8203a622d1d18d23b43d27843d3ea7a7"
+    }
+  },
+  "earlier_rejected_filter": {
+    "source_manifest_sha256": "51dd385e6db9aa92f8bbd1eac506ea13ca3076835c1f644b30d56899ff79e003",
+    "tokenizer_sha256": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+    "authored_sha256": "fed5fcd04a3b46c2e81eac9d69db25179721ffb52710265e4b13b66c8aed7519",
+    "source_sha256": "bdd2a6ab06e8727c5cbb9b6cdee245d17bb8fef7c5cba2430aedf9cd237bed42",
+    "stats": {
+      "short_dialogues": 15649,
+      "short_targets": 1391759,
+      "short_turns": 22901,
+      "excluded_abstract_topic": 5295,
+      "excluded_possible_personal_experience": 416,
+      "excluded_latin_heavy": 18971,
+      "excluded_length": 279,
+      "excluded_heavy_formatting": 985,
+      "excluded_long_answer": 35653,
+      "excluded_repeated_phrases": 154,
+      "excluded_consecutive_repetition": 35,
+      "foundation_dialogues": 65,
+      "foundation_turns": 166,
+      "foundation_targets": 2166
+    },
+    "scope": "TRAIN subset only; held data unchanged. Added authored teaching is never final assessment. No semantic correctness guarantee for filtered public corpus.",
+    "files": {
+      "foundations-tokens.jsonl": "1735c795214c732cfa4be41b849a9da27dc7d2b33b796fc6d104126219ed1df7",
+      "foundations.jsonl": "b6d066e91790f1bca146d0b4a48502a7115d8d5037e627ca6c1fc6c561a534d8",
+      "short-train-tokens.jsonl": "ab4dfa8b804b695432620c323bab4857e19936f732faf3ae39baa32fb0299807",
+      "short-train.jsonl": "50e1cde1a7fe3039f14ba1a7abde8e5086ce92b8255a8bd30b82834cdd825cc1"
+    }
+  },
+  "review_notes": {
+    "minimind_short_subset": "Rejected after15 sampled rows revealed incorrect facts, fabricated experiences and missing tasks; never used for D training.",
+    "teacher_v2": "New source sampled16 rows; several original answers visibly incomplete. Rejected long/incomplete endings in v3.",
+    "teacher_v3": "10 sampled rows read; generally more complete but ambiguity and factual uncertainty remain. Not a semantic correctness certificate.",
+    "foundations": "65 dialogues166 turns authored and read by developer, teaching only; no independent acceptance claim."
+  }
+}

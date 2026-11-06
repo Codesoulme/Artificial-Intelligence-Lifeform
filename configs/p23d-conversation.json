@@ -1,0 +1,62 @@
+{
+  "phase": "P23d",
+  "parent": "checkpoints/individual-prechinese-v3.pt",
+  "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "data": "runs/conversation-data-v4",
+  "seed": 230007,
+  "model": {
+    "vocabulary": 8192,
+    "width": 256,
+    "depth": 8,
+    "heads": 8,
+    "hidden": 704,
+    "context": 512,
+    "memory_layers": [
+      3,
+      7
+    ]
+  },
+  "length": 512,
+  "batch": 4,
+  "learning_rate": 0.0001,
+  "warmup": 100,
+  "schedule_steps": 20000,
+  "check_every": 500,
+  "snapshot_every": 1000,
+  "focus_every": 10,
+  "schedule": [
+    "pretrain",
+    "teacher",
+    "teacher",
+    "foundation",
+    "teacher",
+    "pretrain",
+    "teacher",
+    "teacher",
+    "teacher",
+    "teacher",
+    "pretrain",
+    "teacher",
+    "teacher",
+    "foundation",
+    "dialogue",
+    "pretrain",
+    "teacher",
+    "teacher",
+    "teacher",
+    "teacher"
+  ],
+  "scope": "C20000 language tensors retained; explicit curriculum fork and optimizer reset.20%text,5%old dialogue,65%filtered teacher,10%authored examples by batches. No external weights, no autobiographical writes, no final acceptance inferred from teaching loss.",
+  "initial_language": "runs/p23c-conversation/step020000.pt",
+  "initial_language_sha256": "7e065e6a79c7b43bddc04bdbb25b168a26433fbfb870bb123917fcb77f1cd187",
+  "ancestor_steps": 20000,
+  "ancestor_targets": 30707885,
+  "data_audits": [
+    "runs/p23c-data-audit.json",
+    "runs/conversation-data-v4/lineage-audit.json"
+  ],
+  "prior_lineage_steps": 21500,
+  "prior_lineage_targets": 33410988,
+  "curriculum": "runs/teaching-curriculum-v3",
+  "curriculum_manifest_sha256": "c96b4bb2e7b815d200c3e65e2111d7d7bbc90fd0081c71839157d9ee6d3c07e1"
+}

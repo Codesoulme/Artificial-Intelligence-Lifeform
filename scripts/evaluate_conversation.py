@@ -59,6 +59,7 @@ def main():
     result=dict(checkpoint_sha256=digest,step=payload['steps'],plan_sha256=sha(ROOT/args.plan),
         policy=args.policy,sampling=dict(temperature=.7,top_p=.9,seed_base=args.seed) if args.policy=='sampled' else None,
         tokenizer_sha256=sha(vocab),cases_sha256=sha(ROOT/args.cases),evaluator_sha256=sha(Path(__file__)),
+        generation_source_sha256={name:sha(ROOT/name) for name in ('spora/conversation.py','spora/conversation_sampling.py','scripts/converse_research.py')},
         old_individual_exact=before==frozen_digest(organism,state),checkpoint_unchanged=sha(path)==digest,
         summary=summary,rows=rows)
     out.parent.mkdir(parents=True,exist_ok=True)
