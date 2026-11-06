@@ -6,6 +6,7 @@ import torch
 from tokenizers import Tokenizer
 from spora.growing import load
 from spora.conversation import restore_conversation, generate
+from spora.conversation_sampling import generate_sampled
 from spora.language_training import frozen_digest
 from scripts.prepare_conversation_v2 import sha
 from scripts.converse_research import prefix_tokens
@@ -17,6 +18,8 @@ def main():
     p.add_argument('--plan',default='configs/p23b-conversation.json')
     p.add_argument('--cases',default='data/conversation-development.json')
     p.add_argument('--budget',type=int,default=96)
+    p.add_argument('--policy',choices=('greedy','sampled'),default='greedy')
+    p.add_argument('--seed',type=int,default=231123)
     args=p.parse_args();out=ROOT/args.output
     if out.exists():raise FileExistsError(out)
     plan=json.loads((ROOT/args.plan).read_text('utf-8'));path=ROOT/args.checkpoint
@@ -36,7 +39,9 @@ def main():
             while len(prefix_tokens(tokenizer,history))+args.budget>model.config.context and len(history)>1:
                 history=history[2:];removed+=2
             prefix=prefix_tokens(tokenizer,history);torch.cuda.synchronize();start=time.perf_counter()
-            value=generate(model,state,prefix,eos,args.budget,forbidden);torch.cuda.synchronize()
+            if args.policy=='greedy':value=generate(model,state,prefix,eos,args.budget,forbidden)
+            else:value=generate_sampled(model,state,prefix,eos,args.budget,forbidden,temperature=.7,top_p=.9,seed=args.seed+len(rows))
+            torch.cuda.synchronize()
             seconds=time.perf_counter()-start;text=tokenizer.decode(value['tokens'],skip_special_tokens=False)
             grams=[text[i:i+4] for i in range(max(0,len(text)-3))]
             duplicate_fraction=1-len(set(grams))/max(1,len(grams))
@@ -52,6 +57,7 @@ def main():
         mean_seconds=sum(r['seconds'] for r in rows)/len(rows),
         useful_fraction=None,status='ungraded_development_not_acceptance')
     result=dict(checkpoint_sha256=digest,step=payload['steps'],plan_sha256=sha(ROOT/args.plan),
+        policy=args.policy,sampling=dict(temperature=.7,top_p=.9,seed_base=args.seed) if args.policy=='sampled' else None,
         tokenizer_sha256=sha(vocab),cases_sha256=sha(ROOT/args.cases),evaluator_sha256=sha(Path(__file__)),
         old_individual_exact=before==frozen_digest(organism,state),checkpoint_unchanged=sha(path)==digest,
         summary=summary,rows=rows)

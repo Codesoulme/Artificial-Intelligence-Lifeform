@@ -1,7 +1,7 @@
 """Cross-partition exact/group checks and bounded lexical duplicate audit."""
 import argparse,json,hashlib,collections
 from pathlib import Path
-from prepare_conversation_v2 import ROOT,normalized
+from prepare_conversation_v2 import ROOT,normalized,sha
 from curate_conversation import reject
 
 def signatures(text,width=16,stride=16):
@@ -10,7 +10,8 @@ def signatures(text,width=16,stride=16):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--data',default='runs/conversation-data-v3')
-    args=parser.parse_args();data=ROOT/args.data;out=data/'audit.json'
+    parser.add_argument('--output')
+    args=parser.parse_args();data=ROOT/args.data;out=ROOT/args.output if args.output else data/'audit.json'
     if out.exists():raise FileExistsError(out)
     groups=collections.defaultdict(set);digests=collections.defaultdict(set);held=[];index=collections.defaultdict(list);counts=collections.Counter();problems=[]
     for split in ('development','test'):
@@ -34,6 +35,7 @@ def main():
     cross_groups={f'{a}/{b}':len(groups[a]&groups[b]) for a,b in [('train','development'),('train','test'),('development','test')]}
     cross_exact={f'{a}/{b}':len(digests[a]&digests[b]) for a,b in [('train','development'),('train','test'),('development','test')]}
     report=dict(counts=counts,cross_groups=cross_groups,cross_exact=cross_exact,sampled_shingle_overlaps=problems,
+        data_artifact_sha256={f'{kind}-{split}.jsonl':sha(data/f'{kind}-{split}.jsonl') for kind in ('pretrain','dialogue') for split in ('train','development','test')},
         passed=not any(cross_groups.values()) and not any(cross_exact.values()) and not problems,
         scope='All normalized groups/exact digests; 16-character nonoverlapping sampled shingles, >=8 shared and80% containment. Misses shifted/paraphrased near duplicates; not semantic isolation proof.')
     out.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')

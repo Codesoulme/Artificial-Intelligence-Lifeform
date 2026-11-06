@@ -1,0 +1,40 @@
+{
+  "phase": "P23c",
+  "parent": "checkpoints/individual-prechinese-v3.pt",
+  "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "data": "runs/conversation-data-v4",
+  "seed": 230007,
+  "model": {
+    "vocabulary": 8192,
+    "width": 256,
+    "depth": 8,
+    "heads": 8,
+    "hidden": 704,
+    "context": 512,
+    "memory_layers": [
+      3,
+      7
+    ]
+  },
+  "length": 512,
+  "batch": 4,
+  "learning_rate": 0.0003,
+  "warmup": 100,
+  "schedule_steps": 20000,
+  "check_every": 500,
+  "snapshot_every": 1000,
+  "focus_every": 10,
+  "schedule": [
+    "pretrain",
+    "dialogue"
+  ],
+  "scope": "Continue B tensors under explicit new curriculum. Same random-origin architecture/vocabulary/individual; full-file sampled data,512 training length,balanced text/dialogue batches,optimizer reset. Multiple recipe changes, not a single-factor causal experiment. A and B remain immutable.",
+  "initial_language": "runs/p23b-conversation/step001500.pt",
+  "initial_language_sha256": "d6d2389473bcc49c988f38ccf2503c6d257c49cc778b42dd9485e1c81ba13f25",
+  "ancestor_steps": 1500,
+  "ancestor_targets": 2703103,
+  "data_audits": [
+    "runs/p23c-data-audit.json",
+    "runs/conversation-data-v4/lineage-audit.json"
+  ]
+}
