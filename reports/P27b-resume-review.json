@@ -1,0 +1,751 @@
+{
+  "status": "passed",
+  "passed": true,
+  "checkpoint": "runs\\p27b-token-budget\\step000100.pt",
+  "checkpoint_sha256": "a3dfd02103278e60ab14a59c42408a4ea23d08c6e152003abb03817f75be5816",
+  "source_step": 100,
+  "updates_per_restore": 3,
+  "cpu_threads": 1,
+  "gpu_used": false,
+  "production_ast": {
+    "path": "scripts\\train_conversation_v8.py",
+    "sha256": "5e5c109273a50aef736c9cbead15169f445649c5f9522b6089b01e436953afc5",
+    "first_update_line": 149,
+    "last_update_line": 176,
+    "ast_sha256": "1e6f33eb6c6a1446bba5f9071e54a0e8d8be975cd709d6b473805e62e2610fbc",
+    "method": "Execute unchanged helper/update AST from v8; pass CPU model and restored state. No trainer main, monitor, or GPU API executed."
+  },
+  "source_sha256": {
+    "spora/conversation.py": "431841bb5245b7bee427e2f55db82a070f0d2b768e6dea3c598fc653b2028362",
+    "spora/conversation_data.py": "b7a075ffedcd6824cfb1d771a1c25d816a43cccea13081c32a727517d75d7dde",
+    "scripts/train_conversation_v8.py": "5e5c109273a50aef736c9cbead15169f445649c5f9522b6089b01e436953afc5",
+    "spora/token_objective.py": "f2d0f61eaff2db75c82f732c31f2593f879c8cc057bfad4b8bfc0abe3bf52b9f",
+    "spora/conversation_state.py": "fe9d8dda52bdd60456b350a6b1b8d19b8c95b162932b46f3a7f9c718f337e944",
+    "spora/training_mix.py": "d194df3f310fc5231f5251ee948de437e82c459811403b66acbe38198b3b8cd9",
+    "spora/state_codec.py": "096e7b926c6da598269535d964c0e01e98d5ed409d2e4460f1929580294f1946",
+    "spora/growing.py": "ca646f6b2451c7e54cfa9b9c68b83bbd79d07c3416e5a54dae8de1364ab16703",
+    "scripts/prepare_teaching_curriculum.py": "61bfd818de1a5484c7ed9df75e31c7df1c380ed040f6a7b528e325347a29e158",
+    "scripts/curate_teaching_curriculum.py": "028bf5c541ff2b5a71f05caaa9c448e55f317a7eb1cb4a5949318347a1feb512",
+    "scripts/prepare_conversation_v4.py": "f7dce2afbe570063e269013f87976f42772fb0e95ae9548882d2f2f780afd021",
+    "scripts/prepare_conversation_v2.py": "4ea9f53e0756722ca10d6116957bcf09ecfe797e202aff6b8184a279951553dc",
+    "scripts/curate_conversation.py": "726644321b3076b88462a1a8600101705b5900a8ac87e3f393858b6614aaa2fa",
+    "spora/language_training.py": "717e0e02c25de33935925380f7b38fbf8c5fe6626818c8665dbe19331a1b7f99"
+  },
+  "plan_sha256": "0bca794192720e006ade82e396157d5f6f334b8f64c78ac2bd5e57809b8be5b7",
+  "checker_sha256": "89066b1075c2f996d5446182e9a58b7118e02c3e4ef76c91db9f5abf95c386cb",
+  "attempts": [
+    {
+      "attempt": 1,
+      "seconds": 62.14676799997687,
+      "old_state_before_sha256": "11ba2b60d9e20c1c2d3a1edab029081fcf815f73369e3efa02be0eef93104235",
+      "old_state_unchanged": true,
+      "language_tensors": 55,
+      "optimizer_parameter_states": 55,
+      "optimizer_steps_advanced_exactly": 3,
+      "source_step": 100,
+      "python_rng_advanced": true,
+      "cpu_rng_changed": false,
+      "snapshot": "runs\\p27b-resume-check\\attempt-1-final.pt",
+      "snapshot_sha256": "0041f3d6057cfecfdaeb25ef5e92e8bea37bf34c2f3b9d7cbc20f15cf2c46c5b"
+    },
+    {
+      "attempt": 2,
+      "seconds": 56.03478470002301,
+      "old_state_before_sha256": "11ba2b60d9e20c1c2d3a1edab029081fcf815f73369e3efa02be0eef93104235",
+      "old_state_unchanged": true,
+      "language_tensors": 55,
+      "optimizer_parameter_states": 55,
+      "optimizer_steps_advanced_exactly": 3,
+      "source_step": 100,
+      "python_rng_advanced": true,
+      "cpu_rng_changed": false,
+      "snapshot": "runs\\p27b-resume-check\\attempt-2-final.pt",
+      "snapshot_sha256": "266afc347e020461ceb304bd6ac0b6d6a37dd70ac2f025659f2e3042464dc068"
+    }
+  ],
+  "scope": "Two independent CPU restores of the same GPU-produced B100 checkpoint, followed by real production-sampler/token-budget backward/AdamW updates. Not CPU-vs-GPU or uninterrupted-run equivalence.",
+  "bitwise_equal": {
+    "language": true,
+    "optimizer": true,
+    "python_rng": true,
+    "torch_rng": true,
+    "cuda_rng_opaque_unexecuted": true,
+    "counts": true,
+    "focus_cursor": true,
+    "targets": true,
+    "steps": true,
+    "batch_trace_sha256": true,
+    "trace": true
+  },
+  "discrepancies": {},
+  "trace": [
+    {
+      "step": 101,
+      "loss": 3.117351770401001,
+      "lr": 9.995213823134596e-05,
+      "actual_targets": 8194,
+      "budget_overshoot": 2,
+      "microbatches": [
+        {
+          "shape": [
+            4,
+            512
+          ],
+          "targets": 2048,
+          "sha256": "84171814097307edc147cd0e952c331e8700ef60d568eb24953319d878101cc1"
+        },
+        {
+          "shape": [
+            4,
+            192
+          ],
+          "targets": 330,
+          "sha256": "ccc2b71ad2d0c0f6d114ea7acaed5937d9a9343c3b15627eaf2d5ad97fbe2be7"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 604,
+          "sha256": "d0d6f9c724ca17ff3ef3bc96388ff7d3fddcbe76b3d67d084dfbd75fed55fb86"
+        },
+        {
+          "shape": [
+            4,
+            160
+          ],
+          "targets": 335,
+          "sha256": "832ae93cff71c31d8c7947e1b8524a78374b661fbe48ef2677dc777bca21d5cb"
+        },
+        {
+          "shape": [
+            4,
+            160
+          ],
+          "targets": 237,
+          "sha256": "87d24de54a7f2b7944208c3c97d48966b3f837eb2527b4ec48b0dc26f1372c94"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 496,
+          "sha256": "2818201175a799f841670e9231fcb1edfd77db08c6def30ee11f82143d5de9f7"
+        },
+        {
+          "shape": [
+            4,
+            256
+          ],
+          "targets": 432,
+          "sha256": "bc1947f6a4c8f958b1e4cf4bf81c0c97b6543d42563a53bb923ed2a1b993bfb8"
+        },
+        {
+          "shape": [
+            4,
+            192
+          ],
+          "targets": 283,
+          "sha256": "af80b016f37363770e3b959b1ef71b3d10e234174f055dd96e773c4b9efb01d6"
+        },
+        {
+          "shape": [
+            4,
+            512
+          ],
+          "targets": 2048,
+          "sha256": "5c1dc191a57f269a65ea2dd88c367c18a831af0ab9a98a827684e80e741a6c02"
+        },
+        {
+          "shape": [
+            4,
+            288
+          ],
+          "targets": 642,
+          "sha256": "f42df9c9e99d6f32936e4eb931717e4267254178a71d2717a3c1e0932a75b095"
+        },
+        {
+          "shape": [
+            4,
+            96
+          ],
+          "targets": 136,
+          "sha256": "6a6244001c7dd18e1ee7b0aae87b6b0b9a86218490401973095df4c6395dd6a9"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 417,
+          "sha256": "4a7ea5e39f73296265c8987be7696651259c78f1ffbeaabe3f153b5975369221"
+        },
+        {
+          "shape": [
+            4,
+            128
+          ],
+          "targets": 186,
+          "sha256": "74fe7c8b5e828f300c08968b5d176cb4b5614c4c560bb96f885fbfcf4d646c36"
+        }
+      ],
+      "counts_increment": {
+        "pretrain_microbatches": 2,
+        "pretrain_targets_including_focus": 4096,
+        "pretrain_source_targets": 4096,
+        "teacher_microbatches": 11,
+        "teacher_targets_including_focus": 4098,
+        "teacher_source_targets": 4098,
+        "foundation_microbatches": 0,
+        "foundation_targets_including_focus": 0,
+        "foundation_source_targets": 0,
+        "focus_targets": 0
+      },
+      "targets": 888130,
+      "focus_cursor": 10,
+      "batch_trace_sha256": "7963f605e4beb2ae2aad6192a804a59a4c2a06c2de4413b29aaa66eb86143175",
+      "changed_language_tensors": [
+        "memory_gate",
+        "embedding.weight",
+        "blocks.0.norm1.weight",
+        "blocks.0.norm2.weight",
+        "blocks.0.qkv.weight",
+        "blocks.0.out.weight",
+        "blocks.0.up.weight",
+        "blocks.0.down.weight",
+        "blocks.1.norm1.weight",
+        "blocks.1.norm2.weight",
+        "blocks.1.qkv.weight",
+        "blocks.1.out.weight",
+        "blocks.1.up.weight",
+        "blocks.1.down.weight",
+        "blocks.2.norm1.weight",
+        "blocks.2.norm2.weight",
+        "blocks.2.qkv.weight",
+        "blocks.2.out.weight",
+        "blocks.2.up.weight",
+        "blocks.2.down.weight",
+        "blocks.3.norm1.weight",
+        "blocks.3.norm2.weight",
+        "blocks.3.qkv.weight",
+        "blocks.3.out.weight",
+        "blocks.3.up.weight",
+        "blocks.3.down.weight",
+        "blocks.4.norm1.weight",
+        "blocks.4.norm2.weight",
+        "blocks.4.qkv.weight",
+        "blocks.4.out.weight",
+        "blocks.4.up.weight",
+        "blocks.4.down.weight",
+        "blocks.5.norm1.weight",
+        "blocks.5.norm2.weight",
+        "blocks.5.qkv.weight",
+        "blocks.5.out.weight",
+        "blocks.5.up.weight",
+        "blocks.5.down.weight",
+        "blocks.6.norm1.weight",
+        "blocks.6.norm2.weight",
+        "blocks.6.qkv.weight",
+        "blocks.6.out.weight",
+        "blocks.6.up.weight",
+        "blocks.6.down.weight",
+        "blocks.7.norm1.weight",
+        "blocks.7.norm2.weight",
+        "blocks.7.qkv.weight",
+        "blocks.7.out.weight",
+        "blocks.7.up.weight",
+        "blocks.7.down.weight",
+        "norm.weight",
+        "memory_query.0.weight",
+        "memory_query.1.weight",
+        "memory_out.0.weight",
+        "memory_out.1.weight"
+      ]
+    },
+    {
+      "step": 102,
+      "loss": 3.027780771255493,
+      "lr": 9.995081820917803e-05,
+      "actual_targets": 8960,
+      "budget_overshoot": 768,
+      "microbatches": [
+        {
+          "shape": [
+            4,
+            128
+          ],
+          "targets": 143,
+          "sha256": "745ca4d51e929e30d99ac588233d2098112863358b5a85a6703907a28e316ef0"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 437,
+          "sha256": "9a40f12abe8e883a774ea5109c5f0c27252c864ea91ed1cbb1b6fc474913fa96"
+        },
+        {
+          "shape": [
+            4,
+            192
+          ],
+          "targets": 449,
+          "sha256": "f00ed1926ce38cd15f2e2c7ecb82ec2bd64b3682d01e2b49d1af4d7c9281706c"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 322,
+          "sha256": "ccac46e8c3f53688734f80b6c220e996bd6a8dac1c743575af27e5cdb4499a45"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 306,
+          "sha256": "955c13a52cc65b2af3c22d6822d7045aa1335993b5fc39c8eeb327e4e444bb96"
+        },
+        {
+          "shape": [
+            4,
+            128
+          ],
+          "targets": 159,
+          "sha256": "677e9b85dca39d8b0ccf020ebbba6c6c72d35ec29d386941f5d4b2617f6effe9"
+        },
+        {
+          "shape": [
+            4,
+            512
+          ],
+          "targets": 2048,
+          "sha256": "87e7e400634be7a15c6b8ae18edb19ee974e97cdc58438db7b0b836f2d578c2b"
+        },
+        {
+          "shape": [
+            4,
+            160
+          ],
+          "targets": 364,
+          "sha256": "81e9e66dbffc1bf522df9450c24865d6cddac65fe8aaf9e6ab210c249ad57b69"
+        },
+        {
+          "shape": [
+            4,
+            256
+          ],
+          "targets": 515,
+          "sha256": "51cea56c6be8d89f20ca9e839667c81dff8dd3b26354defd032e28cbfc0097ec"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 509,
+          "sha256": "e3f8b8d5e7575370fc7d45296db2fe3c24d1be01a2bd4ff02965092a98189255"
+        },
+        {
+          "shape": [
+            4,
+            192
+          ],
+          "targets": 428,
+          "sha256": "0b6bdb553c5dfdc86d1ab80183957d5d01cfab3d5a20c1cf4ba179e9cce8e159"
+        },
+        {
+          "shape": [
+            4,
+            128
+          ],
+          "targets": 150,
+          "sha256": "c581c90e45b6d5b812e91b490e2f43b13732715291d355a2fe6bb3552972b753"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 237,
+          "sha256": "9db4fa4f44267d694c524e1bdf62777a0d9a04f0f577a0caccb2df3d355ec21b"
+        },
+        {
+          "shape": [
+            4,
+            256
+          ],
+          "targets": 466,
+          "sha256": "cc7249f8bbdeadd09623e4e0456de57c3070a7582f0d0a7aa307733605d4c231"
+        },
+        {
+          "shape": [
+            4,
+            192
+          ],
+          "targets": 379,
+          "sha256": "e3da2773e7424d74ba70be2daf4939065bd88e34e3e1894c21d0bce8032d9b67"
+        },
+        {
+          "shape": [
+            4,
+            512
+          ],
+          "targets": 2048,
+          "sha256": "6354eecd6adb2c40cf38c07e9c01ff7bec76f27fcbfb9681e1e2fe3f7b345314"
+        }
+      ],
+      "counts_increment": {
+        "pretrain_microbatches": 2,
+        "pretrain_targets_including_focus": 4096,
+        "pretrain_source_targets": 4096,
+        "teacher_microbatches": 13,
+        "teacher_targets_including_focus": 4721,
+        "teacher_source_targets": 4721,
+        "foundation_microbatches": 1,
+        "foundation_targets_including_focus": 143,
+        "foundation_source_targets": 143,
+        "focus_targets": 0
+      },
+      "targets": 897090,
+      "focus_cursor": 10,
+      "batch_trace_sha256": "c31c2e1c0bee3f0c5a26c34106ad61e63fecacc254225f612a002f3de89bc4a0",
+      "changed_language_tensors": [
+        "memory_gate",
+        "embedding.weight",
+        "blocks.0.norm1.weight",
+        "blocks.0.norm2.weight",
+        "blocks.0.qkv.weight",
+        "blocks.0.out.weight",
+        "blocks.0.up.weight",
+        "blocks.0.down.weight",
+        "blocks.1.norm1.weight",
+        "blocks.1.norm2.weight",
+        "blocks.1.qkv.weight",
+        "blocks.1.out.weight",
+        "blocks.1.up.weight",
+        "blocks.1.down.weight",
+        "blocks.2.norm1.weight",
+        "blocks.2.norm2.weight",
+        "blocks.2.qkv.weight",
+        "blocks.2.out.weight",
+        "blocks.2.up.weight",
+        "blocks.2.down.weight",
+        "blocks.3.norm1.weight",
+        "blocks.3.norm2.weight",
+        "blocks.3.qkv.weight",
+        "blocks.3.out.weight",
+        "blocks.3.up.weight",
+        "blocks.3.down.weight",
+        "blocks.4.norm1.weight",
+        "blocks.4.norm2.weight",
+        "blocks.4.qkv.weight",
+        "blocks.4.out.weight",
+        "blocks.4.up.weight",
+        "blocks.4.down.weight",
+        "blocks.5.norm1.weight",
+        "blocks.5.norm2.weight",
+        "blocks.5.qkv.weight",
+        "blocks.5.out.weight",
+        "blocks.5.up.weight",
+        "blocks.5.down.weight",
+        "blocks.6.norm1.weight",
+        "blocks.6.norm2.weight",
+        "blocks.6.qkv.weight",
+        "blocks.6.out.weight",
+        "blocks.6.up.weight",
+        "blocks.6.down.weight",
+        "blocks.7.norm1.weight",
+        "blocks.7.norm2.weight",
+        "blocks.7.qkv.weight",
+        "blocks.7.out.weight",
+        "blocks.7.up.weight",
+        "blocks.7.down.weight",
+        "norm.weight",
+        "memory_query.0.weight",
+        "memory_query.1.weight",
+        "memory_out.0.weight",
+        "memory_out.1.weight"
+      ]
+    },
+    {
+      "step": 103,
+      "loss": 2.9268367290496826,
+      "lr": 9.99494802407031e-05,
+      "actual_targets": 8244,
+      "budget_overshoot": 52,
+      "microbatches": [
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 429,
+          "sha256": "df8e7c94ca8c87d89b70d0a91c773a7f64ab2bf981e4812de6667048d268b8fb"
+        },
+        {
+          "shape": [
+            4,
+            128
+          ],
+          "targets": 274,
+          "sha256": "d9168d31506d88eb12462e5c7e4d8137669848ad1a0b041216e34a24939dd822"
+        },
+        {
+          "shape": [
+            4,
+            192
+          ],
+          "targets": 422,
+          "sha256": "6b4ed794b1a4a11fd668856055ede1a0e1abfe1bf864595473829a80b5e0d25c"
+        },
+        {
+          "shape": [
+            4,
+            256
+          ],
+          "targets": 596,
+          "sha256": "06e217baf675d8fe1e0a24242c2a224f9e79ef964e04d0e7b609304c2ae906f0"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 326,
+          "sha256": "94fac4abf6fc7b9edb308ab1d106f7814377a7867720f41d0aa4b3d09904fd40"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 486,
+          "sha256": "5d99ec06c19adcef28e524cd7818358ea7d2932fb9527a1fd3724efec9c4f3cb"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 609,
+          "sha256": "0633ddeaadceab90411eda59db80a573439ec99470ba774e3dffbfed773553a8"
+        },
+        {
+          "shape": [
+            4,
+            512
+          ],
+          "targets": 2048,
+          "sha256": "de81ca8d69560b6f7c583f112f5a33bec371d7edf7bdd9f21d3b3251d42983ee"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 407,
+          "sha256": "ebab56ec850dd7213bfe41f35eef454986b8b3b05a0b22555a5a839dbf3e5d2d"
+        },
+        {
+          "shape": [
+            4,
+            128
+          ],
+          "targets": 192,
+          "sha256": "122943498574e4bb2ff81d2d5e5ee256a1d13c97f5b9be2afa823e811b6b40af"
+        },
+        {
+          "shape": [
+            4,
+            96
+          ],
+          "targets": 160,
+          "sha256": "6c2f73da2a705d4bb5941bb0f0caccbb8faa5bbebe896bca9cd890d8cbd9835d"
+        },
+        {
+          "shape": [
+            4,
+            256
+          ],
+          "targets": 308,
+          "sha256": "05f38b3969f341780f0715d991d7a0e7bcbfe5a90c4ade6314db0570f13c352f"
+        },
+        {
+          "shape": [
+            4,
+            256
+          ],
+          "targets": 449,
+          "sha256": "2db6f397c1886e051c528c090a6e30bfd62317d51b0fa65c485fa9372d714985"
+        },
+        {
+          "shape": [
+            4,
+            192
+          ],
+          "targets": 299,
+          "sha256": "2ff6c7c589197f96ec26bc684c4efd70b969ce242c4001f8675353cc59c62704"
+        },
+        {
+          "shape": [
+            4,
+            160
+          ],
+          "targets": 262,
+          "sha256": "4e89c54b91879a3ca0bafddae53981b3e3dce57740c88269bc93f12e38186198"
+        },
+        {
+          "shape": [
+            4,
+            192
+          ],
+          "targets": 286,
+          "sha256": "a985ab11fd1ca48b0f8e9c1a2002f1e1b2c75da45ab721347aa4e7ae6a86191e"
+        },
+        {
+          "shape": [
+            4,
+            192
+          ],
+          "targets": 286,
+          "sha256": "a4f5f359ac183b27cc2782917027da5e1ed639a7993fb7d9c8d8de8e48bbec3e"
+        },
+        {
+          "shape": [
+            4,
+            224
+          ],
+          "targets": 405,
+          "sha256": "ea2607eed3cbf9ac9992f9facafa94505d77c5685b7175417aa9055db0c3065c"
+        }
+      ],
+      "counts_increment": {
+        "pretrain_microbatches": 1,
+        "pretrain_targets_including_focus": 2048,
+        "pretrain_source_targets": 2048,
+        "teacher_microbatches": 16,
+        "teacher_targets_including_focus": 6036,
+        "teacher_source_targets": 6036,
+        "foundation_microbatches": 1,
+        "foundation_targets_including_focus": 160,
+        "foundation_source_targets": 160,
+        "focus_targets": 0
+      },
+      "targets": 905334,
+      "focus_cursor": 10,
+      "batch_trace_sha256": "0c21fcb79c245710d2ea4535ef977b2436257a1376752564a18c2e3602ca2d4e",
+      "changed_language_tensors": [
+        "memory_gate",
+        "embedding.weight",
+        "blocks.0.norm1.weight",
+        "blocks.0.norm2.weight",
+        "blocks.0.qkv.weight",
+        "blocks.0.out.weight",
+        "blocks.0.up.weight",
+        "blocks.0.down.weight",
+        "blocks.1.norm1.weight",
+        "blocks.1.norm2.weight",
+        "blocks.1.qkv.weight",
+        "blocks.1.out.weight",
+        "blocks.1.up.weight",
+        "blocks.1.down.weight",
+        "blocks.2.norm1.weight",
+        "blocks.2.norm2.weight",
+        "blocks.2.qkv.weight",
+        "blocks.2.out.weight",
+        "blocks.2.up.weight",
+        "blocks.2.down.weight",
+        "blocks.3.norm1.weight",
+        "blocks.3.norm2.weight",
+        "blocks.3.qkv.weight",
+        "blocks.3.out.weight",
+        "blocks.3.up.weight",
+        "blocks.3.down.weight",
+        "blocks.4.norm1.weight",
+        "blocks.4.norm2.weight",
+        "blocks.4.qkv.weight",
+        "blocks.4.out.weight",
+        "blocks.4.up.weight",
+        "blocks.4.down.weight",
+        "blocks.5.norm1.weight",
+        "blocks.5.norm2.weight",
+        "blocks.5.qkv.weight",
+        "blocks.5.out.weight",
+        "blocks.5.up.weight",
+        "blocks.5.down.weight",
+        "blocks.6.norm1.weight",
+        "blocks.6.norm2.weight",
+        "blocks.6.qkv.weight",
+        "blocks.6.out.weight",
+        "blocks.6.up.weight",
+        "blocks.6.down.weight",
+        "blocks.7.norm1.weight",
+        "blocks.7.norm2.weight",
+        "blocks.7.qkv.weight",
+        "blocks.7.out.weight",
+        "blocks.7.up.weight",
+        "blocks.7.down.weight",
+        "norm.weight",
+        "memory_query.0.weight",
+        "memory_query.1.weight",
+        "memory_out.0.weight",
+        "memory_out.1.weight"
+      ]
+    }
+  ],
+  "final_counts": {
+    "pretrain_microbatches": 177,
+    "pretrain_targets_including_focus": 362002,
+    "pretrain_source_targets": 361984,
+    "teacher_microbatches": 1338,
+    "teacher_targets_including_focus": 534148,
+    "teacher_source_targets": 534009,
+    "foundation_microbatches": 66,
+    "foundation_targets_including_focus": 9184,
+    "foundation_source_targets": 9169,
+    "focus_targets": 172
+  },
+  "final_targets": 905334,
+  "final_batch_trace_sha256": "0c21fcb79c245710d2ea4535ef977b2436257a1376752564a18c2e3602ca2d4e",
+  "maximum_language_tensor_difference": 0.0,
+  "checkpoint_unchanged": true,
+  "parent_file_unchanged": true,
+  "production_sources_unchanged": {
+    "spora/conversation.py": true,
+    "spora/conversation_data.py": true,
+    "scripts/train_conversation_v8.py": true,
+    "spora/token_objective.py": true,
+    "spora/conversation_state.py": true,
+    "spora/training_mix.py": true,
+    "spora/state_codec.py": true,
+    "spora/growing.py": true,
+    "scripts/prepare_teaching_curriculum.py": true,
+    "scripts/curate_teaching_curriculum.py": true,
+    "scripts/prepare_conversation_v4.py": true,
+    "scripts/prepare_conversation_v2.py": true,
+    "scripts/curate_conversation.py": true,
+    "spora/language_training.py": true
+  },
+  "plan_unchanged": true,
+  "training_inputs_stat_unchanged": true,
+  "old_state_unchanged": true,
+  "limitations": [
+    "CUDA RNG bytes are compared and preserved, but never installed on a GPU or consumed; CUDA replay was not tested.",
+    "CPU RNG can remain unchanged because current training has no stochastic forward layers. Python sampler RNG must advance.",
+    "Steps101-103 do not reach the focus_every=10 trigger. Focus logic is copied exactly but this replay does not dynamically exercise an injection.",
+    "No separately uninterrupted training trajectory was compared, and CPU arithmetic is not claimed bitwise equivalent to GPU arithmetic.",
+    "Data inputs were fully hashed before replay and checked for size/mtime changes afterward; frozen production sources, parent and B100 were rehashed.",
+    "Wall-clock accounting and monitoring are excluded because they are not deterministic update state. No final test texts were opened."
+  ],
+  "old_checker_discrepancies": [
+    "verify_coverage_resume.py hard-codes CUDA despite read-only framing; it cannot satisfy this CPU-only request.",
+    "Old checker uses one-source-per-update v7 sampling and does not compare complete optimizer/RNG/count/trace state; it is not a valid v8 verifier."
+  ],
+  "seconds_including_wait": 159.7112978999503
+}
