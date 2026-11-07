@@ -1,0 +1,17 @@
+{
+  "scope": "New openly inspected development probes for sentence continuation, separate from chat following. Never training data or final acceptance. Generic phrases may overlap naturally occurring corpora; no semantic-isolation claim.",
+  "cases": [
+    {"name": "morning_scene", "prefix": "清晨，小林拉开窗帘，看见院子里的树叶上挂着露珠。她走到门口，"},
+    {"name": "rain_action", "prefix": "放学时突然下起了雨，小周没有带伞。同学看到他站在门口，便"},
+    {"name": "water_change", "prefix": "把一杯热水放在桌上，过了一段时间，水温会逐渐降低。这是因为"},
+    {"name": "simple_contrast", "prefix": "跑步和散步都是常见的运动方式。跑步通常强度较高，而散步"},
+    {"name": "lost_item", "prefix": "小陈准备出门，却发现钥匙不在口袋里。他没有马上离开，而是"},
+    {"name": "library_scene", "prefix": "图书馆里很安静。小雅找到一本想看的书，坐在窗边，"},
+    {"name": "cause_effect", "prefix": "冬天的早晨，路面上结了一层薄冰。为了避免滑倒，行人应该"},
+    {"name": "corrected_plan", "prefix": "原本大家打算周六去郊游，后来天气预报说周六会有暴雨。于是，大家决定"},
+    {"name": "small_explanation", "prefix": "植物需要水分和阳光。水分不足时，叶子可能会"},
+    {"name": "shared_object", "prefix": "小明把红色铅笔借给了小华。小华画完图以后，把铅笔"},
+    {"name": "order_events", "prefix": "做饭前，先把蔬菜洗干净，再切成合适的大小。准备好食材后，"},
+    {"name": "uncertain_cause", "prefix": "门外传来一阵脚步声，但小丽还没有看见来的人，因此她暂时"}
+  ]
+}

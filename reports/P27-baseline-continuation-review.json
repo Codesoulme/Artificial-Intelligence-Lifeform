@@ -1,0 +1,808 @@
+{
+  "schema_version": 1,
+  "status": "open_development_probe_review_not_final_acceptance",
+  "created_at_utc": "2026-11-07T20:24:49.051353+00:00",
+  "scope": {
+    "output_file": "D:/SPORA/reports/P27-baseline-continuation-review.json",
+    "write_allowlist": [
+      "reports/P27-baseline-continuation-review.json"
+    ],
+    "reviewer": "当前 Codex 助手直接逐条阅读前缀与完整续写并给出判断；未用外部模型代答，不冒称人类盲评。",
+    "execution": "本次仅以 CPU 运行 Python 标准库进行读取、组装与校验；未导入评测脚本、未加载权重、未运行生成或训练、未使用 GPU、未执行 git 操作。",
+    "input_files_unchanged": true,
+    "probe_scope_verbatim": "New openly inspected development probes for sentence continuation, separate from chat following. Never training data or final acceptance. Generic phrases may overlap naturally occurring corpora; no semantic-isolation claim.",
+    "limitations": "新开的公开开发探针，非最终验收；未声称排除通用短语重合，未做训练语料去重或语义隔离核验。未读取其他未开放题目或额外测试题库。",
+    "evaluator_read_scope": "仅静态查看指定评测脚本的输入构造、预算、策略、输出与摘要相关行；未读取其题库文件或训练计划。"
+  },
+  "sources": {
+    "continuation": {
+      "path": "runs/p27-pretrain-baseline.json",
+      "sha256": "f8a5675c557cc51cc1b5a7ac9249d035f569359c98577911f6f6265da1c23fe8",
+      "bytes": 35381
+    },
+    "small_chat": {
+      "path": "reports/P23f-small-2000.json",
+      "sha256": "603c68701ae7606665638d75879e9cc5400e40863b6dc4a0ce9e34b71505198e",
+      "bytes": 120905
+    },
+    "wide_chat_review": {
+      "path": "reports/P23f-wide-2000-review.json",
+      "sha256": "dde4117d1475705ec6c072d8ffc50b56a2c5fcabf311a2fc9ed2d8045f2af9f5",
+      "bytes": 68005
+    },
+    "evaluator": {
+      "path": "scripts/evaluate_chinese_continuation.py",
+      "sha256": "f17d65be3ced6445e107b9b97f66aee9d2729c7adc2c80908b555209d9365c5b",
+      "bytes": 3250
+    }
+  },
+  "provenance": {
+    "checkpoint_sha256": "9f3bfd9db9e46880138c3d83a9ad37264d5589fc42445d6c508c71a0d23569ed",
+    "same_as_F_small2000": true,
+    "cases_sha256": "5e85153f56a816ef8dba1a6b6aae125b9c784c03c812454bba11ce9d43f590de",
+    "evaluator_sha256": "f17d65be3ced6445e107b9b97f66aee9d2729c7adc2c80908b555209d9365c5b",
+    "evaluator_hash_matches_current_file": true,
+    "generation_source_sha256_as_recorded": {
+      "spora/conversation.py": "431841bb5245b7bee427e2f55db82a070f0d2b768e6dea3c598fc653b2028362",
+      "spora/conversation_state.py": "fe9d8dda52bdd60456b350a6b1b8d19b8c95b162932b46f3a7f9c718f337e944",
+      "spora/conversation_sampling.py": "4d7f40f01f8e71fc40b84fec587fbae5356d47b03ac70a364b5e086b2aece8c7"
+    },
+    "recorded_old_individual_exact": true,
+    "recorded_checkpoint_unchanged": true,
+    "integrity_note": "保留检查来自用户已运行的评测日志；本次仅校验输入文件字节摘要，没有重新加载模型来验证权重。",
+    "input_mode": "脚本第42行使用起始符加原始中文前缀，未拼入用户/助手角色标记；因此该探针直接检查前缀续写。生成仍复用现有模型恢复和生成函数，不能据此排除一切实现或解码因素。",
+    "decoding_limits": "每个前缀贪心和采样各一次。脚本默认预算64，观测到16条长度为64且未输出结束符；JSON未保存实际命令行预算，不能仅凭默认值完全重建运行参数。",
+    "sample_seed_rule": "脚本采样种子为271108加前缀的零基序号；temperature与top_p未显式记录于此JSON，本次不猜测其值。"
+  },
+  "method": {
+    "unit": "将每个完整前缀与其实际生成的全文接在一起判定；每条独立，不继承其他前缀或另一解码策略的输出。",
+    "rubric": {
+      "useful": "整体可作连贯中文续文，句法可理解，衔接与明确事实、因果和指代基本成立，没有主导性重复；允许多种合理故事走向。",
+      "partial": "至少有一个完成当前悬置结构、可独立保留的连贯片段，但其余内容存在明显语法或关系缺陷，全文不能直接采用。",
+      "failed": "核心衔接或事实关系不成立，或全文主要由病句、无关跳转、步骤矛盾、机械重复组成；只有主题词、泛化句形或无实质推进的循环不计部分通过。"
+    },
+    "full_output_rule": "不截取最好的一句代表整条；局部可用且其余失常最多判部分满足。正常结束、UTF8有效或循环指标为零都不是语义通过条件。",
+    "truncation_rule": "不因未输出结束符或末尾被长度截断单独判失败；依据截断之前已发生的句法、关系和重复问题。短预算不支持推断模型永远不会结束。",
+    "open_ended_rule": "不强制雨中必须借伞、钥匙必须找回、铅笔必须归还、郊游必须取消；新人物或意外走向可以成立，要求交代关系且不无解释地违背前提。",
+    "scoring": "主指标为 useful/总条数，partial另列，不折算通过；四个维度给文字证据，不伪造客观量表分数。",
+    "automation": "标签和所有维度依据由直接阅读形成；Python只封装记录、统计和验证对应关系。"
+  },
+  "summary": {
+    "total": 24,
+    "useful": 0,
+    "partial": 2,
+    "failed": 22,
+    "by_policy": {
+      "greedy": {
+        "total": 12,
+        "useful": 0,
+        "partial": 0,
+        "failed": 12,
+        "useful_fraction": 0.0,
+        "ended_with_eos": 2,
+        "without_eos": 10,
+        "recorded_obvious_loops": 6,
+        "valid_utf8": 12,
+        "outputs_with_64_tokens": 10
+      },
+      "sampled": {
+        "total": 12,
+        "useful": 0,
+        "partial": 2,
+        "failed": 10,
+        "useful_fraction": 0.0,
+        "ended_with_eos": 6,
+        "without_eos": 6,
+        "recorded_obvious_loops": 0,
+        "valid_utf8": 12,
+        "outputs_with_64_tokens": 6
+      }
+    },
+    "interpretation": "这组前缀中没有整条达到可直接采用的续写；采样的运动对比和图书馆场景各有一个可保留的开头片段。不能据此声称模型没有任何中文能力，但基础连贯生成明显不稳。"
+  },
+  "rows": [
+    {
+      "name": "morning_scene",
+      "policy": "greedy",
+      "source_pointer": "/rows/0",
+      "prefix": "清晨，小林拉开窗帘，看见院子里的树叶上挂着露珠。她走到门口，",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "开头句法已断裂，随后循环拉窗和鸣叫，不能形成连贯晨景。",
+      "dimensions": {
+        "prefix_coherence": "开头看见小林里不能接她走到门口，后续又退回拉窗动作。",
+        "grammar": "看见小林里缺乏可成立的宾语关系；鸣叫声反复成为无谓语片段。",
+        "causality_and_reference": "人物似仍围绕小林，但门口场景未得到连贯推进。",
+        "repetition": "清风后开始反复组合拉窗与鸣叫，正文被同一小段占据。"
+      },
+      "evidence_excerpt": "看见小林里",
+      "response_sha256": "abf44c4e80ca2e12616b3e221bd171bd14f2c0754389b445a75a63d32de3c51d",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.5245901639344263,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "morning_scene",
+      "policy": "sampled",
+      "source_pointer": "/rows/1",
+      "prefix": "清晨，小林拉开窗帘，看见院子里的树叶上挂着露珠。她走到门口，",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "保留场景词不足以挽救多处病句，动作与修饰关系破碎。",
+      "dimensions": {
+        "prefix_coherence": "草木和花园仍属晨景，但首句看着草木里注意的无法衔接。",
+        "grammar": "把风吹过、说着花香及悬空的一边结构均不自然。",
+        "causality_and_reference": "她可接小林，女孩也不必视为换人；主要缺陷是动作关系无法解释。",
+        "repetition": "花园与漫步多次出现，尚非固定整句循环。"
+      },
+      "evidence_excerpt": "一边静静地说着花香",
+      "response_sha256": "3580481149361fd85177f810a1ec9a58343776edaedc8a553a11393d2386dad5",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.04225352112676062,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "rain_action",
+      "policy": "greedy",
+      "source_pointer": "/rows/2",
+      "prefix": "放学时突然下起了雨，小周没有带伞。同学看到他站在门口，便",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "没有完成前缀悬置的主谓关系，并循环重述起始状态。",
+      "dimensions": {
+        "prefix_coherence": "前缀便后接得他走到门口，不能形成同学的动作。",
+        "grammar": "便得他及看着他走到门口构句和角色关系混乱。",
+        "causality_and_reference": "未续接同学看到小周后的反应，反复回到原先站门口的状态。",
+        "repetition": "没有带伞、走到门口的组合多次重复。"
+      },
+      "evidence_excerpt": "得他走到门口",
+      "response_sha256": "ab63d0976e5df399617fa8b9cdcfafaac01a97e41138aca22b1756aa939570f0",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.640625,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "rain_action",
+      "policy": "sampled",
+      "source_pointer": "/rows/3",
+      "prefix": "放学时突然下起了雨，小周没有带伞。同学看到他站在门口，便",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "雨景词汇仍在，但主语、动作和人物关系均失去连贯性。",
+      "dimensions": {
+        "prefix_coherence": "便有一阵阵风使主语从同学突转天气，未交代其反应。",
+        "grammar": "想到地下点了、他不小心到上去均不能形成明确动作。",
+        "causality_and_reference": "引入小明未建立与小周的关系，随后多个他缺乏清楚承接。",
+        "repetition": "没有带伞和不小心反复出现。"
+      },
+      "evidence_excerpt": "想到地下点了",
+      "response_sha256": "ea439608ea37d40ec8a6721e7fa1ea92386855aaaff163dc001e0cff4090cd50",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.18571428571428572,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "water_change",
+      "policy": "greedy",
+      "source_pointer": "/rows/4",
+      "prefix": "把一杯热水放在桌上，过了一段时间，水温会逐渐降低。这是因为",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "流畅的局部分句不能抵消核心因果矛盾和大面积重复。",
+      "dimensions": {
+        "prefix_coherence": "这是因为后虽形成解释句式，却把降温写成升温。",
+        "grammar": "局部水温会增加合语法，全文只是同一分句堆叠。",
+        "causality_and_reference": "与前缀明确给定的温度下降相反，没有散热或与环境交换热量的原因。",
+        "repetition": "升温断言持续循环。"
+      },
+      "evidence_excerpt": "在桌面上，水温会增加",
+      "response_sha256": "e65dc4cd1aa791e69a6c281054122a4c9585bbd367a053812c9c89689f78d4cc",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.863013698630137,
+        "direct_loop": true,
+        "obvious_loop": true,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "water_change",
+      "policy": "sampled",
+      "source_pointer": "/rows/5",
+      "prefix": "把一杯热水放在桌上，过了一段时间，水温会逐渐降低。这是因为",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "虽正常结束，解释方向仍与前缀相反，语义与指代也不稳。",
+      "dimensions": {
+        "prefix_coherence": "接出多余逗号，随后转向加速和过热，未说明降温。",
+        "grammar": "这种时间会加速与热水的量量结构异常。",
+        "causality_and_reference": "多次声称温度增加，违背前缀；它们也无清楚指代。",
+        "repetition": "存在增温含义的反复，未达到整句循环。"
+      },
+      "evidence_excerpt": "导致水温的增加",
+      "response_sha256": "c8c88808aa52f8c6a000fecf122bb8b94f48695cd6d301b276dec63b980f8c3d",
+      "recorded_metrics": {
+        "ended_with_eos": true,
+        "repeated_4gram_fraction": 0.0,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 35
+    },
+    {
+      "name": "simple_contrast",
+      "policy": "greedy",
+      "source_pointer": "/rows/6",
+      "prefix": "跑步和散步都是常见的运动方式。跑步通常强度较高，而散步",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "比较关系未延续，并混入不成立的度量及循环清单。",
+      "dimensions": {
+        "prefix_coherence": "而散步后接强度较高，没有形成所设对照。",
+        "grammar": "每小时的强度不构成合理量化，后文动作句重复。",
+        "causality_and_reference": "在给定跑步通常强度较高的比较中，未体现散步通常较缓和；又转回跑步。",
+        "repetition": "在跑步时和有氧运动清单反复出现。"
+      },
+      "evidence_excerpt": "则强度较高，可以达到每小时的强度",
+      "response_sha256": "d84ee44d9dc828712e69ae32061583c94dc061fc3f73aa1b08ca0a9e6f4fee4e",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.48888888888888893,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "simple_contrast",
+      "policy": "sampled",
+      "source_pointer": "/rows/7",
+      "prefix": "跑步和散步都是常见的运动方式。跑步通常强度较高，而散步",
+      "verdict": "partial",
+      "useful": false,
+      "partial": true,
+      "reason": "开头对比可用，但后一句动作条件混乱，完整续写未达到 useful。",
+      "dimensions": {
+        "prefix_coherence": "首句则强度较低准确接住而散步，完成核心对比。",
+        "grammar": "首句自然；第二句在游泳或游泳时，跑步时混合状语。",
+        "causality_and_reference": "跑步与散步的强弱关系正确，后半段转到游泳后缺乏清楚关系。",
+        "repetition": "游泳局部重复，没有长段循环。"
+      },
+      "evidence_excerpt": "则强度较低。",
+      "response_sha256": "de175e958fb8e583f50a4d54f03416c7db9a302affee5cfb6b379921f871eaa1",
+      "recorded_metrics": {
+        "ended_with_eos": true,
+        "repeated_4gram_fraction": 0.0,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 20
+    },
+    {
+      "name": "lost_item",
+      "policy": "greedy",
+      "source_pointer": "/rows/8",
+      "prefix": "小陈准备出门，却发现钥匙不在口袋里。他没有马上离开，而是",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "既未处理缺钥匙的前提，又跳到无关人物和荒诞陈述并循环。",
+      "dimensions": {
+        "prefix_coherence": "从口袋里拿出来默认可取出物品，却没有解释钥匙不在口袋的设定。",
+        "grammar": "首个动作有句形，后文口袋里有一只马语义失常。",
+        "causality_and_reference": "无过渡换成小刚并加入马和猫，丢失找钥匙的线索。",
+        "repetition": "小刚口袋里的马与没有猫反复整句出现。"
+      },
+      "evidence_excerpt": "从口袋里拿出来。",
+      "response_sha256": "e1f76d64bc98ebf407189bde5437d9f7cca69adb0e0b19208926e55f5766506a",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.6714285714285715,
+        "direct_loop": true,
+        "obvious_loop": true,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "lost_item",
+      "policy": "sampled",
+      "source_pointer": "/rows/9",
+      "prefix": "小陈准备出门，却发现钥匙不在口袋里。他没有马上离开，而是",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "没有延续钥匙线索，代词与因果链条无法还原。",
+      "dimensions": {
+        "prefix_coherence": "而是不担心并非不离开的对等后续动作，缺乏寻找或其他合理处理。",
+        "grammar": "他只是因为他没有、他没有人知道等结构残缺。",
+        "causality_and_reference": "他、它、告诉他无明确对象，最后无法吃与钥匙无关。",
+        "repetition": "没有人知道短句局部重复。"
+      },
+      "evidence_excerpt": "所以他不能把它告诉他",
+      "response_sha256": "bf8d3885c58a6032b6931663222e14d269e6b3bdce2a78b7b05b06179646a6ba",
+      "recorded_metrics": {
+        "ended_with_eos": true,
+        "repeated_4gram_fraction": 0.09999999999999998,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 38
+    },
+    {
+      "name": "library_scene",
+      "policy": "greedy",
+      "source_pointer": "/rows/10",
+      "prefix": "图书馆里很安静。小雅找到一本想看的书，坐在窗边，",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "局部语法正确且主题不变，仍因全文循环而失败。",
+      "dimensions": {
+        "prefix_coherence": "只重复前缀末尾的坐在窗边，没有新增可用描写。",
+        "grammar": "单个短语正确，但整段退化为同一动作的串联。",
+        "causality_and_reference": "人物和地点未直接冲突，阅读场景没有得到延展。",
+        "repetition": "坐窗边的短语贯穿全部输出。"
+      },
+      "evidence_excerpt": "坐在窗边",
+      "response_sha256": "b46f3b243ae4b2816ee6cfdee880042d2eabcf49d514a517d697b99717b99dd0",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.9180327868852459,
+        "direct_loop": true,
+        "obvious_loop": true,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "library_scene",
+      "policy": "sampled",
+      "source_pointer": "/rows/11",
+      "prefix": "图书馆里很安静。小雅找到一本想看的书，坐在窗边，",
+      "verdict": "partial",
+      "useful": false,
+      "partial": true,
+      "reason": "首个补充姿态的分句连贯，但随后两处残句使全文不可直接采用。",
+      "dimensions": {
+        "prefix_coherence": "坐在椅子上可接坐在窗边，补充落座位置，首个分句成立。",
+        "grammar": "后句小雅独自在缺少补语，对书写上了也缺少成分。",
+        "causality_and_reference": "仍围绕小雅和书，没有人物错换；后续动作无法确定。",
+        "repetition": "坐姿描述略冗余，没有机械循环。"
+      },
+      "evidence_excerpt": "坐在椅子上。",
+      "response_sha256": "af4086e6ff35bb8c76f46f08330d47b3c19569bfccb223f823a50e595908b702",
+      "recorded_metrics": {
+        "ended_with_eos": true,
+        "repeated_4gram_fraction": 0.0,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 18
+    },
+    {
+      "name": "cause_effect",
+      "policy": "greedy",
+      "source_pointer": "/rows/12",
+      "prefix": "冬天的早晨，路面上结了一层薄冰。为了避免滑倒，行人应该",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "防滑目的与行为断开，同时有明显句法缺陷和循环片段。",
+      "dimensions": {
+        "prefix_coherence": "行人应该后没有接防滑行为，而转为下半时分和结冰。",
+        "grammar": "在下半时分一层薄冰缺少合理谓语；将地面上结也不成句。",
+        "causality_and_reference": "未延续避免滑倒的目的，反而把结冰当作待执行过程。",
+        "repetition": "结一层薄冰等片段反复出现。"
+      },
+      "evidence_excerpt": "在下半时分一层薄冰",
+      "response_sha256": "3a559f0008ae9707f5a8a9e88e324acb757bde1f706c882d0d8c416b4f0f17a0",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.6268656716417911,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "cause_effect",
+      "policy": "sampled",
+      "source_pointer": "/rows/13",
+      "prefix": "冬天的早晨，路面上结了一层薄冰。为了避免滑倒，行人应该",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "列表形式并未提供连贯内容，条目病句和重复主导输出。",
+      "dimensions": {
+        "prefix_coherence": "注意以下几点在形式上承接应该，但条目没有有效防滑内容。",
+        "grammar": "不要轻便不是清楚可执行的动作，否定词形式也反复摇摆。",
+        "causality_and_reference": "着凉、高热转向其他健康问题，与薄冰防滑缺乏因果联系。",
+        "repetition": "不要轻便及近似变体在编号项中反复出现。"
+      },
+      "evidence_excerpt": "注意以下几点",
+      "response_sha256": "4a5fa14df1825363eba69634508af9ad4bf1f44208ba0a159754ab479a4dc6f6",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.4657534246575342,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "corrected_plan",
+      "policy": "greedy",
+      "source_pointer": "/rows/14",
+      "prefix": "原本大家打算周六去郊游，后来天气预报说周六会有暴雨。于是，大家决定",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "完整句形和正常结束不足以通过；天气触发的决定缺乏因果支撑且重复。",
+      "dimensions": {
+        "prefix_coherence": "周六晚上去海边在句式上接决定，但未说明如何应对同日暴雨。",
+        "grammar": "短句本身通顺。",
+        "causality_and_reference": "去海边并非逻辑上不可能，但作为暴雨后的于是结果缺少解释，未建立合理计划调整。",
+        "repetition": "去海边连续重述。"
+      },
+      "evidence_excerpt": "周六晚上去海边",
+      "response_sha256": "a22721b80e758e90398e0d46f0812898a456b2dec2be66726e4e67d127b4f66f",
+      "recorded_metrics": {
+        "ended_with_eos": true,
+        "repeated_4gram_fraction": 0.47058823529411764,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 14
+    },
+    {
+      "name": "corrected_plan",
+      "policy": "sampled",
+      "source_pointer": "/rows/15",
+      "prefix": "原本大家打算周六去郊游，后来天气预报说周六会有暴雨。于是，大家决定",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "无重复且正常结束，仍是不能接续前缀的无意义片段。",
+      "dimensions": {
+        "prefix_coherence": "决定后接外光合作用了无法成为人的合理决定。",
+        "grammar": "外光合作用了构词与谓语搭配失常。",
+        "causality_and_reference": "郊游、暴雨和群体决定的关系全部丢失。",
+        "repetition": "短输出没有重复。"
+      },
+      "evidence_excerpt": "外光合作用了。",
+      "response_sha256": "37914e46b6a9e16f86949bdc90083517e89825753d7635a83d4360a6ef9cd1ed",
+      "recorded_metrics": {
+        "ended_with_eos": true,
+        "repeated_4gram_fraction": 0.0,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 5
+    },
+    {
+      "name": "small_explanation",
+      "policy": "greedy",
+      "source_pointer": "/rows/16",
+      "prefix": "植物需要水分和阳光。水分不足时，叶子可能会",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "没有形成缺水到叶片变化的可靠说明，重复术语替代了因果。",
+      "dimensions": {
+        "prefix_coherence": "吸收水分没有清楚续写缺水时叶片的变化，后文转成定义式套话。",
+        "grammar": "维持水分和水分的正常等搭配残缺。",
+        "causality_and_reference": "叶片在某些条件下能吸水，不能据此泛化成缺水时的解释；输出未说明可成立机制或萎蔫等后果。",
+        "repetition": "维持水分的同义片段不断回返。"
+      },
+      "evidence_excerpt": "吸收水分，因此植物需要水分",
+      "response_sha256": "215bc7db4a6e29d4ca6e33eec9e2a3d19d738da413a7d458c0eaff0255927fca",
+      "recorded_metrics": {
+        "ended_with_eos": true,
+        "repeated_4gram_fraction": 0.30612244897959184,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 32
+    },
+    {
+      "name": "small_explanation",
+      "policy": "sampled",
+      "source_pointer": "/rows/17",
+      "prefix": "植物需要水分和阳光。水分不足时，叶子可能会",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "科学话题词汇充足，但句义与因果关系失真，不能说明叶片缺水反应。",
+      "dimensions": {
+        "prefix_coherence": "在阳光下散发缺少散发对象，继而转向光和能量。",
+        "grammar": "水会吸收水分等搭配失当，能量来提供能量近于空转。",
+        "causality_and_reference": "没有解释缺水后果，多处因果连接只由因此串接。",
+        "repetition": "水分和能量词语及功能关系反复出现，非固定整句循环。"
+      },
+      "evidence_excerpt": "在阳光下水会吸收水分",
+      "response_sha256": "1cb0a8e90b9235aadd4ba437fd46eabf245e8551e4f99e324c3260e412d0cfd0",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.09890109890109888,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "shared_object",
+      "policy": "greedy",
+      "source_pointer": "/rows/18",
+      "prefix": "小明把红色铅笔借给了小华。小华画完图以后，把铅笔",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "引入新人物本身不扣死分，但后续人物错乱与算式循环使叙事失败。",
+      "dimensions": {
+        "prefix_coherence": "留在小红身边可作为新情节，但未解释新人物与借用关系。",
+        "grammar": "随后画完图为和铅笔数量等结构突变为残缺算式。",
+        "causality_and_reference": "画图者从小华漂移到小明、小红，借还关系不再可追踪。",
+        "repetition": "铅笔数量等式反复延长。"
+      },
+      "evidence_excerpt": "留在了小红的身边。",
+      "response_sha256": "6553dab6967838006c051faa37f1097e47865bf00049a2a31cc88173c92a5288",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.6483516483516483,
+        "direct_loop": true,
+        "obvious_loop": true,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "shared_object",
+      "policy": "sampled",
+      "source_pointer": "/rows/19",
+      "prefix": "小明把红色铅笔借给了小华。小华画完图以后，把铅笔",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "没有保持可追踪的人物物件关系，且出现病句和近义循环。",
+      "dimensions": {
+        "prefix_coherence": "留给小红可构成另一个故事走向，后文却转成买朋友和分钱。",
+        "grammar": "只买了每个朋友搭配不成立。",
+        "causality_and_reference": "小明和小华的借用关系被丢弃，苹果和钱未建立与铅笔的关联。",
+        "repetition": "小红有两元或钱是两元的近义句占据后半段。"
+      },
+      "evidence_excerpt": "小红只买了每个朋友",
+      "response_sha256": "761d0b66fc56cf1895befd07eb3453e0beb6da0509c54ecc4c693ffc76651807",
+      "recorded_metrics": {
+        "ended_with_eos": true,
+        "repeated_4gram_fraction": 0.49350649350649356,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 62
+    },
+    {
+      "name": "order_events",
+      "policy": "greedy",
+      "source_pointer": "/rows/20",
+      "prefix": "做饭前，先把蔬菜洗干净，再切成合适的大小。准备好食材后，",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "主题词和句形正确，仍因步骤回退和循环而不可用。",
+      "dimensions": {
+        "prefix_coherence": "准备好食材后再次洗切，未向下一阶段推进。",
+        "grammar": "局部操作短语自然，但没有有效新内容。",
+        "causality_and_reference": "未解释重做已完成步骤的理由，顺序停滞。",
+        "repetition": "切成适当大小持续重复。"
+      },
+      "evidence_excerpt": "将蔬菜洗净",
+      "response_sha256": "f43c710027474aeabb18d125caecff551cdb5f23ed79f600c878bf7373153a1a",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.8934426229508197,
+        "direct_loop": true,
+        "obvious_loop": true,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "order_events",
+      "policy": "sampled",
+      "source_pointer": "/rows/21",
+      "prefix": "做饭前，先把蔬菜洗干净，再切成合适的大小。准备好食材后，",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "有下锅和调味等相关片段，但步骤反复且关键动作不成立，不足以构成可用续写。",
+      "dimensions": {
+        "prefix_coherence": "先重复已完成的洗切，之后虽然进入下锅阶段，却未形成连贯流程。",
+        "grammar": "去掉蔬菜和蔬菜语义失常，多个最后相互覆盖。",
+        "causality_and_reference": "加入油后去掉蔬菜再煮沸缺乏清楚对象或步骤依据，不能整体还原操作。",
+        "repetition": "洗切和加油步骤重做，多次使用收尾连接词。"
+      },
+      "evidence_excerpt": "去掉蔬菜和蔬菜",
+      "response_sha256": "862a75c98e7062b55a049742796710f0daa8b29e53eee1f231966a2d10e129b5",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.23863636363636365,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "uncertain_cause",
+      "policy": "greedy",
+      "source_pointer": "/rows/22",
+      "prefix": "门外传来一阵脚步声，但小丽还没有看见来的人，因此她暂时",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "认知状态、声音来源和场景均失去承接，随后进入循环。",
+      "dimensions": {
+        "prefix_coherence": "暂时会看见未接住尚未看见来人的认知状态。",
+        "grammar": "脚步声片段缺乏完整谓语。",
+        "causality_and_reference": "门外来人的脚步变成小丽自身的脚步，场景又跳到海中。",
+        "repetition": "小丽的脚步声反复出现。"
+      },
+      "evidence_excerpt": "会看见。",
+      "response_sha256": "3e51f60d5bab9125fe5db8140f7ed05aad84cdb92bee144b28c877c7d93f1cbf",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.6721311475409837,
+        "direct_loop": true,
+        "obvious_loop": true,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    },
+    {
+      "name": "uncertain_cause",
+      "policy": "sampled",
+      "source_pointer": "/rows/23",
+      "prefix": "门外传来一阵脚步声，但小丽还没有看见来的人，因此她暂时",
+      "verdict": "failed",
+      "useful": false,
+      "partial": false,
+      "reason": "开头悬置关系未完成，后续指代混乱且句法破损，不能连贯续写。",
+      "dimensions": {
+        "prefix_coherence": "暂时只是看见既缺对象，也未解释尚未看见来人后的状态。",
+        "grammar": "一只小丽的猫变成了、小丽的猫非常看见等均为病句。",
+        "causality_and_reference": "突然换成猫狗并在人称她与他之间漂移，没有接住未知来者。",
+        "repetition": "猫相关短语多次复现。"
+      },
+      "evidence_excerpt": "小丽的猫非常看见",
+      "response_sha256": "4194a9c7bf663b19ab70067fa1a6249abe8485c2a1de4596c93c198feef4544d",
+      "recorded_metrics": {
+        "ended_with_eos": false,
+        "repeated_4gram_fraction": 0.16216216216216217,
+        "direct_loop": false,
+        "obvious_loop": false,
+        "utf8_valid": true
+      },
+      "generated_tokens": 64
+    }
+  ],
+  "comparison_with_chat": {
+    "small_existing": {
+      "greedy": {
+        "total": 36,
+        "useful": 3,
+        "partial": 0,
+        "failed": 33
+      },
+      "sampled": {
+        "total": 36,
+        "useful": 2,
+        "partial": 2,
+        "failed": 32
+      }
+    },
+    "wide_prior_review": {
+      "greedy": {
+        "total": 36,
+        "useful": 1,
+        "partial": 3,
+        "failed": 32
+      },
+      "sampled": {
+        "total": 36,
+        "useful": 0,
+        "partial": 5,
+        "failed": 31
+      }
+    },
+    "baseline_regrading": false,
+    "small_review_provenance": "Codex development review, not independent human blind review",
+    "findings": [
+      "同一小组检查点的聊天已有少数有用轮，但在本次无聊天角色格式的续写中也大量失败。因此“只是聊天指令模板没学好”不足以解释全部表现。",
+      "基础缺陷有独立证据：热水降低的前提被续成升高；钥匙和铅笔段发生人物、物件漂移；多段存在残句，即使采样和正常结束也未解决。",
+      "聊天还额外暴露了用户明确更改时间、告知三盆后无法可靠沿用，以及格式控制和语气改写失败。续写探针不能替代这些交互能力的检查。",
+      "宽组聊天严格有用轮数未胜过小组；但此次没有宽组续写结果，不能宣称增宽对基础语言建模也必然无效。",
+      "本次每策略仅12个同前缀配对样本，聊天是12组三轮任务；任务、长度、历史和解码参数记录不同，不能把二者通过率直接相减来量化哪类能力差多少。",
+      "贪心自动标记循环6/12，采样0/12，但人工仍在采样防滑、借笔和做饭条目看到词语、近义句或步骤反复。自动指标漏检不能当作重复已消失。"
+    ],
+    "causal_limit": "这是行为层面的缺陷定位，不是对数据量、参数容量、优化、模型恢复方式或解码配置的因果归因；单检查点和单次采样不足以分离各因素。"
+  },
+  "training_recommendation": {
+    "decision": "值得尝试一个有界、可比较的偏基础文本训练实验，但仅作为待验证假设；本次不启动训练。",
+    "why": [
+      "无需聊天协议的前缀续写仍在语法、局部语义、事件顺序和指代上失稳，为加强基础连贯文本提供了比仅有聊天失败更直接的依据。",
+      "采样中可正确补出散步强度较低，表明有局部语义片段可用，但很快在后句退化；实验目标应包含整段稳定性，不能只看首句变顺。",
+      "聊天增宽实验在相同目标token与批次轨迹下未改善严格有用率，暂时不支持只继续增加容量作为唯一方案。"
+    ],
+    "not_proven": [
+      "24条开放探针不能证明训练文本总量不足，也不能证明偏基础文本必定优于现有混合配方；需要检查质量、覆盖、顺序与优化。",
+      "不能由失败断言所有基础能力都差；该集合包含因果解释和常识要求，并非纯粹孤立语法测试。",
+      "不能把未来续写提升解释为正常聊天能力达标；事实更新、跨轮条件和明确格式约束必须另行验证。"
+    ],
+    "bounded_design_if_later_authorized": [
+      "从相同F-small2000起点设置继续现有配方的对照与提高基础文本占比的实验，先固定架构、优化器和相同新增目标token预算，另记实测耗时和资源；不要把相同步数称为等算力。",
+      "优先选高质量、低重复的中文叙事和说明文本，覆盖人物保持、动作承接、因果对比及事件顺序；不把这12个前缀、其答案或紧贴探针的改写加入训练。",
+      "保留适量原有对话/指令成分以观察遗忘风险；具体配比和训练长度需结合可用数据与损失曲线，不凭这24条硬定。",
+      "以小段预算设检查点，同时观察训练/开发损失、整条续写判定、循环与长度，以及已有开放聊天任务；尽量使用多个固定采样种子，区分偶然首句改善和稳定收益。",
+      "若仅续写变通顺而聊天仍错用用户事实，应将后续工作转向指令与多轮状态使用；若续写也无改善，应检查数据质量、优化及生成路径，而非自动加大文本量。",
+      "这组探针始终保持开发用途；不能反复据其调整后再把它当未见验收，也不把自然语言常用表达重合说成已排除。"
+    ],
+    "success_criterion": "同时减少正文中的句法破损、事实/指代漂移和循环，提高完整续写的可用条数，并监测聊天能力是否保持；损失下降或自动重复率降低单独不构成成功。",
+    "conclusion": "证据支持基础连贯生成本身存在薄弱处，偏基础文本方向值得做小规模受控尝试；它不是已证实的修复，更不能取代聊天跟随训练和独立检查。"
+  },
+  "borderline_notes": [
+    "图书馆采样的坐在椅子上只是小幅补充姿态，部分分采取宽容口径；若要求必须推进情节，可改判失败，采样部分条数变为1，其余结论不变。",
+    "运动对比采样首句正确，不应因后句混乱抹去局部能力；但也不能仅凭首句把全文判成有用。",
+    "做饭采样虽有下锅和调味片段，先后顺序反复且去掉蔬菜等动作破坏整体，判失败；若仅奖励局部相关操作可给部分分，但仍不构成可用续写。"
+  ],
+  "verification": {
+    "row_count": 24,
+    "unique_prefixes": 12,
+    "each_prefix_has_both_policies": true,
+    "all_four_dimensions_present": true,
+    "source_excerpts_and_hashes_checked": true,
+    "counts_recomputed": true,
+    "input_fingerprints_unchanged": true,
+    "utf8_json_roundtrip_checked": true
+  }
+}
