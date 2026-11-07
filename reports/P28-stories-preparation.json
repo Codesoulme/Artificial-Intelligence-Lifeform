@@ -1,0 +1,108 @@
+{
+  "status": "prepared_pending_manual_review",
+  "ready_for_training": false,
+  "mechanical_checks_passed": true,
+  "output": "runs/p28-stories-data/candidate-v3",
+  "manifest_sha256": "fd57c0ffa3878c1aef3e762d4c4153672c7c899088f6369ceec33663243af5bd",
+  "lineage_audit_sha256": "4cfb611228c59f634b3760e211175e250892a0188e0c7e41c7ae51b5efbf8e6b",
+  "source_sha256": "3c86b047b0063056f11b17a494c20a79ce8fda2f17bf4d06634a9d332b740302",
+  "source_rows_scanned": 575898,
+  "resumed_selection": {
+    "path": "runs/p28-stories-data/candidate-v1",
+    "files_sha256": {
+      "selection.sqlite": "a63050950da8d3104f17fd89da4e57d359dcac519b94aea8ccd2b3b12a303ce6",
+      "selection.sqlite-journal": "52e467fae8085d1c6f61948ae81b8cd9f530a831b2c50fd3d90aec84fa34d42b"
+    },
+    "prior_filter_counts": "Not persisted in interrupted implementation; prefix rejection reasons unavailable. Only committed eligible records reused.",
+    "committed_eligible": 97405,
+    "resume_after_zero_based": 99999
+  },
+  "current_curriculum_binding": {
+    "path": "runs/teaching-curriculum-v3",
+    "manifest_sha256": "c96b4bb2e7b815d200c3e65e2111d7d7bbc90fd0081c71839157d9ee6d3c07e1",
+    "files": {
+      "foundations-tokens.jsonl": "1735c795214c732cfa4be41b849a9da27dc7d2b33b796fc6d104126219ed1df7",
+      "foundations.jsonl": "4b54ce4f07692981c6ff640e4475ca685c78d0265855b0b5cce1d93a58b1250f",
+      "teacher-tokens.jsonl": "340f5d9841a37c1ecc9c56e2324fae1f86cada3372d916fde93e50f36637439c",
+      "teacher.jsonl": "65b68071a20c6545c40cb18d45cccfba8203a622d1d18d23b43d27843d3ea7a7"
+    }
+  },
+  "story_splits": {
+    "train": {
+      "documents": 100000,
+      "tokens": 19238513,
+      "characters": 24374823,
+      "within_document_next_token_targets": 19138513
+    },
+    "development": {
+      "documents": 1024,
+      "tokens": 197427,
+      "characters": 249789,
+      "within_document_next_token_targets": 196403
+    },
+    "test": {
+      "documents": 1024,
+      "tokens": 198236,
+      "characters": 250641,
+      "within_document_next_token_targets": 197212
+    }
+  },
+  "preparation_stats": {
+    "source_rows_scanned": 575898,
+    "eligible_unique_stories": 560753,
+    "resumed_committed_eligible_stories": 97405,
+    "resumed_prefix_noneligible_or_duplicate_unclassified": 2595,
+    "rejected_primary_mixed_language": 4145,
+    "rejected_primary_repeated_sentence": 981,
+    "rejected_primary_over_510_content_tokens": 5640,
+    "rejected_primary_unfinished_ending": 863,
+    "rejected_primary_repeated_run": 815,
+    "rejected_primary_unbalanced_delimiter": 24,
+    "rejected_primary_under_60_chars": 20,
+    "rejected_primary_low_chinese_ratio": 52,
+    "rejected_primary_repeated_8gram": 10,
+    "inherited_dialogue_rows_scanned_for_new_held": 77437,
+    "new_held_removed_inherited_dialogue_overlap": 0,
+    "teacher_rows_scanned_for_new_held": 25704,
+    "new_held_removed_teacher_overlap": 0,
+    "foundations_rows_scanned_for_new_held": 65,
+    "new_held_removed_foundations_overlap": 0,
+    "new_held_removed_current_training_overlap": 0
+  },
+  "training_review_sample": {
+    "path": "runs/p28-stories-data/candidate-v3/quality-sample.json",
+    "count": 64,
+    "sha256": "dc8e1be5e03544202373cd04fb5dc6f89120c7e438ac23962fc2c614a8d5877d"
+  },
+  "v8_manifest_contract_verified": true,
+  "inherited_files_byte_exact": {
+    "dialogue-development-tokens.jsonl": "557953b8ddd21120d7168802b36b8752c9e44a4ee386e4520723bd291902c303",
+    "dialogue-development.jsonl": "da2deb84ad158d71946e651493e877a1ca7adcd8744361d0c75aa47df4535b02",
+    "dialogue-test-tokens.jsonl": "d1ec52f62d1f769b34428e4c4734f1fdc70d21a12ef8a283cd1133d8da9aeed9",
+    "dialogue-test.jsonl": "0f5cec08b066aece858ba7a49d59cafc52e07e736508aaee94e1ac5a56366a04",
+    "dialogue-train-tokens.jsonl": "9696007fcfac1103ab14a8b597cdb30e258cee2f69f37c5b7936e43893a1058c",
+    "dialogue-train.jsonl": "2629f0c8668ef6736c2a0431f0681c24944299e5d60c8ae8ac78d688b565973e",
+    "focus-tokens.json": "c9884b46d44d2f8b0512c9f1346a43b728a091bbc55726fdfaef0450687db6a5",
+    "pretrain-development.bin": "72b3e17b7a9861215b33704ec87f05e50f1a20dde8f9e11261685c3a76b97bc4",
+    "pretrain-development.jsonl": "59c5bce59ee085ac5bc2613bcd87347758e19270fba6cb8c8d4cfd20fbe65c32",
+    "pretrain-test.bin": "de110ebd3c229a312836d31ee0670479cf811cfe26025f5ed35134282dd1daff",
+    "pretrain-test.jsonl": "d995c6ec7336586e65bc98a91a01a8385165450e37bc64fa7a743b54b3dfbb94",
+    "tokenizer.json": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20"
+  },
+  "elapsed_seconds": 1312.375044199871,
+  "next_invocation": ".venv/Scripts/python.exe -B scripts/prepare_p28_stories.py --name candidate-v3 --limit 100000 --held-limit 1024 --resume-selection candidate-v1",
+  "invocation_note": "Invocation above records this completed run; do not rerun against an existing directory. No trainer invocation is authorized. Main owns plan/recipe and content decision.",
+  "output_contract": {
+    "train": "pretrain-train.bin/jsonl",
+    "new_story_development": "story-development.bin/jsonl",
+    "new_story_test": "story-test.bin/jsonl (never displayed)",
+    "legacy_held_dialogue_focus_tokenizer": "byte-identical original filenames",
+    "lineage": "lineage-audit.json passed=true means mechanical checks only; manifest and audit ready_for_training=false"
+  },
+  "limits": [
+    "Selected story held files are excluded from this new train corpus, inherited dialogue/focus, and the exact teaching-curriculum-v3 teacher/foundations under the stated rule. Checks cover whole raw records and each user/assistant message. They are not certified unseen by old pretraining, historical weights, vocabulary-fitting corpora or other ancestor data; the old pretrain TRAIN stream was not exhaustively compared. Any different curriculum needs a new audit.",
+    "Reuse HeldIndex: normalized exact, leading96, and stride16 16-character shingles with>=8 minimum count and>=80%min-size containment. Short, shifted and paraphrased overlaps may escape. No semantic proof.",
+    "No training authorized. Main/Hegel must review content and the new fixed64train reservoir; the separate32source-sample review does not automatically approve this selected corpus. This preparer never sets readiness true.",
+    "Little-endian uint16 BOS + up to510 unchanged BPE content tokens + EOS; offsets/counts stored per JSONL record. v8 draws fixed windows, so storing whole stories does not promise its individual windows remain within one story."
+  ]
+}
