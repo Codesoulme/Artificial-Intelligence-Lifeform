@@ -1,0 +1,147 @@
+{
+  "status": "rejected_for_current_curriculum_not_trained",
+  "manifest": {
+    "stats": {
+      "scanned": 905718,
+      "not_complete_2_to_5_turns": 813335,
+      "dialogues": 12238,
+      "turns": 39708,
+      "targets": 2372816,
+      "2_turn_dialogues": 3461,
+      "removed_heavy_formatting": 981,
+      "removed_identity": 1094,
+      "removed_abstract_topic": 31004,
+      "removed_latin_heavy": 8854,
+      "removed_invented_experience": 1158,
+      "3_turn_dialogues": 4074,
+      "removed_possible_personal_experience": 1368,
+      "removed_duplicate_answers": 1556,
+      "4_turn_dialogues": 2951,
+      "unfinished_answer": 2156,
+      "held_exact_group_or_prompt": 1765,
+      "5_turn_dialogues": 1752,
+      "long_or_code_answer": 2438,
+      "removed_long_answer": 25590,
+      "advanced_topic": 375,
+      "non_training_partition": 1528,
+      "removed_repeated_closing": 140,
+      "removed_repeated_phrases": 72,
+      "overlength": 63,
+      "removed_consecutive_repetition": 3
+    },
+    "source_provenance": {
+      "path": "sft_t2t_mini.jsonl",
+      "bytes": 1739201170,
+      "sha256": "abb1e76b2056e14728beb78db96b7b3c491a0bef1ed3e34a9b381b28f29fa518",
+      "url": "https://modelscope.cn/api/v1/datasets/gongjy/minimind_dataset/repo?Revision=833d262180bb2cddbba1284222ad4b5547b6b224&FilePath=sft_t2t_mini.jsonl",
+      "revision": "833d262180bb2cddbba1284222ad4b5547b6b224",
+      "repository": "gongjy/minimind_dataset",
+      "upstream": "https://www.modelscope.cn/datasets/gongjy/minimind_dataset",
+      "license_declared": "CC-BY-NC-4.0",
+      "use": "Local noncommercial research; attribution retained. Dataset card also describes upstream mixed licenses. Text only; no weights.",
+      "seconds": 243.39099999994505
+    },
+    "tokenizer_sha256": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+    "source_code_sha256": {
+      "scripts/prepare_multiturn_curriculum.py": "6a430f9765a1c635b007311333d3dcee3dbddc752152b9d1eccaee4ad76e514d",
+      "scripts/prepare_conversation_curriculum.py": "bdd2a6ab06e8727c5cbb9b6cdee245d17bb8fef7c5cba2430aedf9cd237bed42",
+      "scripts/curate_conversation.py": "726644321b3076b88462a1a8600101705b5900a8ac87e3f393858b6614aaa2fa",
+      "scripts/prepare_conversation_v2.py": "4ea9f53e0756722ca10d6116957bcf09ecfe797e202aff6b8184a279951553dc",
+      "scripts/audit_conversation_data.py": "41bc8ad5b9b7cb298ba8b5d1e4f3a62cb4d46c38c7ac7f17d988afbee2a73789"
+    },
+    "held_manifest_sha256": {
+      "conversation-data-v3": "fc171587f223b4630de7803a790fca2dcd0569f062c4569d54bbbfd20ba02fad",
+      "conversation-data-v4": "51dd385e6db9aa92f8bbd1eac506ea13ca3076835c1f644b30d56899ff79e003"
+    },
+    "scope": "New TRAIN-only short multi-turn subset; no truncation, no new tokenizer. No factual or semantic-isolation guarantee; requires raw review before use. Not individual experiences.",
+    "files": {
+      "multiturn-tokens.jsonl": "6b78ac572aabdabc3374b8bfc94644a0ee2ba3128a49957f3ec0e0adc9f0c7b5",
+      "multiturn.jsonl": "d84af3ef49cb7ed35ef4bc0656b8e68273a87f73af2330812d8ecad1a739264a"
+    }
+  },
+  "sample_sha256": "44cfbaa0936af7b3c26d31f1730dec966e629da64818a2ebf379f6d6d73387a8",
+  "method": "Fixed-seed16-record reservoir from entire selected file; manual developer review, not exhaustive truth audit.",
+  "findings": [
+    {
+      "sample": 0,
+      "source_line": 42398,
+      "reason": "声称近期正在阅读具体书籍，虚构亲历。"
+    },
+    {
+      "sample": 1,
+      "source_line": 59882,
+      "reason": "抽象意识论述，不适合当前基础短对话目标。"
+    },
+    {
+      "sample": 2,
+      "source_line": 8395,
+      "reason": "把人类阅读经历归到自身，任务过于空泛。"
+    },
+    {
+      "sample": 3,
+      "source_line": 66012,
+      "reason": "抽象认知与存在论述。"
+    },
+    {
+      "sample": 4,
+      "source_line": 14750,
+      "reason": "虚构帮助小朋友、做饭等近期事件。"
+    },
+    {
+      "sample": 5,
+      "source_line": 3318,
+      "reason": "自我存在、穿越与时代选择，缺少基础接续教学。"
+    },
+    {
+      "sample": 6,
+      "source_line": 23673,
+      "reason": "虚构每天读纸质书的习惯。"
+    },
+    {
+      "sample": 7,
+      "source_line": 26332,
+      "reason": "虚构泡茶、做饭与近期生活。"
+    },
+    {
+      "sample": 8,
+      "source_line": 50230,
+      "reason": "抽象存在与温暖的修辞讨论。"
+    },
+    {
+      "sample": 9,
+      "source_line": 78182,
+      "reason": "没有真实依据地认领当天经历；话题漂移。"
+    },
+    {
+      "sample": 10,
+      "source_line": 6004,
+      "reason": "抽象技术与自我讨论。"
+    },
+    {
+      "sample": 11,
+      "source_line": 30970,
+      "reason": "声称曾有具体个人困境，来源不实。"
+    },
+    {
+      "sample": 12,
+      "source_line": 20804,
+      "reason": "抽象自我表达与社会心理讨论。"
+    },
+    {
+      "sample": 13,
+      "source_line": 1106,
+      "reason": "虚构天气心情、与朋友交谈。"
+    },
+    {
+      "sample": 14,
+      "source_line": 58508,
+      "reason": "社会媒体宏观讨论，非基础指代／纠正教学。"
+    },
+    {
+      "sample": 15,
+      "source_line": 72626,
+      "reason": "无来源的“研究表明多数人”断言。"
+    }
+  ],
+  "decision": "Do not feed this corpus merely because it contains multiple turns. Preserve rejected material locally. Seek grounded short dialogues with verifiable context and varied language."
+}

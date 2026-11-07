@@ -1,0 +1,65 @@
+{
+  "results": [
+    {
+      "variant": "small",
+      "microbatch": 4,
+      "effective_batch": 16,
+      "length": 512,
+      "seconds_median": 0.49188340007094666,
+      "seconds_mean": 0.4917543333140202,
+      "peak_allocated_bytes": 856955392,
+      "loss": 2.28657865524292,
+      "first_update_close_to_micro4": true,
+      "max_first_update_difference": 0.0
+    },
+    {
+      "variant": "small",
+      "microbatch": 8,
+      "effective_batch": 16,
+      "length": 512,
+      "seconds_median": 0.482010249979794,
+      "seconds_mean": 0.4850387666374445,
+      "peak_allocated_bytes": 1547319808,
+      "loss": 2.28657865524292,
+      "first_update_close_to_micro4": false,
+      "max_first_update_difference": 4.886183887720108e-06
+    },
+    {
+      "variant": "small",
+      "microbatch": 16,
+      "effective_batch": 16,
+      "length": 512,
+      "seconds_median": 0.4632455999380909,
+      "seconds_mean": 0.46256926665470627,
+      "peak_allocated_bytes": 2854884352,
+      "loss": 2.28657865524292,
+      "first_update_close_to_micro4": false,
+      "max_first_update_difference": 5.6996941566467285e-06
+    },
+    {
+      "variant": "wide",
+      "microbatch": 4,
+      "effective_batch": 16,
+      "length": 512,
+      "seconds_median": 1.1955862499889918,
+      "seconds_mean": 1.1945289999712259,
+      "peak_allocated_bytes": 1615686144,
+      "loss": 1.8524819612503052,
+      "first_update_close_to_micro4": true,
+      "max_first_update_difference": 0.0
+    },
+    {
+      "variant": "wide",
+      "microbatch": 8,
+      "effective_batch": 16,
+      "length": 512,
+      "seconds_median": 1.1477902499609627,
+      "seconds_mean": 1.1485580833201918,
+      "peak_allocated_bytes": 2686339584,
+      "loss": 1.8524820804595947,
+      "first_update_close_to_micro4": false,
+      "max_first_update_difference": 2.909451723098755e-06
+    }
+  ],
+  "scope": "Disposable updates, no weights saved. Fixed actual pretraining batch, length512, float32; two warmup plus six timing updates. A microbenchmark, not end-to-end speed or chat quality."
+}
