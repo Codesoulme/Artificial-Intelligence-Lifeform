@@ -1,0 +1,30 @@
+{
+  "status": "candidate_downloaded_not_trained",
+  "provenance": {
+    "repository": "0xDing/wikipedia-cn-20230720-filtered",
+    "revision": "4cef256a3f426ae1d3f6930c8cd59a32d785d99d",
+    "path": "wikipedia-cn-20230720-filtered.json",
+    "url": "https://hf-mirror.com/datasets/0xDing/wikipedia-cn-20230720-filtered/resolve/4cef256a3f426ae1d3f6930c8cd59a32d785d99d/wikipedia-cn-20230720-filtered.json?download=true",
+    "bytes": 524489333,
+    "sha256": "3a4dcb0e1b37436358d6cc5de28300071d55367395381958eba9fd38b3d78e32",
+    "repository_metadata_sha256": "c8a64b9f90f3c939c0a837b16b7a59f91858017194a60aaa1bcea69019ac4076",
+    "license_declared": "CC-BY-SA-3.0",
+    "source": "Chinese Wikipedia 2023-07-20 dump, filtered and script-converted by dataset provider; not an independent truth audit.",
+    "scope": "Candidate text only, not selected by any training plan. Preserve attribution and original source notice; no model weights downloaded.",
+    "seconds": 72.01022910000756
+  },
+  "records": 254547,
+  "source_fields": [
+    "completion",
+    "source"
+  ],
+  "sample_sha256": "4ad5db68bd5a6950791ac18653eb20a0ca458af15e6a374fb2b196ea3e04aa88",
+  "findings": [
+    "Some mathematical entries lost formulas and are unusable without filtering.",
+    "Some entries contain raw thumb markers and citation-number remnants.",
+    "Article URLs and explicit titles are not preserved as separate fields; attribution must retain original collection and source notices.",
+    "Many entries concern specific people, places and historical facts; broad prose is not a replacement for grounded multi-turn instruction data.",
+    "Snapshot content may be dated; not a live facts source."
+  ],
+  "decision": "Do not insert into active capacity comparison. Any later use requires formatting/length filtering, held overlap audit and explicit new plan; keep source metadata and avoid treating third-party descriptions as individual experiences."
+}

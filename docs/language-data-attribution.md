@@ -24,3 +24,7 @@
 随后从Instruction-Tuning-with-GPT-4/GPT-4-LLM读取中文教学文本：固定Git修订80cda626ea305004be42426671c66efebbf22144，路径data/alpaca_gpt4_data_zh.json，共48818条，35100559字节，Git对象SHA1为af092742e9bc3b83fa6feb13203b793aafc9dffc，SHA256为6fcb98c6d79691d1f9a88ef513335da9124e7fdeef5103343f5d9f9a6e8f4903。仓库原文明确为CC-BY-NC-4.0、仅研究用途；遵循此范围，不公开推送原始教材。第三方镜像卡片头部与正文许可不一致，采用原项目更严格的研究／非商业声明。
 
 这份内容由GPT-4生成，不是人工逐条保证正确。经过身份、控制标记、长度、严重重复、句尾完整性及旧／新留出重叠等筛选，25704份进入D／E训练。过滤不保证事实完全正确。原始文件、提供方说明、下载地址与散列保存在runs/alpaca-material。没有下载对应模型参数。项目自写的data/chinese-foundations.json为训练例子和虚构情境，不作亲历，也不能算独立验收。
+
+## 2026-11-08 普通文章候选（未训练）
+
+已核验0xDing/wikipedia-cn-20230720-filtered固定修订4cef256a3f426ae1d3f6930c8cd59a32d785d99d，524489333字节，SHA256为3a4dcb0e1b37436358d6cc5de28300071d55367395381958eba9fd38b3d78e32。提供方声明CC-BY-SA-3.0，基于中文维基2023-07-20快照，经筛选和简繁转换，共解析254547条。仅下载为后续文本候选，没有进入F对照训练。样本有公式丢失、残留标记与过时资料，不能直接视为可靠教材。原文及来源清单保留于runs/chinese-prose-material，不随源码上传；见[P23-prose-source-review.json](../reports/P23-prose-source-review.json)。
