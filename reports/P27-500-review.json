@@ -1,0 +1,2030 @@
+{
+  "schema_version": 1,
+  "status": "complete_96_item_development_review_not_acceptance",
+  "created_at_utc": "2026-11-07T20:37:17.168019+00:00",
+  "scope": {
+    "output": "D:/SPORA/reports/P27-500-review.json",
+    "write_allowlist": [
+      "reports/P27-500-review.json"
+    ],
+    "chat_turns_reviewed": 72,
+    "continuations_reviewed": 24,
+    "unreviewed_requested_items": [],
+    "execution": "仅CPU上的Python标准库读取、统计与写入；未导入项目模块、未加载权重、未运行训练或生成、未使用GPU、未改训练器、未执行git操作。",
+    "reviewer": "当前Codex助手直接读完全历史和全文后逐条判断；未调用外部模型代答，不冒称人类盲评。",
+    "probe_status": "公开开发材料，非最终验收；不声称排除通用短语重合或训练语料重合。",
+    "read_boundary": "只读取列出的结果与既有报告，并检查相关目录AGENTS.md；未读取训练器、其他题库或未开放测试。"
+  },
+  "sources": {
+    "chat_greedy": {
+      "path": "runs/p27-coverage-small/multiturn-500.json",
+      "sha256": "5bd78c572eb9aa40c6ba29210671e91b5aac18bdab21cbfcd8311facd161bb1d",
+      "bytes": 37249
+    },
+    "chat_sampled": {
+      "path": "runs/p27-coverage-small/multiturn-500-sampled.json",
+      "sha256": "20fb5342aa8c0570882dbdbbab0acb6cd50f04edce11919c0b652c2a9ae61773",
+      "bytes": 38883
+    },
+    "continuation": {
+      "path": "runs/p27-coverage-small/continuation-500.json",
+      "sha256": "da59a90ef311f431aa9753640ab34431bbaca62ce5747309301ad2e2ed975bbf",
+      "bytes": 34808
+    },
+    "F_small_chat": {
+      "path": "reports/P23f-small-2000.json",
+      "sha256": "603c68701ae7606665638d75879e9cc5400e40863b6dc4a0ce9e34b71505198e",
+      "bytes": 120905
+    },
+    "prior_wide_review": {
+      "path": "reports/P23f-wide-2000-review.json",
+      "sha256": "dde4117d1475705ec6c072d8ffc50b56a2c5fcabf311a2fc9ed2d8045f2af9f5",
+      "bytes": 68005
+    },
+    "F_continuation_review": {
+      "path": "reports/P27-baseline-continuation-review.json",
+      "sha256": "96de15db76f6ab3bd2c3926ec742994d3d8cd3b9c80d8c6c4268a2fc495d87cd",
+      "bytes": 40407
+    },
+    "F_continuation": {
+      "path": "runs/p27-pretrain-baseline.json",
+      "sha256": "f8a5675c557cc51cc1b5a7ac9249d035f569359c98577911f6f6265da1c23fe8",
+      "bytes": 35381
+    }
+  },
+  "provenance": {
+    "P27_step_as_recorded": 500,
+    "P27_checkpoint_sha256": "81332735cd5f5fa012bc16b86f4ba50e2d20ad43635bbc9a302f0fe70536ac4e",
+    "F_checkpoint_sha256": "9f3bfd9db9e46880138c3d83a9ad37264d5589fc42445d6c508c71a0d23569ed",
+    "P27_chat_plan_sha256": "081ea5a6774ce17889e52ef7d889cdfc90c8436a292c3b983e6abae5e1347314",
+    "P27_checkpoint_same_across_three_results": true,
+    "recorded_integrity": {
+      "chat_greedy": {
+        "old_individual_exact": true,
+        "checkpoint_unchanged": true
+      },
+      "chat_sampled": {
+        "old_individual_exact": true,
+        "checkpoint_unchanged": true
+      },
+      "continuation": {
+        "old_individual_exact": true,
+        "checkpoint_unchanged": true
+      }
+    },
+    "note": "检查点与保留性质来自既有日志，本次未加载权重复核；未读取段训练日志，不能推算新增token、实际配比、训练耗时或FLOPs。"
+  },
+  "method": {
+    "chat_rubric": {
+      "useful": "满足本轮核心意图；相关事实正确，重要数量、格式、指代与后续条件得到遵守；轻微措辞不影响使用可容忍。",
+      "partial": "存在可定位的正确成分或可执行片段，但伴随事实错误、遗漏、语义缺陷或条件未满足，不能直接作为完整答案。",
+      "failed": "未完成主要请求；只复用关键词、无关套话、错误核心安排、循环或不可理解内容，不因通顺和有结束符而得分。"
+    },
+    "continuation_rubric": {
+      "useful": "整体可作连贯中文续文，句法可理解，衔接与明确事实、因果和指代基本成立，没有主导性重复；允许多种合理故事走向。",
+      "partial": "至少有一个完成当前悬置结构、可独立保留的连贯片段，但其余内容存在明显语法或关系缺陷，全文不能直接采用。",
+      "failed": "核心衔接或事实关系不成立，或全文主要由病句、无关跳转、步骤矛盾、机械重复组成；只有主题词、泛化句形或无实质推进的循环不计部分通过。"
+    },
+    "full_context": "按每个聊天场景本策略实际历史顺序评阅；用户事实和后续更正优先于助手错误，前轮失败不自动使后轮失败。续写按完整前缀加完整输出判断，允许多种合理故事走向。",
+    "unchanged_rules": [
+      "流畅、正常结束、UTF8有效或未检测到循环都不是正确性证据。",
+      "partial只奖励可定位的正确成分；不并入useful，不新增加权总分。",
+      "不因为末尾截断单独判失败；以截断前已有的问题判定。",
+      "正确对象搭配错误活动只能部分得分；关键日程时间错误继续判失败，不因保留星期和地点升级。",
+      "F原有标签原样沿用，不重评整套。水果贪心同文仍判失败；这一既有口径与其他只奖励水果相关性的部分分存在边界，单列敏感性而不事后改基线。"
+    ],
+    "baseline_note": "F聊天报告自称Codex开发评审而非独立人类盲评；本次以该既有标签为基准。续写沿用上一份直接逐条评审。",
+    "independence": "逐条根据输出给理由，比较既有标签用于尺度核对；本次不是不知检查点身份的盲评。",
+    "automation": "脚本只包装已写出的判断，做摘要、位置、题序和数量校验，不以关键词或自动循环判语义分数。"
+  },
+  "chat": {
+    "greedy": {
+      "source": "runs/p27-coverage-small/multiturn-500.json",
+      "summary": {
+        "total": 36,
+        "useful": 2,
+        "partial": 4,
+        "failed": 30,
+        "useful_fraction": 0.05555555555555555,
+        "complete_three_turn_scenarios": 0,
+        "useful_by_turn": {
+          "1": 2,
+          "2": 0,
+          "3": 0
+        }
+      },
+      "rows": [
+        {
+          "scenario": "greeting",
+          "turn": 1,
+          "source_pointer": "/rows/0",
+          "prior_turn_pointers": [],
+          "prompt": "下午好，我们聊一会儿吧。",
+          "expected_in_full_context": "自然回应下午问候并接续聊天。",
+          "verdict": "useful",
+          "reason": "自然接受聊天邀请，虽有轻度复述仍完成问候意图。",
+          "useful": true,
+          "partial": false,
+          "F_existing_verdict": "useful",
+          "response_sha256": "de14453e06f6f79886266459fabd4bb5569abbf7b202d1c5cda3cf5dd294c87a"
+        },
+        {
+          "scenario": "greeting",
+          "turn": 2,
+          "source_pointer": "/rows/1",
+          "prior_turn_pointers": [
+            "/rows/0"
+          ],
+          "prompt": "我准备去公园走走，你有什么简单建议？",
+          "expected_in_full_context": "在准备去公园散步的情境下给出简单可行建议。",
+          "verdict": "partial",
+          "reason": "野餐是与公园相关的可行活动，但混入点心病句、重复条目与无根据的周末设定，未形成简洁可靠建议。",
+          "useful": false,
+          "partial": true,
+          "F_existing_verdict": "failed",
+          "response_sha256": "1bbf5119ea57f7aa87f4fa49f53407dc538de03500734f8116fba956dfdd212b"
+        },
+        {
+          "scenario": "greeting",
+          "turn": 3,
+          "source_pointer": "/rows/2",
+          "prior_turn_pointers": [
+            "/rows/0",
+            "/rows/1"
+          ],
+          "prompt": "只保留最重要的一条建议。",
+          "expected_in_full_context": "延续公园散步话题，只保留一条明确且重要的建议。",
+          "verdict": "failed",
+          "reason": "要求只留一条却输出多项目标与心态清单，丢失公园散步主题。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "6996e8f169e6b639c371f1bed0b2545ece390df8991805d7e16b489c63589c14"
+        },
+        {
+          "scenario": "explanation",
+          "turn": 1,
+          "source_pointer": "/rows/3",
+          "prior_turn_pointers": [],
+          "prompt": "冬天对着玻璃哈气，为什么玻璃会变模糊？",
+          "expected_in_full_context": "呼气中的水蒸气遇到冷玻璃凝成小水滴，使玻璃看起来模糊。",
+          "verdict": "failed",
+          "reason": "仅把哈气现象重复命名，没有解释水蒸气遇冷形成小水滴。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "04c4fb887b242ec01cd683d3e543f4c130171217e969109983138e0dfb85f7ba"
+        },
+        {
+          "scenario": "explanation",
+          "turn": 2,
+          "source_pointer": "/rows/4",
+          "prior_turn_pointers": [
+            "/rows/3"
+          ],
+          "prompt": "给小学生解释一下，少用专业词。",
+          "expected_in_full_context": "用小学生能理解的话说明冷玻璃上的小水滴来自呼出的湿气。",
+          "verdict": "failed",
+          "reason": "改称雪哈气没有提供儿童能理解的解释，也未修正前轮空话。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "457d0d9703fd2653320718aeb450221a87ee5c2a9742b6a152b8dcd82a56b471"
+        },
+        {
+          "scenario": "explanation",
+          "turn": 3,
+          "source_pointer": "/rows/5",
+          "prior_turn_pointers": [
+            "/rows/3",
+            "/rows/4"
+          ],
+          "prompt": "这和水烧开时冒出的白雾有什么共同点？",
+          "expected_in_full_context": "两者可见部分都是水蒸气遇冷形成的小水滴；白雾不是气态水本身。",
+          "verdict": "failed",
+          "reason": "水滑开和水分平衡不构成玻璃起雾与白雾的共同成因。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "c5b1984f68fe780aa710865cd45dd69b2de29c3bbaa4bbf58ca5882a57133ff2"
+        },
+        {
+          "scenario": "planning",
+          "turn": 1,
+          "source_pointer": "/rows/6",
+          "prior_turn_pointers": [],
+          "prompt": "我今晚只有半小时，想整理书桌。帮我安排一下。",
+          "expected_in_full_context": "给今晚三十分钟内整理书桌的可执行安排。",
+          "verdict": "failed",
+          "reason": "询问所在城市与整理书桌无关，未给今晚半小时的可行安排。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "d66efb93f66241bdceaa9968a0bb844d68b2b12cfc960a16c5f16d94dd56c76e"
+        },
+        {
+          "scenario": "planning",
+          "turn": 2,
+          "source_pointer": "/rows/7",
+          "prior_turn_pointers": [
+            "/rows/6"
+          ],
+          "prompt": "桌上主要是书和散乱的纸张。",
+          "expected_in_full_context": "保留半小时限制，针对书和散纸提出分类、归位等步骤。",
+          "verdict": "failed",
+          "reason": "转向超市、书店和照片，未针对书与散纸提出整理步骤。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "74f33b94e2ddbbc049d8e0590cc2ab24256e8878eb339beb19c8d0579095095b"
+        },
+        {
+          "scenario": "planning",
+          "turn": 3,
+          "source_pointer": "/rows/8",
+          "prior_turn_pointers": [
+            "/rows/6",
+            "/rows/7"
+          ],
+          "prompt": "如果只剩十分钟，先做什么？",
+          "expected_in_full_context": "把时限更新为十分钟，明确先做哪一步，仍针对桌上的书和纸。",
+          "verdict": "failed",
+          "reason": "谈预算并说散落十分钟，未在缩短时限下指出先做哪一步。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "3752eb99db5d381044e31ed453531f07390811546d90a0cb75bd240031b6b51c"
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 1,
+          "source_pointer": "/rows/9",
+          "prior_turn_pointers": [],
+          "prompt": "把这句话说得礼貌一点：快把那本书还我。",
+          "expected_in_full_context": "保留请对方把那本书还给自己的意思，改为礼貌表达。",
+          "verdict": "failed",
+          "reason": "解释句子很礼貌而未实际改写，丢失请求对方还书的内容。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "bf94dcabd0dfb763d38ac5a297cd54d1c4e5d160e6dfc97d5e8f41c1016ef589"
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 2,
+          "source_pointer": "/rows/10",
+          "prior_turn_pointers": [
+            "/rows/9"
+          ],
+          "prompt": "再简短一点。",
+          "expected_in_full_context": "将礼貌的还书请求缩短，仍保留对象和归还意思。",
+          "verdict": "failed",
+          "reason": "快把一本书都为残句，未保留简短礼貌的还书请求。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "1e7fd191dcc999a929e81a0de19a55996c0acdcd1f0e736f331f21be4d4862e5"
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 3,
+          "source_pointer": "/rows/11",
+          "prior_turn_pointers": [
+            "/rows/9",
+            "/rows/10"
+          ],
+          "prompt": "现在改成对好朋友说的口吻。",
+          "expected_in_full_context": "延续简短还书请求，改成对好朋友说的自然口吻。",
+          "verdict": "failed",
+          "reason": "继续围绕快把做形式拼接，没有可用于朋友之间的还书话语。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "601d157442c32f3d1c53d726f1eeb9f40fc4039da6564ea6cb867673bd386494"
+        },
+        {
+          "scenario": "instruction",
+          "turn": 1,
+          "source_pointer": "/rows/12",
+          "prior_turn_pointers": [],
+          "prompt": "写出两种常见水果，只写名称，用逗号隔开。",
+          "expected_in_full_context": "恰好两种不同的常见水果，仅名称并用逗号隔开。",
+          "verdict": "failed",
+          "reason": "名称中有两种水果，但额外重复造成四项，不满足只列两项；与F贪心同文，沿用既有失败标签。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "963385be1d07b62ed55049ba7a76cf0faddfa4a22709a4b49b31fde33efe6ec6"
+        },
+        {
+          "scenario": "instruction",
+          "turn": 2,
+          "source_pointer": "/rows/13",
+          "prior_turn_pointers": [
+            "/rows/12"
+          ],
+          "prompt": "选其中一种，用一句话描述它的味道。",
+          "expected_in_full_context": "从实际上一轮列出的水果中选一种，用一句话描述味道。",
+          "verdict": "failed",
+          "reason": "循环列水果，没有一句味道描述。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "4fd587567866d6cd383868bc9927e1887ba86b280794eed364eff55d9d65e108"
+        },
+        {
+          "scenario": "instruction",
+          "turn": 3,
+          "source_pointer": "/rows/14",
+          "prior_turn_pointers": [
+            "/rows/12",
+            "/rows/13"
+          ],
+          "prompt": "把刚才那句话改成问句。",
+          "expected_in_full_context": "将上一轮味道描述改成问句；若上一轮未形成描述，应作合乎原意的补救，不能继续列名称。",
+          "verdict": "failed",
+          "reason": "编入带她回家和购物并继续重复水果，既非问句也未修复味道描述。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "2b7a8efcc87d3323fb907178a112f5b44586d9bde8c3814d5eeb891fe6e034f7"
+        },
+        {
+          "scenario": "clarification",
+          "turn": 1,
+          "source_pointer": "/rows/15",
+          "prior_turn_pointers": [],
+          "prompt": "我想买个合适的东西送人，你先问我一个问题。",
+          "expected_in_full_context": "先向用户提一个与挑选礼物有关的问题，如收礼人是谁。",
+          "verdict": "failed",
+          "reason": "虽有问号，却问用户是否知道自己的问题，不是选礼物所需的澄清。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "e2323fca6d6c8c11e923de868adecd0f4de102aa381fb13698dafa1583689caf"
+        },
+        {
+          "scenario": "clarification",
+          "turn": 2,
+          "source_pointer": "/rows/16",
+          "prior_turn_pointers": [
+            "/rows/15"
+          ],
+          "prompt": "送给爱画画的妹妹，预算五十元。",
+          "expected_in_full_context": "根据妹妹爱画画、预算五十元给出合适礼物建议或必要的针对性澄清。",
+          "verdict": "failed",
+          "reason": "重复送给爱丝等片段，没有结合妹妹、绘画爱好与五十元提出礼物。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "810c27eee8bd3fcbd45af7a1e80dc96b9bd2a2915bb73e652a165d3ce89b6bb0"
+        },
+        {
+          "scenario": "clarification",
+          "turn": 3,
+          "source_pointer": "/rows/17",
+          "prior_turn_pointers": [
+            "/rows/15",
+            "/rows/16"
+          ],
+          "prompt": "她已经有很多铅笔了，请换个建议。",
+          "expected_in_full_context": "继续满足妹妹、绘画爱好和五十元预算，换成铅笔以外的礼物。",
+          "verdict": "failed",
+          "reason": "继续重复收礼对象片段，没有排除铅笔后给新建议。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "9d5b185b98d5f3f6aeef584dd5c799847bb1b2320b8450b297acabdfc31a318d"
+        },
+        {
+          "scenario": "reference",
+          "turn": 1,
+          "source_pointer": "/rows/18",
+          "prior_turn_pointers": [],
+          "prompt": "我有一只猫叫栗子，一只狗叫小麦。它们名字里哪个是粮食？",
+          "expected_in_full_context": "按通常粮食/谷物语境指出名字小麦（狗的名字）；栗子也可食用，但不能把动物本身说成粮食。",
+          "verdict": "failed",
+          "reason": "回避识别粮食名字并转谈动物食性，没有回答小麦。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "67fb0bbea6e80790edeb6b5b26abf301cce2765076e212bbb2745af71969f6ac"
+        },
+        {
+          "scenario": "reference",
+          "turn": 2,
+          "source_pointer": "/rows/19",
+          "prior_turn_pointers": [
+            "/rows/18"
+          ],
+          "prompt": "小麦喜欢追球，栗子喜欢晒太阳。谁喜欢追球？",
+          "expected_in_full_context": "指出小麦喜欢追球，不能改成不符合用户设定的活动。",
+          "verdict": "partial",
+          "reason": "正确选到小麦，但将追球改为追狗；对象有部分依据，活动事实错误。",
+          "useful": false,
+          "partial": true,
+          "F_existing_verdict": "useful",
+          "response_sha256": "88bc02593a16706853b7237aed507eac1ed8ac1989b5ee74ef7ad7ab66bac223"
+        },
+        {
+          "scenario": "reference",
+          "turn": 3,
+          "source_pointer": "/rows/20",
+          "prior_turn_pointers": [
+            "/rows/18",
+            "/rows/19"
+          ],
+          "prompt": "用一句话复述栗子的情况。",
+          "expected_in_full_context": "一句话复述栗子是一只猫、喜欢晒太阳；不要转答小麦。",
+          "verdict": "failed",
+          "reason": "继续讲小麦追狗，未复述栗子是猫且喜欢晒太阳。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "88bc02593a16706853b7237aed507eac1ed8ac1989b5ee74ef7ad7ab66bac223"
+        },
+        {
+          "scenario": "correction",
+          "turn": 1,
+          "source_pointer": "/rows/21",
+          "prior_turn_pointers": [],
+          "prompt": "我们先定周五下午三点去图书馆。请复述安排。",
+          "expected_in_full_context": "准确复述周五下午三点去图书馆。",
+          "verdict": "useful",
+          "reason": "准确复述周五下午三点去图书馆。",
+          "useful": true,
+          "partial": false,
+          "F_existing_verdict": "useful",
+          "response_sha256": "c58131037083562d41d96cd443ef0cf935d7901f21fc7c6f29597853f73426e7"
+        },
+        {
+          "scenario": "correction",
+          "turn": 2,
+          "source_pointer": "/rows/22",
+          "prior_turn_pointers": [
+            "/rows/21"
+          ],
+          "prompt": "改一下，周六上午九点去，地点不变。",
+          "expected_in_full_context": "更新到周六上午九点，保留地点图书馆。",
+          "verdict": "failed",
+          "reason": "虽改到周六，仍用下午三点，并把地点同时说成图书馆和书店，核心日程不可靠。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "68ec51f4bc4f02ee472b964993c9155214c9b297e33752d105ba2028063e2dfd"
+        },
+        {
+          "scenario": "correction",
+          "turn": 3,
+          "source_pointer": "/rows/23",
+          "prior_turn_pointers": [
+            "/rows/21",
+            "/rows/22"
+          ],
+          "prompt": "最终是星期几，几点，去哪儿？",
+          "expected_in_full_context": "以用户最后更正为准，完整回答周六、上午九点、图书馆。",
+          "verdict": "failed",
+          "reason": "星期与图书馆正确，但时间仍是旧的下午三点，未落实上午九点的更正；沿用基线对同文的失败判定。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "4508f6c48dab61f4b1d35e0308a1c202c6032266ccf9ecaf69411b8be12ccc45"
+        },
+        {
+          "scenario": "unknown",
+          "turn": 1,
+          "source_pointer": "/rows/24",
+          "prior_turn_pointers": [],
+          "prompt": "你知道我家阳台上现在放着几盆花吗？",
+          "expected_in_full_context": "承认不能直接观察阳台，因此不知道花盆数量，可请用户提供信息。",
+          "verdict": "partial",
+          "reason": "明确承认看不到用户家，回应了未知信息边界；但自我说明大幅重复且未清楚收束为不知道盆数。",
+          "useful": false,
+          "partial": true,
+          "F_existing_verdict": "failed",
+          "response_sha256": "2194a3967057d52e79cbd5a60fe355523f835293ce2391295a97ba80f53c5f7b"
+        },
+        {
+          "scenario": "unknown",
+          "turn": 2,
+          "source_pointer": "/rows/25",
+          "prior_turn_pointers": [
+            "/rows/24"
+          ],
+          "prompt": "我告诉你，有三盆。请记住这次对话里的信息。",
+          "expected_in_full_context": "接收并确认本次对话信息：用户阳台上有三盆花。",
+          "verdict": "failed",
+          "reason": "转问为何喜欢工作，没有接收三盆花这一新信息。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "aa0c7efa57352a5261fd8b79baf98f8154fd2cf7990b7b6af92d2a024807a693"
+        },
+        {
+          "scenario": "unknown",
+          "turn": 3,
+          "source_pointer": "/rows/26",
+          "prior_turn_pointers": [
+            "/rows/24",
+            "/rows/25"
+          ],
+          "prompt": "我刚刚说了几盆？",
+          "expected_in_full_context": "从用户上一轮明确告知的信息回答三盆，不能沿用自身无关回答。",
+          "verdict": "failed",
+          "reason": "让用户自行问答，未从上一轮用户原话取回三盆。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "2ceef65f0deb93b4792b59f51ee410b7eae1cc8dcf00c9fd2409ff07326cf686"
+        },
+        {
+          "scenario": "values",
+          "turn": 1,
+          "source_pointer": "/rows/27",
+          "prior_turn_pointers": [],
+          "prompt": "社会主义核心价值观中，诚信是什么意思？",
+          "expected_in_full_context": "解释诚信是诚实、不欺骗、守信用或兑现承诺。",
+          "verdict": "failed",
+          "reason": "反复堆叠主题名词，没有解释诚实或守信。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "1fd3ac37d72d3a286511ad5f257c05c9393225deb89e0564a1e67006fe247701"
+        },
+        {
+          "scenario": "values",
+          "turn": 2,
+          "source_pointer": "/rows/28",
+          "prior_turn_pointers": [
+            "/rows/27"
+          ],
+          "prompt": "捡到同学的笔又还给他，体现了什么品质？",
+          "expected_in_full_context": "指出归还同学物品体现诚实、拾金不昧等相符品质。",
+          "verdict": "failed",
+          "reason": "只讨论同理心与诚信不同，没有说明归还同学的笔体现哪种品质；出现关键词不等于作答。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "2d337081d5f47943f973902974fbe72b814f09f7a17e4047678f45b674237bd5"
+        },
+        {
+          "scenario": "values",
+          "turn": 3,
+          "source_pointer": "/rows/29",
+          "prior_turn_pointers": [
+            "/rows/27",
+            "/rows/28"
+          ],
+          "prompt": "如果我答应还书却忘了，应该怎样补救？",
+          "expected_in_full_context": "结合忘记还书提出道歉说明、尽快归还或约定明确归还时间。",
+          "verdict": "failed",
+          "reason": "转为同理心定义，没有道歉、还书或约定归还时间的补救。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "79d5742ddf64a4db11962b73515590b4c33744b088544a51ab951416231fb06b"
+        },
+        {
+          "scenario": "emotion",
+          "turn": 1,
+          "source_pointer": "/rows/30",
+          "prior_turn_pointers": [],
+          "prompt": "我努力准备了一次考试，可成绩不理想，有点失落。",
+          "expected_in_full_context": "承接努力后考试失利的失落感，表达理解而非庆祝。",
+          "verdict": "failed",
+          "reason": "用太好了回应失落并重复备考，与当前情绪不符。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "e0110f77de486df436edafd94041f3d4182dbad94d71ee050c9cad9d61b6e4b3"
+        },
+        {
+          "scenario": "emotion",
+          "turn": 2,
+          "source_pointer": "/rows/31",
+          "prior_turn_pointers": [
+            "/rows/30"
+          ],
+          "prompt": "我现在不想听大道理，只想缓一缓。",
+          "expected_in_full_context": "尊重暂时不听道理、只想缓缓的要求，给予安静陪伴或低压力回应。",
+          "verdict": "failed",
+          "reason": "用户明确想缓一缓，仍庆祝并催准备考试，没有尊重暂停说教的要求。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "a04bcafc8129cf5cb966dcf06fedad899fd4accffd76341b94c361e422ba20c7"
+        },
+        {
+          "scenario": "emotion",
+          "turn": 3,
+          "source_pointer": "/rows/32",
+          "prior_turn_pointers": [
+            "/rows/30",
+            "/rows/31"
+          ],
+          "prompt": "谢谢。等我平静后，可以先做哪件小事？",
+          "expected_in_full_context": "承接考试失利及平静后的时点，给一件轻量可做的小事，不说教；休息等建议也可接受，需明确可执行。",
+          "verdict": "failed",
+          "reason": "只道谢，没有给平静后能先做的一件小事。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "4a4ec2e52c7344e256be875ebb965a3bfe49af39e79e2a65f09845f29ae1a992"
+        },
+        {
+          "scenario": "summary",
+          "turn": 1,
+          "source_pointer": "/rows/33",
+          "prior_turn_pointers": [],
+          "prompt": "请概括：小林早上发现天阴了，就带了伞。下午下雨，他没有淋湿。",
+          "expected_in_full_context": "保留看见阴天而带伞、下午下雨因此未淋湿的关键事实和因果。",
+          "verdict": "partial",
+          "reason": "保留早上天阴的事实，但只重复这个片段，遗漏带伞、下雨与未淋湿的因果；与先前宽组同文同判。",
+          "useful": false,
+          "partial": true,
+          "F_existing_verdict": "failed",
+          "response_sha256": "f34e96d569bbd0faf266098720e3da0bc2ba2c4cda5a9e8b9bea8599401052cd"
+        },
+        {
+          "scenario": "summary",
+          "turn": 2,
+          "source_pointer": "/rows/34",
+          "prior_turn_pointers": [
+            "/rows/33"
+          ],
+          "prompt": "小林带伞的依据是什么？",
+          "expected_in_full_context": "依据原文回答早上看见天阴，而不是自编天气预报。",
+          "verdict": "failed",
+          "reason": "把依据说成发现伞，未识别原文中的阴天。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "c067232f62ec8803d455692439cf09e602826cb1712b355ef5dce250e309bbc3"
+        },
+        {
+          "scenario": "summary",
+          "turn": 3,
+          "source_pointer": "/rows/35",
+          "prior_turn_pointers": [
+            "/rows/33",
+            "/rows/34"
+          ],
+          "prompt": "换个结果：下午没有下雨。这能说明带伞一定是错的吗？",
+          "expected_in_full_context": "接受下午未下雨的新设定，说明这不足以证明带伞一定错误，因为可依据当时信息合理预防。",
+          "verdict": "failed",
+          "reason": "将未下雨误接为没有伞，既改错条件，也未判断当时带伞是否合理。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "e2728336eb409bca6b494724489ece730afe5271b1b95a773e85aa2e48b2f693"
+        }
+      ],
+      "recorded_metrics": {
+        "total": 36,
+        "eos": 32,
+        "recorded_obvious_loops": 2,
+        "valid_utf8": 36,
+        "history_trimmed_turns": 0
+      },
+      "comparison": {
+        "F_existing_summary": {
+          "total": 36,
+          "useful": 3,
+          "partial": 0,
+          "failed": 33,
+          "useful_fraction": 0.08333333333333333
+        },
+        "F_metrics": {
+          "total": 36,
+          "eos": 32,
+          "recorded_obvious_loops": 4,
+          "valid_utf8": 36,
+          "history_trimmed_turns": 0
+        },
+        "useful_delta": -1,
+        "partial_delta": 4,
+        "label_changes": [
+          {
+            "scenario": "greeting",
+            "turn": 2,
+            "F_existing_verdict": "failed",
+            "verdict": "partial",
+            "reason": "野餐是与公园相关的可行活动，但混入点心病句、重复条目与无根据的周末设定，未形成简洁可靠建议。"
+          },
+          {
+            "scenario": "reference",
+            "turn": 2,
+            "F_existing_verdict": "useful",
+            "verdict": "partial",
+            "reason": "正确选到小麦，但将追球改为追狗；对象有部分依据，活动事实错误。"
+          },
+          {
+            "scenario": "unknown",
+            "turn": 1,
+            "F_existing_verdict": "failed",
+            "verdict": "partial",
+            "reason": "明确承认看不到用户家，回应了未知信息边界；但自我说明大幅重复且未清楚收束为不知道盆数。"
+          },
+          {
+            "scenario": "summary",
+            "turn": 1,
+            "F_existing_verdict": "failed",
+            "verdict": "partial",
+            "reason": "保留早上天阴的事实，但只重复这个片段，遗漏带伞、下雨与未淋湿的因果；与先前宽组同文同判。"
+          }
+        ],
+        "metadata_matches": {
+          "tokenizer_sha256": true,
+          "cases_sha256": true,
+          "evaluator_sha256": true,
+          "generation_source_sha256": false,
+          "sampling": true,
+          "repetition_metric_version": true
+        },
+        "generation_source_differences": {
+          "spora/conversation.py": {
+            "F": "d3eb98c50237c8a79a9cfe7a9af23818e68d3fe1fc6cfb26ef33465a73ee8e3c",
+            "P27": "431841bb5245b7bee427e2f55db82a070f0d2b768e6dea3c598fc653b2028362"
+          }
+        },
+        "all_user_prompts_and_order_equal": true
+      }
+    },
+    "sampled": {
+      "source": "runs/p27-coverage-small/multiturn-500-sampled.json",
+      "summary": {
+        "total": 36,
+        "useful": 2,
+        "partial": 3,
+        "failed": 31,
+        "useful_fraction": 0.05555555555555555,
+        "complete_three_turn_scenarios": 0,
+        "useful_by_turn": {
+          "1": 2,
+          "2": 0,
+          "3": 0
+        }
+      },
+      "rows": [
+        {
+          "scenario": "greeting",
+          "turn": 1,
+          "source_pointer": "/rows/0",
+          "prior_turn_pointers": [],
+          "prompt": "下午好，我们聊一会儿吧。",
+          "expected_in_full_context": "自然回应下午问候并接续聊天。",
+          "verdict": "useful",
+          "reason": "自然接受聊天并询问话题，完成本轮问候。",
+          "useful": true,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "2212274d4997e425386dec34ba5fef3e0399e5af6cd763f1164484ebbecd0610"
+        },
+        {
+          "scenario": "greeting",
+          "turn": 2,
+          "source_pointer": "/rows/1",
+          "prior_turn_pointers": [
+            "/rows/0"
+          ],
+          "prompt": "我准备去公园走走，你有什么简单建议？",
+          "expected_in_full_context": "在准备去公园散步的情境下给出简单可行建议。",
+          "verdict": "failed",
+          "reason": "未给已明确的公园散步建议，只追问地点和是否需要建议；这里无需额外信息也能回答。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "3a3e60e0345d135cbe524720e045ec78b8676b24754f8c7ff0b793609a6a2e57"
+        },
+        {
+          "scenario": "greeting",
+          "turn": 3,
+          "source_pointer": "/rows/2",
+          "prior_turn_pointers": [
+            "/rows/0",
+            "/rows/1"
+          ],
+          "prompt": "只保留最重要的一条建议。",
+          "expected_in_full_context": "延续公园散步话题，只保留一条明确且重要的建议。",
+          "verdict": "failed",
+          "reason": "转问喜欢什么动物，未保留一条散步建议。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "093616333f47e62c0ce09c8e0c60f1341e06bfef92b16ff20400c76841c05454"
+        },
+        {
+          "scenario": "explanation",
+          "turn": 1,
+          "source_pointer": "/rows/3",
+          "prior_turn_pointers": [],
+          "prompt": "冬天对着玻璃哈气，为什么玻璃会变模糊？",
+          "expected_in_full_context": "呼气中的水蒸气遇到冷玻璃凝成小水滴，使玻璃看起来模糊。",
+          "verdict": "failed",
+          "reason": "把玻璃哈气改成不成句的物体、金属问题，没有凝结解释。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "6a7bdf4e8b93d77a7bc9962f3935cf47f83c6109d66ebb2f361a72f3447c2ac5"
+        },
+        {
+          "scenario": "explanation",
+          "turn": 2,
+          "source_pointer": "/rows/4",
+          "prior_turn_pointers": [
+            "/rows/3"
+          ],
+          "prompt": "给小学生解释一下，少用专业词。",
+          "expected_in_full_context": "用小学生能理解的话说明冷玻璃上的小水滴来自呼出的湿气。",
+          "verdict": "failed",
+          "reason": "仅列零散字词，未给儿童版说明。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "595c1ee4ff4bdf6567873ac55b43e15c358ddbb0b8175c436299233b2c363f73"
+        },
+        {
+          "scenario": "explanation",
+          "turn": 3,
+          "source_pointer": "/rows/5",
+          "prior_turn_pointers": [
+            "/rows/3",
+            "/rows/4"
+          ],
+          "prompt": "这和水烧开时冒出的白雾有什么共同点？",
+          "expected_in_full_context": "两者可见部分都是水蒸气遇冷形成的小水滴；白雾不是气态水本身。",
+          "verdict": "failed",
+          "reason": "把冰、光照和有机物乱接，未说明两种雾状现象的共同机制。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "8c01de155cacee3daa9bcfe7f7eb5da89c29cb1aaad6b4dd26368d3e3eb7c386"
+        },
+        {
+          "scenario": "planning",
+          "turn": 1,
+          "source_pointer": "/rows/6",
+          "prior_turn_pointers": [],
+          "prompt": "我今晚只有半小时，想整理书桌。帮我安排一下。",
+          "expected_in_full_context": "给今晚三十分钟内整理书桌的可执行安排。",
+          "verdict": "failed",
+          "reason": "反复要求准备书和书桌，没有整理步骤或半小时时间安排。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "ca711730d47eebe3a9e002f7f9e3a69d3bc8f297f7dfd648357b91fcbd74f72a"
+        },
+        {
+          "scenario": "planning",
+          "turn": 2,
+          "source_pointer": "/rows/7",
+          "prior_turn_pointers": [
+            "/rows/6"
+          ],
+          "prompt": "桌上主要是书和散乱的纸张。",
+          "expected_in_full_context": "保留半小时限制，针对书和散纸提出分类、归位等步骤。",
+          "verdict": "failed",
+          "reason": "看书和散滴纸张不构成整理建议，也未承接时限。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "43c51739f19fa9c98579bd2c9d782c1fdba908e195350465e6e8f2c0f323a075"
+        },
+        {
+          "scenario": "planning",
+          "turn": 3,
+          "source_pointer": "/rows/8",
+          "prior_turn_pointers": [
+            "/rows/6",
+            "/rows/7"
+          ],
+          "prompt": "如果只剩十分钟，先做什么？",
+          "expected_in_full_context": "把时限更新为十分钟，明确先做哪一步，仍针对桌上的书和纸。",
+          "verdict": "failed",
+          "reason": "转到水和乘法残式，未提出十分钟内的首要动作。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "3076f165ff26fab0907f1c634989aabbbc84bf45787edc83c779146754e2a033"
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 1,
+          "source_pointer": "/rows/9",
+          "prior_turn_pointers": [],
+          "prompt": "把这句话说得礼貌一点：快把那本书还我。",
+          "expected_in_full_context": "保留请对方把那本书还给自己的意思，改为礼貌表达。",
+          "verdict": "failed",
+          "reason": "将还书请求解释成太晚了，既改错意思，也未生成礼貌说法。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "256944498e98854db04d5f896a1d01d843eb8d2fbeb29c40b9e9bae58bcb82ae"
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 2,
+          "source_pointer": "/rows/10",
+          "prior_turn_pointers": [
+            "/rows/9"
+          ],
+          "prompt": "再简短一点。",
+          "expected_in_full_context": "将礼貌的还书请求缩短，仍保留对象和归还意思。",
+          "verdict": "failed",
+          "reason": "快把一本书一把不成句，未完成简短改写。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "48766abcf5c29bbfb3ca76d991ad63acf2f62b70a4f06dd663caa159f20e297f"
+        },
+        {
+          "scenario": "rephrase",
+          "turn": 3,
+          "source_pointer": "/rows/11",
+          "prior_turn_pointers": [
+            "/rows/9",
+            "/rows/10"
+          ],
+          "prompt": "现在改成对好朋友说的口吻。",
+          "expected_in_full_context": "延续简短还书请求，改成对好朋友说的自然口吻。",
+          "verdict": "failed",
+          "reason": "快把他再的口吻了无法表达朋友之间的还书请求。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "1e856ba4d2cb5f503f17edbf9289ed2d2ebbe06f1c6958cf586fa7b606700d83"
+        },
+        {
+          "scenario": "instruction",
+          "turn": 1,
+          "source_pointer": "/rows/12",
+          "prior_turn_pointers": [],
+          "prompt": "写出两种常见水果，只写名称，用逗号隔开。",
+          "expected_in_full_context": "恰好两种不同的常见水果，仅名称并用逗号隔开。",
+          "verdict": "failed",
+          "reason": "超出两项、使用编号和解释并长段重复，还把水果和蔬菜当作两种水果；不是仅名称逗号格式。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "464140296b2bb7dcedb2f0ee611080e884ad952c761e49b0e426e5192fdd53a3"
+        },
+        {
+          "scenario": "instruction",
+          "turn": 2,
+          "source_pointer": "/rows/13",
+          "prior_turn_pointers": [
+            "/rows/12"
+          ],
+          "prompt": "选其中一种，用一句话描述它的味道。",
+          "expected_in_full_context": "从实际上一轮列出的水果中选一种，用一句话描述味道。",
+          "verdict": "failed",
+          "reason": "继续列水果，未选择一种描述味道。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "82b6be9e8f7a870f5e44bbfcd75696ed5bff386ebf323cf019e73674a417de43"
+        },
+        {
+          "scenario": "instruction",
+          "turn": 3,
+          "source_pointer": "/rows/14",
+          "prior_turn_pointers": [
+            "/rows/12",
+            "/rows/13"
+          ],
+          "prompt": "把刚才那句话改成问句。",
+          "expected_in_full_context": "将上一轮味道描述改成问句；若上一轮未形成描述，应作合乎原意的补救，不能继续列名称。",
+          "verdict": "failed",
+          "reason": "新增名称并反复列举，没有将味道描述改成问句。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "32a1c7f31ced038526c07c3f142433cb949db65984ae54c885c6bc98e998a598"
+        },
+        {
+          "scenario": "clarification",
+          "turn": 1,
+          "source_pointer": "/rows/15",
+          "prior_turn_pointers": [],
+          "prompt": "我想买个合适的东西送人，你先问我一个问题。",
+          "expected_in_full_context": "先向用户提一个与挑选礼物有关的问题，如收礼人是谁。",
+          "verdict": "failed",
+          "reason": "自称没有问题并转到手机提醒，没有向用户提出选礼物的一个问题。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "faed4dd2f07d3ae1d21346eed2b2e66c8226d6adc36c372fb132292edbc1802b"
+        },
+        {
+          "scenario": "clarification",
+          "turn": 2,
+          "source_pointer": "/rows/16",
+          "prior_turn_pointers": [
+            "/rows/15"
+          ],
+          "prompt": "送给爱画画的妹妹，预算五十元。",
+          "expected_in_full_context": "根据妹妹爱画画、预算五十元给出合适礼物建议或必要的针对性澄清。",
+          "verdict": "failed",
+          "reason": "无理由拒答，未利用妹妹爱绘画和五十元预算。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "9d7293d32df83bb4fec6cbd4b06aaffb761585910987958b53b2b5fd0a25e84e"
+        },
+        {
+          "scenario": "clarification",
+          "turn": 3,
+          "source_pointer": "/rows/17",
+          "prior_turn_pointers": [
+            "/rows/15",
+            "/rows/16"
+          ],
+          "prompt": "她已经有很多铅笔了，请换个建议。",
+          "expected_in_full_context": "继续满足妹妹、绘画爱好和五十元预算，换成铅笔以外的礼物。",
+          "verdict": "failed",
+          "reason": "继续谈铅笔且语义不成立，未按排除条件换礼物。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "9f2adb8a8f4d0abfa2b556b1ec5d62ab773f22461a3d732cbbe93baa55ddaea1"
+        },
+        {
+          "scenario": "reference",
+          "turn": 1,
+          "source_pointer": "/rows/18",
+          "prior_turn_pointers": [],
+          "prompt": "我有一只猫叫栗子，一只狗叫小麦。它们名字里哪个是粮食？",
+          "expected_in_full_context": "按通常粮食/谷物语境指出名字小麦（狗的名字）；栗子也可食用，但不能把动物本身说成粮食。",
+          "verdict": "useful",
+          "reason": "狗叫小麦明确给出所指粮食名字；与F采样同文，沿用既有通过判定。",
+          "useful": true,
+          "partial": false,
+          "F_existing_verdict": "useful",
+          "response_sha256": "c470618fbfdfd91dd36c3c499061cabfd12f278b91166f9e19823f7512268cd5"
+        },
+        {
+          "scenario": "reference",
+          "turn": 2,
+          "source_pointer": "/rows/19",
+          "prior_turn_pointers": [
+            "/rows/18"
+          ],
+          "prompt": "小麦喜欢追球，栗子喜欢晒太阳。谁喜欢追球？",
+          "expected_in_full_context": "指出小麦喜欢追球，不能改成不符合用户设定的活动。",
+          "verdict": "partial",
+          "reason": "对象小麦正确，但跳球不是用户给定的追球；与F采样同文同判。",
+          "useful": false,
+          "partial": true,
+          "F_existing_verdict": "partial",
+          "response_sha256": "34a180f7ae7f0ed3e0743b6aa35113a110234389d2a42f55149e557d3574f163"
+        },
+        {
+          "scenario": "reference",
+          "turn": 3,
+          "source_pointer": "/rows/20",
+          "prior_turn_pointers": [
+            "/rows/18",
+            "/rows/19"
+          ],
+          "prompt": "用一句话复述栗子的情况。",
+          "expected_in_full_context": "一句话复述栗子是一只猫、喜欢晒太阳；不要转答小麦。",
+          "verdict": "failed",
+          "reason": "答小麦而非栗子，并混入不成义字符，未保留猫与晒太阳信息。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "05c9045c2e55694a108a800d405176c27130c872c8e215a60d25f704cde9bbdf"
+        },
+        {
+          "scenario": "correction",
+          "turn": 1,
+          "source_pointer": "/rows/21",
+          "prior_turn_pointers": [],
+          "prompt": "我们先定周五下午三点去图书馆。请复述安排。",
+          "expected_in_full_context": "准确复述周五下午三点去图书馆。",
+          "verdict": "failed",
+          "reason": "初始时间片段随后被周六等互相冲突的日期循环淹没，地点缺失，未可靠复述安排。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "useful",
+          "response_sha256": "8399cc33bafd17ca555e8a8ced22c9153af465994da077c59d251f2d021dc7f3"
+        },
+        {
+          "scenario": "correction",
+          "turn": 2,
+          "source_pointer": "/rows/22",
+          "prior_turn_pointers": [
+            "/rows/21"
+          ],
+          "prompt": "改一下，周六上午九点去，地点不变。",
+          "expected_in_full_context": "更新到周六上午九点，保留地点图书馆。",
+          "verdict": "failed",
+          "reason": "在周六下午、周日等日期间循环，没有更新为周六上午九点并保留图书馆。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "56b06c58aa54a295623fdadd3f662e6bf05d56469fcb64e336225b5dd009dbd4"
+        },
+        {
+          "scenario": "correction",
+          "turn": 3,
+          "source_pointer": "/rows/23",
+          "prior_turn_pointers": [
+            "/rows/21",
+            "/rows/22"
+          ],
+          "prompt": "最终是星期几，几点，去哪儿？",
+          "expected_in_full_context": "以用户最后更正为准，完整回答周六、上午九点、图书馆。",
+          "verdict": "failed",
+          "reason": "继续输出相互冲突的星期片段，时间与地点均未完整回答。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "0de315cd17333aef14645c154284970dd94ca9e0d6afa573a0d5f02d5a928f15"
+        },
+        {
+          "scenario": "unknown",
+          "turn": 1,
+          "source_pointer": "/rows/24",
+          "prior_turn_pointers": [],
+          "prompt": "你知道我家阳台上现在放着几盆花吗？",
+          "expected_in_full_context": "承认不能直接观察阳台，因此不知道花盆数量，可请用户提供信息。",
+          "verdict": "partial",
+          "reason": "承认无法看到用户家，但以不了解家人话语为由且询问城市，未给出恰当的盆数澄清；与F既有尺度一致。",
+          "useful": false,
+          "partial": true,
+          "F_existing_verdict": "partial",
+          "response_sha256": "ddc14ef67f68dbb582ff19f6f057220a9258f9ec84e93ef9b666453619480877"
+        },
+        {
+          "scenario": "unknown",
+          "turn": 2,
+          "source_pointer": "/rows/25",
+          "prior_turn_pointers": [
+            "/rows/24"
+          ],
+          "prompt": "我告诉你，有三盆。请记住这次对话里的信息。",
+          "expected_in_full_context": "接收并确认本次对话信息：用户阳台上有三盆花。",
+          "verdict": "failed",
+          "reason": "编入她看了那盆花，未确认三盆，也没有可靠承接人物。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "4e8f07ec2933604f80cc814506a0f4347a7bd8582880c5c6d379df0363095fe2"
+        },
+        {
+          "scenario": "unknown",
+          "turn": 3,
+          "source_pointer": "/rows/26",
+          "prior_turn_pointers": [
+            "/rows/24",
+            "/rows/25"
+          ],
+          "prompt": "我刚刚说了几盆？",
+          "expected_in_full_context": "从用户上一轮明确告知的信息回答三盆，不能沿用自身无关回答。",
+          "verdict": "failed",
+          "reason": "有了未提供数量，不能代替三盆。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "3bbb831e4349fc52d1da3f71bb5e34c3d6375aff7af1f9021b546777ac75dd0f"
+        },
+        {
+          "scenario": "values",
+          "turn": 1,
+          "source_pointer": "/rows/27",
+          "prior_turn_pointers": [],
+          "prompt": "社会主义核心价值观中，诚信是什么意思？",
+          "expected_in_full_context": "解释诚信是诚实、不欺骗、守信用或兑现承诺。",
+          "verdict": "failed",
+          "reason": "循环主题词并泛谈平等包容，没有定义诚实守信。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "7e61528da28433be9f5f15ce4606a2aac9f0ce6e90d5c1bc2cb985d7a56bfe79"
+        },
+        {
+          "scenario": "values",
+          "turn": 2,
+          "source_pointer": "/rows/28",
+          "prior_turn_pointers": [
+            "/rows/27"
+          ],
+          "prompt": "捡到同学的笔又还给他，体现了什么品质？",
+          "expected_in_full_context": "指出归还同学物品体现诚实、拾金不昧等相符品质。",
+          "verdict": "failed",
+          "reason": "把笔说成表达自由与价值观，没有根据归还行为指出相符品质。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "691224d0429f6d0358a7b1fcd575686b83364cebd52028c85c2d4711befa5e76"
+        },
+        {
+          "scenario": "values",
+          "turn": 3,
+          "source_pointer": "/rows/29",
+          "prior_turn_pointers": [
+            "/rows/27",
+            "/rows/28"
+          ],
+          "prompt": "如果我答应还书却忘了，应该怎样补救？",
+          "expected_in_full_context": "结合忘记还书提出道歉说明、尽快归还或约定明确归还时间。",
+          "verdict": "failed",
+          "reason": "泛谈交往与尊重意见，没有修复忘记还书的承诺。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "5ca71ee07a6f79492c5a17c2dde48773dac7a27845b6c24e84568cf18af6baa4"
+        },
+        {
+          "scenario": "emotion",
+          "turn": 1,
+          "source_pointer": "/rows/30",
+          "prior_turn_pointers": [],
+          "prompt": "我努力准备了一次考试，可成绩不理想，有点失落。",
+          "expected_in_full_context": "承接努力后考试失利的失落感，表达理解而非庆祝。",
+          "verdict": "partial",
+          "reason": "给自己时间、向老师了解情况有帮助，但因成绩重要所以不理想的因果错误，也缺少清楚的情绪理解。",
+          "useful": false,
+          "partial": true,
+          "F_existing_verdict": "failed",
+          "response_sha256": "66debb60d176493566cc27dd6dcea0ebe950aebd73193426a6586211e7811c44"
+        },
+        {
+          "scenario": "emotion",
+          "turn": 2,
+          "source_pointer": "/rows/31",
+          "prior_turn_pointers": [
+            "/rows/30"
+          ],
+          "prompt": "我现在不想听大道理，只想缓一缓。",
+          "expected_in_full_context": "尊重暂时不听道理、只想缓缓的要求，给予安静陪伴或低压力回应。",
+          "verdict": "failed",
+          "reason": "转成自己完成作业，给自己时间来打错也不成立，未承接用户只想缓一缓。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "8c84edc2f36408b1d6e5ad602d2423fc293ed3c547cdcb9a286df4adfc6ff0f4"
+        },
+        {
+          "scenario": "emotion",
+          "turn": 3,
+          "source_pointer": "/rows/32",
+          "prior_turn_pointers": [
+            "/rows/30",
+            "/rows/31"
+          ],
+          "prompt": "谢谢。等我平静后，可以先做哪件小事？",
+          "expected_in_full_context": "承接考试失利及平静后的时点，给一件轻量可做的小事，不说教；休息等建议也可接受，需明确可执行。",
+          "verdict": "failed",
+          "reason": "让用户听大道理，违背此前明确偏好；折一回也没有可执行对象。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "fad455401dfaba8f611c7816a4eca8ccb52443f7b6a2de91ac8e28c0ecad8363"
+        },
+        {
+          "scenario": "summary",
+          "turn": 1,
+          "source_pointer": "/rows/33",
+          "prior_turn_pointers": [],
+          "prompt": "请概括：小林早上发现天阴了，就带了伞。下午下雨，他没有淋湿。",
+          "expected_in_full_context": "保留看见阴天而带伞、下午下雨因此未淋湿的关键事实和因果。",
+          "verdict": "failed",
+          "reason": "保留阴天字样后编入沿着伞和水面晒太阳，遗漏关键因果且添加失真内容。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "69c1aa790e7b1ef6b542e13389d0aec812add2f3e1f2a4c8b7bafd5e06bf0b87"
+        },
+        {
+          "scenario": "summary",
+          "turn": 2,
+          "source_pointer": "/rows/34",
+          "prior_turn_pointers": [
+            "/rows/33"
+          ],
+          "prompt": "小林带伞的依据是什么？",
+          "expected_in_full_context": "依据原文回答早上看见天阴，而不是自编天气预报。",
+          "verdict": "failed",
+          "reason": "夹有替换字符并列出不连贯雨水片段，没有回答带伞依据是天阴。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "54e62f3b62c2a7131bb344e4b214bbd534c8ee256c60dfafaa8bcd8da5dda1ba"
+        },
+        {
+          "scenario": "summary",
+          "turn": 3,
+          "source_pointer": "/rows/35",
+          "prior_turn_pointers": [
+            "/rows/33",
+            "/rows/34"
+          ],
+          "prompt": "换个结果：下午没有下雨。这能说明带伞一定是错的吗？",
+          "expected_in_full_context": "接受下午未下雨的新设定，说明这不足以证明带伞一定错误，因为可依据当时信息合理预防。",
+          "verdict": "failed",
+          "reason": "泛泛称无法准确回答，没有利用反事实条件判断带伞未必错误。",
+          "useful": false,
+          "partial": false,
+          "F_existing_verdict": "failed",
+          "response_sha256": "5b48f0d72c9dd7ddf1b2fa8208fbec8a662bde45d88533e5c7b4d640e126744a"
+        }
+      ],
+      "recorded_metrics": {
+        "total": 36,
+        "eos": 31,
+        "recorded_obvious_loops": 5,
+        "valid_utf8": 35,
+        "history_trimmed_turns": 0
+      },
+      "comparison": {
+        "F_existing_summary": {
+          "total": 36,
+          "useful": 2,
+          "partial": 2,
+          "failed": 32,
+          "useful_fraction": 0.05555555555555555
+        },
+        "F_metrics": {
+          "total": 36,
+          "eos": 34,
+          "recorded_obvious_loops": 4,
+          "valid_utf8": 36,
+          "history_trimmed_turns": 0
+        },
+        "useful_delta": 0,
+        "partial_delta": 1,
+        "label_changes": [
+          {
+            "scenario": "greeting",
+            "turn": 1,
+            "F_existing_verdict": "failed",
+            "verdict": "useful",
+            "reason": "自然接受聊天并询问话题，完成本轮问候。"
+          },
+          {
+            "scenario": "correction",
+            "turn": 1,
+            "F_existing_verdict": "useful",
+            "verdict": "failed",
+            "reason": "初始时间片段随后被周六等互相冲突的日期循环淹没，地点缺失，未可靠复述安排。"
+          },
+          {
+            "scenario": "emotion",
+            "turn": 1,
+            "F_existing_verdict": "failed",
+            "verdict": "partial",
+            "reason": "给自己时间、向老师了解情况有帮助，但因成绩重要所以不理想的因果错误，也缺少清楚的情绪理解。"
+          }
+        ],
+        "metadata_matches": {
+          "tokenizer_sha256": true,
+          "cases_sha256": true,
+          "evaluator_sha256": true,
+          "generation_source_sha256": false,
+          "sampling": true,
+          "repetition_metric_version": true
+        },
+        "generation_source_differences": {
+          "spora/conversation.py": {
+            "F": "d3eb98c50237c8a79a9cfe7a9af23818e68d3fe1fc6cfb26ef33465a73ee8e3c",
+            "P27": "431841bb5245b7bee427e2f55db82a070f0d2b768e6dea3c598fc653b2028362"
+          }
+        },
+        "all_user_prompts_and_order_equal": true
+      }
+    }
+  },
+  "continuation": {
+    "source": "runs/p27-coverage-small/continuation-500.json",
+    "summary": {
+      "total": 24,
+      "useful": 0,
+      "partial": 1,
+      "failed": 23,
+      "useful_fraction": 0.0
+    },
+    "by_policy": {
+      "greedy": {
+        "total": 12,
+        "useful": 0,
+        "partial": 0,
+        "failed": 12,
+        "useful_fraction": 0.0
+      },
+      "sampled": {
+        "total": 12,
+        "useful": 0,
+        "partial": 1,
+        "failed": 11,
+        "useful_fraction": 0.0
+      }
+    },
+    "rows": [
+      {
+        "name": "morning_scene",
+        "policy": "greedy",
+        "source_pointer": "/rows/0",
+        "prefix": "清晨，小林拉开窗帘，看见院子里的树叶上挂着露珠。她走到门口，",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "看见满天缺少所见事物，重复两次没有形成可用晨景。",
+        "dimensions": {
+          "prefix_coherence": "不能完成门口所见的描写。",
+          "grammar": "满天作看见的对象不完整。",
+          "causality_and_reference": "人物未明显换人，但没有可理解的新事件。",
+          "repetition": "同一残缺分句重复。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "56f1051cfecc9071526135e3573901e3dc5f632c2c464559f9ed8caad6a15dc8"
+      },
+      {
+        "name": "morning_scene",
+        "policy": "sampled",
+        "source_pointer": "/rows/1",
+        "prefix": "清晨，小林拉开窗帘，看见院子里的树叶上挂着露珠。她走到门口，",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "首句残缺，阳光、漫步和窗帘乱接，场景词无法组成连贯描写。",
+        "dimensions": {
+          "prefix_coherence": "晨景词存在，开头仍未完成所见内容。",
+          "grammar": "身边都立刻、一座窗帘搭配不成立。",
+          "causality_and_reference": "漫步者和它的对象不明确，动作关系漂移。",
+          "repetition": "无主导性循环，仍有明显语义缺陷。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "dc3edb1dc45143459a3348d34502180e3842cf848cd9ed0f0463392f28f244dc"
+      },
+      {
+        "name": "rain_action",
+        "policy": "greedy",
+        "source_pointer": "/rows/2",
+        "prefix": "放学时突然下起了雨，小周没有带伞。同学看到他站在门口，便",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "便得在走不能接同学的动作，后续门口叙事循环且指代混乱。",
+        "dimensions": {
+          "prefix_coherence": "便后接出的动作不成立。",
+          "grammar": "得在走及多个门口组合失当。",
+          "causality_and_reference": "小周坐着又看他进门，他的指向不清。",
+          "repetition": "没有带伞、坐门口和进门组合反复。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "bcf1c5faa07fdcaabdbb608ffd04f4a0b9f97501534ddd06d026d18097513ae2"
+      },
+      {
+        "name": "rain_action",
+        "policy": "sampled",
+        "source_pointer": "/rows/3",
+        "prefix": "放学时突然下起了雨，小周没有带伞。同学看到他站在门口，便",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "同学因看到没伞而不再带伞缺乏解释，随后站在脸上等句义失真。",
+        "dimensions": {
+          "prefix_coherence": "未清楚续接同学看到小周后的合理反应。",
+          "grammar": "站在脸上等动作搭配失常。",
+          "causality_and_reference": "哭声与高兴无过渡，人物动作难追踪。",
+          "repetition": "没带伞与窗户的近似片段反复。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "7196dd422bc800c742ca4d15c503ccebfe6ed749d9670b340be7dc9f1f5b54f3"
+      },
+      {
+        "name": "water_change",
+        "policy": "greedy",
+        "source_pointer": "/rows/4",
+        "prefix": "把一杯热水放在桌上，过了一段时间，水温会逐渐降低。这是因为",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "改为水温降低虽不再反向，却只用现象解释自身，重复不能代替散热原因。",
+        "dimensions": {
+          "prefix_coherence": "这是因为后仍只是重述结论。",
+          "grammar": "单句句形正确。",
+          "causality_and_reference": "降低因为降低为循环解释，没有热交换机制。",
+          "repetition": "降温断言贯穿全文反复。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "f263bb4758d8c94df2513f673234e719a858c223f5496805787656c9f47d6d69"
+      },
+      {
+        "name": "water_change",
+        "policy": "sampled",
+        "source_pointer": "/rows/5",
+        "prefix": "把一杯热水放在桌上，过了一段时间，水温会逐渐降低。这是因为",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "这种时间会降低及用水减轻水分不成义，没有解释热水冷却。",
+        "dimensions": {
+          "prefix_coherence": "多余逗号后转入不明时间与用水建议。",
+          "grammar": "热水水在开口、这个问题减少等搭配异常。",
+          "causality_and_reference": "没有把热水与环境热交换联系起来。",
+          "repetition": "多次说降低但非固定整句循环。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "1c4639cd9bfda8f42230d83004e9cefc13fb58faa30a562bf9d48c837f75fac6"
+      },
+      {
+        "name": "simple_contrast",
+        "policy": "greedy",
+        "source_pointer": "/rows/6",
+        "prefix": "跑步和散步都是常见的运动方式。跑步通常强度较高，而散步",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "散步需更久未说明比较条件，随后大段跑步时循环淹没内容。",
+        "dimensions": {
+          "prefix_coherence": "将强度对比转成未限定目标的时长断言。",
+          "grammar": "开头有句形，后文只有状语碎片。",
+          "causality_and_reference": "未说明同距离或运动量，不能确认比较成立。",
+          "repetition": "跑步时持续重复。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "78a986793a84f35f0b4ecd86412dfcb0b6f491b178b43baa34f3ba954bc71199"
+      },
+      {
+        "name": "simple_contrast",
+        "policy": "sampled",
+        "source_pointer": "/rows/7",
+        "prefix": "跑步和散步都是常见的运动方式。跑步通常强度较高，而散步",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "强度较慢比较维度错误，随后禁止吸水又要求喝水，不能形成可靠运动说明。",
+        "dimensions": {
+          "prefix_coherence": "未像F首句那样正确接出强度较低。",
+          "grammar": "强度较慢、可以强壮搭配不当。",
+          "causality_and_reference": "避免吸水与保持摄水相冲突，后文转回跑步。",
+          "repetition": "跑步时和补水反复，但不以整句循环为主。"
+        },
+        "F_existing_verdict": "partial",
+        "response_sha256": "9f25714b61d4575a4936d13426b106ec5abb507c1e9ac1c9dacb2c39cbc4dc79"
+      },
+      {
+        "name": "lost_item",
+        "policy": "greedy",
+        "source_pointer": "/rows/8",
+        "prefix": "小陈准备出门，却发现钥匙不在口袋里。他没有马上离开，而是",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "缺钥匙的处理被无解释转为想去公园，随后换人病句并循环。",
+        "dimensions": {
+          "prefix_coherence": "未建立不离开与想去公园的转折关系。",
+          "grammar": "小刚不到口袋里不成义。",
+          "causality_and_reference": "小陈无过渡变小刚，钥匙去向丢失。",
+          "repetition": "小刚与口袋组合持续复现。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "bd7eaed752c3715521c34e20c768928ff11514cacc11bce9b4118727ed92f36c"
+      },
+      {
+        "name": "lost_item",
+        "policy": "sampled",
+        "source_pointer": "/rows/9",
+        "prefix": "小陈准备出门，却发现钥匙不在口袋里。他没有马上离开，而是",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "想把它离开语法不成立，之后换成小刚并用那里等不明指代。",
+        "dimensions": {
+          "prefix_coherence": "而是后未接清楚动作。",
+          "grammar": "把它离开、小刚上了均不完整。",
+          "causality_and_reference": "人物更换、它与那里无清楚所指。",
+          "repetition": "知道和那里局部回返。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "53d31fe2f9531384423ba036dfd070674493ae8c841e3e11280905bd3b96947d"
+      },
+      {
+        "name": "library_scene",
+        "policy": "greedy",
+        "source_pointer": "/rows/10",
+        "prefix": "图书馆里很安静。小雅找到一本想看的书，坐在窗边，",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "只把坐窗边改为坐窗台并不断重复，没有连贯阅读续文。",
+        "dimensions": {
+          "prefix_coherence": "位置细化可理解，全文却停在同一姿势。",
+          "grammar": "单个分句合语法。",
+          "causality_and_reference": "地点没有必然冲突，但动作完全不推进。",
+          "repetition": "坐窗台短语主导全文。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "821cd4732f018e16216c48d7f8a27add2bca779a0e54fe531aa8ee763340ebae"
+      },
+      {
+        "name": "library_scene",
+        "policy": "sampled",
+        "source_pointer": "/rows/11",
+        "prefix": "图书馆里很安静。小雅找到一本想看的书，坐在窗边，",
+        "verdict": "partial",
+        "useful": false,
+        "partial": true,
+        "reason": "仍围绕小雅在窗边想看书，可保留局部阅读意图；坐在窗户上措辞不准，后句结构破碎。",
+        "dimensions": {
+          "prefix_coherence": "落座和想看书仍与前缀相接。",
+          "grammar": "这个小雅那想看书不顺，小雅知道缺少内容。",
+          "causality_and_reference": "小雅和书保持一致；将窗户宽容理解为窗台，不能算精确表达。",
+          "repetition": "没有机械循环，少量重复姓名。"
+        },
+        "F_existing_verdict": "partial",
+        "response_sha256": "a9cd69b0c3958b21511cb56de7b384cff5810538cdf36489019dfa39dd7ff303"
+      },
+      {
+        "name": "cause_effect",
+        "policy": "greedy",
+        "source_pointer": "/rows/12",
+        "prefix": "冬天的早晨，路面上结了一层薄冰。为了避免滑倒，行人应该",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "只说在下方而不说明何处或怎样走，无法延续防滑目的且反复。",
+        "dimensions": {
+          "prefix_coherence": "应该后没有形成可执行防滑动作。",
+          "grammar": "在下方缺少明确参照。",
+          "causality_and_reference": "复述结冰没有建立防滑因果。",
+          "repetition": "要在下方反复出现。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "0d5ed2eb39aff6fc552e4deb2aa37a4fc2f1ffc0f20fa0dd110cb7352a39ae98"
+      },
+      {
+        "name": "cause_effect",
+        "policy": "sampled",
+        "source_pointer": "/rows/13",
+        "prefix": "冬天的早晨，路面上结了一层薄冰。为了避免滑倒，行人应该",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "改成交通拥堵清单，未给薄冰防滑行为，仍有重复条目。",
+        "dimensions": {
+          "prefix_coherence": "列表形式能接应该，内容偏离当前风险。",
+          "grammar": "遵守交通状况搭配错误。",
+          "causality_and_reference": "拥堵规避与薄冰滑倒的关系未建立。",
+          "repetition": "避免拥堵和活动开始前多次重复。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "2bcfe8dccddf2ea4073366d62610f054dbe27b565c15249aaff2b0e0022da3a6"
+      },
+      {
+        "name": "corrected_plan",
+        "policy": "greedy",
+        "source_pointer": "/rows/14",
+        "prefix": "原本大家打算周六去郊游，后来天气预报说周六会有暴雨。于是，大家决定",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "周六去海边没有交代对暴雨的应对，随后重复同一行程。",
+        "dimensions": {
+          "prefix_coherence": "决定的语法外形成立。",
+          "grammar": "决定周六会去略拗口，其余可读。",
+          "causality_and_reference": "不是强制取消郊游，而是这里缺少暴雨导致该决定的解释。",
+          "repetition": "先去海边再去同地，无新信息。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "cfe1bd4bfc07ceac4c8484cce99531f0384e2dde0d59f1c0f66f88a103a932dd"
+      },
+      {
+        "name": "corrected_plan",
+        "policy": "sampled",
+        "source_pointer": "/rows/15",
+        "prefix": "原本大家打算周六去郊游，后来天气预报说周六会有暴雨。于是，大家决定",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "周六被说成会说话的农民，又转到果汁，没有形成天气变化后的决定。",
+        "dimensions": {
+          "prefix_coherence": "周六只是周六没有补出决定内容。",
+          "grammar": "周六会说及周六是农民语义失常。",
+          "causality_and_reference": "郊游和暴雨因果链丢失。",
+          "repetition": "星期词复现，无长句机械循环。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "07d8a009e46135e36941ccd25b68b5b70619b011d01db2ade65bf32e891aef6e"
+      },
+      {
+        "name": "small_explanation",
+        "policy": "greedy",
+        "source_pointer": "/rows/16",
+        "prefix": "植物需要水分和阳光。水分不足时，叶子可能会",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "仍以吸水和维持水分反复套接，没有说明叶片缺水时的变化。",
+        "dimensions": {
+          "prefix_coherence": "未接出缺水后的具体表现。",
+          "grammar": "水分和水分重复并列削弱语义。",
+          "causality_and_reference": "不能把吸水泛当缺水后果，未给成立机制。",
+          "repetition": "维持水分平衡等近义分句循环。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "0272d819d4c5c378721bb4906441a20ad5c2732d4188a182ee93dbec7288de5f"
+      },
+      {
+        "name": "small_explanation",
+        "policy": "sampled",
+        "source_pointer": "/rows/17",
+        "prefix": "植物需要水分和阳光。水分不足时，叶子可能会",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "叶子出现在植物场所没有回答缺水变化，后面用因此硬接生长和消耗。",
+        "dimensions": {
+          "prefix_coherence": "首句仅谈出现位置，未延续水分不足条件。",
+          "grammar": "植物和植物场所、水分和水分等搭配空泛。",
+          "causality_and_reference": "水促进生长局部常识不能补足前后因果缺失。",
+          "repetition": "局部词语和生长反复。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "75fbd4030cca16f19b0ba76cda99a4fa2cc09faf4c963f8ba75f1f369829bd79"
+      },
+      {
+        "name": "shared_object",
+        "policy": "greedy",
+        "source_pointer": "/rows/18",
+        "prefix": "小明把红色铅笔借给了小华。小华画完图以后，把铅笔",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "借笔故事被变成多支小红铅笔的拼接，人物角色漂移并循环。",
+        "dimensions": {
+          "prefix_coherence": "转借可作为故事，但新增物件归属未说明。",
+          "grammar": "多个和连接失控，画完书搭配不当。",
+          "causality_and_reference": "小华操作突然变成小明操作，没有交代。",
+          "repetition": "小红铅笔与借给小红反复。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "c49d4a8decec006d8fcd4099a67770a219b97931270a05d79994dd1c3c3426ae"
+      },
+      {
+        "name": "shared_object",
+        "policy": "sampled",
+        "source_pointer": "/rows/19",
+        "prefix": "小明把红色铅笔借给了小华。小华画完图以后，把铅笔",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "把铅笔的人数胜了不成句，随后无依据生成数量题，借用关系丢失。",
+        "dimensions": {
+          "prefix_coherence": "把字结构未完成。",
+          "grammar": "人数胜了及颗铅笔搭配失常。",
+          "causality_and_reference": "新增数字与小红未说明来源，小明问自己。",
+          "repetition": "五颗与三颗数量句反复。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "026e13b1b42b1d91f8546d6fc1a987b98b1382118e456dd6a096176009734b21"
+      },
+      {
+        "name": "order_events",
+        "policy": "greedy",
+        "source_pointer": "/rows/20",
+        "prefix": "做饭前，先把蔬菜洗干净，再切成合适的大小。准备好食材后，",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "重复已完成的洗菜后不断加油，没有可追踪的烹饪流程。",
+        "dimensions": {
+          "prefix_coherence": "准备好后重洗，未解释重做步骤。",
+          "grammar": "局部短语正确，整体只堆叠加油。",
+          "causality_and_reference": "缺少下锅和烹调等步骤联系。",
+          "repetition": "加入适量油主导正文。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "2604e8748fb744ea330b4f6e27fb5d9aa15821ad224dfbe3df08a64654670b33"
+      },
+      {
+        "name": "order_events",
+        "policy": "sampled",
+        "source_pointer": "/rows/21",
+        "prefix": "做饭前，先把蔬菜洗干净，再切成合适的大小。准备好食材后，",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "重新切菜后放碗里，锅中却只加水油盐便称可享用，食材未进入烹调链。",
+        "dimensions": {
+          "prefix_coherence": "重复完成的切菜，虽向后推进却不连贯。",
+          "grammar": "将锅中倒入及倒入几分钟搭配不当。",
+          "causality_and_reference": "碗中蔬菜没有入锅或熟制交代，流程断裂。",
+          "repetition": "少量切菜与最后的重复，较F减少但不足以通过。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "58c092fa7179174cda6230029be3ec4879343505fd11653aa8c41b19138c4f45"
+      },
+      {
+        "name": "uncertain_cause",
+        "policy": "greedy",
+        "source_pointer": "/rows/22",
+        "prefix": "门外传来一阵脚步声，但小丽还没有看见来的人，因此她暂时",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "没有看见仅重述前提，后文成为眼睛短语循环，未形成未知来者的连贯状态。",
+        "dimensions": {
+          "prefix_coherence": "没有看见可接暂时，但只是原条件重述。",
+          "grammar": "眼睛和一只眼睛缺谓语和合理量词。",
+          "causality_and_reference": "未从脚步声导向可理解的判断或反应。",
+          "repetition": "眼睛组合整段重复。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "4c073614e6b30c2f637a35cd14d1490801c3dedd80a94992fc7806f606d3f813"
+      },
+      {
+        "name": "uncertain_cause",
+        "policy": "sampled",
+        "source_pointer": "/rows/23",
+        "prefix": "门外传来一阵脚步声，但小丽还没有看见来的人，因此她暂时",
+        "verdict": "failed",
+        "useful": false,
+        "partial": false,
+        "reason": "只是看见未接住未知来者，后续她变他且对话引号与说话者混乱。",
+        "dimensions": {
+          "prefix_coherence": "前缀暂时后的认知状态不成立。",
+          "grammar": "他说出了小丽及层叠引语结构破损。",
+          "causality_and_reference": "来人未交代，人称与谁看见谁难以追踪。",
+          "repetition": "看见和小丽说的片段反复。"
+        },
+        "F_existing_verdict": "failed",
+        "response_sha256": "d8d15662f74041c0027304add023cf146e60229e9e03c31bffc07c9c8faabc49"
+      }
+    ],
+    "recorded_metrics": {
+      "greedy": {
+        "total": 12,
+        "eos": 4,
+        "recorded_obvious_loops": 5,
+        "valid_utf8": 12,
+        "history_trimmed_turns": 0
+      },
+      "sampled": {
+        "total": 12,
+        "eos": 6,
+        "recorded_obvious_loops": 0,
+        "valid_utf8": 12,
+        "history_trimmed_turns": 0
+      }
+    },
+    "comparison": {
+      "F_existing_summary": {
+        "total": 24,
+        "useful": 0,
+        "partial": 2,
+        "failed": 22,
+        "by_policy": {
+          "greedy": {
+            "total": 12,
+            "useful": 0,
+            "partial": 0,
+            "failed": 12,
+            "useful_fraction": 0.0,
+            "ended_with_eos": 2,
+            "without_eos": 10,
+            "recorded_obvious_loops": 6,
+            "valid_utf8": 12,
+            "outputs_with_64_tokens": 10
+          },
+          "sampled": {
+            "total": 12,
+            "useful": 0,
+            "partial": 2,
+            "failed": 10,
+            "useful_fraction": 0.0,
+            "ended_with_eos": 6,
+            "without_eos": 6,
+            "recorded_obvious_loops": 0,
+            "valid_utf8": 12,
+            "outputs_with_64_tokens": 6
+          }
+        },
+        "interpretation": "这组前缀中没有整条达到可直接采用的续写；采样的运动对比和图书馆场景各有一个可保留的开头片段。不能据此声称模型没有任何中文能力，但基础连贯生成明显不稳。"
+      },
+      "F_metrics": {
+        "greedy": {
+          "total": 12,
+          "eos": 2,
+          "recorded_obvious_loops": 6,
+          "valid_utf8": 12,
+          "history_trimmed_turns": 0
+        },
+        "sampled": {
+          "total": 12,
+          "eos": 6,
+          "recorded_obvious_loops": 0,
+          "valid_utf8": 12,
+          "history_trimmed_turns": 0
+        }
+      },
+      "metadata_matches": {
+        "cases_sha256": true,
+        "evaluator_sha256": true,
+        "source_sha256": true
+      },
+      "prefixes_and_order_equal": true,
+      "label_changes": [
+        {
+          "name": "simple_contrast",
+          "policy": "sampled",
+          "F_existing_verdict": "partial",
+          "verdict": "failed",
+          "reason": "强度较慢比较维度错误，随后禁止吸水又要求喝水，不能形成可靠运动说明。"
+        }
+      ]
+    }
+  },
+  "overall": {
+    "chat": {
+      "total": 72,
+      "useful": 4,
+      "partial": 7,
+      "failed": 61,
+      "useful_fraction": 0.05555555555555555
+    },
+    "continuation": {
+      "total": 24,
+      "useful": 0,
+      "partial": 1,
+      "failed": 23,
+      "useful_fraction": 0.0
+    },
+    "all_96": {
+      "total": 96,
+      "useful": 4,
+      "partial": 8,
+      "failed": 84,
+      "useful_fraction": 0.041666666666666664
+    },
+    "F_chat_existing": {
+      "total": 72,
+      "useful": 5,
+      "partial": 2,
+      "failed": 65
+    },
+    "F_continuation_existing": {
+      "total": 24,
+      "useful": 0,
+      "partial": 2,
+      "failed": 22
+    },
+    "note": "合计只核对覆盖范围，不把聊天与续写混成单一能力指标；72轮也并非72个独立场景。"
+  },
+  "assessment": {
+    "decision": "未观察到实质改善；存在局部退步与局部改善，但不足以确证训练整体退步或判定配方无效。",
+    "chat": "贪心从F的3/0/33变为2/4/30；采样从2/2/32变为2/3/31（顺序均为useful/partial/failed）。严格有用轮从5/72降为4/72，所有通过仍在首轮，两策略均无三轮完整通过场景。",
+    "continuation": "贪心仍为0/0/12；采样从0/2/10变为0/1/11。没有新增整条有用续文，运动对比失去F首句的准确强弱关系；图书馆仍只有宽容口径下的局部内容。",
+    "observed_regressions": [
+      "贪心reference第2轮：F的小麦喜欢玩球可接受，现为追逐狗，事实正确性下降，useful降为partial。",
+      "采样correction第1轮：F能复述初始安排，现为多个星期和时段循环且无地点，useful降为failed；后续两轮也未修复。",
+      "采样simple_contrast续写：F则强度较低可用，现为强度较慢且出现避免吸水与多喝水的冲突，partial降为failed。",
+      "采样聊天summary第2轮出现替换字符，UTF8有效标记由F的36/36变35/36；此项也有独立的语义失败，未仅凭编码标记扣分。"
+    ],
+    "observed_local_gains": [
+      "采样问候从F的不成义回应变为自然接话，failed升useful，但下两轮仍未给散步建议。",
+      "贪心公园段出现野餐片段、未知盆数段承认看不到家、摘要段保留准确阴天事实；这些仅获得部分分。",
+      "采样情绪首轮出现给自己时间和求助老师的片段，但错误因果仍阻止整轮通过。",
+      "热水贪心不再说升温而是降温，但只是重复现象；这是方向词纠正，不是科学解释能力通过。"
+    ],
+    "surface_metrics": "贪心聊天自动循环4到2、结束符32到32；采样聊天循环4到5、结束符34到31。续写贪心循环6到5、结束符2到4，采样循环0到0、结束符6到6。较少循环或更早结束没有带来完整任务收益，人工仍可见自动指标漏掉的重复。",
+    "persistent_failures": "书桌限时规划、礼貌改写、味道到问句、预算内换礼物、最新日程、三盆回忆、雾的解释与失约补救均未可靠完成；续写仍有病句、人物漂移、错误因果和步骤链断裂。",
+    "comparability": {
+      "chat": "题目、题序、分词器、评测器、采样参数与循环口径摘要一致；但spora/conversation.py摘要由d3eb98c50237c8a79a9cfe7a9af23818e68d3fe1fc6cfb26ef33465a73ee8e3c变为431841bb5245b7bee427e2f55db82a070f0d2b768e6dea3c598fc653b2028362。本次未读取代码差异，不能断言它影响或不影响生成。后续轮历史也由各自输出构成。比较可说明观测表现，不能作为只有训练变化的严格因果实验。",
+      "continuation": "12个前缀及其题序、评测器、三个生成来源摘要均与F续写一致，比较比聊天更直接；不过JSON未记录全部采样超参数和运行环境，不能声称完全控制所有变量。",
+      "statistics": "一段500步检查点，每题每策略一次；聊天轮内相关，续写仅12个前缀。没有多种子区间、未见测试或匹配的原配方继续训练对照，不能从少数标签变化推出统计显著或配方因果结论。",
+      "training_budget": "未读取训练段/计划细节，不能把500步等同确定的新增数据量，更不能认定已收敛或必然欠训。"
+    },
+    "recommendation": {
+      "bottom_line": "这份结果不能支持“同计划已经有效，应照原计划长时间继续”；也不足以强制立即换语料。建议把继续视为有预算上限的诊断实验，而非效果已证实。",
+      "for_main_agent": [
+        "若已有预先约定的下一检查点，可按小段上限继续观察，并同时比较严格聊天通过、整条续写与保留项；不要仅凭损失或循环下降延长预算。",
+        "先查现有训练记录与覆盖：正文是否包含能完整延续句子、维持人物、解释因果和承接事件步骤的高质量文本；本次输出支持检查这些能力，但并未证明语料一定缺这些样本。",
+        "若下一预设检查点仍只有表面变化，应优先比较语料结构与质量方案，并保留从同一起点、同新增目标token的现有配方对照，再判断该换数据还是优化；避免仅继续加同类文本。",
+        "为聊天的训练归因，需由主任务确认conversation.py变更的语义影响，或在另行授权的可比设置中做对照；本次不调用GPU补跑。",
+        "不要把这批前缀、标准答案或近似改写加入训练，也不要把反复调参后的开发结果升级为最终验收。"
+      ],
+      "not_executed": "以上仅为决策建议；没有启动任何训练、生成、数据修改或代码修改。"
+    },
+    "boundary_sensitivity": [
+      "图书馆采样将坐在窗户上宽容理解为坐窗台，保留阅读意图给partial，与F对局部姿态的宽容一致；严格按字面可降failed，续写仍无有用条。",
+      "运动采样后半有补水防晒片段，但当前对比本身错误且存在吸水冲突，未奖励成partial；宽松给部分分至多令续写部分条数与F持平，仍不出现完整通过。",
+      "贪心未知盆数确实承认看不到家，但全文重复所以只给partial；宽松升useful可令聊天总数回到F的5/72，并不证明实质提升。",
+      "水果贪心与F完全同文，必须同判；即使今后统一放宽到partial，也应同时调整双方，不能计作500步收益。",
+      "野餐、情绪帮助片段和摘要保留事实只给部分分；不将这些相关片段包装成多轮遵循已改善。"
+    ]
+  },
+  "verification": {
+    "requested_96_reviewed": true,
+    "unreviewed_count": 0,
+    "chat_context_pointers_checked": true,
+    "exact_prompt_and_prefix_alignment_checked": true,
+    "baseline_counts_checked": true,
+    "source_hashes_rechecked": true,
+    "utf8_json_roundtrip_checked": true,
+    "only_output_created": "reports/P27-500-review.json"
+  }
+}
