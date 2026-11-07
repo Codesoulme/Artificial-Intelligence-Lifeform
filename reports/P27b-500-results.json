@@ -1,5 +1,5 @@
 {
-  "status": "training_complete_output_review_pending",
+  "status": "completed_review_no_major_language_gain",
   "segment": {
     "status": "segment_completed_not_chat_accepted",
     "steps": 500,
@@ -364,5 +364,75 @@
         "outputs": 24
       }
     }
+  },
+  "independent_review": {
+    "path": "reports/P27b-500-review.json",
+    "sha256": "6a44af736f3d0dcdbae09c6c95423fc580c83d1b50b1f260d0b32d69537f6573",
+    "overall": {
+      "chat": {
+        "total": 72,
+        "useful": 3,
+        "partial": 11,
+        "failed": 58,
+        "useful_fraction": 0.041666666666666664
+      },
+      "continuation": {
+        "total": 24,
+        "useful": 1,
+        "partial": 3,
+        "failed": 20,
+        "useful_fraction": 0.041666666666666664
+      },
+      "all_96_accounting_only": {
+        "total": 96,
+        "useful": 4,
+        "partial": 14,
+        "failed": 78,
+        "useful_fraction": 0.041666666666666664
+      },
+      "trajectory": [
+        {
+          "stage": "F",
+          "chat": {
+            "useful": 5,
+            "partial": 2,
+            "failed": 65
+          },
+          "continuation": {
+            "useful": 0,
+            "partial": 2,
+            "failed": 22
+          }
+        },
+        {
+          "stage": "A2000",
+          "chat": {
+            "useful": 6,
+            "partial": 4,
+            "failed": 62
+          },
+          "continuation": {
+            "useful": 0,
+            "partial": 0,
+            "failed": 24
+          }
+        },
+        {
+          "stage": "B500",
+          "chat": {
+            "useful": 3,
+            "partial": 11,
+            "failed": 58
+          },
+          "continuation": {
+            "useful": 1,
+            "partial": 3,
+            "failed": 20
+          }
+        }
+      ],
+      "note": "合计仅核对覆盖，不将聊天与续写混成总能力分数。"
+    },
+    "verdict": "聊天严格通过数低于A2000及F，局部正确成分增加；续写出现一条短而连贯的提醒和三条部分可用片段。尚未显示稳定、广泛的实质改善，也不足以确证训练整体退化或更新机制的因果效果。"
   }
 }
