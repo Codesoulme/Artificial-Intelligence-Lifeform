@@ -23,7 +23,7 @@
   "focus_every": 10,
   "scope": "Bounded noisy story-learning pilot. Start from reviewed P27b B500 language weights, use 89 percent story pretraining, 10 percent current teacher curriculum, 1 percent foundation by effective targets, and retain the declared focus replay. First100 updates, then review before500. No pretrained external weights and no chat release claim.",
   "initial_language": "runs/p27b-token-budget/step000500.pt",
-  "initial_language_sha256": "93d7519def66ee51c9387a3359573ef879e0e889b0856ffdbad156339b084bb51",
+  "initial_language_sha256": "93d7519def66ee51c9387a3359573ef8790e889b0856ffdbad156339b084bb51",
   "ancestor_steps": 500,
   "ancestor_targets": 4428004,
   "data_audits": ["runs/p28-stories-data/candidate-v3/lineage-audit.json"],
