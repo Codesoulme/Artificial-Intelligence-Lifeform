@@ -3,7 +3,7 @@ import math
 
 
 def choose_source(shares, counts):
-    if not shares or any(k not in ('pretrain','teacher','dialogue','foundation') for k in shares):
+    if not shares or any(k not in ('pretrain','story','teacher','dialogue','foundation') for k in shares):
         raise ValueError('Unknown or empty source mix')
     if any(not isinstance(v,(int,float)) or not math.isfinite(v) or v<=0 for v in shares.values()) or abs(sum(shares.values())-1)>1e-6:
         raise ValueError('Positive source shares summing to one required')
