@@ -1,0 +1,1066 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-08",
+  "phase": "P23/P27 language objective independent audit",
+  "constraints": {
+    "cpu_threads": 2,
+    "cpu_interop_threads": 2,
+    "gpu_used": false,
+    "production_weights_loaded": false,
+    "final_test_text_opened": false,
+    "shared_implementation_modified": false,
+    "existing_unit_suite_rerun": false,
+    "writes": [
+      "scripts/audit_language_objective.py",
+      "reports/P27-objective-audit.json"
+    ]
+  },
+  "source_sha256": {
+    "scripts/train_conversation_v7.py": "2276f50c0d10282532e8fa4741ad0d52663662be0cb642ddcd9ce7c37b40c922",
+    "spora/conversation.py": "431841bb5245b7bee427e2f55db82a070f0d2b768e6dea3c598fc653b2028362",
+    "spora/conversation_data.py": "b7a075ffedcd6824cfb1d771a1c25d816a43cccea13081c32a727517d75d7dde",
+    "spora/conversation_optimization.py": "fea959c85e85232649c2f5795f6e83ab2974ee28d12b5d1b3b60960a4febf2c0",
+    "spora/language_training.py": "717e0e02c25de33935925380f7b38fbf8c5fe6626818c8665dbe19331a1b7f99",
+    "spora/training_mix.py": "d194df3f310fc5231f5251ee948de437e82c459811403b66acbe38198b3b8cd9",
+    "scripts/prepare_conversation_v2.py": "4ea9f53e0756722ca10d6116957bcf09ecfe797e202aff6b8184a279951553dc",
+    "scripts/curate_teaching_curriculum.py": "028bf5c541ff2b5a71f05caaa9c448e55f317a7eb1cb4a5949318347a1feb512",
+    "configs/p27-coverage-small.json": "081ea5a6774ce17889e52ef7d889cdfc90c8436a292c3b983e6abae5e1347314",
+    "docs/P27-protocol.md": "1120bfd313dc091868bdb297815ac8b1461e4f54657b583f6df7af3d5dcfe2cf",
+    "scripts/train_conversation.py": "0d195c06d0fa96f593da6728fb3628f7002b24003ff0564c10441c107e29b6a6",
+    "scripts/train_conversation_v2.py": "4142d1a307215593a9489d516233a325b6eca83d3f1e9bf14b2eb9d40a65eb02",
+    "scripts/train_conversation_v3.py": "747a6bba6c7490d302f101506b70d2cb9b799d79eef926ea10f60c6116ae5f3e",
+    "scripts/train_conversation_v4.py": "c4bf6cf74dab5b5d72575483eb95d0c9fc93067aa810c060354465076d6420a6",
+    "scripts/train_conversation_v5.py": "ff0f618dd80a51e5610b19192baa3f1df6a7b8aeb360536fae6c4d71fbec1c0b",
+    "scripts/train_conversation_v6.py": "65e75d586a80ed792fc288bbd129bf557d86bb8dec3e832927afd79bdbc1d436"
+  },
+  "shared_sources_unchanged": true,
+  "plan": {
+    "phase": "P27-coverage-small",
+    "parent": "checkpoints/individual-prechinese-v3.pt",
+    "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+    "data": "runs/conversation-data-v5",
+    "seed": 271108,
+    "model": {
+      "vocabulary": 8192,
+      "width": 256,
+      "depth": 8,
+      "heads": 8,
+      "hidden": 704,
+      "context": 512,
+      "memory_layers": [
+        3,
+        7
+      ],
+      "memory_read": "legacy"
+    },
+    "length": 512,
+    "batch": 16,
+    "learning_rate": 0.0001,
+    "warmup": 100,
+    "schedule_steps": 20000,
+    "check_every": 500,
+    "snapshot_every": 500,
+    "focus_every": 10,
+    "scope": "Exact F-small2000 continuation; expanded v5 corpus, target-token allocation40/59/0/1 based on independent TRAIN-only quality review. Raw dialogue not trained in this stage. Explicit optimizer reset; frozen original individual; no external model weights. Same old development partitions, fixed500-step checks, real chat development inspection before extending segments. Not a single-factor causal comparison.",
+    "initial_language": "runs/p23f-small/step002000.pt",
+    "initial_language_sha256": "9f3bfd9db9e46880138c3d83a9ad37264d5589fc42445d6c508c71a0d23569ed",
+    "ancestor_steps": 2000,
+    "ancestor_targets": 6025696,
+    "data_audits": [
+      "runs/p23-expanded-data-audit.json",
+      "runs/conversation-data-v5/lineage-audit.json"
+    ],
+    "prior_lineage_steps": 35500,
+    "prior_lineage_targets": 61902001,
+    "curriculum": "runs/teaching-curriculum-v3",
+    "curriculum_manifest_sha256": "c96b4bb2e7b815d200c3e65e2111d7d7bbc90fd0081c71839157d9ee6d3c07e1",
+    "microbatch": 4,
+    "target_shares": {
+      "pretrain": 0.4,
+      "teacher": 0.59,
+      "foundation": 0.01
+    },
+    "corpus_review": "reports/P27-corpus-review.json",
+    "corpus_review_sha256": "89b32106f8165ac4c52df2f96d6994abb392488d37bc1b500578b3a68380090e"
+  },
+  "sample_alignment": {
+    "teacher": {
+      "counts": {
+        "records": 16,
+        "targets": 1706,
+        "assistant_starts": 16,
+        "assistant_eos": 16,
+        "content_characters": 3060,
+        "content_tokens": 1959
+      },
+      "evidence": [
+        {
+          "line": 1,
+          "group": "ea0bc1588e99bdf3db71957e7537e9b621965b95cad5756e41d3b1046aff3070",
+          "tokens": 137,
+          "targets": 128,
+          "first_target_positions_in_labels": [
+            8
+          ],
+          "eos_target_positions_in_labels": [
+            135
+          ]
+        },
+        {
+          "line": 1715,
+          "group": "4bd43c5775446966a73731bcc2639f4f845395337160793153f497498bb62db7",
+          "tokens": 37,
+          "targets": 26,
+          "first_target_positions_in_labels": [
+            10
+          ],
+          "eos_target_positions_in_labels": [
+            35
+          ]
+        },
+        {
+          "line": 3428,
+          "group": "66f5051c0e60658adeb3795a982010b7e992975b5610d7df5d42e1dfb7c70fdd",
+          "tokens": 148,
+          "targets": 82,
+          "first_target_positions_in_labels": [
+            65
+          ],
+          "eos_target_positions_in_labels": [
+            146
+          ]
+        },
+        {
+          "line": 5142,
+          "group": "597abe9ead56fd2d0701625378e59e62b6d629d699a593cc6607feddfd28c4b7",
+          "tokens": 212,
+          "targets": 200,
+          "first_target_positions_in_labels": [
+            11
+          ],
+          "eos_target_positions_in_labels": [
+            210
+          ]
+        },
+        {
+          "line": 6855,
+          "group": "31b19a1399647097bbcb7779b79e090bd773129435e48da686ac1504bfa378e4",
+          "tokens": 108,
+          "targets": 83,
+          "first_target_positions_in_labels": [
+            24
+          ],
+          "eos_target_positions_in_labels": [
+            106
+          ]
+        },
+        {
+          "line": 8569,
+          "group": "88dd5f468f7e3aa6358c2f112def691a20ca55fa1bc58fe9daec07c7de3ec709",
+          "tokens": 173,
+          "targets": 164,
+          "first_target_positions_in_labels": [
+            8
+          ],
+          "eos_target_positions_in_labels": [
+            171
+          ]
+        },
+        {
+          "line": 10282,
+          "group": "d6825ed84a67fcb4921e69023101b2829aee12ff5895de2bb40a655197b288a1",
+          "tokens": 82,
+          "targets": 69,
+          "first_target_positions_in_labels": [
+            12
+          ],
+          "eos_target_positions_in_labels": [
+            80
+          ]
+        },
+        {
+          "line": 11996,
+          "group": "72b7c96972aa7c52c27f58a1b190ed98f6414b6072fffe6b5112b1f66247e189",
+          "tokens": 166,
+          "targets": 151,
+          "first_target_positions_in_labels": [
+            14
+          ],
+          "eos_target_positions_in_labels": [
+            164
+          ]
+        },
+        {
+          "line": 13709,
+          "group": "4cdb1beefde15144c0cf3e15adbb76bcc08c3fe54634a36087d862d7142a4ae7",
+          "tokens": 117,
+          "targets": 86,
+          "first_target_positions_in_labels": [
+            30
+          ],
+          "eos_target_positions_in_labels": [
+            115
+          ]
+        },
+        {
+          "line": 15423,
+          "group": "bdfcaa0dbea03a6e6455f784e2e7981b74d8bf609a8f9acc3f939df1021a3902",
+          "tokens": 178,
+          "targets": 155,
+          "first_target_positions_in_labels": [
+            22
+          ],
+          "eos_target_positions_in_labels": [
+            176
+          ]
+        },
+        {
+          "line": 17136,
+          "group": "a12724e46bfd3505207934f5197538e784067ed79d9e4f7fb2fd156d9d1d840b",
+          "tokens": 106,
+          "targets": 92,
+          "first_target_positions_in_labels": [
+            13
+          ],
+          "eos_target_positions_in_labels": [
+            104
+          ]
+        },
+        {
+          "line": 18850,
+          "group": "fa455d94985839708aade1b13ab557308768b40fc35fbf3448a1ccfbeda6cf00",
+          "tokens": 176,
+          "targets": 145,
+          "first_target_positions_in_labels": [
+            30
+          ],
+          "eos_target_positions_in_labels": [
+            174
+          ]
+        },
+        {
+          "line": 20563,
+          "group": "e48fca1c266984585a9ab970d46323989795047f6fb0a13b66e5ae48cbea9ae6",
+          "tokens": 87,
+          "targets": 47,
+          "first_target_positions_in_labels": [
+            39
+          ],
+          "eos_target_positions_in_labels": [
+            85
+          ]
+        },
+        {
+          "line": 22277,
+          "group": "115772312f981e37a901ad773df81202f16ca041eb8d7d80db19283efea0ac0d",
+          "tokens": 140,
+          "targets": 128,
+          "first_target_positions_in_labels": [
+            11
+          ],
+          "eos_target_positions_in_labels": [
+            138
+          ]
+        },
+        {
+          "line": 23990,
+          "group": "071f3e8378db7ad6ab7841b6713912314be711800668df8095db36391b2ddba9",
+          "tokens": 129,
+          "targets": 119,
+          "first_target_positions_in_labels": [
+            9
+          ],
+          "eos_target_positions_in_labels": [
+            127
+          ]
+        },
+        {
+          "line": 25704,
+          "group": "ec772a4274c2e0c67a11b9d9335adcc856d24e0c36980abeb49979f82628bbd7",
+          "tokens": 43,
+          "targets": 31,
+          "first_target_positions_in_labels": [
+            11
+          ],
+          "eos_target_positions_in_labels": [
+            41
+          ]
+        }
+      ],
+      "all_alignment_checks_passed": true
+    },
+    "foundations": {
+      "counts": {
+        "records": 12,
+        "targets": 404,
+        "assistant_starts": 29,
+        "assistant_eos": 29,
+        "content_characters": 828,
+        "content_tokens": 637
+      },
+      "evidence": [
+        {
+          "line": 1,
+          "group": "caa028a317caad73516230ba178be81b36bb1051b388f32a9d0fd272aa77069a",
+          "tokens": 64,
+          "targets": 29,
+          "first_target_positions_in_labels": [
+            9,
+            29,
+            52
+          ],
+          "eos_target_positions_in_labels": [
+            15,
+            39,
+            62
+          ]
+        },
+        {
+          "line": 7,
+          "group": "ec0d898bd1ec76439dc6d9e09cae267a958ad8e48dbdd131a95618b9be6cd9e7",
+          "tokens": 67,
+          "targets": 38,
+          "first_target_positions_in_labels": [
+            13,
+            32,
+            61
+          ],
+          "eos_target_positions_in_labels": [
+            25,
+            51,
+            65
+          ]
+        },
+        {
+          "line": 13,
+          "group": "95af23daa635101150efb80a18497147cbe0c03e50cbd39a06f1637362292ac7",
+          "tokens": 67,
+          "targets": 44,
+          "first_target_positions_in_labels": [
+            11,
+            44
+          ],
+          "eos_target_positions_in_labels": [
+            32,
+            65
+          ]
+        },
+        {
+          "line": 18,
+          "group": "ae57d81e1045c9b8d50eb208da0a799bf9317555268a45a65ccf1add20adad30",
+          "tokens": 61,
+          "targets": 21,
+          "first_target_positions_in_labels": [
+            19,
+            37,
+            53
+          ],
+          "eos_target_positions_in_labels": [
+            25,
+            43,
+            59
+          ]
+        },
+        {
+          "line": 24,
+          "group": "b88a8beecce4b0416e6aa37076dc4f15014413ec3621572c131da56aa37e099b",
+          "tokens": 63,
+          "targets": 26,
+          "first_target_positions_in_labels": [
+            17,
+            40,
+            58
+          ],
+          "eos_target_positions_in_labels": [
+            27,
+            50,
+            61
+          ]
+        },
+        {
+          "line": 30,
+          "group": "5ca76856fa38f2ded963eac7753ff6d8f6eaf8ba372c7568b6942914a478b2c1",
+          "tokens": 69,
+          "targets": 46,
+          "first_target_positions_in_labels": [
+            12,
+            49
+          ],
+          "eos_target_positions_in_labels": [
+            38,
+            67
+          ]
+        },
+        {
+          "line": 36,
+          "group": "0e54394e027fbd4c26f7309884846d99e22e156da52f692309dd60aa774232d6",
+          "tokens": 60,
+          "targets": 36,
+          "first_target_positions_in_labels": [
+            11,
+            54
+          ],
+          "eos_target_positions_in_labels": [
+            41,
+            58
+          ]
+        },
+        {
+          "line": 42,
+          "group": "b9ea6bbfd7c9249843c28e6f6374ea92351cf17747fdb6073f1cc14b85b47628",
+          "tokens": 73,
+          "targets": 49,
+          "first_target_positions_in_labels": [
+            13,
+            60
+          ],
+          "eos_target_positions_in_labels": [
+            49,
+            71
+          ]
+        },
+        {
+          "line": 48,
+          "group": "e31dd2b4bea4bd05513fbcae76febf29535c43e0edc12b1c8c53c62046bb3457",
+          "tokens": 66,
+          "targets": 38,
+          "first_target_positions_in_labels": [
+            17,
+            46
+          ],
+          "eos_target_positions_in_labels": [
+            35,
+            64
+          ]
+        },
+        {
+          "line": 53,
+          "group": "fd2c8883854679b5366a7489c9405a2bc3bb68adf56e5fd2d3b75724c5858ae5",
+          "tokens": 49,
+          "targets": 27,
+          "first_target_positions_in_labels": [
+            11,
+            33
+          ],
+          "eos_target_positions_in_labels": [
+            22,
+            47
+          ]
+        },
+        {
+          "line": 59,
+          "group": "79fa114688bbb40c4855ad47be28d7f29e0cce37a913491f1fed7b609c2308e1",
+          "tokens": 74,
+          "targets": 26,
+          "first_target_positions_in_labels": [
+            27,
+            44,
+            62
+          ],
+          "eos_target_positions_in_labels": [
+            37,
+            47,
+            72
+          ]
+        },
+        {
+          "line": 65,
+          "group": "35dfc6d497e29ace9f1a4169d040aa4e9337acb3fe664cb31d2f5b666f733856",
+          "tokens": 52,
+          "targets": 24,
+          "first_target_positions_in_labels": [
+            16,
+            38
+          ],
+          "eos_target_positions_in_labels": [
+            26,
+            50
+          ]
+        }
+      ],
+      "all_alignment_checks_passed": true
+    },
+    "legacy_dialogue_train": {
+      "counts": {
+        "records": 8,
+        "targets": 1124,
+        "assistant_starts": 22,
+        "assistant_eos": 22,
+        "content_characters": 2425,
+        "content_tokens": 1321
+      },
+      "evidence": [
+        {
+          "line": 1,
+          "group": "1ed8eb23ed6db3b9f561bea7ce4ffe9bb79d4e12e86ceb69da2d091608f846c0",
+          "tokens": 139,
+          "targets": 111,
+          "first_target_positions_in_labels": [
+            6,
+            48,
+            86,
+            116
+          ],
+          "eos_target_positions_in_labels": [
+            39,
+            80,
+            107,
+            137
+          ]
+        },
+        {
+          "line": 2,
+          "group": "c138a5789908ddaaf63d0e3566eac3362aedcfaa5ce60635392347ee065410ab",
+          "tokens": 170,
+          "targets": 113,
+          "first_target_positions_in_labels": [
+            5,
+            24,
+            53,
+            88,
+            131
+          ],
+          "eos_target_positions_in_labels": [
+            16,
+            36,
+            74,
+            115,
+            168
+          ]
+        },
+        {
+          "line": 3,
+          "group": "318c38a51884fe29cd749f8880f5f8fafe292a03b078c8c95c9ef6cf9a1af095",
+          "tokens": 161,
+          "targets": 121,
+          "first_target_positions_in_labels": [
+            27,
+            90
+          ],
+          "eos_target_positions_in_labels": [
+            77,
+            159
+          ]
+        },
+        {
+          "line": 4,
+          "group": "fbec6b3dfb4e6df732ade83029fdd54b10a7466f89cb887c990ec64f131bc449",
+          "tokens": 104,
+          "targets": 70,
+          "first_target_positions_in_labels": [
+            33
+          ],
+          "eos_target_positions_in_labels": [
+            102
+          ]
+        },
+        {
+          "line": 5,
+          "group": "05b9ea9264b93ba4995c5de312074fe6f183b91e56ed1662cae3366f019dff2f",
+          "tokens": 258,
+          "targets": 231,
+          "first_target_positions_in_labels": [
+            12,
+            88
+          ],
+          "eos_target_positions_in_labels": [
+            73,
+            256
+          ]
+        },
+        {
+          "line": 6,
+          "group": "38c1702987f827d8d1a39bab278bf9b89576594d2c4bdeb7daa0f76b4caacd0b",
+          "tokens": 306,
+          "targets": 261,
+          "first_target_positions_in_labels": [
+            33,
+            176
+          ],
+          "eos_target_positions_in_labels": [
+            164,
+            304
+          ]
+        },
+        {
+          "line": 7,
+          "group": "c138a5789908ddaaf63d0e3566eac3362aedcfaa5ce60635392347ee065410ab",
+          "tokens": 121,
+          "targets": 93,
+          "first_target_positions_in_labels": [
+            5,
+            32,
+            77
+          ],
+          "eos_target_positions_in_labels": [
+            23,
+            62,
+            119
+          ]
+        },
+        {
+          "line": 8,
+          "group": "d36f75ebdbb4a94405e83e03998f5b5c56aade0f391d5bd8117e5899572baf2e",
+          "tokens": 158,
+          "targets": 124,
+          "first_target_positions_in_labels": [
+            10,
+            70,
+            114
+          ],
+          "eos_target_positions_in_labels": [
+            61,
+            98,
+            156
+          ]
+        }
+      ],
+      "all_alignment_checks_passed": true
+    },
+    "focus": {
+      "segments": 32,
+      "min_length": 12,
+      "max_length": 25,
+      "all_eos_supervised": true,
+      "no_role_tokens": true,
+      "fits_smallest_rounded_training_length": true
+    },
+    "pretrain_prefix": {
+      "raw_train_documents": 3,
+      "matched_tokens": 886,
+      "uint16_encoding_matches": true
+    }
+  },
+  "source_mix_replay": {
+    "steps_replayed_without_model": 500,
+    "counts": {
+      "pretrain_steps": 56,
+      "pretrain_targets_including_focus": 456765,
+      "pretrain_source_targets": 456704,
+      "teacher_steps": 422,
+      "teacher_targets_including_focus": 673576,
+      "teacher_source_targets": 672882,
+      "foundation_steps": 22,
+      "foundation_targets_including_focus": 11691,
+      "foundation_source_targets": 11665,
+      "focus_targets": 781
+    },
+    "matches_recorded_segment_counts": true,
+    "source_token_shares": {
+      "pretrain": 0.40017840071991173,
+      "teacher": 0.5896003596053804,
+      "foundation": 0.010221239674707842
+    },
+    "mean_loss_coefficient_shares": {
+      "pretrain": 0.11198414817812184,
+      "focus": 0.0011054436016490268,
+      "teacher": 0.8430156752176029,
+      "foundation": 0.04389473300262621
+    },
+    "lr_weighted_mean_loss_coefficient_shares": {
+      "pretrain": 0.11117058099845485,
+      "focus": 0.0010948784249613798,
+      "teacher": 0.8442869548613167,
+      "foundation": 0.043447585715267
+    },
+    "targets_per_update": {
+      "pretrain": {
+        "min": 7692,
+        "max": 8192,
+        "mean": 8156.517857142857
+      },
+      "teacher": {
+        "min": 914,
+        "max": 2426,
+        "mean": 1596.1516587677725
+      },
+      "foundation": {
+        "min": 433,
+        "max": 620,
+        "mean": 531.4090909090909
+      }
+    },
+    "interpretation": "These are coefficients of source token-mean losses across updates, not measured gradient magnitudes. AdamW and clipping prevent equating them with exact influence or parameter movement."
+  },
+  "tiny_fit": {
+    "architecture": {
+      "vocabulary": 8192,
+      "width": 32,
+      "depth": 2,
+      "heads": 4,
+      "hidden": 64,
+      "context": 96,
+      "memory_layers": [
+        0,
+        1
+      ],
+      "memory_read": "legacy"
+    },
+    "language_parameters": 290978,
+    "updates": 80,
+    "first_update_lr": 0.0001,
+    "remaining_79_updates_lr": 0.01,
+    "model_training_flag": false,
+    "mode_explanation": "restore returns eval; this network has no dropout/batchnorm, so eval does not disable autograd.",
+    "initial_loss": 8.9843111038208,
+    "final_loss": 0.057919275015592575,
+    "trace": [
+      {
+        "toy_update": 2,
+        "pre_update_loss": 8.97407054901123
+      },
+      {
+        "toy_update": 20,
+        "pre_update_loss": 1.7361555099487305
+      },
+      {
+        "toy_update": 40,
+        "pre_update_loss": 0.4581663906574249
+      },
+      {
+        "toy_update": 60,
+        "pre_update_loss": 0.09088882058858871
+      },
+      {
+        "toy_update": 80,
+        "pre_update_loss": 0.05813485383987427
+      }
+    ],
+    "first_microbatch_loss_matches_full": true,
+    "unequal_supervised_counts": [
+      3,
+      3,
+      6,
+      7,
+      6
+    ],
+    "language_tensors": 19,
+    "language_tensors_with_nonzero_gradient": 19,
+    "language_tensors_changed_after_production_optimizer_step": 19,
+    "per_tensor_first_step": {
+      "memory_gate": {
+        "gradient_norm": 0.0006867454503662884,
+        "max_abs_update": 0.000102996826171875
+      },
+      "embedding.weight": {
+        "gradient_norm": 2.6822762489318848,
+        "max_abs_update": 0.00010006874799728394
+      },
+      "blocks.0.norm1.weight": {
+        "gradient_norm": 0.0062825679779052734,
+        "max_abs_update": 0.00010102987289428711
+      },
+      "blocks.0.norm2.weight": {
+        "gradient_norm": 0.0013920452911406755,
+        "max_abs_update": 0.00010102987289428711
+      },
+      "blocks.0.qkv.weight": {
+        "gradient_norm": 0.3425138592720032,
+        "max_abs_update": 0.00010005757212638855
+      },
+      "blocks.0.out.weight": {
+        "gradient_norm": 0.5959666967391968,
+        "max_abs_update": 0.00010002776980400085
+      },
+      "blocks.0.up.weight": {
+        "gradient_norm": 0.07268792390823364,
+        "max_abs_update": 0.00010006874799728394
+      },
+      "blocks.0.down.weight": {
+        "gradient_norm": 0.10891585052013397,
+        "max_abs_update": 0.00010003522038459778
+      },
+      "blocks.1.norm1.weight": {
+        "gradient_norm": 0.007347031496465206,
+        "max_abs_update": 0.00010102987289428711
+      },
+      "blocks.1.norm2.weight": {
+        "gradient_norm": 0.001455912715755403,
+        "max_abs_update": 0.00010102987289428711
+      },
+      "blocks.1.qkv.weight": {
+        "gradient_norm": 0.3199564814567566,
+        "max_abs_update": 0.00010006129741668701
+      },
+      "blocks.1.out.weight": {
+        "gradient_norm": 0.577661395072937,
+        "max_abs_update": 0.00010003522038459778
+      },
+      "blocks.1.up.weight": {
+        "gradient_norm": 0.06165054813027382,
+        "max_abs_update": 0.00010006874799728394
+      },
+      "blocks.1.down.weight": {
+        "gradient_norm": 0.08408571779727936,
+        "max_abs_update": 0.00010003522038459778
+      },
+      "norm.weight": {
+        "gradient_norm": 0.029246985912322998,
+        "max_abs_update": 0.00010102987289428711
+      },
+      "memory_query.0.weight": {
+        "gradient_norm": 0.01630321331322193,
+        "max_abs_update": 0.00010006129741668701
+      },
+      "memory_query.1.weight": {
+        "gradient_norm": 0.015579167753458023,
+        "max_abs_update": 0.00010006129741668701
+      },
+      "memory_out.0.weight": {
+        "gradient_norm": 0.014736129902303219,
+        "max_abs_update": 0.00010005384683609009
+      },
+      "memory_out.1.weight": {
+        "gradient_norm": 0.014700761996209621,
+        "max_abs_update": 0.00010006129741668701
+      }
+    },
+    "frozen_parameter_tensors": 85,
+    "frozen_parameters_unchanged": true,
+    "frozen_parameters_have_no_grad": true,
+    "new_fork_optimizer_empty": true,
+    "resumed_optimizer_steps": [
+      1
+    ],
+    "resumed_optimizer_state_tensors": 19,
+    "first_and_eos_prefix_evidence": [
+      {
+        "row": 0,
+        "target_position": 8,
+        "kind": "assistant_first",
+        "target": 1507,
+        "argmax": 1507,
+        "prefix_loss": 0.003774068783968687,
+        "batched_loss": 0.003774068783968687
+      },
+      {
+        "row": 0,
+        "target_position": 10,
+        "kind": "eos",
+        "target": 2,
+        "argmax": 2,
+        "prefix_loss": 0.001292465953156352,
+        "batched_loss": 0.001292465953156352
+      },
+      {
+        "row": 1,
+        "target_position": 8,
+        "kind": "assistant_first",
+        "target": 686,
+        "argmax": 686,
+        "prefix_loss": 0.0034413659013807774,
+        "batched_loss": 0.0034413659013807774
+      },
+      {
+        "row": 1,
+        "target_position": 10,
+        "kind": "eos",
+        "target": 2,
+        "argmax": 2,
+        "prefix_loss": 0.0014421073719859123,
+        "batched_loss": 0.0014421073719859123
+      },
+      {
+        "row": 2,
+        "target_position": 8,
+        "kind": "assistant_first",
+        "target": 732,
+        "argmax": 732,
+        "prefix_loss": 0.006258650217205286,
+        "batched_loss": 0.006258650217205286
+      },
+      {
+        "row": 2,
+        "target_position": 10,
+        "kind": "eos",
+        "target": 2,
+        "argmax": 2,
+        "prefix_loss": 0.001353539526462555,
+        "batched_loss": 0.001353539526462555
+      },
+      {
+        "row": 2,
+        "target_position": 18,
+        "kind": "assistant_first",
+        "target": 1813,
+        "argmax": 1813,
+        "prefix_loss": 0.002207106677815318,
+        "batched_loss": 0.002207106677815318
+      },
+      {
+        "row": 2,
+        "target_position": 20,
+        "kind": "eos",
+        "target": 2,
+        "argmax": 2,
+        "prefix_loss": 0.001369491801597178,
+        "batched_loss": 0.001369491801597178
+      }
+    ],
+    "max_prefix_batched_loss_difference": 0.0,
+    "toy_generation": [
+      {
+        "kind": "assistant",
+        "exact": true,
+        "expected": "山。",
+        "actual": "山。",
+        "ended_with_eos": true
+      },
+      {
+        "kind": "assistant",
+        "exact": true,
+        "expected": "水。",
+        "actual": "水。",
+        "ended_with_eos": true
+      },
+      {
+        "kind": "assistant",
+        "exact": true,
+        "expected": "风。",
+        "actual": "风。",
+        "ended_with_eos": true
+      },
+      {
+        "kind": "assistant",
+        "exact": true,
+        "expected": "雨。",
+        "actual": "雨。",
+        "ended_with_eos": true
+      },
+      {
+        "kind": "plain_continuation",
+        "exact": true,
+        "expected": "山。绿水。",
+        "actual": "山。绿水。",
+        "ended_with_eos": true
+      },
+      {
+        "kind": "plain_continuation",
+        "exact": true,
+        "expected": "。细雨。",
+        "actual": "。细雨。",
+        "ended_with_eos": true
+      }
+    ],
+    "limits": "A small random model memorizing six prompted continuations does not establish Chinese competence or prove that live large checkpoints updated. No pretrained weights were loaded.",
+    "schedule_scope": "The update probe uses the production base LR, not the first warmup LR; the production schedule is audited separately without training."
+  },
+  "production_lr_schedule": {
+    "1": 1.0000000000000002e-06,
+    "100": 0.0001,
+    "101": 9.999999943924118e-05,
+    "500": 9.991030839991721e-05,
+    "2000": 9.799079281818377e-05,
+    "20000": 1e-05
+  },
+  "hypotheses": [
+    {
+      "hypothesis": "Shift/mask drops assistant first token or EOS",
+      "result": "Not reproduced in independent raw-to-label checks."
+    },
+    {
+      "hypothesis": "Microbatch gives short and long rows equal weight",
+      "result": "Implementation sums CE and divides by full-batch valid-token count; scalar loss agrees on real tokenizer toy rows. Existing gradient-equivalence unit test was read, not duplicated."
+    },
+    {
+      "hypothesis": "Only frozen organism exists in the optimizer",
+      "result": "Language stack, tied embedding and read adapters all receive gradients and change in the tiny restored model; organism remains frozen."
+    },
+    {
+      "hypothesis": "Source token allocation equals the effective objective mixture",
+      "result": "Not equivalent: homogeneous batches have different target counts but each update uses its own token mean. This is a recipe interpretation risk, not an off-by-one defect."
+    }
+  ],
+  "elapsed_seconds": 7.67798769986257,
+  "limitations": [
+    "No production checkpoint tensors or optimizer states loaded; actual live weight deltas are unverified.",
+    "Only sampled raw TRAIN rows were semantically decoded. Alignment is not a factual-quality audit.",
+    "No final/evaluation test text opened. Directory filenames and manifest counts/hashes were visible.",
+    "Teacher tokens were scanned to build the same DialogueRows index; raw content was decoded only for16 teacher,12 foundation and8 accepted legacy-dialogue records (plus any skipped overlength prefix rows).",
+    "Only3 pretraining raw records and their leading binary tokens were compared; no full pretraining quality assessment.",
+    "80 toy updates use small width/depth and accelerated LR for79 steps. Memorization is not language capability or proof that the production recipe is sufficient.",
+    "Source-loss coefficients are not measured gradient contributions; adaptive optimization, clipping and sequential updates matter.",
+    "The original160-test passing baseline is user-reported; no regression suite was repeated."
+  ],
+  "verdict": {
+    "confirmed_implementation_bugs": 0,
+    "root_cause_of_weak_production_language_identified": false,
+    "summary": "未发现系统性错位、mask/角色/EOS错误或语言主体被整体冻结的实现缺陷。当前证据排除所测路径上的这些候选原因；无法在不读取实际权重的条件下证明线上参数确已更新。唯一具体的优化目标风险是跨批次按目标数调度、却按每批均值更新，两者并不等于同一词元加权总体目标。",
+    "do_not_modify_running_training": true
+  },
+  "findings": [
+    {
+      "key": "P27-O1",
+      "priority": "P2",
+      "classification": "training_recipe_objective_risk_not_confirmed_implementation_bug",
+      "title": "40/59/1词元曝光不能解读为40/59/1总体损失权重",
+      "locations": [
+        "scripts/train_conversation_v7.py:149-168",
+        "spora/conversation_optimization.py:14-24",
+        "spora/training_mix.py:10-15"
+      ],
+      "evidence": "前500步重放与已记录counts完全相等：普通文本56次、教学422次、小教材22次。每次更新都按自身有效目标数取平均，短批次的单个目标因而获得更大的损失系数。",
+      "coefficient_shares": {
+        "pretrain": 0.11198414817812184,
+        "focus": 0.0011054436016490268,
+        "teacher": 0.8430156752176029,
+        "foundation": 0.04389473300262621
+      },
+      "why_it_matters": "若用40%普通文本来推断优化器对基础续写的投入，会高估相对权重；小教材的重复拟合也可能明显强于1%的曝光比例所暗示的权重。此差异能影响语言基础/指令学习的平衡，但没有生产权重对照，不能认定它已解释实际弱表现。",
+      "not_a_microbatch_bug": "同一批内部的sum/total梯度累计正确；差异发生在长度不同的多个完整更新之间。",
+      "protocol_assessment": "协议承诺的是有效词元分配，现实现确实兑现该计数；若目标只是曝光占比，则是已量化的配方性质，而非违反协议。只有将其当成总体词元损失的混合权重时才存在目标错配。",
+      "action": "不改正在训练的冻结源码。后续另立配方对照，先明确优化目标究竟是曝光份额还是跨来源的目标词元平均损失；若选择后者，可比较固定有效目标预算的更新或固定分母累计，再独立评估普通续写与聊天。单纯缩放每步loss在AdamW与裁剪下不保证等价，须单独验证。",
+      "reproduction": ".venv/Scripts/python.exe -B scripts/audit_language_objective.py；检查source_mix_replay。重放不加载模型或最终题。"
+    }
+  ],
+  "static_assessments": {
+    "alignment": "padded把seq[j]且mask[j]=true放在labels[j-1]，对应输入seq[:j]。mask不是按输入位置解释。",
+    "roles_and_eos": "角色标记由调用方提供并不作为生成目标；assistant内容首项及其EOS受监督，user内容和user EOS不受对话损失监督。EOS复用作轮次/文档结束符合生成器停止约定。",
+    "padding": "仅右侧填充，因果注意力阻止填充影响左侧有效词元；无须为此额外遮掉历史有效位置。DialogueRows只保留完整且有目标的行；实际样本没有截断答案。",
+    "microbatch": "每个子批CE使用reduction=sum再除整个批的有效目标数，末尾不足一个子批和空目标子批不会改变目标分母。现有梯度等价单测已阅读，不再镜像重复。",
+    "freeze": "ConversationBridge只冻结organism；embedding、全部语言blocks、norm、memory_query/out/gate保持requires_grad。共享输入输出embedding仍是可训练参数。",
+    "eval_mode": "restore返回eval且训练器未切train，但当前语言路径没有dropout/batchnorm；eval不等同于no_grad，不会阻止更新。若将来加入依赖模式的层才需另行处理。",
+    "optimizer_policy": "新课程分支payload=None，继承语言张量后新建AdamW；resume分支从payload恢复optimizer、step、随机数和计数。reset不是每批执行。符合P27及P23后续课程所声明的显式重置。",
+    "schedule": "step是分支内累计步数，不随每个500步段归零；首次热身1e-6，第100步1e-4，20000步1e-5。祖先步数用于核对而非冒充本分支调度步数。",
+    "focus": "32段长度12至25，最小32长度批也容得下完整EOS；只替换一条样本，标签一致，计数单独记账。前500步仅781个focus目标，未见其耗尽主体监督。",
+    "data_and_capacity": "可用新预训练文件大小不等于已学习量：首500步仅456704个普通文本目标，对文件246087365词元约0.186%的有放回曝光量。教学行可重复出现，已有开发小教材NLL很低也不代表未见中文能力。容量不足、知识质量及泛化问题均未被本诊断证明或排除。"
+  },
+  "follow_up_without_overclaim": [
+    "保留160项回归基线；无需因本报告修改正在运行的实现。",
+    "以后在允许检查训练状态时，比较相邻生产检查点各语言层参数差值及AdamW step，才能直接核实真实更新；本报告不代替该证据。",
+    "任何配方变更应单独建运行并保持对照，不把玩具拟合或训练损失下降作为中文能力验收。"
+  ],
+  "historical_padded_helpers_identical": [
+    "scripts/train_conversation_v7.py",
+    "scripts/train_conversation.py",
+    "scripts/train_conversation_v2.py",
+    "scripts/train_conversation_v3.py",
+    "scripts/train_conversation_v4.py",
+    "scripts/train_conversation_v5.py",
+    "scripts/train_conversation_v6.py"
+  ],
+  "tokenizer_sha256": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+  "tokenizer_matches_both_manifests": true,
+  "experiment_script_sha256": "bec24c846953c2735fb51407ca74689c136297c91806e8643ed4791ad98a067d",
+  "script_sha256": "d8951c11dda3e986887e62ce7b4152cb2b03a155fc2edde2d96879e070edf3bc",
+  "finalization_note": "实验仅执行一次80次小模型更新。随后只补充静态结论、脚本可重现报告字段及文件校验，未重跑或扩大实验。主线进度1650步由用户补充；混合比例量化仍仅对应已保存的前500步。",
+  "status": "completed_no_confirmed_implementation_defect",
+  "shared_sources_unchanged_at_finalization": {
+    "scripts/train_conversation_v7.py": true,
+    "spora/conversation.py": true,
+    "spora/conversation_data.py": true,
+    "spora/conversation_optimization.py": true,
+    "spora/language_training.py": true,
+    "spora/training_mix.py": true,
+    "scripts/prepare_conversation_v2.py": true,
+    "scripts/curate_teaching_curriculum.py": true,
+    "configs/p27-coverage-small.json": true,
+    "docs/P27-protocol.md": true,
+    "scripts/train_conversation.py": true,
+    "scripts/train_conversation_v2.py": true,
+    "scripts/train_conversation_v3.py": true,
+    "scripts/train_conversation_v4.py": true,
+    "scripts/train_conversation_v5.py": true,
+    "scripts/train_conversation_v6.py": true
+  }
+}

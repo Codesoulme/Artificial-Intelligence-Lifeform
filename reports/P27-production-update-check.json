@@ -1,0 +1,345 @@
+{
+  "steps": [
+    500,
+    2000
+  ],
+  "tensor_count": 55,
+  "changed_tensor_count": 55,
+  "optimizer_steps": [
+    2000
+  ],
+  "all_language_tensors_changed": true,
+  "rows": [
+    {
+      "tensor": "memory_gate",
+      "changed": true,
+      "rms_change": 0.003646909026429057,
+      "max_abs_change": 0.0050890445709228516
+    },
+    {
+      "tensor": "embedding.weight",
+      "changed": true,
+      "rms_change": 0.005131582263857126,
+      "max_abs_change": 0.07614175975322723
+    },
+    {
+      "tensor": "blocks.0.norm1.weight",
+      "changed": true,
+      "rms_change": 0.0026514858473092318,
+      "max_abs_change": 0.006278038024902344
+    },
+    {
+      "tensor": "blocks.0.norm2.weight",
+      "changed": true,
+      "rms_change": 0.004884413909167051,
+      "max_abs_change": 0.010182499885559082
+    },
+    {
+      "tensor": "blocks.0.qkv.weight",
+      "changed": true,
+      "rms_change": 0.002290019765496254,
+      "max_abs_change": 0.015376667492091656
+    },
+    {
+      "tensor": "blocks.0.out.weight",
+      "changed": true,
+      "rms_change": 0.0023743067868053913,
+      "max_abs_change": 0.010550163686275482
+    },
+    {
+      "tensor": "blocks.0.up.weight",
+      "changed": true,
+      "rms_change": 0.0023215117398649454,
+      "max_abs_change": 0.011213501915335655
+    },
+    {
+      "tensor": "blocks.0.down.weight",
+      "changed": true,
+      "rms_change": 0.0023461582604795694,
+      "max_abs_change": 0.010439395904541016
+    },
+    {
+      "tensor": "blocks.1.norm1.weight",
+      "changed": true,
+      "rms_change": 0.0025803009048104286,
+      "max_abs_change": 0.009158909320831299
+    },
+    {
+      "tensor": "blocks.1.norm2.weight",
+      "changed": true,
+      "rms_change": 0.0030375157948583364,
+      "max_abs_change": 0.006938636302947998
+    },
+    {
+      "tensor": "blocks.1.qkv.weight",
+      "changed": true,
+      "rms_change": 0.002700944896787405,
+      "max_abs_change": 0.015439322218298912
+    },
+    {
+      "tensor": "blocks.1.out.weight",
+      "changed": true,
+      "rms_change": 0.0026459016371518373,
+      "max_abs_change": 0.011631786823272705
+    },
+    {
+      "tensor": "blocks.1.up.weight",
+      "changed": true,
+      "rms_change": 0.00258291931822896,
+      "max_abs_change": 0.011854792013764381
+    },
+    {
+      "tensor": "blocks.1.down.weight",
+      "changed": true,
+      "rms_change": 0.0026198849081993103,
+      "max_abs_change": 0.012110225856304169
+    },
+    {
+      "tensor": "blocks.2.norm1.weight",
+      "changed": true,
+      "rms_change": 0.002254578284919262,
+      "max_abs_change": 0.007843017578125
+    },
+    {
+      "tensor": "blocks.2.norm2.weight",
+      "changed": true,
+      "rms_change": 0.0026366596575826406,
+      "max_abs_change": 0.00906229019165039
+    },
+    {
+      "tensor": "blocks.2.qkv.weight",
+      "changed": true,
+      "rms_change": 0.0027138839941471815,
+      "max_abs_change": 0.015787968412041664
+    },
+    {
+      "tensor": "blocks.2.out.weight",
+      "changed": true,
+      "rms_change": 0.002506717573851347,
+      "max_abs_change": 0.010831237770617008
+    },
+    {
+      "tensor": "blocks.2.up.weight",
+      "changed": true,
+      "rms_change": 0.002753965789452195,
+      "max_abs_change": 0.012759111821651459
+    },
+    {
+      "tensor": "blocks.2.down.weight",
+      "changed": true,
+      "rms_change": 0.0027886833995580673,
+      "max_abs_change": 0.01475067250430584
+    },
+    {
+      "tensor": "blocks.3.norm1.weight",
+      "changed": true,
+      "rms_change": 0.0020340208429843187,
+      "max_abs_change": 0.005375862121582031
+    },
+    {
+      "tensor": "blocks.3.norm2.weight",
+      "changed": true,
+      "rms_change": 0.002650381065905094,
+      "max_abs_change": 0.007734060287475586
+    },
+    {
+      "tensor": "blocks.3.qkv.weight",
+      "changed": true,
+      "rms_change": 0.0027928450144827366,
+      "max_abs_change": 0.016617678105831146
+    },
+    {
+      "tensor": "blocks.3.out.weight",
+      "changed": true,
+      "rms_change": 0.0024699450004845858,
+      "max_abs_change": 0.011687859892845154
+    },
+    {
+      "tensor": "blocks.3.up.weight",
+      "changed": true,
+      "rms_change": 0.0028843895997852087,
+      "max_abs_change": 0.01441916823387146
+    },
+    {
+      "tensor": "blocks.3.down.weight",
+      "changed": true,
+      "rms_change": 0.0029232343658804893,
+      "max_abs_change": 0.01471797376871109
+    },
+    {
+      "tensor": "blocks.4.norm1.weight",
+      "changed": true,
+      "rms_change": 0.0019494487205520272,
+      "max_abs_change": 0.005170166492462158
+    },
+    {
+      "tensor": "blocks.4.norm2.weight",
+      "changed": true,
+      "rms_change": 0.003012224566191435,
+      "max_abs_change": 0.009080231189727783
+    },
+    {
+      "tensor": "blocks.4.qkv.weight",
+      "changed": true,
+      "rms_change": 0.002863910049200058,
+      "max_abs_change": 0.01643064245581627
+    },
+    {
+      "tensor": "blocks.4.out.weight",
+      "changed": true,
+      "rms_change": 0.0024887691251933575,
+      "max_abs_change": 0.01144745945930481
+    },
+    {
+      "tensor": "blocks.4.up.weight",
+      "changed": true,
+      "rms_change": 0.002977109281346202,
+      "max_abs_change": 0.015621140599250793
+    },
+    {
+      "tensor": "blocks.4.down.weight",
+      "changed": true,
+      "rms_change": 0.002964428626000881,
+      "max_abs_change": 0.015238240361213684
+    },
+    {
+      "tensor": "blocks.5.norm1.weight",
+      "changed": true,
+      "rms_change": 0.00306397071108222,
+      "max_abs_change": 0.009283781051635742
+    },
+    {
+      "tensor": "blocks.5.norm2.weight",
+      "changed": true,
+      "rms_change": 0.0034019872546195984,
+      "max_abs_change": 0.010561585426330566
+    },
+    {
+      "tensor": "blocks.5.qkv.weight",
+      "changed": true,
+      "rms_change": 0.0030037269461899996,
+      "max_abs_change": 0.017273157835006714
+    },
+    {
+      "tensor": "blocks.5.out.weight",
+      "changed": true,
+      "rms_change": 0.0027079444844275713,
+      "max_abs_change": 0.01239870861172676
+    },
+    {
+      "tensor": "blocks.5.up.weight",
+      "changed": true,
+      "rms_change": 0.003111904487013817,
+      "max_abs_change": 0.01481936126947403
+    },
+    {
+      "tensor": "blocks.5.down.weight",
+      "changed": true,
+      "rms_change": 0.0030327611602842808,
+      "max_abs_change": 0.015052258968353271
+    },
+    {
+      "tensor": "blocks.6.norm1.weight",
+      "changed": true,
+      "rms_change": 0.002664405619725585,
+      "max_abs_change": 0.008391857147216797
+    },
+    {
+      "tensor": "blocks.6.norm2.weight",
+      "changed": true,
+      "rms_change": 0.0034828789066523314,
+      "max_abs_change": 0.010364770889282227
+    },
+    {
+      "tensor": "blocks.6.qkv.weight",
+      "changed": true,
+      "rms_change": 0.0030274365562945604,
+      "max_abs_change": 0.017989374697208405
+    },
+    {
+      "tensor": "blocks.6.out.weight",
+      "changed": true,
+      "rms_change": 0.002638883888721466,
+      "max_abs_change": 0.0123008256778121
+    },
+    {
+      "tensor": "blocks.6.up.weight",
+      "changed": true,
+      "rms_change": 0.0031460593454539776,
+      "max_abs_change": 0.015271552838385105
+    },
+    {
+      "tensor": "blocks.6.down.weight",
+      "changed": true,
+      "rms_change": 0.0029875088948756456,
+      "max_abs_change": 0.013882394880056381
+    },
+    {
+      "tensor": "blocks.7.norm1.weight",
+      "changed": true,
+      "rms_change": 0.0037475060671567917,
+      "max_abs_change": 0.008674144744873047
+    },
+    {
+      "tensor": "blocks.7.norm2.weight",
+      "changed": true,
+      "rms_change": 0.0043212659657001495,
+      "max_abs_change": 0.01218569278717041
+    },
+    {
+      "tensor": "blocks.7.qkv.weight",
+      "changed": true,
+      "rms_change": 0.0031720937695354223,
+      "max_abs_change": 0.01748073846101761
+    },
+    {
+      "tensor": "blocks.7.out.weight",
+      "changed": true,
+      "rms_change": 0.0028621091041713953,
+      "max_abs_change": 0.012161508202552795
+    },
+    {
+      "tensor": "blocks.7.up.weight",
+      "changed": true,
+      "rms_change": 0.003248171415179968,
+      "max_abs_change": 0.016387570649385452
+    },
+    {
+      "tensor": "blocks.7.down.weight",
+      "changed": true,
+      "rms_change": 0.0027316485065966845,
+      "max_abs_change": 0.014907091856002808
+    },
+    {
+      "tensor": "norm.weight",
+      "changed": true,
+      "rms_change": 0.0775110051035881,
+      "max_abs_change": 0.1106719970703125
+    },
+    {
+      "tensor": "memory_query.0.weight",
+      "changed": true,
+      "rms_change": 0.0026221717707812786,
+      "max_abs_change": 0.011303242295980453
+    },
+    {
+      "tensor": "memory_query.1.weight",
+      "changed": true,
+      "rms_change": 0.0024624732322990894,
+      "max_abs_change": 0.011402416974306107
+    },
+    {
+      "tensor": "memory_out.0.weight",
+      "changed": true,
+      "rms_change": 0.0025106114335358143,
+      "max_abs_change": 0.011045053601264954
+    },
+    {
+      "tensor": "memory_out.1.weight",
+      "changed": true,
+      "rms_change": 0.0026228486094623804,
+      "max_abs_change": 0.013375600799918175
+    }
+  ],
+  "scope": "Read-only actual saved production language weights; parameter change is not proof of useful learning."
+}

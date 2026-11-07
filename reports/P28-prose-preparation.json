@@ -1,0 +1,1107 @@
+{
+  "current_run": "D:\\SPORA\\runs\\p28-prose\\candidate-v3",
+  "manifest": {
+    "schema_version": 1,
+    "stage": "review_complete",
+    "passed": false,
+    "ready_for_training": false,
+    "mechanical_checks_passed": true,
+    "manual_review_passed": false,
+    "run_directory": "D:\\SPORA\\runs\\p28-prose\\candidate-v3",
+    "source_provenance": {
+      "repository": "0xDing/wikipedia-cn-20230720-filtered",
+      "revision": "4cef256a3f426ae1d3f6930c8cd59a32d785d99d",
+      "path": "wikipedia-cn-20230720-filtered.json",
+      "url": "https://hf-mirror.com/datasets/0xDing/wikipedia-cn-20230720-filtered/resolve/4cef256a3f426ae1d3f6930c8cd59a32d785d99d/wikipedia-cn-20230720-filtered.json?download=true",
+      "bytes": 524489333,
+      "sha256": "3a4dcb0e1b37436358d6cc5de28300071d55367395381958eba9fd38b3d78e32",
+      "repository_metadata_sha256": "c8a64b9f90f3c939c0a837b16b7a59f91858017194a60aaa1bcea69019ac4076",
+      "license_declared": "CC-BY-SA-3.0",
+      "source": "Chinese Wikipedia 2023-07-20 dump, filtered and script-converted by dataset provider; not an independent truth audit.",
+      "scope": "Candidate text only, not selected by any training plan. Preserve attribution and original source notice; no model weights downloaded.",
+      "seconds": 72.01022910000756
+    },
+    "tokenizer_sha256": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+    "vocabulary": 8192,
+    "parameters": {
+      "limit": 20000,
+      "min_chars": 80,
+      "max_chars": 360,
+      "max_tokens": 512,
+      "seed": 20261109
+    },
+    "source_sha256_verified": "3a4dcb0e1b37436358d6cc5de28300071d55367395381958eba9fd38b3d78e32",
+    "preparation_stats": {
+      "articles_scanned": 254547,
+      "paragraphs_considered": 3641742,
+      "paragraphs_rejected": 3638665,
+      "paragraph_primary_insufficient_common_description": 759270,
+      "paragraph_reason_insufficient_common_description": 759270,
+      "paragraph_reason_named_catalog_or_specialist": 635137,
+      "paragraph_reason_basic_numeric_dense": 503183,
+      "paragraph_primary_too_short": 2865980,
+      "paragraph_reason_too_short": 2865980,
+      "article_no_clean_paragraph": 251470,
+      "long_paragraph_sentence_prefix": 23141,
+      "paragraph_primary_named_catalog_or_specialist": 10352,
+      "articles_eligible": 3071,
+      "paragraph_primary_too_long": 417,
+      "paragraph_reason_too_long": 417,
+      "paragraph_primary_basic_numeric_dense": 2115,
+      "paragraph_primary_fewer_than_two_sentences": 220,
+      "paragraph_reason_fewer_than_two_sentences": 229,
+      "paragraph_primary_dependent_opening": 148,
+      "paragraph_reason_dependent_opening": 148,
+      "paragraph_reason_unfinished_sentence": 78,
+      "paragraph_primary_markup_list_or_symbol": 77,
+      "paragraph_reason_markup_list_or_symbol": 106,
+      "paragraph_primary_low_chinese_ratio": 3,
+      "paragraph_reason_low_chinese_ratio": 4,
+      "paragraph_primary_unfinished_sentence": 42,
+      "paragraph_primary_unbalanced_delimiter": 12,
+      "paragraph_reason_unbalanced_delimiter": 12,
+      "paragraph_primary_empty_formula_or_broken_punctuation": 27,
+      "paragraph_reason_empty_formula_or_broken_punctuation": 27,
+      "paragraph_reason_latin_dense": 4,
+      "article_or_segment_exact_duplicate": 6,
+      "paragraph_reason_repeated_run": 3,
+      "paragraph_primary_repeated_run": 1,
+      "paragraph_primary_latin_dense": 1
+    },
+    "stats": {
+      "train": {
+        "documents": 2942,
+        "tokens": 390952,
+        "within_document_next_token_targets": 388010,
+        "characters": 466936
+      },
+      "development": {
+        "documents": 68,
+        "tokens": 8427,
+        "within_document_next_token_targets": 8359,
+        "characters": 9850
+      },
+      "test": {
+        "documents": 61,
+        "tokens": 8384,
+        "within_document_next_token_targets": 8323,
+        "characters": 10083
+      }
+    },
+    "selected_before_encoding_and_new_split_exclusion": 3071,
+    "source_row_decile_counts": {
+      "train_7": 296,
+      "train_9": 289,
+      "train_1": 279,
+      "train_8": 279,
+      "train_0": 299,
+      "train_2": 285,
+      "train_4": 283,
+      "train_6": 293,
+      "train_5": 335,
+      "development_7": 3,
+      "train_3": 304,
+      "test_3": 8,
+      "development_8": 9,
+      "development_5": 9,
+      "test_1": 5,
+      "test_0": 8,
+      "development_3": 8,
+      "development_9": 5,
+      "test_6": 12,
+      "development_2": 8,
+      "development_0": 7,
+      "development_4": 11,
+      "development_6": 5,
+      "test_4": 4,
+      "test_2": 2,
+      "test_8": 8,
+      "test_5": 8,
+      "test_7": 4,
+      "test_9": 2,
+      "development_1": 3
+    },
+    "selection_fingerprint": "5c903ec6c4963a17c3267d65d383a0c180d21e062ef8ba392d74940bde6bed52",
+    "sample_n": 64,
+    "files": {
+      "pretrain-development.bin": "8a5c180054c419baf29fb0714e46b26bcadb3dc6ffd8429ecc124273f8ae44bf",
+      "pretrain-development.jsonl": "69f91d56ff69c458d30e382f0016aed8944e89c8096166dfea6d22a13a505e34",
+      "pretrain-test.bin": "b835d7599d833f7bf9f26f0b8916560d683df3126d8ed89c897472d4a9aae4cf",
+      "pretrain-test.jsonl": "5625e9b9a350cadf4cc6cff81efd942998c81cc701202f4e5481e6008cb24818",
+      "pretrain-train.bin": "bbbb04a59b24fb825c23b2ab4e6a864f04c872f7f414a31677ba7f81a91f835d",
+      "pretrain-train.jsonl": "06ade1fe7b3363c771a793a1282e5064309e13148058823a7839125b7b963058",
+      "quality-sample.json": "f5adedfcfaf9963d3e4007d7e6f50723870e58edb5265ca2ab2e533af3d2f7b5",
+      "source-provenance.json": "e6fc7fd841aa8261b35075a01768e1c608c92a5d4f564808102a0df1d9c13dc3",
+      "tokenizer.json": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+      "manual-review.json": "2902d9eaad81369d160ed2c260f5f55347a2155d8e1da1b851600253264a7adf",
+      "test-results.json": "860b1928da7e2b732b75d61be72a9b7f3ab07dd5ff1033d15b3e93956227c995"
+    },
+    "split": "96/2/2 by first16 hex of normalized full original-article SHA256 modulo1000; one excerpt per article; exact normalized excerpt dedup globally before splitting; full-source seeded SHA256 rank then cap.",
+    "binary_format": "Little-endian uint16 concatenation of BOS + unchanged tokenizer.encode(text, add_special_tokens=False) + EOS; per-record token_offset/token_count in JSONL. Training window policies remain trainer responsibility.",
+    "extraction": "Unchanged contiguous original paragraph, or its complete-sentence prefix; surrounding whitespace omitted. No rewriting, fact edits or cross-paragraph concatenation. One eligible passage per article.",
+    "topic_gate": "At least3 distinct common life/nature/material terms; reject explicit biography/year/catalog/specialist terms, foreign-name strings and numeric density>2%. This conservative lexical proxy loses useful prose and does not guarantee semantic suitability; fixed manual review must distinguish common description from named encyclopedia entries.",
+    "old_held_evidence": {
+      "D:\\SPORA\\runs\\conversation-data-v3\\manifest.json": {
+        "sha256": "fc171587f223b4630de7803a790fca2dcd0569f062c4569d54bbbfd20ba02fad"
+      },
+      "D:\\SPORA\\runs\\conversation-data-v3\\pretrain-development.jsonl": {
+        "sha256": "ed7b3c0c2c4f0418d8dcf20c93a17dc43db76d104fb61c3865d35b4e1df3ee08",
+        "records": 510
+      },
+      "D:\\SPORA\\runs\\conversation-data-v3\\dialogue-development.jsonl": {
+        "sha256": "83b0ce456123347a3993d2972a1b3c25ec16161047e65b532acbe4838e2cb00c",
+        "records": 492
+      },
+      "D:\\SPORA\\runs\\conversation-data-v3\\pretrain-test.jsonl": {
+        "sha256": "1a0724f6bc24355a610a5e5ac1fcf1361d1a3a668a7512f412b661084247136e",
+        "records": 512
+      },
+      "D:\\SPORA\\runs\\conversation-data-v3\\dialogue-test.jsonl": {
+        "sha256": "1c5b6ad2d9831279d0039bab571219020c416fc371d07cdbc22335712961df4f",
+        "records": 495
+      },
+      "D:\\SPORA\\runs\\conversation-data-v5\\manifest.json": {
+        "sha256": "b8a7646b82880de66c9a74c2d235025b1aead7d8814818d4f73006398c1f5557"
+      },
+      "D:\\SPORA\\runs\\conversation-data-v5\\pretrain-development.jsonl": {
+        "sha256": "59c5bce59ee085ac5bc2613bcd87347758e19270fba6cb8c8d4cfd20fbe65c32",
+        "records": 512
+      },
+      "D:\\SPORA\\runs\\conversation-data-v5\\dialogue-development.jsonl": {
+        "sha256": "da2deb84ad158d71946e651493e877a1ca7adcd8744361d0c75aa47df4535b02",
+        "records": 512
+      },
+      "D:\\SPORA\\runs\\conversation-data-v5\\pretrain-test.jsonl": {
+        "sha256": "d995c6ec7336586e65bc98a91a01a8385165450e37bc64fa7a743b54b3dfbb94",
+        "records": 512
+      },
+      "D:\\SPORA\\runs\\conversation-data-v5\\dialogue-test.jsonl": {
+        "sha256": "0f5cec08b066aece858ba7a49d59cafc52e07e736508aaee94e1ac5a56366a04",
+        "records": 512
+      }
+    },
+    "isolation": "Old v3/v5 development/test exact normalized text, stored group, computed leading96 and stride16 16-character shingles: >=8 denominator, >=80% min-size containment; additionally individual dialogue messages indexed. Checks original article and excerpt. New selected held excerpts mechanically exclude overlapping new train, test also excludes development. Finite lexical check, not semantic isolation proof.",
+    "constraints": {
+      "cpu_threads": 1,
+      "gpu": false,
+      "training": false,
+      "downloads": false,
+      "full_source_loaded": false,
+      "final_chat_questions_opened": false,
+      "held_text_displayed": false
+    },
+    "memory": "64KiB source chunks, <=8MiB one-object bound; SQLite disk spool and 4MiB page cache, disk sort; bounded held signature index; only 64 train examples retained for review.",
+    "filter_counts": "Sequential length, topic, structural gates; only reasons at the first rejecting gate are recorded, and reasons within that gate overlap. paragraph_primary_* sums to paragraphs_rejected. Articles may have rejected paragraphs before their selected excerpt; no rejected text logged.",
+    "script_sha256": "4bc9d4f665ddffe525050cdfa44b748ba3af05d2a0c278d7781f799825010fa4",
+    "manual_gate": "At least64 fixed TRAIN samples, all individually annotated; zero damaged, dependent or unsuitable-for-basic-prose samples required for ready. One subjective review does not guarantee factual accuracy. On failure preserve candidates but do not train this artifact.",
+    "review_counts": {
+      "damaged": 13,
+      "context_dependent": 16,
+      "unsuitable_basic_prose": 54,
+      "factual_concern": 12
+    },
+    "tests_passed": true
+  },
+  "manual_review": {
+    "sample_sha256": "f5adedfcfaf9963d3e4007d7e6f50723870e58edb5265ca2ab2e533af3d2f7b5",
+    "reviewer": "Single development-agent semantic review of all64 full TRAIN passages; not independent human blind annotation.",
+    "rubric": {
+      "damaged": "Visible typo, broken syntax or semantic translation damage; complete punctuation does not imply undamaged.",
+      "context_dependent": "Missing subject, event, timeframe or fiction/game framing needed to understand passage as a standalone paragraph.",
+      "factual_concern": "Specific suspicious/overbroad/outdated factual claim requiring verification, not necessarily proven false.",
+      "unsuitable_basic_prose": "Not a low-difficulty common-life/basic-nature paragraph, OR any observed damage/context/fact concern.",
+      "categories": "Mutually exclusive main subject: common life/basic nature; named encyclopedia/history; specialist/abstract; fiction/game. A species or food name alone does not disqualify an otherwise concrete simple description."
+    },
+    "annotations": [
+      {
+        "review_index": 0,
+        "source_row_1based": 2190,
+        "sha256": "dd5778fca172f5e8103b51a5baf1a4530d8f193e0a4fdcfeeee554ee126d589c",
+        "category": "fiction_or_game_fragment",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "房东与凯夏的背景未交代，恐怖小说情节被抽成无体裁提示的独立段，不能当日常事实。"
+      },
+      {
+        "review_index": 1,
+        "source_row_1based": 8543,
+        "sha256": "3bbce0015a2341adabb741d2d371e74d1196680f7147abde89c568efd4c1bf48",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "树干定义完整，但木栓形成层、维管束、髓等术语密集，属于专业植物解剖。"
+      },
+      {
+        "review_index": 2,
+        "source_row_1based": 9354,
+        "sha256": "99da05ec7ddd1348611b5d10def471fe7c6ac967a126b7655c251e71e8d1f7b9",
+        "category": "common_life_or_basic_nature",
+        "damaged": true,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "真菌生境是具体自然描述；这种真菌的也会为可见病句。"
+      },
+      {
+        "review_index": 3,
+        "source_row_1based": 10168,
+        "sha256": "e0bc4cf681a029571c281bd7004b61900fdceb0efa5e05038b74976f15ea1642",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": false,
+        "note": "鼓棒制作材料的短说明，句子完整，主旨清楚；具体材种断言未独立核验。"
+      },
+      {
+        "review_index": 4,
+        "source_row_1based": 10461,
+        "sha256": "262736621d31f67b6faf2915112229cfde095c6ae1b95bfe6a38d58a4a55d6c3",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "企业名称与经营范围目录，虽完整却不是常见生活叙述。"
+      },
+      {
+        "review_index": 5,
+        "source_row_1based": 24101,
+        "sha256": "edaa73180d4df0cf423f1fc41ca4c68191943b844ed030e29f56f1964787d2df",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "汉代丧葬器物及古文引语密集，最后称可分三类却不接列举，节选缺后文。"
+      },
+      {
+        "review_index": 6,
+        "source_row_1based": 29066,
+        "sha256": "6d9fd818784c522c402b9f83042a5dd3b0c3fa41265ad2e165ab5f8bd00167eb",
+        "category": "specialist_or_abstract",
+        "damaged": true,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "烈度定义在如水体处缺谓语/结果，潜在能力的定义也混淆；非可靠基础地学说明。"
+      },
+      {
+        "review_index": 7,
+        "source_row_1based": 33363,
+        "sha256": "cf53bcada3a24d35f42fcc6d536ede429524f597c705deb03df79e34304ccfaa",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "群系、生态演替、顶极植被等概念密集，完整但抽象；不是低难度自然描写。"
+      },
+      {
+        "review_index": 8,
+        "source_row_1based": 35533,
+        "sha256": "5fb59d5125ffc0dca71349ab8cec0f92da392bc4b6b2e58aee8b8887d0f1e2fc",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "紫啸鸫的覆羽、羽瓣等辨识术语较多，属物种形态资料，不纳入严格基础段。"
+      },
+      {
+        "review_index": 9,
+        "source_row_1based": 36184,
+        "sha256": "ec86c00a3afa95f8bbd2739427cbf54563acfa1c1d880431315807411f95329a",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "特定陨击坑的冠岩及地层说明，以专名地质条目为主，缺少低难度入门解释。"
+      },
+      {
+        "review_index": 10,
+        "source_row_1based": 37218,
+        "sha256": "03a9f629e57339a26b27706a988c451b0d41edfd74ccd13e5286e4e5a8977493",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": false,
+        "note": "全麦面粉及吸水揉面描述具有具体食物/制作语境；营养倍数未作事实认证。"
+      },
+      {
+        "review_index": 11,
+        "source_row_1based": 42928,
+        "sha256": "b66569397041f821f57cf0e6e3ec757b5ceee9038db1f3221c67e0f8e4807c5a",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "主体为攀缘植物生长，但把遮光概括成窒息，另有未核实战时引入史，须复核。"
+      },
+      {
+        "review_index": 12,
+        "source_row_1based": 43466,
+        "sha256": "1e2e6c259a208ada85f21686a0ba4268f59fb4f7db09c389824f0c41eb16cd68",
+        "category": "fiction_or_game_fragment",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "超人能力与人物名密集，没有交代这是虚构人物，脱离作品背景。"
+      },
+      {
+        "review_index": 13,
+        "source_row_1based": 43592,
+        "sha256": "b2f69061454c296250cc59735a5548f42baa48d50b69e3756417c0172eabfbb1",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "化石鱼类的分类、形态推断和捕食对象术语密集，不是基础自然说明。"
+      },
+      {
+        "review_index": 14,
+        "source_row_1based": 47404,
+        "sha256": "240c158d1d06ba353fbd48eacbf6d4774e259e56c79b756c9c33c4b6ec79ddca",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": false,
+        "note": "具体面食制作步骤完整；包含罕见食物名与罕见汉字，但主体动作容易理解。"
+      },
+      {
+        "review_index": 15,
+        "source_row_1based": 51053,
+        "sha256": "2c771f00a8d3153350283d12cb91dfc27eff934a166dddf5c5367b96fc6dad0e",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": false,
+        "note": "芋头、参薯与食品命名的比较可以独立阅读；较长且地域性强，仍非已核实食品百科。"
+      },
+      {
+        "review_index": 16,
+        "source_row_1based": 61017,
+        "sha256": "6682f6a28a2e67a0d4bdc0331b5659c3529a82ec686414d7193a8af9bc110299",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "冰藻的初级生产和高营养级消费者等生态术语占核心，难度偏高。"
+      },
+      {
+        "review_index": 17,
+        "source_row_1based": 61169,
+        "sha256": "23a4c30c94f92c134c1103fb612e17451d9ed31d1d173811eebef55889963677",
+        "category": "specialist_or_abstract",
+        "damaged": true,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "作用石、身体有食物中等损坏明确；糙米预防改善糖尿病的结论缺条件。"
+      },
+      {
+        "review_index": 18,
+        "source_row_1based": 70891,
+        "sha256": "49cebc56b56a0cfdfd3a18acfa6b248c107bcd2efa0a9679440c66277ce99755",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "太古代大气成分和大部分金属矿藏起源等宽泛断言需专业核查；不作基础事实教材。"
+      },
+      {
+        "review_index": 19,
+        "source_row_1based": 75614,
+        "sha256": "30497e251928a894ad25ac3edcc4c19de7c13206213d402a527d2c2c0dee5f9b",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": false,
+        "note": "陆鳄外形、步行与尾巴作用描写具体，推断用可能限定；题材虽古生物但表达较浅。"
+      },
+      {
+        "review_index": 20,
+        "source_row_1based": 76494,
+        "sha256": "dcd430c10cbe4b5601e14ac2ec7a18888e35dd63458e05ec02b7e3fea3157b65",
+        "category": "specialist_or_abstract",
+        "damaged": true,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "流体内波说明专业，密度差决定界面下方和上方为明显不通顺译句。"
+      },
+      {
+        "review_index": 21,
+        "source_row_1based": 85598,
+        "sha256": "90772835c20a64bcb9259d6422de98455e42835f4d4f1936966c365241836cd1",
+        "category": "specialist_or_abstract",
+        "damaged": true,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "喙嘴翼龙解剖描述专业，随者为可见错字，分类术语密集。"
+      },
+      {
+        "review_index": 22,
+        "source_row_1based": 94020,
+        "sha256": "7a63d04bd31b836b1fd6f117713b72c2931ad51f6f9d32aedbf26eacceae0bc0",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "潮汐加热、共振和卫星内部结构跨度大；完整但不属于基础叙述。"
+      },
+      {
+        "review_index": 23,
+        "source_row_1based": 96371,
+        "sha256": "9fa9e264976ea20c1f5882f76e8ea7440dc4ee38f6f42303bcf70fb9b423e2aa",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "双臼椎龙科、蝶状骨、矢状脊等术语密集，不宜高比例日常语言学习。"
+      },
+      {
+        "review_index": 24,
+        "source_row_1based": 103492,
+        "sha256": "c18c85668add05b2ca4b12db4127f4c05aa5474c030751c458038dd2feace421",
+        "category": "specialist_or_abstract",
+        "damaged": true,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "段首没有交代年代或机型，除去舰载机等句法含混；技术论述依赖前文。"
+      },
+      {
+        "review_index": 25,
+        "source_row_1based": 106284,
+        "sha256": "77fd96ef12ca3d0a05c7effaa6133ac67a05963cdfbf07838addd83ebb4f1656",
+        "category": "fiction_or_game_fragment",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "游戏玩法描述，没有指明游戏名称；不能因有食物、海洋、木材就当现实生活段。"
+      },
+      {
+        "review_index": 26,
+        "source_row_1based": 107851,
+        "sha256": "5b1ab66b068afe2aeeb45e59686bb6262103d93bddd07d66ca6351a05f0699e7",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": false,
+        "note": "水黾运动、腿的分工及翅膀描述具体；含少量形态词，主体可用于基础自然阅读。"
+      },
+      {
+        "review_index": 27,
+        "source_row_1based": 108118,
+        "sha256": "3dbb2fa0a3453436045cdfa8b3465912269f68cd00ebf82ec2dbbaa584628453",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "英军驻守的特定岩岛未交代地点和事件，属于军事史片段。"
+      },
+      {
+        "review_index": 28,
+        "source_row_1based": 108911,
+        "sha256": "55e8b51e6fdb19e8dc5ef0cec47bc646e8b9b8acd3f5bdb4bc76fed31f2d1691",
+        "category": "named_encyclopedia_or_history",
+        "damaged": true,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "大学院系和排名宣传，名列前矛为错字；不是生活或自然过程。"
+      },
+      {
+        "review_index": 29,
+        "source_row_1based": 114132,
+        "sha256": "518ed68ab00c463f80f0ccc7433934c1e31452205e8747debfa56dab9c48cb29",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "食物形状和制作清楚，但断言仅三地才能找到这种吃法过于绝对。"
+      },
+      {
+        "review_index": 30,
+        "source_row_1based": 114560,
+        "sha256": "961427f19be80c669dcdcf8e2628946aedcef8453645eadf421a4dab443285e5",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "猫砂描述具体，但把一英寸写成猫砂颗粒长度，疑似把铺设深度误译成长度。"
+      },
+      {
+        "review_index": 31,
+        "source_row_1based": 115650,
+        "sha256": "188faa4bf943efbcae9dfc5c407014c6da10ab79d96029b5efaea58041ae23ee",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "八哥外观与分类辨识术语密集；本种在句内可解析为八哥，不额外算缺上下文。"
+      },
+      {
+        "review_index": 32,
+        "source_row_1based": 122957,
+        "sha256": "5af8c427c63f47ff04bdf2c8cbc2ad95baf6e8f35a2cb7c6b98baa109818f491",
+        "category": "named_encyclopedia_or_history",
+        "damaged": true,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "海运公司及多港口专名目录；燃料和供应给沿海地区的并列结构损坏。"
+      },
+      {
+        "review_index": 33,
+        "source_row_1based": 124971,
+        "sha256": "e454a654e632744bb49409fa9e76c51d5d472a54cfe5bd1816d1858b55e36d0b",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "修辞学定义完整，但主旨是抽象写作概念，常识词只来自感觉清单。"
+      },
+      {
+        "review_index": 34,
+        "source_row_1based": 126890,
+        "sha256": "09c46dcc01e9f24cf2aa59774b9422687c6bbd0d3cacb68a231dc574785f6cc0",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "本目、本类始终未给出名称，蕨类演化片段失去必要对象。"
+      },
+      {
+        "review_index": 35,
+        "source_row_1based": 130112,
+        "sha256": "d148e5d85c4cb27460614788492e45fc7b79766ccf124d968aac14f3c9c1bc88",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "盖尔坑和探测器专名为主；粘土及硫酸盐只在有水环境形成的绝对断言需核实。"
+      },
+      {
+        "review_index": 36,
+        "source_row_1based": 138470,
+        "sha256": "3b965daa2e779c6dcdc587c4b7e4ba40c18b5f638a317bcf08f225a2a6f9ae94",
+        "category": "fiction_or_game_fragment",
+        "damaged": true,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "科幻情节的作品背景缺失，义眼的影响疑为影像；非日常事实。"
+      },
+      {
+        "review_index": 37,
+        "source_row_1based": 140646,
+        "sha256": "64c201ce1b836fff9362ddde49d222ada3d6472681a46502f13f8b2e29fd6b07",
+        "category": "specialist_or_abstract",
+        "damaged": true,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "另一中、中的结果，因为等残缺语句清楚可见；兽医病理术语密集。"
+      },
+      {
+        "review_index": 38,
+        "source_row_1based": 145457,
+        "sha256": "27b7eb830650fd3ae7775ee2b8b7cbeac338c5220373ed005d91df3287d5f87d",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "引语依赖谢克勒和那个时期的前文，属于植物演化论述。"
+      },
+      {
+        "review_index": 39,
+        "source_row_1based": 149305,
+        "sha256": "d2cc1a904f68b3d508625b135fc5c826ec48407887d03e84ad1556319845d598",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "能源经济论述称鲜有商业化例子，时效及适用地区不明，不能作为当前事实。"
+      },
+      {
+        "review_index": 40,
+        "source_row_1based": 149354,
+        "sha256": "5ae1c3d83a8592257dc467c412e142488f2ad02520189d1970ab35db3f1269f4",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": false,
+        "note": "翠鸟捕食、居住和出行方式是独立可读的具体自然描写。"
+      },
+      {
+        "review_index": 41,
+        "source_row_1based": 150556,
+        "sha256": "b1ee3c1363e7568c8e1471eb12b079812ef09e139ea0c6066f0cac08e6ceb917",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "本科学名/名称未提供，无法确定所指鱼类；单有完整句子不足。"
+      },
+      {
+        "review_index": 42,
+        "source_row_1based": 150905,
+        "sha256": "1ae4eb65ea7374517a0290a6207abf5ee1917e4dc49f65e1922ba0d0d5f41a6f",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "泄漏物与爆炸事件缺起因、日期和明确对象，地点专名很多。"
+      },
+      {
+        "review_index": 43,
+        "source_row_1based": 153383,
+        "sha256": "d8607ec5ec63969ce060a0791f4013faf7a90a97436539dab581ed8d80911509",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "俯冲带、地壳和地幔过程的压缩专业描述；不作事实核验或日常文本。"
+      },
+      {
+        "review_index": 44,
+        "source_row_1based": 170148,
+        "sha256": "724013697fd68b4c41414d3fb32b94480985919dab8ac41b085abe4fa1b8f0f5",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": false,
+        "note": "鱼类埋伏、移动和吸水行为描述具体，主体自足；特殊生理断言仍未核验。"
+      },
+      {
+        "review_index": 45,
+        "source_row_1based": 170374,
+        "sha256": "c9dad1627498ebf64a55d04f8f61946262bfc41bcb9e9927061eec5e8c991aaf",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "另一个理论明显依赖前文，不提供讨论对象的完整引介。"
+      },
+      {
+        "review_index": 46,
+        "source_row_1based": 179631,
+        "sha256": "a41aaf58cac55d18a6b104b435edfc75247fec5060c787ba180d9a47895a7fb5",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "首先/其次的城市改造史片段，没有完整项目引介，地名人名密集。"
+      },
+      {
+        "review_index": 47,
+        "source_row_1based": 197632,
+        "sha256": "e56f251300f8178d5ab255a4c2197ae92c443a5c30b92460331f6b39d1742b7d",
+        "category": "specialist_or_abstract",
+        "damaged": true,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "由有某能力的物种继承的句意和演化方向含混，专业名词密集。"
+      },
+      {
+        "review_index": 48,
+        "source_row_1based": 200657,
+        "sha256": "13eab13fa52d477126513b327b270c1494d74fbdabde2ed0659a93a491eee8a6",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "高原未命名，特定族群的农业史片段需要地理背景。"
+      },
+      {
+        "review_index": 49,
+        "source_row_1based": 202032,
+        "sha256": "d25118f258d0cb790cb726f73e466893f3496c5c030c84449c3b668be131c0cd",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": false,
+        "note": "热熔岩与潮湿地面导致蒸汽爆炸的因果描写具体，可作为基础自然现象候选。"
+      },
+      {
+        "review_index": 50,
+        "source_row_1based": 202337,
+        "sha256": "3f65e1581233bea120547b19012e5af2988cf5bf584517c95c196973dd49f8b6",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "特定族群的现代变迁及40座木屋数据，时间未标明；不归入通用生活描述。"
+      },
+      {
+        "review_index": 51,
+        "source_row_1based": 203850,
+        "sha256": "119cbcae19dd59ce434bc144a0cf4d10d182d188c14cb462f81e1ed786648d4e",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "群岛名称长列主导，虽有末尾气候解释，整体仍是地理专名百科。"
+      },
+      {
+        "review_index": 52,
+        "source_row_1based": 207107,
+        "sha256": "2af867eaa8c1122353f2459dcf5c97b81c32bc29d6668e33c969d7d687d61cc6",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "当时没有对应时间，红山文化器物目录依赖前文。"
+      },
+      {
+        "review_index": 53,
+        "source_row_1based": 214555,
+        "sha256": "e0c075d5f91349a1b8d20d9e2bf24ba8db925356b8bd20592698a646930538e6",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "特定地区森林保护及归咎当局的断言无日期或材料支持，须核实而非当基础事实。"
+      },
+      {
+        "review_index": 54,
+        "source_row_1based": 217783,
+        "sha256": "7b8b6f1cd6c5f427e17583f463cf87ee4bf6ae818a05d368ec44b57ec98e194d",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "特定真菌的海外地名分布目录，通顺但专名密集。"
+      },
+      {
+        "review_index": 55,
+        "source_row_1based": 235141,
+        "sha256": "549fc6c5af0b4ccf0d887729c2b02e027b493367df42cabd3eacab3da14db976",
+        "category": "fiction_or_game_fragment",
+        "damaged": false,
+        "context_dependent": true,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "她和毒素超能力的虚构人物背景缺失，不可把含家庭/植物/皮肤误当日常内容。"
+      },
+      {
+        "review_index": 56,
+        "source_row_1based": 235954,
+        "sha256": "312b817ecb6895540b29d7944ebbc6cf0df274e532650e3d207a09f08145992f",
+        "category": "named_encyclopedia_or_history",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "稀有蝶种的具体地点、地位与繁殖资料，百科物种分布为主。"
+      },
+      {
+        "review_index": 57,
+        "source_row_1based": 236232,
+        "sha256": "f1858bffb1ba2081f04b35ff973f321723e7f735b536529a9f782f8d0ce5e0f4",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "痛风流行病学跨地区数字、倍数和来源范围需核验，尤其台湾与欧美的十倍比较。"
+      },
+      {
+        "review_index": 58,
+        "source_row_1based": 239756,
+        "sha256": "1b1e030e73f31c2fe4a159c6a5233065f4d70c4af3f8061734bb3be8064befe4",
+        "category": "specialist_or_abstract",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "四足总纲与肉鳍鱼的演化比较偏专业，分类名词密集。"
+      },
+      {
+        "review_index": 59,
+        "source_row_1based": 244486,
+        "sha256": "c226c5c67440df9cbc53b65a7235d719f3f7fd30290a49e1f4ff67c164e5f0e1",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": false,
+        "note": "植物气味吸引昆虫并传播花粉的因果说明完整、具体，可作基础自然候选。"
+      },
+      {
+        "review_index": 60,
+        "source_row_1based": 247934,
+        "sha256": "c6500b18d6d47a59b4d31511d624a3319645616f7e40f682e7a33565e4b444ba",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "葡萄种植描述易懂，但将植株高度普遍关联贵腐霉菌，以及热量沿坡爬升等论断需复核。"
+      },
+      {
+        "review_index": 61,
+        "source_row_1based": 248739,
+        "sha256": "f8f8aecda9718a1e6d88a4a53c75e26c672d35e4f4f08f3174dc3cddb81fe58b",
+        "category": "specialist_or_abstract",
+        "damaged": true,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "对垃圾和管理方面等句式不通顺，宣言与宏观环保议论偏抽象。"
+      },
+      {
+        "review_index": 62,
+        "source_row_1based": 251029,
+        "sha256": "86d93a657ab82c9703a60cccf270ec15ba9610ee80fe8ebe3b2d3c87cf83dc9e",
+        "category": "common_life_or_basic_nature",
+        "damaged": true,
+        "context_dependent": false,
+        "factual_concern": false,
+        "unsuitable_basic_prose": true,
+        "note": "谷物季节性生长适合主题，但而且在田地可以空下来为明确小病句；不静默修写。"
+      },
+      {
+        "review_index": 63,
+        "source_row_1based": 252336,
+        "sha256": "cce9397d1b328eca12692994c642765a65809401220c7703a9892c2a1397f6d9",
+        "category": "common_life_or_basic_nature",
+        "damaged": false,
+        "context_dependent": false,
+        "factual_concern": true,
+        "unsuitable_basic_prose": true,
+        "note": "把酒列为代餐，并把代餐限定为不吃固体的定义有明显疑点，不能直接用于健康事实教学。"
+      }
+    ],
+    "category_counts": {
+      "fiction_or_game_fragment": 5,
+      "specialist_or_abstract": 24,
+      "common_life_or_basic_nature": 19,
+      "named_encyclopedia_or_history": 16
+    },
+    "usable_under_review_rubric": {
+      "count": 10,
+      "n": 64,
+      "percent": 15.625
+    },
+    "observations": [
+      "Full source254547 articles scanned;3071 automatic candidates,2942 train; requested10000 minimum not reached without relaxing filters.",
+      "64 fixed-seed TRAIN records individually read. Surface filters still admitted fiction fragments, missing referents, specialist vocabulary and damaged translations.",
+      "New standard uint16 files and unchanged tokenizer were generated;17 unit/artifact checks passed. Mechanical old-v3/v5 held exclusion completed without displaying held text.",
+      "Incomplete candidate-v1/v2 runs are marked ABORTED and are not training artifacts."
+    ],
+    "inferences": [
+      "Common-word matching cannot reliably distinguish daily narration from plot summaries, company catalogs or specialist material.",
+      "This source may yield a much smaller manually curated reading collection, but current sample does not justify high-ratio foundation training or a population-wide usable-count estimate.",
+      "The0/24 continuation baseline was supplied by the main task; this preparation does not identify a model failure cause or demonstrate any training improvement."
+    ],
+    "recommendation": "FAILED for the requested clean ordinary-prose supply. ready_for_training=false. Do not connect candidate-v3 to token-mixture. Preserve for review only; do not lower filters or promote the10 individually acceptable samples as evidence that the whole artifact is clean."
+  },
+  "manual_statistics": {
+    "damaged": {
+      "count": 13,
+      "n": 64,
+      "percent": 20.312
+    },
+    "context_dependent": {
+      "count": 16,
+      "n": 64,
+      "percent": 25.0
+    },
+    "unsuitable_basic_prose": {
+      "count": 54,
+      "n": 64,
+      "percent": 84.375
+    },
+    "factual_concern": {
+      "count": 12,
+      "n": 64,
+      "percent": 18.75
+    }
+  },
+  "observations": [
+    "Full source254547 articles scanned;3071 automatic candidates,2942 train; requested10000 minimum not reached without relaxing filters.",
+    "64 fixed-seed TRAIN records individually read. Surface filters still admitted fiction fragments, missing referents, specialist vocabulary and damaged translations.",
+    "New standard uint16 files and unchanged tokenizer were generated;17 unit/artifact checks passed. Mechanical old-v3/v5 held exclusion completed without displaying held text.",
+    "Incomplete candidate-v1/v2 runs are marked ABORTED and are not training artifacts."
+  ],
+  "inferences": [
+    "Common-word matching cannot reliably distinguish daily narration from plot summaries, company catalogs or specialist material.",
+    "This source may yield a much smaller manually curated reading collection, but current sample does not justify high-ratio foundation training or a population-wide usable-count estimate.",
+    "The0/24 continuation baseline was supplied by the main task; this preparation does not identify a model failure cause or demonstrate any training improvement."
+  ],
+  "recommendation": "FAILED for the requested clean ordinary-prose supply. ready_for_training=false. Do not connect candidate-v3 to token-mixture. Preserve for review only; do not lower filters or promote the10 individually acceptable samples as evidence that the whole artifact is clean.",
+  "limits": [
+    "64-example single-reviewer development audit, not human blind review or a corpus-wide fact check.",
+    "No semantic-isolation proof; short/shifted/paraphrased overlaps may escape legacy shingles.",
+    "2023 snapshot may be dated. Article-level original URLs are absent upstream; collection provenance and original row hashes are retained.",
+    "No trainer integration or model evaluation performed. Ready gate applies to this artifact only."
+  ],
+  "delivery": {
+    "changed_code_and_report": [
+      "scripts/prepare_p28_prose.py",
+      "tests/test_p28_prose.py",
+      "reports/P28-prose-preparation.json"
+    ],
+    "new_run_files": [
+      {
+        "path": "runs/p28-prose/candidate-v1/ABORTED.json",
+        "bytes": 279
+      },
+      {
+        "path": "runs/p28-prose/candidate-v1/preparation-script-snapshot.py",
+        "bytes": 27123
+      },
+      {
+        "path": "runs/p28-prose/candidate-v1/selection.sqlite",
+        "bytes": 73084928
+      },
+      {
+        "path": "runs/p28-prose/candidate-v1/selection.sqlite-journal",
+        "bytes": 5574632
+      },
+      {
+        "path": "runs/p28-prose/candidate-v1/source-provenance.json",
+        "bytes": 913
+      },
+      {
+        "path": "runs/p28-prose/candidate-v1/tokenizer.json",
+        "bytes": 631177
+      },
+      {
+        "path": "runs/p28-prose/candidate-v2/ABORTED.json",
+        "bytes": 255
+      },
+      {
+        "path": "runs/p28-prose/candidate-v2/preparation-script-snapshot.py",
+        "bytes": 30751
+      },
+      {
+        "path": "runs/p28-prose/candidate-v2/selection.sqlite",
+        "bytes": 614400
+      },
+      {
+        "path": "runs/p28-prose/candidate-v2/selection.sqlite-journal",
+        "bytes": 74384
+      },
+      {
+        "path": "runs/p28-prose/candidate-v2/source-provenance.json",
+        "bytes": 913
+      },
+      {
+        "path": "runs/p28-prose/candidate-v2/tokenizer.json",
+        "bytes": 631177
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/manifest.json",
+        "bytes": 10255
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/manual-review.json",
+        "bytes": 31793
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/pretrain-development.bin",
+        "bytes": 16854
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/pretrain-development.jsonl",
+        "bytes": 84159
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/pretrain-test.bin",
+        "bytes": 16768
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/pretrain-test.jsonl",
+        "bytes": 78834
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/pretrain-train.bin",
+        "bytes": 781904
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/pretrain-train.jsonl",
+        "bytes": 3752172
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/quality-sample.json",
+        "bytes": 93668
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/selection.sqlite",
+        "bytes": 11771904
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/source-provenance.json",
+        "bytes": 913
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/test-results.json",
+        "bytes": 443
+      },
+      {
+        "path": "runs/p28-prose/candidate-v3/tokenizer.json",
+        "bytes": 631177
+      }
+    ],
+    "only_authorized_paths_written": true,
+    "git_committed": false,
+    "training_started": false,
+    "final_status": "Preparation experiment complete; quality gate failed; not for training."
+  },
+  "mechanical_check_summary": {
+    "old_held_files_verified": 8,
+    "old_held_records_processed": 4057,
+    "old_overlap_removed": 0,
+    "new_split_overlap_removed": 0,
+    "all_final_file_hashes_rechecked": true,
+    "paragraph_primary_counts_reconciled": true,
+    "test_text_displayed": false
+  }
+}
