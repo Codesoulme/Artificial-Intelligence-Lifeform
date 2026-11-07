@@ -1,0 +1,493 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-11-08",
+  "repository": "D:/SPORA",
+  "baseline_head": "a121e245d0ac02f204eb4b1d4484bd722cdd93e1",
+  "scope": "Independent technical review of the current uncommitted P26 changes, separate from mainline data/language training.",
+  "constraints": {
+    "code_modified": false,
+    "git_commits": false,
+    "gpu_used": false,
+    "only_output": "reports/P26-independent-review.json",
+    "bytecode_writes_disabled": true,
+    "temporary_files_created": false
+  },
+  "verdict": {
+    "highest_severity": "P2",
+    "counts": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 1,
+      "P3": 1
+    },
+    "conclusion": "对当前冻结文件和明确受限的能力表述，未发现阻断提交的实际正确性缺陷。记忆值来自原个体矩阵；无记录来源、模拟历史及数字串验证的独立探针通过。保留一个P2验证流程缺口和一个P3统计问题，均不推翻本次实际文件摘要一致、受限评测通过的结论。",
+    "qualifications": "可提交当前冻结的受限实验版本，并保留非阻断发现。拒答题重叠已由新增文档披露，调整为能力边界，不再作为当前缺陷。没有证明任意中文输入正确，也没有批准自由聊天能力表述。",
+    "commit_recommendation": "No correctness blocker identified for this exact frozen snapshot and documented finite scope; non-blocking follow-ups remain. No commit was performed by the reviewer."
+  },
+  "reviewed_files": [
+    "spora/chinese_query.py",
+    "spora/memory_chat.py",
+    "scripts/chinese_query_task.py",
+    "scripts/train_chinese_query.py",
+    "scripts/validate_chinese_memory.py",
+    "tests/test_chinese_query.py",
+    "docs/P26-protocol.md",
+    "runs/p26-memory-acceptance/report.json",
+    "docs/P26-memory-query.md",
+    "reports/P26-results.json (summary/counting_note/aggregate/final_sources)"
+  ],
+  "supporting_reads": [
+    "spora/growing.py",
+    "spora/state_codec.py",
+    "spora/internal_memory.py:169-197",
+    "spora/temporal.py:124-151",
+    "spora/durable.py:57-68,99-118",
+    "memory_chat.cmd",
+    "pyproject.toml"
+  ],
+  "method": {
+    "comparison": "Tracked P26 changes compared with HEAD; the seven new source/test/protocol files were untracked and were reviewed in full.",
+    "skills": [
+      "review",
+      "codebase-memory"
+    ],
+    "adaptation": "No subagent tools available. Implementation and protocol checks performed directly. No issue-tracker setup or repository edits because the authorized output is a single report.",
+    "discovery": "Graph-first lookup used for existing read/persistence functions. P26 symbols were absent from the graph, so the named working-tree files were read directly.",
+    "concurrent_work": "scripts/audit_p27_corpus.py appeared in git status during review. It was not read or modified and is outside this review.",
+    "cpu_execution": "Existing checkpoints loaded with map_location=cpu; CUDA_VISIBLE_DEVICES empty and python -B / PYTHONDONTWRITEBYTECODE=1. No training or GPU execution.",
+    "not_executed": "Full 157-test suite and original acceptance script were not rerun; they create temporary/output files. Five write-free existing tests and focused in-memory probes were run."
+  },
+  "findings": [
+    {
+      "key": "P26-R2",
+      "severity": "P2",
+      "priority": 2,
+      "title": "最终门禁没有绑定开发成绩与实际检查点、源码",
+      "location": {
+        "file": "scripts/validate_chinese_memory.py",
+        "start_line": 95,
+        "end_line": 101
+      },
+      "related": [
+        "scripts/train_chinese_query.py:94-102",
+        "scripts/validate_chinese_memory.py:24-28,103-110,118-123",
+        "docs/P26-protocol.md:13"
+      ],
+      "defect": "进入最终阶段只检查开发报告的 passed。脚本虽然计算当前文件摘要，却不与开发报告的 checkpoint_sha256/source_sha256 比较，因此旧的通过报告可以为不同的当前检查点或实现放行。此外 module_at 在最终解析、因果检查和发布时重复加载，冻结记录之后没有验证文件保持不变。",
+      "observed_evidence": "将三个开发报告的检查点和源码摘要仅在内存中替换为64个0，保留 passed=true，并拦截所有 mkdir/write_text 后，main 仍到达最终阶段首次 module_at 调用。真实文件写入0次。",
+      "impact": "如果开发后替换了权重或修改了解析器，现有门禁无法保证最终评测及发布的是通过开发门槛的同一版本。当前实际文件摘要全部一致，未发现本次已有这种替换。",
+      "recommended_action": "开启最终题前校验每个开发报告的种子、步数、课程、检查点摘要和相关源码摘要；固定并复用已验证的模块，或每次重新读取时校验摘要。发布前复核冻结清单，失败时不生成候选。",
+      "minimal_reproduction": "R2",
+      "blocking_current_frozen_candidate": false
+    },
+    {
+      "key": "P26-R3",
+      "severity": "P3",
+      "priority": 3,
+      "title": "parsed_correct 不能衡量门槛前的完整解析准确率",
+      "location": {
+        "file": "scripts/train_chinese_query.py",
+        "start_line": 35,
+        "end_line": 39
+      },
+      "related": [
+        "spora/chinese_query.py:118-121",
+        "docs/P26-protocol.md:13"
+      ],
+      "defect": "parse 在 accepted=false 时清空 entity/event；evaluate 再用这些字段与标签比对。对于每个有效支持题，正确解析计数必须先通过门槛，因此 parsed_correct 与 correctly_accepted 恒等，无法区分地址正确但低置信、指针失败、以及原始地址错误。",
+      "observed_evidence": "内存模拟正确 current 类别、对象12数字和完整位置，类别置信度0.7112345；合理地拒绝读取，但 evaluate 返回 parsed_correct=0、correctly_accepted=0。原始输出的类别与地址实际正确。",
+      "impact": "不会虚增通过率；正确接受率>=98%仍是保守约束。但报告没有协议所列的独立完整解析指标，也难以分析拒绝原因。",
+      "recommended_action": "在只供评测的诊断接口保留原始类别/数字/位置；分别统计门槛前解析、门槛后正确接受、误接受和各拒绝原因。运行时仍禁止未经门槛的地址进入记忆读取。若只保留现有统计则改名并收窄协议表述。",
+      "minimal_reproduction": "R3",
+      "blocking_current_frozen_candidate": false
+    }
+  ],
+  "audit_axes": {
+    "memory_read": {
+      "result": "Confirmed within the finite domain.",
+      "path": "answer_memory -> growing.query -> TemporalSPORA.forward -> per-individual current/history matrices. Source queries call read_provenance, which checks the event read and multiplies the stored provenance matrix by a neural address.",
+      "evidence": [
+        "spora/chinese_query.py:147-165",
+        "spora/growing.py:65-75",
+        "spora/temporal.py:124-151",
+        "spora/internal_memory.py:169-197"
+      ],
+      "independent_probe": "13/13 in-memory CPU checks passed: values 0 and 15 after trusted corrections, corresponding history and direct source, old history preservation, simulation isolation/history/source, and current/history erasure. Original schema and all tensors remained exactly equal.",
+      "limit": "Finite symbol decoder and deterministic Chinese formatting are disclosed priors. The query network is not a natural-language answer generator.",
+      "additional_source_probe": "408/408 CPU checks (136 per seed) passed. At new direct and simulation events, source queries for all64 objects returned the declared label only for the written object12 and unknown for the other63. Old/future/missing/erased provenance and provenance without matching history returned unknown; simulation retained current8 and history2. Base schema/tensors stayed exact."
+    },
+    "training_leakage": {
+      "result": "No memory-value answer leakage found.",
+      "evidence": "render supplies text plus query kind/key/event/digits/positions; training feeds only encode(text) to the network. Intent/digit/position targets are used in loss. No individual memory, expected value, or provenance answer is loaded by training.",
+      "references": [
+        "scripts/chinese_query_task.py:21-37",
+        "scripts/train_chinese_query.py:61-78"
+      ],
+      "distinction": "Address supervision is explicit and acceptable for this task. Repeated negative test texts are a separate evaluation contamination issue (R1). The character vocabulary and template components are shared by design."
+    },
+    "pointer_validation": {
+      "result": "Validation only; no alternative address construction or answer replacement found.",
+      "evidence": "parse takes intent/digits/positions from network output; consistent_address returns only bool. It checks leading zero slots, contiguous unique positions, whole digit-run boundaries, and agreement with selected text characters. parse never substitutes characters for predicted digits.",
+      "references": [
+        "spora/chinese_query.py:18-38",
+        "spora/chinese_query.py:105-121"
+      ],
+      "boundary": "The guard does not verify semantic roles or number-to-object association. Swapping the two numeric groups in '对象12在事件34的值是多少？' while preserving corresponding digits passes the guard. This is a deliberate structural check, not proof that every accepted query has correct semantics.",
+      "wrong_group_probe": {
+        "result": true,
+        "positions": [
+          8,
+          9,
+          0,
+          0,
+          3,
+          4
+        ],
+        "digits": [
+          3,
+          4,
+          0,
+          0,
+          1,
+          2
+        ],
+        "kind": 1
+      },
+      "independent_guard_checks": {
+        "total": 59,
+        "passed": 59,
+        "coverage": "48 valid rendered current/history/source cases spanning object0/9/10/63 and event0/7/99/1023 across all four bodies, plus 11 invalid cases: repeated pointer, prefix/suffix fragments, digit disagreement, reversed order, nonzero empty slot, misplaced empty slot, absent number and cross-group overlap.",
+        "scope": "Boolean validator checks only; not 59 independent network-language evaluations."
+      }
+    },
+    "split_and_metrics": {
+      "positive_split": "TRAIN/DEV/FINAL prefix-suffix pairs are disjoint; all four bodies per intent are shared. This is recombination of known wording components, not unseen sentence-pattern semantics.",
+      "held_entities": [
+        11,
+        22,
+        33,
+        44,
+        55,
+        60
+      ],
+      "held_events": "t % 17 == 7, within 0..1023. These addresses are excluded from training positives but used in development and final. They are training holdouts, not newly unseen after development.",
+      "final_set": "Same generated final questions are evaluated across seeds. 5120 occurrences per seed comprise 3840 supported plus 1280 unsupported; only 3058 unique complete texts, of which 2867 are supported.",
+      "length_boundary": "Balanced event-length sampling is evaluated as one aggregate group. No per-length, per-intent, or exhaustive-address guarantee follows; the balanced group uses time_holdout=False.",
+      "reject_boundary": "correctly_rejected counts all not-accepted results, including low confidence, guard failure and domain failure, not only a correct reject-intent classification.",
+      "error_boundary": "Observed wrong_accepted=0 in the sampled final groups. The >=98% gate does not require zero wrong accepts and is not a universal correctness guarantee.",
+      "causal_boundary": "252 reported cases are 84 scenarios per seed, heavily centered on object12 and a small original event prefix; six held objects are additionally checked for current value. This is not exhaustive coverage of 64 objects by 1024 events.",
+      "documentation": "New P26-memory-query.md and P26-results.json explicitly disclose fixed formatting, shared rejection templates, and repeated cross-seed evaluation. These disclosures are consistent with observed behavior."
+    },
+    "persistence": {
+      "result": "No omitted query configuration or tensor found for the supported persistence path.",
+      "evidence": "growing.save routes a model with chinese_query through v2 flatten. All registered module tensors enter model.state_dict; config includes characters, width, layers, heads, context and confidence. restore constructs the module before strict load_state_dict and calls eval. The character map is regenerated from characters.",
+      "references": [
+        "spora/growing.py:89-101",
+        "spora/state_codec.py:12,46-48,85-112,139-158",
+        "tests/test_chinese_query.py:84-106"
+      ],
+      "cpu_probe": {
+        "schema_equal": true,
+        "tensor_key_sets_equal": true,
+        "all_tensors_bitwise_equal": true,
+        "query_tensor_entries": 33,
+        "query_config_equal": true
+      },
+      "verification_limit": "Performed flatten/restore roundtrip wholly in memory. Did not execute disk-write, transaction-commit or crash-injection tests because output is restricted to this report. Existing acceptance reports and test implementations cover these paths.",
+      "sqlite_note": "memory_chat uses TensorStore's mode=rw/WAL connection even for read(). It does not commit experience changes, but this is logical query-only behavior, not a filesystem-read-only guarantee. The SQLite CLI path was not opened during this review."
+    }
+  },
+  "reported_results": {
+    "original_unit_tests": {
+      "passed": 157,
+      "source": "User-provided baseline; full suite not rerun."
+    },
+    "final_per_seed": [
+      {
+        "seed": 7,
+        "total": 5120,
+        "supported": 3840,
+        "correctly_accepted": 3834,
+        "wrong_accepted": 0,
+        "unsupported": 1280,
+        "correctly_rejected": 1280,
+        "accept_accuracy": 0.9984375
+      },
+      {
+        "seed": 11,
+        "total": 5120,
+        "supported": 3840,
+        "correctly_accepted": 3826,
+        "wrong_accepted": 0,
+        "unsupported": 1280,
+        "correctly_rejected": 1280,
+        "accept_accuracy": 0.9963541666666667
+      },
+      {
+        "seed": 23,
+        "total": 5120,
+        "supported": 3840,
+        "correctly_accepted": 3839,
+        "wrong_accepted": 0,
+        "unsupported": 1280,
+        "correctly_rejected": 1280,
+        "accept_accuracy": 0.9997395833333333
+      }
+    ],
+    "final_group_accept_range": [
+      0.9908854166666666,
+      1
+    ],
+    "causal": {
+      "total": 252,
+      "passed": 252,
+      "per_seed": 84,
+      "source": "Existing acceptance report; independently sampled 13 checks in this review."
+    },
+    "acceptance_report_passed": true,
+    "integrity": {
+      "frozen_source_files_matched": 6,
+      "checkpoint_files_matched": 3,
+      "checkpoint_hashes_match_development_reports": true,
+      "development_source_hashes_match_frozen": true,
+      "parent_sha256": "34d023e87bb14504864a2997a29f0842986b163f641f6a1f78232ae4a84e43e4",
+      "candidate_sha256": "61732fea74cd38761b8247561436fc73d7b6c7047be5afd4989598954eeee3d9",
+      "candidate_matches": true,
+      "final_results_source_manifest_files_matched": 8
+    }
+  },
+  "boundary_counterexamples": [
+    {
+      "question": "对象12在事件0的值和来源是什么？",
+      "expected_scope": "Multi-intent request outside the published support domain.",
+      "observed": [
+        {
+          "seed": 7,
+          "accepted": true,
+          "kind": "history",
+          "entity": 12,
+          "event": 0,
+          "confidence": 0.9993658661842346
+        },
+        {
+          "seed": 11,
+          "accepted": true,
+          "kind": "history",
+          "entity": 12,
+          "event": 0,
+          "confidence": 0.9596624374389648
+        },
+        {
+          "seed": 23,
+          "accepted": true,
+          "kind": "source",
+          "entity": 12,
+          "event": 0,
+          "confidence": 0.999482274055481
+        }
+      ],
+      "candidate_answer": {
+        "status": "known",
+        "value": 5,
+        "source": null,
+        "text": "事件0中，对象12的记录值是5。"
+      },
+      "interpretation": "Seeds select only one intent despite the same multi-intent wording. This confirms the documented limit; it is not evidence of reliable unknown-request rejection or a defect in the stated single-intent support domain."
+    }
+  ],
+  "defensible_capability_statements": [
+    {
+      "dimension": "有限中文访存",
+      "defensible": "从随机初始化训练的字符级模块可在预定义单意图措辞及其留出组合上选择对象/事件地址，经工程校验后读取原个体神经矩阵并格式化中文答案。",
+      "unsupported": "自由中文聊天、任意名字指代、开放语义理解、自由生成经历叙述。"
+    },
+    {
+      "dimension": "三种子验证",
+      "defensible": "三个固定末次检查点在同一最终组合题集各评估5120条；每组正确接受率99.09%至100%，本次样本没有误接受的支持题。",
+      "unsupported": "三个相互独立的测试语料、每种子5120条不同支持问题、所有地址和问法绝对正确。"
+    },
+    {
+      "dimension": "拒答",
+      "defensible": "对反复出现的有限拒绝文本达到100%拒绝；低置信和指针不一致会阻止读取。",
+      "unsupported": "未见拒绝措辞的独立最终成绩、开放域98%或100%可靠拒答。"
+    },
+    {
+      "dimension": "记忆因果与恢复",
+      "defensible": "既有报告252项受限因果用例通过；本审阅13项独立CPU探针及全张量内存恢复检查通过，支持答案随个体记忆变化而变化。",
+      "unsupported": "全部对象/时间/来源/长期状态都已穷尽验证，或已完成自动经历写入与统一持续认知。"
+    }
+  ],
+  "independent_checks": {
+    "existing_write_free_unit_tests": {
+      "run": 5,
+      "passed": 5,
+      "excluded": "test_save_restore_transaction_and_growth_preserve_question_weights"
+    },
+    "causal_in_memory": {
+      "run": 13,
+      "passed": 13,
+      "original_tensors_exact": true
+    },
+    "persistence_in_memory": "All schema fields, tensor names and values preserved.",
+    "address_domain_probes": "Object64 and event1024 rejected; negative and decimal event strings rejected by unsupported characters.",
+    "freeze_gate_probe": "Mismatched development hashes reached final module load with all filesystem mutations mocked.",
+    "no_additional_model_training": true,
+    "source_and_simulation_boundaries": {
+      "total": 408,
+      "passed": 408,
+      "per_seed": [
+        {
+          "seed": 7,
+          "total": 136,
+          "passed": 136
+        },
+        {
+          "seed": 11,
+          "total": 136,
+          "passed": 136
+        },
+        {
+          "seed": 23,
+          "total": 136,
+          "passed": 136
+        }
+      ],
+      "cases": "128 source queries per seed cover all64 objects at one direct event and one simulation event;8 extra cases cover old-source, future-source, simulation current/history, erased provenance, history retained after source erasure, history erasure with provenance retained, and absent internal provenance state.",
+      "simulation_current_write": false,
+      "original_state_unchanged": true
+    },
+    "address_guard": {
+      "total": 59,
+      "passed": 59,
+      "all_rejection_cases_preserved_predicted_address": true
+    }
+  },
+  "reproduction_environment": {
+    "cwd": "D:/SPORA",
+    "interpreter": ".venv/Scripts/python.exe",
+    "arguments": [
+      "-B",
+      "-"
+    ],
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "CUDA_VISIBLE_DEVICES": "",
+      "PYTHONUTF8": "1"
+    },
+    "instructions": "Feed each python snippet through stdin. All listed reproductions are CPU-only and create no files; R2 mocks output-directory/file methods and stops before evaluation."
+  },
+  "minimal_reproductions": {
+    "R1": {
+      "python": "from scripts.chinese_query_task import examples\nfinal=[]\nfor i,(k,t) in enumerate(((False,False),(True,False),(False,True),(True,True))):\n    final += examples(26900+i,1024,'final',k,t)\nfinal += examples(26910,1024,'final',True,False,True)\nfor seed in (7,11,23):\n    train=examples(seed*1000+26,32768,balanced_times=True)\n    seen={r['text'] for r in train if r['kind']==3}\n    neg=[r['text'] for r in final if r['kind']==3]\n    print(seed,len(seen),len(neg),len(set(neg)),sum(x in seen for x in neg))",
+      "expected_output": [
+        "7 192 1280 191 1280",
+        "11 192 1280 191 1280",
+        "23 192 1280 191 1280"
+      ]
+    },
+    "R2": {
+      "python": "import json\nfrom pathlib import Path\nfrom unittest.mock import patch\nimport scripts.validate_chinese_memory as v\nreports={str(s):json.loads((v.ROOT/f'runs/p26-query-b/seed{s}/report.json').read_text('utf-8')) for s in (7,11,23)}\nfor r in reports.values():\n    r['checkpoint_sha256']='0'*64\n    r['source_sha256']={k:'0'*64 for k in r['source_sha256']}\ndef fake_read(path,*a,**kw): return json.dumps(reports[path.parent.name.removeprefix('seed')])\nclass ReachedFinal(Exception): pass\nwith patch.object(Path,'mkdir'), patch.object(Path,'write_text') as writes, patch.object(Path,'read_text',fake_read), patch.object(v,'module_at',side_effect=ReachedFinal):\n    try: v.main()\n    except ReachedFinal: print('reached_final', True, 'mocked_writes', writes.call_count)",
+      "expected_output": "reached_final True mocked_writes 1",
+      "caution": "All mismatches exist only in memory; do not modify checkpoints or delete the existing acceptance directory."
+    },
+    "R3": {
+      "python": "import torch\nfrom unittest.mock import patch\nfrom spora.chinese_query import ChineseQuery,ChineseQueryConfig\nfrom scripts.chinese_query_task import CHARACTERS,render\nfrom scripts.train_chinese_query import evaluate\nrow=render(0,12,0,0,(0,0)); m=ChineseQuery(ChineseQueryConfig(CHARACTERS))\nintent=torch.tensor([[2.,0.,0.,0.]])\ndigits=torch.full((1,6,10),-20.); attention=torch.full((1,6,len(row['text'])+1),-20.)\nfor i,d in enumerate(row['digits']): digits[0,i,d]=20.\nfor i,p in enumerate(row['positions']): attention[0,i,p]=20.\nwith patch.object(m,'forward',return_value={'intent':intent,'digits':digits,'attention':attention}):\n    r=evaluate(m,[row]); print(int(intent.argmax(-1)),digits.argmax(-1).tolist(),r['parsed_correct'],r['correctly_accepted'])",
+      "expected_output": "0 [[1, 2, 0, 0, 0, 0]] 0 0"
+    },
+    "boundary_query": {
+      "python": "import torch\nfrom scripts.validate_chinese_memory import module_at\ntorch.set_num_threads(2)\nfor seed in (7,11,23):\n    print(seed,module_at(seed).parse(['对象12在事件0的值和来源是什么？']))",
+      "expected": "All accepted=true; seeds7/11 select history, seed23 selects source."
+    },
+    "source_and_simulation": {
+      "python": "import copy,torch\nfrom spora.growing import load,new_state\nfrom spora.chinese_query import answer_memory\nfrom spora.internal_memory import observe_sourced\nfrom scripts.validate_chinese_memory import module_at\ntorch.set_num_threads(2)\nfor seed in (7,11,23):\n    m,s,_=load('runs/p26-memory-acceptance/individual-query.pt'); m.chinese_query=module_at(seed)\n    direct,_=observe_sourced(m,s,12,8,'direct',1.)\n    sim,decision=observe_sourced(m,direct,12,2,'simulation',1.)\n    checks=[]\n    def check(state,q,status,value=None,source=None):\n        a=answer_memory(m,state,q); checks.append((a['status'],a.get('value'),a.get('source'))==(status,value,source))\n    for event,source in ((s.cursor,'direct'),(direct.cursor,'simulation')):\n        for key in range(64):\n            check(sim,f'对象{key}在事件{event}的来源是什么？','known' if key==12 else 'unknown',source=source if key==12 else None)\n    check(sim,'对象12在事件0的来源是什么？','unknown')\n    check(sim,f'对象12在事件{sim.cursor}的来源是什么？','unknown')\n    check(sim,'对象12现在的值是多少？','known',8)\n    check(sim,f'对象12在事件{direct.cursor}的值是多少？','known',2)\n    erased=copy.deepcopy(sim)\n    for p in erased.internal.provenance: p.zero_()\n    check(erased,f'对象12在事件{direct.cursor}的来源是什么？','unknown')\n    check(erased,f'对象12在事件{direct.cursor}的值是多少？','known',2)\n    erased=copy.deepcopy(sim); erased.pages[direct.cursor//m.config.time_count]=new_state(m).pages[0]\n    check(erased,f'对象12在事件{direct.cursor}的来源是什么？','unknown')\n    erased=copy.deepcopy(sim); erased.internal=None\n    check(erased,f'对象12在事件{direct.cursor}的来源是什么？','unknown')\n    print(seed,sum(checks),len(checks),decision['current_write'])",
+      "expected_output": [
+        "7 136 136 False",
+        "11 136 136 False",
+        "23 136 136 False"
+      ]
+    },
+    "guard_boundary": {
+      "python": "from scripts.chinese_query_task import render\nfrom spora.chinese_query import consistent_address\nr=render(1,44,7,2,(0,3)); p=r['positions'][:]; d=r['digits'][:]\np[-2]=p[-1]; d[-2]=7\nprint('duplicate',consistent_address(r['text'],p,d,1))\nr=render(1,12,1023,0,(0,0)); p=r['positions']; d=r['digits']\nprint('prefix',consistent_address(r['text'],p[:2]+[0]+p[2:5],d[:2]+[0]+d[2:5],1))\nprint('suffix',consistent_address(r['text'],p[:2]+[0]+p[3:],d[:2]+[0]+d[3:],1))\nr=render(1,12,34,0,(0,0)); p=r['positions'][4:]+[0,0]+r['positions'][:2]\nprint('swapped_roles',consistent_address(r['text'],p,[3,4,0,0,1,2],1))",
+      "expected_output": [
+        "duplicate False",
+        "prefix False",
+        "suffix False",
+        "swapped_roles True"
+      ],
+      "interpretation": "Whole-number structural violations are rejected; correct semantic assignment remains the network's responsibility. No replacement address is generated."
+    }
+  },
+  "handoff": "当前冻结版本在已披露有限范围内可提交，未发现实际正确性阻断项。本审阅不执行提交或修复。后续优先补强R2开发摘要绑定，R3独立解析计数可随评测工具整理；R1为已披露限制。若未来改动检查点或相关源码，应重新验证而非沿用当前独立结论。",
+  "documented_limitations": [
+    {
+      "key": "P26-R1",
+      "severity": "informational",
+      "priority": null,
+      "title": "已披露边界：最终拒答题全文与训练集重叠",
+      "location": {
+        "file": "scripts/chinese_query_task.py",
+        "start_line": 50,
+        "end_line": 52
+      },
+      "related": [
+        "scripts/chinese_query_task.py:15-17",
+        "scripts/validate_chinese_memory.py:106-108",
+        "docs/P26-protocol.md:9,13"
+      ],
+      "defect": "支持题使用 split 对应的 pairs，但 kind==3 独立从全部四个前缀、十二个拒绝主体、四个后缀采样。训练已覆盖全部192种拒绝文本；最终题仍从同一集合抽取。最终组合的隔离没有覆盖拒答部分。",
+      "observed_evidence": {
+        "per_seed_training_unique_rejects": 192,
+        "per_seed_final_reject_occurrences": 1280,
+        "per_seed_final_unique_rejects": 191,
+        "per_seed_final_rejects_seen_verbatim_in_training": {
+          "7": 1280,
+          "11": 1280,
+          "23": 1280
+        },
+        "supported_text_overlap_with_training": {
+          "7": 0,
+          "11": 0,
+          "23": 0
+        }
+      },
+      "impact": "100% 的拒绝率不能作为拒答措辞组合迁移的独立证据。这不是记忆值答案泄漏，也不推翻支持题的成绩，但最终门槛对负例的解释需收窄。",
+      "recommended_action": "当前保留收窄后的能力表述即可；后续若声称拒答迁移，再建立独立负例划分并验证全文交集。本项不作为当前版本修复要求。",
+      "minimal_reproduction": "R1",
+      "classification": "Documented limitation, not a current correctness defect or commit blocker.",
+      "documentation_resolution": "docs/P26-memory-query.md 明确说明固定格式、拒绝句型共享训练及跨种子重复计数；reports/P26-results.json 的 counting_note、open_chinese_chat_achieved=false 和 aggregate 与之吻合。全文重叠比仅共享组件更强，建议今后保留这一量化说明，但不再要求本冻结版本为此重训。"
+    }
+  ],
+  "addenda": [
+    {
+      "date": "2026-11-08",
+      "type": "limited_fix_followup",
+      "scope": "仅静态复查 verify_development_binding、新增测试及其最终评测前的调用点；未重跑模型、训练或测试，未扩展审查。",
+      "reviewed_locations": [
+        "scripts/validate_chinese_memory.py:24-30",
+        "scripts/validate_chinese_memory.py:104-106",
+        "tests/test_chinese_query.py:108-120"
+      ],
+      "R2": {
+        "status": "核心修复成立；在文件保持冻结且开发报告可信的本次范围内关闭。",
+        "evidence": "新函数同时检查总体与各开发组通过状态，将实际权重SHA与checkpoint_sha256比较，并要求非空source_sha256且逐项比对实际源码SHA；main对三个种子逐一调用后才进入最终评测。旧报告为已变化文件放行的原始缺口已补上。",
+        "test_review": "新增测试先验证一致文件通过，再分别修改权重字节和源码期望摘要，断言抛出对应weights/source异常；覆盖原发现的两条主要失配路径。",
+        "reported_validation": "三个真实文件绑定核对通过、7项P26测试通过，均由用户提供；本轮未独立重跑。",
+        "remaining_boundary": "函数验证调用时的文件一致性；未新增运行期间文件变化的原子保护。既有冻结约束下，此边界不阻断当前结论。"
+      },
+      "R3": {
+        "status": "接受通过准确披露统计含义处理，不要求改动神经输出。",
+        "required_wording": "parsed_correct是门控后的重复计数，与correctly_accepted等价，不是独立的原始解析准确率。",
+        "verification_limit": "用户说明报告将加入该表述；本轮按限定范围没有复查文档落地。"
+      },
+      "conclusion": "未发现本次修复的新阻断问题；当前受限版本可继续提交，独立审阅工作完成。原报告保留为历史记录，本补充更新R2处置结论及R3说明方式。",
+      "writes": [
+        "reports/P26-independent-review.json"
+      ],
+      "code_modified": false,
+      "git_committed": false,
+      "model_executed": false,
+      "tests_executed": false,
+      "gpu_used": false
+    }
+  ]
+}

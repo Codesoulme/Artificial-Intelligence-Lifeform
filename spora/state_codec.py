@@ -43,6 +43,9 @@ def flatten(model, state):
     config['memory_layers'] = list(config['memory_layers'])
     schema = {'format': 'spora-tensors-v1', 'config': config,
               'cursor': state.cursor, 'pages': pages}
+    if hasattr(model, 'chinese_query'):
+        model.chinese_query.config.validate()
+        schema['chinese_query'] = model.chinese_query.config_dict()
     if hasattr(model, 'awake_core'):
         model.awake_core.validate()
         schema['awake_core'] = model.awake_core.config_dict()
@@ -83,6 +86,9 @@ def restore(schema, tensors, device='cpu'):
     if schema.get('format') != 'spora-tensors-v1':
         raise ValueError('Unsupported tensor state')
     model = TemporalSPORA(TemporalConfig(**schema['config'])).to(device)
+    if 'chinese_query' in schema:
+        from .chinese_query import ChineseQuery, ChineseQueryConfig
+        model.chinese_query = ChineseQuery(ChineseQueryConfig(**schema['chinese_query'])).to(device)
     if 'awake_core' in schema:
         from .awake import AwakeCore, AwakeConfig
         model.awake_core = AwakeCore(AwakeConfig(**schema['awake_core'])).to(device)
