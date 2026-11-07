@@ -1,0 +1,368 @@
+{
+  "status": "training_complete_output_review_pending",
+  "segment": {
+    "status": "segment_completed_not_chat_accepted",
+    "steps": 500,
+    "targets": 4428004,
+    "counts": {
+      "pretrain_microbatches": 870,
+      "pretrain_targets_including_focus": 1772317,
+      "pretrain_source_targets": 1772032,
+      "teacher_microbatches": 6504,
+      "teacher_targets_including_focus": 2611391,
+      "teacher_source_targets": 2610910,
+      "foundation_microbatches": 327,
+      "foundation_targets_including_focus": 44296,
+      "foundation_source_targets": 44281,
+      "focus_targets": 781
+    },
+    "focus_cursor": 50,
+    "batch_trace_sha256": "130ad3b4fbd27708d67782217425eca18ab690e5daa3e0f4e8270f052185a96f",
+    "old_tensors_exact": true,
+    "memory": {
+      "actual": [
+        7,
+        5,
+        9,
+        3
+      ],
+      "expected": [
+        7,
+        5,
+        9,
+        3
+      ],
+      "passed": true
+    },
+    "seconds": 711.4432775999885,
+    "peak_allocated_bytes": 856529408,
+    "checkpoint_sha256": "93d7519def66ee51c9387a3359573ef8790e889b0856ffdbad156339b084bb51",
+    "realized_source_shares": {
+      "pretrain": 0.4002581302093886,
+      "teacher": 0.5897398888648708,
+      "foundation": 0.010001980925740582
+    }
+  },
+  "baseline": {
+    "pretrain_nll": 3.563494086265564,
+    "dialogue_nll": 3.406948823229377,
+    "scope": "Fixed development samples, not a chat acceptance test. NLL only comparable within this tokenizer.",
+    "teacher_training_nll": 2.952336360513082,
+    "foundation_training_nll": 0.0757743278283532
+  },
+  "development": [
+    {
+      "step": 100,
+      "loss": 2.84142804145813,
+      "targets": 879936,
+      "pretrain_nll": 3.5279063284397125,
+      "dialogue_nll": 3.379189308744768,
+      "scope": "Fixed development samples, not a chat acceptance test. NLL only comparable within this tokenizer.",
+      "teacher_training_nll": 2.926890471921767,
+      "foundation_training_nll": 0.05780815598524474,
+      "samples": [
+        {
+          "ended_with_eos": true,
+          "prompt": "你好，请简单介绍你的能力。",
+          "text": "你好！很高兴见到你！我是一个人工智能助手，我没有能力为您提供信息。我是一个人工智能助手，我没有能力为您提供信息，但我可以为你提供关于您所遇到的问题。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": false,
+          "prompt": "我今天有点累，可以怎样放松？",
+          "text": "如果您感到忙，以下是一些放松技巧：\n\n1. 深呼吸：深呼吸有助于放松身心，减轻压力。\n2. 深呼吸：深呼吸可以帮助您放松身心，减轻压力。\n3. 冥想：冥想可以帮助您放松身心，减轻压力。\n4. 冥想：冥想可以帮助您放松身心，减轻压力。\n5. 冥想：冥想可以帮助您放松身心，减轻压力。\n6. 冥想：冥想可以帮助您放松身心，减轻",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "请用一句话解释为什么会下雨。",
+          "text": "当天气晴朗时，天气变得越来越寒冷，气温可能会变得更寒冷。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "把“明天我去图书馆看书”改成疑问句。",
+          "text": "今天我去图书馆看书，看书能去图书馆吗？",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "我不知道该选哪本书，你能先问我一个问题吗？",
+          "text": "抱歉，我是一个人工智能助手，我没有阅读能力。我是一个人工智能助手，我没有阅读能力，所以我不能回答您的问题。如果您能提供更多信息，我将尽力为您提供帮助。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": false,
+          "prompt": "社会主义核心价值观的个人层面包括哪些内容？",
+          "text": "社会主义核心价值观（Courses）是社会主义核心价值观的核心价值观之一。社会主义核心价值观包括社会主义、社会主义、社会主义、社会主义、人权和人权等价值观。社会主义核心价值观包括：\n\n1. **社会主义核心价值观**：社会主义核心价值观强调个人主义核心价值观，包括社会主义、社会主义、人权和人权。\n\n2. **社会主义价值观**：社会主义强调个人",
+          "utf8_valid": true
+        }
+      ]
+    },
+    {
+      "step": 200,
+      "loss": 2.941959857940674,
+      "targets": 1771518,
+      "pretrain_nll": 3.5142120122909546,
+      "dialogue_nll": 3.3744467466100625,
+      "scope": "Fixed development samples, not a chat acceptance test. NLL only comparable within this tokenizer.",
+      "teacher_training_nll": 2.8715645298199455,
+      "foundation_training_nll": 0.05213811379673879,
+      "samples": [
+        {
+          "ended_with_eos": true,
+          "prompt": "你好，请简单介绍你的能力。",
+          "text": "你好，我是一个人工智能助手，无法提供实时的信息。但是我可以提供有关你所指的具体信息，例如您正在寻找什么类型的产品或服务的相关信息。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": false,
+          "prompt": "我今天有点累，可以怎样放松？",
+          "text": "如果您感到疲惫，以下是一些可以帮助您放松身心的方法：\n\n1. 深呼吸：深呼吸可以帮助您放松身心，减轻压力。\n2. 深呼吸：深呼吸可以帮助您放松身心，减轻压力。\n3. 冥想：冥想可以帮助您放松身心，减轻压力。\n4. 冥想：冥想可以帮助您放松身心，减轻压力。\n5. 冥想：冥想可以帮助您放松身心，减轻压力。\n6. 冥想：冥想",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": false,
+          "prompt": "请用一句话解释为什么会下雨。",
+          "text": "当天气晴朗时，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气晴朗，天气",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "把“明天我去图书馆看书”改成疑问句。",
+          "text": "明天我去图书馆看书。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "我不知道该选哪本书，你能先问我一个问题吗？",
+          "text": "抱歉，我是一个人工智能助手，我没有关于您所提到的书籍的信息。 如果您能提供更多信息，我将很乐意为您提供帮助。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "社会主义核心价值观的个人层面包括哪些内容？",
+          "text": "社会主义核心价值观价值观（如社会主义核心价值观）是社会主义核心价值观与价值观价值观与价值观原则。社会主义核心价值观包括：自由、平等、公正、法治，以及社会主义核心价值观。社会主义核心价值观包括：自由、平等、公正、法治，以及社会主义核心价值观。社会主义核心价值观包括：自由、平等、公正、法治。个人层面，社会主义核心价值观是个人主义核心价值观。",
+          "utf8_valid": true
+        }
+      ]
+    },
+    {
+      "step": 300,
+      "loss": 2.9372549057006836,
+      "targets": 2653458,
+      "pretrain_nll": 3.5049116611480713,
+      "dialogue_nll": 3.3739779684909905,
+      "scope": "Fixed development samples, not a chat acceptance test. NLL only comparable within this tokenizer.",
+      "teacher_training_nll": 2.8411025875447535,
+      "foundation_training_nll": 0.05149998164880955,
+      "samples": [
+        {
+          "ended_with_eos": true,
+          "prompt": "你好，请简单介绍你的能力。",
+          "text": "你好，我是一个人工智能助手，我没有能力为您提供服务。但是我可以为你提供关于你所遇到的问题的信息。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": false,
+          "prompt": "我今天有点累，可以怎样放松？",
+          "text": "如果您感到疲惫，可以采取以下一些方法：\n\n1. 深呼吸：深呼吸有助于放松身心，减轻压力。\n2. 深呼吸：深呼吸有助于放松身心，减轻压力。\n3. 深呼吸：深呼吸可以帮助放松身心，减轻压力。\n4. 深呼吸：深呼吸可以帮助放松身心，减轻压力。\n5. 冥想：冥想可以帮助放松身心，减轻压力。\n6. 冥想：冥想可以帮助放松身心，减轻压力",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "请用一句话解释为什么会下雨。",
+          "text": "下雨是一种非常寒冷的现象，它通常伴随着寒冷的气氛。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "把“明天我去图书馆看书”改成疑问句。",
+          "text": "明天我去图书馆看书。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "我不知道该选哪本书，你能先问我一个问题吗？",
+          "text": "我不知道您所指的，我不知道您所指的哪本书。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": false,
+          "prompt": "社会主义核心价值观的个人层面包括哪些内容？",
+          "text": "社会主义核心价值观价值观与个人价值观，主要包括：\n\n1. 社会主义核心价值观：社会主义核心价值观强调个人主义核心价值观，强调个人主义核心价值观。\n\n2. 社会主义核心价值观：社会主义核心价值观强调个人主义核心价值观，强调个人主义核心价值观。\n\n3. 社会主义核心价值观：社会主义核心价值观强调个人主义核心价值观，强调社会主义核心价值观。\n\n4. 社会",
+          "utf8_valid": true
+        }
+      ]
+    },
+    {
+      "step": 400,
+      "loss": 2.7704219818115234,
+      "targets": 3545241,
+      "pretrain_nll": 3.4905129075050354,
+      "dialogue_nll": 3.3720316041578102,
+      "scope": "Fixed development samples, not a chat acceptance test. NLL only comparable within this tokenizer.",
+      "teacher_training_nll": 2.8044718046853228,
+      "foundation_training_nll": 0.05266117130994908,
+      "samples": [
+        {
+          "ended_with_eos": false,
+          "prompt": "你好，请简单介绍你的能力。",
+          "text": "你好！很高兴见到你。我是一个人工智能助手，我没有能力为您服务，但我可以为你提供有关您遇到的问题。\n\n你好，我是一个人工智能助手，我没有能力为您提供关于您遇到的问题。但是，我可以为你提供一些建议，帮助你更好地管理时间。\n\n首先，你需要了解您所遇到的问题，以及您正在寻找的问题。然后，你需要了解您所遇到的问题，并确定您正在发生的问题。\n\n其次，",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "我今天有点累，可以怎样放松？",
+          "text": "我是一个人工智能助手，我不能保证您每天都要休息的习惯，所以我不能保证每天都要休息。不过，如果您感到疲惫不堪，那么我建议您进行一些放松的活动。例如，您可以尝试深呼吸、冥想、瑜伽等放松技巧，来放松身心，放松身心。此外，您也可以尝试一些放松技巧，如冥想、深呼吸、冥想等，来帮助你放松身心。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "请用一句话解释为什么会下雨。",
+          "text": "下雨是一种很常见的情况，它通常伴随着雨水，而雨水则会变得干燥。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "把“明天我去图书馆看书”改成疑问句。",
+          "text": "明天我去图书馆看书。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "我不知道该选哪本书，你能先问我一个问题吗？",
+          "text": "我不知道您所指的，我不知道您所指的哪本书。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "社会主义核心价值观的个人层面包括哪些内容？",
+          "text": "社会主义核心价值观价值观价值观价值观，社会主义核心价值观价值观价值观价值观价值观价值观。",
+          "utf8_valid": true
+        }
+      ]
+    },
+    {
+      "step": 500,
+      "loss": 3.1064834594726562,
+      "targets": 4428004,
+      "pretrain_nll": 3.485000640153885,
+      "dialogue_nll": 3.370979413379064,
+      "scope": "Fixed development samples, not a chat acceptance test. NLL only comparable within this tokenizer.",
+      "teacher_training_nll": 2.793802100329098,
+      "foundation_training_nll": 0.054185419815595076,
+      "samples": [
+        {
+          "ended_with_eos": false,
+          "prompt": "你好，请简单介绍你的能力。",
+          "text": "你好，很高兴见到你。我是一个人工智能助手，无法直接回答你的问题。但是，我可以为你提供一些建议，帮助你更好地管理时间，规划好计划。\n\n1. 制定计划：制定一个详细的计划，包括每天的目标，制定计划，制定计划，制定计划，制定计划，制定计划，制定计划，制定计划，制定计划，制定计划，制定计划，制定计划，制定计划，制定计划，制定计划，制定",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": false,
+          "prompt": "我今天有点累，可以怎样放松？",
+          "text": "你没有提供足够的信息来帮助你放松。你可以尝试以下一些方法帮助你放松：\n\n1. 深呼吸：深呼吸可以帮助你放松身体，减轻压力和焦虑。\n\n2. 深呼吸：深呼吸可以帮助你放松身心，减轻压力。\n\n3. 冥想：冥想可以帮助你放松身心，减轻压力。\n\n4. 冥想：冥想可以帮助你放松身心，减轻压力。\n\n5. 冥想：冥想可以帮助你放松身心，减轻压力。\n\n6",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "请用一句话解释为什么会下雨。",
+          "text": "下雨是一种很常见的现象，它对人造成的破坏和破坏至关重要。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "把“明天我去图书馆看书”改成疑问句。",
+          "text": "明天我去图书馆看书。",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": true,
+          "prompt": "我不知道该选哪本书，你能先问我一个问题吗？",
+          "text": "当然可以。请问您想问什么问题？",
+          "utf8_valid": true
+        },
+        {
+          "ended_with_eos": false,
+          "prompt": "社会主义核心价值观的个人层面包括哪些内容？",
+          "text": "社会主义核心价值观价值观包括：\n\n1. 社会主义核心价值观：社会主义核心价值观强调个人主义核心价值观，强调个人主义核心价值观。\n\n2. 社会主义核心价值观：社会主义核心价值观强调个人主义核心价值观，强调个人主义核心价值观。\n\n3. 社会主义核心价值观：社会主义核心价值观强调个人主义核心价值观，强调社会主义核心价值观。\n\n4. 社会主义核心价值观：社会",
+          "utf8_valid": true
+        }
+      ]
+    }
+  ],
+  "plan_sha256": "0bca794192720e006ade82e396157d5f6f334b8f64c78ac2bd5e57809b8be5b7",
+  "source_code_sha256": {
+    "spora/conversation.py": "431841bb5245b7bee427e2f55db82a070f0d2b768e6dea3c598fc653b2028362",
+    "spora/conversation_data.py": "b7a075ffedcd6824cfb1d771a1c25d816a43cccea13081c32a727517d75d7dde",
+    "scripts/train_conversation_v8.py": "5e5c109273a50aef736c9cbead15169f445649c5f9522b6089b01e436953afc5",
+    "spora/token_objective.py": "f2d0f61eaff2db75c82f732c31f2593f879c8cc057bfad4b8bfc0abe3bf52b9f",
+    "spora/conversation_state.py": "fe9d8dda52bdd60456b350a6b1b8d19b8c95b162932b46f3a7f9c718f337e944",
+    "spora/training_mix.py": "d194df3f310fc5231f5251ee948de437e82c459811403b66acbe38198b3b8cd9",
+    "spora/state_codec.py": "096e7b926c6da598269535d964c0e01e98d5ed409d2e4460f1929580294f1946",
+    "spora/growing.py": "ca646f6b2451c7e54cfa9b9c68b83bbd79d07c3416e5a54dae8de1364ab16703",
+    "scripts/prepare_teaching_curriculum.py": "61bfd818de1a5484c7ed9df75e31c7df1c380ed040f6a7b528e325347a29e158",
+    "scripts/curate_teaching_curriculum.py": "028bf5c541ff2b5a71f05caaa9c448e55f317a7eb1cb4a5949318347a1feb512",
+    "scripts/prepare_conversation_v4.py": "f7dce2afbe570063e269013f87976f42772fb0e95ae9548882d2f2f780afd021",
+    "scripts/prepare_conversation_v2.py": "4ea9f53e0756722ca10d6116957bcf09ecfe797e202aff6b8184a279951553dc",
+    "scripts/curate_conversation.py": "726644321b3076b88462a1a8600101705b5900a8ac87e3f393858b6614aaa2fa",
+    "spora/language_training.py": "717e0e02c25de33935925380f7b38fbf8c5fe6626818c8665dbe19331a1b7f99"
+  },
+  "resume_review": "reports/P27b-resume-review.json",
+  "regression": {
+    "tests": 179,
+    "skipped": 4,
+    "passed": true
+  },
+  "comparison": {
+    "A2000_targets": 4580219,
+    "A2000_pretrain_nll": 3.614374,
+    "A2000_dialogue_nll": 3.536588,
+    "note": "Approximately matched target exposure; optimizer batching, schedule and focus frequency differ. No causal attribution or chat acceptance."
+  },
+  "next": "Complete independent output review; separately prepare coherent fictional Chinese stories without pretrained weights.",
+  "generated_outputs": {
+    "multiturn-500.json": {
+      "path": "runs/p27b-token-budget/multiturn-500.json",
+      "sha256": "79c39e06a5befae9958c5645e78b5f266999c19bba14b89afe5f323749ef538c",
+      "old_individual_exact": true,
+      "checkpoint_unchanged": true,
+      "summary": {
+        "turns": 36,
+        "eos_fraction": 0.8888888888888888,
+        "valid_utf8_fraction": 1.0,
+        "obvious_loops": 6,
+        "history_trimmed_turns": 0,
+        "mean_seconds": 0.43420738612379256,
+        "useful_fraction": null,
+        "status": "ungraded_development_not_acceptance"
+      }
+    },
+    "multiturn-500-sampled.json": {
+      "path": "runs/p27b-token-budget/multiturn-500-sampled.json",
+      "sha256": "21b6a19978c763f6f5a8a406a44087ab5afc6a26a779575e6f96b618a8254829",
+      "old_individual_exact": true,
+      "checkpoint_unchanged": true,
+      "summary": {
+        "turns": 36,
+        "eos_fraction": 0.9722222222222222,
+        "valid_utf8_fraction": 1.0,
+        "obvious_loops": 3,
+        "history_trimmed_turns": 0,
+        "mean_seconds": 0.4579070027749468,
+        "useful_fraction": null,
+        "status": "ungraded_development_not_acceptance"
+      }
+    },
+    "continuation-500.json": {
+      "path": "runs/p27b-token-budget/continuation-500.json",
+      "sha256": "5f980182f29201e9b805a8b3db707ff162764b2efa04e703e2e4291b89dbe8ed",
+      "old_individual_exact": true,
+      "checkpoint_unchanged": true,
+      "summary": {
+        "outputs": 24
+      }
+    }
+  }
+}
