@@ -1,0 +1,32 @@
+{
+  "status": "prepared_training_only_clean_subset",
+  "source": "runs/teaching-curriculum-v3",
+  "source_manifest_sha256": "c96b4bb2e7b815d200c3e65e2111d7d7bbc90fd0081c71839157d9ee6d3c07e1",
+  "tokenizer_sha256": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+  "teacher_rows_kept": 11714,
+  "teacher_targets_kept": 731173,
+  "source_teacher_rows": 25704,
+  "stats": {
+    "removed_list_heavy": 4551,
+    "removed_answer_length": 6653,
+    "removed_identity_or_capability_script": 679,
+    "removed_code_or_technical_template": 1487,
+    "removed_unfinished_or_fragment": 402,
+    "removed_low_chinese_ratio": 57,
+    "removed_high_stakes_or_current_fact": 111,
+    "removed_control_or_url": 39,
+    "removed_repeated_phrase": 11
+  },
+  "files": {
+    "foundations-tokens.jsonl": "1735c795214c732cfa4be41b849a9da27dc7d2b33b796fc6d104126219ed1df7",
+    "foundations.jsonl": "4b54ce4f07692981c6ff640e4475ca685c78d0265855b0b5cce1d93a58b1250f",
+    "teacher-tokens.jsonl": "dea112e677f92fb6cc97be547c5c725419c40da6e23c28978b5fa98124c6a69e",
+    "teacher.jsonl": "dc5e3854dbd75e1aa0570b067c5baeb5456a4bfb6c39a6145813db907f03c21a"
+  },
+  "scope": "Stricter training-only subset for a bounded chat curriculum. It removes common identity scripts, high-stakes/current prompts, code-heavy answers, list-heavy answers, repeated phrases and fragments. It is not a factual correctness audit and does not use development/test text.",
+  "limitations": [
+    "Single mechanical filter; no blind human review.",
+    "No new facts or answers were generated.",
+    "Parent v3 already passed its finite isolation checks; this subset inherits that boundary."
+  ]
+}
