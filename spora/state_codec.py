@@ -43,6 +43,9 @@ def flatten(model, state):
     config['memory_layers'] = list(config['memory_layers'])
     schema = {'format': 'spora-tensors-v1', 'config': config,
               'cursor': state.cursor, 'pages': pages}
+    if hasattr(model, 'awake_core'):
+        model.awake_core.validate()
+        schema['awake_core'] = model.awake_core.config_dict()
     if hasattr(model, 'semantic_memory'):
         module = model.semantic_memory
         if not -1 <= int(module.trained_cursor) <= state.cursor or not 0 <= int(module.evidence_count) <= 64:
@@ -80,6 +83,9 @@ def restore(schema, tensors, device='cpu'):
     if schema.get('format') != 'spora-tensors-v1':
         raise ValueError('Unsupported tensor state')
     model = TemporalSPORA(TemporalConfig(**schema['config'])).to(device)
+    if 'awake_core' in schema:
+        from .awake import AwakeCore, AwakeConfig
+        model.awake_core = AwakeCore(AwakeConfig(**schema['awake_core'])).to(device)
     if 'semantic_memory' in schema:
         from .semantic_memory import SemanticMemory
         model.semantic_memory = SemanticMemory(**schema['semantic_memory']).to(device)
