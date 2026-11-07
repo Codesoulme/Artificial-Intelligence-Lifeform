@@ -38,7 +38,7 @@ def widen_conversation(source, *, seed=231301, noise_std=0.001):
             mapped = torch.cat((value, value), dim=1)
         elif name == 'norm.weight':
             mapped = torch.cat((value / 2, value / 2))
-        elif name == 'memory_gate':
+        elif name in ('memory_gate', 'typed_memory.page_keys'):
             mapped = value.clone()
         elif name.startswith('memory_query.'):
             mapped = columns(value)

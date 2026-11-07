@@ -20,8 +20,12 @@ class ConversationConfig:
     hidden:int=704
     context:int=512
     memory_layers:tuple=(3,7)
+    memory_read:str='legacy'
 
     def validate(self):
+        if any(type(v) is not int or v<=0 for v in (self.vocabulary,self.width,self.depth,self.heads,self.hidden,self.context)):
+            raise ValueError('Positive integer dimensions required')
+        if self.memory_read not in ('legacy','typed_v1'):raise ValueError('Unknown memory reader version')
         if self.width%self.heads or (self.width//self.heads)%2:raise ValueError('Even rotary head width required')
         if self.depth<1 or self.context<8 or self.vocabulary<8:raise ValueError('Invalid model dimensions')
         if len(self.memory_layers)!=2 or len(set(self.memory_layers))!=2 or any(i<0 or i>=self.depth for i in self.memory_layers):raise ValueError('Two valid memory sites required')
@@ -68,7 +72,7 @@ class ConversationBridge(nn.Module):
         self.blocks=nn.ModuleList([ConversationBlock(c) for _ in range(c.depth)])
         self.norm=RMSNorm(c.width)
         self.memory_query=nn.ModuleList([nn.Linear(c.width,m,bias=False) for _ in range(2)])
-        self.memory_out=nn.ModuleList([nn.Linear(m,c.width,bias=False) for _ in range(2)])
+        self.memory_out=nn.ModuleList([nn.Linear(m*(2 if c.memory_read=='typed_v1' else 1),c.width,bias=False) for _ in range(2)])
         self.memory_gate=nn.Parameter(torch.full((2,),-3.))
         # Only initialize the new path. Never apply recursively to organism.
         for name,module in self.named_modules():
@@ -76,9 +80,15 @@ class ConversationBridge(nn.Module):
             if isinstance(module,(nn.Linear,nn.Embedding)):nn.init.normal_(module.weight,std=.02)
         for block in self.blocks:
             nn.init.normal_(block.out.weight,std=.02/math.sqrt(2*c.depth));nn.init.normal_(block.down.weight,std=.02/math.sqrt(2*c.depth))
+        if c.memory_read=='typed_v1':
+            from .typed_memory import TypedMemoryReader
+            self.typed_memory=TypedMemoryReader(m)
     def trainable_parameters(self):return [p for p in self.parameters() if p.requires_grad]
     def read_memory(self,x,state,site):
         q=F.normalize(self.memory_query[site](x),dim=-1)
+        if self.config.memory_read=='typed_v1':
+            read=self.typed_memory(q,state,site,self.organism.config.time_count)
+            return x+self.memory_gate[site].sigmoid()*self.memory_out[site](read)
         matrices=[state.current[site]]+[history_site(page,site)[0] for page in state.pages]
         values=torch.stack([torch.einsum('bmd,bnd->bnm',matrix.expand(x.shape[0],-1,-1).detach(),q) for matrix in matrices],2)
         weights=(values*q.unsqueeze(2)).sum(-1).softmax(-1)
@@ -86,6 +96,13 @@ class ConversationBridge(nn.Module):
         return x+self.memory_gate[site].sigmoid()*self.memory_out[site](read)
     def forward(self,tokens,state,past=None,use_past=False):
         if tokens.ndim!=2 or tokens.dtype!=torch.long:raise ValueError('Integer tokens expected')
+        if past is not None or use_past:
+            from .conversation_state import ConversationPast
+        if past is not None:
+            if not isinstance(past,ConversationPast):raise ValueError('Unbound incremental state; rebuild the prefix')
+            past.validate(self,state)
+        if use_past:
+            binding=ConversationPast([None]*self.config.depth,self,state)
         offset=0 if past is None else past[0][0].shape[-2]
         if not 0<tokens.shape[1]+offset<=self.config.context:raise ValueError('Conversation exceeds context')
         x=self.embedding(tokens);updated=[];site=0
@@ -94,7 +111,12 @@ class ConversationBridge(nn.Module):
             if i in self.config.memory_layers:x=self.read_memory(x,state,site);site+=1
             if use_past:updated.append(p)
         logits=F.linear(self.norm(x),self.embedding.weight)
-        return (logits,updated) if use_past else logits
+        if past is not None:past.validate(self,state)
+        if use_past:
+            binding.validate(self,state)
+            binding[:]=updated
+            return logits,binding
+        return logits
 
 def restore_conversation(organism,payload,parent_sha256,tokenizer_sha256,device='cpu'):
     if payload.get('format')!='spora-conversation-v1':raise ValueError('Not a conversation checkpoint')

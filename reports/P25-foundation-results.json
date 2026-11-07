@@ -1,0 +1,362 @@
+{
+  "status": "foundation_candidate_verified_not_promoted_to_language_training",
+  "baseline_commit": "1985f436b63f0afe58a4c3d3be7f97ec0b592581",
+  "inventory": {
+    "core_config": {
+      "vocab_size": 512,
+      "width": 128,
+      "layers": 4,
+      "heads": 4,
+      "memory_width": 90,
+      "expert_rank": 16,
+      "key_count": 64,
+      "value_count": 17,
+      "key_start": 16,
+      "value_start": 128,
+      "max_length": 256,
+      "memory_layers": [
+        1,
+        3
+      ],
+      "memory_kind": "delta",
+      "residual_write": false,
+      "temporal_kind": "split",
+      "time_count": 64,
+      "time_start": 192,
+      "history_writer": "rls",
+      "history_ridge": 0.01,
+      "current_address": "orthogonal"
+    },
+    "core_parameters": 1052725,
+    "memory_extent": {
+      "cursor": 72,
+      "allocated_pages": 4,
+      "slots_per_page": 64,
+      "maximum_pages": 16,
+      "total_event_capacity_limit": 1024
+    },
+    "memory_scalars": {
+      "current": 16200,
+      "history_including_optimizer_evidence": 111150,
+      "internal_controls": 9990,
+      "total": 137340
+    },
+    "attachments": [
+      "write_control",
+      "time_world",
+      "semantic_memory",
+      "skill_policy"
+    ],
+    "language_trainable_legacy": 8616194,
+    "language_trainable_typed": 8665154,
+    "additional_language_parameters": 48960
+  },
+  "experiment": {
+    "structural_witness": {
+      "legacy": {
+        "role_swap_max_abs": 0.0,
+        "unused_growth_max_abs": 0.013459265232086182
+      },
+      "typed_v1": {
+        "role_swap_max_abs": 0.04246258735656738,
+        "unused_growth_max_abs": 0.0
+      }
+    },
+    "role_probes": [
+      {
+        "seed": 7,
+        "train_pairs": 256,
+        "held_pairs": 256,
+        "steps": 200,
+        "legacy": {
+          "accuracy": 0.5,
+          "paired_feature_max_abs": 0.0,
+          "head_parameters": 130
+        },
+        "typed_v1": {
+          "accuracy": 1.0,
+          "paired_feature_max_abs": 2.000000476837158,
+          "head_parameters": 130
+        }
+      },
+      {
+        "seed": 11,
+        "train_pairs": 256,
+        "held_pairs": 256,
+        "steps": 200,
+        "legacy": {
+          "accuracy": 0.5,
+          "paired_feature_max_abs": 0.0,
+          "head_parameters": 130
+        },
+        "typed_v1": {
+          "accuracy": 1.0,
+          "paired_feature_max_abs": 2.000000476837158,
+          "head_parameters": 130
+        }
+      },
+      {
+        "seed": 23,
+        "train_pairs": 256,
+        "held_pairs": 256,
+        "steps": 200,
+        "legacy": {
+          "accuracy": 0.5,
+          "paired_feature_max_abs": 0.0,
+          "head_parameters": 130
+        },
+        "typed_v1": {
+          "accuracy": 1.0,
+          "paired_feature_max_abs": 2.000000476837158,
+          "head_parameters": 130
+        }
+      }
+    ],
+    "factor_read": [
+      {
+        "tokens": 1,
+        "width": 90,
+        "rank": 16,
+        "max_abs_error": 2.2351741790771484e-08,
+        "median_seconds": {
+          "dense": 0.0003916099993512034,
+          "factor": 4.3087000958621504e-05
+        },
+        "samples_seconds": {
+          "dense": [
+            0.0005523640010505914,
+            0.000456793000921607,
+            0.00044570399913936856,
+            0.0003916099993512034,
+            0.0004403800005093217,
+            0.0002849290007725358,
+            0.00027286000084131957,
+            0.0002935259998776019,
+            0.00028800699859857557
+          ],
+          "factor": [
+            5.747500108554959e-05,
+            4.2902999557554724e-05,
+            4.3087000958621504e-05,
+            5.617999937385321e-05,
+            4.116299794986844e-05,
+            4.318400053307414e-05,
+            4.772899905219674e-05,
+            3.305500140413642e-05,
+            4.083700012415647e-05
+          ]
+        }
+      },
+      {
+        "tokens": 128,
+        "width": 90,
+        "rank": 16,
+        "max_abs_error": 6.705522537231445e-08,
+        "median_seconds": {
+          "dense": 0.00037196699995547535,
+          "factor": 6.636499892920256e-05
+        },
+        "samples_seconds": {
+          "dense": [
+            0.00044546700082719325,
+            0.0004139019991271198,
+            0.00041855799965560435,
+            0.00029575600055977704,
+            0.00037196699995547535,
+            0.0003306780010461807,
+            0.0003788010007701814,
+            0.000314599999692291,
+            0.00036924200132489206
+          ],
+          "factor": [
+            6.636499892920256e-05,
+            7.272300077602267e-05,
+            6.0626999475061896e-05,
+            5.3920999635010956e-05,
+            7.656099973246455e-05,
+            8.33979994058609e-05,
+            8.636800106614828e-05,
+            5.276700016111136e-05,
+            6.617699982598424e-05
+          ]
+        }
+      }
+    ],
+    "legacy_checkpoint": {
+      "baseline_commit": "1985f436b63f0afe58a4c3d3be7f97ec0b592581",
+      "checkpoint_sha256": "9f3bfd9db9e46880138c3d83a9ad37264d5589fc42445d6c508c71a0d23569ed",
+      "logits_bitwise_equal": true,
+      "generated_tokens_equal": true,
+      "original_tensors_exact": true,
+      "original_files_unchanged": true,
+      "scope": "Actual P23f-small2000 checkpoint; numeric token prefix for regression, not language-quality grading."
+    },
+    "scope": "Representation and lifecycle foundations only. No claim of Chinese improvement, semantic alignment, calibrated evidence, or autonomous general reasoning.",
+    "passed": true,
+    "sources": {
+      "spora/conversation.py": "1fd0e60452e9d72860c7f8a2f345e2d2d0be76e3097494974e24099b8b12e6f7",
+      "spora/conversation_growth.py": "a83a02b9b2938f491bea020c7bdca8fdffbaf37cbc99fb5a88e1ba9a0be5361c",
+      "spora/typed_memory.py": "424f2a0c3b8197911a33ab18739168cfb1484805048c7c4ad34bb6c8c2677cfb",
+      "spora/conversation_state.py": "fe9d8dda52bdd60456b350a6b1b8d19b8c95b162932b46f3a7f9c718f337e944",
+      "tests/test_memory_foundation.py": "2810f620bcc1b7eacd1767dfcc735d7ad1f8e8198ae317ed3a93361fa118e547",
+      "scripts/evaluate_memory_foundation.py": "0c9080364202de5f729ae485bc6382debb6f92ddd0e575fa0d114347e44e477f"
+    }
+  },
+  "final_legacy_compatibility": {
+    "baseline_commit": "1985f436b63f0afe58a4c3d3be7f97ec0b592581",
+    "checkpoint_sha256": "9f3bfd9db9e46880138c3d83a9ad37264d5589fc42445d6c508c71a0d23569ed",
+    "logits_bitwise_equal": true,
+    "generated_tokens_equal": true,
+    "original_tensors_exact": true,
+    "original_files_unchanged": true,
+    "scope": "Actual P23f-small2000 checkpoint; numeric token prefix for regression, not language-quality grading.",
+    "final_source_sha256": {
+      "spora/conversation.py": "431841bb5245b7bee427e2f55db82a070f0d2b768e6dea3c598fc653b2028362",
+      "spora/conversation_state.py": "fe9d8dda52bdd60456b350a6b1b8d19b8c95b162932b46f3a7f9c718f337e944",
+      "tests/test_memory_foundation.py": "bc0dd7251a859fa9433cc753aee00ae85b9790a9001c7d02710510d809632a77"
+    }
+  },
+  "regression": {
+    "tests": 151,
+    "seconds": 43.636,
+    "passed": true,
+    "log_sha256": "985684a599ce81ea2a115339100693fb5a5f6edb7325ba63ed65552986bc73e0"
+  },
+  "capacity_context": {
+    "small": {
+      "status": "segment_completed_not_chat_accepted",
+      "steps": 2000,
+      "targets": 6025696,
+      "counts": {
+        "pretrain_steps": 400,
+        "pretrain_targets_including_focus": 3276800,
+        "teacher_steps": 1500,
+        "teacher_targets_including_focus": 2394054,
+        "focus_targets": 3196,
+        "dialogue_steps": 80,
+        "dialogue_targets_including_focus": 343832,
+        "foundation_steps": 20,
+        "foundation_targets_including_focus": 11010
+      },
+      "focus_cursor": 200,
+      "batch_trace_sha256": "c3e505faac017bcb8566332b51127adf19e7d14039da4212c5fb545fe3b43c78",
+      "old_tensors_exact": true,
+      "memory": {
+        "actual": [
+          7,
+          5,
+          9,
+          3
+        ],
+        "expected": [
+          7,
+          5,
+          9,
+          3
+        ],
+        "passed": true
+      },
+      "seconds": 943.3040036000311,
+      "peak_allocated_bytes": 856174080,
+      "checkpoint_sha256": "9f3bfd9db9e46880138c3d83a9ad37264d5589fc42445d6c508c71a0d23569ed"
+    },
+    "wide": {
+      "status": "segment_completed_not_chat_accepted",
+      "steps": 2000,
+      "targets": 6025696,
+      "counts": {
+        "pretrain_steps": 400,
+        "pretrain_targets_including_focus": 3276800,
+        "teacher_steps": 1500,
+        "teacher_targets_including_focus": 2394054,
+        "focus_targets": 3196,
+        "dialogue_steps": 80,
+        "dialogue_targets_including_focus": 343832,
+        "foundation_steps": 20,
+        "foundation_targets_including_focus": 11010
+      },
+      "focus_cursor": 200,
+      "batch_trace_sha256": "c3e505faac017bcb8566332b51127adf19e7d14039da4212c5fb545fe3b43c78",
+      "old_tensors_exact": true,
+      "memory": {
+        "actual": [
+          7,
+          5,
+          9,
+          3
+        ],
+        "expected": [
+          7,
+          5,
+          9,
+          3
+        ],
+        "passed": true
+      },
+      "seconds": 2615.124436500133,
+      "peak_allocated_bytes": 1604806656,
+      "checkpoint_sha256": "6ada1ba49ffe21fdb197ea516fe5e8084c128cc93579ed228ca7f961f46d7356"
+    },
+    "identical_target_tokens": true,
+    "identical_batch_trace": true,
+    "wide_multiturn_automatic_summaries": {
+      "multiturn-2000.json": {
+        "turns": 36,
+        "eos_fraction": 0.8055555555555556,
+        "valid_utf8_fraction": 1.0,
+        "obvious_loops": 9,
+        "history_trimmed_turns": 0,
+        "mean_seconds": 1.2874757333322324,
+        "useful_fraction": null,
+        "status": "ungraded_development_not_acceptance"
+      },
+      "multiturn-2000-sampled.json": {
+        "turns": 36,
+        "eos_fraction": 0.8888888888888888,
+        "valid_utf8_fraction": 1.0,
+        "obvious_loops": 0,
+        "history_trimmed_turns": 0,
+        "mean_seconds": 1.017153941689887,
+        "useful_fraction": null,
+        "status": "ungraded_development_not_acceptance"
+      }
+    },
+    "grading_limit": "Sampled outputs inspected; full human usefulness grading remains pending. No capacity winner or chat readiness claimed."
+  },
+  "research": [
+    {
+      "url": "https://arxiv.org/abs/1503.08895",
+      "title": "Title: End-To-End Memory Networks",
+      "abstract": "Abstract: We introduce a neural network with a recurrent attention model over a possibly large external memory. The architecture is a form of Memory Network (Weston et al., 2015) but unlike the model in that work, it is trained end-to-end, and hence requires significantly less supervision during training, making it more generally applicable in realistic settings. It can also be seen as an extension of RNNsearch to the case where multiple computational steps (hops) are performed per output symbol. The flexibility of the model allows us to apply it to tasks as diverse as (synthetic) question answering and to language modeling. For the former our approach is competitive with Memory Networks, but with less supervision. For the latter, on the Penn TreeBank and Text8 datasets our approach demonstrates comparable performance to RNNs and LSTMs. In both cases we show that the key concept of multiple computational hops yields improved results.",
+      "sha256": "b6b1e8dec70617dfd5033072523c45965011603bbe3e9711e2926a246ac3bb5f"
+    },
+    {
+      "url": "https://arxiv.org/abs/2312.00752",
+      "title": "Title: Mamba: Linear-Time Sequence Modeling with Selective State Spaces",
+      "abstract": "Abstract: Foundation models, now powering most of the exciting applications in deep learning, are almost universally based on the Transformer architecture and its core attention module. Many subquadratic-time architectures such as linear attention, gated convolution and recurrent models, and structured state space models (SSMs) have been developed to address Transformers' computational inefficiency on long sequences, but they have not performed as well as attention on important modalities such as language. We identify that a key weakness of such models is their inability to perform content-based reasoning, and make several improvements. First, simply letting the SSM parameters be functions of the input addresses their weakness with discrete modalities, allowing the model to selectively propagate or forget information along the sequence length dimension depending on the current token. Second, even though this change prevents the use of efficient convolutions, we design a hardware-aware parallel algorithm in recurrent mode. We integrate these selective SSMs into a simplified end-to-end neural network architecture without attention or even MLP blocks (Mamba). Mamba enjoys fast inference (5$\\times$ higher throughput than Transformers) and linear scaling in sequence length, and its performance improves on real data up to million-length sequences. As a general sequence model backbone, Mamba achieves state-of-the-art performance across several modalities such as language, audio, and genomics. On language modeling, our Mamba-3B model outperforms Transformers of the same size and matches Transformers twice its size, both in pretraining and downstream evaluation.",
+      "sha256": "af4ee95e020e6314f6095434349c6764ee176dfa5b6e39cf61848c455ed7aac8"
+    },
+    {
+      "url": "https://arxiv.org/abs/2501.00663",
+      "title": "Title: Titans: Learning to Memorize at Test Time",
+      "abstract": "Abstract: Over more than a decade there has been an extensive research effort on how to effectively utilize recurrent models and attention. While recurrent models aim to compress the data into a fixed-size memory (called hidden state), attention allows attending to the entire context window, capturing the direct dependencies of all tokens. This more accurate modeling of dependencies, however, comes with a quadratic cost, limiting the model to a fixed-length context. We present a new neural long-term memory module that learns to memorize historical context and helps attention to attend to the current context while utilizing long past information. We show that this neural memory has the advantage of fast parallelizable training while maintaining a fast inference. From a memory perspective, we argue that attention due to its limited context but accurate dependency modeling performs as a short-term memory, while neural memory due to its ability to memorize the data, acts as a long-term, more persistent, memory. Based on these two modules, we introduce a new family of architectures, called Titans, and present three variants to address how one can effectively incorporate memory into this architecture. Our experimental results on language modeling, common-sense reasoning, genomics, and time series tasks show that Titans are more effective than Transformers and recent modern linear recurrent models. They further can effectively scale to larger than 2M context window size with higher accuracy in needle-in-haystack tasks compared to baselines.",
+      "sha256": "aa7c4a44cc092a70dc43e42fcb2fe7c970e587f4be7499765c741f26cb58e951"
+    }
+  ],
+  "development_notes": [
+    "Initial structural and learning experiments precede the final mid-forward state-change guard. Numeric reader unchanged; final full regression and actual legacy checkpoint recheck cover the final code.",
+    "The synthetic role task trains equal-sized linear probes on frozen representations. It does not train or establish Chinese language competence.",
+    "typed_v1 is explicit opt-in; no existing checkpoint was relabelled or converted, no pretrained third-party weights were used.",
+    "Incremental state guard covers ordinary PyTorch mutation, not foreign data writes, and does not replace a future single-writer or locked-snapshot runtime."
+  ],
+  "default_language_unchanged": true,
+  "large_language_training_started": false,
+  "final_source_sha256": {
+    "spora/conversation.py": "431841bb5245b7bee427e2f55db82a070f0d2b768e6dea3c598fc653b2028362",
+    "spora/conversation_growth.py": "a83a02b9b2938f491bea020c7bdca8fdffbaf37cbc99fb5a88e1ba9a0be5361c",
+    "spora/conversation_state.py": "fe9d8dda52bdd60456b350a6b1b8d19b8c95b162932b46f3a7f9c718f337e944",
+    "spora/typed_memory.py": "424f2a0c3b8197911a33ab18739168cfb1484805048c7c4ad34bb6c8c2677cfb",
+    "tests/test_memory_foundation.py": "bc0dd7251a859fa9433cc753aee00ae85b9790a9001c7d02710510d809632a77",
+    "scripts/evaluate_memory_foundation.py": "0c9080364202de5f729ae485bc6382debb6f92ddd0e575fa0d114347e44e477f"
+  }
+}
