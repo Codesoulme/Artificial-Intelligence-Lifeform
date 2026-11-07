@@ -1,0 +1,1723 @@
+{
+  "schema_version": 1,
+  "status": "source_review_complete_conditional_filtered_pilot_candidate",
+  "scope": {
+    "cpu_only": true,
+    "training": false,
+    "live_teacher_generation": false,
+    "pretrained_weights": false,
+    "existing_rejected_artifact_modified": false,
+    "wiki_full_rescan": false,
+    "held_or_final_text_read": false,
+    "writes_only": [
+      "reports/P28-next-source-review.json",
+      "runs/p28-source-review/**"
+    ]
+  },
+  "chosen": {
+    "repository": "Gabrui/multilingual_TinyStories",
+    "url": "https://huggingface.co/datasets/Gabrui/multilingual_TinyStories",
+    "revision": "7fb5f327b907318dd95877a366e288f1971b64c1",
+    "readme_url": "https://huggingface.co/datasets/Gabrui/multilingual_TinyStories/blob/7fb5f327b907318dd95877a366e288f1971b64c1/README.md",
+    "declared_license": "cdla-sharing-1.0",
+    "decision": "first_choice_for_filtered_bounded_pilot_preparation",
+    "config": "chinese",
+    "split": "train",
+    "schema": {
+      "story": "string"
+    },
+    "train_rows_card": 2879487,
+    "first_train_shard_rows_verified": 575898,
+    "train_shards": 5,
+    "train_compressed_bytes": 1183531344,
+    "train_uncompressed_bytes_card": 2051351450.1030862,
+    "first_train_shard": {
+      "path": "chinese/train-00000-of-00005.parquet",
+      "bytes": 236545336,
+      "url": "https://huggingface.co/datasets/Gabrui/multilingual_TinyStories/resolve/7fb5f327b907318dd95877a366e288f1971b64c1/chinese/train-00000-of-00005.parquet",
+      "sha256": "3c86b047b0063056f11b17a494c20a79ce8fda2f17bf4d06634a9d332b740302"
+    },
+    "quality_verdict": "Self-contained simple fictional prose is much closer to continuation target than isolated encyclopedia fragments. All32 have recognizable story arcs;11 have meaning-affecting local defects. Conditional pilot candidate, not clean-corpus certification.",
+    "translation_provenance": "English GPT-3.5/GPT-4 static generated stories from roneneldan/TinyStories -> 52AI/TinyStoriesZh translated with deep-translator package -> Gabrui aggregation, duplicate/inconsistency pruning as described by publisher. No live teacher called here.",
+    "provenance_unknowns": [
+      "Translation service backend, package version, per-record English alignment and exact upstream snapshot not specified.",
+      "Gabrui Chinese count differs from Robin2M; do not assume interchangeable row order, a single identical source file, or aligned held splits.",
+      "Publisher says translations involve manual/automatic methods generally; Chinese source specifically describes package-based translation. No individual human review guarantee."
+    ]
+  },
+  "alternatives": [
+    {
+      "repository": "RobinChen2001/TinyStories-Zh-2M",
+      "url": "https://huggingface.co/datasets/RobinChen2001/TinyStories-Zh-2M",
+      "revision": "7601b862e5b2fbf60e83d7b27b8bd8017f105e70",
+      "readme_url": "https://huggingface.co/datasets/RobinChen2001/TinyStories-Zh-2M/blob/7601b862e5b2fbf60e83d7b27b8bd8017f105e70/README.md",
+      "declared_license": "mit",
+      "decision": "format_convenient_but_no_quality_advantage_and_license_chain_caveat",
+      "schema": {
+        "text": "string"
+      },
+      "train_rows_card": 1994314,
+      "train_parquet_shards": 3,
+      "compressed_bytes_card": 842061023,
+      "train_url": "https://huggingface.co/datasets/RobinChen2001/TinyStories-Zh-2M/resolve/7601b862e5b2fbf60e83d7b27b8bd8017f105e70/data/train-00000-of-00003.parquet",
+      "origin": "Reformatted52AI2M Chinese translations, therefore not independently cleaner translation.",
+      "license_note": "MIT declared downstream; English original declares CDLA-Sharing-1.0. Do not silently treat derived text as MIT-only. No training records fetched from this repo."
+    },
+    {
+      "repository": "52AI/TinyStoriesZh",
+      "url": "https://huggingface.co/datasets/52AI/TinyStoriesZh",
+      "revision": "96e998aab7ce3311f8a8497b2aa6ed5088630672",
+      "readme_url": "https://huggingface.co/datasets/52AI/TinyStoriesZh/blob/96e998aab7ce3311f8a8497b2aa6ed5088630672/README.md",
+      "declared_license": "mit",
+      "decision": "translation_origin_metadata_only",
+      "format": "TinyStories_all_data_zh_1M.tar.gz and TinyStories_all_data_zh_2M.tar.gz; names suggest scale, no validated count here.",
+      "origin": "README says deep-translator; specific service/version unspecified.",
+      "license_note": "MIT card versus CDLA upstream; archive described as all_data with no clear TRAIN-only mapping in README. No archive sampled."
+    },
+    {
+      "repository": "adam89/TinyStoriesChinese",
+      "url": "https://huggingface.co/datasets/adam89/TinyStoriesChinese",
+      "revision": "98547ad8ca1205e2e5ce564343cb78f972f72ffa",
+      "readme_url": "https://huggingface.co/datasets/adam89/TinyStoriesChinese/blob/98547ad8ca1205e2e5ce564343cb78f972f72ffa/README.md",
+      "declared_license": "cdla-sharing-1.0",
+      "decision": "reserve_pending_train_membership_and_translator_provenance",
+      "format": "TinyStories_all_data_zh.tar.gz; README schema includes story, story_zh, instruction, source and summary.",
+      "scale": "Unknown actual story count; HF n<1K tag reflects archive/container inference and is not credible evidence of corpus row count.",
+      "origin": "Declared TinyStories Chinese translation; translation engine/version not named.",
+      "quality": "Only README examples seen; includes name English remnants and awkward translation. No32-story evidence.",
+      "blocker": "Archive all_data has no demonstrated train-only selection; no archive opened."
+    },
+    {
+      "repository": "78yang/TinyStoriesChinese",
+      "url": "https://huggingface.co/datasets/78yang/TinyStoriesChinese",
+      "revision": "8e76cad492f1c1b243eb075c569afc813e4c58cb",
+      "readme_url": "https://huggingface.co/datasets/78yang/TinyStoriesChinese/blob/8e76cad492f1c1b243eb075c569afc813e4c58cb/README.md",
+      "declared_license": "cdla-sharing-1.0",
+      "decision": "apparent_mirror_not_independent_source",
+      "format": "Same archive name and effectively matching README as adam89; full content equivalence not verified.",
+      "scale": "Unknown actual rows",
+      "quality": "No training sample reviewed",
+      "blocker": "Train-only membership and translation provenance unresolved."
+    },
+    {
+      "repository": "fzmnm/TinyStoriesAdv-zh",
+      "url": "https://huggingface.co/datasets/fzmnm/TinyStoriesAdv-zh",
+      "revision": "fb892c135fa6ba4ddb1a69aa4612d92aae9d454d",
+      "readme_url": "https://huggingface.co/datasets/fzmnm/TinyStoriesAdv-zh/blob/fb892c135fa6ba4ddb1a69aa4612d92aae9d454d/README.md",
+      "declared_license": "cc",
+      "decision": "not_sampled_license_insufficiently_specific",
+      "scale": "README claims about1B tokens, not measured with project tokenizer.",
+      "format": "train_data/* JSONL; encyclopedia, story, school lessons and other tasks.",
+      "origin": "README explicitly describes GPT-4o/GPT-4o-mini static synthesis and textbook-inspired rewriting.",
+      "license_note": "Card says cc without concrete Creative Commons variant/version; no clear license grant identified in inspected README. No text downloaded.",
+      "quality": "Publisher explicitly says no human/machine safety, factual or logic audit; potentially suitable breadth but not currently an approved sample source."
+    },
+    {
+      "repository": "Dxniz/TinyStories-Multilingual",
+      "url": "https://huggingface.co/datasets/Dxniz/TinyStories-Multilingual",
+      "revision": "51c98d89398e26e680551d38102a5cae59388648",
+      "readme_url": "https://huggingface.co/datasets/Dxniz/TinyStories-Multilingual/blob/51c98d89398e26e680551d38102a5cae59388648/README.md",
+      "declared_license": "apache-2.0",
+      "decision": "secondary_independent_static_story_candidate_metadata_only",
+      "scale": "15688 stories across28 languages claimed; Chinese count unknown.",
+      "format": "tinystories.jsonl,48026242bytes; fields language_code/output/score; HF conversion metadata exposes default/train.",
+      "origin": "Novelist generation/branch translation and model scoring described; specific generator/translator versions not disclosed.",
+      "quality": "Publisher quality scores are model judgments, not human accuracy. No story text sampled in this task.",
+      "reason_not_first": "Much smaller unknown Chinese slice and not established translated TinyStories lineage despite similar name."
+    },
+    {
+      "repository": "hughxusu/chinese-kid-story",
+      "url": "https://huggingface.co/datasets/hughxusu/chinese-kid-story",
+      "revision": "0d2cb0b798cacc8308445192ec0622a6cfe67cc5",
+      "readme_url": "https://huggingface.co/datasets/hughxusu/chinese-kid-story/blob/0d2cb0b798cacc8308445192ec0622a6cfe67cc5/README.md",
+      "declared_license": "mit",
+      "decision": "not_actionable_empty_repository",
+      "files": "README and attributes only; metadata usedStorage0. No data artifact to select."
+    },
+    {
+      "repository": "CASIA-LM/ChineseWebText2.0",
+      "url": "https://huggingface.co/datasets/CASIA-LM/ChineseWebText2.0",
+      "revision": "9b647306646e5ddd85cc239870fc39bfb60e9531",
+      "readme_url": "https://huggingface.co/datasets/CASIA-LM/ChineseWebText2.0/blob/9b647306646e5ddd85cc239870fc39bfb60e9531/README.md",
+      "declared_license": "apache-2.0",
+      "decision": "concrete_broader_prose_fallback_metadata_only",
+      "scale": "Publisher claims3.8TB processed Chinese web corpus.",
+      "format": "ChineseWebText2.0/part-*.jsonl.gz; text,domain.single_label,domain.multi_label,toxicity,quality_score.",
+      "candidate_url": "https://huggingface.co/datasets/CASIA-LM/ChineseWebText2.0/resolve/9b647306646e5ddd85cc239870fc39bfb60e9531/ChineseWebText2.0/part-0001.jsonl.gz",
+      "origin": "Native Chinese web collection, model/rule filtering and labels; no translation provenance needed for entire collection but source-specific provenance remains necessary.",
+      "quality": "Could retain coherent encyclopedia/general articles without strict daily-word blacklist. Publisher quality scores are not our validation.",
+      "blocker": "Huge compressed parts, document-level rights/provenance and explicit train-only sampling require separate bounded work. Files named test/test_demo were not opened; no raw corpus downloaded."
+    }
+  ],
+  "license": {
+    "name": "CDLA-Sharing-1.0",
+    "url": "https://cdla.dev/sharing-1-0/",
+    "description": "Permits use/computational analysis, including training; data-sharing conditions apply. Not equivalent to unrestricted MIT or public-domain text.",
+    "source_status": "Clear declared grant for this bounded review; retained original and Chinese contributor attribution. This is reading the published terms, not an independent rights-chain audit.",
+    "obligations": [
+      {
+        "section": "2.1/2.2",
+        "summary": "Grants use and publication subject to Section3."
+      },
+      {
+        "section": "3.1(a)",
+        "summary": "If publishing received or enhanced data, publish it under this Agreement."
+      },
+      {
+        "section": "3.1(b)",
+        "summary": "Enhanced-data files must carry prominent notices identifying changes."
+      },
+      {
+        "section": "3.1(c)",
+        "summary": "Preserve provider credits, legal notices, metadata and practicable source links."
+      },
+      {
+        "section": "3.2/3.3",
+        "summary": "Supply unchanged license text/name/link; do not add restrictions on further publication or commercial/noncommercial use."
+      },
+      {
+        "section": "3.5 with1.11",
+        "summary": "No obligations/restrictions on use or publication of Results; Results must not include more than a de-minimis portion of source data. Do not assume substantial memorized text is automatically exempt."
+      },
+      {
+        "section": "6",
+        "summary": "Provided as-is, without general accuracy/fitness warranties."
+      }
+    ],
+    "preparation_application": "Retain roneneldan,52AI,Gabrui attributions, pinned revisions, source-row hashes, license link and notices of filtering/dedup/encoding. This sidecar has not published a new corpus externally.",
+    "upstream_label_discrepancy": "52AI and Robin declare MIT while original and Gabrui declare CDLA-Sharing. Prefer the explicit Gabrui sharing license and keep all upstream notices; label mismatch does not prove bad rights but is not permission to discard obligations."
+  },
+  "local_existing_source": {
+    "repository": "0xDing/wikipedia-cn-20230720-filtered",
+    "revision": "4cef256a3f426ae1d3f6930c8cd59a32d785d99d",
+    "license": "CC-BY-SA-3.0",
+    "records_prior_report": 254547,
+    "bytes": 524489333,
+    "inspected": [
+      "reports/P23-prose-source-review.json",
+      "runs/chinese-prose-material/provenance.json",
+      "runs/chinese-prose-material/repository-metadata.json",
+      "directory inventory"
+    ],
+    "decision": "No new raw scan. Prior formula/markup damage and specific entity concentration remain valid. Strict daily-language gate failure does not rule out broader intact encyclopedic prose; it is a secondary option, not a new clean source."
+  },
+  "sampling": {
+    "method": "random.Random(20261108).sample(range(575898),32), sorted for review; no quality selection",
+    "repository": "Gabrui/multilingual_TinyStories",
+    "revision": "7fb5f327b907318dd95877a366e288f1971b64c1",
+    "config": "chinese",
+    "split": "train",
+    "scope": "First TRAIN shard only. Uniform sampling within that shard; not representative of all five shards by design.",
+    "local_file": "D:\\SPORA\\runs\\p28-stories-material\\train-00000-of-00005.parquet",
+    "file_bytes": 236545336,
+    "sha256_verified": "3c86b047b0063056f11b17a494c20a79ce8fda2f17bf4d06634a9d332b740302",
+    "schema": "story: string",
+    "first_shard_rows": 575898,
+    "row_indices_0based": [
+      79,
+      620,
+      13683,
+      15458,
+      85099,
+      86315,
+      101205,
+      114452,
+      192546,
+      211859,
+      233926,
+      276227,
+      311644,
+      312688,
+      343288,
+      352209,
+      391637,
+      392812,
+      404441,
+      411109,
+      419350,
+      423198,
+      445330,
+      445873,
+      445901,
+      445912,
+      453301,
+      472458,
+      489889,
+      512858,
+      523963,
+      575399
+    ],
+    "row_groups_read": 28,
+    "decoded_train_rows_including_collateral": 27898,
+    "decoded_table_bytes_total": 19807680,
+    "max_row_group_bytes": 8388608,
+    "retained_stories": 32,
+    "held_text_accessed": false,
+    "live_generation": false,
+    "weights_loaded": false,
+    "cpu_compute_threads": 1,
+    "parquet_io_threads": 1,
+    "range_attempts": "Remote attempt1 completed first3 shards then502, losing unsaved samples; capped24MiB. Attempt2 stopped after main local shard became available; bounded persisted range evidence retained. Neither attempt formed the manually reviewed sample. No further network tooling used.",
+    "dependency": "PyArrow19.0.1 isolated in review-local vendor; project venv unchanged"
+  },
+  "manual_review": {
+    "sample_file_sha256": "6f5c293115e3abd0fc014fba031310cfe4281c1a540961c1705a7c929319ace8",
+    "reviewer": "Single development-agent qualitative annotation, not human evaluation, native-speaker verification or independent blind assessment.",
+    "rubric": {
+      "clean": "No obvious grammatical/translation/entity/causal problem on this read; not certified perfect.",
+      "minor": "Main story remains readable; transliteration variants, literal wording, minor pronoun or template issues warrant filtering/spot-checking but do not by themselves rule out a bounded pilot.",
+      "major": "Meaning-affecting object/relationship substitution, reversed action, broken sentence or material local continuity problem; exclude from high-quality pilot candidates.",
+      "fiction_policy": "Explicit fictional prose. Anthropomorphism, magic and unrealistic events are expected, not factual errors by themselves. Neither encyclopedia evidence nor model autobiographical experience."
+    },
+    "counts": {
+      "clean": {
+        "count": 9,
+        "n": 32,
+        "percent": 28.125
+      },
+      "minor": {
+        "count": 12,
+        "n": 32,
+        "percent": 37.5
+      },
+      "major": {
+        "count": 11,
+        "n": 32,
+        "percent": 34.375
+      }
+    },
+    "annotations": [
+      {
+        "sample_index": 0,
+        "row_index_0based": 79,
+        "text_sha256": "3892f00fd2266757fa2824e5dfc90dfe87e20ed6169286e46f137e919df82882",
+        "severity": "major",
+        "issue_tags": [
+          "translation",
+          "entity",
+          "causal"
+        ],
+        "note": "球分成两部分可作幻想，但发挥自己的作用、球权进球和同一个球的指代混乱，无法稳定理解物体状态。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "unclear_object_state"
+      },
+      {
+        "sample_index": 1,
+        "row_index_0based": 620,
+        "text_sha256": "6971657bda9e46930bb6d01c1263e2c50e642555dd1158c7cc9cfc32284637f4",
+        "severity": "minor",
+        "issue_tags": [
+          "name_variant",
+          "word_choice"
+        ],
+        "note": "蒂米/提米交替；吵闹的花可能是幻想，也可能是直译，缺少声音行为解释，列疑点而非按幻想拒绝。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 2,
+        "row_index_0based": 13683,
+        "text_sha256": "862edbbc8922cb0384cfa885c0fc8a06370a972c257fbf4009757749189cf9e8",
+        "severity": "major",
+        "issue_tags": [
+          "name_variant",
+          "translation"
+        ],
+        "note": "狗从斯波变斯波特再变斑点，末段发现一棵树与之相配句意损坏；找到石头的情节仍能辨认。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "main_arc_followable_with_local_defects"
+      },
+      {
+        "sample_index": 3,
+        "row_index_0based": 15458,
+        "text_sha256": "27d91e2c6e99e4c71d4c0d10f9672959228136438c0b6b1ae3bbdfca1c2f1a19",
+        "severity": "major",
+        "issue_tags": [
+          "entity",
+          "translation"
+        ],
+        "note": "摘草莓译成选下来；正在拉包的拉链却变成门打不开，实体连续性损坏。猫头鹰说话不是问题。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "main_arc_followable_with_local_defects"
+      },
+      {
+        "sample_index": 4,
+        "row_index_0based": 85099,
+        "text_sha256": "905e8237743860bea11361f247674fb6af0e30debac9cc6c3a2e76b8b553285a",
+        "severity": "major",
+        "issue_tags": [
+          "translation"
+        ],
+        "note": "树下干燥译成天干了，结尾玩耍、玩耍重复；避雨因果可辨但关键位置表达错误。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "main_arc_followable_with_local_defects"
+      },
+      {
+        "sample_index": 5,
+        "row_index_0based": 86315,
+        "text_sha256": "19944ac5ec89d07fb369717575134eef623cfade382654ceb4edc003e2921e98",
+        "severity": "clean",
+        "issue_tags": [],
+        "note": "虫子说话和参与游戏明确属于故事幻想，人物反应、冲突和结尾连续。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 6,
+        "row_index_0based": 101205,
+        "text_sha256": "11bf2ee859e17203e8b65f01a74329a5dc44972fb91b299a3ed4e775fb5d520e",
+        "severity": "minor",
+        "issue_tags": [
+          "word_choice"
+        ],
+        "note": "玩具小车被称大马车，拉车与开车措辞摇摆，整理玩具称排序生硬；主线仍可理解。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 7,
+        "row_index_0based": 114452,
+        "text_sha256": "e93ad11769188677942a029050ac345cbb7450aacfd3984985223af687c075ae",
+        "severity": "major",
+        "issue_tags": [
+          "entity",
+          "name_variant",
+          "translation"
+        ],
+        "note": "开头已住在小屋又羡慕并请求进入小屋，背景矛盾；弗罗斯蒂/Frosty/霜/小霜混用；融化后移到室外的因果清楚。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "main_arc_followable_with_local_defects"
+      },
+      {
+        "sample_index": 8,
+        "row_index_0based": 192546,
+        "text_sha256": "f2b8f95f5dd24d2f546855c250ba8db22756cc6273f9970f6f991eeadf0edbab",
+        "severity": "minor",
+        "issue_tags": [
+          "pronoun",
+          "template"
+        ],
+        "note": "主体始终为一个女孩，末句突用他们；梦想、存钱、买玩具过程清楚，但幸福生活结尾模板不贴合。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 9,
+        "row_index_0based": 211859,
+        "text_sha256": "1f4a99c297dc025914af1142e552c6992f22f7ffebdf95908c163d59acd3cc00",
+        "severity": "major",
+        "issue_tags": [
+          "entity"
+        ],
+        "note": "同一手足先妹妹、后姐姐、再妹妹，亲属关系不稳定；受伤后和解的主线可读。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "main_arc_followable_with_local_defects"
+      },
+      {
+        "sample_index": 10,
+        "row_index_0based": 233926,
+        "text_sha256": "1bff05abfc9e806736ff78e50a168415e3f40f6e12403bb1ba9af926d8bdbfe2",
+        "severity": "clean",
+        "issue_tags": [],
+        "note": "洗干净一座山是夸张童话设定，不按现实可行性扣分；角色目标、努力、结果完整。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 11,
+        "row_index_0based": 276227,
+        "text_sha256": "ffc0b4a1e8509c37de5e2d504bc5697da82d531688a59d1e5c743c4838c5d76f",
+        "severity": "major",
+        "issue_tags": [
+          "semantic_reversal"
+        ],
+        "note": "向鸟索回被夺玩具，却问我们可以把玩具还给你吗；归还方向反转直接影响事件含义。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "main_arc_followable_with_local_defects"
+      },
+      {
+        "sample_index": 12,
+        "row_index_0based": 311644,
+        "text_sha256": "56665258a94e699e35a9e9b52ffa325ce5f3d2ba88ca3d50f569f5428ae0e4fd",
+        "severity": "minor",
+        "issue_tags": [
+          "name_variant",
+          "template"
+        ],
+        "note": "麦克斯/马克斯交替；分享骨头的角色与因果连续，寓意重复较多。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 13,
+        "row_index_0based": 312688,
+        "text_sha256": "5da682eeffa82f51b64f9a7a5f96f5868b421a2497717a08bcc50f80f052a6cf",
+        "severity": "major",
+        "issue_tags": [
+          "entity"
+        ],
+        "note": "同一个欺负女孩的手足从弟弟变哥哥；事故后由莉莉明白捏人不好也弱化责任指向。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "main_arc_followable_with_local_defects"
+      },
+      {
+        "sample_index": 14,
+        "row_index_0based": 343288,
+        "text_sha256": "50c14f4a9d722e28fcab9b0df297326f35e333f20a8ef6939a028cc1d049807d",
+        "severity": "minor",
+        "issue_tags": [
+          "word_choice"
+        ],
+        "note": "狗的项圈写成衣领；拟人狗说话可接受，磁铁故事事件完整。咀嚼磁铁只作虚构情节，不作儿童行为指南。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 15,
+        "row_index_0based": 352209,
+        "text_sha256": "48a1872e44153149c1063a892373f3ae3453a24fc63a7e7791bfae8d3eefb30b",
+        "severity": "major",
+        "issue_tags": [
+          "entity",
+          "translation"
+        ],
+        "note": "同一容器大锅变花盆；给种子浇水和阳光搭配损坏。长出友好怪物是允许的幻想。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "main_arc_followable_with_local_defects"
+      },
+      {
+        "sample_index": 16,
+        "row_index_0based": 391637,
+        "text_sha256": "c20344292f8b259aeae456035711ae3a4fee055bd7fb79a18e76cff874800680",
+        "severity": "minor",
+        "issue_tags": [
+          "name_variant",
+          "pronoun"
+        ],
+        "note": "蒂米/提米交替，用他指狗略生硬；探望奶奶、两次遇狗和感受变化完整。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 17,
+        "row_index_0based": 392812,
+        "text_sha256": "bca036c5f3932d4fc8b35abd0b54797307ce492d2378f66e47c59c7b0902c3e8",
+        "severity": "clean",
+        "issue_tags": [],
+        "note": "重字典需要妈妈帮忙，翻页认词后拥抱，语法和因果连续。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 18,
+        "row_index_0based": 404441,
+        "text_sha256": "5ef47403220776fcfe9d43f593f9dade449c5652556f9f5d38344d1b61b6a67b",
+        "severity": "clean",
+        "issue_tags": [],
+        "note": "玩具车飞出窗外并说话属于明确童话情节；寻找、救出与继续玩耍有完整事件链。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 19,
+        "row_index_0based": 411109,
+        "text_sha256": "507ca00115aacb8c153fda577196ead7ce0d75e5a1480092a3689d1d2fc52739",
+        "severity": "clean",
+        "issue_tags": [],
+        "note": "小狗害怕高桥，大熊帮助过桥，目标和结局明确，拟人不扣分。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 20,
+        "row_index_0based": 419350,
+        "text_sha256": "bf2bbdb7c91db89abedbb7649739b8446e6b2b53c60919c143f0efb56f352b20",
+        "severity": "minor",
+        "issue_tags": [
+          "word_choice"
+        ],
+        "note": "看起来很困扰、制作环是直译表达；练习系鞋带的因果完整，拟人狗并非缺陷。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 21,
+        "row_index_0based": 423198,
+        "text_sha256": "033b2f50e663a85a4a18cf5c1a5666c7f2bc0dbf8d0addfdc1b15e949295958e",
+        "severity": "minor",
+        "issue_tags": [
+          "name_variant"
+        ],
+        "note": "麦克斯/马克斯混用，借香水参加聚会的情节清楚。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 22,
+        "row_index_0based": 445330,
+        "text_sha256": "0c7842fe149c1f31b9b45825e79c809da236677762dc32ab97cf797f4685811a",
+        "severity": "clean",
+        "issue_tags": [],
+        "note": "鸭家庭预判风暴却看到彩虹，是故事转折而非必然逻辑矛盾；叙述自足。不能当真实雷暴避险说明。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 23,
+        "row_index_0based": 445873,
+        "text_sha256": "db815ebfbbeff721112282ef827b1e9a180dbf6abc8409cdcb7334fef2de5b91",
+        "severity": "major",
+        "issue_tags": [
+          "sentence_damage"
+        ],
+        "note": "母亲引语被错误切断，单独留下给他们并多出引号；故事主线仍在但句法明显损坏。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "main_arc_followable_with_local_defects"
+      },
+      {
+        "sample_index": 24,
+        "row_index_0based": 445901,
+        "text_sha256": "7956f400dfb7cd4a986a72da40136b7e07c0c6535bdc7016f4e06c62c928bda4",
+        "severity": "minor",
+        "issue_tags": [
+          "word_choice"
+        ],
+        "note": "水对皮肤太粗糙、给狗提供食物译腔明显；洗澡到喂狗的叙事完整。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 25,
+        "row_index_0based": 445912,
+        "text_sha256": "8b776c69a903c4a889116806a07a60f14a4ca259fe469830c97defd58a8dfc8c",
+        "severity": "clean",
+        "issue_tags": [],
+        "note": "仙女送冒险的礼物是幻想约定，兄弟开始探索并获得快乐，故事完整。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 26,
+        "row_index_0based": 453301,
+        "text_sha256": "954e43b4ef81711e0f3d896793082c2018431fd4b20f040063841ee6b0445581",
+        "severity": "minor",
+        "issue_tags": [
+          "name_variant",
+          "word_choice"
+        ],
+        "note": "萨姆/山姆混用；有罪的狗是guilty直译式措辞，找回玩具的关系仍清楚。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 27,
+        "row_index_0based": 472458,
+        "text_sha256": "6eb7218ba44ce6b01ef1a3bfd4b7eee790f5221b7f47d0f9e88e7022ce6c4555",
+        "severity": "clean",
+        "issue_tags": [],
+        "note": "先以为小提琴自己演奏，随后发现猫在拉琴，感知转变有解释；会拉琴的猫属于童话。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 28,
+        "row_index_0based": 489889,
+        "text_sha256": "ce4bea380dc6d3c1cff6828298697649ed0d97f43538ed31d4904488c63e5704",
+        "severity": "minor",
+        "issue_tags": [
+          "word_choice"
+        ],
+        "note": "地铁轻轻移动把他摇晃等译腔略重，睡醒已在公园省略下车但可作正常叙事省略，不判实体错乱。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 29,
+        "row_index_0based": 512858,
+        "text_sha256": "46930ad7877c41c7c86fac20c696db8828f9a11e36c669094a0873618c451c11",
+        "severity": "clean",
+        "issue_tags": [],
+        "note": "恶作剧藏胡萝卜、朋友生气、归还并和解，前因后果清楚；不是现实饮食建议。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 30,
+        "row_index_0based": 523963,
+        "text_sha256": "27191f33dca63c82f40f3c34e0f78d48058ec9281eabd02946de168e4b3891e9",
+        "severity": "minor",
+        "issue_tags": [
+          "name_variant"
+        ],
+        "note": "萨姆/山姆混用；颜色偏好冲突与各穿喜欢颜色的解决方法完整。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "followable"
+      },
+      {
+        "sample_index": 31,
+        "row_index_0based": 575399,
+        "text_sha256": "8ade420730439bba7fc434717857513718a844c84d0f9822db3505fa454e2662",
+        "severity": "major",
+        "issue_tags": [
+          "entity",
+          "translation",
+          "template"
+        ],
+        "note": "冰淇淋甜筒被译为球果，关键物体替换；它有甜味多次复用，家庭安慰与自制结尾仍完整。",
+        "fictional_prose": true,
+        "adult_or_specialist_complexity": false,
+        "visible_physical_truncation": false,
+        "complete_story_arc": true,
+        "coreference_and_causal_readability": "main_arc_followable_with_local_defects"
+      }
+    ]
+  },
+  "surface_and_token_metrics": {
+    "sample_n": 32,
+    "tokenizer_path": "D:\\SPORA\\runs\\conversation-data-v5\\tokenizer.json",
+    "tokenizer_sha256": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+    "vocabulary": 8192,
+    "character_lengths": {
+      "min": 141,
+      "median": 231.0,
+      "mean": 246.625,
+      "max": 457
+    },
+    "token_lengths_with_bos_eos": {
+      "min": 116,
+      "median": 178.5,
+      "mean": 192.625,
+      "max": 330
+    },
+    "fits_512_whole_story": 32,
+    "fits_512_token_sum": 6164,
+    "all_story_token_sum": 6164,
+    "roundtrip_passed": 32,
+    "normalized_exact_duplicates": 0,
+    "normalized_leading96_duplicate_groups": 0,
+    "lexical_proxies": {
+      "unit": "CJK characters and contiguous CJK bigrams, not segmented Chinese words",
+      "cjk_character_count": 6822,
+      "distinct_cjk_characters": 787,
+      "cjk_bigram_count": 5961,
+      "distinct_cjk_bigrams": 2922,
+      "global_character_type_token_ratio": 0.1154,
+      "global_distinct_bigram_ratio": 0.4902,
+      "mean_100char_window_type_ratio_stride50": 0.6154,
+      "most_common_bigrams": [
+        [
+          "他们",
+          110
+        ],
+        [
+          "有一",
+          68
+        ],
+        [
+          "一个",
+          64
+        ],
+        [
+          "莉莉",
+          56
+        ],
+        [
+          "蒂姆",
+          52
+        ],
+        [
+          "了一",
+          39
+        ],
+        [
+          "一天",
+          37
+        ],
+        [
+          "喜欢",
+          35
+        ],
+        [
+          "名叫",
+          34
+        ],
+        [
+          "一起",
+          32
+        ],
+        [
+          "看到",
+          31
+        ],
+        [
+          "朋友",
+          31
+        ],
+        [
+          "高兴",
+          29
+        ],
+        [
+          "妈妈",
+          28
+        ],
+        [
+          "他的",
+          27
+        ],
+        [
+          "蒂米",
+          26
+        ],
+        [
+          "玩具",
+          25
+        ],
+        [
+          "的朋",
+          23
+        ],
+        [
+          "克斯",
+          23
+        ],
+        [
+          "一只",
+          22
+        ]
+      ],
+      "normalized_first8char_counts": [
+        [
+          "有一天,一个名叫",
+          6
+        ],
+        [
+          "从前,有一个小女",
+          6
+        ],
+        [
+          "从前,有一个小男",
+          3
+        ],
+        [
+          "有一天,一只名叫",
+          3
+        ],
+        [
+          "从前,有一个黄色",
+          1
+        ],
+        [
+          "从前,有一个男孩",
+          1
+        ],
+        [
+          "从前,在树林里的",
+          1
+        ],
+        [
+          "从前,在一个安静",
+          1
+        ],
+        [
+          "有一天,一只大狗",
+          1
+        ],
+        [
+          "从前,有一只灰色",
+          1
+        ],
+        [
+          "从前,有一个快乐",
+          1
+        ],
+        [
+          "有一天,一只可爱",
+          1
+        ],
+        [
+          "从前,有一只优雅",
+          1
+        ],
+        [
+          "从前,有一个鸭子",
+          1
+        ],
+        [
+          "从前,有两个兄弟",
+          1
+        ],
+        [
+          "从前,一个名叫莉",
+          1
+        ],
+        [
+          "从前,有一只傻兔",
+          1
+        ],
+        [
+          "汤姆和莉莉是双胞",
+          1
+        ]
+      ],
+      "common_opening_formulas": {
+        "从前": 20,
+        "一天": 0,
+        "有一天": 11,
+        "曾经": 0
+      },
+      "limitations": "Length-dependent descriptive surface diversity; no human vocabulary assessment or comparison to other corpora. Character/bigram diversity does not establish semantic/domain diversity."
+    },
+    "details": [
+      {
+        "sample_index": 0,
+        "characters": 253,
+        "cjk_characters": 225,
+        "encoded_tokens_with_bos_eos": 175,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7286,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.44
+      },
+      {
+        "sample_index": 1,
+        "characters": 208,
+        "cjk_characters": 181,
+        "encoded_tokens_with_bos_eos": 175,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.8291,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4696
+      },
+      {
+        "sample_index": 2,
+        "characters": 418,
+        "cjk_characters": 365,
+        "encoded_tokens_with_bos_eos": 329,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.6254,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.3397
+      },
+      {
+        "sample_index": 3,
+        "characters": 251,
+        "cjk_characters": 214,
+        "encoded_tokens_with_bos_eos": 203,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.828,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.5327
+      },
+      {
+        "sample_index": 4,
+        "characters": 194,
+        "cjk_characters": 154,
+        "encoded_tokens_with_bos_eos": 158,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7969,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4805
+      },
+      {
+        "sample_index": 5,
+        "characters": 278,
+        "cjk_characters": 237,
+        "encoded_tokens_with_bos_eos": 216,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7206,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4346
+      },
+      {
+        "sample_index": 6,
+        "characters": 158,
+        "cjk_characters": 137,
+        "encoded_tokens_with_bos_eos": 129,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.8051,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.5693
+      },
+      {
+        "sample_index": 7,
+        "characters": 334,
+        "cjk_characters": 278,
+        "encoded_tokens_with_bos_eos": 284,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 6,
+        "cjk_distinct_bigram_ratio": 0.7773,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.446
+      },
+      {
+        "sample_index": 8,
+        "characters": 270,
+        "cjk_characters": 242,
+        "encoded_tokens_with_bos_eos": 192,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7752,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4752
+      },
+      {
+        "sample_index": 9,
+        "characters": 231,
+        "cjk_characters": 206,
+        "encoded_tokens_with_bos_eos": 180,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.8415,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.5243
+      },
+      {
+        "sample_index": 10,
+        "characters": 180,
+        "cjk_characters": 156,
+        "encoded_tokens_with_bos_eos": 149,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.9185,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.6346
+      },
+      {
+        "sample_index": 11,
+        "characters": 231,
+        "cjk_characters": 194,
+        "encoded_tokens_with_bos_eos": 176,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.8072,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.5052
+      },
+      {
+        "sample_index": 12,
+        "characters": 262,
+        "cjk_characters": 228,
+        "encoded_tokens_with_bos_eos": 204,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7662,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4518
+      },
+      {
+        "sample_index": 13,
+        "characters": 141,
+        "cjk_characters": 123,
+        "encoded_tokens_with_bos_eos": 116,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.8667,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.5935
+      },
+      {
+        "sample_index": 14,
+        "characters": 300,
+        "cjk_characters": 255,
+        "encoded_tokens_with_bos_eos": 257,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7466,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4471
+      },
+      {
+        "sample_index": 15,
+        "characters": 218,
+        "cjk_characters": 191,
+        "encoded_tokens_with_bos_eos": 163,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.8193,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.5445
+      },
+      {
+        "sample_index": 16,
+        "characters": 238,
+        "cjk_characters": 208,
+        "encoded_tokens_with_bos_eos": 190,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7667,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4808
+      },
+      {
+        "sample_index": 17,
+        "characters": 235,
+        "cjk_characters": 200,
+        "encoded_tokens_with_bos_eos": 174,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.8448,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.495
+      },
+      {
+        "sample_index": 18,
+        "characters": 331,
+        "cjk_characters": 290,
+        "encoded_tokens_with_bos_eos": 269,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7843,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4483
+      },
+      {
+        "sample_index": 19,
+        "characters": 184,
+        "cjk_characters": 151,
+        "encoded_tokens_with_bos_eos": 140,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.754,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4437
+      },
+      {
+        "sample_index": 20,
+        "characters": 203,
+        "cjk_characters": 172,
+        "encoded_tokens_with_bos_eos": 153,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.8725,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.564
+      },
+      {
+        "sample_index": 21,
+        "characters": 269,
+        "cjk_characters": 242,
+        "encoded_tokens_with_bos_eos": 203,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7788,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4669
+      },
+      {
+        "sample_index": 22,
+        "characters": 225,
+        "cjk_characters": 197,
+        "encoded_tokens_with_bos_eos": 187,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7746,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4365
+      },
+      {
+        "sample_index": 23,
+        "characters": 326,
+        "cjk_characters": 267,
+        "encoded_tokens_with_bos_eos": 239,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.864,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.5169
+      },
+      {
+        "sample_index": 24,
+        "characters": 171,
+        "cjk_characters": 151,
+        "encoded_tokens_with_bos_eos": 138,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.8409,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.5695
+      },
+      {
+        "sample_index": 25,
+        "characters": 282,
+        "cjk_characters": 241,
+        "encoded_tokens_with_bos_eos": 224,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.8093,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.5353
+      },
+      {
+        "sample_index": 26,
+        "characters": 229,
+        "cjk_characters": 197,
+        "encoded_tokens_with_bos_eos": 177,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7225,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4112
+      },
+      {
+        "sample_index": 27,
+        "characters": 229,
+        "cjk_characters": 202,
+        "encoded_tokens_with_bos_eos": 194,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7611,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.5149
+      },
+      {
+        "sample_index": 28,
+        "characters": 227,
+        "cjk_characters": 202,
+        "encoded_tokens_with_bos_eos": 171,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.7821,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4901
+      },
+      {
+        "sample_index": 29,
+        "characters": 155,
+        "cjk_characters": 136,
+        "encoded_tokens_with_bos_eos": 125,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.8475,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.5956
+      },
+      {
+        "sample_index": 30,
+        "characters": 204,
+        "cjk_characters": 173,
+        "encoded_tokens_with_bos_eos": 144,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.755,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.4855
+      },
+      {
+        "sample_index": 31,
+        "characters": 457,
+        "cjk_characters": 407,
+        "encoded_tokens_with_bos_eos": 330,
+        "fits_512_whole_story": true,
+        "tokenizer_roundtrip": true,
+        "sentence_terminal_proxy": true,
+        "replacement_character": false,
+        "literal_backslash_n": false,
+        "latin_letters": 0,
+        "cjk_distinct_bigram_ratio": 0.6022,
+        "repeated_full_sentence_within_story": false,
+        "cjk_character_type_token_ratio": 0.3587
+      }
+    ]
+  },
+  "decision": {
+    "proceed_to_filtered64_review": true,
+    "reject_source_entirely": false,
+    "source_suitable_for_bounded_pilot_preparation": true,
+    "training_ready_artifact_delivered": false,
+    "unfiltered_20M_plus_training_endorsed": false,
+    "rationale": "32/32 self-contained story arcs and512 compatibility;9 clean,12 minor,11 major by one reviewer. This supports a filtered pilot, not automatic full-corpus acceptance. Fantastical prose is intentional and not penalized.",
+    "next_gate": "Prepare story-group split using unchanged tokenizer/context512, preserve oldv3/v5 held exclusion, exact/near duplicate controls and end-of-story completeness. Inspect fixed64 post-filter TRAIN stories for grammar, entity/causal continuity and translation defects. Do not rely only on punctuation or reject fiction.",
+    "suggested_nonperfect_pilot_gate": "Proposed prospective gate, not measured result: at least56/64 clean-or-minor and main-arc readable; no more than8/64 major; no visible physical truncation or unexplained concatenated stories. Any repeated systematic entity/direction reversal needs mitigation or explicit reconsideration even if count passes. Main task sets the final gate; no human accuracy claim.",
+    "main_proposed_schedule": "User/main proposal89%story/10%oldteacher/1%foundation by effective targets, B500parent,100then500updates can be a bounded continuation experiment after filtered64 and mechanical gates pass. This audit does not establish optimality or authorize a broad-chat claim; focus replay must be accounted once within mixture totals.",
+    "evaluation_scope": "Check story continuation coherence, entity consistency, repetition, old development degradation and original individual preservation under the main predeclared protocol; this sidecar performs no model evaluation.",
+    "scale_for_20M_targets": {
+      "sample_mean_tokens_including_bos_eos": 192.625,
+      "sample_mean_within_story_next_token_targets": 191.625,
+      "rough_distinct_story_count_for_20M_targets": 104371,
+      "interpretation": "Planning arithmetic20,000,000/191.625, not measured filtered yield. First shard has575898 raw rows; enough nominal scale if sufficient survive. Actual output token count must be measured; do not meet20M by repeating a tiny subset.32/32 fitting512 does not prove whole-shard fit."
+    }
+  },
+  "observations": [
+    "All32 tokenizer roundtrips passed; whole-story length116–330 tokens includingBOS/EOS.",
+    "No physical truncation or specialist/adult complexity observed in32; surface punctuation alone did not detect11 major semantic/local continuity issues.",
+    "31/32 stories start with 从前 or 有一天; recurring protagonist names and morals suggest template concentration.",
+    "6822 CJK characters contain787 distinct characters;5961 contiguous CJK bigrams contain2922 distinct types. These are surface units, not a word-vocabulary or semantic diversity score."
+  ],
+  "inferences": [
+    "Better narrative self-containment than decontextualized wiki fragments is plausible from this review, but no controlled cross-corpus or model comparison was run.",
+    "Raw machine translation noise is material. A filtering-only procedure may miss entity substitutions; validate on held-back post-filter training samples rather than asserting clean quality from rules.",
+    "Native/simple-story alternatives may broaden vocabulary later; current evidence does not justify additional downloads in this bounded task."
+  ],
+  "limitations": [
+    "First-shard-only fixed32 sample; not a corpus-wide population error estimate or independent human review.",
+    "No English-original alignment check; suspected translation errors are inferred from Chinese text, not measured translation fidelity.",
+    "No new old-held leakage audit performed here; main preparation must complete it before any training-ready decision.",
+    "Quoted source quality/scale claims are distinguished from local measurements.",
+    "Discovery search was bounded, not exhaustive; selected candidate is concrete and pinned, not a claim no better source exists."
+  ],
+  "changes": [
+    "reports/P28-next-source-review.json",
+    "runs/p28-source-review/ metadata snapshots, license text,32-story sample,annotations,metrics,sampling scripts/evidence,isolated PyArrow dependency and abandoned bounded range blocks."
+  ],
+  "evidence_files": [
+    {
+      "file": "52AI--TinyStoriesZh-metadata.json",
+      "bytes": 1435,
+      "sha256": "0b09553844c55fdea462d8d6dbae087cfbd07446f20260345147ff5ebae461fc"
+    },
+    {
+      "file": "52AI--TinyStoriesZh-README.md",
+      "bytes": 2941,
+      "sha256": "3a2b6a3477c2e2ab230ffc3a843f9d11acc28d40301dde50fd37e42f0838f387"
+    },
+    {
+      "file": "78yang--TinyStoriesChinese-metadata.json",
+      "bytes": 1318,
+      "sha256": "ebf1638ab3af5fafc2b6257a7f4401628d16f9b365711a3a9c161969506c1468"
+    },
+    {
+      "file": "78yang--TinyStoriesChinese-README.md",
+      "bytes": 9977,
+      "sha256": "d0b3ad8f5be43138e84302cdb193759acfe8b9e83ba3accd127682cb9fd9cbef"
+    },
+    {
+      "file": "adam89--TinyStoriesChinese-metadata.json",
+      "bytes": 1320,
+      "sha256": "20b823d767c9e8511065ed754fd7116e35ea3fe09a144e9f74104ad643d77249"
+    },
+    {
+      "file": "adam89--TinyStoriesChinese-README.md",
+      "bytes": 9977,
+      "sha256": "d0b3ad8f5be43138e84302cdb193759acfe8b9e83ba3accd127682cb9fd9cbef"
+    },
+    {
+      "file": "analyze_train_samples.py",
+      "bytes": 5055,
+      "sha256": "5f4a3ff6edc86249e8285ba6a120fab4960cdea0d479bd770fd463ba4a00a6d3"
+    },
+    {
+      "file": "CASIA-LM--ChineseWebText2.0-metadata.json",
+      "bytes": 9975,
+      "sha256": "d491e62e7f1b6a56349fc1d2c733150d6e8c0cdc3b684da408a9f605b62cf354"
+    },
+    {
+      "file": "CASIA-LM--ChineseWebText2.0-README.md",
+      "bytes": 12383,
+      "sha256": "374455164776d86cca64b5023ec583da34fac9b6c96f228fecfac889640310f8"
+    },
+    {
+      "file": "CDLA-Sharing-1.0-extracted.txt",
+      "bytes": 12425,
+      "sha256": "04af0669119fff63299b58263f32fdf7aad1071a3802fc57641b87a6db6b9a4c"
+    },
+    {
+      "file": "CDLA-Sharing-1.0.html",
+      "bytes": 156071,
+      "sha256": "2fc70c2093aa1c60dc0ea0329a0f772d3554b4c9ce57d9ee8ca1d5338447e795"
+    },
+    {
+      "file": "Dxniz--TinyStories-Multilingual-metadata.json",
+      "bytes": 2204,
+      "sha256": "cf6e9ef38aaa46e12c97d5cf1b72a2a7e721c9d78c31df98d14e0d30e4abfda0"
+    },
+    {
+      "file": "Dxniz--TinyStories-Multilingual-README.md",
+      "bytes": 4285,
+      "sha256": "dbf077cb083770b5081be36f046a2d81fabfa01d36de72cec00b79c73041793a"
+    },
+    {
+      "file": "dxniz-parquet-index.json",
+      "bytes": 124,
+      "sha256": "201b3e4ece408e667479d854e76db3dc1d2d8e7481238ff95dddf61da64c5364"
+    },
+    {
+      "file": "dxniz-tree.json",
+      "bytes": 498,
+      "sha256": "a1fe8ae028372303901ead194af591c3c024783d30655b788e3748e0e5ec70fc"
+    },
+    {
+      "file": "finalize_review.py",
+      "bytes": 21836,
+      "sha256": "e526f9b7f9e92a4500f6122befd8b6b2afdc4027579030bcb0b451fb984dbb29"
+    },
+    {
+      "file": "fzmnm--TinyStoriesAdv-zh-metadata.json",
+      "bytes": 4448,
+      "sha256": "5d293e312ab0dec2c7a3cdaf6e40fac1807f41ccfcf178bd472e667a0b51ee46"
+    },
+    {
+      "file": "fzmnm--TinyStoriesAdv-zh-README.md",
+      "bytes": 6602,
+      "sha256": "107256565abd849edf984bd8d28532da6130b278a838a885ebdc7e53e2e77bb5"
+    },
+    {
+      "file": "Gabrui--multilingual_TinyStories-metadata.json",
+      "bytes": 9582,
+      "sha256": "5a02089242d2553184ad9d20b639f46a7e48c12dbc6cd83690f2cddd63b3dc8b"
+    },
+    {
+      "file": "Gabrui--multilingual_TinyStories-README.md",
+      "bytes": 13602,
+      "sha256": "8a9ecd2baba974315b4227fee30bd35ef2fef071b2ad366c3e34a3b27137a52a"
+    },
+    {
+      "file": "Gabrui-chinese-file-metadata.json",
+      "bytes": 1924,
+      "sha256": "1b9bc48faab5cc7cd59953ddc31af8881921c2fa4ad4bcf44fa532713f0d0153"
+    },
+    {
+      "file": "hughxusu--chinese-kid-story-metadata.json",
+      "bytes": 440,
+      "sha256": "351d8b3681d0e93d55f3d4b68ecdc507fa64ae92ac82f5902e0b9a419efbde97"
+    },
+    {
+      "file": "hughxusu--chinese-kid-story-README.md",
+      "bytes": 24,
+      "sha256": "d8d7a46d41a1a37fe4f0a5f637bf55c649310185329127d8a2204632e480be17"
+    },
+    {
+      "file": "manual-review-32.json",
+      "bytes": 20685,
+      "sha256": "5456a725f66436d10b1f24b063a6adc5609fd6fb89cc85706e5ab5d371692cae"
+    },
+    {
+      "file": "range-network.json",
+      "bytes": 1311,
+      "sha256": "9f76226e532f7810a67fb1249e86c5513c4bd08742e42b4b845445d606d37214"
+    },
+    {
+      "file": "RobinChen2001--TinyStories-Zh-2M-metadata.json",
+      "bytes": 2390,
+      "sha256": "07da04f2fd7e8bfe4f4eec0563c758a8419da95a877cdf0c6dcbff7716980ca6"
+    },
+    {
+      "file": "RobinChen2001--TinyStories-Zh-2M-README.md",
+      "bytes": 1895,
+      "sha256": "9fe45494e8149143e7f3a0e9df3b25b49aade3566e1b36bbd34a27313fb41489"
+    },
+    {
+      "file": "roneneldan--TinyStories-metadata.json",
+      "bytes": 1985,
+      "sha256": "a85b7ba00eaf0cbd1747630a33cd20c6d323d4f66cbe66efb3b6e90321f5d1b3"
+    },
+    {
+      "file": "roneneldan--TinyStories-README.md",
+      "bytes": 1061,
+      "sha256": "f67b71c3ffe761795b9428222444bfc1ec447d45cb13b00821b7e6c1ceecf7c5"
+    },
+    {
+      "file": "sample-metrics.json",
+      "bytes": 19707,
+      "sha256": "7725b77f1b697f45524bea4e171aa166219ed06bfcb41b801677e9b60c8d7587"
+    },
+    {
+      "file": "sample_local_train.py",
+      "bytes": 3758,
+      "sha256": "a8a11e69e3e193cce6772329de6f1dcae3da1ad0ee3597dbfe2eac13ec534174"
+    },
+    {
+      "file": "sample_pinned_train.py",
+      "bytes": 8024,
+      "sha256": "51a2f158545cbd9e0450c6f13124a174ecf90e2051115bfa0645b7448154b0ca"
+    },
+    {
+      "file": "sampling-evidence.json",
+      "bytes": 1811,
+      "sha256": "19d72db9ebb71c4449ef081e45d5c868120eef82407e818dd9387a1e15cd0e73"
+    },
+    {
+      "file": "search-0.json",
+      "bytes": 2327,
+      "sha256": "7037cb8e7701d7802a82036bf01dac40b40e859223788ce5ed4240f3ea8536ce"
+    },
+    {
+      "file": "search-1.json",
+      "bytes": 5288,
+      "sha256": "bb32dbf6cfac5619e809f72392e4d977b19a5e0e5e7d75de99ea74183a0b0552"
+    },
+    {
+      "file": "search-2.json",
+      "bytes": 1172,
+      "sha256": "0f213380f74c8cc628b1a6d3f20a8644542f85f8556f78c6ce09cfefe82a8f80"
+    },
+    {
+      "file": "search-3.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "file": "search-Chinese-Story.json",
+      "bytes": 354,
+      "sha256": "0013f9725bd2c5ff3d933d2bbb995d74ba75152683330b88d4701f3b30497bf6"
+    },
+    {
+      "file": "search-ChineseStory.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "file": "search-ChineseWebText.json",
+      "bytes": 6316,
+      "sha256": "66b8043c1dce250702c05ebb8366f4de042ba6e9ef23e4be451b646e9e931db9"
+    },
+    {
+      "file": "search-SimpleStories.json",
+      "bytes": 19239,
+      "sha256": "16f9a311d18a40e5596d829a337089259933f2787548d111c1e9f65e960f6a9b"
+    },
+    {
+      "file": "search-StoryBench.json",
+      "bytes": 2714,
+      "sha256": "6466503470981682137ff31bdfb5dda3756814867ed93e96c03310382e08912c"
+    },
+    {
+      "file": "search-TinyStories.json",
+      "bytes": 292845,
+      "sha256": "be2f1026439fde8eca7a08d5c2292088c4e7c169151a59b8600440029f54625e"
+    },
+    {
+      "file": "train-samples-32.json",
+      "bytes": 36573,
+      "sha256": "6f5c293115e3abd0fc014fba031310cfe4281c1a540961c1705a7c929319ace8"
+    },
+    {
+      "file": "train-samples-partial.json",
+      "bytes": 2429,
+      "sha256": "5738b1f04fcb764e4d18cddfbeb5bd95bcc8a75692142584678377f26fa120d8"
+    }
+  ],
+  "validation": {
+    "annotation_count_and_hash_binding_passed": true,
+    "train_only_sample_verified": true,
+    "token_length_counts_reconciled": true,
+    "scripts_parse": true,
+    "full_first_shard_sha_verified": true,
+    "all_links_pinned_where_supported": true,
+    "no_model_tests_run": true
+  }
+}
