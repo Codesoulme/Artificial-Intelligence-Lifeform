@@ -1,0 +1,57 @@
+{
+  "phase": "P139-authored-pretrain-pipeline-smoke",
+  "parent": "checkpoints/individual-prechinese-v3.pt",
+  "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "data": "runs/authored-pretrain-adapter-v1",
+  "base_data": "runs/authored-pretrain-adapter-v1",
+  "seed": 139109,
+  "model": {
+    "vocabulary": 8192,
+    "width": 256,
+    "depth": 8,
+    "heads": 8,
+    "hidden": 704,
+    "context": 512,
+    "memory_layers": [
+      3,
+      7
+    ],
+    "memory_read": "legacy"
+  },
+  "length": 512,
+  "learning_rate": 0.0001,
+  "warmup": 5,
+  "schedule_steps": 20,
+  "check_every": 10,
+  "snapshot_every": 10,
+  "focus_every": 10,
+  "scope": "20-step pipeline smoke using user-authored narrow candidate; not capability claim.",
+  "respect_document_boundaries": true,
+  "initial_language": "runs/p34-pretraining-100/step001000.pt",
+  "initial_language_sha256": "eae8e678db0e9b87b7a88528206e2210fb93d87cb925308aa8a2d1ae67bc1234",
+  "ancestor_steps": 1000,
+  "ancestor_targets": 8192000,
+  "data_audits": [
+    "runs/authored-pretrain-adapter-v1/lineage-audit.json"
+  ],
+  "prior_lineage_steps": 0,
+  "curriculum": "runs/p35-authored-dialogue-v4",
+  "curriculum_manifest_sha256": "00e023c9c08e674b289fb3419551e790ebc784f7a093b33fca3745c24f96956b",
+  "microbatch": 4,
+  "target_shares": {
+    "pretrain": 1.0
+  },
+  "corpus_review": "reports/P35-authored-dialogue-v4-review.json",
+  "corpus_review_sha256": "18f58ad28947c0dc431ef60d6f0483ae3badf5906d50f1db5f5adaa0a879161c",
+  "target_budget": 8192,
+  "training_source_reviews": {
+    "pretrain": {
+      "path": "runs/authored-pretrain-adapter-v1/pipeline-review.json",
+      "sha256": "9f9e86d51ed73fe7ddf0e52256d3a22bfae68974d399083f38969eabeeda7550"
+    },
+    "focus": {
+      "path": "runs/authored-pretrain-adapter-v1/pipeline-review.json",
+      "sha256": "9f9e86d51ed73fe7ddf0e52256d3a22bfae68974d399083f38969eabeeda7550"
+    }
+  }
+}
