@@ -1,0 +1,70 @@
+{
+  "phase": "p111-old-uniform-chunks",
+  "parent": "checkpoints/individual-prechinese-v3.pt",
+  "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "data": "runs/p28-stories-data/candidate-v3",
+  "base_data": "runs/conversation-data-v5",
+  "seed": 391109,
+  "model": {
+    "vocabulary": 8192,
+    "width": 256,
+    "depth": 8,
+    "heads": 8,
+    "hidden": 704,
+    "context": 512,
+    "memory_layers": [
+      3,
+      7
+    ],
+    "memory_read": "legacy"
+  },
+  "length": 512,
+  "learning_rate": 0.0001,
+  "warmup": 28,
+  "schedule_steps": 200,
+  "check_every": 50,
+  "snapshot_every": 50,
+  "focus_every": 10,
+  "scope": "Bounded chunk-sampling diagnostic, independent pretrain and story exposure accounting; not a chat claim.",
+  "respect_document_boundaries": true,
+  "initial_language": "runs/p34-pretraining-100/step001000.pt",
+  "initial_language_sha256": "eae8e678db0e9b87b7a88528206e2210fb93d87cb925308aa8a2d1ae67bc1234",
+  "ancestor_steps": 1000,
+  "ancestor_targets": 8192000,
+  "data_audits": [
+    "runs/p28-stories-data/candidate-v3/lineage-audit.json"
+  ],
+  "prior_lineage_steps": 35500,
+  "prior_lineage_targets": 61902001,
+  "curriculum": "runs/mixed-context-curriculum-v1",
+  "curriculum_manifest_sha256": "24a282b07353411952561b001eebff7c29a3b0de0d6ac0e14c5194b21acd4098",
+  "microbatch": 4,
+  "target_shares": {
+    "pretrain": 0.5,
+    "story": 0.5
+  },
+  "corpus_review": "reports/P28-stories-content-review.json",
+  "corpus_review_sha256": "b3da3e063d25616922aa482a67d107258e39a2b1af63ff205b44a4cf46e2054f",
+  "target_budget": 8192,
+  "training_source_reviews": {
+    "pretrain": {
+      "path": "reports/P107-mix-source-review.json",
+      "sha256": "1379030133be85fa7ca2705886c2b43c7c89683f399c56540405756a8f06dc81"
+    },
+    "story": {
+      "path": "reports/P107-mix-source-review.json",
+      "sha256": "1379030133be85fa7ca2705886c2b43c7c89683f399c56540405756a8f06dc81"
+    },
+    "focus": {
+      "path": "reports/P107-mix-source-review.json",
+      "sha256": "1379030133be85fa7ca2705886c2b43c7c89683f399c56540405756a8f06dc81"
+    }
+  },
+  "respect_story_document_boundaries": true,
+  "trim_ignored_tail": true,
+  "memory_ablation": false,
+  "observe_story_coverage": true,
+  "story_sampling_mode": "uniform",
+  "pretrain_sampling_mode": "chunk",
+  "observe_pretrain_coverage": true
+}
