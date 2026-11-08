@@ -42,6 +42,14 @@
 & 'D:\SPORA\chat.cmd' --device cpu
 ```
 
+如果需要在本次进程内保留有限多轮上下文，可运行：
+
+```powershell
+& 'D:\SPORA\chat.cmd' --device cpu --multi-turn
+```
+
+该模式只保留最近若干轮在内存中，`/clear` 可清除；它不会写入长期神经记忆或磁盘，也不代表模型已经学会了稳定多轮理解。
+
 默认配套文件为 `checkpoints/individual-prechinese-v3.pt` 和 `runs/chinese-curriculum-1000/checkpoint.pt`。入口验证二者的摘要绑定；只从GitHub克隆源码时没有这些本地权重，不能直接得到当前个体。
 
 本次仅增加交流入口，没有继续训练。后续需要先改善问答能力，并完成中文与内在经历的对应关系，才能实现可靠的对话和通过交流持续学习。

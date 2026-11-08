@@ -1,7 +1,8 @@
 """Read-only local console for the P18 language interface and symbol memory.
 
-Every text request is an independent raw prefix. No hidden persona, external
-answer service, chat replay, optimizer, or persisted conversation is involved.
+The default mode keeps requests independent. Optional multi-turn mode keeps a
+bounded in-process transcript only; it never writes the transcript to neural
+memory or disk.
 """
 import argparse
 import hashlib
@@ -25,8 +26,22 @@ def visible(text):
                    else '\\u'+format(ord(c), '04x') for c in text.replace('\r\n', '\n'))
 
 
+def bounded_conversation_prompt(history, current, budget, max_turns=8):
+    """Build a bounded prompt from RAM-only turns, keeping the newest turns."""
+    if type(budget) is not int or budget < 1 or type(max_turns) is not int or max_turns < 1:
+        raise ValueError('Invalid conversation budget')
+    turns = list(history)[-max_turns:]
+    while True:
+        parts = [f'用户：{user}\n助手：{assistant}' for user, assistant in turns]
+        parts.append(f'用户：{current}\n助手：')
+        prompt = '\n'.join(parts)
+        if len(prompt.encode('utf-8')) <= budget or not turns:
+            return prompt
+        turns.pop(0)
+
+
 class LocalConversation:
-    def __init__(self, parent, interface, device='cpu', max_new_bytes=96):
+    def __init__(self, parent, interface, device='cpu', max_new_bytes=96, multi_turn=False):
         if type(max_new_bytes) is not int or not 1 <= max_new_bytes <= 128:
             raise ValueError('生成长度必须在1到128之间。')
         parent, interface = Path(parent), Path(interface)
@@ -40,6 +55,8 @@ class LocalConversation:
         load_interface(self.model, payload, digest)
         self.total_steps = payload.get('steps', 0)+(payload.get('lineage') or {}).get('prior_steps', 0)
         self.max_new_bytes = max_new_bytes
+        self.multi_turn = bool(multi_turn)
+        self.history = []
         self.input_budget = organism.config.max_length-1-max_new_bytes
         if self.input_budget < 1:
             raise ValueError('生成预算超过当前模型的可用长度。')
@@ -51,6 +68,8 @@ class LocalConversation:
         print(f'每次最多输入{self.input_budget}个UTF-8字节，约{self.input_budget//3}个常用汉字。')
         print('/memory 12     查看键12的当前记忆')
         print('/memory 12 0   查看键12在第0次观察时的记录')
+        if self.multi_turn:
+            print('/clear         清除本次运行的临时多轮上下文')
         print('/info          查看当前版本；/help 帮助；/quit 退出')
 
     @torch.no_grad()
@@ -61,11 +80,16 @@ class LocalConversation:
         parts = stripped.split()
         if stripped in ('/quit', '/exit'):
             return False
+        if stripped == '/clear' and self.multi_turn:
+            self.history.clear()
+            print('已清除本次运行的临时多轮上下文。')
+            return True
         if stripped == '/help':
             self.help()
         elif stripped == '/info':
             print(f'累计中文训练{self.total_steps}步；已保存{self.state.cursor}次符号观察。')
-            print('每次输入独立续写，不拼接之前的对话；交流不会自动写入长期记忆。')
+            mode = '启用临时多轮上下文' if self.multi_turn else '每次输入独立续写'
+            print(f'{mode}；交流不会自动写入长期记忆。')
         elif parts[0] == '/memory':
             if len(parts) not in (2, 3):
                 raise ValueError('用法：/memory 键 [观察时刻]，例如 /memory 12 0')
@@ -90,11 +114,15 @@ class LocalConversation:
         else:
             if len(text.encode('utf-8')) > self.input_budget:
                 raise ValueError(f'这段输入太长，请缩短到约{self.input_budget//3}个常用汉字以内；没有截断或保存它。')
-            result = generate(self.model, self.state, text, self.max_new_bytes)
+            prompt = bounded_conversation_prompt(self.history, text, self.input_budget) if self.multi_turn else text
+            result = generate(self.model, self.state, prompt, self.max_new_bytes)
             output = visible(result['text']).strip()
             print('模型：'+(output if output else '（没有生成可显示的文字）'))
             if not result['utf8_valid']:
                 print('提示：原始输出包含无效编码，显示中的替代符号不算有效文字。')
+            if self.multi_turn:
+                self.history.append((text, output))
+                del self.history[:-8]
         return True
 
 
@@ -104,6 +132,8 @@ def main():
     parser.add_argument('--interface', default=str(DEFAULT_INTERFACE))
     parser.add_argument('--device', choices=['auto', 'cpu', 'cuda'], default='auto')
     parser.add_argument('--max-new-bytes', type=int, default=96)
+    parser.add_argument('--multi-turn', action='store_true',
+                        help='保留本次进程内的有限对话历史；不写入长期记忆或磁盘')
     parser.add_argument('--prompt', help='只运行一次输入；省略则进入交互窗口')
     args = parser.parse_args()
     # UTF-8 is needed both in Windows terminals and redirected streams.
@@ -114,9 +144,9 @@ def main():
     torch.set_num_threads(2)
     try:
         print('正在加载本地 SPORA…', flush=True)
-        conversation = LocalConversation(args.individual, args.interface, device, args.max_new_bytes)
+        conversation = LocalConversation(args.individual, args.interface, device, args.max_new_bytes, args.multi_turn)
         print(f'已加载累计{conversation.total_steps}步的语言版本。当前只能尝试短文本续写，回答可能不正确。')
-        print('每次输入独立处理；本轮交流不会自动记为长期经历。')
+        print(('本次启用有限多轮上下文；' if args.multi_turn else '每次输入独立处理；') + '本轮交流不会自动记为长期经历。')
         if args.prompt is not None:
             conversation.respond(args.prompt)
             return
