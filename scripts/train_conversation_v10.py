@@ -12,6 +12,7 @@ from spora.conversation import ConversationBridge,ConversationConfig,restore_con
 from spora.conversation_data import DialogueRows
 from spora.token_objective import backward_token_budget
 from spora.training_mix import choose_source
+from spora.source_review import verify_training_source_reviews
 from spora.growing import load
 from spora.language_training import interface_state,atomic_save,frozen_digest
 from chinese_curriculum_common import memory_answers
@@ -19,7 +20,7 @@ from types import SimpleNamespace
 from prepare_conversation_v2 import sha,SPECIAL
 from train_wording import dump,protected_manifest
 ROOT=Path(__file__).resolve().parents[1]
-SOURCES=('spora/conversation.py','spora/conversation_data.py','scripts/train_conversation_v10.py','spora/token_objective.py','spora/conversation_state.py','spora/training_mix.py','spora/state_codec.py','spora/growing.py','scripts/prepare_teaching_curriculum.py','scripts/curate_teaching_curriculum.py','scripts/prepare_conversation_v4.py','scripts/prepare_conversation_v2.py','scripts/curate_conversation.py','spora/language_training.py')
+SOURCES=('spora/conversation.py','spora/conversation_data.py','scripts/train_conversation_v10.py','spora/token_objective.py','spora/conversation_state.py','spora/training_mix.py','spora/source_review.py','spora/state_codec.py','spora/growing.py','scripts/prepare_teaching_curriculum.py','scripts/curate_teaching_curriculum.py','scripts/prepare_conversation_v4.py','scripts/prepare_conversation_v2.py','scripts/curate_conversation.py','spora/language_training.py')
 PROMPTS=('你好，请简单介绍你的能力。','我今天有点累，可以怎样放松？','请用一句话解释为什么会下雨。','把“明天我去图书馆看书”改成疑问句。','我不知道该选哪本书，你能先问我一个问题吗？','社会主义核心价值观的个人层面包括哪些内容？')
 
 def load_rows(path,length):
@@ -79,6 +80,7 @@ def main():
     parser.add_argument('--output',required=True);parser.add_argument('--until',type=int,required=True);parser.add_argument('--resume',action='store_true')
     args=parser.parse_args();plan=json.loads((ROOT/args.plan).read_text('utf-8'));data=ROOT/plan['data'];base_data=ROOT/plan.get('base_data',plan['data']);out=ROOT/args.output
     if not 0<args.until<=plan['schedule_steps'] or args.until%plan['check_every']:raise ValueError('End at a planned checkpoint')
+    source_reviews=verify_training_source_reviews(ROOT,plan)
     if sha(ROOT/plan['parent'])!=plan['parent_sha256']:raise ValueError('Individual file changed')
     if sha(ROOT/plan['corpus_review'])!=plan['corpus_review_sha256']:raise ValueError('Corpus review changed')
     review=json.loads((ROOT/plan['corpus_review']).read_text('utf-8'))
@@ -127,7 +129,7 @@ def main():
         for path in (ROOT/'runs').glob(pattern):protected[str(path.relative_to(ROOT)).replace('\\','/')]=sha(path)
     protected[plan['initial_language']]=plan['initial_language_sha256']
     fingerprints={name:sha(ROOT/name) for name in SOURCES}
-    metadata=dict(plan=plan,plan_sha256=sha(ROOT/args.plan),manifest_sha256=sha(data/'manifest.json'),base_manifest_sha256=sha(base_data/'manifest.json'),data_audit_sha256=audits,source_code_sha256=fingerprints,protected=protected)
+    metadata=dict(plan=plan,plan_sha256=sha(ROOT/args.plan),manifest_sha256=sha(data/'manifest.json'),base_manifest_sha256=sha(base_data/'manifest.json'),data_audit_sha256=audits,source_reviews=source_reviews,source_code_sha256=fingerprints,protected=protected)
     torch.set_num_threads(2);torch.manual_seed(plan['seed']);rng=random.Random(plan['seed'])
     organism,state,_=load(ROOT/plan['parent'],'cuda');before=frozen_digest(organism,state)
     payload=None;step=0;targets=0;focus_cursor=0;counts={};logs=[];elapsed=0.;batch_trace='00'*32

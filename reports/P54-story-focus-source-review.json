@@ -1,0 +1,15 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_diagnostic_only",
+  "max_schedule_steps": 100,
+  "scope": "At most 100 training updates for a controlled story-language diagnostic; no claim of general factual correctness, chat readiness, or privacy certification.",
+  "training_source_sha256": {
+    "story": "61a5fec7b4b13a0b7da138b2466185092216c6039b3e4ececbb5c356885613b6",
+    "focus": "c9884b46d44d2f8b0512c9f1346a43b728a091bbc55726fdfaef0450687db6a5"
+  },
+  "story_basis": "P28-stories-content-review.json reviewed 64 fixed training examples and approved a bounded 100-to-500 update story pilot; it identifies translation and safety limitations. Its manifest hash matches the local source manifest. This document narrows that review to 100 updates.",
+  "story_source_manifest_sha256": "fd57c0ffa3878c1aef3e762d4c4153672c7c899088f6369ceec33663243af5bd",
+  "story_original_review_sha256": "b3da3e063d25616922aa482a67d107258e39a2b1af63ff205b44a4cf46e2054f",
+  "focus_basis": "Decoded all 32 focus segments with the bound tokenizer. They state the user's requested twelve values, group membership, and short explanations. Source-only text replay does not prove conversational generalization.",
+  "limitations": ["The story review is a 64-record sample, not a full review.", "Content is translated synthetic fiction, not factual training data.", "Mechanical isolation does not establish semantic isolation."]
+}
