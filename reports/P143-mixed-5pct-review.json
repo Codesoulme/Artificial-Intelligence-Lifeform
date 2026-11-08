@@ -1,0 +1,20 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_5pct_mixed_smoke_not_capability_approval",
+  "max_schedule_steps": 20,
+  "max_target_shares": {
+    "pretrain": 1.0,
+    "teacher": 0.05
+  },
+  "reviewed_checkpoint_sha256": "1289f7cf5ebd16f3577ce77c06290d32a0664cc60716924e81391ec605be6f27",
+  "training_source_sha256": {
+    "pretrain": "d3acb9f571509b866372343b91b3661944ef98eb0ccd9ba8c0dea3cc4aa141fb",
+    "teacher": "e771c6e8abbf4b370c9eb8a9b5ee62af702abf82ec06e5ad2823d0d657dc8daa",
+    "focus": "c9884b46d44d2f8b0512c9f1346a43b728a091bbc55726fdfaef0450687db6a5"
+  },
+  "basis": "Bounded diagnostic of 5 percent reviewed authored dialogue mixed into the authored pretrain candidate; no chat claim.",
+  "limitations": [
+    "Narrow authored corpus and repeated exposure risk.",
+    "Not an independent chat acceptance evaluation."
+  ]
+}
