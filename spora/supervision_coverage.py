@@ -6,6 +6,7 @@ module does not observe training or infer coverage for previous runs.
 """
 
 from dataclasses import dataclass
+from bisect import bisect_left
 import re
 
 
@@ -30,10 +31,10 @@ def _source(value: object) -> str:
 
 
 class SupervisionCoverage:
-    """Store interval observations, including repeated observations."""
+    """Store merged intervals and the total number of observed positions."""
 
     def __init__(self) -> None:
-        self._records: list[tuple[str, int, int, int]] = []
+        self._groups: dict[tuple[str, int], tuple[list[tuple[int, int]], int]] = {}
 
     def add(self, source: str, document: int, start: int, end: int) -> None:
         source = _source(source)
@@ -42,42 +43,67 @@ class SupervisionCoverage:
         end = _integer(end, "end")
         if end <= start:
             raise ValueError("end must be greater than start")
-        self._records.append((source, document, start, end))
+        key = (source, document)
+        intervals, total = self._groups.get(key, ([], 0))
+        total += end - start
+        index = bisect_left(intervals, (start,))
+        if index and intervals[index - 1][1] >= start:
+            index -= 1
+        stop = index
+        while stop < len(intervals) and intervals[stop][0] <= end:
+            start = min(start, intervals[stop][0])
+            end = max(end, intervals[stop][1])
+            stop += 1
+        intervals[index:stop] = [(start, end)]
+        self._groups[key] = (intervals, total)
 
     def summaries(self) -> dict[tuple[str, int], CoverageSummary]:
-        groups: dict[tuple[str, int], list[tuple[int, int]]] = {}
-        for source, document, start, end in self._records:
-            groups.setdefault((source, document), []).append((start, end))
         result = {}
-        for key, intervals in groups.items():
-            merged: list[tuple[int, int]] = []
-            for start, end in sorted(intervals):
-                if merged and start <= merged[-1][1]:
-                    merged[-1] = (merged[-1][0], max(end, merged[-1][1]))
-                else:
-                    merged.append((start, end))
-            total = sum(end - start for start, end in intervals)
-            unique = sum(end - start for start, end in merged)
-            result[key] = CoverageSummary(tuple(merged), total, unique, total - unique)
+        for key, (intervals, total) in self._groups.items():
+            unique = sum(end - start for start, end in intervals)
+            result[key] = CoverageSummary(tuple(intervals), total, unique, total - unique)
         return result
 
     def to_dict(self) -> dict:
-        """Return a JSON-compatible, versioned snapshot of all observations."""
-        return {"version": 1, "records": [
-            {"source": source, "document": document, "start": start, "end": end}
-            for source, document, start, end in self._records
+        """Return a JSON-compatible snapshot of the accumulated coverage."""
+        return {"version": 2, "records": [
+            {"source": source, "document": document, "intervals": [list(pair) for pair in intervals],
+             "total_positions": total}
+            for (source, document), (intervals, total) in self._groups.items()
         ]}
 
     @classmethod
     def from_dict(cls, state: object) -> "SupervisionCoverage":
         """Validate and restore a snapshot, rejecting unknown fields."""
         if (not isinstance(state, dict) or set(state) != {"version", "records"}
-                or type(state["version"]) is not int or state["version"] != 1
+                or type(state["version"]) is not int or state["version"] not in (1, 2)
                 or not isinstance(state["records"], list)):
             raise ValueError("invalid coverage snapshot")
         result = cls()
         for record in state["records"]:
-            if not isinstance(record, dict) or set(record) != {"source", "document", "start", "end"}:
+            if state["version"] == 1:
+                if not isinstance(record, dict) or set(record) != {"source", "document", "start", "end"}:
+                    raise ValueError("invalid coverage record")
+                result.add(record["source"], record["document"], record["start"], record["end"])
+                continue
+            if not isinstance(record, dict) or set(record) != {"source", "document", "intervals", "total_positions"}:
                 raise ValueError("invalid coverage record")
-            result.add(record["source"], record["document"], record["start"], record["end"])
+            key = (_source(record["source"]), _integer(record["document"], "document"))
+            if key in result._groups or not isinstance(record["intervals"], list) or not record["intervals"]:
+                raise ValueError("invalid coverage intervals or duplicate group")
+            intervals = []
+            unique = 0
+            for pair in record["intervals"]:
+                if not isinstance(pair, list) or len(pair) != 2:
+                    raise ValueError("invalid coverage interval")
+                start = _integer(pair[0], "start")
+                end = _integer(pair[1], "end")
+                if end <= start or (intervals and start <= intervals[-1][1]):
+                    raise ValueError("coverage intervals must be ordered and disjoint")
+                intervals.append((start, end))
+                unique += end - start
+            total = _integer(record["total_positions"], "total_positions")
+            if total < unique:
+                raise ValueError("total positions cannot be less than unique positions")
+            result._groups[key] = (intervals, total)
         return result
