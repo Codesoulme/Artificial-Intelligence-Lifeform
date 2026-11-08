@@ -28,10 +28,10 @@ python -B scripts/p114_disk_story_dedupe.py --input D:/path/candidate.jsonl --ou
 
 `python -B -m unittest discover -s tests -p test_p114_disk_story_dedupe.py -v`：5 项合成测试通过。覆盖命令行参数映射、跨 100 行提交边界的连接、非代表桥接及传递合并、所有行恰有一个组条目、相同输入重复运行的四份输出逐字节一致、Jaccard 阈值边界、两种摘要校验、短文本、大桶和比较预算隔离、已有目录保护，以及内存和磁盘保护触发。测试构造了强制碰撞来验证完整特征核验，不能衡量真实 LSH 召回率。
 
-万条合成基准仍待执行，**目前没有本方案的万条峰值资源或完成时间数据**。预备的本机运行器 `runs/p114-synthetic-benchmark-runner.py` 会先检查已知 P112/P113 进程和系统内存，生成随机种子固定的纯合成文件，以低优先级启动本工具，并每 0.25 秒采样子进程和系统内存；超限时仅终止该子进程并写测量结果。它不会终止其他进程，进程名匹配不能替代人工确认其他相关作业均已结束。必须在相关作业结束且内存充足后手动执行，例如：
+万条合成基准仍待执行，**目前没有本方案的万条峰值资源或完成时间数据**。本机运行器 `scripts/p114_synthetic_benchmark.py` 会先检查已知 P112/P113 进程和系统内存，生成随机种子固定的纯合成文件，以低优先级启动本工具，并每 0.25 秒采样子进程和系统内存；超限时仅终止该子进程并写测量结果。它不会终止其他进程，进程名匹配不能替代人工确认其他相关作业均已结束。必须在相关作业结束且内存充足后手动执行，例如：
 
 ```powershell
-python -B runs/p114-synthetic-benchmark-runner.py --output D:/SPORA/runs/p114-synthetic-10k-20261109 --count 10000 --min-available-mib 1536 --max-memory-mib 192 --max-disk-mib 512
+python -B scripts/p114_synthetic_benchmark.py --output D:/SPORA/runs/p114-synthetic-10k-20261109 --count 10000 --min-available-mib 1536 --max-memory-mib 192 --max-disk-mib 512
 ```
 
-基准完成后应检查 `measurement.json`、`result/summary.json` 和输出覆盖情况，并记录峰值工作集、峰值提交、最低可用物理内存、磁盘占用、耗时和已知构造对的召回。采样值及保护仍非硬实时限制；本次尚未运行该基准，也未验证预备运行器的完整实测流程。启动前检查已做过一次：检测到 P112 的两个进程后立即退出，没有创建输出目录。
+基准完成后应检查 `measurement.json`、`result/summary.json` 和输出覆盖情况，并记录峰值工作集、峰值提交、最低可用物理内存、磁盘占用、耗时和已知构造对的召回。运行器会统计构造对是否归入同组及是否隔离。采样值及保护仍非硬实时限制；本次尚未运行该基准，也未验证运行器的完整实测流程。启动前检查已做过：检测到 P112 的两个进程后立即退出，没有创建输出目录。
