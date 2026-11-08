@@ -11,6 +11,7 @@ INPUT_SHA='4ec0b001db65b7ccabfaa064e56ce6dff3bbf0bb0a3890c116f4b99999bae9a1'
 HAN=re.compile(r'[\u3400-\u4dbf\u4e00-\u9fff\U00020000-\U0002fa1f]')
 CODE=re.compile(r'```|\b(?:def|class|import|function|var|const|SELECT)\b|<\/?[A-Za-z][^>]*>',re.I)
 TASK=re.compile(r'^(?:请|帮我|帮助|如何|怎样|给出|写一|生成|总结|翻译|判断|解释|根据|列出|完成|设计|描述|输出|输入：|问题：|问：)',re.I)
+TASK_ANY=re.compile(r'(?:输入(?:内容|文本)?|问题：|回答：|答案：|正确答案|总结如下|请将|请对|请根据|以下(?:文本|句子|数字|内容))',re.I)
 ROLE=re.compile(r'(?:^|\n)(?:用户|助手|system|assistant|user)\s*[:：]|(?:^|\n)[A-Z][A-Za-z]{0,12}\s*[:：]')
 COMMERCIAL=re.compile(r'产品|广告|购买|客服|优惠|促销|招商|加盟|品牌|销量|官网|报价|订单|营销|推广',re.I)
 HIGH_STAKES=re.compile(r'医疗|疾病|药物|诊断|治疗|法律|合同|诉讼|投资|股票|贷款|金融|疫情|新冠|战争|枪击|选举',re.I)
@@ -21,7 +22,7 @@ def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def classify(text):
  compact=''.join(text.split()); han=len(HAN.findall(text))/max(1,len(compact)); flags=[]
  if CODE.search(text):flags.append('code_or_markup')
- if TASK.search(text):flags.append('instruction_shape')
+ if TASK.search(text) or TASK_ANY.search(text[:240]):flags.append('instruction_shape')
  if ROLE.search(text):flags.append('dialogue_or_role_shape')
  if COMMERCIAL.search(text):flags.append('commercial_terms')
  if HIGH_STAKES.search(text):flags.append('high_stakes_terms')
