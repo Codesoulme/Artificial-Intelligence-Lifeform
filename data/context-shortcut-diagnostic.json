@@ -1,0 +1,13 @@
+{
+  "scope": "Hand-authored development diagnostic, not independent acceptance. Pairs reverse the relation while keeping the candidate words fixed. Ranking only, not generated answers.",
+  "cases": [
+    {"name":"earlier_place", "contexts":["小林先去了公园，后来去了车站。小林最先去了哪里？", "小林先去了车站，后来去了公园。小林最先去了哪里？"], "answers":["公园", "车站"]},
+    {"name":"other_person", "contexts":["小林在公园，小王在车站。小林在哪里？", "小林在车站，小王在公园。小林在哪里？"], "answers":["公园", "车站"]},
+    {"name":"other_object", "contexts":["书放在桌上，伞放在椅子上。书放在哪里？", "书放在椅子上，伞放在桌上。书放在哪里？"], "answers":["桌上", "椅子上"]},
+    {"name":"negated_place", "contexts":["小林没有去公园，而是去了车站。小林去了哪里？", "小林没有去车站，而是去了公园。小林去了哪里？"], "answers":["车站", "公园"]},
+    {"name":"before_change", "contexts":["会议原定周一，后来改到周二。原定星期几？", "会议原定周二，后来改到周一。原定星期几？"], "answers":["周一", "周二"]},
+    {"name":"negated_color", "contexts":["杯子不是蓝色，而是黄色。杯子是什么颜色？", "杯子不是黄色，而是蓝色。杯子是什么颜色？"], "answers":["黄色", "蓝色"]},
+    {"name":"person_color", "contexts":["小红的杯子是蓝色，小明的杯子是黄色。小红的杯子是什么颜色？", "小红的杯子是黄色，小明的杯子是蓝色。小红的杯子是什么颜色？"], "answers":["蓝色", "黄色"]},
+    {"name":"person_quantity", "contexts":["小红有两本书，小明有五本书。小红有几本书？", "小红有五本书，小明有两本书。小红有几本书？"], "answers":["两本", "五本"]}
+  ]
+}
