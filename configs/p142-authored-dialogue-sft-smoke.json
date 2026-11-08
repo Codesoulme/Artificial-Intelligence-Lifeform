@@ -1,0 +1,57 @@
+{
+  "phase": "P142-authored-dialogue-sft-smoke",
+  "parent": "checkpoints/individual-prechinese-v3.pt",
+  "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "data": "runs/authored-pretrain-adapter-v1",
+  "base_data": "runs/authored-pretrain-adapter-v1",
+  "seed": 142109,
+  "model": {
+    "vocabulary": 8192,
+    "width": 256,
+    "depth": 8,
+    "heads": 8,
+    "hidden": 704,
+    "context": 512,
+    "memory_layers": [
+      3,
+      7
+    ],
+    "memory_read": "legacy"
+  },
+  "length": 512,
+  "learning_rate": 0.0001,
+  "warmup": 5,
+  "schedule_steps": 20,
+  "check_every": 10,
+  "snapshot_every": 10,
+  "focus_every": 10,
+  "scope": "20-step bounded SFT from authored pretrain smoke; not a chat capability claim.",
+  "respect_document_boundaries": true,
+  "initial_language": "runs/p139-authored-pretrain-smoke/checkpoint.pt",
+  "initial_language_sha256": "1289f7cf5ebd16f3577ce77c06290d32a0664cc60716924e81391ec605be6f27",
+  "ancestor_steps": 20,
+  "ancestor_targets": 167482,
+  "data_audits": [
+    "runs/authored-pretrain-adapter-v1/lineage-audit.json"
+  ],
+  "prior_lineage_steps": 0,
+  "curriculum": "runs/p35-authored-dialogue-v4",
+  "curriculum_manifest_sha256": "00e023c9c08e674b289fb3419551e790ebc784f7a093b33fca3745c24f96956b",
+  "microbatch": 4,
+  "target_shares": {
+    "teacher": 1.0
+  },
+  "corpus_review": "reports/P35-authored-dialogue-v4-review.json",
+  "corpus_review_sha256": "18f58ad28947c0dc431ef60d6f0483ae3badf5906d50f1db5f5adaa0a879161c",
+  "target_budget": 8192,
+  "training_source_reviews": {
+    "teacher": {
+      "path": "reports/P141-bounded-sft-review.json",
+      "sha256": "a80473dbbf8dc9192b50229026539a999465ce83ad8a963f8da351b8c44e296a"
+    },
+    "focus": {
+      "path": "reports/P141-bounded-sft-review.json",
+      "sha256": "a80473dbbf8dc9192b50229026539a999465ce83ad8a963f8da351b8c44e296a"
+    }
+  }
+}

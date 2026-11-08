@@ -1,0 +1,18 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_sft_pipeline_smoke_not_capability_approval",
+  "max_schedule_steps": 20,
+  "max_target_shares": {
+    "teacher": 1.0
+  },
+  "reviewed_checkpoint_sha256": "1289f7cf5ebd16f3577ce77c06290d32a0664cc60716924e81391ec605be6f27",
+  "training_source_sha256": {
+    "teacher": "e771c6e8abbf4b370c9eb8a9b5ee62af702abf82ec06e5ad2823d0d657dc8daa",
+    "focus": "c9884b46d44d2f8b0512c9f1346a43b728a091bbc55726fdfaef0450687db6a5"
+  },
+  "basis": "P35 authored multi-turn set was independently reviewed and approved only for a bounded pilot; this review permits 20-step SFT from the P139 checkpoint and makes no chat claim.",
+  "limitations": [
+    "Tiny authored set and repeated exposure risk.",
+    "No independent acceptance evaluation."
+  ]
+}
