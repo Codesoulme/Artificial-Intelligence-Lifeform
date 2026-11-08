@@ -74,7 +74,9 @@ def main():
             f.write(json.dumps(dict(text=text, group='synthetic', sha256=sha), ensure_ascii=False)+'\n')
     if other_jobs():
         raise RuntimeError('protected job started during generation')
-    cmd = [sys.executable, '-B', str(ROOT/'scripts/p114_disk_story_dedupe.py'), '--input', str(source),
+    # Windows venv python.exe is a launcher with a separate interpreter child;
+    # use the base interpreter so monitoring and termination target the worker.
+    cmd = [getattr(sys, '_base_executable', sys.executable), '-B', str(ROOT/'scripts/p114_disk_story_dedupe.py'), '--input', str(source),
            '--output', str(out/'result'), '--min-available-mib', str(a.min_available_mib),
            '--max-memory-mib', str(a.max_memory_mib), '--max-disk-mib', str(a.max_disk_mib)]
     with (out/'stdout.txt').open('x', encoding='utf-8') as stdout, (out/'stderr.txt').open('x', encoding='utf-8') as stderr:
@@ -95,6 +97,9 @@ def main():
                 available = p.memory_info()['available_physical']
                 minimum = min(minimum or available, available)
                 counters = Counters(); counters.cb = ctypes.sizeof(counters)
+                # memory_info uses a different local ctypes structure and resets
+                # the shared function's argtypes on every call.
+                ctypes.windll.psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(Counters), wintypes.DWORD]
                 if not ctypes.windll.psapi.GetProcessMemoryInfo(handle, ctypes.byref(counters), counters.cb):
                     stop_reason = 'cannot monitor child'; child.terminate(); break
                 peak_working = max(peak_working, counters.peak_working)
@@ -104,6 +109,9 @@ def main():
                 time.sleep(.25)
             child.wait()
         finally:
+            if child.poll() is None:
+                child.terminate()
+                child.wait()
             ctypes.windll.kernel32.CloseHandle(handle)
     measurement = dict(count=a.count, exit_code=child.returncode, stop_reason=stop_reason,
         wall_seconds=time.monotonic()-started, peak_working_set_sampled=peak_working,
