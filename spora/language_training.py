@@ -23,13 +23,16 @@ def interface_state(model):
 
 
 def load_interface(model, payload, parent_sha256):
-    if payload.get('format') not in ('spora-byte-interface-v1', 'spora-byte-interface-v2', 'spora-byte-training-v2'):
+    if payload.get('format') not in ('spora-byte-interface-v1', 'spora-byte-interface-v2', 'spora-byte-training-v2',
+                                     'spora-codepoint-interface-v1', 'spora-codepoint-training-v1'):
         raise ValueError('Unsupported byte interface')
     if payload.get('organism_sha256') != parent_sha256:
         raise ValueError('Interface belongs to a different individual')
     expected_context_layers = len(getattr(model, 'contextualizer', ()))
     if payload.get('context_layers', 0) != expected_context_layers:
         raise ValueError('Interface context layer count does not match model')
+    if payload.get('vocab_size', 259) != getattr(model, 'vocab_size', 259):
+        raise ValueError('Interface vocabulary size does not match model')
     expected = interface_state(model)
     actual = payload.get('state', {})
     if set(actual) != set(expected):
@@ -57,11 +60,12 @@ def atomic_save(payload, destination):
 
 
 class ByteTrainer:
-    def __init__(self, model, state, parent_sha256, provenance, seed):
+    def __init__(self, model, state, parent_sha256, provenance, seed, format_name='spora-byte-training-v2'):
         if any(p.requires_grad for p in model.organism.parameters()):
             raise ValueError('The entire organism must stay frozen')
         self.model, self.state = model, state
         self.parent_sha256, self.provenance = parent_sha256, dict(provenance)
+        self.format_name = format_name
         self.generator = torch.Generator().manual_seed(seed)
         self.optimizer = torch.optim.AdamW(model.trainable_parameters(), lr=3e-4, weight_decay=.01)
         self.steps = self.tokens_seen = 0
@@ -89,7 +93,8 @@ class ByteTrainer:
 
     def snapshot(self):
         on_cuda = next(self.model.parameters()).is_cuda
-        return {'format': 'spora-byte-training-v2', 'context_layers': len(getattr(self.model, 'contextualizer', ())),
+        return {'format': self.format_name, 'context_layers': len(getattr(self.model, 'contextualizer', ())),
+            'vocab_size': getattr(self.model, 'vocab_size', 259),
             'organism_sha256': self.parent_sha256,
             'state': interface_state(self.model), 'provenance': self.provenance,
             'optimizer': copy.deepcopy(self.optimizer.state_dict()), 'steps': self.steps,
@@ -100,7 +105,7 @@ class ByteTrainer:
     def restore(self, payload):
         if 'covering_sampler' in payload and not hasattr(self, 'sampler'):
             raise ValueError('Covering curriculum requires its own resumable trainer')
-        if payload.get('format') != 'spora-byte-training-v2' or payload.get('provenance') != self.provenance:
+        if payload.get('format') != self.format_name or payload.get('provenance') != self.provenance:
             raise ValueError('Resume requires identical data, seed, batch, context and device')
         if type(payload.get('steps')) is not int or not 0 <= payload['steps'] <= 10000 or type(payload.get('trained_tokens')) is not int or payload['trained_tokens'] < 0:
             raise ValueError('Invalid training counters')

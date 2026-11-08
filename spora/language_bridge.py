@@ -57,7 +57,7 @@ class CausalContextLayer(nn.Module):
 
 
 class LanguageBridge(nn.Module):
-    def __init__(self,organism,read_mode='exact',read_error_l2=1e-4,context_layers=0):
+    def __init__(self,organism,read_mode='exact',read_error_l2=1e-4,context_layers=0,vocab_size=VOCAB):
         super().__init__();self.organism=organism
         if read_mode not in ('legacy','exact','bounded','learned'):raise ValueError('Invalid read mode')
         self.read_mode=read_mode;self.read_error_l2=read_error_l2
@@ -66,24 +66,27 @@ class LanguageBridge(nn.Module):
         if organism.config.width % organism.config.heads:
             raise ValueError('Organism width must be divisible by heads')
         self.context_layers=context_layers
+        if type(vocab_size) is not int or vocab_size < VOCAB:
+            raise ValueError('Vocabulary size must include byte special tokens')
+        self.vocab_size=vocab_size
         self._read_plans={};self.last_read_stats=[]
         for p in organism.parameters():p.requires_grad_(False)
         d=organism.config.width;m=organism.config.memory_width
-        self.byte_embedding=nn.Embedding(VOCAB,d,padding_idx=PAD)
+        self.byte_embedding=nn.Embedding(vocab_size,d,padding_idx=PAD)
         self.byte_position=nn.Embedding(organism.config.max_length,d)
         self.query_projection=nn.Linear(d,m)
         self.read_projection=nn.Linear(m,d)
         self.page_key=nn.Embedding(17,m)
         self.read_strength=nn.Parameter(torch.tensor(-2.))
         self.adapter=nn.Sequential(nn.LayerNorm(d),nn.Linear(d,2*d),nn.GELU(),nn.Linear(2*d,d))
-        self.head=nn.Linear(d,VOCAB,bias=False)
+        self.head=nn.Linear(d,vocab_size,bias=False)
         self.contextualizer=nn.ModuleList([CausalContextLayer(d,organism.config.heads) for _ in range(context_layers)])
         nn.init.normal_(self.byte_embedding.weight,std=.02)
 
     def forward(self,tokens,state):
         if tokens.ndim!=2 or tokens.dtype!=torch.long:raise ValueError('Batch of integer byte tokens required')
         if tokens.shape[1]<1 or tokens.shape[1]>self.organism.config.max_length:raise ValueError('Context extent invalid')
-        if bool(((tokens<0)|(tokens>=VOCAB)).any()):raise ValueError('Byte token out of range')
+        if bool(((tokens<0)|(tokens>=self.vocab_size)).any()):raise ValueError('Token out of range')
         b,n=tokens.shape;device=tokens.device
         self.last_read_stats=[]
         x=self.embed_tokens(tokens)
@@ -149,4 +152,4 @@ class LanguageBridge(nn.Module):
 
 def causal_loss(logits,tokens):
     if tokens.shape[1]<2:raise ValueError('At least two tokens required')
-    return F.cross_entropy(logits[:,:-1].reshape(-1,VOCAB),tokens[:,1:].reshape(-1),ignore_index=PAD)
+    return F.cross_entropy(logits[:,:-1].reshape(-1,logits.shape[-1]),tokens[:,1:].reshape(-1),ignore_index=PAD)
