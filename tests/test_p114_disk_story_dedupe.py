@@ -48,6 +48,20 @@ class DiskDedupeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads((out/'summary.json').read_text(encoding='utf-8'))['counts']['candidates'], 1)
 
+    def test_benchmark_counts_known_pairs_and_rejects_incomplete_output(self):
+        spec = importlib.util.spec_from_file_location('benchmark', ROOT/'scripts/p114_synthetic_benchmark.py')
+        benchmark = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(benchmark)
+        data = [dict(source_line=i, representative_line=i, status='candidate') for i in range(1, 13)]
+        data[1]['representative_line'] = 1
+        data[11]['status'] = 'quarantine'
+        path = self.base/'groups.jsonl'
+        path.write_text(''.join(json.dumps(x)+'\n' for x in data), encoding='utf-8')
+        self.assertEqual(benchmark.constructed_pair_counts(path, 12),
+                         {'expected': 2, 'same_group': 1, 'quarantined': 1})
+        with self.assertRaisesRegex(ValueError, 'incomplete'):
+            benchmark.constructed_pair_counts(path, 13)
+
     def test_cross_batch_prefix_bridge_coverage_and_determinism(self):
         prefix = ''.join(chr(0x4e00+i) for i in range(96))
         a = prefix + ''.join(chr(0x5100+i) for i in range(100))

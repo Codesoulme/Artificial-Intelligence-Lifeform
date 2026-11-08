@@ -22,6 +22,25 @@ def other_jobs():
     return result.stdout.strip()
 
 
+def constructed_pair_counts(path, count):
+    expected = matched = quarantined = observed = 0
+    prior = None
+    with path.open(encoding='utf-8') as groups:
+        for line in groups:
+            item = json.loads(line)
+            observed += 1
+            if item['source_line'] != observed:
+                raise ValueError('nonsequential group output')
+            if (observed - 1) % 10 == 1:
+                expected += 1
+                matched += item['representative_line'] == prior['representative_line']
+                quarantined += item['status'] == 'quarantine' or prior['status'] == 'quarantine'
+            prior = item
+    if observed != count:
+        raise ValueError('incomplete group output')
+    return {'expected': expected, 'same_group': matched, 'quarantined': quarantined}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', type=Path, required=True)
@@ -90,23 +109,7 @@ def main():
         wall_seconds=time.monotonic()-started, peak_working_set_sampled=peak_working,
         peak_commit_sampled=peak_commit, minimum_available_physical_sampled=minimum)
     if not child.returncode and not stop_reason:
-        expected = matched = quarantined = observed = 0
-        prior = None
-        with (out/'result'/'groups.jsonl').open(encoding='utf-8') as groups:
-            for line in groups:
-                item = json.loads(line)
-                observed += 1
-                if item['source_line'] != observed:
-                    raise ValueError('nonsequential group output')
-                if (observed - 1) % 10 == 1:
-                    expected += 1
-                    matched += item['representative_line'] == prior['representative_line']
-                    quarantined += item['status'] == 'quarantine' or prior['status'] == 'quarantine'
-                prior = item
-        if observed != a.count:
-            raise ValueError('incomplete group output')
-        measurement['constructed_pairs'] = {'expected': expected, 'same_group': matched,
-                                            'quarantined': quarantined}
+        measurement['constructed_pairs'] = constructed_pair_counts(out/'result'/'groups.jsonl', a.count)
     p.write_json(out/'measurement.json', measurement)
     print(json.dumps(measurement, indent=2))
     if child.returncode or stop_reason:
