@@ -9,6 +9,7 @@ from .growing import load
 from .language_bridge import LanguageBridge, causal_loss, PAD
 from .language_training import ByteTrainer, load_interface, atomic_save, frozen_digest
 from .text_data import read_manifest, windows, overlap_audit
+from .corpus_admission import validate_language_training_approval
 
 
 def main():
@@ -18,6 +19,7 @@ def main():
     source.add_argument('--interface')
     source.add_argument('--resume')
     parser.add_argument('--manifest', required=True)
+    parser.add_argument('--review', required=True)
     parser.add_argument('--output', required=True)
     parser.add_argument('--start-language-training', action='store_true')
     parser.add_argument('--steps', type=int, default=100, help='Additional steps; total must be <=10000')
@@ -38,9 +40,16 @@ def main():
     train, dev = [windows(documents, split, args.length) for split in ('train', 'development')]
     # Test documents are checked for provenance/overlap, not used for selection.
     digest = hashlib.sha256(Path(args.individual).read_bytes()).hexdigest()
+    review_path = Path(args.review)
+    review = json.loads(review_path.read_text(encoding='utf-8'))
+    manifest_sha256 = hashlib.sha256(Path(args.manifest).read_bytes()).hexdigest()
+    approval = validate_language_training_approval(
+        review, manifest_sha256=manifest_sha256, parent_sha256=digest,
+        schedule_steps=args.steps)
     source_file = Path(args.resume or args.interface)
     payload = torch.load(source_file, map_location='cpu', weights_only=True)
-    provenance = {'manifest_sha256': hashlib.sha256(Path(args.manifest).read_bytes()).hexdigest(),
+    provenance = {'manifest_sha256': manifest_sha256,
+        'review_sha256': hashlib.sha256(review_path.read_bytes()).hexdigest(),
         'documents': [{k: v for k, v in d.items() if k != 'text'} for d in documents],
         'seed': args.seed, 'batch': args.batch, 'length': args.length, 'device': args.device}
     torch.set_num_threads(2)
@@ -61,6 +70,7 @@ def main():
         raise ValueError('Total pilot budget exceeds 10000 steps')
     output.mkdir(parents=True)
     metadata = {'arguments': vars(args), 'parent_sha256': digest, 'provenance': provenance,
+        'approval': approval,
         'source_checkpoint_sha256': hashlib.sha256(source_file.read_bytes()).hexdigest(),
         'overlap': overlap_audit(documents),
         'limitations': 'Byte prediction; entire organism frozen; no text-to-event writer or skill alignment'}

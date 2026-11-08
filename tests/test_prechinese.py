@@ -145,8 +145,15 @@ class PreChineseTests(unittest.TestCase):
                 rows.append({'path':file.name,'sha256':hashlib.sha256(text).hexdigest(),
                     'split':split,'source':'random-byte fixture','license':'test fixture'})
             manifest=root/'manifest.json';manifest.write_text(json.dumps({'schema':'spora-text-v1','documents':rows}))
+            manifest_sha256=hashlib.sha256(manifest.read_bytes()).hexdigest()
+            review=root/'review.json';review.write_text(json.dumps({
+                'approved_for_pilot':True,'max_schedule_steps':4,
+                'training_source_sha256':{'artifact':manifest_sha256,'manifest':manifest_sha256},
+                'parent_checkpoint_sha256':digest,
+                'quality_gate':{'status':'passed','independent_review':True,
+                    'sample_count':3,'major_count':0,'unsafe_count':0}}))
             common=['train','--individual',str(parent),'--manifest',str(manifest),
-                '--start-language-training','--device','cpu','--batch','2','--length','12']
+                '--review',str(review),'--start-language-training','--device','cpu','--batch','2','--length','12']
             for label,count,flag,file in [('full',4,'--interface',interface),('first',2,'--interface',interface),
                 ('second',2,'--resume',root/'first'/'checkpoint.pt')]:
                 args=common+['--steps',str(count),'--output',str(root/label),flag,str(file)]

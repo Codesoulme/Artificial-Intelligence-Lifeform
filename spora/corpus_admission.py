@@ -35,3 +35,16 @@ def validate_review(review: dict, *, artifact_sha256: str, schedule_steps: int,
     return {"artifact_sha256": artifact_sha256, "schedule_steps": schedule_steps,
             "sample_count": sample_count, "major_count": major, "unsafe_count": unsafe,
             "independent_review": quality["independent_review"]}
+
+
+def validate_language_training_approval(review: dict, *, manifest_sha256: str,
+                                        parent_sha256: str, schedule_steps: int) -> dict:
+    """Validate the approval contract for byte-language training."""
+    result = validate_review(review, artifact_sha256=manifest_sha256,
+                             schedule_steps=schedule_steps)
+    if review.get("training_source_sha256", {}).get("manifest") != manifest_sha256:
+        raise ValueError("language review does not bind exact manifest")
+    if review.get("parent_checkpoint_sha256") != parent_sha256:
+        raise ValueError("language review does not bind exact parent checkpoint")
+    return {**result, "manifest_sha256": manifest_sha256,
+            "parent_checkpoint_sha256": parent_sha256}

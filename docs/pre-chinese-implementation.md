@@ -62,6 +62,8 @@
 .\.venv\Scripts\python.exe -m spora.train_language --individual checkpoints/individual-prechinese-v3.pt --interface runs/p16-language-ready-v2/untrained-interface.pt --manifest runs/chinese-pilot-v1/manifest.json --output runs/chinese-pilot-train1 --start-language-training --steps 100 --batch 4 --length 128 --seed 1910000 --device cuda
 ```
 
+实际启动还必须追加 `--review <approved-review.json>`。该审查文件需要绑定精确 manifest 摘要、父个体摘要、步数上限和独立质量门禁；当前没有这样的批准记录，因此上面的命令仍只是历史计划示例，不能直接启动训练。
+
 先测未训练接口的开发损失，再训练，最后只做一次封存测试；不能看测试表现反复选模型。首次评估可以使用以下入口：
 
 ```powershell

@@ -8,7 +8,8 @@ class TrainingEntrypointTests(unittest.TestCase):
     def test_readiness_cannot_accidentally_start_language_training(self):
         with tempfile.TemporaryDirectory() as temp:
             output=Path(temp)/'should-not-exist'
-            args=['train_language','--individual','missing.pt','--interface','missing.pt','--manifest','missing.json','--output',str(output)]
+            args=['train_language','--individual','missing.pt','--interface','missing.pt','--manifest','missing.json',
+                '--review','missing-review.json','--output',str(output)]
             with patch.object(sys,'argv',args),redirect_stderr(io.StringIO()),self.assertRaises(SystemExit) as raised:
                 main()
             self.assertEqual(raised.exception.code,2)
