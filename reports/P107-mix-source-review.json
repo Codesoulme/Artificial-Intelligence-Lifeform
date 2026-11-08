@@ -1,0 +1,23 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_mixture_diagnostic_not_quality_certification",
+  "max_schedule_steps": 200,
+  "max_target_shares": {
+    "pretrain": 0.8,
+    "story": 0.5
+  },
+  "reviewed_checkpoint_sha256": "eae8e678db0e9b87b7a88528206e2210fb93d87cb925308aa8a2d1ae67bc1234",
+  "training_source_sha256": {
+    "pretrain": "781088fbcc6c81650d1e01b0e49a7e2a7393034e88399e585f6487073f10acdf",
+    "story": "61a5fec7b4b13a0b7da138b2466185092216c6039b3e4ececbb5c356885613b6",
+    "focus": "c9884b46d44d2f8b0512c9f1346a43b728a091bbc55726fdfaef0450687db6a5"
+  },
+  "basis": "P28 content review sampled 64 synthetic translated stories, P34 used the old pretraining stream and stories; P85 finds old stream predominantly role-unmarked question-answer material. The focus text was bound and inspected in P54. This pilot investigates mixture behavior, not quality certification or chatting.",
+  "limitations": [
+    "Stories are generated translations with repetitive beginnings and may contain errors.",
+    "Old stream has unknown quality and duplication; not necessarily modern continuous prose.",
+    "Identical seed does not guarantee identical samples across arms when the mixture changes random-number consumption.",
+    "Data reviews are limited and no per-record provenance or quality guarantee is implied.",
+    "No final test is used."
+  ]
+}
