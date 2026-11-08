@@ -1,0 +1,59 @@
+{
+  "phase": "P76-story-continuation",
+  "parent": "checkpoints/individual-prechinese-v3.pt",
+  "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "data": "runs/p28-stories-data/candidate-v3",
+  "base_data": "runs/p28-stories-data/candidate-v3",
+  "seed": 391109,
+  "model": {
+    "vocabulary": 8192,
+    "width": 256,
+    "depth": 8,
+    "heads": 8,
+    "hidden": 704,
+    "context": 512,
+    "memory_layers": [
+      3,
+      7
+    ],
+    "memory_read": "legacy"
+  },
+  "length": 512,
+  "learning_rate": 0.0001,
+  "warmup": 14,
+  "schedule_steps": 100,
+  "check_every": 50,
+  "snapshot_every": 50,
+  "focus_every": 10,
+  "scope": "100-update bounded continuation from P67 with story and focus replay; measure dialogue regression and story development likelihood.",
+  "respect_document_boundaries": false,
+  "initial_language": "runs/p67-trim-ignored-tail/checkpoint.pt",
+  "initial_language_sha256": "c002a4844c983a1d16614145e1f248fb9a04791cf2fb3e4387e405903dd77bd7",
+  "ancestor_steps": 100,
+  "ancestor_targets": 865306,
+  "data_audits": [
+    "runs/p28-stories-data/candidate-v3/lineage-audit.json"
+  ],
+  "curriculum": "runs/mixed-context-curriculum-v1",
+  "curriculum_manifest_sha256": "24a282b07353411952561b001eebff7c29a3b0de0d6ac0e14c5194b21acd4098",
+  "microbatch": 4,
+  "target_shares": {
+    "story": 1.0
+  },
+  "corpus_review": "reports/P28-stories-content-review.json",
+  "corpus_review_sha256": "b3da3e063d25616922aa482a67d107258e39a2b1af63ff205b44a4cf46e2054f",
+  "target_budget": 8192,
+  "training_source_reviews": {
+    "story": {
+      "path": "reports/P76-continuation-source-review.json",
+      "sha256": "84ab7c639a0ab17821e0785ca5d2eda913a321ae4a136f047b5233a7617cc47b"
+    },
+    "focus": {
+      "path": "reports/P76-continuation-source-review.json",
+      "sha256": "84ab7c639a0ab17821e0785ca5d2eda913a321ae4a136f047b5233a7617cc47b"
+    }
+  },
+  "respect_story_document_boundaries": true,
+  "trim_ignored_tail": true,
+  "lineage_note": "P67 checkpoint records 100 local updates after the P34 step001000 language checkpoint; global totals require following recorded parent plans, not adding this segment to an unverified aggregate."
+}

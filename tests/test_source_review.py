@@ -59,6 +59,33 @@ class SourceReviewTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "different artifact: dialogue"):
                 verify_training_source_reviews(root, plan)
 
+    def test_checkpoint_bound_review_rejects_wrong_or_modified_checkpoint(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'data').mkdir()
+            (root / 'curriculum').mkdir()
+            story = root / 'data/pretrain-train.bin'
+            checkpoint = root / 'initial.pt'
+            story.write_bytes(b'story')
+            checkpoint.write_bytes(b'checkpoint')
+            checkpoint_sha = file_sha256(checkpoint)
+            review = root / 'review.json'
+            review.write_text(json.dumps({'approved_for_pilot': True, 'max_schedule_steps': 100,
+                'reviewed_checkpoint_sha256': checkpoint_sha,
+                'training_source_sha256': {'story': file_sha256(story)}}), encoding='utf8')
+            plan = {'data': 'data', 'curriculum': 'curriculum', 'schedule_steps': 100,
+                    'focus_every': 1000, 'target_shares': {'story': 1.0},
+                    'initial_language': 'initial.pt', 'initial_language_sha256': checkpoint_sha,
+                    'training_source_reviews': {'story': {'path': 'review.json', 'sha256': file_sha256(review)}}}
+            verify_training_source_reviews(root, plan)
+            plan['initial_language_sha256'] = '0' * 64
+            with self.assertRaisesRegex(ValueError, 'different checkpoint'):
+                verify_training_source_reviews(root, plan)
+            plan['initial_language_sha256'] = checkpoint_sha
+            checkpoint.write_bytes(b'modified')
+            with self.assertRaisesRegex(ValueError, 'different checkpoint'):
+                verify_training_source_reviews(root, plan)
+
 
 if __name__ == "__main__":
     unittest.main()

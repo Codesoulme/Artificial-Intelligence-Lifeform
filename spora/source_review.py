@@ -44,6 +44,14 @@ def verify_training_source_reviews(root, plan):
         review = json.loads(review_path.read_text(encoding="utf8"))
         if review.get("approved_for_pilot") is not True:
             raise ValueError("Source review not approved: " + kind)
+        checkpoint = review.get("reviewed_checkpoint_sha256")
+        if checkpoint is not None:
+            initial = plan.get("initial_language")
+            declared = plan.get("initial_language_sha256")
+            if (not isinstance(checkpoint, str) or not isinstance(initial, str) or
+                    not isinstance(declared, str) or checkpoint.lower() != declared.lower() or
+                    file_sha256(root / initial).lower() != checkpoint.lower()):
+                raise ValueError("Source review covers different checkpoint: " + kind)
         limit = review.get("max_schedule_steps")
         if type(limit) is not int or limit < plan["schedule_steps"]:
             raise ValueError("Source review does not cover schedule: " + kind)
