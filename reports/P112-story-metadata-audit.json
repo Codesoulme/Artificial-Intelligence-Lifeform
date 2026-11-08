@@ -1,0 +1,44 @@
+{
+  "status": "blocked_metadata_audit_only",
+  "ready_for_training": false,
+  "new_stories_exported": 0,
+  "actual_new_independent_targets": 0,
+  "seed": 112281109,
+  "selection": "SHA256(ASCII seed:normalized_full_hash), ascending; first 200000 after metadata exclusions",
+  "candidate_split_counts": {
+    "development": 5688,
+    "test": 5624,
+    "train": 549441
+  },
+  "original_train_records": 100000,
+  "original_train_groups": 99996,
+  "excluded_train_metadata": {
+    "original_exact": 100000,
+    "original_group_only": 8,
+    "other_partition_group": 0
+  },
+  "metadata_eligible_before_near_duplicate_checks": 449433,
+  "shortlist_metadata_count": 200000,
+  "shortlist_metadata_sha256": "337dcc142c4d05dc89af561b02959ec2c500b3fb6179fe74fd3431f502d8c937",
+  "train_metadata_sha256": "6ccde8e20bbaeb1e4b921809c103f81f6cb8f84915a742a0d9874f4c706310ad",
+  "metadata_encoding": "UTF-8 compact JSON arrays in stated order, one LF each; train rows ordered by source row, shortlist by score/full/row/tokens",
+  "shortlist_content_token_sum_unverified": 38014228,
+  "old_train_within_document_targets_manifest": 19138513,
+  "verified_file_sha256": {
+    "pretrain-train.jsonl": "af994a6be4540e8bdef51c446b7a4a434113d187e054f673d8a5251db23e0c90",
+    "pretrain-train.bin": "61a5fec7b4b13a0b7da138b2466185092216c6039b3e4ececbb5c356885613b6",
+    "tokenizer.json": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20"
+  },
+  "manifest_sha256": "fd57c0ffa3878c1aef3e762d4c4153672c7c899088f6369ceec33663243af5bd",
+  "audit_script_sha256": "f79dec1d99ce2701cc0a3cf38d9c1bc725565da8231f7b25afb7eafb820fac2a",
+  "source_sha256_previously_recorded_not_rehashed": "3c86b047b0063056f11b17a494c20a79ce8fda2f17bf4d06634a9d332b740302",
+  "limits": [
+    "No candidate text, source parquet or held files were opened; original training JSONL was read only to obtain identity metadata.",
+    "SQLite queries select metadata only; the underlying database contains held text and cannot be byte-hashed without reading it.",
+    "The original manifest does not bind selection.sqlite. Metadata digests record the observed snapshot, not proof of its original integrity.",
+    "Existing full-shard pass records legacy lexical screening but does not retain its held index, and resumed-prefix filtering counts are unavailable.",
+    "New story held and original train near-duplicates have not been excluded for this shortlist; no isolated semantic comparison has been performed.",
+    "A metadata shortlist is neither a safe corpus nor an actual count of distinct training targets. No material was exported or training performed.",
+    "Existing review covers 64 original train examples for a bounded pilot only, not this shortlist."
+  ]
+}
