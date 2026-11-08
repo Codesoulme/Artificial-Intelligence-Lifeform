@@ -9,7 +9,7 @@ def file_sha256(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def verify_training_source_reviews(root, plan):
+def verify_training_source_reviews(root, plan, story_override=None):
     """Require an independently bound review for each enabled training source.
 
     Reviews may cover more than one source, but must explicitly state the hash
@@ -27,6 +27,8 @@ def verify_training_source_reviews(root, plan):
         "teacher": curriculum / "teacher-tokens.jsonl",
         "foundation": curriculum / "foundations-tokens.jsonl",
     }
+    if story_override is not None:
+        paths['story'] = Path(story_override['path'])
     if plan.get("focus_every", 0) <= plan["schedule_steps"]:
         paths["focus"] = data / "focus-tokens.json"
         active = set(plan["target_shares"]) | {"focus"}
@@ -44,6 +46,9 @@ def verify_training_source_reviews(root, plan):
         review = json.loads(review_path.read_text(encoding="utf8"))
         if review.get("approved_for_pilot") is not True:
             raise ValueError("Source review not approved: " + kind)
+        if kind == 'story' and story_override is not None:
+            if review.get('candidate_summary_sha256') != story_override['summary_sha256']:
+                raise ValueError('Story review covers different candidate summary')
         checkpoint = review.get("reviewed_checkpoint_sha256")
         if checkpoint is not None:
             initial = plan.get("initial_language")

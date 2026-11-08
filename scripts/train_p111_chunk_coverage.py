@@ -19,6 +19,7 @@ from spora.supervision_coverage import SupervisionCoverage
 from spora.document_stream_observation import accumulate_unchanged_rows
 from spora.story_coverage_run import coverage_contract, restore_coverage, sample_story, record_story, validate_identity
 from spora.source_review import verify_training_source_reviews
+from spora.p115_story_input import validate_candidate
 from spora.growing import load
 from spora.language_training import interface_state,atomic_save,frozen_digest
 from chinese_curriculum_common import memory_answers
@@ -26,7 +27,7 @@ from types import SimpleNamespace
 from prepare_conversation_v2 import sha,SPECIAL
 from train_wording import dump,protected_manifest
 ROOT=Path(__file__).resolve().parents[1]
-SOURCES=('spora/conversation.py','spora/conversation_data.py','scripts/train_p111_chunk_coverage.py','spora/document_chunk_stream.py','spora/uniform_document_stream.py','spora/story_coverage_run.py','spora/document_stream_observation.py','spora/supervision_coverage.py','spora/token_objective.py','spora/conversation_state.py','spora/training_mix.py','spora/document_stream.py','spora/source_review.py','spora/state_codec.py','spora/growing.py','scripts/prepare_teaching_curriculum.py','scripts/curate_teaching_curriculum.py','scripts/prepare_conversation_v4.py','scripts/prepare_conversation_v2.py','scripts/curate_conversation.py','scripts/prepare_prose_pretrain_pilot.py','spora/language_training.py')
+SOURCES=('spora/conversation.py','spora/conversation_data.py','scripts/train_p111_chunk_coverage.py','spora/document_chunk_stream.py','spora/uniform_document_stream.py','spora/story_coverage_run.py','spora/document_stream_observation.py','spora/supervision_coverage.py','spora/token_objective.py','spora/conversation_state.py','spora/training_mix.py','spora/document_stream.py','spora/source_review.py','spora/p115_story_input.py','spora/state_codec.py','spora/growing.py','scripts/prepare_teaching_curriculum.py','scripts/curate_teaching_curriculum.py','scripts/prepare_conversation_v4.py','scripts/prepare_conversation_v2.py','scripts/curate_conversation.py','scripts/prepare_prose_pretrain_pilot.py','spora/language_training.py')
 PROMPTS=('你好，请简单介绍你的能力。','我今天有点累，可以怎样放松？','请用一句话解释为什么会下雨。','把“明天我去图书馆看书”改成疑问句。','我不知道该选哪本书，你能先问我一个问题吗？','社会主义核心价值观的个人层面包括哪些内容？')
 
 def load_rows(path,length):
@@ -162,7 +163,6 @@ def main():
     mode=story_sampling_mode(plan)
     contract=coverage_contract(plan)
     chunk_spec=chunk_contract(plan)
-    source_reviews=verify_training_source_reviews(ROOT,plan)
     if sha(ROOT/plan['parent'])!=plan['parent_sha256']:raise ValueError('Individual file changed')
     if sha(ROOT/plan['corpus_review'])!=plan['corpus_review_sha256']:raise ValueError('Corpus review changed')
     review=json.loads((ROOT/plan['corpus_review']).read_text('utf-8'))
@@ -179,6 +179,21 @@ def main():
         review_bound = review_bound or str(review.get('source_manifest_sha256', '')).lower() == sha(ROOT/plan['review_source_manifest']).lower()
     if not review_bound:raise ValueError('Content review covers different training data')
     manifest=json.loads((data/'manifest.json').read_text('utf-8'))
+    candidate = plan.get('candidate_story')
+    candidate_identity = None
+    story_path = data/'pretrain-train.bin'
+    if candidate is not None:
+        if (not isinstance(candidate, dict) or not isinstance(candidate.get('path'), str)
+                or not isinstance(candidate.get('summary_sha256'), str) or mode != 'uniform'):
+            raise ValueError('Candidate story requires path, summary hash and uniform sampling')
+        candidate_dir = ROOT/candidate['path']
+        candidate_identity = validate_candidate(candidate_dir, candidate['summary_sha256'], manifest['tokenizer_sha256'], plan['length'], plan['model']['vocabulary'])
+        story_path = candidate_dir/'stories.bin'
+    source_reviews=verify_training_source_reviews(ROOT,plan, None if candidate_identity is None else
+        {'path': story_path, 'summary_sha256': candidate_identity['summary_sha256']})
+    if candidate_identity is not None and source_reviews.get('story', {}).get('artifact_sha256') != candidate_identity['story_sha256']:
+        raise ValueError('Candidate story review does not match validated artifact')
+    story_source = manifest['files']['pretrain-train.bin'] if candidate_identity is None else candidate_identity['story_sha256']
     audit_paths=plan['data_audits'];audits={}
     for name in audit_paths:
         report=json.loads((ROOT/name).read_text('utf-8'))
@@ -201,7 +216,7 @@ def main():
     else:
         base_manifest=manifest
     tokenizer=Tokenizer.from_file(str(data/'tokenizer.json'));pad=tokenizer.token_to_id('<|pad|>')
-    story_stream=np.memmap(data/'pretrain-train.bin',dtype=np.uint16,mode='r')
+    story_stream=np.memmap(story_path,dtype='<u2',mode='r')
     story_documents = make_story_documents(story_stream, tokenizer.token_to_id('<|bos|>'), tokenizer.token_to_id('<|eos|>'), pad, plan)
     cm=json.loads((curriculum/'manifest.json').read_text('utf-8'))
     if cm['tokenizer_sha256']!=manifest['tokenizer_sha256']:raise ValueError('Teaching vocabulary differs')
@@ -213,14 +228,14 @@ def main():
         for path in (ROOT/'runs').glob(pattern):protected[str(path.relative_to(ROOT)).replace('\\','/')]=sha(path)
     protected[plan['initial_language']]=plan['initial_language_sha256']
     fingerprints={name:sha(ROOT/name) for name in SOURCES}
-    metadata=dict(entry='spora-p111-chunk-coverage-v1',story_sampling_mode=mode,pretrain_sampling_mode='chunk',chunk_coverage_contract=chunk_spec,coverage_contract=contract,plan=plan,plan_sha256=sha(ROOT/args.plan),manifest_sha256=sha(data/'manifest.json'),base_manifest_sha256=sha(base_data/'manifest.json'),data_audit_sha256=audits,source_reviews=source_reviews,source_code_sha256=fingerprints,protected=protected)
+    metadata=dict(entry='spora-p111-chunk-coverage-v1',story_sampling_mode=mode,pretrain_sampling_mode='chunk',chunk_coverage_contract=chunk_spec,coverage_contract=contract,plan=plan,plan_sha256=sha(ROOT/args.plan),manifest_sha256=sha(data/'manifest.json'),base_manifest_sha256=sha(base_data/'manifest.json'),candidate_story=candidate_identity,data_audit_sha256=audits,source_reviews=source_reviews,source_code_sha256=fingerprints,protected=protected)
     torch.set_num_threads(2);torch.manual_seed(plan['seed']);rng=random.Random(plan['seed'])
     organism,state,_=load(ROOT/plan['parent'],'cuda');before=frozen_digest(organism,state)
     payload=None;step=0;targets=0;focus_cursor=0;counts={};logs=[];elapsed=0.;batch_trace='00'*32
     if args.resume:
         if json.loads((out/'config.json').read_text('utf-8'))!=metadata:raise ValueError('Resume requires exact implementation/data/plan/protected sources')
         payload=torch.load(out/'checkpoint.pt',map_location='cpu',weights_only=True)
-        validate_identity(payload,contract,fingerprints,manifest['files']['pretrain-train.bin'])
+        validate_identity(payload,contract,fingerprints,story_source)
         if payload.get('story_sampling_mode') != mode:raise ValueError('Sampling mode differs from checkpoint')
         model=restore_conversation(organism,payload,plan['parent_sha256'],manifest['tokenizer_sha256'],'cuda')
         step=payload['steps'];targets=payload['targets'];focus_cursor=payload['focus_cursor'];counts=payload['counts'];elapsed=payload['seconds']
@@ -244,7 +259,7 @@ def main():
     if payload is not None:optimizer.load_state_dict(payload['optimizer'])
     stream=np.memmap(base_data/'pretrain-train.bin',dtype=np.uint16,mode='r');dev=np.memmap(data/'pretrain-development.bin',dtype=np.uint16,mode='r')
     document_stream = DocumentChunkStream(stream, tokenizer.token_to_id('<|bos|>'), tokenizer.token_to_id('<|eos|>'), pad, plan['length'])
-    coverage=restore_coverage(payload, contract, manifest['files']['pretrain-train.bin'], story_documents)
+    coverage=restore_coverage(payload, contract, story_source, story_documents)
     chunk_source=base_manifest['files']['pretrain-train.bin']
     chunk_coverage=restore_chunk_coverage(payload, chunk_spec, chunk_source, document_stream)
     sft=load_rows(data/'dialogue-train-tokens.jsonl',plan['length']);sft_dev=load_rows(data/'dialogue-development-tokens.jsonl',plan['length'])
@@ -287,7 +302,7 @@ def main():
                 counts['focus_targets']=counts.get('focus_targets',0)+focus_n
             n=int((y!=-100).sum())
             if n==0:raise ValueError('Source produced no supervision')
-            record_story(coverage,manifest['files']['pretrain-train.bin'],windows,sampled_labels,y,replaced_rows)
+            record_story(coverage,story_source,windows,sampled_labels,y,replaced_rows)
             observed=record_chunk(chunk_coverage,chunk_source,chunk_windows,chunk_labels,y,replaced_rows)
             if kind=='pretrain' and observed != n-focus_n:raise AssertionError('Chunk coverage differs from supervised targets')
             if plan.get('trim_ignored_tail',False):x,y=trim_ignored_tail(x,y)
@@ -312,10 +327,10 @@ def main():
                 focus_cursor=focus_cursor,counts=counts,batch_trace_sha256=batch_trace,python_rng=rng.getstate(),torch_rng=torch.get_rng_state(),cuda_rng=torch.cuda.get_rng_state_all(),
                 seconds=elapsed+time.perf_counter()-start,plan_sha256=metadata['plan_sha256'],manifest_sha256=metadata['manifest_sha256'],
                 coverage_entry='spora-story-coverage-v1',story_sampling_mode=mode,source_code_sha256=fingerprints,coverage_contract=contract,
-                story_source_sha256=manifest['files']['pretrain-train.bin'],coverage=coverage.to_dict(),
+                story_source_sha256=story_source,coverage=coverage.to_dict(),
                 chunk_coverage_entry='spora-chunk-coverage-v1',chunk_coverage_contract=chunk_spec,
                 pretrain_source_sha256=chunk_source,chunk_coverage=chunk_coverage.to_dict(),development_logs=logs)
-            restore_coverage(snapshot, contract, manifest['files']['pretrain-train.bin'], story_documents)
+            restore_coverage(snapshot, contract, story_source, story_documents)
             restore_chunk_coverage(snapshot, chunk_spec, chunk_source, document_stream)
             atomic_save(snapshot,out/'checkpoint.pt')
             if step%plan['snapshot_every']==0:atomic_save(snapshot,out/f'step{step:06d}.pt')
@@ -324,6 +339,10 @@ def main():
     for name,digest in protected.items():
         if sha(ROOT/name)!=digest:raise AssertionError('Protected artifact changed: '+name)
     if fingerprints!={name:sha(ROOT/name) for name in SOURCES}:raise AssertionError('Implementation changed during segment')
+    if candidate_identity is not None:
+        if (sha(candidate_dir/'summary.json') != candidate_identity['summary_sha256'] or
+                any(sha(candidate_dir/name) != digest for name,digest in candidate_identity['files'].items())):
+            raise AssertionError('Candidate changed during segment')
     result=dict(status='segment_completed_not_chat_accepted',steps=step,targets=targets,counts=counts,focus_cursor=focus_cursor,
         batch_trace_sha256=batch_trace,old_tensors_exact=before==frozen_digest(organism,state),memory=memory_answers(SimpleNamespace(model=model,state=state)),
         seconds=elapsed+time.perf_counter()-start,peak_allocated_bytes=torch.cuda.max_memory_allocated(),checkpoint_sha256=sha(out/'checkpoint.pt'))
