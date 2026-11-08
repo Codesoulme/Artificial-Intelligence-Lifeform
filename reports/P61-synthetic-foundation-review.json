@@ -1,0 +1,11 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_synthetic_conditioning_diagnostic",
+  "max_schedule_steps": 100,
+  "max_target_shares": {"foundation": 0.01},
+  "training_source_sha256": {"foundation": "e9690c40dfe578025b2c3ce7a78e4729d21020fc267ffea403f74dca6d3ba338"},
+  "basis": "Same exact synthetic token file reviewed in P60, now mapped to the foundation source so it can be mixed with the previously reviewed authored dialogues. Limited to 100 updates and 1% planned target share.",
+  "prior_review_sha256": "2588244dfe20a8475c127048c7225e0dc64d2adb069068564cc4c4879630d20f",
+  "combined_manifest_sha256": "24a282b07353411952561b001eebff7c29a3b0de0d6ac0e14c5194b21acd4098",
+  "limitations": ["Synthetic location exercises reuse three templates; held-out combinations do not establish generalization.", "A low planned share may still overfit short outputs.", "Batch-level token allocation can slightly overshoot planned shares."]
+}

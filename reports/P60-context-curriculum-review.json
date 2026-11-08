@@ -1,0 +1,11 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_synthetic_conditioning_diagnostic",
+  "max_schedule_steps": 100,
+  "max_target_shares": {"teacher": 0.01},
+  "training_source_sha256": {"teacher": "e9690c40dfe578025b2c3ce7a78e4729d21020fc267ffea403f74dca6d3ba338"},
+  "curriculum_manifest_sha256": "0620a6ff3da17c6381c24c7447a046bb4e8e62fd3bee537dd2a49e72bca634ae",
+  "scope": "Bounded 100-update model-path diagnostic using 145 short deterministic synthetic dialogues. This is not a factual corpus, general Chinese conversation dataset, independent evaluation, or evidence of agent memory.",
+  "checks": ["The three generator templates and slot values were reviewed.", "All 192 generated rows satisfy programmatic last-location and role-alternation invariants.", "Train and development hold out selected object/place pairs; all 192 token sequences and masks were recomputed against source messages.", "A small selection was read manually."],
+  "limitations": ["145 training dialogues differ only by small sets of objects, locations, and three templates.", "Development uses the same templates and vocabulary; held-out combinations alone cannot measure broad generalization.", "No semantic overlap audit against every historical dataset or the final evaluation has been completed."]
+}
