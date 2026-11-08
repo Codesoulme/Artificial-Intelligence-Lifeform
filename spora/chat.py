@@ -35,8 +35,8 @@ class LocalConversation:
                 raise FileNotFoundError('找不到本地模型文件：'+str(path))
         digest = hashlib.sha256(parent.read_bytes()).hexdigest()
         organism, self.state, _ = load(parent, device)
-        self.model = LanguageBridge(organism).to(device).eval()
         payload = torch.load(interface, map_location='cpu', weights_only=True)
+        self.model = LanguageBridge(organism, context_layers=payload.get('context_layers', 0)).to(device).eval()
         load_interface(self.model, payload, digest)
         self.total_steps = payload.get('steps', 0)+(payload.get('lineage') or {}).get('prior_steps', 0)
         self.max_new_bytes = max_new_bytes

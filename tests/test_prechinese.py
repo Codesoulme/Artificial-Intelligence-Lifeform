@@ -134,8 +134,9 @@ class PreChineseTests(unittest.TestCase):
             parent=root/'parent.pt'
             save(parent,self.model,self.state)
             digest=hashlib.sha256(parent.read_bytes()).hexdigest()
-            payload={'format':'spora-byte-interface-v1','organism_sha256':digest,
-                'state':interface_state(LanguageBridge(self.model)),'trained_tokens':0}
+            context_layers=2
+            payload={'format':'spora-byte-interface-v2','context_layers':context_layers,'organism_sha256':digest,
+                'state':interface_state(LanguageBridge(self.model,context_layers=context_layers)),'trained_tokens':0}
             interface=root/'interface.pt';atomic_save(payload,interface)
             rows=[]
             generator=torch.Generator().manual_seed(303)
@@ -156,7 +157,7 @@ class PreChineseTests(unittest.TestCase):
                 '--review',str(review),'--start-language-training','--device','cpu','--batch','2','--length','12']
             for label,count,flag,file in [('full',4,'--interface',interface),('first',2,'--interface',interface),
                 ('second',2,'--resume',root/'first'/'checkpoint.pt')]:
-                args=common+['--steps',str(count),'--output',str(root/label),flag,str(file)]
+                args=common+['--context-layers',str(context_layers),'--steps',str(count),'--output',str(root/label),flag,str(file)]
                 with patch.object(sys,'argv',args),redirect_stdout(io.StringIO()):train_main()
             full=torch.load(root/'full'/'checkpoint.pt',weights_only=True)
             resumed=torch.load(root/'second'/'checkpoint.pt',weights_only=True)

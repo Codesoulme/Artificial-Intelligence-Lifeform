@@ -76,8 +76,8 @@ def main():
     documents = read_manifest(args.manifest)
     torch.set_num_threads(2)
     organism, state, _ = load(args.individual, args.device)
-    model = LanguageBridge(organism).to(args.device).eval()
     payload = torch.load(args.interface, map_location='cpu', weights_only=True)
+    model = LanguageBridge(organism, context_layers=payload.get('context_layers', 0)).to(args.device).eval()
     load_interface(model, payload, digest)
     if not 2 <= args.length <= organism.config.max_length:
         raise ValueError('Invalid evaluation context')

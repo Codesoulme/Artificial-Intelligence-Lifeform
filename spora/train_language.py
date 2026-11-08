@@ -20,6 +20,7 @@ def main():
     source.add_argument('--resume')
     parser.add_argument('--manifest', required=True)
     parser.add_argument('--review', required=True)
+    parser.add_argument('--context-layers', type=int, default=0)
     parser.add_argument('--output', required=True)
     parser.add_argument('--start-language-training', action='store_true')
     parser.add_argument('--steps', type=int, default=100, help='Additional steps; total must be <=10000')
@@ -31,6 +32,8 @@ def main():
     args = parser.parse_args()
     if not args.start_language_training:
         parser.error('Explicit --start-language-training required; readiness does not train text')
+    if not 0 <= args.context_layers <= 4:
+        parser.error('Invalid context layer count')
     if not 1 <= args.steps <= 10000 or not 1 <= args.batch <= 16 or not 2 <= args.length <= 256 or not 1 <= args.save_every <= 100:
         parser.error('Invalid finite budget')
     output = Path(args.output)
@@ -56,14 +59,15 @@ def main():
     torch.manual_seed(args.seed)
     organism, state, _ = load(args.individual, args.device)
     original_tensors = frozen_digest(organism, state)
-    model = LanguageBridge(organism).to(args.device)
+    model = LanguageBridge(organism, context_layers=args.context_layers).to(args.device)
     if args.length > organism.config.max_length:
         raise ValueError('Context exceeds this organism configuration')
     trainer = ByteTrainer(model, state, digest, provenance, args.seed)
     if args.resume:
         trainer.restore(payload)
     else:
-        if payload.get('format') != 'spora-byte-interface-v1' or payload.get('trained_tokens') != 0:
+        expected_format = 'spora-byte-interface-v2' if args.context_layers else 'spora-byte-interface-v1'
+        if payload.get('format') != expected_format or payload.get('trained_tokens') != 0:
             raise ValueError('Use --resume with a v2 checkpoint for trained interfaces')
         load_interface(model, payload, digest)
     if trainer.steps+args.steps > 10000:

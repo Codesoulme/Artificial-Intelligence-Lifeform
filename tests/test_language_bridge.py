@@ -2,6 +2,7 @@ import unittest,torch
 from spora.temporal import TemporalSPORA,TemporalConfig
 from spora.growing import new_state,observe,grow,GrowingState
 from spora.language_bridge import LanguageBridge,causal_loss,encode,decode,BOS,EOS
+from spora.language_training import interface_state,load_interface
 
 class LanguageInterfaceTests(unittest.TestCase):
     def setUp(self):
@@ -43,5 +44,18 @@ class LanguageInterfaceTests(unittest.TestCase):
         tokens=torch.randint(0,256,(1,9))
         with torch.no_grad():a=self.bridge(tokens,state);b=self.bridge(tokens,swapped)
         self.assertFalse(torch.equal(a,b))
+
+    def test_optional_context_layers_are_causal_trainable_and_roundtrip(self):
+        bridge=LanguageBridge(self.organism,context_layers=2)
+        tokens=torch.randint(0,256,(2,12));changed=tokens.clone();changed[:,7:]=(changed[:,7:]+1)%256
+        with torch.no_grad():a=bridge(tokens,self.state);b=bridge(changed,self.state)
+        torch.testing.assert_close(a[:,:7],b[:,:7],atol=0,rtol=0)
+        loss=causal_loss(bridge(tokens,self.state),tokens);loss.backward()
+        self.assertGreater(float(bridge.contextualizer[0].out.weight.grad.norm()),0)
+        payload={'format':'spora-byte-interface-v2','context_layers':2,
+            'organism_sha256':'parent','state':interface_state(bridge)}
+        load_interface(LanguageBridge(self.organism,context_layers=2),payload,'parent')
+        with self.assertRaisesRegex(ValueError,'context layer count'):
+            load_interface(LanguageBridge(self.organism),payload,'parent')
 
 if __name__=='__main__':unittest.main()

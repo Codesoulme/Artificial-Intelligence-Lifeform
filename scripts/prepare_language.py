@@ -8,12 +8,12 @@ from spora.language_bridge import LanguageBridge,causal_loss
 from spora.language_training import load_interface,ByteTrainer
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--individual',required=True);p.add_argument('--output',required=True);args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--individual',required=True);p.add_argument('--output',required=True);p.add_argument('--context-layers',type=int,default=0);args=p.parse_args()
     output=Path(args.output)
     if output.exists():raise FileExistsError(output)
     output.mkdir(parents=True);torch.set_num_threads(2);torch.manual_seed(1710000)
     source=Path(args.individual);before=hashlib.sha256(source.read_bytes()).hexdigest()
-    organism,state,meta=load(source);bridge=LanguageBridge(organism)
+    organism,state,meta=load(source);bridge=LanguageBridge(organism,context_layers=args.context_layers)
     # Synthetic integer tokens only: readiness for a training step, no Chinese examples.
     tokens=torch.randint(0,256,(2,128));prefix=tokens.clone();prefix[:,64:]=(prefix[:,64:]+1)%256
     with torch.no_grad():
@@ -25,9 +25,10 @@ def main():
     bridge.zero_grad(set_to_none=True)
     # Save the pristine random interface; smoke test performed no optimizer step.
     interface={k:v.detach().cpu().clone() for k,v in bridge.state_dict().items() if not k.startswith('organism.')}
-    torch.save({'format':'spora-byte-interface-v1','seed':1710000,'organism_sha256':before,'state':interface,
+    interface_format='spora-byte-interface-v2' if args.context_layers else 'spora-byte-interface-v1'
+    torch.save({'format':interface_format,'context_layers':args.context_layers,'seed':1710000,'organism_sha256':before,'state':interface,
                 'trained_tokens':0,'vocab':'UTF-8 bytes + BOS/EOS/PAD'},output/'untrained-interface.pt')
-    restored=LanguageBridge(organism)
+    restored=LanguageBridge(organism,context_layers=args.context_layers)
     payload=torch.load(output/'untrained-interface.pt',weights_only=True)
     load_interface(restored,payload,before)
     with torch.no_grad():same=torch.equal(a,restored(tokens,state))

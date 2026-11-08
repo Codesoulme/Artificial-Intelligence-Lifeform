@@ -25,11 +25,47 @@ def decode(tokens):
     return bytes([x for x in tokens if 0<=x<256]).decode('utf-8',errors='strict')
 
 
+class CausalContextLayer(nn.Module):
+    """Small trainable causal context mixer in front of the frozen organism."""
+    def __init__(self, width, heads):
+        super().__init__()
+        if type(width) is not int or type(heads) is not int or width < 1 or width % heads:
+            raise ValueError('Context width must be divisible by heads')
+        self.heads = heads
+        self.head_width = width // heads
+        self.norm1 = nn.LayerNorm(width)
+        self.qkv = nn.Linear(width, 3 * width)
+        self.out = nn.Linear(width, width)
+        self.norm2 = nn.LayerNorm(width)
+        self.up = nn.Linear(width, 4 * width)
+        self.down = nn.Linear(4 * width, width)
+        nn.init.zeros_(self.out.weight)
+        nn.init.zeros_(self.out.bias)
+        nn.init.zeros_(self.down.weight)
+        nn.init.zeros_(self.down.bias)
+
+    def forward(self, x):
+        b, n, width = x.shape
+        q, k, v = self.qkv(self.norm1(x)).reshape(
+            b, n, 3, self.heads, self.head_width).permute(2, 0, 3, 1, 4).unbind(0)
+        scores = q @ k.transpose(-2, -1) / (self.head_width ** .5)
+        causal = torch.triu(torch.ones(n, n, dtype=torch.bool, device=x.device), diagonal=1)
+        attention = scores.masked_fill(causal, -torch.inf).softmax(-1)
+        mixed = attention @ v
+        x = x + self.out(mixed.transpose(1, 2).reshape(b, n, width))
+        return x + self.down(F.gelu(self.up(self.norm2(x))))
+
+
 class LanguageBridge(nn.Module):
-    def __init__(self,organism,read_mode='exact',read_error_l2=1e-4):
+    def __init__(self,organism,read_mode='exact',read_error_l2=1e-4,context_layers=0):
         super().__init__();self.organism=organism
         if read_mode not in ('legacy','exact','bounded','learned'):raise ValueError('Invalid read mode')
         self.read_mode=read_mode;self.read_error_l2=read_error_l2
+        if type(context_layers) is not int or not 0 <= context_layers <= 4:
+            raise ValueError('Context layer count must be between 0 and 4')
+        if organism.config.width % organism.config.heads:
+            raise ValueError('Organism width must be divisible by heads')
+        self.context_layers=context_layers
         self._read_plans={};self.last_read_stats=[]
         for p in organism.parameters():p.requires_grad_(False)
         d=organism.config.width;m=organism.config.memory_width
@@ -41,6 +77,7 @@ class LanguageBridge(nn.Module):
         self.read_strength=nn.Parameter(torch.tensor(-2.))
         self.adapter=nn.Sequential(nn.LayerNorm(d),nn.Linear(d,2*d),nn.GELU(),nn.Linear(2*d,d))
         self.head=nn.Linear(d,VOCAB,bias=False)
+        self.contextualizer=nn.ModuleList([CausalContextLayer(d,organism.config.heads) for _ in range(context_layers)])
         nn.init.normal_(self.byte_embedding.weight,std=.02)
 
     def forward(self,tokens,state):
@@ -50,6 +87,7 @@ class LanguageBridge(nn.Module):
         b,n=tokens.shape;device=tokens.device
         self.last_read_stats=[]
         x=self.embed_tokens(tokens)
+        for layer in self.contextualizer:x=layer(x)
         layer_site=0
         for i,block in enumerate(self.language_blocks()):
             x=block(x)

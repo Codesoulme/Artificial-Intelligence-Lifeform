@@ -23,10 +23,13 @@ def interface_state(model):
 
 
 def load_interface(model, payload, parent_sha256):
-    if payload.get('format') not in ('spora-byte-interface-v1', 'spora-byte-training-v2'):
+    if payload.get('format') not in ('spora-byte-interface-v1', 'spora-byte-interface-v2', 'spora-byte-training-v2'):
         raise ValueError('Unsupported byte interface')
     if payload.get('organism_sha256') != parent_sha256:
         raise ValueError('Interface belongs to a different individual')
+    expected_context_layers = len(getattr(model, 'contextualizer', ()))
+    if payload.get('context_layers', 0) != expected_context_layers:
+        raise ValueError('Interface context layer count does not match model')
     expected = interface_state(model)
     actual = payload.get('state', {})
     if set(actual) != set(expected):
@@ -86,7 +89,8 @@ class ByteTrainer:
 
     def snapshot(self):
         on_cuda = next(self.model.parameters()).is_cuda
-        return {'format': 'spora-byte-training-v2', 'organism_sha256': self.parent_sha256,
+        return {'format': 'spora-byte-training-v2', 'context_layers': len(getattr(self.model, 'contextualizer', ())),
+            'organism_sha256': self.parent_sha256,
             'state': interface_state(self.model), 'provenance': self.provenance,
             'optimizer': copy.deepcopy(self.optimizer.state_dict()), 'steps': self.steps,
             'trained_tokens': self.tokens_seen, 'sampler_rng': self.generator.get_state(),
