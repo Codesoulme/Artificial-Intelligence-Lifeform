@@ -5,6 +5,7 @@ import torch
 from .growing import load
 from .durable import TensorStore
 from .awake_session import AwakeSession
+from .event_ledger import EventLedger
 
 
 def main():
@@ -28,7 +29,9 @@ def main():
         store=TensorStore.create(path,model,state,{**metadata,'runtime':'awake CPU session'})
     with store:
         if not hasattr(model,'awake_core'):raise ValueError('An awake-enabled individual is required')
-        session=AwakeSession(model);core=model.awake_core;inbox=queue.Queue(maxsize=64)
+        ledger_path=path.with_name(path.stem+'.events.sqlite')
+        ledger=EventLedger.open(ledger_path) if ledger_path.exists() else EventLedger.create(ledger_path)
+        session=AwakeSession(model,ledger=ledger);core=model.awake_core;inbox=queue.Queue(maxsize=64)
         print('持续活动研究入口：目前仅接收数字图环境；尚不能理解任意中文目标。',flush=True)
         print('命令：demo / focus / relax / sleep / wake / status / quit。JSON可提交observe与goal。',flush=True)
         print('本次状态文件：'+str(path.resolve()),flush=True)
@@ -52,15 +55,15 @@ def main():
                         if command=='demo':
                             graph=torch.zeros_like(core.graph)
                             for i in range(10):graph[i,i+1]=1
-                            core.observe(graph,0,'synthetic');core.set_goal(10)
+                            session.observe(graph,0,'synthetic');session.set_goal(10)
                             print('已给定一次目标：从节点0到10。接下来由内部循环推进规划。',flush=True)
-                        elif command in ('focus','relax','sleep'):core.set_mode(command)
-                        elif command=='wake':core.set_mode('relax')
+                        elif command in ('focus','relax','sleep'):session.set_mode(command)
+                        elif command=='wake':session.set_mode('relax')
                         elif command=='status':print(json.dumps(core.status(),ensure_ascii=False),flush=True)
                         else:
                             event=json.loads(command)
-                            if event['type']=='observe':core.observe(event['graph'],event['position'],event['source'],event.get('urgent',False))
-                            elif event['type']=='goal':core.set_goal(event['target'])
+                            if event['type']=='observe':session.observe(event['graph'],event['position'],event['source'],event.get('urgent',False))
+                            elif event['type']=='goal':session.set_goal(event['target'])
                             else:raise ValueError('Unknown input event')
                         # External input can wake computation immediately.
                         if command!='status':
@@ -76,6 +79,7 @@ def main():
         except KeyboardInterrupt:pass
         finally:
             session.checkpoint(store,model,state)
+            ledger.close()
             print(json.dumps(dict(saved=str(path.resolve()),**core.status()),ensure_ascii=False),flush=True)
 
 
