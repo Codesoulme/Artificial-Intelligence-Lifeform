@@ -12,6 +12,7 @@ from spora.conversation import ConversationBridge,ConversationConfig,restore_con
 from spora.conversation_data import DialogueRows
 from spora.token_objective import backward_token_budget
 from spora.training_mix import choose_source
+from spora.document_stream import DocumentStream,trim_ignored_tail
 from spora.source_review import verify_training_source_reviews
 from spora.growing import load
 from spora.language_training import interface_state,atomic_save,frozen_digest
@@ -20,7 +21,7 @@ from types import SimpleNamespace
 from prepare_conversation_v2 import sha,SPECIAL
 from train_wording import dump,protected_manifest
 ROOT=Path(__file__).resolve().parents[1]
-SOURCES=('spora/conversation.py','spora/conversation_data.py','scripts/train_conversation_v10.py','spora/token_objective.py','spora/conversation_state.py','spora/training_mix.py','spora/source_review.py','spora/state_codec.py','spora/growing.py','scripts/prepare_teaching_curriculum.py','scripts/curate_teaching_curriculum.py','scripts/prepare_conversation_v4.py','scripts/prepare_conversation_v2.py','scripts/curate_conversation.py','spora/language_training.py')
+SOURCES=('spora/conversation.py','spora/conversation_data.py','scripts/train_conversation_v10.py','spora/token_objective.py','spora/conversation_state.py','spora/training_mix.py','spora/document_stream.py','spora/source_review.py','spora/state_codec.py','spora/growing.py','scripts/prepare_teaching_curriculum.py','scripts/curate_teaching_curriculum.py','scripts/prepare_conversation_v4.py','scripts/prepare_conversation_v2.py','scripts/curate_conversation.py','scripts/prepare_prose_pretrain_pilot.py','spora/language_training.py')
 PROMPTS=('你好，请简单介绍你的能力。','我今天有点累，可以怎样放松？','请用一句话解释为什么会下雨。','把“明天我去图书馆看书”改成疑问句。','我不知道该选哪本书，你能先问我一个问题吗？','社会主义核心价值观的个人层面包括哪些内容？')
 
 def load_rows(path,length):
@@ -151,9 +152,14 @@ def main():
         # Explicit curriculum fork: retain learned tensors, reset optimizer and
         # schedule, keep ancestor steps/targets in plan (not silently resuming).
         if language_payload['steps']!=plan['ancestor_steps'] or language_payload['targets']!=plan['ancestor_targets']:raise ValueError('Ancestor accounting differs')
+    if plan.get('memory_ablation', False):
+        model.memory_gate.data.fill_(-10.)
+        model.memory_gate.requires_grad_(False)
     optimizer=torch.optim.AdamW(model.trainable_parameters(),lr=plan['learning_rate'],weight_decay=.01,betas=(.9,.95))
     if payload is not None:optimizer.load_state_dict(payload['optimizer'])
     story_stream=np.memmap(data/'pretrain-train.bin',dtype=np.uint16,mode='r');stream=np.memmap(base_data/'pretrain-train.bin',dtype=np.uint16,mode='r');dev=np.memmap(data/'pretrain-development.bin',dtype=np.uint16,mode='r')
+    document_stream = DocumentStream(stream, tokenizer.token_to_id('<|bos|>'), tokenizer.token_to_id('<|eos|>'), pad) if plan.get('respect_document_boundaries', False) else None
+    story_documents = DocumentStream(story_stream, tokenizer.token_to_id('<|bos|>'), tokenizer.token_to_id('<|eos|>'), pad) if plan.get('respect_story_document_boundaries', False) else None
     sft=load_rows(data/'dialogue-train-tokens.jsonl',plan['length']);sft_dev=load_rows(data/'dialogue-development-tokens.jsonl',plan['length'])
     teacher=load_rows(curriculum/'teacher-tokens.jsonl',plan['length'])
     foundation=load_rows(curriculum/'foundations-tokens.jsonl',plan['length'])
@@ -173,8 +179,12 @@ def main():
         batches=[];update_targets=0;focus_used=False
         while update_targets<plan['target_budget']:
             kind=choose_source(plan['target_shares'],counts)
-            if kind=='story':x,y=text_batch(story_stream,rng,plan['microbatch'],plan['length'],'cpu')
-            elif kind=='pretrain':x,y=text_batch(stream,rng,plan['microbatch'],plan['length'],'cpu')
+            if kind=='story':
+                x,y=(story_documents.batch(rng,plan['microbatch'],plan['length'],'cpu') if story_documents is not None
+                     else text_batch(story_stream,rng,plan['microbatch'],plan['length'],'cpu'))
+            elif kind=='pretrain':
+                x,y=(document_stream.batch(rng,plan['microbatch'],plan['length'],'cpu') if document_stream is not None
+                     else text_batch(stream,rng,plan['microbatch'],plan['length'],'cpu'))
             else:
                 source={'dialogue':sft,'teacher':teacher,'foundation':foundation}[kind]
                 rows=[rng.choice(source) for _ in range(plan['microbatch'])]
@@ -188,12 +198,14 @@ def main():
                 counts['focus_targets']=counts.get('focus_targets',0)+focus_n
             n=int((y!=-100).sum())
             if n==0:raise ValueError('Source produced no supervision')
+            if plan.get('trim_ignored_tail',False):x,y=trim_ignored_tail(x,y)
             batches.append((x,y));update_targets+=n
             counts[kind+'_microbatches']=counts.get(kind+'_microbatches',0)+1
             counts[kind+'_targets_including_focus']=counts.get(kind+'_targets_including_focus',0)+n
             counts[kind+'_source_targets']=counts.get(kind+'_source_targets',0)+n-focus_n
             batch_trace=hashlib.sha256(bytes.fromhex(batch_trace)+x.numpy().tobytes()+y.numpy().tobytes()).hexdigest()
-        optimizer.zero_grad(set_to_none=True);loss,actual=backward_token_budget(model,state,batches)
+        optimizer.zero_grad(set_to_none=True)
+        loss,actual=backward_token_budget(model,state,batches,plan.get('unlikelihood_weight',0.0))
         if actual!=update_targets:raise AssertionError('Objective denominator differs from sampler')
         torch.nn.utils.clip_grad_norm_(model.trainable_parameters(),1.,error_if_nonfinite=True);optimizer.step()
         targets+=actual
