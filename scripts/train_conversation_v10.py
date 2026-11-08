@@ -83,9 +83,16 @@ def main():
     if sha(ROOT/plan['corpus_review'])!=plan['corpus_review_sha256']:raise ValueError('Corpus review changed')
     review=json.loads((ROOT/plan['corpus_review']).read_text('utf-8'))
     if review.get('approved_for_pilot') is not True:raise ValueError('Content review has no pilot approval')
-    review_bound = review.get('data_manifest_sha256') == sha(data/'manifest.json')
+    curriculum=ROOT/plan['curriculum']
+    review_bound = str(review.get('data_manifest_sha256', '')).lower() == sha(data/'manifest.json').lower()
+    # A curriculum review may bind the exact curriculum directory rather than
+    # the mixed base data directory. This keeps custom reviewed courses
+    # traceable without weakening the artifact hash checks below.
+    curriculum_sha = sha(curriculum/'manifest.json').lower()
+    review_bound = review_bound or str(review.get('input_directory_manifest_sha256', '')).lower() == curriculum_sha
+    review_bound = review_bound or str(review.get('manifest_sha256', '')).lower() == curriculum_sha
     if plan.get('review_source_manifest'):
-        review_bound = review_bound or review.get('source_manifest_sha256') == sha(ROOT/plan['review_source_manifest'])
+        review_bound = review_bound or str(review.get('source_manifest_sha256', '')).lower() == sha(ROOT/plan['review_source_manifest']).lower()
     if not review_bound:raise ValueError('Content review covers different training data')
     manifest=json.loads((data/'manifest.json').read_text('utf-8'))
     audit_paths=plan['data_audits'];audits={}
@@ -110,7 +117,7 @@ def main():
     else:
         base_manifest=manifest
     tokenizer=Tokenizer.from_file(str(data/'tokenizer.json'));pad=tokenizer.token_to_id('<|pad|>')
-    curriculum=ROOT/plan['curriculum'];cm=json.loads((curriculum/'manifest.json').read_text('utf-8'))
+    cm=json.loads((curriculum/'manifest.json').read_text('utf-8'))
     if cm['tokenizer_sha256']!=manifest['tokenizer_sha256']:raise ValueError('Teaching vocabulary differs')
     if sha(curriculum/'manifest.json')!=plan['curriculum_manifest_sha256']:raise ValueError('Teaching manifest changed')
     for name,digest in cm['files'].items():

@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "review_id": "P35-authored-dialogue-v4",
+  "review_status": "complete",
+  "reviewer": "Codex independent read-only content and integrity review",
+  "review_date": "2026-11-08",
+  "input_directory": "D:/SPORA/runs/p35-authored-dialogue-v4",
+  "manifest_sha256": "00e023c9c08e674b289fb3419551e790ebc784f7a093b33fca3745c24f96956b",
+  "manifest_binding": {
+    "algorithm": "SHA-256",
+    "manifest_file": "manifest.json",
+    "meaning": "The manifest hash and all file hashes below were computed from the bytes present in the reviewed v4 directory."
+  },
+  "manifest_declared_source_checks": {
+    "source_curriculum_manifest_sha256": {
+      "declared": "c2969c7d6dc86138810009c982bff93a6bc173ad6b21d928d034c7c86580775d",
+      "actual": "c2969c7d6dc86138810009c982bff93a6bc173ad6b21d928d034c7c86580775d",
+      "match": true
+    },
+    "tokenizer_sha256": {
+      "declared": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+      "actual": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+      "match": true
+    }
+  },
+  "input_file_sha256": {
+    "manifest.json": {
+      "declared": "00e023c9c08e674b289fb3419551e790ebc784f7a093b33fca3745c24f96956b",
+      "actual": "00e023c9c08e674b289fb3419551e790ebc784f7a093b33fca3745c24f96956b",
+      "match": true
+    },
+    "teacher.jsonl": {
+      "declared": "4613d3b3d84889c7fbc3975227b9523615081e96fdb87bbe1c494e867096a63e",
+      "actual": "4613d3b3d84889c7fbc3975227b9523615081e96fdb87bbe1c494e867096a63e",
+      "match": true
+    },
+    "teacher-tokens.jsonl": {
+      "declared": "e771c6e8abbf4b370c9eb8a9b5ee62af702abf82ec06e5ad2823d0d657dc8daa",
+      "actual": "e771c6e8abbf4b370c9eb8a9b5ee62af702abf82ec06e5ad2823d0d657dc8daa",
+      "match": true
+    },
+    "foundations.jsonl": {
+      "declared": "4b54ce4f07692981c6ff640e4475ca685c78d0265855b0b5cce1d93a58b1250f",
+      "actual": "4b54ce4f07692981c6ff640e4475ca685c78d0265855b0b5cce1d93a58b1250f",
+      "match": true
+    },
+    "foundations-tokens.jsonl": {
+      "declared": "1735c795214c732cfa4be41b849a9da27dc7d2b33b796fc6d104126219ed1df7",
+      "actual": "1735c795214c732cfa4be41b849a9da27dc7d2b33b796fc6d104126219ed1df7",
+      "match": true
+    }
+  },
+  "counts_and_binding": {
+    "teacher_dialogues_manifest": 24,
+    "teacher_dialogues_read_and_reviewed": 24,
+    "teacher_jsonl_rows": 24,
+    "teacher_token_rows": 24,
+    "teacher_assistant_turns_manifest": 65,
+    "teacher_assistant_targets_manifest": 884,
+    "teacher_masked_targets_recomputed": 884,
+    "foundations_jsonl_rows": 65,
+    "foundations_token_rows": 65,
+    "jsonl_parse_errors": 0,
+    "teacher_row_sha_failures": 0,
+    "teacher_token_group_mismatches": 0,
+    "foundations_token_group_mismatches": 0,
+    "token_mask_length_mismatches": 0,
+    "teacher_text_reconstruction_mismatches": 0,
+    "teacher_role_sequence_errors": 0,
+    "unique_teacher_indexes": 24,
+    "unique_teacher_groups": 24
+  },
+  "review_scope": {
+    "content": "Read every user and assistant message in all 24 teacher dialogues and checked role boundaries, Chinese expression, factual and logical consistency, task adherence, uncertainty handling, leakage of existing development material or internal project details, unsupported identity or firsthand-experience claims, and value framing.",
+    "integrity": "Read manifest.json; recomputed SHA-256 for manifest.json and all four JSONL artifacts; verified the declared source curriculum manifest and tokenizer hashes; parsed every JSONL row; checked row counts, row-level teacher SHA-256 values, group bindings, reconstructed text, role alternation, token-mask lengths, and masked-target totals.",
+    "limits": "Read-only review only. No training, fine-tuning, checkpoint evaluation, or input-file modification was performed. The 65 foundations rows were checked for parse, count, and token binding integrity; line-by-line content review covers the requested 24 teacher dialogues."
+  },
+  "approved_for_pilot": true,
+  "pilot_decision": {
+    "status": "approved_for_pilot_with_strict_limits",
+    "reason": "All 24 teacher dialogues are coherent, bounded low-stakes examples of multi-turn reference, correction, clarification, unknown-fact handling, instruction following, simple reasoning, and ordinary interpersonal values. The v4 revision makes the box-counting criterion explicit by consistently referring to usable empty boxes. No material content or integrity blocker was found.",
+    "conditions": [
+      "Use a short predeclared step or token budget and retain the parent checkpoint for rollback.",
+      "Run fixed before-and-after multi-turn evaluations for semantic correctness, correction handling, repetition, and role boundaries; do not rely on loss alone.",
+      "Stop on semantic regression, increased repetition, or persistent failure to preserve corrected context.",
+      "Treat this as a small authored pilot set; approval does not establish broad chat ability or authorize an unrestricted training run."
+    ]
+  },
+  "overall_assessment": {
+    "role_boundary": "pass",
+    "chinese_expression": "pass",
+    "facts_and_logic": "pass",
+    "task_adherence": "pass",
+    "development_question_leakage": "none_found",
+    "identity_or_firsthand_experience_claims": "none_unsupported_found",
+    "values": "pass",
+    "summary": "The set preserves dialogue-local facts, applies user corrections, distinguishes unknown information from known information, and avoids unsupported assistant biography. The only notable scope limitation is the small authored size and its resulting overfitting risk."
+  },
+  "row_reviews": [
+    {"index": 0, "source_line": 1, "status": "pass", "issues": [], "note": "Updates the pickup time to Sunday afternoon while preserving the unchanged location without inventing a named location."},
+    {"index": 1, "source_line": 2, "status": "pass", "issues": [], "note": "Tracks four pencils minus one plus one and answers four."},
+    {"index": 2, "source_line": 3, "status": "pass", "issues": [], "note": "Preserves both pet names and attributes eating the carrot to Tuan Tuan; the introduction of Man Man is accurate and natural."},
+    {"index": 3, "source_line": 4, "status": "pass", "issues": [], "note": "Stays within the stated budget, removes the timer after correction, and returns one recommendation."},
+    {"index": 4, "source_line": 5, "status": "pass", "issues": [], "note": "Prioritizes moving paper to a dry place and respects the five-minute constraint."},
+    {"index": 5, "source_line": 6, "status": "pass", "issues": [], "note": "Softens and formalizes the request while retaining the original urgency in the final wording."},
+    {"index": 6, "source_line": 7, "status": "pass", "issues": [], "note": "Correctly separates a precaution based on a forecast from the later outcome."},
+    {"index": 7, "source_line": 8, "status": "pass", "issues": [], "note": "Encourages direct admission and repair; the honesty and responsibility labels fit the situation."},
+    {"index": 8, "source_line": 9, "status": "pass", "issues": [], "note": "Correctly identifies the four personal-level value terms and maps diligence, trustworthiness, and friendliness."},
+    {"index": 9, "source_line": 10, "status": "pass", "issues": [], "note": "The condensation explanation is accurate and simplified appropriately on request."},
+    {"index": 10, "source_line": 11, "status": "pass", "issues": [], "note": "Uses only the stated potatoes and carrots and respects the preference for few seasonings."},
+    {"index": 11, "source_line": 12, "status": "pass", "issues": [], "note": "Acknowledges that the location is unknown and does not fabricate a nearby bus stop."},
+    {"index": 12, "source_line": 13, "status": "pass", "issues": [], "note": "Maintains three weekly sessions and avoids Friday."},
+    {"index": 13, "source_line": 14, "status": "pass", "issues": [], "note": "Acknowledges disappointment and respects the request for quiet time."},
+    {"index": 14, "source_line": 15, "status": "pass", "issues": [], "note": "Moves the stamp correctly and states that no item is mentioned in the red box, avoiding an unsupported claim that it is physically empty."},
+    {"index": 15, "source_line": 16, "status": "pass", "issues": [], "note": "The explicit usable-empty-box criterion makes the arithmetic six minus two plus three minus one equals six unambiguous."},
+    {"index": 16, "source_line": 17, "status": "pass", "issues": [], "note": "Provides an organizing action that does not depend on an unstated container size and then gives the requested single action."},
+    {"index": 17, "source_line": 18, "status": "pass", "issues": [], "note": "Replaces the access card with a key while preserving the water bottle and final packing list."},
+    {"index": 18, "source_line": 19, "status": "pass", "issues": [], "note": "Explicitly disclaims bodily and firsthand cycling experience and limits advice to general guidance."},
+    {"index": 19, "source_line": 20, "status": "pass", "issues": [], "note": "The corrected compression preserves the planned nature of the evening trip and purchase."},
+    {"index": 20, "source_line": 21, "status": "pass", "issues": [], "note": "Does not infer whether meat is available and summarizes only rice and green peas as known ingredients."},
+    {"index": 21, "source_line": 22, "status": "pass", "issues": [], "note": "Updates the appointment time and preserves the unchanged hall."},
+    {"index": 22, "source_line": 23, "status": "pass", "issues": [], "note": "Avoids claiming knowledge of the friend's motives and suggests calm clarification."},
+    {"index": 23, "source_line": 24, "status": "pass", "issues": [], "note": "Tracks five stickers minus two plus one and answers four."}
+  ],
+  "leakage_and_identity_check": {
+    "development_material_found": false,
+    "unsupported_identity_claim_found": false,
+    "unsupported_firsthand_experience_claim_found": false,
+    "note": "The codex_authored_p35 provenance label is metadata and does not appear as dialogue content. The explicit cycling-experience response states the assistant's limitation accurately."
+  },
+  "training_performed": false,
+  "input_files_modified": false,
+  "report_file_written": "D:/SPORA/reports/P35-authored-dialogue-v4-review.json"
+}

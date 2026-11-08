@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "review_id": "P35-authored-dialogue-v3",
+  "review_status": "complete",
+  "reviewer": "Codex independent read-only content review",
+  "review_date": "2026-11-08",
+  "input_directory": "D:/SPORA/runs/p35-authored-dialogue-v3",
+  "input_directory_manifest_sha256": "1D313308B5FCDB776D887440A52359E0245FB433A13ADBB113068CA129D769C2",
+  "manifest_sha256": "1D313308B5FCDB776D887440A52359E0245FB433A13ADBB113068CA129D769C2",
+  "manifest_binding": {
+    "algorithm": "SHA-256",
+    "manifest_file": "manifest.json",
+    "meaning": "Hash computed from the manifest.json bytes currently present in the reviewed v3 input directory. All reported row counts and file hashes below were checked against that same directory during this review."
+  },
+  "input_file_sha256": {
+    "manifest.json": "1D313308B5FCDB776D887440A52359E0245FB433A13ADBB113068CA129D769C2",
+    "teacher.jsonl": "84728E9F0879E226B80C7D05619AEC3E3750A0DC261544301F22D6A4CFEB9DBC",
+    "teacher-tokens.jsonl": "3048A6ACBA52D9A3D2CD422D1B82EED739514EA840B9694E116A803EC3EC7C35",
+    "foundations.jsonl": "4B54CE4F07692981C6FF640E4475CA685C78D0265855B0B5CCE1D93A58B1250F",
+    "foundations-tokens.jsonl": "1735C795214C732CFA4BE41B849A9DA27DC7D2B33B796FC6D104126219ED1DF7"
+  },
+  "counts": {
+    "teacher_dialogues_manifest": 24,
+    "teacher_dialogues_read_and_reviewed": 24,
+    "teacher_jsonl_rows": 24,
+    "teacher_token_rows": 24,
+    "teacher_assistant_turns_manifest": 65,
+    "teacher_assistant_targets_manifest": 877,
+    "foundations_jsonl_rows": 65,
+    "foundations_token_rows": 65,
+    "jsonl_parse_errors": 0
+  },
+  "review_scope": {
+    "content": "Read every turn in each of the 24 teacher dialogues and checked role boundaries, Chinese expression, facts and logic, leakage of existing development questions or internal project details, unsupported identity or firsthand-experience claims, and value statements.",
+    "integrity": "Read manifest.json; computed SHA-256 for the manifest and all four JSONL files; counted and parsed every JSONL row; checked teacher and foundations row counts against token-row counts. The 65 foundations dialogues were integrity-checked and inventoried, while the requested line-by-line content review covers the 24 teacher dialogues.",
+    "limits": "Read-only review only. No training, checkpoint evaluation, or input-file modification was performed."
+  },
+  "approved_for_pilot": true,
+  "pilot_decision": {
+    "status": "approved_for_pilot_with_strict_limits",
+    "reason": "The 24 reviewed dialogues are coherent, low-stakes examples of multi-turn reference, correction, clarification, instruction following, simple reasoning, and interpersonal values. The v2 wording concern in row 2 is corrected to the natural phrase '喜欢晒太阳'. One minor ambiguity remains in row 15 about whether a broken empty box counts as a remaining box. It does not materially compromise the set for a short controlled pilot.",
+    "conditions": [
+      "Keep the experiment short and use a predeclared step or token budget with the parent checkpoint retained for rollback.",
+      "Compare against fixed multi-turn cases before and after training, scoring semantic correctness, correction handling, repetition, and role boundaries rather than relying on loss alone.",
+      "Stop if semantic performance regresses, repetition increases, or corrected context remains unreliable.",
+      "Approval covers only this bounded experiment; it does not certify general chat ability or authorize an unrestricted training run."
+    ]
+  },
+  "overall_assessment": {
+    "role_boundary": "pass",
+    "chinese_expression": "pass",
+    "facts_and_logic": "pass_with_one_minor_ambiguity",
+    "development_question_leakage": "none_found",
+    "identity_or_firsthand_experience_claims": "none_unsupported_found",
+    "values": "pass",
+    "summary": "No material blocker found. Dialogue-local memory wording remains bounded to facts provided in the conversation. Row 18 explicitly rejects a personal cycling biography. Value statements favor honesty, responsibility, fairness, consent, and respectful communication without coercion or harmful framing."
+  },
+  "row_reviews": [
+    {"index": 0, "source_line": 1, "status": "pass", "issues": [], "note": "Carries the update to Sunday afternoon and preserves the user's unchanged-location instruction; no location name is invented."},
+    {"index": 1, "source_line": 2, "status": "pass", "issues": [], "note": "The count is correct: four minus one plus one equals four."},
+    {"index": 2, "source_line": 3, "status": "pass", "issues": [], "note": "The v2 wording is corrected to natural Chinese ('喜欢晒太阳'); names, animal types, and stated behavior are tracked correctly."},
+    {"index": 3, "source_line": 4, "status": "pass", "issues": [], "note": "Respects the budget, excludes the timer the cousin already owns, and gives one recommendation."},
+    {"index": 4, "source_line": 5, "status": "pass", "issues": [], "note": "Prioritizes moving paper away from possible kitchen spills and follows the request for the first action."},
+    {"index": 5, "source_line": 6, "status": "pass", "issues": [], "note": "Softens and formalizes the wording while restoring the original request's urgency in the final version."},
+    {"index": 6, "source_line": 7, "status": "pass", "issues": [], "note": "Soundly distinguishes a precaution based on the forecast from the eventual outcome."},
+    {"index": 7, "source_line": 8, "status": "pass", "issues": [], "note": "Encourages an honest admission and repair; the responsibility and honesty labels fit the scenario."},
+    {"index": 8, "source_line": 9, "status": "pass", "issues": [], "note": "Correctly identifies the personal-level terms and maps diligence, trustworthiness, and friendliness."},
+    {"index": 9, "source_line": 10, "status": "pass", "issues": [], "note": "The condensation explanation is accurate and simplified appropriately."},
+    {"index": 10, "source_line": 11, "status": "pass", "issues": [], "note": "Uses only the stated potatoes and carrots; the cooking suggestion is ordinary and coherent."},
+    {"index": 11, "source_line": 12, "status": "pass", "issues": [], "note": "Acknowledges missing location information and does not fabricate a nearby bus stop."},
+    {"index": 12, "source_line": 13, "status": "pass", "issues": [], "note": "Maintains three weekly sessions and avoids Friday."},
+    {"index": 13, "source_line": 14, "status": "pass", "issues": [], "note": "Acknowledges disappointment and respects the user's request for quiet time."},
+    {"index": 14, "source_line": 15, "status": "pass", "issues": [], "note": "Tracks the stamp move and carefully says no item is currently mentioned in the red box."},
+    {"index": 15, "source_line": 16, "status": "minor_ambiguity", "issues": ["The final count of six treats the broken box as no longer part of the count, but the dialogue does not specify whether '多少个' means total boxes or usable empty boxes."], "note": "The arithmetic is six minus two plus three minus one equals six under a usable-box interpretation. Clarifying the counting criterion would remove ambiguity."},
+    {"index": 16, "source_line": 17, "status": "pass", "issues": [], "note": "Offers a size-independent organizing action and then follows the request for one action."},
+    {"index": 17, "source_line": 18, "status": "pass", "issues": [], "note": "Updates the packing list accurately, replacing the access card with a key."},
+    {"index": 18, "source_line": 19, "status": "pass", "issues": [], "note": "Explicitly disclaims bodily and firsthand cycling experience and limits advice to general guidance based on the user's information."},
+    {"index": 19, "source_line": 20, "status": "pass", "issues": [], "note": "The shortened and rewritten sentences preserve the planned evening trip and purchase; the summary correctly describes the user's intent."},
+    {"index": 20, "source_line": 21, "status": "pass", "issues": [], "note": "Does not infer whether meat is available and summarizes only the known rice and green peas."},
+    {"index": 21, "source_line": 22, "status": "pass", "issues": [], "note": "Updates the appointment time and preserves the unchanged hall."},
+    {"index": 22, "source_line": 23, "status": "pass", "issues": [], "note": "Avoids claiming knowledge of the friend's motives and suggests a calm way to clarify."},
+    {"index": 23, "source_line": 24, "status": "pass", "issues": [], "note": "Sticker count is correct: five minus two plus one equals four."}
+  ],
+  "leakage_and_identity_check": {
+    "development_material_found": false,
+    "unsupported_identity_claim_found": false,
+    "unsupported_firsthand_experience_claim_found": false,
+    "note": "The codex_authored_p35 provenance label is metadata and does not appear as dialogue content. The explicit cycling-experience answer in row 18 states the assistant's limitation accurately."
+  },
+  "training_performed": false,
+  "input_files_modified": false
+}

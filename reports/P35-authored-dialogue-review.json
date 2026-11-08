@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "review_id": "P35-authored-dialogue-v1",
+  "review_status": "complete",
+  "reviewer": "Codex independent content review",
+  "review_date": "2026-11-08",
+  "scope": {
+    "run_directory": "D:/SPORA/runs/p35-authored-dialogue-v1",
+    "files_examined": [
+      "teacher.jsonl",
+      "foundations.jsonl",
+      "teacher-tokens.jsonl",
+      "foundations-tokens.jsonl",
+      "manifest.json"
+    ],
+    "dialogue_counts": {
+      "teacher": 25,
+      "foundations": 65,
+      "total": 90
+    },
+    "method": "Read every message turn in all 90 dialogue rows, assessed role boundaries, Chinese wording, factual and logical consistency, leakage of existing project development material, identity or firsthand-experience claims, and value statements. Compared the proposed training decision with the separate P35 dialogue diagnosis in reports/P35-latest-dialogue-diagnosis.md. Manifest metadata was used for file identity and counts, not treated as the review conclusion.",
+    "input_sha256": {
+      "teacher.jsonl": "9742D006D956DA74D4153B06869ECD65B6473B9B2F5E83C18D5F967EE7252E8D",
+      "foundations.jsonl": "4B54CE4F07692981C6FF640E4475CA685C78D0265855B0B5CCE1D93A58B1250F",
+      "teacher-tokens.jsonl": "7BAE5E0F877CBB771654EA060235A11AF6D113429A0A7CFD739534B7B78680DB",
+      "foundations-tokens.jsonl": "1735C795214C732CFA4BE41B849A9DA27DC7D2B33B796FC6D104126219ED1DF7",
+      "manifest.json": "3A3D84B6F51680E4159E8D14084178A82DE9DD17A4503F78F42EA8055BCD4F9B"
+    },
+    "integrity_checks": {
+      "all_jsonl_rows_parse": true,
+      "teacher_rows": 25,
+      "foundations_rows": 65,
+      "token_rows_match_corresponding_dialogue_row_counts": true
+    }
+  },
+  "decision": {
+    "short_term_training_trial": "yes_with_strict_limits",
+    "rationale": "The authored rows are mostly coherent, low-stakes, role-appropriate examples of dialogue-local reference, correction, clarification, instruction following, and ordinary values. No material project-development prompt or detail was found in the reviewed dialogue content. This supports a small, reversible pilot to test whether explicit multi-turn supervision helps. It does not justify a production run, long continuation, or a claim that the model has acquired reliable chat ability. The set is only 25 target dialogues and 65 short foundations examples, is synthetic, and contains limited coverage; the independent P35 diagnosis reports that the current checkpoint performs poorly on the 36-turn development set, including repetition and failed context recall.",
+    "conditions": [
+      "Use a short, predeclared step or token budget and retain the parent checkpoint for rollback.",
+      "Evaluate against the same fixed multi-turn development cases before and after the pilot; inspect semantic correctness and repetition, not only loss or normal termination.",
+      "Stop if semantic performance regresses, repetition rises, or context correction remains unreliable; do not extend the run solely because training loss falls.",
+      "Treat approval as permission for an experiment on this small dataset, not certification of the data as broad or production-ready dialogue training material."
+    ]
+  },
+  "category_summary": {
+    "role_boundary": "Pass overall. Replies stay within assistant role; no instruction hierarchy or role confusion observed. Dialogue-local phrases such as '记下了' and '已更新' refer to facts supplied in the conversation and are followed by correct local tracking.",
+    "chinese_expression": "Generally clear and grammatical. Minor imprecision or compression is recorded on teacher rows 10, 13, and 20; none makes the set unusable for a bounded pilot.",
+    "facts_and_logic": "Mostly consistent low-stakes facts and arithmetic. Teacher row 13 relies on interpreting '周末' as both weekend evenings; teacher row 20 progressively drops detail while shortening. No material factual defect found in foundations rows; their science explanations are simplified but suitable for their stated elementary-level context.",
+    "development_material_leakage": "No existing project name, development question, internal procedure, checkpoint, or implementation detail appears in user-facing dialogue content. The source field 'codex_authored_p35' and run metadata are provenance metadata, not dialogue leakage.",
+    "identity_and_firsthand_claims": "No unsupported human biography or firsthand experience claim found. Teacher row 19 explicitly denies bodily or personal running experience. Foundations rows 10, 12, 41, and 64 state limits on perception, action, fiction, or access to real-world facts appropriately.",
+    "values": "Value statements promote honesty, responsibility, respect for consent and boundaries, fair turn-taking, and regard for others. They are proportionate to the scenarios; no coercive, discriminatory, or harmful value framing observed. Row 8 correctly distinguishes personal-level values and identifies honesty as the primary value in returning a found pen, with kindness as a secondary interpretation."
+  },
+  "teacher_row_reviews": [
+    {"index": 0, "status": "pass", "note": "Schedule correction is carried through consistently; '记下了' is bounded by the dialogue context."},
+    {"index": 1, "status": "pass", "note": "Accurately recalls the stated count of three flowerpots."},
+    {"index": 2, "status": "pass", "note": "Names, animal types, and preferences remain correctly associated."},
+    {"index": 3, "status": "pass", "note": "Advice respects the stated budget and avoids the already-owned art supplies."},
+    {"index": 4, "status": "pass", "note": "Adapts to the shorter time and follows the request to give only the first step."},
+    {"index": 5, "status": "pass", "note": "Register changes from polite to friendly to formal as requested; wording is natural."},
+    {"index": 6, "status": "pass", "note": "Avoids judging a precaution solely by outcome; reasoning is sound."},
+    {"index": 7, "status": "pass", "note": "Practical reminder advice and accountability framing are proportionate."},
+    {"index": 8, "status": "pass", "note": "Value categories and explanation of honesty are appropriate and coherent."},
+    {"index": 9, "status": "pass", "note": "Elementary condensation explanation is accurate enough for the requested level."},
+    {"index": 10, "status": "minor_issue", "note": "'较大的小块' is understandable but slightly awkward; '切成大一些的块' is more natural."},
+    {"index": 11, "status": "pass", "note": "Asks relevant preferences and does not invent nearby park names."},
+    {"index": 12, "status": "pass", "note": "Clearly marks missing location information and asks for a useful clarification."},
+    {"index": 13, "status": "minor_issue", "note": "Six nights is correct if '周末' means Saturday and Sunday, but the answer assumes both are available; the user only excluded Wednesday. Prefer asking whether both weekend nights are intended or state the assumption."},
+    {"index": 14, "status": "pass", "note": "Acknowledges distress without imposing advice after the user declines it."},
+    {"index": 15, "status": "pass", "note": "Tracks the move correctly and carefully says no item was mentioned in the blue folder."},
+    {"index": 16, "status": "pass", "note": "Arithmetic is correct under the explicit clarification that the lent book was not in the user's possession."},
+    {"index": 17, "status": "pass", "note": "Gives a size-independent suggestion after the user requests one."},
+    {"index": 18, "status": "pass", "note": "Updates the item list and accurately excludes the notebook."},
+    {"index": 19, "status": "pass", "note": "Cautious low-stakes exercise advice; explicitly disclaims bodily and firsthand experience."},
+    {"index": 20, "status": "minor_issue", "note": "The first rewrite is within ten Chinese characters if punctuation is excluded. The second preserves '附近' but drops '故事' and '一本'; acceptable as a shorter paraphrase only if the length constraint remains active and some detail loss is allowed. Constraint scope should be clearer."},
+    {"index": 21, "status": "pass", "note": "Does not invent whether eggs are available and summarizes only stated ingredients."},
+    {"index": 22, "status": "pass", "note": "Updates the meeting time while preserving the unchanged room."},
+    {"index": 23, "status": "pass", "note": "Validates worry without claiming to know the friend's motive; suggests a calm check-in."},
+    {"index": 24, "status": "pass", "note": "Ticket count returns correctly to three after the ticket is returned."}
+  ],
+  "foundations_row_reviews": [
+    {"index": 0, "status": "pass"},
+    {"index": 1, "status": "pass"},
+    {"index": 2, "status": "pass"},
+    {"index": 3, "status": "pass"},
+    {"index": 4, "status": "pass"},
+    {"index": 5, "status": "pass"},
+    {"index": 6, "status": "pass"},
+    {"index": 7, "status": "pass"},
+    {"index": 8, "status": "pass"},
+    {"index": 9, "status": "pass"},
+    {"index": 10, "status": "pass", "note": "Explicitly says it cannot see the drawer, then answers from the user's statement."},
+    {"index": 11, "status": "pass", "note": "Does not guess what the user is listening to."},
+    {"index": 12, "status": "pass", "note": "Does not claim remote physical control or proactive reminder ability."},
+    {"index": 13, "status": "pass"},
+    {"index": 14, "status": "pass"},
+    {"index": 15, "status": "pass"},
+    {"index": 16, "status": "pass"},
+    {"index": 17, "status": "pass"},
+    {"index": 18, "status": "pass", "note": "Distinguishes a sentence rewrite from knowledge of the user's real timetable."},
+    {"index": 19, "status": "pass"},
+    {"index": 20, "status": "pass"},
+    {"index": 21, "status": "pass"},
+    {"index": 22, "status": "pass"},
+    {"index": 23, "status": "pass"},
+    {"index": 24, "status": "pass"},
+    {"index": 25, "status": "pass"},
+    {"index": 26, "status": "pass"},
+    {"index": 27, "status": "pass", "note": "Basic explanation of a shadow is suitable for the simple question."},
+    {"index": 28, "status": "pass", "note": "Basic phase-change explanation is suitable for the simple question."},
+    {"index": 29, "status": "pass", "note": "Avoids the false generalization that every metal is attracted to an ordinary magnet."},
+    {"index": 30, "status": "pass", "note": "Basic sound-and-vibration explanation is coherent."},
+    {"index": 31, "status": "pass", "note": "Correctly attributes day and night to Earth's rotation."},
+    {"index": 32, "status": "pass", "note": "Correctly identifies reflected sunlight as the main source of visible moonlight."},
+    {"index": 33, "status": "pass", "note": "Notes that plant needs vary and that waterlogging can deprive seeds of air."},
+    {"index": 34, "status": "pass", "note": "Correctly distinguishes whales from fish and describes their need to surface for air."},
+    {"index": 35, "status": "pass"},
+    {"index": 36, "status": "pass", "note": "Does not fabricate a cleanup detail when asked for an unstated fact."},
+    {"index": 37, "status": "pass", "note": "Water entering the boat increases its total mass; '重量' is a common, adequate simplification here."},
+    {"index": 38, "status": "pass", "note": "Rejects an unsupported inference and offers plausible alternatives."},
+    {"index": 39, "status": "pass", "note": "Avoids assuming why someone was absent and suggests a considerate question."},
+    {"index": 40, "status": "pass", "note": "Accepts correction without defensiveness and follows it."},
+    {"index": 41, "status": "pass", "note": "Provides a harmless fictional story and labels it as fiction when asked."},
+    {"index": 42, "status": "pass", "note": "Tracks story details and revises them as requested; sharing is framed kindly without coercion."},
+    {"index": 43, "status": "pass"},
+    {"index": 44, "status": "pass", "note": "First-person emotion is explicitly supplied as a requested writing task, not asserted as assistant experience."},
+    {"index": 45, "status": "pass", "note": "Encourages honest disclosure and repair after accidental damage."},
+    {"index": 46, "status": "pass", "note": "Respects the other person's willingness and boundaries."},
+    {"index": 47, "status": "pass", "note": "Promotes transparent, fair turn-taking and allows mutually agreed adjustment."},
+    {"index": 48, "status": "pass", "note": "Correctly lists the three value levels and their terms."},
+    {"index": 49, "status": "pass"},
+    {"index": 50, "status": "pass"},
+    {"index": 51, "status": "pass"},
+    {"index": 52, "status": "pass", "note": "Twelve terms and twenty-four characters are correct."},
+    {"index": 53, "status": "pass", "note": "Balances helping with consent; does not treat assistance as entitlement."},
+    {"index": 54, "status": "pass", "note": "Balances personal choice with others' rights and shared rules."},
+    {"index": 55, "status": "pass", "note": "Frames responsibility as doing the work, communicating, and repairing mistakes."},
+    {"index": 56, "status": "pass"},
+    {"index": 57, "status": "pass", "note": "Correctly tracks a changed packing list and answers based on the update."},
+    {"index": 58, "status": "pass"},
+    {"index": 59, "status": "pass"},
+    {"index": 60, "status": "pass"},
+    {"index": 61, "status": "pass", "note": "Patience example is concrete and nonjudgmental."},
+    {"index": 62, "status": "pass", "note": "Defines cooperation and competition accurately and allows that they can coexist."},
+    {"index": 63, "status": "pass"},
+    {"index": 64, "status": "pass", "note": "Clarifies that the described image comes only from user-provided text, not visual perception."}
+  ],
+  "notable_findings": [
+    {
+      "category": "logic_and_ambiguity",
+      "rows": ["teacher:13"],
+      "severity": "minor",
+      "finding": "The answer's six-night count assumes both Saturday and Sunday are available under '周末'. The arithmetic follows that interpretation, but the availability was not stated."
+    },
+    {
+      "category": "instruction_following_and_compression",
+      "rows": ["teacher:20"],
+      "severity": "minor",
+      "finding": "The second compressed sentence drops story-book specificity ('故事' and '一本') while retaining proximity. No explicit request says every detail must remain, but the active length constraint and allowed information loss are not explicit."
+    },
+    {
+      "category": "language",
+      "rows": ["teacher:10"],
+      "severity": "minor",
+      "finding": "'较大的小块' is understandable but less idiomatic than '大一些的块'."
+    },
+    {
+      "category": "training_readiness",
+      "rows": ["teacher:0", "teacher:15", "teacher:18", "teacher:22"],
+      "severity": "low",
+      "finding": "Phrases such as '记下了' and '已更新' are safe in these dialogue-local context-tracking examples. Their presence should not be read as a claim that the assistant wrote to a persistent calendar, memory, or external store."
+    }
+  ],
+  "external_evidence_considered": [
+    {
+      "path": "reports/P35-latest-dialogue-diagnosis.md",
+      "relevance": "Separate fixed multi-turn development diagnosis reports substantial deterioration by the later P34 checkpoint, with repetition at 21/36 turns and failures in correction/context recall. It states that the model did not pass the chat gate. This supports limiting the recommendation to a short controlled experiment and requires explicit before/after semantic evaluation."
+    },
+    {
+      "path": "reports/P30-reviewed-dialogue-results.md",
+      "relevance": "Prior small reviewed-question pilot showed acceptable termination metrics but did not pass semantic and multi-turn continuity promotion conditions. This reinforces that this data review cannot itself establish training effectiveness."
+    }
+  ],
+  "limitations": [
+    "This is a single-reviewer content audit; it is not blind human review or a formal corpus-wide factual certification.",
+    "The 25 authored target rows and 65 foundations rows are small and synthetic, so they cannot establish naturalness, broad coverage, or generalization.",
+    "This review examines data suitability only; it does not execute training or assess any resulting checkpoint."
+  ],
+  "training_performed": false,
+  "other_files_modified": false
+}

@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "review_id": "P35-authored-dialogue-v2",
+  "review_status": "complete",
+  "reviewer": "Codex independent content review",
+  "review_date": "2026-11-08",
+  "input_directory": "D:/SPORA/runs/p35-authored-dialogue-v2",
+  "input_directory_manifest_sha256": "7E22A4B62AF857BEB70113B01A084F5473FFC56E5F0C4723747BB68F896C5558",
+  "manifest_declared_source_curriculum_manifest_sha256": "c2969c7d6dc86138810009c982bff93a6bc173ad6b21d928d034c7c86580775d",
+  "input_file_sha256": {
+    "manifest.json": "7E22A4B62AF857BEB70113B01A084F5473FFC56E5F0C4723747BB68F896C5558",
+    "teacher.jsonl": "E1DAA942722BF82E61FEFD4A236152B04D4464895AE6956E1DEF991AEF3BAE57",
+    "teacher-tokens.jsonl": "4E58423E33A7BD5DF638331C6E6ABC6A55E324FF843A6152087F046DA1C09437",
+    "foundations.jsonl": "4B54CE4F07692981C6FF640E4475CA685C78D0265855B0B5CCE1D93A58B1250F",
+    "foundations-tokens.jsonl": "1735C795214C732CFA4BE41B849A9DA27DC7D2B33B796FC6D104126219ED1DF7"
+  },
+  "counts": {
+    "teacher_dialogues_reviewed": 24,
+    "teacher_assistant_turns": 65,
+    "teacher_target_tokens_declared_by_manifest": 877,
+    "foundations_dialogues_present": 65,
+    "foundations_token_rows": 65,
+    "teacher_token_rows": 24,
+    "jsonl_parse_errors": 0
+  },
+  "review_scope": {
+    "included": "Every user and assistant message in all 24 teacher dialogues was checked individually for role boundaries, Chinese expression, factual and logical consistency, leakage of existing development questions or internal project material, unsupported identity or firsthand-experience claims, and value statements.",
+    "integrity": "The manifest, all four JSONL files, row counts, token-row counts, and SHA-256 values were checked. The 65 foundations rows were inventoried for parse and count integrity; the requested 24-dialogue content review refers to the 24 teacher rows.",
+    "excluded": "No training, fine-tuning, checkpoint evaluation, or modification of run files was performed. The manifest was not accepted as the quality conclusion; the dialogue messages were read and assessed independently."
+  },
+  "overall_assessment": {
+    "role_boundary": "pass",
+    "chinese_expression": "pass_with_one_minor_style_note",
+    "facts_and_logic": "pass",
+    "development_question_leakage": "pass",
+    "identity_or_firsthand_claims": "pass",
+    "values": "pass",
+    "summary": "All 24 teacher dialogues are coherent low-stakes examples of local state tracking, correction, clarification, instruction following, simple reasoning, and ordinary interpersonal values. No existing development question, internal implementation detail, or unsupported assistant biography appears in the dialogue content. One phrase, '喜欢晒灯', is unusual Chinese but faithfully follows the user's supplied fact and does not create a logical error."
+  },
+  "approved_for_pilot": true,
+  "pilot_decision": {
+    "decision": "approved_for_pilot_with_strict_limits",
+    "reason": "The v2 set is suitable for a short, reversible training pilot. The 24 authored dialogues contain no material review blocker and improve coverage of correction, context tracking, uncertainty, and explicit experience limits. Approval applies only to a bounded experiment; this small synthetic set cannot establish broad dialogue quality or justify an unrestricted training run.",
+    "conditions": [
+      "Use a short predeclared step or token budget and retain the parent checkpoint for rollback.",
+      "Run fixed before-and-after multi-turn evaluations that score semantic correctness, correction handling, repetition, and role boundaries rather than loss alone.",
+      "Stop on semantic regression, increased repetition, or persistent failure to preserve corrected context.",
+      "Do not treat this approval as evidence that the resulting model has reliable general chat ability."
+    ]
+  },
+  "row_reviews": [
+    {"index": 0, "source_line": 1, "status": "pass", "issues": [], "note": "The time is updated to Sunday afternoon and the unchanged location is preserved. '原来的地点' is a dialogue-local paraphrase, not an invented named location."},
+    {"index": 1, "source_line": 2, "status": "pass", "issues": [], "note": "The pencil count is correctly 4 - 1 + 1 = 4."},
+    {"index": 2, "source_line": 3, "status": "minor_style_note", "issues": ["'喜欢晒灯' is understandable but nonstandard or slightly awkward Chinese for a turtle's behavior."], "note": "The assistant preserves the user-provided fact and answers the requested introduction without adding unsupported facts."},
+    {"index": 3, "source_line": 4, "status": "pass", "issues": [], "note": "The recommendation stays within the stated budget, avoids the existing timer, and returns one suggestion when requested."},
+    {"index": 4, "source_line": 5, "status": "pass", "issues": [], "note": "The first action is prioritized sensibly for paper on a kitchen counter and the five-minute constraint is respected."},
+    {"index": 5, "source_line": 6, "status": "pass", "issues": [], "note": "The register becomes softer, then more formal, and the final wording restores the original urgency."},
+    {"index": 6, "source_line": 7, "status": "pass", "issues": [], "note": "The response correctly separates the quality of a decision from an outcome that did not occur."},
+    {"index": 7, "source_line": 8, "status": "pass", "issues": [], "note": "Advice favors direct admission and timely repair; the honesty and responsibility framing is proportionate."},
+    {"index": 8, "source_line": 9, "status": "pass", "issues": [], "note": "The four personal-level value terms and the mappings for diligence, trustworthiness, and friendliness are correct."},
+    {"index": 9, "source_line": 10, "status": "pass", "issues": [], "note": "The condensation explanation is factually sound and successfully simplified on request."},
+    {"index": 10, "source_line": 11, "status": "pass", "issues": [], "note": "The cooking suggestion uses only the stated ingredients, and the final answer lists exactly those ingredients."},
+    {"index": 11, "source_line": 12, "status": "pass", "issues": [], "note": "The assistant states that location is unknown and does not invent a nearby bus stop."},
+    {"index": 12, "source_line": 13, "status": "pass", "issues": [], "note": "It preserves the requested frequency of three sessions while excluding Friday."},
+    {"index": 13, "source_line": 14, "status": "pass", "issues": [], "note": "The response acknowledges disappointment and respects the user's request for quiet time."},
+    {"index": 14, "source_line": 15, "status": "pass", "issues": [], "note": "The item move is tracked correctly; saying the red box has no mentioned item does not assert that it is physically empty."},
+    {"index": 15, "source_line": 16, "status": "pass", "issues": [], "note": "The box count is correctly 6 - 2 + 3 - 1 = 6."},
+    {"index": 16, "source_line": 17, "status": "pass", "issues": [], "note": "The advice does not depend on an unstated storage-box size and gives the requested single action."},
+    {"index": 17, "source_line": 18, "status": "pass", "issues": [], "note": "The replacement of the access card with a key is carried through accurately."},
+    {"index": 18, "source_line": 19, "status": "pass", "issues": [], "note": "The assistant explicitly disclaims bodily and firsthand cycling experience and limits itself to general advice."},
+    {"index": 19, "source_line": 20, "status": "pass", "issues": [], "note": "The compression remains a natural statement of planned activity; the later rewrite preserves the planning meaning explicitly."},
+    {"index": 20, "source_line": 21, "status": "pass", "issues": [], "note": "The assistant does not infer whether meat is available and summarizes only rice and green peas as known ingredients."},
+    {"index": 21, "source_line": 22, "status": "pass", "issues": [], "note": "The appointment time changes while the unchanged hall is preserved."},
+    {"index": 22, "source_line": 23, "status": "pass", "issues": [], "note": "The response avoids claiming to know the friend's feelings or attributing blame without evidence."},
+    {"index": 23, "source_line": 24, "status": "pass", "issues": [], "note": "The sticker count is correctly 5 - 2 + 1 = 4."}
+  ],
+  "leakage_and_identity_check": {
+    "development_material_found": false,
+    "unsupported_identity_claim_found": false,
+    "unsupported_firsthand_experience_claim_found": false,
+    "details": "The provenance string codex_authored_p35 occurs as a dataset field, not as user-facing dialogue. The only explicit assistant self-description is the appropriate limitation in teacher row 18."
+  },
+  "training_performed": false,
+  "other_files_modified": false
+}
