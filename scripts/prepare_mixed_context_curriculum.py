@@ -13,14 +13,19 @@ from scripts.prepare_conversation_v2 import sha
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--synthetic", choices=("all-replies", "last-reply"), default="all-replies")
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(args.output)
     authored = ROOT / "runs/p35-authored-dialogue-v4"
-    synthetic = ROOT / "runs/context-curriculum-v2"
+    synthetic = ROOT / ("runs/context-curriculum-v2" if args.synthetic == "all-replies"
+                        else "runs/context-curriculum-last-v1")
+    synthetic_hash = ("0620a6ff3da17c6381c24c7447a046bb4e8e62fd3bee537dd2a49e72bca634ae"
+                      if args.synthetic == "all-replies"
+                      else "b983e84f5b65922029583cd02543fadda4986b4a3957d5edc9fa192eb7078409")
     expected = {
         authored / "manifest.json": "00e023c9c08e674b289fb3419551e790ebc784f7a093b33fca3745c24f96956b",
-        synthetic / "manifest.json": "0620a6ff3da17c6381c24c7447a046bb4e8e62fd3bee537dd2a49e72bca634ae",
+        synthetic / "manifest.json": synthetic_hash,
     }
     for path, value in expected.items():
         if sha(path) != value:

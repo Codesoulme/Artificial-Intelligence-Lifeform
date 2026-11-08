@@ -1,0 +1,12 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_synthetic_conditioning_diagnostic",
+  "max_schedule_steps": 100,
+  "max_target_shares": {"foundation": 0.01},
+  "training_source_sha256": {"foundation": "03adb47201b438badd976dd8b9d9b106f423be9e5fb26101456c5112274f2ee7"},
+  "basis": "P60 synthetic dialogues unchanged; all 145 token masks checked against the final assistant answer plus EOS. Earlier assistant turns remain input only. Limited to 100 updates and a 1% planned share, compared with P61.",
+  "parent_manifest_sha256": "0620a6ff3da17c6381c24c7447a046bb4e8e62fd3bee537dd2a49e72bca634ae",
+  "masked_manifest_sha256": "b983e84f5b65922029583cd02543fadda4986b4a3957d5edc9fa192eb7078409",
+  "combined_manifest_sha256": "34248321dfc11dfc53c7787bcec0ea265f3ad7159b5bbf819e08cb79e0a1a6a4",
+  "limitations": ["Synthetic templates and vocabulary remain narrow.", "A 1% target-token share oversamples short final answers and can still harm generic conversation.", "The held-out combination evaluation is not independent chat acceptance."]
+}
