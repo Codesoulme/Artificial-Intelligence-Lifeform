@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "status": "bounded_train_only_audit_complete",
+  "decision": "Do not promote the current teacher or pretrain files as a clean native-Chinese free-chat corpus. Prepare a small, explicitly reviewed dialogue subset from role-marked records, and keep the current pretrain file in a broad noisy language bucket until a separate prose corpus is available.",
+  "scope": {
+    "cpu_only": true,
+    "training_started": false,
+    "external_teacher_called": false,
+    "pretrained_weights_read": false,
+    "code_changed": false,
+    "git_changed": false,
+    "heldout_or_final_text_read": false,
+    "partitions_read": [
+      "runs/teaching-curriculum-v3/teacher.jsonl",
+      "runs/conversation-data-v5/pretrain-train.jsonl",
+      "runs/conversation-data-v5/manifest.json",
+      "runs/teaching-curriculum-v3/manifest.json",
+      "training-only prior reports"
+    ],
+    "partitions_excluded": [
+      "runs/conversation-data-v5/*development*",
+      "runs/conversation-data-v5/*test*",
+      "runs/conversation-data-v5/dialogue-train.jsonl"
+    ],
+    "writes_only": [
+      "reports/P30-data-quality-review.json"
+    ]
+  },
+  "method": {
+    "sample_design": "Fixed row-index samples from each requested training file. The row index is 1-based for reproducibility; no reservoir state or adaptive resampling was used.",
+    "teacher_sample": {
+      "file": "runs/teaching-curriculum-v3/teacher.jsonl",
+      "records": 25704,
+      "sample_n": 64,
+      "seed": 300108,
+      "sample_fingerprint_sha256": "fcba0c8626a9b1de2231064591bf54f37b7ad4dd79cb86ed82ec763482f4935a",
+      "rows_1based": [61, 240, 988, 1179, 2811, 2826, 2838, 2917, 3192, 3863, 4959, 5892, 7005, 7201, 7246, 7460, 8020, 8268, 9016, 9136, 9940, 9950, 10345, 11272, 12602, 12807, 13102, 13183, 13192, 13788, 13960, 13967, 14103, 14790, 15081, 15134, 15552, 15608, 15944, 16527, 16795, 17004, 17070, 18134, 18232, 18552, 18608, 18989, 19507, 19514, 20008, 20593, 20999, 21319, 21687, 21780, 21944, 22129, 23031, 23125, 23481, 24076, 24863, 25219]
+    },
+    "ordinary_pretrain_sample": {
+      "file": "runs/conversation-data-v5/pretrain-train.jsonl",
+      "records": 1085328,
+      "sample_n": 64,
+      "seed": 300109,
+      "sample_fingerprint_sha256": "a5fbbcf403f7a7863b2245c888f1161a45e74801e6328e0b5fcaab09dcfa2470",
+      "rows_1based": [1528, 35816, 53761, 61454, 85784, 89742, 145827, 192555, 204283, 213701, 217367, 219144, 223813, 231623, 268905, 298424, 311021, 321811, 337076, 346747, 347613, 355017, 356660, 361304, 365898, 366471, 397656, 405776, 436781, 448583, 459619, 470664, 513809, 521045, 561087, 579324, 608289, 629168, 643012, 643613, 653461, 703269, 709890, 733010, 739384, 764896, 772194, 808275, 816136, 838960, 842499, 858678, 886294, 890133, 899372, 912192, 919616, 925367, 962866, 1045414, 1045899, 1052314, 1079483, 1084140]
+    },
+    "rubric": {
+      "clean_native_dialogue_candidate": "A Chinese user request and assistant answer with an explicit role boundary, direct task completion, no unsupported personal experience, no clear factual or safety defect, and conversationally useful wording. A single-turn instruction answer can pass format but still fail this style label.",
+      "clean_ordinary_prose_candidate": "A self-contained Chinese paragraph or coherent short article without an embedded task prompt, answer, follow-up request, role transcript, visible corruption, or material semantic defect.",
+      "substantive_defect": "A visible calculation error, factual reversal, unsupported image claim, malformed source, unsafe overconfident advice, serious task failure, or meaning-changing language defect. This is a sample finding, not a corpus-wide error rate."
+    }
+  },
+  "source_fingerprints": {
+    "teacher_jsonl_sha256": "65b68071a20c6545c40cb18d45cccfba8203a622d1d18d23b43d27843d3ea7a7",
+    "pretrain_train_jsonl_sha256": "4ec0b001db65b7ccabfaa064e56ce6dff3bbf0bb0a3890c116f4b99999bae9a1",
+    "teacher_manifest_sha256": "0ea5141c8b999e65e1d6201e00789461bb497856dff9d19bf644b5c2b6d69d12",
+    "tokenizer_sha256": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20"
+  },
+  "sample_surface_metrics": {
+    "teacher": {
+      "role_marker_rows": 64,
+      "eos_rows": 64,
+      "distinct_texts": 64,
+      "character_length_min_median_p90_max": [57, 210.0, 312, 393],
+      "main_shape": "All sampled records are one explicit user/assistant exchange. They are structurally supervised examples, not multi-turn conversations.",
+      "observed_style": "Mostly list generation, definitions, rewriting, extraction, arithmetic, recipes, generic advice, and clarification of missing input. Natural social exchange is rare.",
+      "manual_findings": {
+        "task_or_exercise_dominant": 53,
+        "potential_short_dialogue_seed_after_review": 8,
+        "missing_input_handled_with_clarification": 3,
+        "clear_substantive_or_task_defect": 10,
+        "unsupported_personal_experience": 0,
+        "native_human_dialogue_evidence": 0
+      },
+      "defect_examples_by_row": {
+        "1179": "Black-hole description uses misleading core/surface wording and presents a simplified claim as settled explanation.",
+        "3192": "Harvard description contains a visible grammar defect and an unqualified broad reputation claim.",
+        "9950": "The requested 25-word summary is not reliably constrained and drops part of the source relation.",
+        "15944": "The requested original Chinese proverb is a well-known existing proverb.",
+        "20008": "The two rice-cooking methods overlap and include questionable electric-cooker instructions.",
+        "21319": "The answer contains duplicated wording and the nonsensical phrase ‘排除万恶之源’. ",
+        "21687": "It answers 三分之一 as 一分之三, a direct arithmetic/language error.",
+        "22129": "It equates dicotyledons with angiosperms, which is a biological classification error.",
+        "23481": "The magnetic-property explanation contains overbroad or inaccurate claims about fields and recovery after heating.",
+        "24076": "The connector exercise forces an awkward causal ending that is semantically weak."
+      },
+      "interpretation": "The role markers make this file easier to train safely than the ordinary pretrain file, but the sample does not support calling it native free dialogue. It is a synthetic instruction curriculum with a small conversational tail."
+    },
+    "ordinary_pretrain": {
+      "role_marker_rows": 0,
+      "eos_rows": 0,
+      "distinct_texts": 64,
+      "character_length_min_median_p90_max": [77, 247.5, 475, 1615],
+      "main_shape": "Every sampled record contains a task prompt followed by an answer, often followed by another task or an imagined follow-up. No explicit role boundary is present.",
+      "manual_findings": {
+        "unmarked_prompt_answer_join": 64,
+        "multiple_task_or_follow_up_segments": 16,
+        "repairable_dialogue_like_records": 4,
+        "clean_ordinary_prose_candidates": 0,
+        "visible_format_or_source_damage": 7,
+        "clear_substantive_or_task_defect": 14,
+        "specialist_or_encyclopedic_records": 11
+      },
+      "defect_examples_by_row": {
+        "337076": "Describes two linked images without image evidence, making an unsupported visual claim.",
+        "405776": "Names an African leopard and then incorrectly gives American jaguar as an equivalent.",
+        "436781": "Refuses discriminatory use, then repeats an operational discriminatory screening direction inside the answer.",
+        "629168": "The answer misreads the shampoo question and gives a long response to a different hair-care issue.",
+        "739384": "The explanation reverses the usual aerodynamic trade-off and claims opening windows lowers fuel use.",
+        "808275": "A synthetic doctor diagnoses anxiety too early from nonspecific symptoms and lacks an appropriate uncertainty boundary.",
+        "858678": "The date calculation adds unrelated year intervals and gives 726 days instead of the approximately 180-day interval.",
+        "886294": "The source contains visible corruption: ‘是什么’ is split by ‘文章生成：’. ",
+        "962866": "Several guide conversations are concatenated into one long record without role boundaries.",
+        "1045899": "The cultural-heritage classification contradicts its own statement that intangible items are also cultural heritage.",
+        "1052314": "The mpg-to-L/100 km conversion is wrong and the later annual amount inherits the error.",
+        "1084140": "A generated article is followed by an unmarked rewrite request and contains a visible ‘超度开采’ wording defect."
+      },
+      "interpretation": "The file is useful as a noisy broad instruction/text mixture, but it cannot supply a clean ordinary-prose course through simple sampling. Role reconstruction would be a data transformation requiring record-level review, and the sampled factual defects make blind inclusion unsafe."
+    }
+  },
+  "prior_evidence": {
+    "P27_corpus_review_pretrain_train_sample_n": 40,
+    "P27_corpus_review_pretrain_unmarked_join": "37/40",
+    "P27_corpus_review_pretrain_standalone_basic_prose": "0/40",
+    "P27_corpus_review_pretrain_basic_curriculum_usable": "5/40",
+    "P27_corpus_review_pretrain_substantive_concern": "25/40",
+    "P27_corpus_review_dialogue_train_sample_n": 40,
+    "P27_corpus_review_dialogue_basic_curriculum_usable": "6/40",
+    "P27_corpus_review_dialogue_template_or_padding": "28/40",
+    "P27_corpus_review_dialogue_substantive_concern": "23/40",
+    "P27_corpus_review_dialogue_unsupported_personal_experience": "0/40 in that rubric, while targeted P27 findings separately identified unsupported personal-experience examples",
+    "P28_story_review": "The fixed story sample was 34 clean, 24 minor, 6 major; it passed a bounded story-learning pilot gate, but the source is translated synthetic fiction and is not native Chinese prose."
+  },
+  "recommended_next_recipe": {
+    "preparation": [
+      "Build a training-only candidate table from teacher.jsonl and any explicitly role-marked dialogue records. Keep source row, source hash, group, language, role count, target length, and rejection reason.",
+      "For the dialogue branch, require explicit user/assistant boundaries, one coherent exchange, direct answer completion, no invented personal life, and no current-weather/news, medical, legal, investment, or image-dependent claims.",
+      "Prefer everyday conversation, clarification, emotional support, simple explanation, and grounded planning. Downweight list-only, generic promotional, definition-only, and repeated ‘希望能帮助您’ answers.",
+      "For the ordinary-prose branch, reject any record containing an instruction-to-answer transition, follow-up question, role transcript, raw URL/image claim, malformed source, or specialist abstract. The current pretrain file should yield zero approved rows until a stronger source is found or a human repairs a record.",
+      "Use exact and near-duplicate checks after segmentation, group-aware splitting, and a second blind review of at least 256 candidate rows before declaring a clean subset ready. The 64-row audit identifies the failure modes but does not estimate corpus-wide prevalence."
+    ],
+    "first_controlled_training_trial": {
+      "parent": "Freeze the same P27b B500 parent used for the balanced-language comparison so the data change is isolated.",
+      "effective_target_token_mix": {
+        "base_replay_and_existing_broad_language": 79,
+        "new_reviewed_dialogue_subset": 20,
+        "core_values_foundation": 1
+      },
+      "ordinary_prose_share": 0,
+      "gate": "Run 100 updates for stability and resume checks, then at most 500 updates if the old development loss, UTF-8/EOS behavior, loop rate, and conversational review do not regress. Use fixed new development prompts and an independent reviewer; do not use the training sample as an evaluation set.",
+      "why_this_mix": "The audit found no approved ordinary-prose supply. A 20 percent reviewed dialogue slot tests whether cleaner role-marked supervision helps without repeating the prior 59 percent broad-teacher exposure. The 1 percent foundation replay preserves the existing value curriculum."
+    },
+    "success_condition": "Treat the trial as useful only if it improves independent multi-turn chat across several intent classes, reduces obvious repetition and unrelated answers, and preserves the original language and memory checks. A lower training loss or higher EOS rate alone is insufficient.",
+    "limits": [
+      "A fixed 64+64 sample is a bounded audit, not an unbiased corpus error estimate.",
+      "The teacher corpus is static synthetic Chinese data; role markers prove formatting, not human conversational naturalness or factual truth.",
+      "The ordinary pretrain corpus has no explicit role markers in the sampled records, so automatic parsing can create false conversations.",
+      "P28 translated stories may help local continuity and ending behavior, but their translation artifacts and fictional content make them a separate story channel.",
+      "No result here establishes general chat ability, persistent internal memory, consciousness, or artificial life."
+    ]
+  },
+  "validation": {
+    "read_only_checks_completed": [
+      "JSONL line counts and fixed row selection",
+      "UTF-8 sample decoding",
+      "source and sample SHA-256 fingerprints",
+      "role-marker and EOS surface counts",
+      "manual review of 64 teacher rows and 64 ordinary-pretrain rows",
+      "comparison with P27 and P28 training-only quality reports"
+    ],
+    "final_test_text_opened": false
+  }
+}
