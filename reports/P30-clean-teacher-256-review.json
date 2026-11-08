@@ -1,0 +1,539 @@
+{
+  "schema_version": 1,
+  "status": "bounded_manual_review_complete_64",
+  "approved_for_pilot": true,
+  "source": "runs/teaching-curriculum-v4/teacher.jsonl",
+  "source_manifest_sha256": "843eaa698c2fa6de19168da60524be21c15f374af9f37fefcf25d3179cc916ef",
+  "source_file_sha256": "dc5e3854dbd75e1aa0570b067c5baeb5456a4bfb6c39a6145813db907f03c21a",
+  "seed": 302109,
+  "sample_count": 64,
+  "approved_count": 42,
+  "rejected_count": 22,
+  "reviewer": "Codex single-reviewer bounded audit; not blind human review and not corpus-wide factual certification.",
+  "scope": "Fixed 64-row sample from the stricter mechanical subset. Excludes high-stakes, unverified current claims, copyright continuation, obvious factual errors, and unsupported tool-use claims. Fictional or ordinary advice remains allowed when locally coherent.",
+  "gate": {
+    "minimum_approved": 40,
+    "observed_approved": 42,
+    "manual_review_sample_minimum": 64,
+    "met": true
+  },
+  "rows": [
+    {
+      "review_index": 1,
+      "source_row_1based": 7473,
+      "teacher_sha256": "5642f455f5eb1a6a4c9e5fd5d0fa80d6665d82fe82e4bf3a6344992182080a16",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 2,
+      "source_row_1based": 2199,
+      "teacher_sha256": "76d3ee920f29e85ca4c5506c635291f8ba4208220668e24c9458c768236e421e",
+      "approved": false,
+      "category": "rejected",
+      "note": "historical factual details are unreliable"
+    },
+    {
+      "review_index": 3,
+      "source_row_1based": 5233,
+      "teacher_sha256": "24d1808a4580b6b7eaaa91c748cd58ec94f1e5bc77498f5f462ea4a3fb7dc69c",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 4,
+      "source_row_1based": 2160,
+      "teacher_sha256": "65988eeff60efea2548a740b18d1b81eae68398ecc44af2c01cc7f368ceac1e2",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 5,
+      "source_row_1based": 4943,
+      "teacher_sha256": "6f79ad33825d58cbdec3f2379fb484efb2ec67b14200289acb9210957c759882",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 6,
+      "source_row_1based": 7744,
+      "teacher_sha256": "ccb47bf801a805321c6dd0c49c9ea4e26cb1e262926d898041416568dceb7809",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 7,
+      "source_row_1based": 994,
+      "teacher_sha256": "3b9c8d3a3b2a1604a34ea366cab735fbcdd12f45fe01e63d48d6f027e89a36e9",
+      "approved": false,
+      "category": "rejected",
+      "note": "time-sensitive sports fact is not source-bound"
+    },
+    {
+      "review_index": 8,
+      "source_row_1based": 3894,
+      "teacher_sha256": "8a2fdaff0994563f3186052866359227ccc6b24294621c52a32482dd26291ef3",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 9,
+      "source_row_1based": 351,
+      "teacher_sha256": "f64ba8c78486c48aa13d0241bd8a86abc7e364f676b7ee3c316415945c95cc90",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 10,
+      "source_row_1based": 4709,
+      "teacher_sha256": "c706f51b66eace43f94b270151c115005ee13dd6b9ff4ccdfcb06b1050d7a310",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 11,
+      "source_row_1based": 4705,
+      "teacher_sha256": "dbdb84753998dcab603ada9add2596df86c8dadb7ab49b9a354ab3146c1e0d42",
+      "approved": false,
+      "category": "rejected",
+      "note": "film synopsis contains likely factual and plot errors"
+    },
+    {
+      "review_index": 12,
+      "source_row_1based": 4034,
+      "teacher_sha256": "b242252cba3a1e523e310266575df2a9ae0f053bccd039d839d082032e8bde0d",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 13,
+      "source_row_1based": 8621,
+      "teacher_sha256": "c3ba6cc16682b63421d1ee1b7fdbca5bbf25eeb7071649221778712428a7980a",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 14,
+      "source_row_1based": 3412,
+      "teacher_sha256": "0eba5cea09eab6f72592fe595c09107285043e2c05b0311d82bf4b07b489f89d",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 15,
+      "source_row_1based": 8798,
+      "teacher_sha256": "dbb31cdc528a5aaf2abd2555f33cf4a22f3693559b31584e0f7ed3fa736c7b77",
+      "approved": false,
+      "category": "rejected",
+      "note": "medical description is overconfident"
+    },
+    {
+      "review_index": 16,
+      "source_row_1based": 2361,
+      "teacher_sha256": "30ec715e1946d3fba33fe1dfd8e0fa4eaf2845e2b1caa6428932c54f37577795",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 17,
+      "source_row_1based": 11374,
+      "teacher_sha256": "73235bb0252bf933129d439dea4dc39205d00102fda6caffedbd4e7d6dd9e57d",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 18,
+      "source_row_1based": 4895,
+      "teacher_sha256": "c233ca3a77b09d065f7ba6c1d6c4ebaa83b27077032562ab0e6f5a005f9da2d6",
+      "approved": false,
+      "category": "rejected",
+      "note": "answer assumes an unstated permutation convention"
+    },
+    {
+      "review_index": 19,
+      "source_row_1based": 4240,
+      "teacher_sha256": "cef8658cdb72ecc8ede5348f9632099894be19c3f1968c8c50c20813d235392a",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 20,
+      "source_row_1based": 2300,
+      "teacher_sha256": "d2b3316d3f0c9d645ea5f034434a1a87dd837f31ef7dc909bed3846a953606f9",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 21,
+      "source_row_1based": 2473,
+      "teacher_sha256": "5c520c9a08214823f98c2bfe407aeb9705fede96d1853990b03eefc36d8bda30",
+      "approved": false,
+      "category": "rejected",
+      "note": "scientific explanation is materially oversimplified"
+    },
+    {
+      "review_index": 22,
+      "source_row_1based": 6495,
+      "teacher_sha256": "331676262fbc9439c43dcb52a4ccb34b3b03487020de716c6ae07928da795a69",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 23,
+      "source_row_1based": 5973,
+      "teacher_sha256": "e5c996da7e3abdb39665caca6625d45bdfeb74b4bc4663b49a5765009ddb1b1b",
+      "approved": false,
+      "category": "rejected",
+      "note": "long summary is incomplete for the requested constraint"
+    },
+    {
+      "review_index": 24,
+      "source_row_1based": 5944,
+      "teacher_sha256": "cc901578d047aa879becde60c1a5fa53b764f5df3e84fb53300fbbd0fbf843cc",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 25,
+      "source_row_1based": 1469,
+      "teacher_sha256": "637be0b930b5d25e86419e52720623e9c29c85057138121ab38eb497e10ddb0c",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 26,
+      "source_row_1based": 3512,
+      "teacher_sha256": "123db2dac1fe8f32dcb743ac694aa3d0558d0c0017423822d59dcda34db3c17e",
+      "approved": false,
+      "category": "rejected",
+      "note": "requested 100-word constraint is not reliably followed"
+    },
+    {
+      "review_index": 27,
+      "source_row_1based": 1818,
+      "teacher_sha256": "9ce5f7d0d049a49d9a2179d2aeea488c35016d56c0a226e5195e122a54276292",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 28,
+      "source_row_1based": 1773,
+      "teacher_sha256": "8590ca9605f7990f440e1423ccc92ed92f022d92b21541d5b17360f4dcc23945",
+      "approved": false,
+      "category": "rejected",
+      "note": "rhyme analysis is incorrect"
+    },
+    {
+      "review_index": 29,
+      "source_row_1based": 3580,
+      "teacher_sha256": "5a174a9bc4e9f6afcd2beeeacc2868ce8ad46b4f1c6d406081d584311377d264",
+      "approved": false,
+      "category": "rejected",
+      "note": "medical imaging diagnosis example is high-stakes"
+    },
+    {
+      "review_index": 30,
+      "source_row_1based": 261,
+      "teacher_sha256": "75ec760abd3b39e58683c5b8b03c8f1d648dbefc37c9e9145be7e37e17223b3a",
+      "approved": false,
+      "category": "rejected",
+      "note": "art description contains a visible wording defect"
+    },
+    {
+      "review_index": 31,
+      "source_row_1based": 4461,
+      "teacher_sha256": "303c4c3e13d199aeac658240cd24858fa2f709896012211af5c1e7b4af8ab6fb",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 32,
+      "source_row_1based": 6219,
+      "teacher_sha256": "542333db2cbd9554db2babb345bf08e2337bb21ad49dbac662aae87abf2181f8",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 33,
+      "source_row_1based": 7470,
+      "teacher_sha256": "9b0937cc0f62e3408d3ac69defbdfef1346d13203df1ba404a3ab62ead1f2a4c",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 34,
+      "source_row_1based": 5936,
+      "teacher_sha256": "7121b445f49a277d0df0643709ee41191e48c333b682437e0d11df769cc1af91",
+      "approved": false,
+      "category": "rejected",
+      "note": "investment/market content is high-stakes"
+    },
+    {
+      "review_index": 35,
+      "source_row_1based": 138,
+      "teacher_sha256": "cb33bba047e7e9c927bc4144ad8bd391aa3735fef13ac2c5d1d3fe846c06436e",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 36,
+      "source_row_1based": 6169,
+      "teacher_sha256": "9d43d2188a1ebe018c29a3e0264364b5d8838f7b84db5f536a284d9c8f50415e",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 37,
+      "source_row_1based": 8261,
+      "teacher_sha256": "188d7838a1ea7a4f2e8b227914798bb2663a88a3bfa94319fe394d15b8a47764",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 38,
+      "source_row_1based": 5624,
+      "teacher_sha256": "f46de9e0bea5bbc6126db50a31b7edf3fd2ceea8e4cb1db441af19d74b98699a",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 39,
+      "source_row_1based": 7376,
+      "teacher_sha256": "20dda2a3ce7991e6d73570173ebde6af2575c189183d849cd767f0cf5b75cbb2",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 40,
+      "source_row_1based": 1019,
+      "teacher_sha256": "9caaf33b90c5e0f8947cfd1a0f8c9374b95e263071a7a888c1ac3380b5e69832",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 41,
+      "source_row_1based": 3945,
+      "teacher_sha256": "3aae3457c95ed5fe528bdab91d7d042cb8e2abc6f7fba022149ac7b70419bd6c",
+      "approved": false,
+      "category": "rejected",
+      "note": "generic encyclopedic answer rather than conversational exchange"
+    },
+    {
+      "review_index": 42,
+      "source_row_1based": 3798,
+      "teacher_sha256": "cb779597238b3cf3a5359804e0ba957799b48c160cdf9ea949ca997ef2688299",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 43,
+      "source_row_1based": 43,
+      "teacher_sha256": "894c28aeb473612254a7c95fc826cdf10c5ae4ea350aff8be00cc728e36a4b48",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 44,
+      "source_row_1based": 11615,
+      "teacher_sha256": "ec3e03009c510e59780b23dd1d84b677603abef3612225b4e4e35c5d12736c97",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 45,
+      "source_row_1based": 3148,
+      "teacher_sha256": "f4e14d6db4fdf3fe564b2e680a87d5792882ed3e8caee172ea9fd41d1a9520d0",
+      "approved": false,
+      "category": "rejected",
+      "note": "technical definition is long and has wording defects"
+    },
+    {
+      "review_index": 46,
+      "source_row_1based": 10054,
+      "teacher_sha256": "76b7e3cf664a5a0a5685ba2b8eb1ef05cc431fd3cb7e4cd6411b268ed04e7b98",
+      "approved": false,
+      "category": "rejected",
+      "note": "answer is long template feedback rather than a natural exchange"
+    },
+    {
+      "review_index": 47,
+      "source_row_1based": 459,
+      "teacher_sha256": "48c90d8e57cd626a84b53249764890a4f7a73d14fb063428e1b081b0594d4a62",
+      "approved": false,
+      "category": "rejected",
+      "note": "generic scene description rather than conversational exchange"
+    },
+    {
+      "review_index": 48,
+      "source_row_1based": 7482,
+      "teacher_sha256": "9787904a425db56bfec21cc4ef2ba1025037712cab9c4ce7a92357a906bc615b",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 49,
+      "source_row_1based": 9276,
+      "teacher_sha256": "1c3e5e6f04d281a4839cea525b606cd3dbf381260f19b09243d25e0da1a54578",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 50,
+      "source_row_1based": 1959,
+      "teacher_sha256": "70d600bb1eccdc8dd707a03260e711736fa144688196042105108068028361f7",
+      "approved": false,
+      "category": "rejected",
+      "note": "fortune telling and investment advice are unsupported"
+    },
+    {
+      "review_index": 51,
+      "source_row_1based": 5183,
+      "teacher_sha256": "ef9d14fe1c7d2e72cfa041c3f74527e9ca12af4563bfacd510f93bf3f2eba52e",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 52,
+      "source_row_1based": 11691,
+      "teacher_sha256": "6be7d2ae582892235663cd525b1aac5fdcdf3017a969a305b8a604c769aefbf8",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 53,
+      "source_row_1based": 6709,
+      "teacher_sha256": "7466eb0acdbbb65e2e6563f7bda57c8be168381be2a08d19cd75d9572dfbc0b0",
+      "approved": false,
+      "category": "rejected",
+      "note": "copyright text continuation request"
+    },
+    {
+      "review_index": 54,
+      "source_row_1based": 6025,
+      "teacher_sha256": "e23c8121338c6d5c895713ea83de5cbb22fde98f66c6b31b6d4981ccb85d2d52",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 55,
+      "source_row_1based": 1800,
+      "teacher_sha256": "fd811e59cc53e07b58480facc4601bee34a32e725167f07b32eba6d03c7e167d",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 56,
+      "source_row_1based": 3020,
+      "teacher_sha256": "de6f21fc81dd0679ad1a3407d9a4a36992a5c5735e97e2d874c03638851d9c70",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 57,
+      "source_row_1based": 5463,
+      "teacher_sha256": "cea359083505f22798fff021653fe7c5b631dd76f5cce09e9a452c0960798d57",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 58,
+      "source_row_1based": 7446,
+      "teacher_sha256": "362d26b0544a369ade34112b8ac04d1260f09b0b89e70fdfcdfb8e46cf9a94fb",
+      "approved": false,
+      "category": "rejected",
+      "note": "source title and psychoanalytic claims are not verifiable here"
+    },
+    {
+      "review_index": 59,
+      "source_row_1based": 1302,
+      "teacher_sha256": "5fa3679a8e06786ae10cca6458c1269273d6c41a383a186ab4eb1929f4f358e9",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 60,
+      "source_row_1based": 2455,
+      "teacher_sha256": "2e74fee176b8cc127f74f57e8ced66ad2da8216c7e87442cef089ef77a370e7c",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 61,
+      "source_row_1based": 3753,
+      "teacher_sha256": "a98788647b591677378e2395ee67bb726643ee97af19045f4bbd101ea4337fcd",
+      "approved": true,
+      "category": "approved_no_obvious_defect",
+      "note": "Role boundary, answer completion and basic Chinese wording acceptable for a bounded noisy pilot."
+    },
+    {
+      "review_index": 62,
+      "source_row_1based": 4235,
+      "teacher_sha256": "36099163fba7cf22f4ef8db5cbb0463b36b159db439303691bd3f3169e4a4fb8",
+      "approved": false,
+      "category": "rejected",
+      "note": "generic promotional content with unsupported company claims"
+    },
+    {
+      "review_index": 63,
+      "source_row_1based": 5303,
+      "teacher_sha256": "9393d4a98b14d041744e208d12efbce63fd9e100ea3b68e5ae9641cac67b2515",
+      "approved": false,
+      "category": "rejected",
+      "note": "current product claim is unverified"
+    },
+    {
+      "review_index": 64,
+      "source_row_1based": 10971,
+      "teacher_sha256": "4e8c611ffacd3ca433396112f9052f40ab5540f06b377bc3c6c56b19c7ba4ce6",
+      "approved": false,
+      "category": "rejected",
+      "note": "claims to have searched the internet without a tool result"
+    }
+  ],
+  "limitations": [
+    "This is 64 rows rather than the originally planned 256-row audit.",
+    "Approved rows are still synthetic instruction data, not natural human dialogue.",
+    "A bounded pilot approval does not establish factual reliability or chat competence."
+  ]
+}

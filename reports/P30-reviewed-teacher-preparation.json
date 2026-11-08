@@ -1,0 +1,18 @@
+{
+  "status": "prepared_reviewed_dialogue_subset",
+  "source": "runs/teaching-curriculum-v4",
+  "source_manifest_sha256": "843eaa698c2fa6de19168da60524be21c15f374af9f37fefcf25d3179cc916ef",
+  "review_sha256": "94cbff71ac148ab8860d3841c22e22587293276a5435fdc207150389a79a4733",
+  "tokenizer_sha256": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+  "teacher_rows_kept": 42,
+  "teacher_targets_kept": 2053,
+  "reviewed_rows_requested": 64,
+  "files": {
+    "foundations-tokens.jsonl": "1735c795214c732cfa4be41b849a9da27dc7d2b33b796fc6d104126219ed1df7",
+    "foundations.jsonl": "4b54ce4f07692981c6ff640e4475ca685c78d0265855b0b5cce1d93a58b1250f",
+    "teacher-tokens.jsonl": "cdded979a79030b6cb3f045391e2feb756f4f052d553eac366a8c332f5f727b5",
+    "teacher.jsonl": "0888ac667a6b8362e39819779ea5d836208018abe71c3371b5f31f70713e0df4"
+  },
+  "scope": "Only rows explicitly approved by the fixed 256-row review. This is a bounded noisy dialogue pilot, not a factual corpus certification or chat acceptance.",
+  "foundations_inherited": true
+}

@@ -82,8 +82,11 @@ def main():
     if sha(ROOT/plan['parent'])!=plan['parent_sha256']:raise ValueError('Individual file changed')
     if sha(ROOT/plan['corpus_review'])!=plan['corpus_review_sha256']:raise ValueError('Corpus review changed')
     review=json.loads((ROOT/plan['corpus_review']).read_text('utf-8'))
-    if review.get('approved_for_pilot') is not True:raise ValueError('Story pilot has no content approval')
-    if review.get('data_manifest_sha256')!=sha(data/'manifest.json'):raise ValueError('Content review covers different story data')
+    if review.get('approved_for_pilot') is not True:raise ValueError('Content review has no pilot approval')
+    review_bound = review.get('data_manifest_sha256') == sha(data/'manifest.json')
+    if plan.get('review_source_manifest'):
+        review_bound = review_bound or review.get('source_manifest_sha256') == sha(ROOT/plan['review_source_manifest'])
+    if not review_bound:raise ValueError('Content review covers different training data')
     manifest=json.loads((data/'manifest.json').read_text('utf-8'))
     audit_paths=plan['data_audits'];audits={}
     for name in audit_paths:
