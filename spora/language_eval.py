@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import json
 import math
+import sys
 from pathlib import Path
 import torch
 from .growing import load
@@ -60,6 +61,8 @@ def evaluate(model, state, examples):
 
 
 def main():
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
     parser = argparse.ArgumentParser()
     parser.add_argument('--individual', required=True)
     parser.add_argument('--interface', required=True)
