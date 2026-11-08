@@ -9,6 +9,7 @@ import unicodedata
 import re
 import subprocess
 import sys
+import sqlite3
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('p114', ROOT/'scripts/p114_disk_story_dedupe.py')
@@ -38,6 +39,42 @@ class DiskDedupeTests(unittest.TestCase):
         summary = p.run(self.source, out, **kw)
         groups = [json.loads(x) for x in (out/'groups.jsonl').read_text(encoding='utf-8').splitlines()]
         return out, summary, groups
+
+    def test_deep_path_compression_and_transaction_rollback(self):
+        db = sqlite3.connect(':memory:')
+        self.addCleanup(db.close)
+        db.execute('CREATE TABLE records(n INTEGER PRIMARY KEY, parent INTEGER)')
+        db.executemany('INSERT INTO records VALUES (?,?)', ((i, max(1, i-1)) for i in range(1, 301)))
+        db.commit()
+        before = list(db.execute('SELECT n,parent FROM records ORDER BY n'))
+        self.assertEqual(p.root(db, 300), 1)
+        self.assertEqual(db.execute('SELECT COUNT(*) FROM records WHERE parent != 1').fetchone()[0], 0)
+        db.rollback()
+        self.assertEqual(list(db.execute('SELECT n,parent FROM records ORDER BY n')), before)
+        p.union(db, 300, 1)
+        db.commit()
+        self.assertEqual(db.execute('SELECT COUNT(*) FROM records WHERE parent != 1').fetchone()[0], 0)
+        db.execute('INSERT INTO records VALUES(301,301)')
+        p.union(db, 301, 200)
+        self.assertEqual(p.root(db, 301), 1)
+
+    def test_compression_preserves_original_outputs_and_risks(self):
+        prefix = ''.join(chr(0x4e00+i) for i in range(96))
+        self.write([row(prefix+'甲'), row(prefix+'乙'), row('天地玄黄宇宙洪荒'), row('短')])
+        def old_root(db, n):
+            while True:
+                parent = db.execute('SELECT parent FROM records WHERE n=?', (n,)).fetchone()[0]
+                if parent == n:
+                    return n
+                n = parent
+        with patch.object(p, 'signature', return_value=(1,)*32):
+            new, _, groups = self.run_case('compressed', max_bucket=2)
+            with patch.object(p, 'root', side_effect=old_root):
+                old, _, _ = self.run_case('uncompressed', max_bucket=2)
+        self.assertTrue(all(x['status'] == 'quarantine' for x in groups))
+        self.assertEqual([x['representative_line'] for x in groups], [1, 1, 3, 4])
+        for filename in ('candidates.jsonl', 'quarantine.jsonl', 'groups.jsonl', 'unchecked_buckets.jsonl'):
+            self.assertEqual((new/filename).read_bytes(), (old/filename).read_bytes())
 
     def test_command_line_runs_with_documented_arguments(self):
         self.write([row('天地玄黄宇宙洪荒')])

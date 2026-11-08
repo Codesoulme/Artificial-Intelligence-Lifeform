@@ -71,11 +71,26 @@ def write_json(path, obj):
 
 
 def root(db, n):
+    # Two iterative passes keep memory constant even for an arbitrarily deep path.
+    # The caller owns the transaction; never commit a partially compressed path.
+    start = n
+    first_parent = None
     while True:
         parent = db.execute('SELECT parent FROM records WHERE n=?', (n,)).fetchone()[0]
+        if first_parent is None:
+            first_parent = parent
         if parent == n:
-            return n
+            representative = n
+            break
         n = parent
+    if first_parent != representative:
+        n = start
+        while n != representative:
+            parent = db.execute('SELECT parent FROM records WHERE n=?', (n,)).fetchone()[0]
+            if parent != representative:
+                db.execute('UPDATE records SET parent=? WHERE n=?', (representative, n))
+            n = parent
+    return representative
 
 
 def union(db, a, b):
