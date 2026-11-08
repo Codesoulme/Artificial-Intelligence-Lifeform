@@ -1,0 +1,5 @@
+# Optional CPU-only tools for the corpus preparation and overlap audits.
+-r requirements-language.txt
+pyarrow==26.0.1
+pyahocorasick==2.3.1
+praatio==6.2.0

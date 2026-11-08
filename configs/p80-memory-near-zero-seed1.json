@@ -1,0 +1,71 @@
+{
+  "phase": "p80-memory-near-zero-seed1",
+  "parent": "checkpoints/individual-prechinese-v3.pt",
+  "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "data": "runs/p28-stories-data/candidate-v3",
+  "base_data": "runs/p28-stories-data/candidate-v3",
+  "seed": 391109,
+  "model": {
+    "vocabulary": 8192,
+    "width": 256,
+    "depth": 8,
+    "heads": 8,
+    "hidden": 704,
+    "context": 512,
+    "memory_layers": [
+      3,
+      7
+    ],
+    "memory_read": "legacy"
+  },
+  "length": 512,
+  "learning_rate": 0.0001,
+  "warmup": 14,
+  "schedule_steps": 100,
+  "check_every": 50,
+  "snapshot_every": 50,
+  "focus_every": 10,
+  "scope": "Paired diagnostic: same P34 parent, data, seed and schedule; compare learned memory reading with both read gates fixed near zero. This is not independent chat acceptance.",
+  "respect_document_boundaries": false,
+  "initial_language": "runs/p34-pretraining-100/step001000.pt",
+  "initial_language_sha256": "eae8e678db0e9b87b7a88528206e2210fb93d87cb925308aa8a2d1ae67bc1234",
+  "ancestor_steps": 1000,
+  "ancestor_targets": 8192000,
+  "data_audits": [
+    "runs/p28-stories-data/candidate-v3/lineage-audit.json"
+  ],
+  "prior_lineage_steps": 35500,
+  "prior_lineage_targets": 61902001,
+  "curriculum": "runs/mixed-context-curriculum-v1",
+  "curriculum_manifest_sha256": "24a282b07353411952561b001eebff7c29a3b0de0d6ac0e14c5194b21acd4098",
+  "microbatch": 4,
+  "target_shares": {
+    "story": 0.98,
+    "teacher": 0.01,
+    "foundation": 0.01
+  },
+  "corpus_review": "reports/P28-stories-content-review.json",
+  "corpus_review_sha256": "b3da3e063d25616922aa482a67d107258e39a2b1af63ff205b44a4cf46e2054f",
+  "target_budget": 8192,
+  "training_source_reviews": {
+    "story": {
+      "path": "reports/P54-story-focus-source-review.json",
+      "sha256": "d67ab061b83e45f096af46fd1f574bd8d1a4dc38d21b4fe2261578a754167a92"
+    },
+    "focus": {
+      "path": "reports/P54-story-focus-source-review.json",
+      "sha256": "d67ab061b83e45f096af46fd1f574bd8d1a4dc38d21b4fe2261578a754167a92"
+    },
+    "teacher": {
+      "path": "reports/P55-authored-source-review.json",
+      "sha256": "7246e84dfc7b6240f25f829db9b2646380af0e4e49047a8a9a1948fe89de9edd"
+    },
+    "foundation": {
+      "path": "reports/P61-synthetic-foundation-review.json",
+      "sha256": "35fe2238fa63143c5418647b9eb0756016ae49239c65509d20f44f55a4f88355"
+    }
+  },
+  "respect_story_document_boundaries": true,
+  "trim_ignored_tail": true,
+  "memory_ablation": true
+}
