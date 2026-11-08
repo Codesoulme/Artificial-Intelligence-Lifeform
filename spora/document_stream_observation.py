@@ -53,3 +53,49 @@ def batch_with_windows(sampler, rng, batch_size, length, device):
             raise RuntimeError('Sampled tokens do not match coordinates')
         windows.append(target)
     return x, y, windows
+
+
+def accumulate_unchanged_rows(coverage, source, windows, sampled_labels, final_labels, replaced_rows):
+    """Account only unchanged, still-supervised targets after batch edits.
+
+    Replaced rows must be explicitly supplied, including when replacement tokens
+    happen to equal the original. Their new source needs separate accounting.
+    Any other target value change is rejected. Call only once per committed batch.
+    """
+    if sampled_labels.ndim != 2 or sampled_labels.shape != final_labels.shape:
+        raise ValueError('Expected aligned label batches')
+    if len(windows) != sampled_labels.shape[0]:
+        raise ValueError('Missing sampling windows')
+    if not isinstance(replaced_rows, (set, frozenset)) or any(
+        type(row) is not int or not 0 <= row < len(windows) for row in replaced_rows
+    ):
+        raise ValueError('Invalid replacement row set')
+    pending = []
+    for row, window in enumerate(windows):
+        if row in replaced_rows:
+            continue
+        before, after = sampled_labels[row], final_labels[row]
+        active = after != -100
+        if bool((active & ((before == -100) | (before != after))).any()):
+            raise ValueError('Unattributed label modification')
+        count = window.end - window.start
+        if count < 1 or count > len(before) or bool((before[:count] == -100).any()) or bool((before[count:] != -100).any()):
+            raise ValueError('Sampled labels do not match window')
+        positions = active[:count].nonzero(as_tuple=False).flatten().tolist()
+        if not positions:
+            continue
+        start = previous = positions[0]
+        for position in positions[1:]:
+            if position != previous + 1:
+                pending.append((window.document, window.start + start, window.start + previous + 1))
+                start = position
+            previous = position
+        pending.append((window.document, window.start + start, window.start + previous + 1))
+    # Validate all records before changing the supplied accumulator.
+    from spora.supervision_coverage import SupervisionCoverage
+    validated = SupervisionCoverage()
+    for document, start, end in pending:
+        validated.add(source, document, start, end)
+    for document, start, end in pending:
+        coverage.add(source, document, start, end)
+    return sum(end - start for _, start, end in pending)
