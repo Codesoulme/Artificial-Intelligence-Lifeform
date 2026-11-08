@@ -1,0 +1,50 @@
+{
+  "approved_for_pilot": false,
+  "status": "content_reviewed_future_sft_waits_for_pretraining",
+  "scope": "A small reviewed QA plus authored multi-turn candidate. Do not use for training while Chinese continuous pretraining and effective-data expansion remain incomplete.",
+  "max_schedule_steps_if_later_approved": 100,
+  "max_target_share_if_later_approved": {
+    "teacher": 0.01
+  },
+  "training_source_sha256": {
+    "teacher": "1d0d34614add5c306ff354cfcd00c243a7ebc33fdfd2ac352fffd7e470ee3113"
+  },
+  "curriculum_manifest_sha256": "36d104cdacd87869a8ab11e6e1c20c2aa69b6bf46416d3825b57e064edca64e9",
+  "source_repository": "CohereForAI/aya_dataset",
+  "source_revision": "f9ea04583f02a8f86404ff6c58bf75fe637df8a2",
+  "declared_license": "Apache-2.0",
+  "review_counts": {
+    "first_reviewed": 240,
+    "first_accept": 90,
+    "cross_reviewed": 90,
+    "cross_accept": 79,
+    "duplicate_cleaned_train_removed": 1,
+    "aya_train": 70,
+    "aya_development": 8,
+    "existing_authored_multiturn": 24,
+    "aya_train_supervised_targets": 2402
+  },
+  "review_artifact_sha256": {
+    "shard-1.jsonl": "b8f301342f9faf388daa7c1051bd9dab751e94f869426739a8b7bfff1a4b42fa",
+    "review-1.jsonl": "cb733c640a7a3aa93ca09a653b98a495f418a0e38ffaf2a39f5468f78b96a1c3",
+    "shard-2.jsonl": "a75f2eb933ebdf9ab548ab02c1253524af98d0dc85396230a816d54c8d74bc14",
+    "review-2.jsonl": "07bfa0fa4c8ba9a079de0d6ebc662495acfd03017c2387de68263385e838aedb",
+    "shard-3.jsonl": "f922d24c5d73cdefa5a6fb8ace4599e3318294fa81498eeda1d8f48e9dd74144",
+    "review-3.jsonl": "9c00ae21ec3b5d005e946b1f831de51ef84b24ac621f5f7736c18eb401178a93",
+    "shard-4.jsonl": "f36c517c7ea93ffbd403d560b3f52fea061013c4bbb6cda1bc0c4db0c8d4a0e6",
+    "review-4.jsonl": "74e3e6e2951ab56888c088851a9932e06f32dfbd94873d3a5b5b38a59720753f",
+    "cross-shard-1.jsonl": "fa09c5830e50b138a65580df6e0205c12bdc6b570060e8e8358e200128551d2f",
+    "cross-review-1.jsonl": "586719fa3e0b5faa93881286ef834c8573f8d5c7edbf0ded90a0bb7c83ec0242",
+    "cross-shard-2.jsonl": "5766ee0f231ed07e95d62edca9560805dded4edea3d16134d779f296b583d4ac",
+    "cross-review-2.jsonl": "a5d5cb3b2d48ddcec2f6cd7dacbf402f5bc2f544d6918252c98675dd16ea9316"
+  },
+  "basis": "Four independent AI instances each reviewed 60 rows; two reviewed all 90 initial acceptances. A further independent AI audit re-encoded every retained row, checked source bindings and duplicate split; not human expert or comprehensive factual review.",
+  "limitations": [
+    "Small single-turn QA set with narrow domains; only 2402 assistant targets.",
+    "Prior pretraining and semantic near-duplicate leakage cannot be excluded.",
+    "Development contains only eight QA examples and cannot certify multi-turn chat.",
+    "Actual training must wait until the requested pretraining stage and must separately validate source review and plan."
+  ],
+  "public_decisions_artifact": "artifacts/p83-qa-review-decisions.json",
+  "public_decisions_sha256": "19d05768c1a363d9623f902d5516e8547b979382415054e4c5f731f1b9c1d6f1"
+}

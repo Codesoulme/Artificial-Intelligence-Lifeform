@@ -1,0 +1,13 @@
+{
+  "scope": "New development diagnostics for model comparison, not independent final acceptance. Never add these scenarios to training. Evaluate semantic usefulness by reading every response; EOS and repetition are not correctness.",
+  "scenarios": [
+    {"name":"recipe_constraint","turns":["我想做一份不加鸡蛋的早餐，给我一个简单主意。","家里没有面包，还有别的选择吗？","把你刚才的建议压缩成一句话。"]},
+    {"name":"earlier_later","turns":["我上午先去了邮局，下午又去了菜市场。上午去了哪里？","后来去的地方叫什么？","如果把上午和下午对调，先去哪里？"]},
+    {"name":"two_people","turns":["阿青把一本杂志借给小陈；小陈把一支钢笔借给阿青。谁借出了杂志？","谁现在拿着钢笔？","如果阿青把钢笔还回去，钢笔回到谁手里？"]},
+    {"name":"uncertain_object","turns":["猜猜我的抽屉里有几张纸？你没有看到抽屉。","我刚数过，是七张。","我拿走两张后还剩几张？"]},
+    {"name":"schedule_revision","turns":["把见面记为下周三晚上七点，在影院门口。","时间改成周四晚上八点，地点不变。","现在的安排是什么？"]},
+    {"name":"style_and_length","turns":["用一句简短的话安慰准备上台发言的朋友。","把这句话改得更轻松一点，不要增加建议。","现在用不超过十个字表达同样意思。"]},
+    {"name":"conditional_plan","turns":["我打算周末去骑车。如果下雨就在家看电影。","天气预报说周末会下雨。按我的计划做什么？","朋友想一起参加，我需要先确认什么？"]},
+    {"name":"negation_and_reason","turns":["小叶不喝咖啡，她喜欢喝温水。她喜欢什么？","她为什么没喝咖啡？如果我没说原因，请直接说不知道。","如果她改喝茶，那她现在喝的是什么？"]}
+  ]
+}

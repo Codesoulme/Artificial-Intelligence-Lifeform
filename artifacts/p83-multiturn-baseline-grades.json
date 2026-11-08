@@ -1,0 +1,155 @@
+{
+  "scope": "One independent AI reviewer, development-only, subjective; not independent final acceptance.",
+  "evaluation_sha256": "8f3f9aec0ec2fe858a238ddacfca2cfb9062c31a61d43afe8ef984aba7128c01",
+  "checkpoint_sha256": "f06e3f6aa5a634a253d7dec0bd2156b83be8769471e9b7d031ac3e7fa0ac7e16",
+  "cases_sha256": "fac3f3089c94b3ecdc29ffa98c1d24b938ab5d13717c275b53c7f2d38ca4d9c5",
+  "rubric_sha256": "ca7dec41be1d4cc266d50732fb2d9231fc0a4ec4d7a43a1338c64ddb6fd25d25",
+  "useful": 2,
+  "total": 24,
+  "rows": [
+    {
+      "scenario": "recipe_constraint",
+      "turn": 1,
+      "useful": false,
+      "reason": "使用了明确禁止的食材，且内容反复。"
+    },
+    {
+      "scenario": "recipe_constraint",
+      "turn": 2,
+      "useful": false,
+      "reason": "只重复限制，没有给出替代早餐。"
+    },
+    {
+      "scenario": "recipe_constraint",
+      "turn": 3,
+      "useful": false,
+      "reason": "前文没有可用方案，回答也不能构成早餐建议。"
+    },
+    {
+      "scenario": "earlier_later",
+      "turn": 1,
+      "useful": false,
+      "reason": "给出时间而非上午去过的地点。"
+    },
+    {
+      "scenario": "earlier_later",
+      "turn": 2,
+      "useful": false,
+      "reason": "地点表述不准确，未指出菜市场。"
+    },
+    {
+      "scenario": "earlier_later",
+      "turn": 3,
+      "useful": false,
+      "reason": "回答为空，没有给出对调后的地点。"
+    },
+    {
+      "scenario": "two_people",
+      "turn": 1,
+      "useful": true,
+      "reason": "正确指出杂志的借出者。"
+    },
+    {
+      "scenario": "two_people",
+      "turn": 2,
+      "useful": true,
+      "reason": "结合借物关系正确指出钢笔持有者。"
+    },
+    {
+      "scenario": "two_people",
+      "turn": 3,
+      "useful": false,
+      "reason": "回答的是物品且表述错误，没有指出归还对象。"
+    },
+    {
+      "scenario": "uncertain_object",
+      "turn": 1,
+      "useful": false,
+      "reason": "未说明无法知道数量，也没有完成猜测。"
+    },
+    {
+      "scenario": "uncertain_object",
+      "turn": 2,
+      "useful": false,
+      "reason": "虽有简短回应，但附加无关内容，未清晰确认数量。"
+    },
+    {
+      "scenario": "uncertain_object",
+      "turn": 3,
+      "useful": false,
+      "reason": "计算结果错误，且表达不完整。"
+    },
+    {
+      "scenario": "schedule_revision",
+      "turn": 1,
+      "useful": false,
+      "reason": "确认了时间，但遗漏用户要求记住的地点。"
+    },
+    {
+      "scenario": "schedule_revision",
+      "turn": 2,
+      "useful": false,
+      "reason": "改约时间错误，并将时间误作地点。"
+    },
+    {
+      "scenario": "schedule_revision",
+      "turn": 3,
+      "useful": false,
+      "reason": "沿用了前文错误时间，且遗漏地点。"
+    },
+    {
+      "scenario": "style_and_length",
+      "turn": 1,
+      "useful": false,
+      "reason": "句子不通顺，未形成安慰。"
+    },
+    {
+      "scenario": "style_and_length",
+      "turn": 2,
+      "useful": false,
+      "reason": "延续不通顺的前文，并额外加入含糊建议。"
+    },
+    {
+      "scenario": "style_and_length",
+      "turn": 3,
+      "useful": false,
+      "reason": "内容不通顺，未表达安慰且超过字数限制。"
+    },
+    {
+      "scenario": "conditional_plan",
+      "turn": 1,
+      "useful": false,
+      "reason": "只提骑车，遗漏下雨时的替代安排。"
+    },
+    {
+      "scenario": "conditional_plan",
+      "turn": 2,
+      "useful": false,
+      "reason": "推荐骑车，与下雨时看电影的计划相反。"
+    },
+    {
+      "scenario": "conditional_plan",
+      "turn": 3,
+      "useful": false,
+      "reason": "凭空引入家人许可，未结合与朋友看电影的安排。"
+    },
+    {
+      "scenario": "negation_and_reason",
+      "turn": 1,
+      "useful": false,
+      "reason": "虽提到温水，但句意不通，未清楚表达偏好。"
+    },
+    {
+      "scenario": "negation_and_reason",
+      "turn": 2,
+      "useful": false,
+      "reason": "没有按要求说明原因未知，转而给出无关步骤。"
+    },
+    {
+      "scenario": "negation_and_reason",
+      "turn": 3,
+      "useful": false,
+      "reason": "只说发生改变，未回答现在喝什么。"
+    }
+  ]
+}

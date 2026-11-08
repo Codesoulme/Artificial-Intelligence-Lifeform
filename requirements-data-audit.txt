@@ -3,3 +3,4 @@
 pyarrow==26.0.1
 pyahocorasick==2.3.1
 praatio==6.2.0
+mwparserfromhell==0.7.2
