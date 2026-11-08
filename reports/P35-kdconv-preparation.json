@@ -1,0 +1,69 @@
+{
+  "status": "prepared_pending_review",
+  "ready_for_training": false,
+  "source_repository": "thu-coai/kdconv",
+  "source_revision": "460c94a39c1498241b3c7e94a22be25e1489601e",
+  "source_provenance_sha256": "a0841cff0f04da48378fcfd75baee0a12180a7329413c1bfe1051932d58b2f7a",
+  "tokenizer_sha256": "b3629001784896437c4aa9f279f6b4cdc5a534be191b537009e7293f971fda20",
+  "stats": {
+    "source_dialogues": 3600,
+    "windows_considered": 10931,
+    "windows_kept": 10562,
+    "assistant_target_tokens": 555841,
+    "possible_assistant_experience": 288,
+    "malformed_or_identifier": 81
+  },
+  "old_held_evidence": {
+    "D:\\SPORA\\runs\\conversation-data-v3\\manifest.json": {
+      "sha256": "fc171587f223b4630de7803a790fca2dcd0569f062c4569d54bbbfd20ba02fad"
+    },
+    "D:\\SPORA\\runs\\conversation-data-v3\\pretrain-development.jsonl": {
+      "sha256": "ed7b3c0c2c4f0418d8dcf20c93a17dc43db76d104fb61c3865d35b4e1df3ee08",
+      "records": 510
+    },
+    "D:\\SPORA\\runs\\conversation-data-v3\\dialogue-development.jsonl": {
+      "sha256": "83b0ce456123347a3993d2972a1b3c25ec16161047e65b532acbe4838e2cb00c",
+      "records": 492
+    },
+    "D:\\SPORA\\runs\\conversation-data-v3\\pretrain-test.jsonl": {
+      "sha256": "1a0724f6bc24355a610a5e5ac1fcf1361d1a3a668a7512f412b661084247136e",
+      "records": 512
+    },
+    "D:\\SPORA\\runs\\conversation-data-v3\\dialogue-test.jsonl": {
+      "sha256": "1c5b6ad2d9831279d0039bab571219020c416fc371d07cdbc22335712961df4f",
+      "records": 495
+    },
+    "D:\\SPORA\\runs\\conversation-data-v5\\manifest.json": {
+      "sha256": "b8a7646b82880de66c9a74c2d235025b1aead7d8814818d4f73006398c1f5557"
+    },
+    "D:\\SPORA\\runs\\conversation-data-v5\\pretrain-development.jsonl": {
+      "sha256": "59c5bce59ee085ac5bc2613bcd87347758e19270fba6cb8c8d4cfd20fbe65c32",
+      "records": 512
+    },
+    "D:\\SPORA\\runs\\conversation-data-v5\\dialogue-development.jsonl": {
+      "sha256": "da2deb84ad158d71946e651493e877a1ca7adcd8744361d0c75aa47df4535b02",
+      "records": 512
+    },
+    "D:\\SPORA\\runs\\conversation-data-v5\\pretrain-test.jsonl": {
+      "sha256": "d995c6ec7336586e65bc98a91a01a8385165450e37bc64fa7a743b54b3dfbb94",
+      "records": 512
+    },
+    "D:\\SPORA\\runs\\conversation-data-v5\\dialogue-test.jsonl": {
+      "sha256": "0f5cec08b066aece858ba7a49d59cafc52e07e736508aaee94e1ac5a56366a04",
+      "records": 512
+    }
+  },
+  "development_prompts_sha256": "1edd05ca36e795efe726f608212948483b895feae954f1f3028aa9a1269ee499",
+  "files": {
+    "dialogue.jsonl": "86935869bab62c70dec8f46d1771dde7908c0efd1a7881e305ae8fe056662a73",
+    "dialogue-tokens.jsonl": "3a8e935bb4f2bb2ba592eab3d15d4d57f15fd3225148c599a15f6842fd6a0156"
+  },
+  "limits": [
+    "Existing held checks cover exact/group and finite sampled shingles, not semantic equivalence.",
+    "Both speakers are humans; assigning one assistant role may teach personal claims. Regex is insufficient to remove them.",
+    "Source knowledge attributes are omitted; dialogue may depend on missing information.",
+    "Knowledge facts are not independently verified; current-source QA and future generalization are separate.",
+    "Windows within each original dialogue share a group; never split the group across train/development.",
+    "No original KdConv development or test data was read."
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "scope": "Sample-level review of KdConv training material only; no inference about overall dataset quality.",
+  "sources": {
+    "film": {"path": "runs/kdconv-material/film/train.json", "sha256": "b48a491c30ace856914c6863679ba5c8ea95d7e3a1734f45177f69afbcd88e74", "dialogues": 1200},
+    "music": {"path": "runs/kdconv-material/music/train.json", "sha256": "d5835bb6a61da0067ab2d0dc3ba90059f07cfa781a70206a8266ecafd22641ad", "dialogues": 1200},
+    "travel": {"path": "runs/kdconv-material/travel/train.json", "sha256": "b582a7171f8a7bb6b579bbf8d31a06cebd0966e520c95301a143b1629d20fb2f", "dialogues": 1200}
+  },
+  "methodology": {
+    "sampling": "Python random.Random(340021), one shared generator; random.sample(range(len(data)), 8), in film, music, travel order; without replacement within each domain. Indices are zero-based, listed in draw order.",
+    "inspection": "Read every message of all 24 sampled dialogues, including record and message field structure; reviewed examples of knowledge attributes and scanned sampled attributes and messages for prompt-related markers. Turns in reasons are zero-based. No external factual verification was performed.",
+    "role_policy": "Messages have no role field. For review only, even turns are tentatively treated as the first participant and odd turns as the second; this is not evidence of true roles. Apparent same-speaker continuations are flagged; all role mappings require validation.",
+    "labels": "naturalness is mixed or low; persona marks a second-participant first-person preference, experience, identity or planned action that would be invented if assigned to an assistant; time_sensitive marks potentially changing or relative claims, not proven falsehood; identifiers marks public venue contacts/addresses or potentially sensitive personal details, not proof of private data; prompt_inclusion records visible evidence only.",
+    "privacy": "Venue names, phone numbers and addresses appear as apparently public business information; actor family details and blood type warrant context-sensitive review. No direct private individual contact was identified in sampled message text.",
+    "limits": "Attributes are knowledge metadata, not reliable role annotations. Keyword scans do not prove absence of hidden instructions, personal data, or prior prompts. No dev or test files were inspected. CPU only."
+  },
+  "dialogues": [
+    {"domain":"film","index":790,"turns":26,"naturalness":"low","role":"unverified","persona":true,"time_sensitive":false,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Mechanical production trivia; turn 1 claims to have watched it, and turn 5 is malformed."},
+    {"domain":"film","index":148,"turns":30,"naturalness":"low","role":"unverified","persona":true,"time_sensitive":false,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Long reciprocal quiz with precise production dates; turn 16 claims a viewing experience."},
+    {"domain":"film","index":1079,"turns":22,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":true,"identifiers":true,"prompt_inclusion":"none_observed","reason":"Awkward topic transitions; turn 17 claims a zodiac sign, turn 4 gives weight, turns 6-7 mention relatives."},
+    {"domain":"film","index":576,"turns":22,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":false,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Friendly exchange becomes an award list; turns 1 and 9 claim viewing and personal preference."},
+    {"domain":"film","index":976,"turns":24,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":true,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Turn 8 claims a viewing history; youth and agency can change; the drama is called a film and a torrent is requested."},
+    {"domain":"film","index":434,"turns":30,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":true,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Colloquial but abruptly switches to television; turn 15 claims reading a magazine; turn 25 gives an undated weekly schedule."},
+    {"domain":"film","index":322,"turns":26,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":true,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Friendly but fact-heavy; turns 1 and 7 claim an idol and viewing; current streaming availability is asked about."},
+    {"domain":"film","index":1034,"turns":20,"naturalness":"low","role":"possible_same_speaker_continuation","persona":true,"time_sensitive":true,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Turns 7-8 read like one speaker continuing a sentence; turn 1 claims a viewing and gives a mutable rating."},
+    {"domain":"music","index":187,"turns":16,"naturalness":"low","role":"possible_same_speaker_continuation","persona":true,"time_sensitive":false,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Turns 10-11 both recommend songs and may be one speaker; turn 1 claims listening; repeated knowledge questions."},
+    {"domain":"music","index":225,"turns":18,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":true,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Conversational tone but turn 4 says 1999 was 20 years ago; turns 6 and 16 claim prior research and shared history."},
+    {"domain":"music","index":291,"turns":14,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":false,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Some natural disagreement, then a biography quiz; turn 8 claims personal recollection of the 1994 debut."},
+    {"domain":"music","index":388,"turns":14,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":false,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Casual but contrived trivia; turns 3 and 7 imply knowledge and an ongoing shared conversational history."},
+    {"domain":"music","index":1194,"turns":10,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":false,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Short coherent exchange, though composer facts dominate; turn 1 asserts a personal preference."},
+    {"domain":"music","index":328,"turns":20,"naturalness":"low","role":"unverified","persona":true,"time_sensitive":true,"identifiers":true,"prompt_inclusion":"none_observed","reason":"Biographical questionnaire; turn 1 claims listening preference; turn 8 gives mutable weight and turn 14 gives blood type."},
+    {"domain":"music","index":1090,"turns":14,"naturalness":"low","role":"unverified","persona":true,"time_sensitive":false,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Almost entirely album trivia; turn 1 claims listening and turn 12 uses an awkward album reference."},
+    {"domain":"music","index":493,"turns":17,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":true,"identifiers":false,"prompt_inclusion":"none_observed","reason":"Turn 6 claims a musical preference; turns 12-13 present a roster as current without a date."},
+    {"domain":"travel","index":1126,"turns":18,"naturalness":"low","role":"unverified","persona":true,"time_sensitive":true,"identifiers":true,"prompt_inclusion":"none_observed","reason":"Rigid venue questionnaire; turn 1 claims a visit; opening hours, ticket price and venue addresses need current verification."},
+    {"domain":"travel","index":180,"turns":16,"naturalness":"low","role":"unverified","persona":false,"time_sensitive":true,"identifiers":true,"prompt_inclusion":"none_observed","reason":"Odd reciprocal questions and turn 11 claims a phone number without giving it; business contact details and opening status may change."},
+    {"domain":"travel","index":68,"turns":16,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":true,"identifiers":true,"prompt_inclusion":"none_observed","reason":"Turn 3 accepts an invented shared trip; venue phones, access, hours and admission prices are date-dependent."},
+    {"domain":"travel","index":288,"turns":16,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":true,"identifiers":true,"prompt_inclusion":"none_observed","reason":"Repetitive travel lookup; turn 1 claims a visit; public phones and seasonal opening hours can change."},
+    {"domain":"travel","index":681,"turns":16,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":true,"identifiers":true,"prompt_inclusion":"none_observed","reason":"Turn 10 claims an intention to call; turn 11 discourages checking assumed hours; ticket prices and a venue phone can change."},
+    {"domain":"travel","index":119,"turns":14,"naturalness":"low","role":"unverified","persona":false,"time_sensitive":true,"identifiers":true,"prompt_inclusion":"none_observed","reason":"A claimed lookup and repeated question handoffs feel scripted; public phones, hours, price and address need verification."},
+    {"domain":"travel","index":830,"turns":18,"naturalness":"low","role":"unverified","persona":false,"time_sensitive":true,"identifiers":true,"prompt_inclusion":"none_observed","reason":"Mechanical exchange; turn 5 says temporarily closed and reopening in 2020; hours, fees and public phone numbers may be stale."},
+    {"domain":"travel","index":660,"turns":17,"naturalness":"mixed","role":"unverified","persona":true,"time_sensitive":true,"identifiers":true,"prompt_inclusion":"none_observed","reason":"Turn 7 insults the other person; turns 1 and 13 claim experience or hearsay; a public phone and attraction access can change."}
+  ],
+  "counts": {
+    "sampled": 24,
+    "by_domain": {"film": 8, "music": 8, "travel": 8},
+    "naturalness": {"low": 10, "mixed": 14},
+    "possible_same_speaker_continuation": 2,
+    "role_unverified": 24,
+    "persona": 21,
+    "time_sensitive": 16,
+    "identifiers": 10,
+    "prompt_inclusion_none_observed": 24
+  },
+  "decision": "Conditional, curated bounded-training candidate only; do not ingest these sampled dialogues wholesale. Validate or reconstruct participant roles; remove or rewrite unsupported assistant persona and shared-memory claims, discourage insults and unsupported lookup claims, review private or sensitive details, and date, verify or exclude mutable factual claims and venue contacts. Exclude uncertain turns or dialogues when these conditions cannot be met. This small sample cannot establish corpus-wide quality, safety, factual accuracy, provenance of individual assertions, or absence of prompt leakage."
+}
