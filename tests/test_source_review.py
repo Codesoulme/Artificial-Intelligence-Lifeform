@@ -28,6 +28,23 @@ class SourceReviewTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "different artifact: dialogue"):
                 verify_training_source_reviews(root, plan)
 
+    def test_review_cannot_be_used_above_approved_share(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "data").mkdir()
+            (root / "curriculum").mkdir()
+            teacher = root / "curriculum/teacher-tokens.jsonl"
+            teacher.write_text("teacher", encoding="utf8")
+            review = root / "review.json"
+            review.write_text(json.dumps({"approved_for_pilot": True, "max_schedule_steps": 100,
+                "max_target_shares": {"teacher": 0.01},
+                "training_source_sha256": {"teacher": file_sha256(teacher)}}), encoding="utf8")
+            plan = {"data": "data", "curriculum": "curriculum", "schedule_steps": 100,
+                    "focus_every": 1000, "target_shares": {"teacher": 0.1},
+                    "training_source_reviews": {"teacher": {"path": "review.json", "sha256": file_sha256(review)}}}
+            with self.assertRaisesRegex(ValueError, "target share: teacher"):
+                verify_training_source_reviews(root, plan)
+
     def test_curriculum_only_approval_does_not_approve_dialogue(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

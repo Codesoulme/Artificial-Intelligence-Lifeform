@@ -47,6 +47,9 @@ def verify_training_source_reviews(root, plan):
         limit = review.get("max_schedule_steps")
         if type(limit) is not int or limit < plan["schedule_steps"]:
             raise ValueError("Source review does not cover schedule: " + kind)
+        shares = review.get("max_target_shares", {})
+        if kind in shares and plan["target_shares"].get(kind, 0) > shares[kind]:
+            raise ValueError("Source review does not cover target share: " + kind)
         expected = review.get("training_source_sha256", {}).get(kind)
         actual = file_sha256(paths[kind])
         if not isinstance(expected, str) or expected.lower() != actual:

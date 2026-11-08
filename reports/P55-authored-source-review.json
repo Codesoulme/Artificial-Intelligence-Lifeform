@@ -1,0 +1,11 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_diagnostic_only",
+  "max_schedule_steps": 100,
+  "max_target_shares": {"teacher": 0.01},
+  "training_source_sha256": {"teacher": "e771c6e8abbf4b370c9eb8a9b5ee62af702abf82ec06e5ad2823d0d657dc8daa"},
+  "basis": "P35-authored-dialogue-v4-review.json reviewed all 24 authored conversations and allows a bounded pilot. This approval is restricted to 1% teacher targets and 100 updates in a matched story-language diagnostic.",
+  "original_review_sha256": "18f58ad28947c0dc431ef60d6f0483ae3badf5906d50f1db5f5adaa0a879161c",
+  "curriculum_manifest_sha256": "00e023c9c08e674b289fb3419551e790ebc784f7a093b33fca3745c24f96956b",
+  "limitations": ["Only 24 authored dialogues, not evidence of broad language coverage.", "Repetition of this small set can overfit.", "The development scenarios are used for model selection and cannot certify final chat acceptance."]
+}
