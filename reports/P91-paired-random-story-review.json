@@ -1,0 +1,23 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_research_review_not_experiment_result",
+  "reviewer": "Codex research review under user authorization; not independent human content review",
+  "plan_sha256": "928f35ee54e24fa0306b29ae453ac675aadea7e4a30603c5158a18c77fa7fb39",
+  "architectures": [
+    "memory_bridge",
+    "standard_causal"
+  ],
+  "initialization": "paired_random",
+  "seeds": [
+    391109,
+    391110
+  ],
+  "scope": "Two paired seeds, story only, up to 100 updates per arm; exact target budget 8192 plus final microbatch overshoot. Frozen existing individual is read only by memory bridge. No initial language weights, focus, SFT, or final test.",
+  "basis": "P28 content sample and P54 bounded story source review; this review binds the new exact plan but does not expand the P54 limit.",
+  "limitations": [
+    "P28 sampled 64 stories, not the full corpus; translated synthetic fiction has known quality and safety defects.",
+    "Existing lexical isolation audit does not prove semantic isolation or exclusion from all prior sources.",
+    "100 updates and two seeds do not establish convergence or generalization; GPU cost and numerical determinism remain to be measured.",
+    "The two arms differ in memory inputs, parameter count and computation; NLL differences cannot isolate the cause."
+  ]
+}

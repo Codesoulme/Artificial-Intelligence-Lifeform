@@ -1,0 +1,44 @@
+{
+  "phase": "p91-paired-random-story-diagnostic",
+  "parent": "checkpoints/individual-prechinese-v3.pt",
+  "parent_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "data": "runs/p28-stories-data/candidate-v3",
+  "seeds": [
+    391109,
+    391110
+  ],
+  "data_seeds": {
+    "391109": 491109,
+    "391110": 491110
+  },
+  "model": {
+    "vocabulary": 8192,
+    "width": 256,
+    "depth": 8,
+    "heads": 8,
+    "hidden": 704,
+    "context": 512,
+    "memory_layers": [
+      3,
+      7
+    ],
+    "memory_read": "legacy"
+  },
+  "device": "cuda",
+  "length": 512,
+  "microbatch": 4,
+  "target_budget": 8192,
+  "schedule_steps": 100,
+  "warmup": 14,
+  "learning_rate": 0.0001,
+  "evaluation_steps": [
+    0,
+    50,
+    100
+  ],
+  "target_shares": {
+    "story": 1.0
+  },
+  "focus_every": 0,
+  "initial_language": null
+}
