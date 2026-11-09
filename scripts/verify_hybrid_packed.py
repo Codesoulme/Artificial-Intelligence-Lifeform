@@ -8,7 +8,7 @@ import numpy as np
 
 from scripts.prepare_hybrid_packed import sha_file
 from spora.hybrid_tokenizer import HybridTokenizer
-from spora.language_bridge import BOS, EOS
+from spora.language_bridge import BOS, EOS, PAD
 
 
 def verify(directory, tokenizer_path, source_path):
@@ -28,7 +28,8 @@ def verify(directory, tokenizer_path, source_path):
         raise ValueError('Token count mismatch')
     count = offset = fallback_bytes = 0
     with (root / 'index.jsonl').open(encoding='utf8') as index_stream, Path(source_path).open(encoding='utf8') as source:
-        for index_line, source_line in zip(index_stream, source, strict=True):
+        nonempty_source = (line for line in source if line.strip())
+        for index_line, source_line in zip(index_stream, nonempty_source, strict=True):
             entry, row = json.loads(index_line), json.loads(source_line)
             if entry['document'] != count or entry['offset'] != offset or entry['tokens'] < 2:
                 raise ValueError('Invalid document offsets')
@@ -36,10 +37,12 @@ def verify(directory, tokenizer_path, source_path):
             if end > len(tokens):
                 raise ValueError('Document extends past stream')
             piece = tokens[offset:end].astype(np.int64).tolist()
-            if piece[0] != BOS or piece[-1] != EOS or any(t >= tokenizer.size for t in piece):
+            if (piece[0] != BOS or piece[-1] != EOS or any(t >= tokenizer.size for t in piece)
+                    or any(t in (BOS, EOS, PAD) for t in piece[1:-1])):
                 raise ValueError('Invalid document tokens')
             text = tokenizer.decode(piece)
-            if (text != row.get('text') or hashlib.sha256(text.encode('utf8')).hexdigest() != entry['text_sha256']
+            if (row.get('split') != 'train' or text != row.get('text') or piece != tokenizer.encode(text)
+                    or hashlib.sha256(text.encode('utf8')).hexdigest() != entry['text_sha256']
                     or entry['text_sha256'] != row.get('source_original_sha256')
                     or entry['source_row_index'] != row.get('source_row_index') or entry['group'] != row.get('group')):
                 raise ValueError('Source and packed document differ')
