@@ -31,7 +31,7 @@ def verify(individual, audit):
     data = torch.load(audit, map_location='cpu', weights_only=True)
     binding = model.named_address_binding
     with torch.inference_mode():
-        result = binding(data['features'], model, WEIGHT_SHA)
+        result = binding(data['features'], model, WEIGHT_SHA, allow_legacy_unbound=True)
         keys = data['keys']
         zeros = torch.zeros_like(keys)
         values = query(model, state, keys, zeros, zeros).argmax(-1)
@@ -85,7 +85,7 @@ def run():
     features, masks = extract(base, tokenizer, questions, batch_size=1)
     vectors = pooled(features, masks)
     with torch.inference_mode():
-        result = binding(vectors, organism, WEIGHT_SHA)
+        result = binding(vectors, organism, WEIGHT_SHA, allow_legacy_unbound=True)
         keys = torch.tensor([event['key'] for event in previous['events']], dtype=torch.long)
         zero = torch.zeros_like(keys)
         values = query(organism, state, keys, zero, zero).argmax(-1)
