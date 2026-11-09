@@ -85,8 +85,11 @@ def main():
     parser.add_argument('--train', type=Path, required=True)
     parser.add_argument('--development', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--train-count', type=int, default=512)
+    parser.add_argument('--dev-count', type=int, default=32)
     args = parser.parse_args()
-    print(json.dumps(prepare(args.train, args.development, args.output), ensure_ascii=False))
+    print(json.dumps(prepare(args.train, args.development, args.output,
+                             train_count=args.train_count, dev_count=args.dev_count), ensure_ascii=False))
 
 
 if __name__ == '__main__':
