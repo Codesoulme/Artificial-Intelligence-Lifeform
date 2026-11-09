@@ -1,0 +1,19 @@
+{
+  "approved_for_pilot": true,
+  "policy": "bounded-noisy-story-v1",
+  "experiment": "hybrid-character-byte-diagnostic-v1",
+  "max_schedule_steps": 100,
+  "manifest_sha256": "e014fcf3406a9864355eeecfc1cf2195e120ea4994a76340a798c4c8ded7471e",
+  "audit_sha256": "4d5348db2f4afac0fb69adfafe806d34fe37e7b28c79ee47ffe565c48609bb8d",
+  "parent_checkpoint_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "transfer_checkpoint_sha256": "8b5f9bb5a9228cce03b7af2f6b8d6c3e663264d1d32d8b28300cb0a51eeeae62",
+  "source_review_path": "reports/P28-stories-content-review.json",
+  "source_review_sha256": "b3da3e063d25616922aa482a67d107258e39a2b1af63ff205b44a4cf46e2054f",
+  "basis": "The user authorized continued training. This fixed 4096-story subset expands the same source pool, with 2048 records shared with the preceding curriculum; use the P203 project-trained checkpoint, a new optimizer and a different sampling seed for at most 100 stage updates. Record inherited training exposure and overlap separately.",
+  "limitations": [
+    "The original source review was model-authored, not independent human review; 6/64 sampled stories had major defects.",
+    "Machine-translated synthetic children's fiction is not representative of general Chinese, factual knowledge or chat.",
+    "Unmeasured semantic and historical-source overlap remain possible; source licensing is declared but the complete rights chain is unverified.",
+    "Do not open final evaluation texts; preserve the original individual and historical checkpoints."
+  ]
+}

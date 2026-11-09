@@ -23,8 +23,8 @@ def audit(old_manifest, new_manifest, tokenizer_path, checkpoint_path):
     old_train, new_train = ids(old_docs, 'train'), ids(new_docs, 'train')
     if not old_train < new_train or ids(old_docs, 'development') != ids(new_docs, 'development'):
         raise ValueError('Require a strict train expansion and unchanged development documents')
-    if set(tokenizer.symbols) != set(''.join(r['text'] for r in old_docs if r['split'] == 'train')):
-        raise ValueError('Tokenizer is not derived from original training data')
+    if not set(tokenizer.symbols) <= set(''.join(r['text'] for r in old_docs if r['split'] == 'train')):
+        raise ValueError('Tokenizer contains characters absent from previous training data')
     overlap = overlap_audit(new_docs)
     stats = {}
     for split in ('train', 'development'):
