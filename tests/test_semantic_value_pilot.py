@@ -1,6 +1,6 @@
 import unittest
 
-from scripts.deepseek_semantic_value_pilot import HELD_TEMPLATES, TRAIN_TEMPLATES, WORDS, run, word_correct
+from scripts.deepseek_semantic_value_pilot import HELD_TEMPLATES, TRAIN_TEMPLATES, WORDS, balanced_schedule, run, word_correct
 from scripts.deepseek_semantic_value_diagnose import candidate_metrics
 import torch
 
@@ -28,6 +28,14 @@ class SemanticValuePilotTests(unittest.TestCase):
     def test_invalid_continuation_schedule_is_rejected(self):
         with self.assertRaises(ValueError):
             run(output='runs/semantic-test-invalid-schedule', steps=2, word_ratio=0)
+
+    def test_balanced_schedule_rotates_all_values_and_pairs_distinct_states(self):
+        schedule = balanced_schedule(32, 3, 17)
+        self.assertEqual(schedule, balanced_schedule(32, 3, 17))
+        for group in ('word', 'numeric_replay'):
+            values = [row[4] for row in schedule if row[0] == group]
+            self.assertEqual(len(set(values.count(value) for value in range(8))), 1)
+        self.assertTrue(all(row[4] != row[5] for row in schedule))
 
 
 if __name__ == '__main__':

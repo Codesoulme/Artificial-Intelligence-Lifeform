@@ -41,6 +41,25 @@ def word_correct(text, expected):
     return text.strip() in (expected, expected + '.', expected + '。')
 
 
+def balanced_schedule(steps, word_ratio, seed):
+    """Rotate through all values separately for word and numeric updates."""
+    generator = torch.Generator().manual_seed(seed)
+    pending = {'word': [], 'numeric_replay': []}
+    schedule = []
+    for step in range(steps):
+        group = 'word' if step % (word_ratio + 1) < word_ratio else 'numeric_replay'
+        if not pending[group]:
+            name_index = int(torch.randint(len(NAMES), (1,), generator=generator))
+            template_index = int(torch.randint(len(TRAIN_TEMPLATES), (1,), generator=generator))
+            values = torch.randperm(len(WORDS), generator=generator).tolist()
+            pending[group] = [(NAMES[name_index], KEYS[name_index], TRAIN_TEMPLATES[template_index], value)
+                              for value in values]
+        name, key, template, value = pending[group].pop()
+        offset = int(torch.randint(1, len(WORDS), (1,), generator=generator))
+        schedule.append((group, name, key, template, value, (value + offset) % len(WORDS)))
+    return schedule
+
+
 @torch.no_grad()
 def evaluate(base, tokenizer, adapter, bases, states, names, keys):
     rows = []
@@ -85,12 +104,13 @@ def evaluate(base, tokenizer, adapter, bases, states, names, keys):
     return {'summary': summary, 'rows': rows}
 
 
-def run(output=OUTPUT, steps=STEPS, initial=None, word_ratio=1, seed=4634):
+def run(output=OUTPUT, steps=STEPS, initial=None, word_ratio=1, seed=4634, balanced=False):
     output = Path(output).resolve()
     runs = (ROOT / 'runs').resolve()
     if not output.is_relative_to(runs) or output == runs or output.exists():
         raise ValueError('Expected a new output directory under runs')
-    if type(steps) is not int or not 1 <= steps <= 4000 or type(word_ratio) is not int or not 1 <= word_ratio <= 7:
+    if (type(steps) is not int or not 1 <= steps <= 4000 or type(word_ratio) is not int
+            or not 1 <= word_ratio <= 7 or type(balanced) is not bool):
         raise ValueError('Invalid training schedule')
     initial = Path(initial).resolve() if initial is not None else None
     if initial is not None and not initial.is_relative_to(runs):
@@ -143,20 +163,25 @@ def run(output=OUTPUT, steps=STEPS, initial=None, word_ratio=1, seed=4634):
     generator = torch.Generator().manual_seed(seed)
     order = torch.randperm(len(tasks), generator=generator).tolist()
     block = word_ratio + 1
-    if steps > len(tasks) * block:
+    if not balanced and steps > len(tasks) * block:
         raise ValueError('Training schedule exceeds one task permutation')
+    schedule = balanced_schedule(steps, word_ratio, seed) if balanced else None
+    value_counts = {'word': [0] * len(WORDS), 'numeric_replay': [0] * len(WORDS)}
     log = []
     for step in range(steps):
-        name, key, template, value = tasks[order[step // block]]
-        other = (value + 1) % 8
-        if step % block < word_ratio:
+        if balanced:
+            group, name, key, template, value, other = schedule[step]
+        else:
+            name, key, template, value = tasks[order[step // block]]
+            other = (value + 1) % 8
+            group = 'word' if step % block < word_ratio else 'numeric_replay'
+        value_counts[group][value] += 1
+        if group == 'word':
             question = template.format(name=name)
             answers = [WORDS[value], WORDS[other]]
-            group = 'word'
         else:
             question = f'对象{key}的值是多少？'
             answers = [value, other]
-            group = 'numeric_replay'
         inputs, labels = answer_batch(tokenizer, question, answers, 'cuda')
         memory = combined_states([states[(key, value)], states[(key, other)]])
         addresses = [basis[key:key+1] for basis in bases]
@@ -195,6 +220,7 @@ def run(output=OUTPUT, steps=STEPS, initial=None, word_ratio=1, seed=4634):
     report = {'status': 'finite_semantic_value_development_only', 'weight_sha256': WEIGHT_SHA,
               'individual_sha256': INDIVIDUAL_SHA, 'parent_sha256': protected[initial] if initial is not None else protected[SELECTOR],
               'adapter_sha256': sha(checkpoint), 'steps': steps, 'word_ratio': word_ratio, 'seed': seed,
+              'balanced_schedule': balanced, 'primary_value_counts': value_counts,
               'optimizer_restarted': initial is not None, 'learning_rate': 0.0002,
               'train_names': list(NAMES), 'held_names': list(UNKNOWN[:2]), 'vocabulary': WORDS,
               'held_values': HELD_VALUES, 'log': log, 'baseline': baseline, 'adapted': adapted,
@@ -220,5 +246,6 @@ if __name__ == '__main__':
     parser.add_argument('--initial', type=Path)
     parser.add_argument('--word-ratio', type=int, default=1)
     parser.add_argument('--seed', type=int, default=4634)
+    parser.add_argument('--balanced', action='store_true')
     args = parser.parse_args()
-    run(args.output, args.steps, args.initial, args.word_ratio, args.seed)
+    run(args.output, args.steps, args.initial, args.word_ratio, args.seed, args.balanced)

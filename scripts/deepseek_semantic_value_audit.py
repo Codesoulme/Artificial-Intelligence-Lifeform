@@ -1,4 +1,5 @@
 """Audit free generation across all eight finite values, without training."""
+import argparse
 import json
 import sys
 import time
@@ -25,14 +26,16 @@ ADAPTER = ROOT / 'runs/deepseek-semantic-value-continuation-20261110/adapter.pt'
 OUTPUT = ROOT / 'runs/deepseek-semantic-value-all-values-audit-20261110.json'
 
 
-def run():
-    if OUTPUT.exists():
-        raise FileExistsError(OUTPUT)
-    paths = (pilot.MODEL / 'model.safetensors', INDIVIDUAL, ADAPTER)
+def run(adapter_path=ADAPTER, output=OUTPUT, fresh=False):
+    runs = (ROOT / 'runs').resolve()
+    adapter_path, output = Path(adapter_path).resolve(), Path(output).resolve()
+    if not adapter_path.is_relative_to(runs) or not output.is_relative_to(runs) or output.exists():
+        raise ValueError('Expected an adapter and a new output file under runs')
+    paths = (pilot.MODEL / 'model.safetensors', INDIVIDUAL, adapter_path)
     before = {p: sha(p) for p in paths}
     if before[paths[0]] != pilot.WEIGHT_SHA or before[INDIVIDUAL] != INDIVIDUAL_SHA:
         raise ValueError('Protected input mismatch')
-    checkpoint = torch.load(ADAPTER, map_location='cpu', weights_only=True)
+    checkpoint = torch.load(adapter_path, map_location='cpu', weights_only=True)
     if (checkpoint.get('format') != 'deepseek-spora-semantic-value-development-v1'
             or checkpoint.get('weight_sha256') != pilot.WEIGHT_SHA
             or checkpoint.get('individual_sha256') != INDIVIDUAL_SHA
@@ -43,8 +46,10 @@ def run():
     started = time.perf_counter()
     organism, original, _ = load(INDIVIDUAL, 'cpu')
     digest = frozen_digest(organism, original)
-    names = (NAMES[0], NAMES[2], UNKNOWN[0], UNKNOWN[1])
-    keys = (KEYS[0], KEYS[2], NEW_KEYS[0], NEW_KEYS[1])
+    names = ('林栩', '许澄', '江屿', '叶芮') if fresh else (NAMES[0], NAMES[2], UNKNOWN[0], UNKNOWN[1])
+    keys = (2, 3, 4, 5) if fresh else (KEYS[0], KEYS[2], NEW_KEYS[0], NEW_KEYS[1])
+    if fresh and (set(keys) & set(KEYS + NEW_KEYS) or set(names) & set(NAMES + UNKNOWN)):
+        raise ValueError('Fresh audit overlaps prior development bindings')
     states = {(key, value): snapshot(organism, key, value) for key in keys for value in range(8)}
     state_digests = {key: frozen_digest(organism, value) for key, value in states.items()}
     tokenizer = AutoTokenizer.from_pretrained(pilot.MODEL, local_files_only=True, trust_remote_code=False)
@@ -56,8 +61,10 @@ def run():
     adapter.load_state_dict(checkpoint['state'], strict=True)
     bases = [F.normalize(site.current_basis.to('cuda').float(), dim=-1) for site in organism.memories]
     results = []
-    old_values = pilot.HELD_VALUES
+    old_values, old_templates = pilot.HELD_VALUES, pilot.HELD_TEMPLATES
     try:
+        if fresh:
+            pilot.HELD_TEMPLATES = ('{name}最爱喝哪种饮料？', '说说{name}偏好喝的东西。')
         for pair in ((0, 1), (2, 3), (4, 5), (6, 7)):
             pilot.HELD_VALUES = pair
             result = pilot.evaluate(base, tokenizer, adapter, bases, states, names, keys)
@@ -65,17 +72,25 @@ def run():
             print(json.dumps({'values': pair, 'summary': result['summary']}), flush=True)
     finally:
         pilot.HELD_VALUES = old_values
+        pilot.HELD_TEMPLATES = old_templates
     if (any(sha(p) != before[p] for p in paths) or frozen_digest(organism, original) != digest
             or any(frozen_digest(organism, state) != state_digests[key] for key, state in states.items())):
         raise ValueError('Protected input changed')
-    report = {'status': 'development_only', 'adapter_sha256': before[ADAPTER], 'results': results,
+    report = {'status': 'development_only', 'adapter_sha256': before[adapter_path], 'fresh_cases': fresh,
+              'names': names, 'keys': keys, 'results': results,
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Artificially supplied addresses and finite values; not open fact memory.',
-                              'Names and templates are development examples; not independent validation.']}
-    with OUTPUT.open('x', encoding='utf-8', newline='\n') as stream:
+                              'The manually written cases and fixed vocabulary are not open-domain validation.',
+                              'The language model may have encountered similar text during pretraining.']}
+    with output.open('x', encoding='utf-8', newline='\n') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
 
 
 if __name__ == '__main__':
-    run()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--adapter', type=Path, default=ADAPTER)
+    parser.add_argument('--output', type=Path, default=OUTPUT)
+    parser.add_argument('--fresh', action='store_true')
+    args = parser.parse_args()
+    run(args.adapter, args.output, args.fresh)
