@@ -1,0 +1,88 @@
+import copy
+import tempfile
+import unittest
+from pathlib import Path
+
+import torch
+
+from spora.durable import TensorStore
+from spora.growing import load, new_state, save
+from spora.named_address import NamedAddressBinding
+from spora.state_codec import flatten, restore
+from spora.temporal import TemporalConfig, TemporalSPORA
+
+
+class NamedAddressTests(unittest.TestCase):
+    def setUp(self):
+        torch.manual_seed(6301)
+        self.model = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=64,
+                                    expert_rank=4, memory_layers=(0, 1),
+                                    history_writer='rls', current_address='orthogonal'))
+        self.state = new_state(self.model)
+        self.digest = 'a' * 64
+        self.model.named_address_binding = NamedAddressBinding(64, 64, self.digest, 0.9)
+        with torch.no_grad():
+            self.model.named_address_binding.weights.copy_(torch.eye(64).repeat(2, 1, 1))
+        self.features = torch.stack([site.current_basis[7] for site in self.model.memories]).unsqueeze(0)
+
+    def test_codec_portable_and_transaction_roundtrip(self):
+        expected = self.model.named_address_binding(self.features, self.model, self.digest)
+        self.assertEqual(expected['indices'].tolist(), [[7, 7]])
+        self.assertEqual(expected['accepted'].tolist(), [True])
+        schema, tensors = flatten(self.model, self.state)
+        model, state = restore(schema, tensors)
+        self.assertEqual(model.named_address_binding(self.features, model, self.digest)['indices'].tolist(), [[7, 7]])
+        self.assertEqual(flatten(model, state)[0], schema)
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'individual.pt'
+            save(path, self.model, self.state)
+            data = torch.load(path, weights_only=True)
+            self.assertEqual(data['format'], 'spora-growing-v2')
+            model, state, _ = load(path)
+            result = model.named_address_binding(self.features, model, self.digest)
+            self.assertEqual(result['accepted'].tolist(), [True])
+            with TensorStore.create(Path(temp) / 'individual.sqlite', self.model, self.state) as store:
+                model, state, _, _ = store.read()
+                self.assertEqual(model.named_address_binding(self.features, model, self.digest)['indices'].tolist(), [[7, 7]])
+
+    def test_old_model_without_binding_still_uses_legacy_format(self):
+        del self.model.named_address_binding
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'legacy.pt'
+            save(path, self.model, self.state)
+            self.assertEqual(torch.load(path, weights_only=True)['format'], 'spora-growing-v1')
+            model, _, _ = load(path)
+            self.assertFalse(hasattr(model, 'named_address_binding'))
+
+    def test_mismatch_nonfinite_and_empty_signal_are_rejected(self):
+        binding = self.model.named_address_binding
+        with self.assertRaises(ValueError):
+            binding(self.features, self.model, 'b' * 64)
+        other = copy.deepcopy(self.model)
+        with self.assertRaises(ValueError):
+            binding(self.features, other, self.digest)
+        with self.assertRaises(ValueError):
+            binding(torch.full_like(self.features, float('nan')), self.model, self.digest)
+        with torch.no_grad():
+            binding.weights.zero_()
+        result = binding(self.features, self.model, self.digest)
+        self.assertFalse(result['accepted'].item())
+        with torch.no_grad():
+            binding.weights[0, 0, 0] = float('nan')
+        with self.assertRaises(ValueError):
+            flatten(self.model, self.state)
+
+    def test_schema_and_tensor_corruption_are_rejected(self):
+        schema, tensors = flatten(self.model, self.state)
+        bad_schema = copy.deepcopy(schema)
+        bad_schema['named_address_binding']['threshold'] = float('nan')
+        with self.assertRaises(ValueError):
+            restore(bad_schema, tensors)
+        bad_tensors = dict(tensors)
+        bad_tensors.pop('model/named_address_binding.weights')
+        with self.assertRaises(RuntimeError):
+            restore(schema, bad_tensors)
+
+
+if __name__ == '__main__':
+    unittest.main()

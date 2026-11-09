@@ -46,6 +46,12 @@ def flatten(model, state):
     if hasattr(model, 'chinese_query'):
         model.chinese_query.config.validate()
         schema['chinese_query'] = model.chinese_query.config_dict()
+    if hasattr(model, 'named_address_binding'):
+        from .named_address import NamedAddressBinding
+        if not isinstance(model.named_address_binding, NamedAddressBinding):
+            raise ValueError('Invalid named address binding')
+        model.named_address_binding.validate(model)
+        schema['named_address_binding'] = model.named_address_binding.config_dict()
     if hasattr(model, 'awake_core'):
         model.awake_core.validate()
         schema['awake_core'] = model.awake_core.config_dict()
@@ -89,6 +95,9 @@ def restore(schema, tensors, device='cpu'):
     if 'chinese_query' in schema:
         from .chinese_query import ChineseQuery, ChineseQueryConfig
         model.chinese_query = ChineseQuery(ChineseQueryConfig(**schema['chinese_query'])).to(device)
+    if 'named_address_binding' in schema:
+        from .named_address import NamedAddressBinding
+        model.named_address_binding = NamedAddressBinding(**schema['named_address_binding']).to(device)
     if 'awake_core' in schema:
         from .awake import AwakeCore, AwakeConfig
         model.awake_core = AwakeCore(AwakeConfig(**schema['awake_core'])).to(device)
