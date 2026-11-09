@@ -1,6 +1,7 @@
 import unittest
 
-from spora.training_guard import assess_guard, validate_guard
+from spora.training_guard import (assess_guard, validate_guard, assess_multiturn_guard,
+                                  validate_multiturn_guard)
 
 
 def report(nll, endings):
@@ -28,6 +29,19 @@ class TrainingGuardTests(unittest.TestCase):
             assess_guard(config, report(3., [True]), changed)
         with self.assertRaisesRegex(ValueError, 'Invalid guard report'):
             assess_guard(config, report(3., [True]), report(float('nan'), [True]))
+
+    def test_multiturn_regression_and_mismatch(self):
+        config = {'cases': 'data/dev.json', 'cases_sha256': 'a' * 64, 'budget': 96,
+                  'max_ended_drop': 4, 'max_loop_increase': 4}
+        baseline = {'turns': 36, 'ended': 27, 'loops': 9}
+        current = {'turns': 36, 'ended': 12, 'loops': 19}
+        result = assess_multiturn_guard(config, baseline, current)
+        self.assertEqual(result['reasons'], ['multiturn_ended_drop', 'multiturn_loop_increase'])
+        with self.assertRaisesRegex(ValueError, 'counts differ'):
+            assess_multiturn_guard(config, baseline, dict(current, turns=35))
+        with self.assertRaises(ValueError):
+            validate_multiturn_guard(dict(config, cases_sha256='bad'))
+        self.assertIsNone(assess_multiturn_guard(None, None, None))
 
 
 if __name__ == '__main__':

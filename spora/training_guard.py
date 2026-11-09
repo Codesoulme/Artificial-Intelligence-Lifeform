@@ -1,5 +1,6 @@
 """Optional development regression checks for bounded training runs."""
 import math
+import re
 
 
 def validate_guard(config):
@@ -37,3 +38,42 @@ def assess_guard(config, baseline, current):
         reasons.append('ended_count_drop')
     return {'stop': bool(reasons), 'reasons': reasons,
             'dialogue_nll_increase': delta, 'ended_count_drop': ended_drop}
+
+
+def validate_multiturn_guard(config):
+    if config is None:
+        return
+    required = {'cases', 'cases_sha256', 'budget', 'max_ended_drop', 'max_loop_increase'}
+    if not isinstance(config, dict) or set(config) != required:
+        raise ValueError('Invalid multi-turn guard configuration')
+    if (not isinstance(config['cases'], str) or not config['cases']
+            or not isinstance(config['cases_sha256'], str)
+            or re.fullmatch(r'[0-9a-f]{64}', config['cases_sha256']) is None
+            or type(config['budget']) is not int or config['budget'] < 1
+            or type(config['max_ended_drop']) is not int or config['max_ended_drop'] < 0
+            or type(config['max_loop_increase']) is not int or config['max_loop_increase'] < 0):
+        raise ValueError('Invalid multi-turn guard thresholds')
+
+
+def assess_multiturn_guard(config, baseline, current):
+    validate_multiturn_guard(config)
+    if config is None:
+        return None
+    for report in (baseline, current):
+        if not isinstance(report, dict) or set(report) != {'turns', 'ended', 'loops'}:
+            raise ValueError('Invalid multi-turn guard report')
+        if any(type(report[k]) is not int for k in report) or not (
+                report['turns'] > 0 and 0 <= report['ended'] <= report['turns']
+                and 0 <= report['loops'] <= report['turns']):
+            raise ValueError('Invalid multi-turn guard counts')
+    if baseline['turns'] != current['turns']:
+        raise ValueError('Multi-turn guard counts differ')
+    ended_drop = baseline['ended'] - current['ended']
+    loop_increase = current['loops'] - baseline['loops']
+    reasons = []
+    if ended_drop > config['max_ended_drop']:
+        reasons.append('multiturn_ended_drop')
+    if loop_increase > config['max_loop_increase']:
+        reasons.append('multiturn_loop_increase')
+    return {'stop': bool(reasons), 'reasons': reasons,
+            'ended_count_drop': ended_drop, 'loop_count_increase': loop_increase}
