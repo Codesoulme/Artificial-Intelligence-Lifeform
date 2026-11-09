@@ -7,9 +7,21 @@ from unittest.mock import patch
 
 from scripts import audit_authored_text_overlap as audit
 from scripts import audit_reviewed_wikivoyage_overlap as wiki_audit
+from scripts import audit_p223_mixture as mixture_audit
 
 
 class AuthoredOverlapTests(unittest.TestCase):
+    def test_mixture_rejects_duplicate_identities(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            row = {'text': '测试内容', 'source_original_sha256': 'same'}
+            raw = (json.dumps(row)+'\n'+json.dumps(row)+'\n').encode('utf8')
+            (root/'candidate.jsonl').write_bytes(raw)
+            (root/'manifest.json').write_text(json.dumps({'candidate_sha256': hashlib.sha256(raw).hexdigest(),
+                                                         'counts': {'records': 2}}), encoding='utf8')
+            with self.assertRaisesRegex(ValueError, 'identity mismatch'):
+                mixture_audit.audit(root, {})
+
     def test_reviewed_wikivoyage_binds_each_text(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

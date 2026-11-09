@@ -1,0 +1,19 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_model_reviewed_language_diagnostic_only",
+  "max_schedule_steps": 10,
+  "max_target_shares": {"story": 0.2},
+  "reviewed_checkpoint_sha256": "eae8e678db0e9b87b7a88528206e2210fb93d87cb925308aa8a2d1ae67bc1234",
+  "training_source_sha256": {"story": "6f274e51e69daad417309e5c65ff0f6346e589a271e4d74708fcbeb04545ccbe"},
+  "candidate_summary_sha256": "a808c5233685057563ce7b00e2093168b808368716be344876cd5cdec7b4d4f0",
+  "candidate_manifest_sha256": "ed62af729a8d7404077d243790ec01c5cbac2f65bc281f3b8b5f16b2ea4b60a8",
+  "basis": "User authorized iterative local training. This explicitly scoped 10-update pilot supersedes earlier non-approval only for the exact filtered mixture and checkpoint above. It tests a small reviewed mixture with actual coverage tracking and multi-turn regression monitoring; it does not certify the individual records or authorize a larger run.",
+  "review_and_isolation": "Wikipedia excerpts were selected by two sequential model reviews; Wikivoyage excerpts by one model reviewer per sample. Thirteen records sharing 20-character windows with two fixed historical training sources were removed; paraphrases and other historical or final-test overlap are not excluded.",
+  "limitations": [
+    "No human review or independent fact checking. Some passages may be inaccurate, stale, biased, technical or stylistically narrow.",
+    "Wikipedia and Wikivoyage source declarations include CC BY-SA; individual page history, translation and third-party rights have not been fully established. Preserve attribution and do not distribute this data as a cleared dataset.",
+    "The 170 passages contain 27906 next-token targets. With-replacement draws can repeat them; report unique positions and repeated exposure, not as independent new knowledge.",
+    "The source labeled story by the existing trainer is a mixed encyclopedia and travel sample, not a story corpus. Existing old pretraining material is separately limited by P107 review.",
+    "The final test remains untouched. Generation metrics do not establish usefulness or chat ability."
+  ]
+}

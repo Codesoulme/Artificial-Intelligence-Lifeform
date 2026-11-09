@@ -1,0 +1,16 @@
+{
+  "status": "model_review_not_training_approval",
+  "sample_sha256": "bfccd2c8869dd656ca8644697893ba7758f6d9d7a72b6d6e44aa323f1b684a69",
+  "candidate_sha256": "6f39245d0c937069c5eb85b70b97868db0cab3bdaad0f42a6072829bf886596b",
+  "sample_size": 40,
+  "pass_indices": [4,8,12,36],
+  "uncertain_indices": [0,1,2,3,5,6,7,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,37,38,39],
+  "reject_indices": [],
+  "method": "Two model reviewers each inspected a disjoint half; not human or independent dual review. Criteria included contextual completeness, translation quality, potential factual and time-sensitive risks.",
+  "limitations": [
+    "Each sample is one selected span per page; it is not uniform over spans.",
+    "Review strictness and passage length differ from P222, so pass proportions cannot be directly compared.",
+    "Uncertain includes potentially useful text requiring additional context or verification; it is not a claim of falsehood.",
+    "Neither approval nor legal or factual verification is implied."
+  ]
+}
