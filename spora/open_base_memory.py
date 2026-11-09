@@ -35,7 +35,7 @@ class OpenBaseMemory(nn.Module):
         for projection in self.out:
             nn.init.zeros_(projection.weight)
 
-    def forward(self, hidden, matrices, site):
+    def forward(self, hidden, matrices, site, address=None):
         if type(site) is not int or site not in (0, 1):
             raise ValueError('Site must be 0 or 1')
         if not isinstance(hidden, torch.Tensor) or hidden.ndim != 3 or hidden.shape[-1] != self.hidden_width:
@@ -46,7 +46,15 @@ class OpenBaseMemory(nn.Module):
             raise ValueError('At least one memory matrix is required')
         projection = self.query[site]
         x = hidden.to(device=projection.weight.device, dtype=projection.weight.dtype)
-        q = F.normalize(projection(x), dim=-1)
+        if address is None:
+            q = F.normalize(projection(x), dim=-1)
+        else:
+            if (not isinstance(address, torch.Tensor) or address.ndim != 2
+                    or address.shape[1] != self.memory_width or address.shape[0] not in (1, hidden.shape[0])
+                    or not address.is_floating_point() or not bool(torch.isfinite(address).all())):
+                raise ValueError('Address must have shape [1 or batch, memory_width]')
+            q = F.normalize(address.detach().to(device=x.device, dtype=x.dtype), dim=-1)
+            q = q.expand(hidden.shape[0], -1).unsqueeze(1).expand(-1, hidden.shape[1], -1)
         values = []
         for matrix in matrices:
             if (not isinstance(matrix, torch.Tensor) or matrix.ndim != 3
@@ -64,7 +72,7 @@ class OpenBaseMemory(nn.Module):
 
 
 @contextmanager
-def memory_hooks(layers, adapter, state):
+def memory_hooks(layers, adapter, state, *, current_only=False, addresses=None):
     """Attach two hooks for one immutable state snapshot and then remove them.
 
     Layers must be distinct modules whose outputs are tensors of shape
@@ -76,6 +84,11 @@ def memory_hooks(layers, adapter, state):
         raise ValueError('Exactly two distinct layers are required')
     if not isinstance(adapter, OpenBaseMemory):
         raise ValueError('Expected an OpenBaseMemory adapter')
+    if type(current_only) is not bool:
+        raise ValueError('current_only must be a boolean')
+    if addresses is not None and (not isinstance(addresses, (tuple, list)) or len(addresses) != 2
+                                  or any(not isinstance(address, torch.Tensor) for address in addresses)):
+        raise ValueError('Addresses must contain one tensor per site')
     handles = []
     with _ACTIVE_LOCK:
         if any(layer in _ACTIVE_LAYERS for layer in layers):
@@ -86,12 +99,13 @@ def memory_hooks(layers, adapter, state):
         with torch.no_grad():
             snapshots = tuple(
                 tuple(matrix.detach().clone() for matrix in
-                      [state.current[site]] + [history_site(page, site)[0] for page in state.pages])
+                      [state.current[site]] + ([] if current_only else [history_site(page, site)[0] for page in state.pages]))
                 for site in range(2)
             )
+            fixed_addresses = None if addresses is None else tuple(address.detach().clone() for address in addresses)
         for site, layer in enumerate(layers):
             def hook(_module, _inputs, output, site=site):
-                return adapter(output, snapshots[site], site)
+                return adapter(output, snapshots[site], site, None if fixed_addresses is None else fixed_addresses[site])
             handles.append(layer.register_forward_hook(hook))
         yield adapter
     finally:

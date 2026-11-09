@@ -111,6 +111,31 @@ def test_invalid_shapes_and_layer_outputs():
 
 
 class OpenBaseMemoryTests(unittest.TestCase):
+    def test_explicit_neural_address_changes_read_and_is_detached(self):
+        adapter = configured()
+        layer = nn.Identity()
+        address = torch.tensor([[1., 0., 0.]], requires_grad=True)
+        x = torch.tensor([[[0., 1., 0.]]])
+        with memory_hooks([layer, nn.Identity()], adapter, state(), current_only=True,
+                          addresses=[address, address]):
+            result = layer(x)
+            self.assertTrue(torch.allclose(result, torch.tensor([[[.5, 1., 0.]]])))
+            result.sum().backward()
+        self.assertIsNone(address.grad)
+
+    def test_current_only_ignores_history(self):
+        layers = [nn.Identity(), nn.Identity()]
+        adapter = configured()
+        memory = state()
+        x = torch.tensor([[[1., 0., 0.]]])
+        with memory_hooks(layers, adapter, memory, current_only=True):
+            self.assertTrue(torch.allclose(layers[0](x), 1.5*x))
+        with memory_hooks(layers, adapter, memory):
+            self.assertFalse(torch.allclose(layers[0](x), 1.5*x))
+        with self.assertRaises(ValueError):
+            with memory_hooks(layers, adapter, memory, current_only='yes'):
+                pass
+
     def test_overlapping_contexts_fail_without_removing_original_hooks(self):
         layers = [nn.Identity(), nn.Identity()]
         adapter = configured()
