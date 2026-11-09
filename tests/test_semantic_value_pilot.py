@@ -1,6 +1,6 @@
 import unittest
 
-from scripts.deepseek_semantic_value_pilot import HELD_TEMPLATES, TRAIN_TEMPLATES, WORDS, word_correct
+from scripts.deepseek_semantic_value_pilot import HELD_TEMPLATES, TRAIN_TEMPLATES, WORDS, run, word_correct
 from scripts.deepseek_semantic_value_diagnose import candidate_metrics
 import torch
 
@@ -24,6 +24,10 @@ class SemanticValuePilotTests(unittest.TestCase):
         self.assertTrue(rows[1]['full_vocabulary_top_is_target'])
         with self.assertRaises(ValueError):
             candidate_metrics(logits, [1, 1], [0, 1])
+
+    def test_invalid_continuation_schedule_is_rejected(self):
+        with self.assertRaises(ValueError):
+            run(output='runs/semantic-test-invalid-schedule', steps=2, word_ratio=0)
 
 
 if __name__ == '__main__':

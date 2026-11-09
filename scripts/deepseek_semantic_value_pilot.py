@@ -1,4 +1,5 @@
 """Align finite internal values to Chinese words while replaying numeric reads."""
+import argparse
 import json
 import sys
 import time
@@ -84,10 +85,19 @@ def evaluate(base, tokenizer, adapter, bases, states, names, keys):
     return {'summary': summary, 'rows': rows}
 
 
-def run():
-    if OUTPUT.exists():
-        raise FileExistsError(OUTPUT)
+def run(output=OUTPUT, steps=STEPS, initial=None, word_ratio=1, seed=4634):
+    output = Path(output).resolve()
+    runs = (ROOT / 'runs').resolve()
+    if not output.is_relative_to(runs) or output == runs or output.exists():
+        raise ValueError('Expected a new output directory under runs')
+    if type(steps) is not int or not 1 <= steps <= 4000 or type(word_ratio) is not int or not 1 <= word_ratio <= 7:
+        raise ValueError('Invalid training schedule')
+    initial = Path(initial).resolve() if initial is not None else None
+    if initial is not None and not initial.is_relative_to(runs):
+        raise ValueError('Initial adapter must be under runs')
     protected = {p: sha(p) for p in (MODEL / 'model.safetensors', INDIVIDUAL, SELECTOR)}
+    if initial is not None:
+        protected[initial] = sha(initial)
     if protected[MODEL / 'model.safetensors'] != WEIGHT_SHA or protected[INDIVIDUAL] != INDIVIDUAL_SHA:
         raise ValueError('Protected model mismatch')
     parent = torch.load(SELECTOR, map_location='cpu', weights_only=True)
@@ -97,7 +107,7 @@ def run():
         raise ValueError('Readout provenance mismatch')
     if len(set(WORDS)) != 8 or set(NAMES) & set(UNKNOWN[:2]) or set(TRAIN_TEMPLATES) & set(HELD_TEMPLATES):
         raise ValueError('Vocabulary or train/evaluation split mismatch')
-    torch.manual_seed(4634)
+    torch.manual_seed(seed)
     torch.set_num_threads(2)
     torch.cuda.reset_peak_memory_stats()
     started = time.perf_counter()
@@ -112,7 +122,16 @@ def run():
                                                 torch_dtype=torch.float16, attn_implementation='sdpa').to('cuda').eval()
     base.requires_grad_(False)
     adapter = ScaledReadout(base.config.hidden_size, organism.config.memory_width, 0.5).to('cuda')
-    adapter.load_state_dict(parent['readout'], strict=True)
+    if initial is None:
+        adapter.load_state_dict(parent['readout'], strict=True)
+    else:
+        initial_data = torch.load(initial, map_location='cpu', weights_only=True)
+        if (initial_data.get('format') != 'deepseek-spora-semantic-value-development-v1'
+                or initial_data.get('weight_sha256') != WEIGHT_SHA
+                or initial_data.get('individual_sha256') != INDIVIDUAL_SHA
+                or initial_data.get('layers') != [5, 17] or initial_data.get('strength') != 0.5):
+            raise ValueError('Initial semantic adapter provenance mismatch')
+        adapter.load_state_dict(initial_data['state'], strict=True)
     bases = [F.normalize(site.current_basis.to('cuda').float(), dim=-1) for site in organism.memories]
     adapter.eval()
     print('baseline evaluation starting', flush=True)
@@ -121,13 +140,16 @@ def run():
     optimizer = torch.optim.AdamW(adapter.parameters(), lr=0.0002, weight_decay=0.)
     tasks = [(name, key, template, value) for name, key in zip(NAMES, KEYS)
              for template in TRAIN_TEMPLATES for value in range(8)]
-    generator = torch.Generator().manual_seed(4634)
+    generator = torch.Generator().manual_seed(seed)
     order = torch.randperm(len(tasks), generator=generator).tolist()
+    block = word_ratio + 1
+    if steps > len(tasks) * block:
+        raise ValueError('Training schedule exceeds one task permutation')
     log = []
-    for step in range(STEPS):
-        name, key, template, value = tasks[order[step // 2]]
+    for step in range(steps):
+        name, key, template, value = tasks[order[step // block]]
         other = (value + 1) % 8
-        if step % 2 == 0:
+        if step % block < word_ratio:
             question = template.format(name=name)
             answers = [WORDS[value], WORDS[other]]
             group = 'word'
@@ -157,12 +179,13 @@ def run():
             or any(frozen_digest(organism, state) != state_digests[key] for key, state in states.items())
             or any(sha(p) != d for p, d in protected.items())):
         raise ValueError('Protected input changed')
-    OUTPUT.mkdir(parents=False, exist_ok=False)
-    checkpoint = OUTPUT / 'adapter.pt'
+    output.mkdir(parents=False, exist_ok=False)
+    checkpoint = output / 'adapter.pt'
     torch.save({'format': 'deepseek-spora-semantic-value-development-v1',
                 'state': {k: v.detach().cpu() for k, v in adapter.state_dict().items()},
                 'weight_sha256': WEIGHT_SHA, 'individual_sha256': INDIVIDUAL_SHA,
-                'parent_sha256': protected[SELECTOR], 'layers': [5, 17], 'strength': 0.5}, checkpoint)
+                'parent_sha256': protected[initial] if initial is not None else protected[SELECTOR],
+                'layers': [5, 17], 'strength': 0.5}, checkpoint)
     print('adapted checkpoint saved; evaluation starting', flush=True)
     adapted = evaluate(base, tokenizer, adapter, bases, states, eval_names, eval_keys)
     if (frozen_digest(organism, original) != before
@@ -170,8 +193,9 @@ def run():
             or any(sha(p) != d for p, d in protected.items())):
         raise ValueError('Protected input changed during evaluation')
     report = {'status': 'finite_semantic_value_development_only', 'weight_sha256': WEIGHT_SHA,
-              'individual_sha256': INDIVIDUAL_SHA, 'parent_sha256': protected[SELECTOR],
-              'adapter_sha256': sha(checkpoint), 'steps': STEPS, 'learning_rate': 0.0002,
+              'individual_sha256': INDIVIDUAL_SHA, 'parent_sha256': protected[initial] if initial is not None else protected[SELECTOR],
+              'adapter_sha256': sha(checkpoint), 'steps': steps, 'word_ratio': word_ratio, 'seed': seed,
+              'optimizer_restarted': initial is not None, 'learning_rate': 0.0002,
               'train_names': list(NAMES), 'held_names': list(UNKNOWN[:2]), 'vocabulary': WORDS,
               'held_values': HELD_VALUES, 'log': log, 'baseline': baseline, 'adapted': adapted,
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
@@ -183,11 +207,18 @@ def run():
                               'Closed-thinking greedy generation and eight-token cap; not open conversation or reasoning.',
                               'Zero-matrix ablation is not a reliable unknown-state mechanism.',
                               'No automatic writes, semantic routing, independently trained individuals or crash recovery.']}
-    with (OUTPUT / 'result.json').open('x', encoding='utf-8', newline='\n') as stream:
+    with (output / 'result.json').open('x', encoding='utf-8', newline='\n') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
     print(json.dumps({'baseline': baseline['summary'], 'adapted': adapted['summary']}), flush=True)
 
 
 if __name__ == '__main__':
-    run()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, default=OUTPUT)
+    parser.add_argument('--steps', type=int, default=STEPS)
+    parser.add_argument('--initial', type=Path)
+    parser.add_argument('--word-ratio', type=int, default=1)
+    parser.add_argument('--seed', type=int, default=4634)
+    args = parser.parse_args()
+    run(args.output, args.steps, args.initial, args.word_ratio, args.seed)
