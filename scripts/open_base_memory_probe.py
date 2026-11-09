@@ -20,6 +20,8 @@ from spora.open_base_memory import OpenBaseMemory, memory_hooks
 from spora.sleep_memory import history_site
 
 OUTPUT = ROOT/'runs/open-base-memory-probe-20261109.json'
+MODEL_NAME = 'Qwen/Qwen2.5-0.5B-Instruct'
+ATTENTION = 'eager'
 
 
 def zero_state(state):
@@ -40,7 +42,7 @@ def run():
     start = time.perf_counter()
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     model = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False,
-                                                 torch_dtype=torch.float16, attn_implementation='eager').to('cuda').eval()
+                                                 torch_dtype=torch.float16, attn_implementation=ATTENTION).to('cuda').eval()
     model.requires_grad_(False)
     organism, state, _ = load(INDIVIDUAL, 'cuda')
     before = frozen_digest(organism, state)
@@ -71,7 +73,7 @@ def run():
     if (before != frozen_digest(organism, state) or sha(INDIVIDUAL) != INDIVIDUAL_SHA
             or sha(MODEL/'model.safetensors') != WEIGHT_SHA):
         raise ValueError('Protected input changed')
-    result = {'status': 'structural_probe_not_semantic_memory', 'model': 'Qwen/Qwen2.5-0.5B-Instruct',
+    result = {'status': 'structural_probe_not_semantic_memory', 'model': MODEL_NAME, 'attention': ATTENTION,
               'revision': REVISION, 'weight_sha256': WEIGHT_SHA, 'individual_sha256': INDIVIDUAL_SHA,
               'individual_frozen_digest': before, 'layers': [5, 17], 'seed': 23701,
               'zero_adapter_logits_exact': True, 'hook_removal_logits_exact': True,
