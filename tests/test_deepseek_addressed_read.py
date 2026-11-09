@@ -6,11 +6,12 @@ import torch
 from scripts.deepseek_addressed_read import closed_think_inputs
 from scripts.deepseek_full_answer import answer_batch
 from scripts.deepseek_learned_address import select_addresses
-from scripts.deepseek_pooled_address import PooledAddress, question_mask
+from scripts.deepseek_pooled_address import PooledAddress, extract, question_mask
 from scripts.deepseek_memory_intent import IntentGate, build_cases
 from scripts.deepseek_guard_adversarial import SECOND_CASES
 from scripts.deepseek_semantic_gate import hide_numbers, unique_semantic_cases
 from scripts.deepseek_composite_probe import initial_route
+from scripts.deepseek_multitype_gate import MultiIntentGate, CLASSES, unique_cases, checkpoint_payload
 from spora.open_base_memory import OpenBaseMemory
 from spora.finite_question_guard import valid_finite_question_form
 
@@ -115,6 +116,8 @@ class DeepseekReadPrefixTests(unittest.TestCase):
         self.assertEqual(mask.tolist(), [[False, True, True, False, False]])
         with self.assertRaises(ValueError):
             question_mask(offsets, torch.ones(1, 5), ['foo foo'], ['foo'])
+        with self.assertRaises(ValueError):
+            extract(None, None, [], hidden_indices=(6, 6))
 
     def test_intent_dataset_splits_and_question_mask(self):
         for augmented, malformed, contrastive in ((False, False, False), (True, False, False),
@@ -150,3 +153,15 @@ class DeepseekReadPrefixTests(unittest.TestCase):
                                        (True, float('nan'), [1, 1]), (True, 0.9, [1, 2]),
                                        (True, 0.9, [-1, -1]), (True, 0.9, [True, True])):
             self.assertEqual(initial_route(form, score, predicted), 'defer')
+
+    def test_multitype_gate_outputs_one_logit_per_type(self):
+        gate = MultiIntentGate(3)
+        features = torch.randn(2, 2, 3, 3)
+        output = gate(features, torch.tensor([[True, True, False], [True, False, False]]))
+        self.assertEqual(tuple(output.shape), (2, len(CLASSES)))
+        self.assertEqual(checkpoint_payload(gate, (24, 28))['hidden_state_indices'], (24, 28))
+        with self.assertRaises(ValueError):
+            checkpoint_payload(gate, torch.tensor([24, 28]))
+        with self.assertRaises(ValueError):
+            unique_cases([{'question': '对象8的值是多少？', 'category': 'current'},
+                          {'question': '对象9的值是多少？', 'category': 'history'}])

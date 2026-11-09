@@ -66,7 +66,10 @@ def question_mask(offsets, attention_mask, texts, questions):
 
 
 @torch.no_grad()
-def extract(model, tokenizer, questions, batch_size=8, question_only=True):
+def extract(model, tokenizer, questions, batch_size=8, question_only=True, hidden_indices=(6, 18)):
+    if (len(hidden_indices) != 2 or any(type(index) is not int or index < 1 for index in hidden_indices)
+            or hidden_indices[0] == hidden_indices[1]):
+        raise ValueError('Two distinct positive hidden-state indices are required')
     texts = [tokenizer.apply_chat_template([{'role': 'user', 'content': question}], tokenize=False,
                                            add_generation_prompt=True) for question in questions]
     if any('<think>' not in text or '</think>' in text for text in texts):
@@ -80,7 +83,9 @@ def extract(model, tokenizer, questions, batch_size=8, question_only=True):
     for offset in range(0, len(texts), batch_size):
         inputs = {k: v[offset:offset + batch_size].to('cuda') for k, v in encoded.items()}
         output = model(**inputs, use_cache=False, output_hidden_states=True)
-        batch = torch.stack([output.hidden_states[index] for index in (6, 18)], dim=1)
+        if max(hidden_indices) >= len(output.hidden_states):
+            raise ValueError('Hidden-state index outside model')
+        batch = torch.stack([output.hidden_states[index] for index in hidden_indices], dim=1)
         if not bool(torch.isfinite(batch).all()):
             raise ValueError('Nonfinite model features')
         features.append(batch.cpu())
