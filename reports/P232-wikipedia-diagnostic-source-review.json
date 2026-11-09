@@ -1,0 +1,17 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_local_diagnostic_not_quality_certification",
+  "reviewed_checkpoint_sha256": "e5df3ba8c17c8fd2c5e0d50d687cab69a72136bb9fe0ca5bf7bda973298d9cd8",
+  "max_schedule_steps": 25,
+  "max_target_shares": {"story": 0.2},
+  "training_source_sha256": {"story": "a0f4a1b26b6338bd5357dc140c4501d47fecc2566f41dd5cdbf7d2a40025ff9c"},
+  "candidate_summary_sha256": "a6a5eb9e1f6dd62acb91db24f87f49f0e7f32ac99a8e22ad2b35c25f0789126f",
+  "basis": "User authorized continued local experiments. This permits only a bounded diagnostic using the exact candidate and parent named here, not broad training or a quality certification.",
+  "limitations": [
+    "The 40-page sample received one model review per page: 5 major and 22 minor findings; no human factual or rights review was performed.",
+    "Historical overlap checks only cover normalized full containment in two specified sources; partial, semantic and other historical overlap remain possible.",
+    "Attribution and license information must remain attached; page-level and third-party rights have not been fully verified.",
+    "Training uses a historical field named story for encyclopedia passages and does not establish conversational ability.",
+    "A broad search may have opened development or final-test JSON files; strict final-test isolation is uncertain and future acceptance needs a fresh independent evaluation."
+  ]
+}
