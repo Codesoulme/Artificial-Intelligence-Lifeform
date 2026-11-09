@@ -12,6 +12,7 @@ from scripts.deepseek_guard_adversarial import SECOND_CASES
 from scripts.deepseek_semantic_gate import hide_numbers, unique_semantic_cases
 from scripts.deepseek_composite_probe import initial_route
 from scripts.deepseek_multitype_gate import MultiIntentGate, CLASSES, unique_cases, checkpoint_payload
+from scripts.deepseek_route_hardening import evaluate as evaluate_hardened_gate
 from spora.open_base_memory import OpenBaseMemory
 from spora.finite_question_guard import valid_finite_question_form
 
@@ -165,3 +166,12 @@ class DeepseekReadPrefixTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             unique_cases([{'question': '对象8的值是多少？', 'category': 'current'},
                           {'question': '对象9的值是多少？', 'category': 'history'}])
+
+    def test_hardening_comparison_counts_regression_and_rejects_missing_scores(self):
+        rows = [{'question': '对象8的值是多少？', 'label': 1},
+                {'question': '不要读取对象9的值。', 'label': 0}]
+        result = evaluate_hardened_gate(rows, [0.8, 0.1], [0.9, 0.9])
+        self.assertEqual(result['summary']['old']['correct'], 2)
+        self.assertEqual(result['summary']['new']['false_accept'], 1)
+        with self.assertRaises(ValueError):
+            evaluate_hardened_gate(rows, [0.8], [0.9, 0.9])
