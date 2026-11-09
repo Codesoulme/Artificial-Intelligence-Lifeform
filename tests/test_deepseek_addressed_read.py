@@ -13,6 +13,7 @@ from scripts.deepseek_semantic_gate import hide_numbers, unique_semantic_cases
 from scripts.deepseek_composite_probe import initial_route
 from scripts.deepseek_multitype_gate import MultiIntentGate, CLASSES, unique_cases, checkpoint_payload
 from scripts.deepseek_route_hardening import evaluate as evaluate_hardened_gate
+from scripts.deepseek_adaptive_read_probe import strength as adaptive_strength
 from spora.open_base_memory import OpenBaseMemory
 from spora.finite_question_guard import valid_finite_question_form
 
@@ -175,3 +176,11 @@ class DeepseekReadPrefixTests(unittest.TestCase):
         self.assertEqual(result['summary']['new']['false_accept'], 1)
         with self.assertRaises(ValueError):
             evaluate_hardened_gate(rows, [0.8], [0.9, 0.9])
+
+    def test_adaptive_strength_rejects_invalid_scores_and_closes_below_threshold(self):
+        self.assertEqual(adaptive_strength('hard', 0.49), 0.0)
+        self.assertEqual(adaptive_strength('hard', 0.5), 0.5)
+        self.assertAlmostEqual(adaptive_strength('soft', 0.2), 0.1)
+        for score in (float('nan'), -0.1, 1.1):
+            with self.assertRaises(ValueError):
+                adaptive_strength('hard', score)
