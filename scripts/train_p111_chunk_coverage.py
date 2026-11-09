@@ -22,12 +22,14 @@ from spora.source_review import verify_training_source_reviews
 from spora.p115_story_input import validate_candidate
 from spora.growing import load
 from spora.language_training import interface_state,atomic_save,frozen_digest
+from spora.training_guard import assess_guard, validate_guard
 from chinese_curriculum_common import memory_answers
 from types import SimpleNamespace
 from prepare_conversation_v2 import sha,SPECIAL
 from train_wording import dump,protected_manifest
 ROOT=Path(__file__).resolve().parents[1]
 SOURCES=('spora/conversation.py','spora/conversation_data.py','scripts/train_p111_chunk_coverage.py','spora/document_chunk_stream.py','spora/uniform_document_stream.py','spora/story_coverage_run.py','spora/document_stream_observation.py','spora/supervision_coverage.py','spora/token_objective.py','spora/conversation_state.py','spora/training_mix.py','spora/document_stream.py','spora/source_review.py','spora/p115_story_input.py','spora/state_codec.py','spora/growing.py','scripts/prepare_teaching_curriculum.py','scripts/curate_teaching_curriculum.py','scripts/prepare_conversation_v4.py','scripts/prepare_conversation_v2.py','scripts/curate_conversation.py','scripts/prepare_prose_pretrain_pilot.py','spora/language_training.py')
+SOURCES += ('spora/training_guard.py',)
 PROMPTS=('你好，请简单介绍你的能力。','我今天有点累，可以怎样放松？','请用一句话解释为什么会下雨。','把“明天我去图书馆看书”改成疑问句。','我不知道该选哪本书，你能先问我一个问题吗？','社会主义核心价值观的个人层面包括哪些内容？')
 
 def load_rows(path,length):
@@ -160,6 +162,7 @@ def main():
     parser.add_argument('--output',required=True);parser.add_argument('--until',type=int,required=True);parser.add_argument('--resume',action='store_true')
     args=parser.parse_args();plan=json.loads((ROOT/args.plan).read_text('utf-8'));data=ROOT/plan['data'];base_data=ROOT/plan.get('base_data',plan['data']);out=ROOT/args.output
     if not 0<args.until<=plan['schedule_steps'] or args.until%plan['check_every']:raise ValueError('End at a planned checkpoint')
+    guard_config=plan.get('regression_guard');validate_guard(guard_config)
     mode=story_sampling_mode(plan)
     contract=coverage_contract(plan)
     chunk_spec=chunk_contract(plan)
@@ -235,6 +238,10 @@ def main():
     if args.resume:
         if json.loads((out/'config.json').read_text('utf-8'))!=metadata:raise ValueError('Resume requires exact implementation/data/plan/protected sources')
         payload=torch.load(out/'checkpoint.pt',map_location='cpu',weights_only=True)
+        if payload.get('regression_guard', {}).get('stop'):
+            raise ValueError('Stopped regression checkpoint requires a new reviewed experiment')
+        if guard_config is not None and not isinstance(payload.get('guard_baseline'), dict):
+            raise ValueError('Missing regression baseline')
         validate_identity(payload,contract,fingerprints,story_source)
         if payload.get('story_sampling_mode') != mode:raise ValueError('Sampling mode differs from checkpoint')
         model=restore_conversation(organism,payload,plan['parent_sha256'],manifest['tokenizer_sha256'],'cuda')
@@ -270,9 +277,13 @@ def main():
     if not sft or not sft_dev or not focus:raise ValueError('Missing curriculum')
     if payload is None:
         baseline=monitor(model,state,tokenizer,dev,sft_dev,plan['length'],pad)
+        if guard_config is not None:assess_guard(guard_config,baseline,baseline)
         baseline.update(teacher_training_nll=teaching_loss(model,state,teacher,pad,231201),foundation_training_nll=teaching_loss(model,state,foundation,pad,231202))
         dump(out/'baseline.json',baseline)
         atomic_save(dict(format='spora-conversation-v1',organism_sha256=plan['parent_sha256'],tokenizer_sha256=manifest['tokenizer_sha256'],config=asdict(model.config),state=interface_state(model)),out/'language-initial.pt')
+    else:
+        baseline=payload.get('guard_baseline')
+    guard_result=None
     start=time.perf_counter();torch.cuda.reset_peak_memory_stats()
     print(json.dumps(dict(start_step=step,until=args.until,parameters=sum(p.numel() for p in model.trainable_parameters()),sft_rows=len(sft),teacher_rows=len(teacher),foundation_rows=len(foundation),focus_segments=len(focus))),flush=True)
     for step in range(step+1,args.until+1):
@@ -319,6 +330,7 @@ def main():
         if step%50==0:print(json.dumps(dict(step=step,loss=float(loss.detach()),targets=targets,seconds=elapsed+time.perf_counter()-start)),flush=True)
         if step%plan['check_every']==0:
             report=monitor(model,state,tokenizer,dev,sft_dev,plan['length'],pad)
+            guard_result=assess_guard(guard_config,baseline,report)
             report.update(teacher_training_nll=teaching_loss(model,state,teacher,pad,231201),foundation_training_nll=teaching_loss(model,state,foundation,pad,231202))
             if before!=frozen_digest(organism,state):raise AssertionError('Original individual changed')
             row=dict(step=step,loss=float(loss.detach()),targets=targets,**report);logs.append(row)
@@ -330,12 +342,18 @@ def main():
                 story_source_sha256=story_source,coverage=coverage.to_dict(),
                 chunk_coverage_entry='spora-chunk-coverage-v1',chunk_coverage_contract=chunk_spec,
                 pretrain_source_sha256=chunk_source,chunk_coverage=chunk_coverage.to_dict(),development_logs=logs)
+            if guard_config is not None:
+                snapshot['guard_baseline']=baseline
+                snapshot['regression_guard']=guard_result
             restore_coverage(snapshot, contract, story_source, story_documents)
             restore_chunk_coverage(snapshot, chunk_spec, chunk_source, document_stream)
             atomic_save(snapshot,out/'checkpoint.pt')
             if step%plan['snapshot_every']==0:atomic_save(snapshot,out/f'step{step:06d}.pt')
             dump(out/'development.json',logs)
             print(json.dumps(dict(step=step,pretrain_nll=report['pretrain_nll'],dialogue_nll=report['dialogue_nll'],samples=[dict(prompt=r['prompt'],characters=len(r['text']),ended=r['ended_with_eos'],utf8_valid=r['utf8_valid']) for r in report['samples']])),flush=True)
+            if guard_result is not None and guard_result['stop']:
+                print(json.dumps({'regression_guard':guard_result}),flush=True)
+                break
     for name,digest in protected.items():
         if sha(ROOT/name)!=digest:raise AssertionError('Protected artifact changed: '+name)
     if fingerprints!={name:sha(ROOT/name) for name in SOURCES}:raise AssertionError('Implementation changed during segment')
@@ -343,12 +361,13 @@ def main():
         if (sha(candidate_dir/'summary.json') != candidate_identity['summary_sha256'] or
                 any(sha(candidate_dir/name) != digest for name,digest in candidate_identity['files'].items())):
             raise AssertionError('Candidate changed during segment')
-    result=dict(status='segment_completed_not_chat_accepted',steps=step,targets=targets,counts=counts,focus_cursor=focus_cursor,
+    result=dict(status='stopped_regression_not_chat_accepted' if guard_result and guard_result['stop'] else 'segment_completed_not_chat_accepted',steps=step,targets=targets,counts=counts,focus_cursor=focus_cursor,
         batch_trace_sha256=batch_trace,old_tensors_exact=before==frozen_digest(organism,state),memory=memory_answers(SimpleNamespace(model=model,state=state)),
         seconds=elapsed+time.perf_counter()-start,peak_allocated_bytes=torch.cuda.max_memory_allocated(),checkpoint_sha256=sha(out/'checkpoint.pt'))
     source_total=sum(counts.get(k+'_source_targets',0) for k in plan['target_shares'])
     result['coverage_contract']=contract
     result['chunk_coverage_contract']=chunk_spec
+    if guard_config is not None:result['regression_guard']=guard_result
     result['realized_source_shares']={k:counts.get(k+'_source_targets',0)/max(1,source_total) for k in plan['target_shares']}
     dump(out/f'segment-{step:06d}.json',result);print(json.dumps(result),flush=True)
 
