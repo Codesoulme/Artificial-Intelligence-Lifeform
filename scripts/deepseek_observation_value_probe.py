@@ -32,6 +32,15 @@ TRAIN_NEGATIVE = {
     'question': ('{name}喜欢喝{word}吗？',),
     'hypothesis': ('假如{name}喜欢喝{word}就好了。',),
 }
+EXTRA_POSITIVE = ('{name}最爱饮用{word}。', '{name}常说自己爱喝{word}。',
+                  '{name}最中意的饮品是{word}。', '记住，{name}喜欢的饮料是{word}。',
+                  '关于{name}：最喜欢喝{word}。')
+EXTRA_NEGATIVE = {
+    'negation': ('{name}喜欢的饮料绝不是{word}。',),
+    'history': ('{name}曾喜欢{word}，现在的喜好未知。',),
+    'uncertain': ('我不确定{name}是不是喜欢{word}。', '我推测{name}可能喜欢喝{word}。',
+                  '有人猜{name}也许喜欢{word}，没有证实。', '我猜{name}大概爱喝{word}，但不确定。'),
+}
 HELD_POSITIVE = ('{name}偏爱的饮品是{word}。', '据我所知，{name}最爱喝{word}。')
 HELD_NEGATIVE = {
     'negation': ('{name}一点也不爱喝{word}。',),
@@ -74,19 +83,23 @@ def metrics(logits, rows):
     return {'summary': summary, 'rows': result}
 
 
-def run(output=OUTPUT, augmented=False):
+def run(output=OUTPUT, augmented=False, diverse=False, abstain_weight=1.0):
     output = Path(output).resolve()
     if not output.is_relative_to((ROOT / 'runs').resolve()) or output.exists():
         raise ValueError('Expected a new output directory under runs')
+    if diverse and not augmented or not 0.05 <= abstain_weight <= 2.0:
+        raise ValueError('Diverse training requires augmentation and a valid abstain weight')
     protected = {p: sha(p) for p in (MODEL / 'model.safetensors', INDIVIDUAL)}
     if protected[MODEL / 'model.safetensors'] != WEIGHT_SHA or protected[INDIVIDUAL] != INDIVIDUAL_SHA:
         raise ValueError('Protected input mismatch')
     config_sha = feature_files_sha256(MODEL)
     train, held = cases(TRAIN_NAMES, TRAIN_POSITIVE, TRAIN_NEGATIVE), cases(HELD_NAMES, HELD_POSITIVE, HELD_NEGATIVE)
+    if diverse:
+        train += cases(TRAIN_NAMES, EXTRA_POSITIVE, EXTRA_NEGATIVE)
     if augmented:
         train += [{'text': template.format(name=name, word=word), 'label': ABSTAIN, 'group': 'unsupported'}
                   for name in TRAIN_NAMES for word in ('茉莉花茶', '苏打水', '苹果汁', '冰牛奶', '绿豆汤')
-                  for template in TRAIN_POSITIVE]
+                  for template in TRAIN_POSITIVE + (EXTRA_POSITIVE if diverse else ())]
     held += [{'text': f'{name}喜欢喝{word}。', 'label': ABSTAIN, 'group': 'unsupported'}
              for name in HELD_NAMES for word in ('柠檬水', '热巧克力', '汽水', '白开水')]
     if set(r['text'] for r in train) & set(r['text'] for r in held):
@@ -110,10 +123,12 @@ def run(output=OUTPUT, augmented=False):
         print(f'{name} features ready: {len(rows)}', flush=True)
     classifier = nn.Linear(vectors['train'].shape[-1], ABSTAIN + 1)
     labels = torch.tensor([row['label'] for row in train])
+    weights = torch.ones(ABSTAIN + 1)
+    weights[ABSTAIN] = abstain_weight
     optimizer = torch.optim.AdamW(classifier.parameters(), lr=0.0002, weight_decay=0.01)
     for step in range(600):
         optimizer.zero_grad(set_to_none=True)
-        loss = F.cross_entropy(classifier(vectors['train']), labels)
+        loss = F.cross_entropy(classifier(vectors['train']), labels, weight=weights)
         if not bool(torch.isfinite(loss)):
             raise ValueError('Nonfinite training loss')
         loss.backward()
@@ -132,7 +147,8 @@ def run(output=OUTPUT, augmented=False):
                 'feature_config_sha256': config_sha, 'hidden_indices': [6, 18]}, checkpoint)
     report = {'status': 'research_only_no_writes', 'classifier_sha256': sha(checkpoint),
               'weight_sha256': WEIGHT_SHA, 'individual_sha256': INDIVIDUAL_SHA,
-              'feature_config_sha256': config_sha, 'steps': 600, 'augmented': augmented, 'results': results,
+              'feature_config_sha256': config_sha, 'steps': 600, 'augmented': augmented, 'diverse': diverse,
+              'abstain_weight': abstain_weight, 'results': results,
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Fixed eight-word vocabulary and manually authored synthetic examples.',
                               'No entity recognition, address selection, writes, correction, or persistence.',
@@ -148,5 +164,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=OUTPUT)
     parser.add_argument('--augmented', action='store_true')
+    parser.add_argument('--diverse', action='store_true')
+    parser.add_argument('--abstain-weight', type=float, default=1.0)
     args = parser.parse_args()
-    run(args.output, args.augmented)
+    run(args.output, args.augmented, args.diverse, args.abstain_weight)
