@@ -6,6 +6,7 @@ import torch.nn.functional as F
 
 from .language_bridge import PAD
 from .language_training import ByteTrainer
+from .packed_coverage import PackedCoverage
 
 
 class PackedHybridTrainer(ByteTrainer):
@@ -19,11 +20,24 @@ class PackedHybridTrainer(ByteTrainer):
         super().__init__(model, state, parent_sha256, provenance, seed,
                          format_name='spora-hybrid-training-v1')
         self.packed_rng = random.Random(seed)
+        self.coverage = None
+        self.pending_coverage = None
 
     def step(self, stream):
-        inputs, labels = stream.batch(self.packed_rng, self.provenance['batch'],
-                                      self.provenance['length'], next(self.model.parameters()).device)
-        return self.step_aligned(inputs, labels)
+        if self.coverage is None:
+            if self.pending_coverage is None and self.tokens_seen:
+                raise ValueError('Cannot start coverage after untracked updates')
+            self.coverage = (PackedCoverage.restore(stream, self.pending_coverage)
+                             if self.pending_coverage is not None else PackedCoverage(stream))
+            self.pending_coverage = None
+        if self.coverage.stream is not stream:
+            raise ValueError('Cannot change packed stream during training')
+        inputs, labels, spans = stream.batch(self.packed_rng, self.provenance['batch'],
+                                             self.provenance['length'], next(self.model.parameters()).device,
+                                             return_spans=True)
+        loss = self.step_aligned(inputs, labels)
+        self.coverage.add(spans)
+        return loss
 
     def step_aligned(self, inputs, labels):
         if (inputs.ndim != 2 or labels.shape != inputs.shape or inputs.dtype != torch.long
@@ -53,14 +67,26 @@ class PackedHybridTrainer(ByteTrainer):
         return float(loss.detach())
 
     def snapshot(self):
+        if self.coverage is not None and self.coverage.presentations != self.tokens_seen:
+            raise ValueError('Cannot snapshot mixed tracked and untracked updates')
         payload = super().snapshot()
         payload['packed_sampler_rng'] = self.packed_rng.getstate()
+        if self.coverage is not None:
+            payload['packed_coverage'] = self.coverage.snapshot()
+        elif self.pending_coverage is not None:
+            payload['packed_coverage'] = self.pending_coverage
         return payload
 
     def restore(self, payload):
         if 'packed_sampler_rng' not in payload:
             raise ValueError('Packed sampler state required')
+        coverage = payload.get('packed_coverage')
+        if coverage is not None and (not isinstance(coverage, dict)
+                                     or coverage.get('presentations') != payload.get('trained_tokens')):
+            raise ValueError('Coverage and training counters disagree')
         candidate = random.Random()
         candidate.setstate(payload['packed_sampler_rng'])
         super().restore(payload)
         self.packed_rng = candidate
+        self.coverage = None
+        self.pending_coverage = coverage

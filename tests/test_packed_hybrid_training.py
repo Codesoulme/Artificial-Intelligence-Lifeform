@@ -12,6 +12,7 @@ from spora.hybrid_tokenizer import HybridLanguageBridge, HybridTokenizer
 from spora.language_bridge import BOS, EOS, PAD
 from spora.language_training import ByteTrainer, atomic_save, frozen_digest, interface_state
 from spora.packed_hybrid_training import PackedHybridTrainer
+from spora.packed_coverage import PackedCoverage
 from spora.temporal import TemporalConfig, TemporalSPORA
 
 
@@ -63,6 +64,8 @@ class PackedHybridTrainingTests(unittest.TestCase):
         self.assertEqual(trainer.step(self.stream), resumed.step(self.stream))
         self.assertEqual(trainer.tokens_seen, resumed.tokens_seen)
         self.assertEqual(trainer.packed_rng.getstate(), resumed.packed_rng.getstate())
+        self.assertEqual(trainer.coverage.metrics(), resumed.coverage.metrics())
+        self.assertEqual(trainer.coverage.metrics()['target_presentations'], trainer.tokens_seen)
         for name, tensor in interface_state(model).items():
             self.assertTrue(torch.equal(tensor, interface_state(restored)[name]))
         self.assertEqual(before, frozen_digest(self.organism, self.state))
@@ -72,6 +75,20 @@ class PackedHybridTrainingTests(unittest.TestCase):
         wrong = dict(self.provenance, tokens_sha256='other')
         with self.assertRaisesRegex(ValueError, 'identical data'):
             PackedHybridTrainer(self.new_model(), self.state, 'parent', wrong, 13).restore(checkpoint)
+
+    def test_coverage_counts_repeated_and_overlapping_windows(self):
+        coverage = PackedCoverage(self.stream)
+        coverage.add([(0, 0, 2), (0, 1, 3), (0, 0, 2)])
+        self.assertEqual(coverage.metrics(), {'target_presentations': 6, 'distinct_target_positions': 3,
+                                               'distinct_documents': 1, 'distinct_windows': 2})
+        saved = coverage.snapshot()
+        restored = PackedCoverage.restore(self.stream, saved)
+        self.assertEqual(restored.metrics(), coverage.metrics())
+        saved['positions'][0] ^= 1
+        with self.assertRaisesRegex(ValueError, 'Inconsistent'):
+            PackedCoverage.restore(self.stream, saved)
+        with self.assertRaisesRegex(ValueError, 'Invalid supervised span'):
+            coverage.add([(0, 0, int(self.stream.ends[0]))])
 
 
 if __name__ == '__main__':

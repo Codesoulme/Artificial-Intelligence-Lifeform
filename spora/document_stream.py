@@ -31,8 +31,8 @@ class DocumentStream:
         self.ends = ends
         self.cumulative = np.cumsum(lengths - 1, dtype=np.int64)
 
-    def batch(self, rng, batch_size, length, device):
-        inputs, labels = [], []
+    def batch(self, rng, batch_size, length, device, *, return_spans=False):
+        inputs, labels, spans = [], [], []
         total = int(self.cumulative[-1])
         for _ in range(batch_size):
             sampled = rng.randrange(total)
@@ -50,5 +50,7 @@ class DocumentStream:
             x[:count], y[:count] = seq[:-1], seq[1:]
             inputs.append(x)
             labels.append(y)
-        return (torch.tensor(np.stack(inputs), device=device),
-                torch.tensor(np.stack(labels), device=device))
+            spans.append((index, start, start + count))
+        result = (torch.tensor(np.stack(inputs), device=device),
+                  torch.tensor(np.stack(labels), device=device))
+        return (*result, spans) if return_spans else result
