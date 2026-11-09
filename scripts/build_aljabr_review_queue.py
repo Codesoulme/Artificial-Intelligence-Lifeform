@@ -27,17 +27,25 @@ def select_queue(rows, limit=80):
     groups = {}
     for row in rows:
         groups.setdefault((row['source'], row['path'].split('.')[0]), []).append(row)
-    for key in sorted(groups):
-        bucket = sorted(groups[key], key=rank)
-        row = bucket[0]
-        selected.append(row)
-        used.add(row['record_id'])
-    residual = sorted((row for row in rows if row['record_id'] not in used), key=lambda row: (strata(row), rank(row)))
-    for row in residual:
-        if len(selected) >= limit:
-            break
-        selected.append(row)
-        used.add(row['record_id'])
+    sources = sorted({row['source'] for row in rows})
+    if not sources or limit % len(sources):
+        raise ValueError('queue limit must divide source count')
+    per_source = limit // len(sources)
+    for source in sources:
+        source_rows = [row for row in rows if row['source'] == source]
+        source_selected = []
+        source_used = set()
+        source_groups = {key: value for key, value in groups.items() if key[0] == source}
+        for key in sorted(source_groups):
+            bucket = sorted(source_groups[key], key=rank)
+            source_selected.append(bucket[0])
+            source_used.add(bucket[0]['record_id'])
+        residual = sorted((row for row in source_rows if row['record_id'] not in source_used), key=lambda row: (strata(row), rank(row)))
+        source_selected.extend(residual[:per_source - len(source_selected)])
+        if len(source_selected) != per_source:
+            raise ValueError(f'not enough rows for source {source}')
+        selected.extend(source_selected)
+        used.update(row['record_id'] for row in source_selected)
     if len(selected) != limit:
         raise ValueError('unable to fill queue')
     selected.sort(key=lambda row: (row['source'], row['path'], row['block_index'], row['record_id']))

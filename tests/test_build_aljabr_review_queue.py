@@ -14,6 +14,7 @@ class AlJabrQueueTests(unittest.TestCase):
         self.assertEqual(len(queue), 20)
         self.assertEqual(queue, select_queue(rows, 20))
         self.assertEqual({(row['source'], row['path']) for row in queue}, {(s, f'chapter{c}.tex') for s in ('one', 'two') for c in range(3)})
+        self.assertEqual({source: sum(row['source'] == source for row in queue) for source in ('one', 'two')}, {'one': 10, 'two': 10})
 
 
 if __name__ == '__main__':
