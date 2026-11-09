@@ -57,6 +57,28 @@ def evaluate(model, state, data):
     return total / count
 
 
+def validate_diagnostic_review(review, *, manifest_sha, parent_sha, audit_sha, steps):
+    if review.get('experiment') != 'hybrid-character-byte-diagnostic-v1' or review.get('audit_sha256') != audit_sha:
+        raise ValueError('Review does not cover this hybrid diagnostic')
+    if review.get('policy') != 'bounded-noisy-story-v1':
+        return validate_language_training_approval(review, manifest_sha256=manifest_sha,
+                                                   parent_sha256=parent_sha, schedule_steps=steps)
+    if (review.get('approved_for_pilot') is not True or review.get('manifest_sha256') != manifest_sha
+            or review.get('parent_checkpoint_sha256') != parent_sha
+            or type(review.get('max_schedule_steps')) is not int or not 1 <= steps <= review['max_schedule_steps'] <= 100):
+        raise ValueError('No matching bounded story diagnostic review')
+    basis_path = Path(review.get('source_review_path', ''))
+    if sha(basis_path) != review.get('source_review_sha256'):
+        raise ValueError('Original source review mismatch')
+    basis = json.loads(basis_path.read_text(encoding='utf8'))
+    if basis.get('approved_for_pilot') is not True or basis.get('sample_count') != 64:
+        raise ValueError('Original source review does not cover bounded story pilot')
+    return {'policy': 'bounded-noisy-story-v1', 'manifest_sha256': manifest_sha,
+            'parent_checkpoint_sha256': parent_sha, 'schedule_steps': steps,
+            'source_sample_count': basis['sample_count'], 'source_review_counts': basis['counts'],
+            'independent_human_review': False}
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('individual', 'manifest', 'review', 'audit', 'output'):
@@ -88,8 +110,6 @@ def main():
     vocab_bytes = (json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(',', ':')) + '\n').encode('utf8')
     vocab_sha = hashlib.sha256(vocab_bytes).hexdigest()
     review = json.loads(Path(a.review).read_text(encoding='utf8'))
-    if review.get('experiment') != 'hybrid-character-byte-diagnostic-v1' or review.get('audit_sha256') != audit_sha:
-        raise ValueError('Review does not cover this hybrid diagnostic')
     documents = read_non_test_documents(a.manifest)
     if set(tokenizer.symbols) != set(''.join(d['text'] for d in documents if d['split'] == 'train')):
         raise ValueError('Vocabulary must derive from training documents')
@@ -110,8 +130,8 @@ def main():
         trainer.restore(torch.load(a.resume, map_location='cpu', weights_only=True))
     if trainer.steps + a.steps > 1000:
         raise ValueError('Total diagnostic budget exceeds 1000 updates')
-    approval = validate_language_training_approval(review, manifest_sha256=manifest_sha, parent_sha256=parent_sha,
-                                                   schedule_steps=trainer.steps + a.steps)
+    approval = validate_diagnostic_review(review, manifest_sha=manifest_sha, parent_sha=parent_sha,
+                                           audit_sha=audit_sha, steps=trainer.steps + a.steps)
     output.mkdir(parents=True)
     (output / 'tokenizer.json').write_bytes(vocab_bytes)
     metadata = {'arguments': vars(a), 'parent_sha256': parent_sha, 'provenance': provenance,

@@ -9,6 +9,7 @@ from spora.hybrid_tokenizer import HybridLanguageBridge, HybridTokenizer, window
 from spora.language_training import ByteTrainer, interface_state, load_interface
 from spora.growing import new_state
 from spora.temporal import TemporalConfig, TemporalSPORA
+from spora.train_hybrid import validate_diagnostic_review
 import torch
 
 
@@ -75,6 +76,25 @@ class HybridTokenizerTests(unittest.TestCase):
         wrong = dict(snapshot, format='spora-codepoint-training-v1')
         with self.assertRaisesRegex(ValueError, 'format mismatch'):
             load_interface(restored, wrong, 'parent')
+
+    def test_noisy_story_review_is_bounded_and_keeps_defect_counts(self):
+        with tempfile.TemporaryDirectory() as temp:
+            basis = Path(temp) / 'review.json'
+            basis.write_text(json.dumps({'approved_for_pilot': True, 'sample_count': 64,
+                                         'counts': {'clean': 34, 'minor': 24, 'major': 6}}), encoding='utf8')
+            review = {'experiment': 'hybrid-character-byte-diagnostic-v1', 'audit_sha256': 'audit',
+                      'policy': 'bounded-noisy-story-v1', 'approved_for_pilot': True,
+                      'manifest_sha256': 'manifest', 'parent_checkpoint_sha256': 'parent',
+                      'max_schedule_steps': 100, 'source_review_path': str(basis),
+                      'source_review_sha256': hashlib.sha256(basis.read_bytes()).hexdigest()}
+            args = {'manifest_sha': 'manifest', 'parent_sha': 'parent', 'audit_sha': 'audit', 'steps': 100}
+            result = validate_diagnostic_review(review, **args)
+            self.assertEqual(result['source_review_counts']['major'], 6)
+            self.assertFalse(result['independent_human_review'])
+            with self.assertRaises(ValueError):
+                validate_diagnostic_review(review, **dict(args, steps=101))
+            with self.assertRaises(ValueError):
+                validate_diagnostic_review(review, **dict(args, manifest_sha='other'))
 
 
 if __name__ == '__main__':

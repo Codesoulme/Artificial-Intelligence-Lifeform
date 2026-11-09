@@ -1,0 +1,19 @@
+{
+  "approved_for_pilot": true,
+  "policy": "bounded-noisy-story-v1",
+  "experiment": "hybrid-character-byte-diagnostic-v1",
+  "max_schedule_steps": 100,
+  "manifest_sha256": "9dadd9003569d08f558a783dd9decc598bea39e9865a2ec021fd6012516014f0",
+  "audit_sha256": "59eaacbbae9abeaf0fc1a29445e90d65aa7a953a9807b49774cf8f2f085ac60d",
+  "parent_checkpoint_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "source_review_path": "reports/P28-stories-content-review.json",
+  "source_review_sha256": "b3da3e063d25616922aa482a67d107258e39a2b1af63ff205b44a4cf46e2054f",
+  "basis": "P28 reviewed 64 samples from the parent pool (34 clean, 24 minor, 6 major) and approved only bounded story diagnostics; this deterministic subset is not independently reviewed in full. The user authorized iterative Chinese training. This record permits a single bounded 100-step diagnostic using the specified files and parent.",
+  "limitations": [
+    "The source review is by a model, not independent human review; 6 of 64 source samples were major defects.",
+    "The first 16 deterministic candidate stories show translation, consistency and implausibility defects.",
+    "The text is synthetic translated children's fiction, not general chat, factual knowledge, or proof of values alignment.",
+    "The source declares CDLA-Sharing-1.0; upstream rights and downstream obligations are not fully established.",
+    "No final evaluation texts may be read, and old individual and checkpoints must remain unchanged."
+  ]
+}
