@@ -3,10 +3,21 @@ import unittest
 
 import torch
 
-from scripts.diagnose_p228_teacher_forced import score_logits
+from scripts.diagnose_p228_teacher_forced import EXPECTED, score_logits, validate_baseline
 
 
 class FixedHistoryScoreTests(unittest.TestCase):
+    def test_baseline_identity_and_count(self):
+        baseline = {'rows': [{'scenario': 'a', 'turn': 1}],
+                    'checkpoint_sha256': EXPECTED['parent'],
+                    'tokenizer_sha256': EXPECTED['tokenizer'], 'policy': 'greedy'}
+        self.assertEqual(validate_baseline(baseline, 1), baseline['rows'])
+        with self.assertRaises(ValueError):
+            validate_baseline(baseline, 2)
+        baseline['checkpoint_sha256'] = 'wrong'
+        with self.assertRaises(ValueError):
+            validate_baseline(baseline, 1)
+
     def test_masks_forbidden_and_scores_termination(self):
         logits = torch.tensor([[100., 3., 1., 0.], [100., 0., 1., 4.]])
         result = score_logits(logits, torch.tensor([1, 3]), eos=3, forbidden=(0,), ended=True)
