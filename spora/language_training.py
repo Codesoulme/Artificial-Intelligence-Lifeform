@@ -112,6 +112,8 @@ class ByteTrainer:
     def restore(self, payload):
         if 'covering_sampler' in payload and not hasattr(self, 'sampler'):
             raise ValueError('Covering curriculum requires its own resumable trainer')
+        if 'packed_sampler_rng' in payload and not hasattr(self, 'packed_rng'):
+            raise ValueError('Packed stream requires its own resumable trainer')
         if payload.get('format') != self.format_name or payload.get('provenance') != self.provenance:
             raise ValueError('Resume requires identical data, seed, batch, context and device')
         if type(payload.get('steps')) is not int or not 0 <= payload['steps'] <= 10000 or type(payload.get('trained_tokens')) is not int or payload['trained_tokens'] < 0:
