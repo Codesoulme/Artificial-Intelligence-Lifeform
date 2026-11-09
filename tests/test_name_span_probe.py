@@ -3,6 +3,7 @@ import unittest
 import torch
 
 from scripts.deepseek_name_span_probe import oracle_span_mask
+from scripts.deepseek_learned_name_span import single_span_mask
 
 
 class NameSpanTests(unittest.TestCase):
@@ -19,6 +20,19 @@ class NameSpanTests(unittest.TestCase):
         self.assertEqual(crossings, [True])
         with self.assertRaises(ValueError):
             oracle_span_mask(torch.tensor([[[0, 5]]]), torch.ones(1, 1), ['小林和小林'], ['小林和小林'], ['小林'])
+
+    def test_learned_span_defers_empty_and_disconnected_tokens(self):
+        allowed = torch.tensor([False, True, True, True, True])
+        mask, accepted = single_span_mask(torch.tensor([0.9, 0.1, 0.8, 0.7, 0.1]), allowed)
+        self.assertTrue(accepted)
+        self.assertEqual(mask.tolist(), [False, False, True, True, False])
+        mask, accepted = single_span_mask(torch.tensor([0.9, 0.7, 0.1, 0.8, 0.1]), allowed)
+        self.assertFalse(accepted)
+        self.assertFalse(bool(mask.any()))
+        _, accepted = single_span_mask(torch.zeros(5), allowed)
+        self.assertFalse(accepted)
+        with self.assertRaises(ValueError):
+            single_span_mask(torch.full((5,), float('nan')), allowed)
 
 
 if __name__ == '__main__':
