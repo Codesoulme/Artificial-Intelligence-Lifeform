@@ -6,7 +6,7 @@ from pathlib import Path
 
 from scripts.audit_hybrid_tokenizer import audit
 from spora.hybrid_tokenizer import HybridLanguageBridge, HybridTokenizer, windows
-from spora.language_training import ByteTrainer, interface_state, load_interface
+from spora.language_training import ByteTrainer, frozen_digest, interface_state, load_interface
 from spora.growing import new_state
 from spora.temporal import TemporalConfig, TemporalSPORA
 from spora.train_hybrid import rebind_resume_review, validate_diagnostic_review
@@ -81,6 +81,35 @@ class HybridTokenizerTests(unittest.TestCase):
         wrong = dict(snapshot, format='spora-codepoint-training-v1')
         with self.assertRaisesRegex(ValueError, 'format mismatch'):
             load_interface(restored, wrong, 'parent')
+
+    def test_copied_blocks_start_identical_and_leave_organism_frozen(self):
+        torch.manual_seed(17)
+        organism = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2,
+            memory_width=16, expert_rank=4, memory_layers=(0, 1), history_writer='rls'))
+        state = new_state(organism)
+        vocab = HybridTokenizer(['你', '好'])
+        model = HybridLanguageBridge(organism, vocab, 'vocab-hash', context_layers=1)
+        tokens = torch.tensor([vocab.encode('你好')])
+        baseline = model(tokens, state).detach()
+        before = frozen_digest(organism, state)
+        model.enable_language_block_copies()
+        self.assertTrue(torch.equal(baseline, model(tokens, state).detach()))
+        trainer = ByteTrainer(model, state, 'parent', {'vocab_sha256': 'vocab-hash'}, 2,
+                              format_name='spora-hybrid-training-v1')
+        trainer.step_batch(tokens)
+        self.assertEqual(before, frozen_digest(organism, state))
+        self.assertTrue(any(p.grad is not None and torch.count_nonzero(p.grad) for p in model.adapted_blocks.parameters()))
+        restored = HybridLanguageBridge(organism, vocab, 'vocab-hash', context_layers=1)
+        with self.assertRaisesRegex(ValueError, 'adapter tensors'):
+            load_interface(restored, trainer.snapshot(), 'parent')
+        restored.enable_language_block_copies()
+        load_interface(restored, trainer.snapshot(), 'parent')
+        resumed = ByteTrainer(restored, new_state(organism), 'parent', {'vocab_sha256': 'vocab-hash'}, 2,
+                              format_name='spora-hybrid-training-v1')
+        resumed.restore(trainer.snapshot())
+        self.assertEqual(trainer.step_batch(tokens), resumed.step_batch(tokens))
+        for key, tensor in interface_state(model).items():
+            self.assertTrue(torch.equal(tensor, interface_state(restored)[key]))
 
     def test_noisy_story_review_is_bounded_and_keeps_defect_counts(self):
         with tempfile.TemporaryDirectory() as temp:

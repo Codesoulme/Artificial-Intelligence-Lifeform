@@ -1,0 +1,18 @@
+{
+  "approved_for_pilot": true,
+  "policy": "bounded-noisy-story-v1",
+  "experiment": "hybrid-character-byte-diagnostic-v1",
+  "max_schedule_steps": 100,
+  "manifest_sha256": "49478b5992920b4f8b32ff57bc727448457ffbd912b0c9464e8e22d807a10c45",
+  "audit_sha256": "37d4ce1c97cd9e3b7eef33f41cc6f4f0c19057dc48c90d3e1543f43b0fc405da",
+  "parent_checkpoint_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "transfer_checkpoint_sha256": "8b5f9bb5a9228cce03b7af2f6b8d6c3e663264d1d32d8b28300cb0a51eeeae62",
+  "source_review_path": "reports/P28-stories-content-review.json",
+  "source_review_sha256": "b3da3e063d25616922aa482a67d107258e39a2b1af63ff205b44a4cf46e2054f",
+  "basis": "The user authorized architecture iteration and bounded training. Compare two branches of the same project-trained checkpoint on the same P202 curriculum for at most 100 updates each: frozen original language blocks versus trainable copies initialized from those same blocks. Both branches reset AdamW and sampler identically; no external model weights are used.",
+  "limitations": [
+    "The source is noisy translated synthetic children's fiction; the 64-example source review was model-authored, with six major defects.",
+    "This comparison is not equal compute, not a multi-seed experiment, and does not validate general chat or memory alignment.",
+    "No final evaluation texts may be read. The original individual and all historic checkpoints remain unchanged."
+  ]
+}

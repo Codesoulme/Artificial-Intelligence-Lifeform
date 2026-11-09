@@ -79,6 +79,9 @@ def main():
     organism, state, _ = load(args.individual, args.device)
     before = frozen_digest(organism, state)
     model = HybridLanguageBridge(organism, tokenizer, hashes['tokenizer'], payload['context_layers']).to(args.device).eval()
+    if provenance.get('train_backbone_copy') is True:
+        model.enable_language_block_copies()
+        model.eval()
     load_interface(model, payload, hashes['individual'])
     scored = measure(model, state, rows, args.device)
     if any(sha(getattr(args, key)) != hashes[key] for key in keys) or before != frozen_digest(organism, state):

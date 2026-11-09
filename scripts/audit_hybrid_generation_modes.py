@@ -72,6 +72,9 @@ def main():
     organism, state, _ = load(args.individual, args.device)
     before = frozen_digest(organism, state)
     model = HybridLanguageBridge(organism, tokenizer, hashes['tokenizer'], payload['context_layers']).to(args.device).eval()
+    if payload['provenance'].get('train_backbone_copy') is True:
+        model.enable_language_block_copies()
+        model.eval()
     load_interface(model, payload, hashes['individual'])
     records = []
     for prompt in PROMPTS:

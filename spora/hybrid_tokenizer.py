@@ -4,6 +4,7 @@ The format has distinct semantics from the older codepoint tokenizer even
 though their character token numbers can coincide. Never reuse an interface
 checkpoint without explicitly binding it to this format and vocabulary.
 """
+import copy
 import json
 from pathlib import Path
 
@@ -100,3 +101,13 @@ class HybridLanguageBridge(LanguageBridge):
         self.tokenizer = tokenizer
         self.hybrid_vocab_sha256 = vocab_sha256
         super().__init__(organism, context_layers=context_layers, vocab_size=tokenizer.size)
+
+    def enable_language_block_copies(self):
+        if hasattr(self, 'adapted_blocks'):
+            raise ValueError('Language block copies already enabled')
+        self.adapted_blocks = copy.deepcopy(self.organism.blocks)
+        for parameter in self.adapted_blocks.parameters():
+            parameter.requires_grad_(True)
+
+    def language_blocks(self):
+        return self.adapted_blocks if hasattr(self, 'adapted_blocks') else self.organism.blocks

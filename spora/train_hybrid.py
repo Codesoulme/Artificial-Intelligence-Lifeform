@@ -108,6 +108,7 @@ def main():
     source = p.add_mutually_exclusive_group()
     source.add_argument('--resume')
     source.add_argument('--initialize-from')
+    p.add_argument('--train-backbone-copy', action='store_true')
     p.add_argument('--steps', type=int, default=100)
     p.add_argument('--batch', type=int, default=4)
     p.add_argument('--length', type=int, default=128)
@@ -159,6 +160,8 @@ def main():
     provenance = {'manifest_sha256': manifest_sha, 'vocab_sha256': vocab_sha, 'audit_sha256': audit_sha,
                   'review_sha256': review_sha, 'seed': a.seed, 'batch': a.batch, 'length': a.length,
                   'context_layers': a.context_layers, 'device': a.device}
+    if a.train_backbone_copy:
+        provenance['train_backbone_copy'] = True
     resume_payload = torch.load(a.resume, map_location='cpu', weights_only=True) if a.resume else None
     if a.initialize_from:
         provenance['initial_checkpoint_sha256'] = sha(a.initialize_from)
@@ -167,7 +170,6 @@ def main():
         if initial_sha != audit.get('source_checkpoint_sha256') or initial_sha != review.get('transfer_checkpoint_sha256'):
             raise ValueError('Resumed transfer lineage mismatch')
         provenance['initial_checkpoint_sha256'] = initial_sha
-    trainer = ByteTrainer(model, state, parent_sha, provenance, a.seed, format_name='spora-hybrid-training-v1')
     resume_sha = None
     inherited_steps = inherited_tokens = 0
     if a.initialize_from:
@@ -177,6 +179,9 @@ def main():
             raise ValueError('Transfer source lineage mismatch')
         load_interface(model, payload, parent_sha)
         inherited_steps, inherited_tokens = payload['steps'], payload['trained_tokens']
+    if a.train_backbone_copy:
+        model.enable_language_block_copies()
+    trainer = ByteTrainer(model, state, parent_sha, provenance, a.seed, format_name='spora-hybrid-training-v1')
     if a.resume:
         resume_sha = sha(a.resume)
         payload = rebind_resume_review(resume_payload, provenance, review, manifest_sha=manifest_sha,
