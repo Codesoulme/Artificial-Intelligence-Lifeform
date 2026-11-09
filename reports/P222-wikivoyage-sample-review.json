@@ -1,0 +1,16 @@
+{
+  "status": "model_review_not_training_approval",
+  "sample_sha256": "7f60ba662e68df8171461c5a6c69c1de4efc857fb9f8b40e486360a546f4397e",
+  "candidate_sha256": "b22fa9febd9188de0c2d48c16503d5d24cf3cd8a656a7168feb81bff6f21b707",
+  "sample_size": 40,
+  "review_method": "Two model reviewers each read one disjoint half of the fixed sample; decisions are not human, blind cross-review, factual verification or license clearance.",
+  "pass_indices": [0,3,4,5,6,7,8,9,10,12,15,17,21,22,23,24,25,27,28,30,32,35,38],
+  "uncertain_indices": [1,2,11,13,16,18,19,20,26,29,33,36,37,39],
+  "reject_indices": [14,31,34],
+  "observed_problems": [
+    "Language-conversion markup remained in one sampled paragraph.",
+    "Some passages depend on omitted context or contain ambiguous translations.",
+    "Travel costs, routes, safety and geographic claims may be stale or unverified.",
+    "The sample has 40 paragraphs from 38 pages; decisions do not establish page-level or corpus-level quality."
+  ]
+}
