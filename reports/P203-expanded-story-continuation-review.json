@@ -1,0 +1,21 @@
+{
+  "approved_for_pilot": true,
+  "policy": "bounded-noisy-story-v1",
+  "experiment": "hybrid-character-byte-diagnostic-v1",
+  "max_schedule_steps": 500,
+  "manifest_sha256": "49478b5992920b4f8b32ff57bc727448457ffbd912b0c9464e8e22d807a10c45",
+  "audit_sha256": "9f6d0372055a9cdd0cf085e5e132bc73cad604d5579fbacd35fcabf70d9a0394",
+  "parent_checkpoint_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "transfer_checkpoint_sha256": "a251d8c6e77f91cbf11a6d8de7d554b9fb4dfe4acdd27327a23adcc8ebfa940a",
+  "source_review_path": "reports/P28-stories-content-review.json",
+  "source_review_sha256": "b3da3e063d25616922aa482a67d107258e39a2b1af63ff205b44a4cf46e2054f",
+  "previous_review_path": "reports/P202-expanded-story-review.json",
+  "previous_review_sha256": "d9086cc769d40401d9bcda20a94f24069e93321bc879ada974482e453adf7f9e",
+  "basis": "The user authorized ongoing bounded iteration. Continue P202 on the same fixed 2048-story subset to a maximum of 500 stage updates, restoring its optimizer and sampler. This is a separate continued diagnostic after the inherited 500-step run; cumulative lineage and repetition must be reported.",
+  "limitations": [
+    "The original source review was model-authored rather than an independent human review; 6/64 sampled stories had major defects.",
+    "The source is translated synthetic children's fiction and cannot establish general chat, factual knowledge, or safety.",
+    "Development documents have been used repeatedly; no final evaluation texts may be read.",
+    "Preserve the parent and previous language checkpoints; the declared source license does not establish the full upstream rights chain."
+  ]
+}
