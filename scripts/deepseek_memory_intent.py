@@ -50,6 +50,17 @@ HELD_MALFORMED = ('请告诉我对象的数值。', '编号对应的值是多少
 HELD_UNSUPPORTED = ('对象二十六的值是多少？', '对象-1的值是多少？', '对象8.5的值是多少？',
                     '对象007的值是多少？', '编号100的值是什么？',
                     '请把对象8目前的值告诉我，并把对象9修改为3。')
+CONTRAST_CURRENT = ('当前对象{key}存储的数字是几？', '对象{key}当前的数值是多少？')
+CONTRAST_NEGATIVE = {
+    'derived': ('对象{key}的值是奇数吗？', '对象{key}的值大于零吗？', '判断编号{key}的数值是否为偶数。'),
+    'source': ('对象{key}的记录来自哪里？', '对象{key}的值是谁告诉你的？'),
+    'negated': ('不要读取对象{key}的值。', '我不想知道对象{key}的值。'),
+}
+CONTRAST_HELD = {
+    'derived': ('对象{key}存的数字是否为偶数？', '对象{key}的值能被二整除吗？'),
+    'source': ('对象{key}的值最初由谁提供？', '编号{key}的信息来源是什么？'),
+    'negated': ('别告诉我对象{key}的值。', '我不需要查询编号{key}。'),
+}
 BOUNDARY = (('history', '对象26昨天的值是多少？'), ('history', '对象8上一次的值是多少？'),
             ('write', '请把对象26的值改成3。'), ('multiple', '对象8和对象9的值之和是多少？'),
             ('out_of_range', '对象64的值是多少？'), ('out_of_range', '对象99的值是多少？'),
@@ -79,11 +90,14 @@ class IntentGate(nn.Module):
         return self.classifier(torch.cat(pooled, dim=-1)).squeeze(-1)
 
 
-def build_cases(held=False, augmented=False, malformed=False):
+def build_cases(held=False, augmented=False, malformed=False, contrastive=False):
     if malformed and not augmented:
         raise ValueError('Malformed cases require augmented dataset')
+    if contrastive and not malformed:
+        raise ValueError('Contrastive cases require malformed examples')
     if augmented:
-        templates = NEXT_CURRENT if held else EXPANDED_PROMPTS + HELD_PROMPTS + NOVEL_PROMPTS
+        templates = (NEXT_CURRENT if held else EXPANDED_PROMPTS + HELD_PROMPTS + NOVEL_PROMPTS +
+                     (CONTRAST_CURRENT if contrastive else ()))
         negatives = NEXT_NEGATIVE if held else {
             category: TRAIN_NEGATIVE[category] + HELD_NEGATIVE[category] for category in TRAIN_NEGATIVE}
     else:
@@ -95,6 +109,11 @@ def build_cases(held=False, augmented=False, malformed=False):
     for category, choices in negatives.items():
         rows.extend({'category': category, 'question': template.format(key=key, other=(key + 1) % 64), 'label': 0}
                     for key in keys for template in choices)
+    if contrastive:
+        contrast = CONTRAST_HELD if held else CONTRAST_NEGATIVE
+        for category, choices in contrast.items():
+            rows.extend({'category': category, 'question': template.format(key=key), 'label': 0}
+                        for key in keys for template in choices)
     out_templates = (templates if augmented else (('编号{key}当前的值是多少？',) if held else
                      ('对象{key}现在的值是多少？', '对象{key}的当前值是什么？')))
     rows.extend({'category': 'out_of_range', 'question': template.format(key=key), 'label': 0}
@@ -130,13 +149,18 @@ def evaluate(gate, features, masks, rows, batch_size=64):
             'categories': categories, 'rows': output}
 
 
-def run(output, steps, augmented=False, malformed=False):
+def run(output, steps, augmented=False, malformed=False, contrastive=False, initial=None):
     output = Path(output).resolve()
     runs = (ROOT / 'runs').resolve()
     if not output.is_relative_to(runs) or output == runs or output.exists() or not 1 <= steps <= 5000:
         raise ValueError('Expected a new output under runs and valid steps')
+    initial = Path(initial).resolve() if initial is not None else None
+    if initial is not None and not initial.is_relative_to(runs):
+        raise ValueError('Initial gate must be under runs')
+    initial_sha = sha(initial) if initial is not None else None
     def verify():
-        return sha(MODEL / 'model.safetensors') == WEIGHT_SHA and sha(INDIVIDUAL) == INDIVIDUAL_SHA
+        return (sha(MODEL / 'model.safetensors') == WEIGHT_SHA and sha(INDIVIDUAL) == INDIVIDUAL_SHA
+                and (initial is None or sha(initial) == initial_sha))
     if not verify():
         raise ValueError('Protected source mismatch')
     torch.manual_seed(4610)
@@ -145,8 +169,8 @@ def run(output, steps, augmented=False, malformed=False):
     started = time.perf_counter()
     organism, original, _ = load(INDIVIDUAL, 'cpu')
     before = frozen_digest(organism, original)
-    training = build_cases(augmented=augmented, malformed=malformed)
-    held = build_cases(True, augmented=augmented, malformed=malformed)
+    training = build_cases(augmented=augmented, malformed=malformed, contrastive=contrastive)
+    held = build_cases(True, augmented=augmented, malformed=malformed, contrastive=contrastive)
     if set(row['question'] for row in training) & set(row['question'] for row in held):
         raise ValueError('Train and held questions overlap')
     boundary = [{'category': category, 'question': question, 'label': 0} for category, question in BOUNDARY]
@@ -163,6 +187,13 @@ def run(output, steps, augmented=False, malformed=False):
     negative = torch.nonzero(labels == 0).flatten()
     generator = torch.Generator().manual_seed(4610)
     gate = IntentGate(model.config.hidden_size).to('cuda')
+    if initial is not None:
+        checkpoint = torch.load(initial, map_location='cpu', weights_only=True)
+        if (checkpoint.get('format') != 'deepseek-spora-current-intent-gate-v1'
+                or checkpoint.get('weight_sha256') != WEIGHT_SHA or checkpoint.get('individual_sha256') != INDIVIDUAL_SHA
+                or checkpoint.get('layers') != [5, 17] or checkpoint.get('threshold') != 0.5):
+            raise ValueError('Initial gate provenance mismatch')
+        gate.load_state_dict(checkpoint['state'], strict=True)
     optimizer = torch.optim.AdamW(gate.parameters(), lr=0.001, weight_decay=0.)
     log = []
     for step in range(steps):
@@ -198,6 +229,8 @@ def run(output, steps, augmented=False, malformed=False):
     report = {'status': 'finite_intent_gate_development_only', 'revision': REVISION, 'weight_sha256': WEIGHT_SHA,
               'individual_sha256': INDIVIDUAL_SHA, 'gate_sha256': sha(snapshot), 'steps': steps,
               'threshold': 0.5, 'augmented': augmented, 'malformed_training': malformed,
+              'contrastive_training': contrastive, 'initial_gate_sha256': initial_sha,
+              'optimizer_restarted': initial is not None,
               'results': results, 'log': log,
               'seconds': time.perf_counter() - started,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
@@ -220,5 +253,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--augmented', action='store_true')
     parser.add_argument('--malformed', action='store_true')
+    parser.add_argument('--contrastive', action='store_true')
+    parser.add_argument('--initial', type=Path)
     args = parser.parse_args()
-    run(args.output, args.steps, args.augmented, args.malformed)
+    run(args.output, args.steps, args.augmented, args.malformed, args.contrastive, args.initial)

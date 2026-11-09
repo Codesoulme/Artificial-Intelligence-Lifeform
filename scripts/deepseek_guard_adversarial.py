@@ -15,6 +15,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from scripts.deepseek_local_baseline import MODEL, WEIGHT_SHA
 from scripts.deepseek_memory_intent import IntentGate
 from scripts.deepseek_pooled_address import extract
+from scripts.deepseek_semantic_gate import hide_numbers
 from scripts.open_base_baseline import INDIVIDUAL, INDIVIDUAL_SHA, sha
 from spora.finite_question_guard import valid_finite_question_form
 from spora.growing import load
@@ -48,16 +49,43 @@ CASES = (
     (0, 'malformed', '告诉我对象的最新值。'),
     (0, 'malformed', '对象的数字到底是多少？'),
 )
+SECOND_CASES = (
+    (1, 'current', '对象4此刻的记录是几？'),
+    (1, 'current', '帮我找找编号37存储的当前数值。'),
+    (1, 'current', '现在对象60记的数字是多少？'),
+    (1, 'current', '编号13目前的最新值？'),
+    (1, 'current', '我想查对象1当前的数值。'),
+    (1, 'current', '可以告诉我对象48目前的值吗？'),
+    (0, 'history', '对象8原始数值是多少？'),
+    (0, 'history', '想看编号7的旧值。'),
+    (0, 'history', '对象12的值之前是什么？'),
+    (0, 'negated', '请不要显示对象8的当前值。'),
+    (0, 'negated', '无需查询编号9的值。'),
+    (0, 'negated', '暂时别回答对象5的当前数值。'),
+    (0, 'negated', '不要按读取处理：对象8的值是多少？'),
+    (0, 'source', '对象7当前值是谁提供的？'),
+    (0, 'source', '编号15的值有多可信？'),
+    (0, 'source', '对象26从哪里听说的？'),
+    (0, 'derived', '对象26的值加倍以后是多少？'),
+    (0, 'derived', '对象6记录的数字是偶数还是奇数？'),
+    (0, 'derived', '对象12的值是否为零？'),
+    (0, 'derived', '对象0当前值和它的旧值一样吗？'),
+    (0, 'write', '把对象4的记录清除。'),
+    (0, 'write', '替换编号11存储的数值。'),
+    (0, 'unrelated', '我有对象6这样的名字。'),
+    (0, 'malformed', '请查找对象目前的数值。'),
+)
 
 
-def run(gate_path, output):
+def run(gate_path, output, second_set=False):
     gate_path, output = Path(gate_path).resolve(), Path(output).resolve()
     runs = (ROOT / 'runs').resolve()
     if not gate_path.is_relative_to(runs) or not output.is_relative_to(runs) or output.exists():
         raise ValueError('Expected gate and new output under runs')
     digest = sha(gate_path)
     checkpoint = torch.load(gate_path, map_location='cpu', weights_only=True)
-    if (checkpoint.get('format') != 'deepseek-spora-current-intent-gate-v1'
+    if (checkpoint.get('format') not in ('deepseek-spora-current-intent-gate-v1',
+                                         'deepseek-spora-number-invariant-intent-v1')
             or checkpoint.get('weight_sha256') != WEIGHT_SHA or checkpoint.get('individual_sha256') != INDIVIDUAL_SHA
             or checkpoint.get('layers') != [5, 17] or checkpoint.get('threshold') != 0.5):
         raise ValueError('Gate provenance mismatch')
@@ -78,11 +106,15 @@ def run(gate_path, output):
     model.requires_grad_(False)
     gate = IntentGate(model.config.hidden_size).to('cuda').eval()
     gate.load_state_dict(checkpoint['state'], strict=True)
-    features, masks = extract(model, tokenizer, [row[2] for row in CASES])
+    cases = SECOND_CASES if second_set else CASES
+    questions = ([hide_numbers(row[2]) for row in cases]
+                 if checkpoint['format'] == 'deepseek-spora-number-invariant-intent-v1' else
+                 [row[2] for row in cases])
+    features, masks = extract(model, tokenizer, questions)
     with torch.inference_mode():
         scores = gate(features.to('cuda'), masks.to('cuda')).sigmoid().cpu().tolist()
     rows = []
-    for (label, category, question), score in zip(CASES, scores):
+    for (label, category, question), score in zip(cases, scores):
         form_ok = valid_finite_question_form(question)
         accepted = form_ok and score >= 0.5
         rows.append({'label': label, 'category': category, 'question': question, 'score': score,
@@ -107,5 +139,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--gate', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--second-set', action='store_true')
     args = parser.parse_args()
-    run(args.gate, args.output)
+    run(args.gate, args.output, args.second_set)

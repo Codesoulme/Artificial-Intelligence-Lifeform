@@ -8,7 +8,11 @@ from scripts.deepseek_full_answer import answer_batch
 from scripts.deepseek_learned_address import select_addresses
 from scripts.deepseek_pooled_address import PooledAddress, question_mask
 from scripts.deepseek_memory_intent import IntentGate, build_cases
+from scripts.deepseek_guard_adversarial import SECOND_CASES
+from scripts.deepseek_semantic_gate import hide_numbers, unique_semantic_cases
+from scripts.deepseek_composite_probe import initial_route
 from spora.open_base_memory import OpenBaseMemory
+from spora.finite_question_guard import valid_finite_question_form
 
 
 class FakeBatch:
@@ -113,9 +117,10 @@ class DeepseekReadPrefixTests(unittest.TestCase):
             question_mask(offsets, torch.ones(1, 5), ['foo foo'], ['foo'])
 
     def test_intent_dataset_splits_and_question_mask(self):
-        for augmented, malformed in ((False, False), (True, False), (True, True)):
-            training = build_cases(augmented=augmented, malformed=malformed)
-            held = build_cases(True, augmented=augmented, malformed=malformed)
+        for augmented, malformed, contrastive in ((False, False, False), (True, False, False),
+                                                  (True, True, False), (True, True, True)):
+            training = build_cases(augmented=augmented, malformed=malformed, contrastive=contrastive)
+            held = build_cases(True, augmented=augmented, malformed=malformed, contrastive=contrastive)
             self.assertFalse({row['question'] for row in training} & {row['question'] for row in held})
             self.assertEqual({row['label'] for row in training}, {0, 1})
         gate = IntentGate(3)
@@ -125,3 +130,23 @@ class DeepseekReadPrefixTests(unittest.TestCase):
         changed = features.clone()
         changed[~mask[:, None, :, None].expand_as(changed)] = 1000
         self.assertTrue(torch.allclose(original, gate(changed, mask)))
+        training = {row['question'] for row in build_cases(augmented=True, malformed=True, contrastive=True)}
+        self.assertFalse(training & {row[2] for row in SECOND_CASES})
+
+    def test_number_invariant_intent_data_has_no_normalized_overlap(self):
+        self.assertEqual(hide_numbers('对象26的值是多少？'), hide_numbers('对象8的值是多少？'))
+        training = [row for row in build_cases(augmented=True, malformed=True, contrastive=True)
+                    if row['category'] not in ('out_of_range', 'malformed')]
+        held = build_cases(True, augmented=True, malformed=True, contrastive=True)
+        train_unique = unique_semantic_cases(training)
+        held_unique = unique_semantic_cases([row for row in held if valid_finite_question_form(row['question'])],
+                                            enforce_labels=False)
+        self.assertFalse({r['question'] for r in train_unique} & {r['question'] for r in held_unique})
+        self.assertFalse({r['question'] for r in train_unique} & {hide_numbers(r[2]) for r in SECOND_CASES})
+
+    def test_initial_routing_fails_closed_on_invalid_inputs(self):
+        self.assertEqual(initial_route(True, 0.7, [12, 12]), 'inspect')
+        for form, score, predicted in ((False, 0.9, [1, 1]), (True, 0.2, [1, 1]),
+                                       (True, float('nan'), [1, 1]), (True, 0.9, [1, 2]),
+                                       (True, 0.9, [-1, -1]), (True, 0.9, [True, True])):
+            self.assertEqual(initial_route(form, score, predicted), 'defer')
