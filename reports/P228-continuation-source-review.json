@@ -1,0 +1,20 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_continuation_not_quality_certification",
+  "reviewed_checkpoint_sha256": "e5df3ba8c17c8fd2c5e0d50d687cab69a72136bb9fe0ca5bf7bda973298d9cd8",
+  "max_schedule_steps": 100,
+  "max_target_shares": {"pretrain": 0.8, "story": 0.2},
+  "training_source_sha256": {
+    "pretrain": "781088fbcc6c81650d1e01b0e49a7e2a7393034e88399e585f6487073f10acdf",
+    "story": "61a5fec7b4b13a0b7da138b2466185092216c6039b3e4ececbb5c356885613b6",
+    "focus": "c9884b46d44d2f8b0512c9f1346a43b728a091bbc55726fdfaef0450687db6a5"
+  },
+  "basis": "User authorized continued local training with monitoring. This bounded continuation uses the exact historical P107 sources and P223 checkpoint, resetting optimizer and sampling state. It does not authorize other data or assert that this is a high-quality corpus.",
+  "limitations": [
+    "Old pretraining is predominantly unmarked question-answer material; quality and ancestry overlap are not comprehensively verified.",
+    "Story material consists of synthetic translated stories with known errors; P28 reviewed only a small sample and cannot certify the entire pool.",
+    "Coverage is for this run only; it does not prove positions were not seen by ancestors.",
+    "Development multi-turn results are repeatedly used, and termination or repetition does not establish semantic correctness.",
+    "This continuation is capped at 100 updates with a development guard every 25, and does not certify chat capability."
+  ]
+}
