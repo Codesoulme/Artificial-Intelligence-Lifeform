@@ -56,10 +56,10 @@ def cases(names, positives, negatives):
     rows = []
     for name in names:
         for value, word in enumerate(WORDS):
-            rows.extend({'text': template.format(name=name, word=word), 'label': value, 'group': 'positive'}
+            rows.extend({'text': template.format(name=name, word=word), 'label': value, 'mentioned_value': value, 'group': 'positive'}
                         for template in positives)
             for group, templates in negatives.items():
-                rows.extend({'text': template.format(name=name, word=word), 'label': ABSTAIN, 'group': group}
+                rows.extend({'text': template.format(name=name, word=word), 'label': ABSTAIN, 'mentioned_value': value, 'group': group}
                             for template in templates)
     return rows
 

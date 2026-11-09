@@ -14,6 +14,7 @@ from torch import nn
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from scripts.deepseek_local_baseline import MODEL, WEIGHT_SHA
+from scripts.deepseek_observation_factorized_probe import FORMAT as FACTORIZED_FORMAT, FactorizedProbe, combined_logits
 from scripts.deepseek_observation_value_probe import ABSTAIN, OUTPUT as SOURCE, WORDS, cases, metrics, pool
 from scripts.deepseek_pooled_address import extract
 from scripts.open_base_baseline import INDIVIDUAL, INDIVIDUAL_SHA, sha
@@ -58,9 +59,21 @@ NEXT_NEGATIVE = {
     'other_person': ('小周喝{word}，我不了解{name}的口味。',),
     'multiple': ('{name}喜欢{word}或者水，我记不清楚。',),
 }
+NOVEL_NAMES = ('莫安', '顾澜')
+NOVEL_POSITIVE = ('{name}亲口说自己如今最喜欢{word}。', '{name}过去不爱喝{word}，现在最喜欢{word}。')
+NOVEL_NEGATIVE = {
+    'negation': ('{name}说自己最不喜欢的饮品是{word}。', '{name}过去喜欢{word}，现在讨厌它。'),
+    'question': ('能不能问问{name}喜不喜欢{word}？',),
+    'uncertain': ('有人怀疑{name}喜欢{word}，尚未核实。',),
+    'conditional': ('若{name}喜欢喝{word}，我会记下来。',),
+    'history': ('以前{name}喜欢{word}，现在没有相关消息。',),
+    'quote': ('“{name}爱喝{word}吗？”这是一个问题。',),
+    'other_person': ('不是{name}喜欢{word}，喜欢它的是阿林。',),
+    'multiple': ('{name}说{word}和茶都可以，最喜欢哪种不确定。',),
+}
 
 
-def run(source=SOURCE, output=OUTPUT, fresh=False, compare_source=None, independent=False):
+def run(source=SOURCE, output=OUTPUT, fresh=False, compare_source=None, independent=False, novel=False):
     runs = (ROOT / 'runs').resolve()
     source, output = Path(source).resolve(), Path(output).resolve()
     if not source.is_relative_to(runs) or not output.is_relative_to(runs) or output.exists():
@@ -80,7 +93,7 @@ def run(source=SOURCE, output=OUTPUT, fresh=False, compare_source=None, independ
     data = torch.load(checkpoint, map_location='cpu', weights_only=True)
     config_sha = feature_files_sha256(MODEL)
     if (source['classifier_sha256'] != before[checkpoint]
-            or data.get('format') != 'deepseek-finite-observation-value-development-v1'
+            or data.get('format') not in ('deepseek-finite-observation-value-development-v1', FACTORIZED_FORMAT)
             or data.get('weight_sha256') != WEIGHT_SHA or data.get('individual_sha256') != INDIVIDUAL_SHA
             or data.get('feature_config_sha256') != config_sha or data.get('hidden_indices') != [6, 18]
             or tuple(data.get('vocabulary', ())) != WORDS or data.get('abstain') != ABSTAIN):
@@ -92,13 +105,17 @@ def run(source=SOURCE, output=OUTPUT, fresh=False, compare_source=None, independ
         comparison_path = compare_source / 'classifier.pt'
         comparison = torch.load(comparison_path, map_location='cpu', weights_only=True)
         if (comparison_report['classifier_sha256'] != before[comparison_path]
+                or comparison.get('format') not in ('deepseek-finite-observation-value-development-v1', FACTORIZED_FORMAT)
                 or any(comparison.get(key) != data.get(key) for key in
-                       ('format', 'weight_sha256', 'individual_sha256', 'feature_config_sha256',
+                       ('weight_sha256', 'individual_sha256', 'feature_config_sha256',
                         'hidden_indices', 'vocabulary', 'abstain'))):
             raise ValueError('Comparison provenance mismatch')
-    if fresh and independent:
+    if sum((fresh, independent, novel)) > 1:
         raise ValueError('Choose one case set')
-    if independent:
+    if novel:
+        names, positives, negatives = NOVEL_NAMES, NOVEL_POSITIVE, NOVEL_NEGATIVE
+        unsupported = ('红豆奶茶', '椰子水', '苹果果汁', '无糖酸奶')
+    elif independent:
         names, positives, negatives = NEXT_NAMES, NEXT_POSITIVE, NEXT_NEGATIVE
         unsupported = ('普洱茶', '气泡水', '西瓜汁', '草莓牛奶')
     elif fresh:
@@ -123,19 +140,27 @@ def run(source=SOURCE, output=OUTPUT, fresh=False, compare_source=None, independ
     base.requires_grad_(False)
     features, masks = extract(base, tokenizer, [r['text'] for r in rows], batch_size=2)
     vectors = pool(features, masks)
-    classifier = nn.Linear(vectors.shape[-1], ABSTAIN + 1).eval()
-    classifier.load_state_dict(data['state'], strict=True)
+    def score(checkpoint_data):
+        if checkpoint_data['format'] == FACTORIZED_FORMAT:
+            classifier = FactorizedProbe(vectors.shape[-1]).eval()
+            classifier.load_state_dict(checkpoint_data['state'], strict=True)
+            fact, values = classifier(vectors)
+            result = metrics(combined_logits(fact, values), rows)
+            for row, probability, value in zip(result['rows'], fact.sigmoid().tolist(), values.argmax(-1).tolist()):
+                row['fact_probability'], row['value_prediction'] = probability, value
+            return result
+        classifier = nn.Linear(vectors.shape[-1], ABSTAIN + 1).eval()
+        classifier.load_state_dict(checkpoint_data['state'], strict=True)
+        return metrics(classifier(vectors), rows)
+
     with torch.no_grad():
-        result = metrics(classifier(vectors), rows)
-        comparison_result = None
-        if comparison is not None:
-            classifier.load_state_dict(comparison['state'], strict=True)
-            comparison_result = metrics(classifier(vectors), rows)
+        result = score(data)
+        comparison_result = score(comparison) if comparison is not None else None
     if (any(sha(p) != before[p] for p in paths) or feature_files_sha256(MODEL) != config_sha
             or frozen_digest(organism, original) != digest):
         raise ValueError('Protected input changed')
     report = {'status': 'research_only_no_writes', 'classifier_sha256': before[checkpoint],
-              'fresh_cases': fresh, 'independent_cases': independent,
+              'fresh_cases': fresh, 'independent_cases': independent, 'novel_cases': novel,
               'comparison_sha256': before[compare_source / 'classifier.pt'] if compare_source else None,
               'result': result, 'comparison': comparison_result, 'seconds': time.perf_counter() - started,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
@@ -157,6 +182,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, default=OUTPUT)
     parser.add_argument('--fresh', action='store_true')
     parser.add_argument('--independent', action='store_true')
+    parser.add_argument('--novel', action='store_true')
     parser.add_argument('--compare-source', type=Path)
     args = parser.parse_args()
-    run(args.source, args.output, args.fresh, args.compare_source, args.independent)
+    run(args.source, args.output, args.fresh, args.compare_source, args.independent, args.novel)
