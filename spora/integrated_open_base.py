@@ -7,12 +7,27 @@ and any concurrency policy for the underlying language model.
 """
 from contextlib import contextmanager
 from contextvars import ContextVar
+import math
 
 import torch
 from torch import nn
 
 from .open_base_memory import OpenBaseMemory
 from .sleep_memory import history_site
+
+
+class ScaledOpenBaseMemory(OpenBaseMemory):
+    """Reader whose residual is scaled after the base dtype conversion."""
+
+    def __init__(self, hidden_width, memory_width, strength):
+        super().__init__(hidden_width, memory_width)
+        if type(strength) not in (int, float) or not math.isfinite(strength) or not 0 <= strength <= 1:
+            raise ValueError('Strength must be finite and in [0, 1]')
+        self.strength = float(strength)
+
+    def forward(self, hidden, matrices, site, address=None):
+        injected = super().forward(hidden, matrices, site, address)
+        return hidden + self.strength * (injected - hidden)
 
 
 class _MemoryDecoderLayer(nn.Module):
