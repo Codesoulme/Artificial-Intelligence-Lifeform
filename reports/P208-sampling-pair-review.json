@@ -1,0 +1,19 @@
+{
+  "approved_for_pilot": true,
+  "policy": "bounded-noisy-story-v1",
+  "experiment": "hybrid-character-byte-diagnostic-v1",
+  "max_schedule_steps": 200,
+  "manifest_sha256": "e014fcf3406a9864355eeecfc1cf2195e120ea4994a76340a798c4c8ded7471e",
+  "audit_sha256": "077b73b693e983047d620749b457a279e15e6a95b2071d7d98769fd1892244bb",
+  "parent_checkpoint_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "transfer_checkpoint_sha256": "fa614d31174bdb606033ea20a7c9e017b2f3ccaa2017cb1762576b84bdd4b0de",
+  "source_review_path": "reports/P28-stories-content-review.json",
+  "source_review_sha256": "b3da3e063d25616922aa482a67d107258e39a2b1af63ff205b44a4cf46e2054f",
+  "basis": "User authorized iterative training. Compare random and covering window sampling for up to 200 updates per branch on the same fixed story corpus, project-owned parent checkpoint and interface. Both branches reset optimizer and sampling state; document target-count differences and inherited exposure.",
+  "limitations": [
+    "No independent human review; the parent sample included six serious defects out of 64.",
+    "Synthetic translated children's stories are not high-quality general Chinese or chat data; full upstream rights remain unverified.",
+    "Equal update counts do not imply equal target counts or equivalent sampled examples; use independent evaluation before making capability claims.",
+    "Do not read final evaluation texts or alter the original individual or historic checkpoints."
+  ]
+}

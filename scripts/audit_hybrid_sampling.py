@@ -6,10 +6,11 @@ from pathlib import Path
 import torch
 
 from spora.hybrid_tokenizer import HybridTokenizer
+from spora.curriculum import CoveringSampler
 from spora.train_hybrid import read_non_test_documents, sha
 
 
-def reconstruct(documents, tokenizer, *, length, steps, batch, seed):
+def reconstruct(documents, tokenizer, *, length, steps, batch, seed, sampling='random'):
     if not 2 <= length <= 256 or not 1 <= batch <= 16 or not 0 <= steps <= 10000:
         raise ValueError('Invalid sampling parameters')
     windows = []
@@ -21,11 +22,20 @@ def reconstruct(documents, tokenizer, *, length, steps, batch, seed):
             windows.append((doc['sha256'], min(length - 1, token_count - 1 - start)))
     if not windows:
         raise ValueError('No training windows')
-    generator = torch.Generator().manual_seed(seed)
     picks = []
-    for _ in range(steps):
-        picks.extend(torch.randint(len(windows), (batch,), generator=generator).tolist())
-    return windows, picks, generator.get_state()
+    if sampling == 'random':
+        generator = torch.Generator().manual_seed(seed)
+        for _ in range(steps):
+            picks.extend(torch.randint(len(windows), (batch,), generator=generator).tolist())
+        state = generator.get_state()
+    elif sampling == 'covering-v1':
+        sampler = CoveringSampler({'all': range(len(windows))}, ['all'], seed)
+        for _ in range(steps):
+            picks.extend(sampler.take(batch).tolist())
+        state = sampler.snapshot()
+    else:
+        raise ValueError('Unsupported sampling method')
+    return windows, picks, state
 
 
 def summarize(windows, picks, previous_ids):
@@ -58,16 +68,24 @@ def main():
     previous = read_non_test_documents(args.previous_manifest)
     previous_ids = {row['sha256'] for row in previous if row['split'] == 'train'}
     tokenizer = HybridTokenizer.from_file(args.tokenizer)
+    sampling = provenance.get('sampling', 'random')
     windows, picks, rng = reconstruct(docs, tokenizer, length=provenance['length'],
-                                      steps=checkpoint['steps'], batch=provenance['batch'], seed=provenance['seed'])
-    if not torch.equal(rng, checkpoint['sampler_rng']):
+                                      steps=checkpoint['steps'], batch=provenance['batch'], seed=provenance['seed'],
+                                      sampling=sampling)
+    if sampling == 'random':
+        matches = torch.equal(rng, checkpoint['sampler_rng'])
+    else:
+        actual = checkpoint.get('covering_sampler', {})
+        matches = (all(rng[key] == actual.get(key) for key in ('signature', 'orders', 'positions', 'draws', 'counts'))
+                   and isinstance(actual.get('rng'), torch.Tensor) and torch.equal(rng['rng'], actual['rng']))
+    if not matches:
         raise ValueError('Reconstructed sampler state differs from checkpoint')
     summary = summarize(windows, picks, previous_ids)
     if summary['target_presentations'] != checkpoint['trained_tokens']:
         raise ValueError('Reconstructed target count differs from checkpoint')
     if any(sha(getattr(args, key)) != hashes[key] for key in keys):
         raise AssertionError('Input file changed')
-    result = {'input_sha256': hashes, 'test_split_read': False, 'stage_steps': checkpoint['steps'],
+    result = {'input_sha256': hashes, 'test_split_read': False, 'stage_steps': checkpoint['steps'], 'sampling': sampling,
               'available_windows': len(windows), 'sampler_state_matches': True, 'coverage': summary,
               'limitations': ['Stage only; prior stages and semantic overlap are not counted.',
                               'Different window targets include EOS and do not measure knowledge or semantic uniqueness.',

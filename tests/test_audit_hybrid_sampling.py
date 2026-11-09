@@ -25,6 +25,16 @@ class SamplingAuditTests(unittest.TestCase):
         self.assertEqual(summary['documents_in_previous_pool'], 1)
         self.assertEqual(summary['documents_not_in_previous_pool'], 0)
 
+    def test_covering_visits_every_window_before_repeating(self):
+        tokenizer = HybridTokenizer(['甲', '乙', '丙'])
+        docs = [{'split': 'train', 'sha256': 'one', 'text': '甲乙丙'}]
+        windows, picks, state = reconstruct(docs, tokenizer, length=3, steps=2, batch=1,
+                                            seed=9, sampling='covering-v1')
+        self.assertEqual(len(windows), 2)
+        self.assertEqual(len(set(picks)), 2)
+        self.assertEqual(state['draws'], 2)
+        self.assertEqual(set(state['counts'].values()), {1})
+
 
 if __name__ == '__main__':
     unittest.main()

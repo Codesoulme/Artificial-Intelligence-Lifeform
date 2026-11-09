@@ -9,7 +9,7 @@ from spora.hybrid_tokenizer import HybridLanguageBridge, HybridTokenizer, window
 from spora.language_training import ByteTrainer, frozen_digest, interface_state, load_interface
 from spora.growing import new_state
 from spora.temporal import TemporalConfig, TemporalSPORA
-from spora.train_hybrid import rebind_resume_review, validate_diagnostic_review
+from spora.train_hybrid import HybridCoveringTrainer, rebind_resume_review, validate_diagnostic_review
 import torch
 
 
@@ -110,6 +110,29 @@ class HybridTokenizerTests(unittest.TestCase):
         self.assertEqual(trainer.step_batch(tokens), resumed.step_batch(tokens))
         for key, tensor in interface_state(model).items():
             self.assertTrue(torch.equal(tensor, interface_state(restored)[key]))
+
+    def test_covering_trainer_resume_preserves_sampling_and_optimizer(self):
+        torch.manual_seed(33)
+        organism = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2,
+            memory_width=16, expert_rank=4, memory_layers=(0, 1), history_writer='rls'))
+        vocab = HybridTokenizer(['你', '好'])
+        model = HybridLanguageBridge(organism, vocab, 'vocab-hash', context_layers=0)
+        data = windows([{'split': 'train', 'text': '你好你好你好'}], vocab, 'train', 4)
+        provenance = {'vocab_sha256': 'vocab-hash', 'batch': 1}
+        trainer = HybridCoveringTrainer(model, new_state(organism), 'parent', provenance, 7, len(data))
+        trainer.step(data, 1)
+        snapshot = trainer.snapshot()
+        restored = HybridLanguageBridge(organism, vocab, 'vocab-hash', context_layers=0)
+        resumed = HybridCoveringTrainer(restored, new_state(organism), 'parent', provenance, 7, len(data))
+        resumed.restore(snapshot)
+        self.assertEqual(trainer.step(data, 1), resumed.step(data, 1))
+        self.assertEqual(trainer.sampler.counts, resumed.sampler.counts)
+        for key, tensor in interface_state(model).items():
+            self.assertTrue(torch.equal(tensor, interface_state(restored)[key]))
+        bad = dict(snapshot)
+        bad.pop('covering_sampler')
+        with self.assertRaisesRegex(ValueError, 'sampler state'):
+            resumed.restore(bad)
 
     def test_noisy_story_review_is_bounded_and_keeps_defect_counts(self):
         with tempfile.TemporaryDirectory() as temp:
