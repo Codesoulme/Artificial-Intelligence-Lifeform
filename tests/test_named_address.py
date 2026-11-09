@@ -85,6 +85,21 @@ class NamedAddressTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'basis fingerprint'):
             flatten(self.model, self.state)
 
+    def test_span_pooling_contract_survives_reload_and_rejects_mismatch(self):
+        binding = self.model.named_address_binding
+        binding.feature_contract = 'name-span-mean-v1'
+        with self.assertRaisesRegex(ValueError, 'pooling contract'):
+            binding(self.features, self.model, self.digest, self.feature_digest)
+        schema, tensors = flatten(self.model, self.state)
+        model, _ = restore(schema, tensors)
+        self.assertEqual(model.named_address_binding.feature_contract, 'name-span-mean-v1')
+        with self.assertRaisesRegex(ValueError, 'pooling contract'):
+            model.named_address_binding(self.features, model, self.digest, self.feature_digest)
+        result = model.named_address_binding(self.features, model, self.digest, self.feature_digest,
+                                             feature_contract='name-span-mean-v1')
+        self.assertEqual(result['indices'].tolist(), [[7, 7]])
+        self.assertEqual(result['accepted'].tolist(), [True])
+
     def test_legacy_binding_requires_explicit_opt_in(self):
         legacy = NamedAddressBinding(64, 64, self.digest, 0.9)
         with torch.no_grad():

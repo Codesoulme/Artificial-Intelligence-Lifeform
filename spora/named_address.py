@@ -1,7 +1,7 @@
 """Experimental name-to-address projection stored with a SPORA individual.
 
-The caller must supply the matching frozen encoder's question-pooled features
-and honestly computed fingerprints. Legacy bindings require explicit opt-in.
+The caller must supply features matching the declared pooling contract and
+honestly computed fingerprints. Legacy bindings require explicit opt-in.
 This component does not extract text, write memory, or establish open-world
 entity identity; its acceptance threshold is an uncalibrated experiment.
 """
@@ -71,7 +71,8 @@ class NamedAddressBinding(nn.Module):
             raise ValueError('Threshold must be finite and in [0, 1]')
         if (not isinstance(feature_layers, (list, tuple)) or len(feature_layers) != 2
                 or any(type(i) is not int or i <= 0 for i in feature_layers)
-                or feature_layers[0] == feature_layers[1] or feature_contract != 'question-mean-v1'):
+                or feature_layers[0] == feature_layers[1]
+                or feature_contract not in ('question-mean-v1', 'name-span-mean-v1')):
             raise ValueError('Unsupported feature contract')
         if (basis_sha256 is None) != (feature_config_sha256 is None):
             raise ValueError('Both binding fingerprints are required together')
@@ -99,9 +100,12 @@ class NamedAddressBinding(nn.Module):
         if self.basis_sha256 is not None and address_basis_sha256(model) != self.basis_sha256:
             raise ValueError('Address basis fingerprint mismatch')
 
-    def forward(self, features, model, feature_model_sha256, feature_config_sha256=None, *, allow_legacy_unbound=False):
+    def forward(self, features, model, feature_model_sha256, feature_config_sha256=None, *,
+                feature_contract='question-mean-v1', allow_legacy_unbound=False):
         if feature_model_sha256 != self.feature_model_sha256:
             raise ValueError('Feature encoder mismatch')
+        if feature_contract != self.feature_contract:
+            raise ValueError('Feature pooling contract mismatch')
         if type(allow_legacy_unbound) is not bool:
             raise ValueError('Legacy permission must be boolean')
         if self.basis_sha256 is None:
