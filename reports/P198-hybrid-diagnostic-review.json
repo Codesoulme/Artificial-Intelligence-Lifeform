@@ -1,0 +1,26 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_project_owned_hybrid_diagnostic",
+  "experiment": "hybrid-character-byte-diagnostic-v1",
+  "max_schedule_steps": 100,
+  "audit_sha256": "603e369161fbcd119b082dcdab962c830a3bb48b6243bea59ed631064270cbd1",
+  "training_source_sha256": {
+    "artifact": "3b53475fa0808a63a8443f2de01a9cf60328b54d1dc21c11b0e233b84671e1f8",
+    "manifest": "3b53475fa0808a63a8443f2de01a9cf60328b54d1dc21c11b0e233b84671e1f8"
+  },
+  "parent_checkpoint_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "quality_gate": {
+    "status": "passed",
+    "independent_review": true,
+    "sample_count": 306,
+    "major_count": 0,
+    "unsafe_count": 0
+  },
+  "basis": "Project-authored P18 curriculum and the existing P154 corpus review; inherited review claims, not a new human review. The user authorized bounded training and independent architecture iteration. This record explicitly scopes the new hybrid-tokenizer diagnostic to 100 updates.",
+  "limitations": [
+    "A narrow synthetic curriculum, not general Chinese or chat training.",
+    "The independent-review flag and quality counts are inherited from P154; their original human-review provenance is not established here.",
+    "Only the training and development documents may be opened by this experiment.",
+    "Preserve the parent individual and old checkpoints."
+  ]
+}

@@ -7,7 +7,9 @@ checkpoint without explicitly binding it to this format and vocabulary.
 import json
 from pathlib import Path
 
-from .language_bridge import BOS, EOS, PAD
+import torch
+
+from .language_bridge import BOS, EOS, PAD, LanguageBridge
 
 CHAR_BASE = 259
 FORMAT = 'spora-hybrid-utf8-v1'
@@ -75,3 +77,26 @@ class HybridTokenizer:
         if data.get('vocab_size') != vocab.size:
             raise ValueError('Vocabulary size mismatch')
         return vocab
+
+
+def windows(documents, tokenizer, split, length):
+    if length < 2:
+        raise ValueError('Window too short')
+    rows = []
+    for doc in documents:
+        if doc['split'] != split:
+            continue
+        tokens = tokenizer.encode(doc['text'])
+        for start in range(0, len(tokens) - 1, length - 1):
+            piece = tokens[start:start + length]
+            rows.append(piece + [PAD] * (length - len(piece)))
+    if not rows:
+        raise ValueError('No examples in selected split')
+    return torch.tensor(rows, dtype=torch.long)
+
+
+class HybridLanguageBridge(LanguageBridge):
+    def __init__(self, organism, tokenizer, vocab_sha256, context_layers=2):
+        self.tokenizer = tokenizer
+        self.hybrid_vocab_sha256 = vocab_sha256
+        super().__init__(organism, context_layers=context_layers, vocab_size=tokenizer.size)

@@ -24,8 +24,15 @@ def interface_state(model):
 
 def load_interface(model, payload, parent_sha256):
     if payload.get('format') not in ('spora-byte-interface-v1', 'spora-byte-interface-v2', 'spora-byte-training-v2',
-                                     'spora-codepoint-interface-v1', 'spora-codepoint-training-v1'):
+                                     'spora-codepoint-interface-v1', 'spora-codepoint-training-v1',
+                                     'spora-hybrid-training-v1'):
         raise ValueError('Unsupported byte interface')
+    hybrid_model = getattr(model, 'hybrid_vocab_sha256', None)
+    hybrid_payload = payload.get('format') == 'spora-hybrid-training-v1'
+    if hybrid_payload != (hybrid_model is not None):
+        raise ValueError('Hybrid interface format mismatch')
+    if hybrid_payload and payload.get('provenance', {}).get('vocab_sha256') != hybrid_model:
+        raise ValueError('Hybrid vocabulary digest mismatch')
     if payload.get('organism_sha256') != parent_sha256:
         raise ValueError('Interface belongs to a different individual')
     expected_context_layers = len(getattr(model, 'contextualizer', ()))
