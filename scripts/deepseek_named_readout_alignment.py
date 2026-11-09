@@ -35,9 +35,13 @@ HELD_VALUES = (5, 13)
 STEPS = 80
 
 
-def snapshot(organism, key, value):
+def snapshot(organism, key, value, distractor=None):
+    if distractor is None:
+        distractor = (value + 3) % 16
+    if type(distractor) is not int or not 0 <= distractor < 16 or key == 63:
+        raise ValueError('Invalid distractor or target key')
     state = fresh_controlled_state(organism)
-    for event_key, event_value in ((63, (value + 3) % 16), (key, value)):
+    for event_key, event_value in ((63, distractor), (key, value)):
         state, decision = observe_sourced(organism, state, event_key, event_value, 'direct', 1.0)
         if not decision['current_write']:
             raise ValueError('Controlled observation not written')
@@ -45,7 +49,7 @@ def snapshot(organism, key, value):
     zero = torch.zeros_like(keys)
     with torch.no_grad():
         actual = query(organism, state, keys, zero, zero).argmax(-1).tolist()
-    if actual != [value, (value + 3) % 16]:
+    if actual != [value, distractor]:
         raise ValueError('Native snapshot values mismatch')
     return state
 
