@@ -65,7 +65,7 @@ def validate_diagnostic_review(review, *, manifest_sha, parent_sha, audit_sha, s
                                                    parent_sha256=parent_sha, schedule_steps=steps)
     if (review.get('approved_for_pilot') is not True or review.get('manifest_sha256') != manifest_sha
             or review.get('parent_checkpoint_sha256') != parent_sha
-            or type(review.get('max_schedule_steps')) is not int or not 1 <= steps <= review['max_schedule_steps'] <= 100):
+            or type(review.get('max_schedule_steps')) is not int or not 1 <= steps <= review['max_schedule_steps'] <= 500):
         raise ValueError('No matching bounded story diagnostic review')
     basis_path = Path(review.get('source_review_path', ''))
     if sha(basis_path) != review.get('source_review_sha256'):
@@ -77,6 +77,28 @@ def validate_diagnostic_review(review, *, manifest_sha, parent_sha, audit_sha, s
             'parent_checkpoint_sha256': parent_sha, 'schedule_steps': steps,
             'source_sample_count': basis['sample_count'], 'source_review_counts': basis['counts'],
             'independent_human_review': False}
+
+
+def rebind_resume_review(payload, provenance, review, *, manifest_sha, parent_sha, audit_sha):
+    old_provenance = payload.get('provenance')
+    if not isinstance(old_provenance, dict):
+        raise ValueError('Missing checkpoint provenance')
+    if old_provenance == provenance:
+        return payload
+    old_path = Path(review.get('previous_review_path', ''))
+    old_sha = review.get('previous_review_sha256')
+    if old_provenance.get('review_sha256') != old_sha or sha(old_path) != old_sha:
+        raise ValueError('Previous review mismatch')
+    old_review = json.loads(old_path.read_text(encoding='utf8'))
+    if review.get('policy') != 'bounded-noisy-story-v1' or old_review.get('policy') != review['policy']:
+        raise ValueError('Review policy mismatch')
+    validate_diagnostic_review(old_review, manifest_sha=manifest_sha, parent_sha=parent_sha,
+                               audit_sha=audit_sha, steps=payload.get('steps'))
+    other_old = {k: v for k, v in old_provenance.items() if k != 'review_sha256'}
+    other_new = {k: v for k, v in provenance.items() if k != 'review_sha256'}
+    if other_old != other_new:
+        raise ValueError('Resume inputs changed')
+    return {**payload, 'provenance': provenance}
 
 
 def main():
@@ -126,8 +148,13 @@ def main():
                   'review_sha256': review_sha, 'seed': a.seed, 'batch': a.batch, 'length': a.length,
                   'context_layers': a.context_layers, 'device': a.device}
     trainer = ByteTrainer(model, state, parent_sha, provenance, a.seed, format_name='spora-hybrid-training-v1')
+    resume_sha = None
     if a.resume:
-        trainer.restore(torch.load(a.resume, map_location='cpu', weights_only=True))
+        resume_sha = sha(a.resume)
+        payload = torch.load(a.resume, map_location='cpu', weights_only=True)
+        payload = rebind_resume_review(payload, provenance, review, manifest_sha=manifest_sha,
+                                       parent_sha=parent_sha, audit_sha=audit_sha)
+        trainer.restore(payload)
     if trainer.steps + a.steps > 1000:
         raise ValueError('Total diagnostic budget exceeds 1000 updates')
     approval = validate_diagnostic_review(review, manifest_sha=manifest_sha, parent_sha=parent_sha,
@@ -135,7 +162,8 @@ def main():
     output.mkdir(parents=True)
     (output / 'tokenizer.json').write_bytes(vocab_bytes)
     metadata = {'arguments': vars(a), 'parent_sha256': parent_sha, 'provenance': provenance,
-                'approval': approval, 'overlap_train_dev': overlap, 'test_split_read': False,
+                'approval': approval, 'resume_checkpoint_sha256': resume_sha,
+                'overlap_train_dev': overlap, 'test_split_read': False,
                 'limitations': 'Short synthetic corpus; no general Chinese or chat claim.'}
     (output / 'config.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding='utf8')
     started = time.perf_counter()

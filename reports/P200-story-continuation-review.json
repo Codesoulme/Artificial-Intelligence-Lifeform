@@ -1,0 +1,20 @@
+{
+  "approved_for_pilot": true,
+  "policy": "bounded-noisy-story-v1",
+  "experiment": "hybrid-character-byte-diagnostic-v1",
+  "max_schedule_steps": 500,
+  "manifest_sha256": "9dadd9003569d08f558a783dd9decc598bea39e9865a2ec021fd6012516014f0",
+  "audit_sha256": "59eaacbbae9abeaf0fc1a29445e90d65aa7a953a9807b49774cf8f2f085ac60d",
+  "parent_checkpoint_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "source_review_path": "reports/P28-stories-content-review.json",
+  "source_review_sha256": "b3da3e063d25616922aa482a67d107258e39a2b1af63ff205b44a4cf46e2054f",
+  "previous_review_path": "reports/P199-story-diagnostic-review.json",
+  "previous_review_sha256": "308756fcb3fc07214f837f9709c8e59761fc050dd5dd4cf64415ef78b26aa589",
+  "basis": "The existing P28 source review permits a bounded 100-to-500-update story pilot. P199 ran 100 updates on this fixed subset, with declining development loss but unusable generation. The user authorized continuing experimentation; this record permits continuation to at most 500 total updates, without changing data, vocabulary, parent, optimizer, sampling, or device.",
+  "limitations": [
+    "The original source review was performed by a model, not an independent human; 6 of 64 source samples were major defects.",
+    "The selected synthetic translated stories contain translation and consistency defects, and are not general chat or factual knowledge.",
+    "This longer diagnostic may overfit its 512-story training subset and cannot establish normal conversation.",
+    "No final evaluation texts may be read; preserve the parent and the 100-step checkpoint."
+  ]
+}

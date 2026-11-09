@@ -9,7 +9,7 @@ from spora.hybrid_tokenizer import HybridLanguageBridge, HybridTokenizer, window
 from spora.language_training import ByteTrainer, interface_state, load_interface
 from spora.growing import new_state
 from spora.temporal import TemporalConfig, TemporalSPORA
-from spora.train_hybrid import validate_diagnostic_review
+from spora.train_hybrid import rebind_resume_review, validate_diagnostic_review
 import torch
 
 
@@ -71,6 +71,11 @@ class HybridTokenizerTests(unittest.TestCase):
         self.assertEqual(resumed.tokens_seen, trainer.tokens_seen)
         for key, tensor in interface_state(model).items():
             self.assertTrue(torch.equal(tensor, interface_state(restored)[key]))
+        original_loss = trainer.step(data, 1)
+        resumed_loss = resumed.step(data, 1)
+        self.assertEqual(original_loss, resumed_loss)
+        for key, tensor in interface_state(model).items():
+            self.assertTrue(torch.equal(tensor, interface_state(restored)[key]))
         with self.assertRaisesRegex(ValueError, 'digest mismatch'):
             load_interface(HybridLanguageBridge(organism, vocab, 'other', context_layers=0), snapshot, 'parent')
         wrong = dict(snapshot, format='spora-codepoint-training-v1')
@@ -95,6 +100,33 @@ class HybridTokenizerTests(unittest.TestCase):
                 validate_diagnostic_review(review, **dict(args, steps=101))
             with self.assertRaises(ValueError):
                 validate_diagnostic_review(review, **dict(args, manifest_sha='other'))
+
+    def test_resume_review_extension_requires_identical_training_inputs(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            basis = root / 'basis.json'
+            basis.write_text(json.dumps({'approved_for_pilot': True, 'sample_count': 64,
+                                         'counts': {'major': 6}}), encoding='utf8')
+            old = {'experiment': 'hybrid-character-byte-diagnostic-v1', 'audit_sha256': 'audit',
+                   'policy': 'bounded-noisy-story-v1', 'approved_for_pilot': True,
+                   'manifest_sha256': 'manifest', 'parent_checkpoint_sha256': 'parent',
+                   'max_schedule_steps': 100, 'source_review_path': str(basis),
+                   'source_review_sha256': hashlib.sha256(basis.read_bytes()).hexdigest()}
+            old_path = root / 'old.json'
+            old_path.write_text(json.dumps(old), encoding='utf8')
+            old_sha = hashlib.sha256(old_path.read_bytes()).hexdigest()
+            new_review = dict(old, previous_review_path=str(old_path), previous_review_sha256=old_sha,
+                              max_schedule_steps=500)
+            payload = {'steps': 100, 'provenance': {'review_sha256': old_sha, 'batch': 4}}
+            new_provenance = {'review_sha256': 'new', 'batch': 4}
+            args = {'manifest_sha': 'manifest', 'parent_sha': 'parent', 'audit_sha': 'audit'}
+            rebound = rebind_resume_review(payload, new_provenance, new_review, **args)
+            self.assertEqual(rebound['provenance'], new_provenance)
+            self.assertEqual(payload['provenance']['review_sha256'], old_sha)
+            with self.assertRaisesRegex(ValueError, 'inputs changed'):
+                rebind_resume_review(payload, dict(new_provenance, batch=5), new_review, **args)
+            with self.assertRaisesRegex(ValueError, 'Previous review mismatch'):
+                rebind_resume_review(payload, new_provenance, dict(new_review, previous_review_sha256='wrong'), **args)
 
 
 if __name__ == '__main__':
