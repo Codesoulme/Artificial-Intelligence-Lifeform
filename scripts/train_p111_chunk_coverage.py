@@ -157,6 +157,15 @@ def record_chunk(coverage, source, windows, sampled_labels, final_labels, replac
         return 0
     return accumulate_unchanged_rows(coverage, source, windows, sampled_labels, final_labels, replaced_rows)
 
+
+def exclude_run_outputs(protected, root, output):
+    root, output = Path(root).resolve(), Path(output).resolve()
+    runs = (root / 'runs').resolve()
+    if not output.is_relative_to(runs) or output == runs:
+        raise ValueError('Training output must be a directory inside runs')
+    return {name: digest for name, digest in protected.items()
+            if not (root / name).resolve().is_relative_to(output)}
+
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--plan',required=True)
     parser.add_argument('--output',required=True);parser.add_argument('--until',type=int,required=True);parser.add_argument('--resume',action='store_true')
@@ -230,6 +239,9 @@ def main():
     for pattern in ('p27b-token-budget/**/*.pt','p27-coverage*/**/*.pt','p21*/**/*.pt','p22*/**/*.pt','p23a*/**/*.pt','p23b*/**/*.pt','p23c*/**/*.pt','p23d*/**/*.pt','p23e*/**/*.pt','p23f*/**/*.pt','p24*/**/*.pt','p26*/**/*.pt'):
         for path in (ROOT/'runs').glob(pattern):protected[str(path.relative_to(ROOT)).replace('\\','/')]=sha(path)
     protected[plan['initial_language']]=plan['initial_language_sha256']
+    protected=exclude_run_outputs(protected,ROOT,out)
+    if plan['initial_language'] not in protected:
+        raise ValueError('Training output cannot contain its initial checkpoint')
     fingerprints={name:sha(ROOT/name) for name in SOURCES}
     metadata=dict(entry='spora-p111-chunk-coverage-v1',story_sampling_mode=mode,pretrain_sampling_mode='chunk',chunk_coverage_contract=chunk_spec,coverage_contract=contract,plan=plan,plan_sha256=sha(ROOT/args.plan),manifest_sha256=sha(data/'manifest.json'),base_manifest_sha256=sha(base_data/'manifest.json'),candidate_story=candidate_identity,data_audit_sha256=audits,source_reviews=source_reviews,source_code_sha256=fingerprints,protected=protected)
     torch.set_num_threads(2);torch.manual_seed(plan['seed']);rng=random.Random(plan['seed'])

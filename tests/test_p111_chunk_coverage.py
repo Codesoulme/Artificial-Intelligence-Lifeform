@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from scripts.train_p111_chunk_coverage import (chunk_contract, record_chunk, restore_chunk_coverage,
+from scripts.train_p111_chunk_coverage import (chunk_contract, exclude_run_outputs, record_chunk, restore_chunk_coverage,
                                                sample_chunk)
 from spora.document_chunk_stream import DocumentChunkStream
 from spora.document_stream import DocumentStream
@@ -18,6 +18,18 @@ from spora.story_coverage_run import (coverage_contract, record_story, restore_c
 
 
 class ChunkCoverageTest(unittest.TestCase):
+    def test_excludes_only_current_run_from_protected_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            output = root / 'runs' / 'p220-example'
+            protected = {'runs/p220-example/checkpoint.pt': 'own',
+                         'runs/p220-other/checkpoint.pt': 'other',
+                         'checkpoints/individual.pt': 'parent'}
+            self.assertEqual(exclude_run_outputs(protected, root, output),
+                             {k: v for k, v in protected.items() if v != 'own'})
+            with self.assertRaises(ValueError):
+                exclude_run_outputs(protected, root, root / 'runs')
+
     def setUp(self):
         self.tokens = np.array([1, 7, 8, 9, 10, 11, 2, 1, 12, 2, 1, 2], dtype=np.uint16)
         self.digest = hashlib.sha256(self.tokens.tobytes()).hexdigest()
