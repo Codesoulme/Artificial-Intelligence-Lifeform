@@ -7,6 +7,28 @@ from spora.source_review import file_sha256, verify_training_source_reviews
 
 
 class SourceReviewTests(unittest.TestCase):
+    def test_dialogue_override_requires_exact_candidate_and_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'data').mkdir()
+            (root / 'curriculum').mkdir()
+            candidate = root / 'candidate.jsonl'
+            candidate.write_text('candidate', encoding='utf8')
+            review = root / 'review.json'
+            review.write_text(json.dumps({'approved_for_pilot': True, 'max_schedule_steps': 10,
+                'candidate_manifest_sha256': 'a' * 64,
+                'training_source_sha256': {'dialogue': file_sha256(candidate)}}), encoding='utf8')
+            plan = {'data': 'data', 'curriculum': 'curriculum', 'schedule_steps': 10,
+                    'focus_every': 100, 'target_shares': {'dialogue': 1.0},
+                    'training_source_reviews': {'dialogue': {'path': 'review.json', 'sha256': file_sha256(review)}}}
+            override = {'path': candidate, 'manifest_sha256': 'a' * 64}
+            verify_training_source_reviews(root, plan, dialogue_override=override)
+            with self.assertRaisesRegex(ValueError, 'different candidate manifest'):
+                verify_training_source_reviews(root, plan, dialogue_override={**override, 'manifest_sha256': 'b' * 64})
+            candidate.write_text('modified', encoding='utf8')
+            with self.assertRaisesRegex(ValueError, 'different artifact'):
+                verify_training_source_reviews(root, plan, dialogue_override=override)
+
     def test_review_must_bind_each_active_artifact_and_reject_changes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

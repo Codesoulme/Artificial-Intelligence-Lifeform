@@ -9,7 +9,7 @@ def file_sha256(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def verify_training_source_reviews(root, plan, story_override=None):
+def verify_training_source_reviews(root, plan, story_override=None, dialogue_override=None):
     """Require an independently bound review for each enabled training source.
 
     Reviews may cover more than one source, but must explicitly state the hash
@@ -29,6 +29,8 @@ def verify_training_source_reviews(root, plan, story_override=None):
     }
     if story_override is not None:
         paths['story'] = Path(story_override['path'])
+    if dialogue_override is not None:
+        paths['dialogue'] = Path(dialogue_override['path'])
     if plan.get("focus_every", 0) <= plan["schedule_steps"]:
         paths["focus"] = data / "focus-tokens.json"
         active = set(plan["target_shares"]) | {"focus"}
@@ -49,6 +51,9 @@ def verify_training_source_reviews(root, plan, story_override=None):
         if kind == 'story' and story_override is not None:
             if review.get('candidate_summary_sha256') != story_override['summary_sha256']:
                 raise ValueError('Story review covers different candidate summary')
+        if kind == 'dialogue' and dialogue_override is not None:
+            if review.get('candidate_manifest_sha256') != dialogue_override['manifest_sha256']:
+                raise ValueError('Dialogue review covers different candidate manifest')
         checkpoint = review.get("reviewed_checkpoint_sha256")
         if checkpoint is not None:
             initial = plan.get("initial_language")

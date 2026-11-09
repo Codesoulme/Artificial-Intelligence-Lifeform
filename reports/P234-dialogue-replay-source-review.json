@@ -1,0 +1,16 @@
+{
+  "approved_for_pilot": true,
+  "status": "bounded_replay_diagnostic_not_quality_certification",
+  "reviewed_checkpoint_sha256": "e5df3ba8c17c8fd2c5e0d50d687cab69a72136bb9fe0ca5bf7bda973298d9cd8",
+  "max_schedule_steps": 25,
+  "max_target_shares": {"dialogue": 0.05},
+  "training_source_sha256": {"dialogue": "c7da2b8b3ec29d60bed8af14ac1b7b928646bb3d40a938881caa6a00bf2a24a0"},
+  "candidate_manifest_sha256": "050f7f8e057320e73f642f51b771695261679e16e76f33c1a0bc22df849e5e1e",
+  "basis": "User authorized bounded local experiments. Only the specified reviewed candidate, checkpoint, share and schedule are included; this is not general data approval.",
+  "limitations": [
+    "Only 57 pairs and 4841 assistant targets; repeated sampling may severely overfit.",
+    "Two model reviews do not establish factual correctness, privacy, rights, or independence from ancestor training.",
+    "Source changes consume random numbers differently and complete microbatches can overshoot planned target ratios.",
+    "Previously used development cases are not independent chat acceptance; final-test isolation is uncertain."
+  ]
+}

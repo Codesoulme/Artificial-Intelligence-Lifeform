@@ -20,6 +20,8 @@ from spora.document_stream_observation import accumulate_unchanged_rows
 from spora.story_coverage_run import coverage_contract, restore_coverage, sample_story, record_story, validate_identity
 from spora.source_review import verify_training_source_reviews
 from spora.p115_story_input import validate_candidate
+from spora.dialogue_candidate import validate_candidate as validate_dialogue_candidate
+from spora.dialogue_replay_coverage import DialogueReplayCoverage
 from spora.growing import load
 from spora.language_training import interface_state,atomic_save,frozen_digest
 from spora.training_guard import (assess_guard, validate_guard, assess_multiturn_guard,
@@ -33,6 +35,7 @@ ROOT=Path(__file__).resolve().parents[1]
 SOURCES=('spora/conversation.py','spora/conversation_data.py','scripts/train_p111_chunk_coverage.py','spora/document_chunk_stream.py','spora/uniform_document_stream.py','spora/story_coverage_run.py','spora/document_stream_observation.py','spora/supervision_coverage.py','spora/token_objective.py','spora/conversation_state.py','spora/training_mix.py','spora/document_stream.py','spora/source_review.py','spora/p115_story_input.py','spora/state_codec.py','spora/growing.py','scripts/prepare_teaching_curriculum.py','scripts/curate_teaching_curriculum.py','scripts/prepare_conversation_v4.py','scripts/prepare_conversation_v2.py','scripts/curate_conversation.py','scripts/prepare_prose_pretrain_pilot.py','spora/language_training.py')
 SOURCES += ('spora/training_guard.py','scripts/evaluate_conversation.py',
             'scripts/converse_research.py','spora/conversation_metrics.py','spora/conversation_sampling.py')
+SOURCES += ('spora/dialogue_candidate.py','spora/dialogue_replay_coverage.py')
 PROMPTS=('你好，请简单介绍你的能力。','我今天有点累，可以怎样放松？','请用一句话解释为什么会下雨。','把“明天我去图书馆看书”改成疑问句。','我不知道该选哪本书，你能先问我一个问题吗？','社会主义核心价值观的个人层面包括哪些内容？')
 
 def load_rows(path,length):
@@ -161,6 +164,15 @@ def record_chunk(coverage, source, windows, sampled_labels, final_labels, replac
     return accumulate_unchanged_rows(coverage, source, windows, sampled_labels, final_labels, replaced_rows)
 
 
+def record_dialogue(coverage, source, rows, replaced_rows):
+    recorded = 0
+    for index, row in enumerate(rows):
+        if index not in replaced_rows:
+            coverage.add(source, row['pair_id'])
+            recorded += sum(row['mask'][1:])
+    return recorded
+
+
 def exclude_run_outputs(protected, root, output):
     root, output = Path(root).resolve(), Path(output).resolve()
     runs = (root / 'runs').resolve()
@@ -211,8 +223,21 @@ def main():
         candidate_dir = ROOT/candidate['path']
         candidate_identity = validate_candidate(candidate_dir, candidate['summary_sha256'], manifest['tokenizer_sha256'], plan['length'], plan['model']['vocabulary'])
         story_path = candidate_dir/'stories.bin'
+    dialogue_candidate = plan.get('candidate_dialogue')
+    dialogue_identity = None
+    dialogue_path = data/'dialogue-train-tokens.jsonl'
+    if dialogue_candidate is not None:
+        if (not isinstance(dialogue_candidate, dict) or set(dialogue_candidate) != {'path', 'manifest_sha256'}
+                or not isinstance(dialogue_candidate['path'], str) or not isinstance(dialogue_candidate['manifest_sha256'], str)
+                or 'dialogue' not in plan['target_shares']):
+            raise ValueError('Candidate dialogue requires path, manifest hash and dialogue share')
+        dialogue_dir = ROOT/dialogue_candidate['path']
+        dialogue_identity = validate_dialogue_candidate(dialogue_dir, dialogue_candidate['manifest_sha256'],
+            manifest['tokenizer_sha256'], plan['length'], plan['model']['vocabulary'])
+        dialogue_path = dialogue_dir/'context.jsonl'
     source_reviews=verify_training_source_reviews(ROOT,plan, None if candidate_identity is None else
-        {'path': story_path, 'summary_sha256': candidate_identity['summary_sha256']})
+        {'path': story_path, 'summary_sha256': candidate_identity['summary_sha256']},
+        None if dialogue_identity is None else {'path': dialogue_path, 'manifest_sha256': dialogue_identity['manifest_sha256']})
     if candidate_identity is not None and source_reviews.get('story', {}).get('artifact_sha256') != candidate_identity['story_sha256']:
         raise ValueError('Candidate story review does not match validated artifact')
     story_source = manifest['files']['pretrain-train.bin'] if candidate_identity is None else candidate_identity['story_sha256']
@@ -253,7 +278,7 @@ def main():
     if plan['initial_language'] not in protected:
         raise ValueError('Training output cannot contain its initial checkpoint')
     fingerprints={name:sha(ROOT/name) for name in SOURCES}
-    metadata=dict(entry='spora-p111-chunk-coverage-v1',story_sampling_mode=mode,pretrain_sampling_mode='chunk',chunk_coverage_contract=chunk_spec,coverage_contract=contract,plan=plan,plan_sha256=sha(ROOT/args.plan),manifest_sha256=sha(data/'manifest.json'),base_manifest_sha256=sha(base_data/'manifest.json'),candidate_story=candidate_identity,data_audit_sha256=audits,source_reviews=source_reviews,source_code_sha256=fingerprints,protected=protected)
+    metadata=dict(entry='spora-p111-chunk-coverage-v1',story_sampling_mode=mode,pretrain_sampling_mode='chunk',chunk_coverage_contract=chunk_spec,coverage_contract=contract,plan=plan,plan_sha256=sha(ROOT/args.plan),manifest_sha256=sha(data/'manifest.json'),base_manifest_sha256=sha(base_data/'manifest.json'),candidate_story=candidate_identity,candidate_dialogue=dialogue_identity,data_audit_sha256=audits,source_reviews=source_reviews,source_code_sha256=fingerprints,protected=protected)
     torch.set_num_threads(2);torch.manual_seed(plan['seed']);rng=random.Random(plan['seed'])
     organism,state,_=load(ROOT/plan['parent'],'cuda');before=frozen_digest(organism,state)
     payload=None;step=0;targets=0;focus_cursor=0;counts={};logs=[];elapsed=0.;batch_trace='00'*32
@@ -295,7 +320,18 @@ def main():
     coverage=restore_coverage(payload, contract, story_source, story_documents)
     chunk_source=base_manifest['files']['pretrain-train.bin']
     chunk_coverage=restore_chunk_coverage(payload, chunk_spec, chunk_source, document_stream)
-    sft=load_rows(data/'dialogue-train-tokens.jsonl',plan['length']);sft_dev=load_rows(data/'dialogue-development-tokens.jsonl',plan['length'])
+    sft=load_rows(dialogue_path,plan['length']);sft_dev=load_rows(data/'dialogue-development-tokens.jsonl',plan['length'])
+    dialogue_coverage = None
+    dialogue_source = None
+    if dialogue_identity is not None:
+        dialogue_source = dialogue_identity['files']['context.jsonl']
+        dialogue_records = [dict(source=dialogue_source, pair_id=row['pair_id'], mask=row['mask']) for row in sft]
+        if len(dialogue_records) != dialogue_identity['pairs']:
+            raise ValueError('Candidate dialogue loader excluded records')
+        dialogue_coverage = (DialogueReplayCoverage(dialogue_records) if payload is None else
+                             DialogueReplayCoverage.from_dict(dialogue_records, payload['dialogue_coverage']))
+        if sum(s['target_presentations'] for s in dialogue_coverage.summaries().values()) != counts.get('dialogue_source_targets', 0):
+            raise ValueError('Dialogue coverage differs from target count')
     teacher=load_rows(curriculum/'teacher-tokens.jsonl',plan['length'])
     foundation=load_rows(curriculum/'foundations-tokens.jsonl',plan['length'])
     if not teacher or not foundation:raise ValueError('Missing teaching rows')
@@ -349,6 +385,9 @@ def main():
             record_story(coverage,story_source,windows,sampled_labels,y,replaced_rows)
             observed=record_chunk(chunk_coverage,chunk_source,chunk_windows,chunk_labels,y,replaced_rows)
             if kind=='pretrain' and observed != n-focus_n:raise AssertionError('Chunk coverage differs from supervised targets')
+            if kind=='dialogue' and dialogue_coverage is not None:
+                recorded=record_dialogue(dialogue_coverage,dialogue_source,rows,replaced_rows)
+                if recorded != n-focus_n:raise AssertionError('Dialogue coverage differs from supervised targets')
             if plan.get('trim_ignored_tail',False):x,y=trim_ignored_tail(x,y)
             batches.append((x,y));update_targets+=n
             counts[kind+'_microbatches']=counts.get(kind+'_microbatches',0)+1
@@ -387,6 +426,11 @@ def main():
             if multi_config is not None:
                 snapshot['multiturn_baseline']=multi_baseline
                 snapshot['multiturn_guard']=multi_result
+            if dialogue_coverage is not None:
+                snapshot['dialogue_coverage']=dialogue_coverage.to_dict()
+                restored=DialogueReplayCoverage.from_dict(dialogue_records,snapshot['dialogue_coverage'])
+                if sum(s['target_presentations'] for s in restored.summaries().values()) != counts.get('dialogue_source_targets', 0):
+                    raise AssertionError('Dialogue coverage and target counts differ')
             restore_coverage(snapshot, contract, story_source, story_documents)
             restore_chunk_coverage(snapshot, chunk_spec, chunk_source, document_stream)
             atomic_save(snapshot,out/'checkpoint.pt')
@@ -403,6 +447,10 @@ def main():
         if (sha(candidate_dir/'summary.json') != candidate_identity['summary_sha256'] or
                 any(sha(candidate_dir/name) != digest for name,digest in candidate_identity['files'].items())):
             raise AssertionError('Candidate changed during segment')
+    if dialogue_identity is not None:
+        if (sha(dialogue_dir/'manifest.json') != dialogue_identity['manifest_sha256'] or
+                any(sha(dialogue_dir/name) != digest for name,digest in dialogue_identity['files'].items())):
+            raise AssertionError('Dialogue candidate changed during segment')
     stopped=(guard_result and guard_result['stop']) or (multi_result and multi_result['stop'])
     result=dict(status='stopped_regression_not_chat_accepted' if stopped else 'segment_completed_not_chat_accepted',steps=step,targets=targets,counts=counts,focus_cursor=focus_cursor,
         batch_trace_sha256=batch_trace,old_tensors_exact=before==frozen_digest(organism,state),memory=memory_answers(SimpleNamespace(model=model,state=state)),
@@ -410,6 +458,10 @@ def main():
     source_total=sum(counts.get(k+'_source_targets',0) for k in plan['target_shares'])
     result['coverage_contract']=contract
     result['chunk_coverage_contract']=chunk_spec
+    if dialogue_coverage is not None:
+        summaries=dialogue_coverage.summaries().values()
+        result['dialogue_coverage']={key:sum(row[key] for row in summaries) for key in
+            ('presentations','target_presentations','distinct_target_positions','duplicate_target_positions')}
     if guard_config is not None:result['regression_guard']=guard_result
     if multi_config is not None:result['multiturn_guard']=multi_result
     result['realized_source_shares']={k:counts.get(k+'_source_targets',0)/max(1,source_total) for k in plan['target_shares']}
