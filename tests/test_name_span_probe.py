@@ -4,6 +4,7 @@ import torch
 
 from scripts.deepseek_name_span_probe import oracle_span_mask
 from scripts.deepseek_learned_name_span import single_span_mask
+from scripts.deepseek_named_composite_probe import replace_span
 
 
 class NameSpanTests(unittest.TestCase):
@@ -33,6 +34,15 @@ class NameSpanTests(unittest.TestCase):
         self.assertFalse(accepted)
         with self.assertRaises(ValueError):
             single_span_mask(torch.full((5,), float('nan')), allowed)
+
+    def test_gate_placeholder_uses_predicted_offsets(self):
+        text = 'u:小林的值？'
+        offsets = torch.tensor([[0, 2], [2, 3], [3, 4], [4, 7]])
+        masked, span = replace_span('小林的值？', text, offsets, torch.tensor([False, True, True, False]))
+        self.assertEqual(masked, '对象[编号]的值？')
+        self.assertEqual(span, [0, 2])
+        with self.assertRaises(ValueError):
+            replace_span('小林的值？', text, offsets, torch.zeros(4, dtype=torch.bool))
 
 
 if __name__ == '__main__':
