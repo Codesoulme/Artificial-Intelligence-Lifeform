@@ -1,6 +1,8 @@
 import unittest
 
 from scripts.deepseek_semantic_value_pilot import HELD_TEMPLATES, TRAIN_TEMPLATES, WORDS, word_correct
+from scripts.deepseek_semantic_value_diagnose import candidate_metrics
+import torch
 
 
 class SemanticValuePilotTests(unittest.TestCase):
@@ -13,6 +15,15 @@ class SemanticValuePilotTests(unittest.TestCase):
         self.assertEqual(len(set(WORDS)), 8)
         self.assertFalse(set(TRAIN_TEMPLATES) & set(HELD_TEMPLATES))
         self.assertTrue(all('{name}' in text for text in TRAIN_TEMPLATES + HELD_TEMPLATES))
+
+    def test_candidate_ranking_distinguishes_full_vocabulary(self):
+        logits = torch.tensor([[0., 2., 1., 3.], [0., 1., 2., 0.]])
+        rows = candidate_metrics(logits, [1, 2], [0, 1])
+        self.assertTrue(all(r['candidate_correct'] for r in rows))
+        self.assertFalse(rows[0]['full_vocabulary_top_is_target'])
+        self.assertTrue(rows[1]['full_vocabulary_top_is_target'])
+        with self.assertRaises(ValueError):
+            candidate_metrics(logits, [1, 1], [0, 1])
 
 
 if __name__ == '__main__':
