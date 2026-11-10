@@ -7,8 +7,8 @@ from types import SimpleNamespace
 import torch
 
 from spora.growing import new_state
-from spora.integrated_checkpoint import load_integrated, save_integrated
-from spora.integrated_open_base import IntegratedOpenBase, ScaledOpenBaseMemory
+from spora.integrated_checkpoint import _digest, load_integrated, save_integrated
+from spora.integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
 from spora.language_training import frozen_digest
 from spora.named_address import NamedAddressBinding, address_basis_sha256, feature_files_sha256
 from spora.temporal import TemporalConfig, TemporalSPORA
@@ -61,6 +61,35 @@ class IntegratedCheckpointTests(unittest.TestCase):
         self.assertEqual(frozen_digest(organism, state), frozen_digest(self.organism, self.state))
         self.assertEqual(organism.named_address_binding.feature_contract, 'name-span-mean-v1')
         self.assertTrue(torch.equal(model(x, memory_state=state, memory_addresses=addresses, current_only=True), expected))
+
+    def test_native_spora_reader_roundtrip_preserves_outputs(self):
+        legacy = self.reader
+        native = NativeSPORAMemoryReader(3, 64, 0.5)
+        native.initialize_from_legacy(legacy)
+        self.reader = native
+        x = torch.randn(1, 2, 3)
+        addresses = [torch.randn(1, 64), torch.randn(1, 64)]
+        reference = IntegratedOpenBase(self.base(), native, (0, 2))
+        expected = reference(x, memory_state=self.state, memory_addresses=addresses, current_only=True)
+        self.save()
+        payload = torch.load(self.path, weights_only=True)
+        self.assertEqual(payload['metadata']['format'], 'spora-integrated-open-base-v2')
+        self.assertEqual(payload['metadata']['reader']['kind'], 'native-spora-delta-site')
+        model, organism, state = load_integrated(self.path, self.base(), self.root)
+        self.assertIsInstance(model.reader, NativeSPORAMemoryReader)
+        self.assertEqual(frozen_digest(organism, state), frozen_digest(self.organism, self.state))
+        actual = model(x, memory_state=state, memory_addresses=addresses, current_only=True)
+        self.assertTrue(torch.equal(actual, expected))
+
+    def test_v1_checkpoint_still_loads_as_legacy_reader(self):
+        self.save()
+        payload = torch.load(self.path, weights_only=True)
+        payload['metadata']['format'] = 'spora-integrated-open-base-v1'
+        payload['metadata']['reader'].pop('kind')
+        payload['integrity_sha256'] = _digest(payload['metadata'], payload['tensors'])
+        torch.save(payload, self.path)
+        model, _, _ = load_integrated(self.path, self.base(), self.root)
+        self.assertIs(type(model.reader), ScaledOpenBaseMemory)
 
     def test_wrong_base_or_configuration_is_rejected(self):
         self.save()

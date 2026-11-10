@@ -10,12 +10,13 @@ from pathlib import Path
 
 import torch
 
-from .integrated_open_base import IntegratedOpenBase, ScaledOpenBaseMemory
+from .integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
 from .language_training import atomic_save
 from .named_address import feature_files_sha256
 from .state_codec import flatten, restore
 
-FORMAT = 'spora-integrated-open-base-v1'
+FORMAT = 'spora-integrated-open-base-v2'
+LEGACY_FORMAT = 'spora-integrated-open-base-v1'
 
 
 def _file_sha256(path):
@@ -65,8 +66,8 @@ def _validate_base_config(directory, hidden_width, layers):
 
 
 def save_integrated(path, organism, state, reader, model_dir, layer_indices):
-    if type(reader) is not ScaledOpenBaseMemory:
-        raise ValueError('Expected a scaled open-base reader')
+    if type(reader) not in (ScaledOpenBaseMemory, NativeSPORAMemoryReader):
+        raise ValueError('Expected a supported scaled SPORA memory reader')
     if (not isinstance(layer_indices, (tuple, list)) or len(layer_indices) != 2
             or any(type(i) is not int or i < 0 for i in layer_indices) or layer_indices[0] == layer_indices[1]):
         raise ValueError('Expected two distinct nonnegative layer indices')
@@ -84,7 +85,8 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices):
     schema, individual = flatten(organism, state)
     reader_tensors = reader.state_dict()
     with torch.random.fork_rng(devices=[]):
-        reference = ScaledOpenBaseMemory(reader.hidden_width, reader.memory_width, reader.strength).state_dict()
+        reader_type = type(reader)
+        reference = reader_type(reader.hidden_width, reader.memory_width, reader.strength).state_dict()
     if (set(reference) != set(reader_tensors)
             or any(reader_tensors[k].shape != v.shape or reader_tensors[k].dtype != v.dtype
                    for k, v in reference.items())):
@@ -93,7 +95,8 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices):
                **{'reader/' + k: v.detach().cpu().clone() for k, v in reader_tensors.items()}}
     metadata = {'format': FORMAT, 'base_sha256': base_sha, 'feature_config_sha256': config_sha,
                 'individual_schema': schema, 'reader': {'hidden_width': reader.hidden_width,
-                'memory_width': reader.memory_width, 'strength': reader.strength, 'layers': list(layer_indices)}}
+                'memory_width': reader.memory_width, 'strength': reader.strength, 'layers': list(layer_indices),
+                'kind': 'native-spora-delta-site' if type(reader) is NativeSPORAMemoryReader else 'scaled-open-base'}}
     integrity = _digest(metadata, tensors)
     atomic_save({'metadata': metadata, 'tensors': tensors, 'integrity_sha256': integrity}, path)
 
@@ -103,7 +106,8 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     if not isinstance(payload, dict) or set(payload) != {'metadata', 'tensors', 'integrity_sha256'}:
         raise ValueError('Invalid integrated checkpoint')
     metadata, tensors = payload['metadata'], payload['tensors']
-    if not isinstance(metadata, dict) or metadata.get('format') != FORMAT or not isinstance(tensors, dict):
+    if (not isinstance(metadata, dict) or metadata.get('format') not in (FORMAT, LEGACY_FORMAT)
+            or not isinstance(tensors, dict)):
         raise ValueError('Unsupported integrated checkpoint')
     if _digest(metadata, tensors) != payload['integrity_sha256']:
         raise ValueError('Integrated checkpoint integrity mismatch')
@@ -112,7 +116,9 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     if metadata.get('base_sha256') != base_sha or metadata.get('feature_config_sha256') != config_sha:
         raise ValueError('Base weight or feature configuration mismatch')
     config = metadata.get('reader')
-    if not isinstance(config, dict) or set(config) != {'hidden_width', 'memory_width', 'strength', 'layers'}:
+    old_config = {'hidden_width', 'memory_width', 'strength', 'layers'}
+    new_config = old_config | {'kind'}
+    if not isinstance(config, dict) or set(config) not in (old_config, new_config):
         raise ValueError('Invalid reader configuration')
     _validate_base_config(directory, config['hidden_width'], config['layers'])
     if getattr(getattr(base, 'config', None), 'hidden_size', None) != config['hidden_width']:
@@ -125,7 +131,14 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     if organism.config.memory_width != config['memory_width']:
         raise ValueError('Reader and individual memory widths differ')
     _validate_binding(organism, base_sha, config_sha)
-    reader = ScaledOpenBaseMemory(config['hidden_width'], config['memory_width'], config['strength'])
+    kind = config.get('kind', 'scaled-open-base')
+    if kind == 'scaled-open-base':
+        reader_type = ScaledOpenBaseMemory
+    elif kind == 'native-spora-delta-site' and metadata['format'] == FORMAT:
+        reader_type = NativeSPORAMemoryReader
+    else:
+        raise ValueError('Unsupported integrated reader kind')
+    reader = reader_type(config['hidden_width'], config['memory_width'], config['strength'])
     expected = reader.state_dict()
     if set(expected) != set(reader_tensors) or any(reader_tensors[k].shape != v.shape or reader_tensors[k].dtype != v.dtype
                                                     for k, v in expected.items()):

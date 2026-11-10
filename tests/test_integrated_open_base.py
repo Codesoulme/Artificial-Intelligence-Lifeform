@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import torch
 from torch import nn
 
-from spora.integrated_open_base import IntegratedOpenBase
+from spora.integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
 from spora.open_base_memory import OpenBaseMemory, memory_hooks
 
 
@@ -67,6 +67,26 @@ class IntegratedOpenBaseTests(unittest.TestCase):
                                                             current_only=True), target))
         self.assertFalse(torch.equal(expected[0], expected[1]))
         self.assertFalse(any(layer._forward_hooks for layer in base.model.layers))
+
+    def test_native_spora_delta_site_matches_mapped_legacy_reader(self):
+        legacy = ScaledOpenBaseMemory(3, 3, 0.5)
+        with torch.no_grad():
+            for query, output in zip(legacy.query, legacy.out):
+                query.weight.copy_(torch.eye(3))
+                output.weight.copy_(torch.eye(3))
+            legacy.gate.zero_()
+        native = NativeSPORAMemoryReader(3, 3, 0.5)
+        native.initialize_from_legacy(legacy)
+        hidden = torch.randn(2, 4, 3)
+        matrix = torch.randn(2, 3, 3)
+        address = torch.randn(2, 3)
+        for site in range(2):
+            for matrices in ([matrix], [matrix, matrix * 0.3]):
+                expected = legacy(hidden, matrices, site, address)
+                actual = native(hidden, matrices, site, address)
+                self.assertTrue(torch.allclose(actual, expected, atol=1e-6, rtol=1e-6))
+        self.assertFalse(hasattr(native, 'query'))
+        self.assertFalse(hasattr(native, 'out'))
 
     def test_error_cleans_state_and_external_cache_is_rejected(self):
         base = Base()

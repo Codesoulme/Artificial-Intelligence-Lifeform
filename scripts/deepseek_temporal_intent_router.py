@@ -25,7 +25,7 @@ from scripts.open_base_baseline import INDIVIDUAL, INDIVIDUAL_SHA, sha
 from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.growing import load, query
 from spora.integrated_checkpoint import load_integrated, save_integrated
-from spora.integrated_open_base import ScaledOpenBaseMemory
+from spora.integrated_open_base import NativeSPORAMemoryReader, ScaledOpenBaseMemory
 from spora.internal_memory import observe_sourced
 from spora.language_training import frozen_digest
 from spora.named_address import feature_files_sha256
@@ -74,9 +74,11 @@ def temporal_addresses(organism, key, event_time, device):
     return [organism.memory_address(site, bound, keys, modes) for site in organism.memories]
 
 
-def run():
-    if OUTPUT.exists():
-        raise FileExistsError(OUTPUT)
+def run(native_spora=False):
+    output_dir = (ROOT / 'runs/deepseek-temporal-intent-router-native-spora-site-20261110'
+                  if native_spora else OUTPUT)
+    if output_dir.exists():
+        raise FileExistsError(output_dir)
     files = {'weight': MODEL / 'model.safetensors', 'original': INDIVIDUAL,
              'adapter': READOUT / 'adapter.pt', 'adapter_report': READOUT / 'result.json'}
     before = {name: sha(path) for name, path in files.items()}
@@ -141,10 +143,17 @@ def run():
         held_predictions = router(features['held']).argmax(-1).tolist()
     train_rows = [{**row, 'predicted_slot': prediction} for row, prediction in zip(train, train_predictions)]
     bases = [F.normalize(site.current_basis.to('cuda').float(), dim=-1) for site in organism.memories]
-    reader = ScaledOpenBaseMemory(adapter_data['state']['query.0.weight'].shape[1], organism.config.memory_width, 0.5)
-    reader.load_state_dict(adapter_data['state'], strict=True)
-    checkpoint = OUTPUT / 'historical-individual.pt'
-    OUTPUT.mkdir(parents=False, exist_ok=False)
+    legacy_reader = ScaledOpenBaseMemory(adapter_data['state']['query.0.weight'].shape[1],
+                                         organism.config.memory_width, 0.5)
+    legacy_reader.load_state_dict(adapter_data['state'], strict=True)
+    if native_spora:
+        reader = NativeSPORAMemoryReader(legacy_reader.hidden_width, legacy_reader.memory_width,
+                                        legacy_reader.strength)
+        reader.initialize_from_legacy(legacy_reader)
+    else:
+        reader = legacy_reader
+    checkpoint = output_dir / 'historical-individual.pt'
+    output_dir.mkdir(parents=False, exist_ok=False)
     save_integrated(checkpoint, organism, state, reader, MODEL, (5, 17))
     checkpoint_sha = sha(checkpoint)
     inputs = [closed_think_inputs(tokenizer, row['text'], 'cuda') for row in held]
@@ -197,7 +206,8 @@ def run():
                               'Small held set with one seed; templates are authored by the experimenter.',
                               'No unknown time, uncertain date, multi-event natural dialogue, writes or open chat tested.',
                               'Base and tokenizer remain separate; state persists only in the integrated checkpoint.']}
-    with (OUTPUT / 'result.json').open('x', encoding='utf-8', newline='\n') as stream:
+    report['reader_kind'] = 'native_spora_delta_memory_site' if native_spora else 'legacy_scaled_open_base'
+    with (output_dir / 'result.json').open('x', encoding='utf-8', newline='\n') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
     print(json.dumps(report['summary']), flush=True)

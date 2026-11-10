@@ -12,6 +12,7 @@ import math
 import torch
 from torch import nn
 
+from .model import DeltaMemorySite, ModelConfig
 from .open_base_memory import OpenBaseMemory
 from .sleep_memory import history_site
 
@@ -28,6 +29,92 @@ class ScaledOpenBaseMemory(OpenBaseMemory):
     def forward(self, hidden, matrices, site, address=None):
         injected = super().forward(hidden, matrices, site, address)
         return hidden + self.strength * (injected - hidden)
+
+
+class NativeSPORAMemoryReader(ScaledOpenBaseMemory):
+    """Use SPORA's native DeltaMemorySite as the decoder memory reader.
+
+    The supplied memory matrices are the same fast weights used by SPORA.
+    ``initialize_from_legacy`` maps the trained open-base projections into the
+    native site's readout and gate, with its slow expert path initially zeroed.
+    """
+
+    def __init__(self, hidden_width, memory_width, strength):
+        super().__init__(hidden_width, memory_width, strength)
+        del self.query, self.out, self.gate
+        config = ModelConfig(width=hidden_width, heads=1, memory_width=memory_width,
+                             expert_rank=min(16, memory_width), memory_kind='delta')
+        self.native_sites = nn.ModuleList([DeltaMemorySite(config) for _ in range(2)])
+        for site in self.native_sites:
+            with torch.no_grad():
+                site.read_out.weight.zero_()
+                site.read_out.bias.zero_()
+                for expert in site.experts:
+                    expert[-1].weight.zero_()
+                    expert[-1].bias.zero_()
+
+    def initialize_from_legacy(self, legacy):
+        if not isinstance(legacy, OpenBaseMemory) or isinstance(legacy, NativeSPORAMemoryReader):
+            raise ValueError('Expected the legacy scaled reader')
+        if (legacy.hidden_width != self.hidden_width or legacy.memory_width != self.memory_width
+                or getattr(legacy, 'strength', self.strength) != self.strength):
+            raise ValueError('Legacy reader dimensions or strength do not match')
+        with torch.no_grad():
+            for index, site in enumerate(self.native_sites):
+                site.read_out.weight.copy_(legacy.out[index].weight)
+                site.read_out.bias.zero_()
+                site.read_gate.weight.zero_()
+                site.read_gate.bias.fill_(legacy.gate[index])
+
+    def forward(self, hidden, matrices, site, address=None):
+        if type(site) is not int or site not in (0, 1):
+            raise ValueError('Site must be 0 or 1')
+        if not isinstance(hidden, torch.Tensor) or hidden.ndim != 3 or hidden.shape[-1] != self.hidden_width:
+            raise ValueError('Layer output must have shape [batch, sequence, hidden_width]')
+        if not hidden.is_floating_point() or not hidden.shape[0] or not matrices:
+            raise ValueError('Layer output and memory matrices must be nonempty floating tensors')
+        native_site = self.native_sites[site]
+        parameter = native_site.read_out.weight
+        x = hidden.to(device=parameter.device, dtype=parameter.dtype)
+        if address is None:
+            query = native_site.address(x[:, -1])
+        else:
+            valid_shapes = ((1, self.memory_width), (hidden.shape[0], self.memory_width))
+            if (not isinstance(address, torch.Tensor) or address.ndim != 2
+                    or tuple(address.shape) not in valid_shapes
+                    or not address.is_floating_point() or not bool(torch.isfinite(address).all())):
+                raise ValueError('Address must have shape [1 or batch, memory_width]')
+            query = torch.nn.functional.normalize(
+                address.detach().to(device=x.device, dtype=x.dtype), dim=-1).expand(hidden.shape[0], -1)
+        fixed_matrices = []
+        for matrix in matrices:
+            if (not isinstance(matrix, torch.Tensor) or matrix.ndim != 3
+                    or matrix.shape[1:] != (self.memory_width, self.memory_width)
+                    or matrix.shape[0] not in (1, hidden.shape[0]) or not matrix.is_floating_point()):
+                raise ValueError('Memory matrices must have shape [1 or batch, memory_width, memory_width]')
+            fixed_matrices.append(matrix.detach().to(device=x.device, dtype=x.dtype).expand(hidden.shape[0], -1, -1))
+        batch_size, sequence_length = x.shape[:2]
+
+        def read_page(matrix):
+            token_hidden = x.reshape(batch_size * sequence_length, 1, self.hidden_width)
+            token_query = query[:, None, :].expand(-1, sequence_length, -1).reshape(
+                batch_size * sequence_length, self.memory_width)
+            token_matrix = matrix[:, None, :, :].expand(-1, sequence_length, -1, -1).reshape(
+                batch_size * sequence_length, self.memory_width, self.memory_width)
+            return native_site.read(token_hidden, token_query, [token_matrix]).reshape_as(x)
+
+        if len(fixed_matrices) == 1:
+            injected = read_page(fixed_matrices[0])
+        else:
+            page_outputs, page_scores = [], []
+            for matrix in fixed_matrices:
+                retrieved = native_site.retrieve([matrix], query)
+                page_scores.append((retrieved * query).sum(-1))
+                page_outputs.append(read_page(matrix))
+            weights = torch.stack(page_scores, dim=1).softmax(-1)
+            residuals = torch.stack([output - x for output in page_outputs], dim=1)
+            injected = x + (residuals * weights[:, :, None, None]).sum(1)
+        return hidden + self.strength * (injected.to(device=hidden.device, dtype=hidden.dtype) - hidden)
 
 
 class _MemoryDecoderLayer(nn.Module):

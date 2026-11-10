@@ -32,7 +32,9 @@ def legacy_forward(layer, *args, **kwargs):
     active = layer._memory_context.get()
     if active is None:
         return output
-    matrices, addresses, read_mask = active
+    matrices, addresses, read_mask, memory_slots = active
+    if memory_slots is not None:
+        raise ValueError('Legacy read-mask benchmark does not cover temporal slots')
     address = None if addresses is None else addresses[layer.site]
     if read_mask is not None and read_mask.shape[0] not in (1, output.shape[0]):
         raise ValueError('Memory read mask must match the decoder batch')
