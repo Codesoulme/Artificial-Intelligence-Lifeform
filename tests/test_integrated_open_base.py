@@ -47,6 +47,24 @@ def make_reader():
 
 
 class IntegratedOpenBaseTests(unittest.TestCase):
+    def test_native_dynamic_address_cannot_read_future_tokens(self):
+        torch.manual_seed(90)
+        reader = NativeSPORAMemoryReader(3, 3, 1.0).eval()
+        with torch.no_grad():
+            for site in reader.native_sites:
+                site.key.weight.copy_(torch.eye(3))
+                site.key.bias.zero_()
+                site.read_out.weight.copy_(torch.eye(3))
+                site.read_out.bias.zero_()
+                site.read_gate.weight.zero_()
+                site.read_gate.bias.zero_()
+        hidden = torch.tensor([[[1., 0., -1.], [0., 1., -1.], [-1., 0., 1.]]])
+        pages = [torch.eye(3).unsqueeze(0), -torch.eye(3).unsqueeze(0)]
+        with torch.no_grad():
+            prefix = reader(hidden[:, :2], pages, 0)
+            extended = reader(hidden, pages, 0)
+        torch.testing.assert_close(prefix, extended[:, :2], atol=1e-6, rtol=1e-6)
+
     def test_matches_existing_hooks_for_multiple_states_and_generate(self):
         base, reader = Base(), make_reader()
         x = torch.tensor([[[1., 0., 0.]]])

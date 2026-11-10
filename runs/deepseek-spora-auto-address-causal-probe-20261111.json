@@ -1,0 +1,323 @@
+{
+  "results": {
+    "integrated_base": [
+      {
+        "question": "你能告诉我一件以前记录的事情吗？",
+        "uncached": {
+          "text": "我是一个AI助手,通过算法处理信息并生成回答。但我并没有真实的",
+          "token_ids": [
+            35946,
+            101909,
+            15469,
+            110498,
+            11,
+            67338,
+            107018,
+            54542,
+            27369,
+            62926,
+            43959,
+            102104,
+            1773,
+            105984,
+            104065,
+            107573
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "cached": {
+          "text": "我是一个AI助手,通过算法处理信息并生成回答。但我并没有真实的",
+          "token_ids": [
+            35946,
+            101909,
+            15469,
+            110498,
+            11,
+            67338,
+            107018,
+            54542,
+            27369,
+            62926,
+            43959,
+            102104,
+            1773,
+            105984,
+            104065,
+            107573
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "same_tokens": true
+      },
+      {
+        "question": "请简短说明你现在想做什么。",
+        "uncached": {
+          "text": "您好！我是由中国的深度求索（DeepSeek）公司开发的智能",
+          "token_ids": [
+            111308,
+            6313,
+            104198,
+            67071,
+            105538,
+            102217,
+            30918,
+            50984,
+            9909,
+            33464,
+            39350,
+            7552,
+            73218,
+            100013,
+            9370,
+            100168
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "cached": {
+          "text": "您好！我是由中国的深度求索（DeepSeek）公司开发的智能",
+          "token_ids": [
+            111308,
+            6313,
+            104198,
+            67071,
+            105538,
+            102217,
+            30918,
+            50984,
+            9909,
+            33464,
+            39350,
+            7552,
+            73218,
+            100013,
+            9370,
+            100168
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "same_tokens": true
+      }
+    ],
+    "pair": [
+      {
+        "question": "你能告诉我一件以前记录的事情吗？",
+        "uncached": {
+          "text": "我是一个AI助手，由中国的深度求索公司开发，我擅长通过",
+          "token_ids": [
+            35946,
+            101909,
+            15469,
+            110498,
+            3837,
+            67071,
+            105538,
+            102217,
+            30918,
+            50984,
+            73218,
+            100013,
+            3837,
+            35946,
+            107618,
+            67338
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "cached": {
+          "text": "我是一个AI助手，由中国的深度求索公司开发，我擅长通过",
+          "token_ids": [
+            35946,
+            101909,
+            15469,
+            110498,
+            3837,
+            67071,
+            105538,
+            102217,
+            30918,
+            50984,
+            73218,
+            100013,
+            3837,
+            35946,
+            107618,
+            67338
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "same_tokens": true
+      },
+      {
+        "question": "请简短说明你现在想做什么。",
+        "uncached": {
+          "text": "我目前专注于通过数据分析来探索和理解世界。我热爱学习和思考",
+          "token_ids": [
+            35946,
+            100004,
+            107782,
+            67338,
+            111540,
+            36407,
+            101964,
+            33108,
+            101128,
+            99489,
+            1773,
+            35946,
+            105721,
+            100134,
+            33108,
+            104107
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "cached": {
+          "text": "我目前专注于通过数据分析来探索和理解世界。我热爱学习和思考",
+          "token_ids": [
+            35946,
+            100004,
+            107782,
+            67338,
+            111540,
+            36407,
+            101964,
+            33108,
+            101128,
+            99489,
+            1773,
+            35946,
+            105721,
+            100134,
+            33108,
+            104107
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "same_tokens": true
+      }
+    ],
+    "triple": [
+      {
+        "question": "你能告诉我一件以前记录的事情吗？",
+        "uncached": {
+          "text": "我是一个AI助手，由中国的深度求索（DeepSeek）和深度",
+          "token_ids": [
+            35946,
+            101909,
+            15469,
+            110498,
+            3837,
+            67071,
+            105538,
+            102217,
+            30918,
+            50984,
+            9909,
+            33464,
+            39350,
+            7552,
+            33108,
+            102217
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "cached": {
+          "text": "我是一个AI助手，由中国的深度求索（DeepSeek）和深度",
+          "token_ids": [
+            35946,
+            101909,
+            15469,
+            110498,
+            3837,
+            67071,
+            105538,
+            102217,
+            30918,
+            50984,
+            9909,
+            33464,
+            39350,
+            7552,
+            33108,
+            102217
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "same_tokens": true
+      },
+      {
+        "question": "请简短说明你现在想做什么。",
+        "uncached": {
+          "text": "您好！我是由中国的深度求索（DeepSeek）公司，目前正在",
+          "token_ids": [
+            111308,
+            6313,
+            104198,
+            67071,
+            105538,
+            102217,
+            30918,
+            50984,
+            9909,
+            33464,
+            39350,
+            7552,
+            73218,
+            3837,
+            100004,
+            96555
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "cached": {
+          "text": "您好！我是由中国的深度求索（DeepSeek）公司，目前正在",
+          "token_ids": [
+            111308,
+            6313,
+            104198,
+            67071,
+            105538,
+            102217,
+            30918,
+            50984,
+            9909,
+            33464,
+            39350,
+            7552,
+            73218,
+            3837,
+            100004,
+            96555
+          ],
+          "generated_tokens": 16,
+          "ended_with_eos": false
+        },
+        "same_tokens": true
+      }
+    ]
+  },
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "layer18_sha256": "f8f61e2746c9e43adb1789a682870c43f7416d5c45bb32fe4ef20a6013c28e34",
+  "elapsed_seconds": 144.90336689981632,
+  "limitations": [
+    "Two short prompts and 16 generated tokens, no correctness scoring.",
+    "Automatic token query is not a verified language-to-memory router.",
+    "One synthetic state with current and historical memory pages."
+  ]
+}

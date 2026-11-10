@@ -1,0 +1,466 @@
+{
+  "results": {
+    "integrated_base": {
+      "memory": [
+        {
+          "intent": "current",
+          "question": "小桐现在最喜欢什么饮料？",
+          "expected": "果汁",
+          "uncached": {
+            "text": "果汁",
+            "token_ids": [
+              116107,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "cached": {
+            "text": "果汁",
+            "token_ids": [
+              116107,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "same_tokens": true
+        },
+        {
+          "intent": "past",
+          "question": "小桐之前喜欢喝什么？",
+          "expected": "酸奶",
+          "uncached": {
+            "text": "酸奶",
+            "token_ids": [
+              113760,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "cached": {
+            "text": "酸奶",
+            "token_ids": [
+              113760,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "same_tokens": true
+        }
+      ],
+      "dialogue": [
+        {
+          "question": "如果朋友心情不好，可以怎样安慰她？",
+          "text": "对不起，我还没有学会回答这个问题。如果你有其他问题，我非常乐意为你提供帮助。",
+          "token_ids": [
+            109024,
+            3837,
+            35946,
+            104485,
+            101278,
+            102104,
+            105073,
+            1773,
+            102056,
+            18830,
+            92894,
+            86119,
+            3837,
+            35946,
+            99491,
+            115590,
+            106184,
+            99553,
+            100364,
+            1773,
+            151643
+          ],
+          "generated_tokens": 21,
+          "ended_with_eos": true
+        },
+        {
+          "question": "请用简单的话解释雨是怎样形成的。",
+          "text": "雨的形成主要与空气中的水蒸气有关。当空气中的水蒸气遇到温度较低的地面或云层时，会凝结成小水滴，形成云。这些小水滴在阳光下进一步聚集",
+          "token_ids": [
+            100029,
+            9370,
+            101894,
+            99558,
+            57218,
+            100819,
+            101047,
+            52510,
+            101494,
+            99180,
+            101063,
+            1773,
+            39165,
+            100819,
+            101047,
+            52510,
+            101494,
+            99180,
+            104011,
+            104273,
+            106551,
+            9370,
+            104722,
+            57191,
+            99718,
+            99371,
+            13343,
+            3837,
+            36993,
+            100898,
+            36885,
+            12857,
+            30709,
+            52510,
+            100856,
+            3837,
+            101894,
+            99718,
+            1773,
+            100001,
+            30709,
+            52510,
+            100856,
+            18493,
+            104166,
+            16872,
+            100642,
+            105061
+          ],
+          "generated_tokens": 48,
+          "ended_with_eos": false
+        }
+      ]
+    },
+    "pair": {
+      "memory": [
+        {
+          "intent": "current",
+          "question": "小桐现在最喜欢什么饮料？",
+          "expected": "果汁",
+          "uncached": {
+            "text": "果汁",
+            "token_ids": [
+              116107,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "cached": {
+            "text": "果汁",
+            "token_ids": [
+              116107,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "same_tokens": true
+        },
+        {
+          "intent": "past",
+          "question": "小桐之前喜欢喝什么？",
+          "expected": "酸奶",
+          "uncached": {
+            "text": "酸奶",
+            "token_ids": [
+              113760,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "cached": {
+            "text": "酸奶",
+            "token_ids": [
+              113760,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "same_tokens": true
+        }
+      ],
+      "dialogue": [
+        {
+          "question": "如果朋友心情不好，可以怎样安慰她？",
+          "text": "如果你的朋友心情不好，可以采取以下几种方式来安慰她：\n\n1. **与朋友分享心情**：和朋友一起分享你的烦恼，一起感受生活中的美好时光。\n\n2. **表达自己的感受**：用一些轻松",
+          "token_ids": [
+            102056,
+            104464,
+            104753,
+            101132,
+            3837,
+            73670,
+            103975,
+            87752,
+            108464,
+            75768,
+            36407,
+            107299,
+            99517,
+            48443,
+            16,
+            13,
+            3070,
+            57218,
+            99614,
+            93149,
+            104753,
+            334,
+            5122,
+            33108,
+            99614,
+            100018,
+            93149,
+            103929,
+            106227,
+            3837,
+            100018,
+            101224,
+            99424,
+            101047,
+            101483,
+            105129,
+            3407,
+            17,
+            13,
+            3070,
+            102124,
+            100005,
+            101224,
+            334,
+            5122,
+            11622,
+            101883,
+            104261
+          ],
+          "generated_tokens": 48,
+          "ended_with_eos": false
+        },
+        {
+          "question": "请用简单的话解释雨是怎样形成的。",
+          "text": "雨的形成是自然界的复杂现象，它由多种因素共同作用，包括阳光、云层、空气流动、温度变化以及地质活动等。这些因素共同作用，导致雨的形成。雨的形成过程包括：",
+          "token_ids": [
+            100029,
+            9370,
+            101894,
+            20412,
+            99795,
+            108206,
+            102181,
+            102060,
+            3837,
+            99652,
+            67071,
+            101312,
+            100741,
+            100656,
+            100154,
+            3837,
+            100630,
+            104166,
+            5373,
+            99718,
+            99371,
+            5373,
+            100819,
+            102403,
+            5373,
+            104273,
+            100682,
+            101034,
+            107112,
+            99600,
+            49567,
+            1773,
+            100001,
+            100741,
+            100656,
+            100154,
+            3837,
+            100673,
+            100029,
+            9370,
+            101894,
+            1773,
+            100029,
+            9370,
+            101894,
+            100178,
+            100630,
+            5122
+          ],
+          "generated_tokens": 48,
+          "ended_with_eos": false
+        }
+      ]
+    },
+    "triple": {
+      "memory": [
+        {
+          "intent": "current",
+          "question": "小桐现在最喜欢什么饮料？",
+          "expected": "果汁",
+          "uncached": {
+            "text": "果汁",
+            "token_ids": [
+              116107,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "cached": {
+            "text": "果汁",
+            "token_ids": [
+              116107,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "same_tokens": true
+        },
+        {
+          "intent": "past",
+          "question": "小桐之前喜欢喝什么？",
+          "expected": "酸奶",
+          "uncached": {
+            "text": "酸奶",
+            "token_ids": [
+              113760,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "cached": {
+            "text": "酸奶",
+            "token_ids": [
+              113760,
+              151643
+            ],
+            "generated_tokens": 2,
+            "ended_with_eos": true
+          },
+          "same_tokens": true
+        }
+      ],
+      "dialogue": [
+        {
+          "question": "如果朋友心情不好，可以怎样安慰她？",
+          "text": "朋友心情不好时，可以通过以下方法安慰自己：\n1. **自我安慰**：朋友心情不好时，可以对自己身边的人说：“我知道你最近的困难，我会一直支持你。”\n2. **倾诉情绪**",
+          "token_ids": [
+            99614,
+            104753,
+            101132,
+            13343,
+            3837,
+            105125,
+            87752,
+            39907,
+            107299,
+            99283,
+            28311,
+            16,
+            13,
+            3070,
+            104049,
+            107299,
+            334,
+            5122,
+            99614,
+            104753,
+            101132,
+            13343,
+            3837,
+            73670,
+            106266,
+            102144,
+            100623,
+            36587,
+            36987,
+            105519,
+            56568,
+            104044,
+            9370,
+            103985,
+            3837,
+            105351,
+            99725,
+            100143,
+            56568,
+            32945,
+            198,
+            17,
+            13,
+            3070,
+            100544,
+            99482,
+            104405,
+            334
+          ],
+          "generated_tokens": 48,
+          "ended_with_eos": false
+        },
+        {
+          "question": "请用简单的话解释雨是怎样形成的。",
+          "text": "雨的形成是自然界的循环现象，通常由水的蒸发和大气的循环运动共同作用。",
+          "token_ids": [
+            100029,
+            9370,
+            101894,
+            20412,
+            99795,
+            108206,
+            101353,
+            102060,
+            3837,
+            102119,
+            67071,
+            52510,
+            9370,
+            113578,
+            33108,
+            105797,
+            9370,
+            101353,
+            101079,
+            100656,
+            100154,
+            1773,
+            151643
+          ],
+          "generated_tokens": 23,
+          "ended_with_eos": true
+        }
+      ]
+    }
+  },
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "layer18_sha256": "f8f61e2746c9e43adb1789a682870c43f7416d5c45bb32fe4ef20a6013c28e34",
+  "elapsed_seconds": 148.61844109999947,
+  "peak_allocated_bytes": 3924171776,
+  "limitations": [
+    "Only two short controlled memory questions, same single entity.",
+    "Evaluator supplies memory addresses and temporal slot.",
+    "Two independent 48-token dialogue samples with memory disabled.",
+    "Explicitly closed reasoning prefix; no multi-turn or open-chat acceptance.",
+    "Sequence length and trained position embeddings limited to 128."
+  ]
+}

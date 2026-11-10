@@ -76,8 +76,10 @@ class NativeSPORAMemoryReader(ScaledOpenBaseMemory):
         native_site = self.native_sites[site]
         parameter = native_site.read_out.weight
         x = hidden.to(device=parameter.device, dtype=parameter.dtype)
+        batch_size, sequence_length = x.shape[:2]
         if address is None:
-            query = native_site.address(x[:, -1])
+            query = native_site.address(x.reshape(batch_size * sequence_length, self.hidden_width))
+            query = query.reshape(batch_size, sequence_length, self.memory_width)
         else:
             valid_shapes = ((1, self.memory_width), (hidden.shape[0], self.memory_width))
             if (not isinstance(address, torch.Tensor) or address.ndim != 2
@@ -86,6 +88,7 @@ class NativeSPORAMemoryReader(ScaledOpenBaseMemory):
                 raise ValueError('Address must have shape [1 or batch, memory_width]')
             query = torch.nn.functional.normalize(
                 address.detach().to(device=x.device, dtype=x.dtype), dim=-1).expand(hidden.shape[0], -1)
+            query = query[:, None, :].expand(-1, sequence_length, -1)
         fixed_matrices = []
         for matrix in matrices:
             if (not isinstance(matrix, torch.Tensor) or matrix.ndim != 3
@@ -93,12 +96,9 @@ class NativeSPORAMemoryReader(ScaledOpenBaseMemory):
                     or matrix.shape[0] not in (1, hidden.shape[0]) or not matrix.is_floating_point()):
                 raise ValueError('Memory matrices must have shape [1 or batch, memory_width, memory_width]')
             fixed_matrices.append(matrix.detach().to(device=x.device, dtype=x.dtype).expand(hidden.shape[0], -1, -1))
-        batch_size, sequence_length = x.shape[:2]
-
         def read_page(matrix):
             token_hidden = x.reshape(batch_size * sequence_length, 1, self.hidden_width)
-            token_query = query[:, None, :].expand(-1, sequence_length, -1).reshape(
-                batch_size * sequence_length, self.memory_width)
+            token_query = query.reshape(batch_size * sequence_length, self.memory_width)
             token_matrix = matrix[:, None, :, :].expand(-1, sequence_length, -1, -1).reshape(
                 batch_size * sequence_length, self.memory_width, self.memory_width)
             return native_site.read(token_hidden, token_query, [token_matrix]).reshape_as(x)
@@ -108,12 +108,15 @@ class NativeSPORAMemoryReader(ScaledOpenBaseMemory):
         else:
             page_outputs, page_scores = [], []
             for matrix in fixed_matrices:
-                retrieved = native_site.retrieve([matrix], query)
+                token_matrix = matrix[:, None, :, :].expand(-1, sequence_length, -1, -1).reshape(
+                    batch_size * sequence_length, self.memory_width, self.memory_width)
+                retrieved = native_site.retrieve([token_matrix], query.reshape(-1, self.memory_width))
+                retrieved = retrieved.reshape(batch_size, sequence_length, self.memory_width)
                 page_scores.append((retrieved * query).sum(-1))
                 page_outputs.append(read_page(matrix))
-            weights = torch.stack(page_scores, dim=1).softmax(-1)
+            weights = torch.stack(page_scores, dim=1).softmax(dim=1)
             residuals = torch.stack([output - x for output in page_outputs], dim=1)
-            injected = x + (residuals * weights[:, :, None, None]).sum(1)
+            injected = x + (residuals * weights[:, :, :, None]).sum(1)
         return hidden + self.strength * (injected.to(device=hidden.device, dtype=hidden.dtype) - hidden)
 
 
