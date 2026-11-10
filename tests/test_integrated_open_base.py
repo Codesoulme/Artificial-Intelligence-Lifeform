@@ -124,7 +124,7 @@ class IntegratedOpenBaseTests(unittest.TestCase):
     def test_read_mask_is_snapshotted_for_call(self):
         model = IntegratedOpenBase(Base(), make_reader(), (0, 2))
         mask = torch.tensor([True, False])
-        with model._snapshot(make_state(1), None, True, mask):
+        with model._snapshot(make_state(1), None, True, mask, None):
             mask.fill_(False)
             self.assertEqual(model._memory_context.get()[2].tolist(), [True, False])
         self.assertIsNone(model._memory_context.get())
@@ -180,6 +180,65 @@ class IntegratedOpenBaseTests(unittest.TestCase):
         self.assertTrue(torch.isfinite(result).all())
         self.assertTrue(torch.isfinite(x.grad).all())
         self.assertTrue(all(p.grad is not None and torch.isfinite(p.grad).all() for p in reader.parameters()))
+
+    def test_memory_slots_select_current_or_own_history_row(self):
+        model = IntegratedOpenBase(Base(), make_reader(), (0, 2))
+        x = torch.tensor([[[1., 0., 0.]], [[1., 0., 0.]]])
+        current = [torch.eye(3).repeat(2, 1, 1) for _ in range(2)]
+        page = [[torch.stack((torch.eye(3) * 2, torch.eye(3) * 3)),
+                 torch.eye(3).repeat(2, 1, 1)] for _ in range(2)]
+        memory = SimpleNamespace(current=current, pages=[page])
+        addresses = [torch.tensor([[1., 0., 0.]]), torch.tensor([[1., 0., 0.]])]
+        mixed = model(x, memory_state=memory, memory_addresses=addresses,
+                      memory_slots=torch.tensor([0, 1]), current_only=False)
+        def slice_state(row):
+            one_page = [[tensor[row:row + 1] for tensor in site] for site in page]
+            return SimpleNamespace(current=[m[row:row + 1] for m in current], pages=[one_page])
+        current_batch = model(x[:1], memory_state=slice_state(0),
+                              memory_addresses=addresses, memory_slots=torch.tensor([0]), current_only=False)
+        history_batch = model(x[1:], memory_state=slice_state(1),
+                              memory_addresses=addresses, memory_slots=torch.tensor([1]), current_only=False)
+        self.assertTrue(torch.equal(mixed[0], current_batch[0]))
+        self.assertTrue(torch.equal(mixed[1], history_batch[0]))
+        self.assertFalse(torch.equal(mixed[0], mixed[1]))
+
+    def test_memory_slots_validate_state_dtype_batch_and_range(self):
+        model = IntegratedOpenBase(Base(), make_reader(), (0, 2))
+        x = torch.ones(2, 1, 3)
+        with self.assertRaisesRegex(ValueError, 'require a memory state'):
+            model(x, memory_slots=torch.tensor([0], dtype=torch.long))
+        memory = make_state(1.)
+        for slots in (torch.tensor([0.]), torch.tensor([0, 0], dtype=torch.int32),
+                      torch.tensor([0, 0, 0], dtype=torch.long), torch.tensor([-1, 0]), torch.tensor([0, 1])):
+            with self.subTest(slots=slots), self.assertRaises((ValueError, RuntimeError)):
+                model(x, memory_state=memory, memory_slots=slots, current_only=True)
+
+    def test_per_request_memory_slots_select_current_or_history(self):
+        model = IntegratedOpenBase(Base(), make_reader(), (0, 2))
+        x = torch.tensor([[[1., 0., 0.]], [[1., 0., 0.]]])
+        current = [torch.eye(3).repeat(2, 1, 1) for _ in range(2)]
+        page = [[torch.stack((torch.eye(3) * 2, torch.eye(3) * 3)),
+                 torch.eye(3).repeat(2, 1, 1)] for _ in range(2)]
+        memory = SimpleNamespace(current=current, pages=[page])
+        addresses = [torch.tensor([[1., 0., 0.]])] * 2
+        mixed = model(x, memory_state=memory, memory_addresses=addresses,
+                      memory_slots=torch.tensor([0, 1]), current_only=False)
+        def one_row(row):
+            single_page = [[tensor[row:row + 1] for tensor in site] for site in page]
+            return SimpleNamespace(current=[tensor[row:row + 1] for tensor in current], pages=[single_page])
+        current_only = model(x[:1], memory_state=one_row(0), memory_addresses=addresses,
+                             memory_slots=torch.tensor([0]), current_only=False)
+        history_only = model(x[1:], memory_state=one_row(1), memory_addresses=addresses,
+                             memory_slots=torch.tensor([1]), current_only=False)
+        self.assertTrue(torch.equal(mixed[0], current_only[0]))
+        self.assertTrue(torch.equal(mixed[1], history_only[0]))
+        self.assertFalse(torch.equal(mixed[0], mixed[1]))
+
+    def test_memory_slot_requires_available_page(self):
+        model = IntegratedOpenBase(Base(), make_reader(), (0, 2))
+        with self.assertRaisesRegex(ValueError, 'outside'):
+            model(torch.ones(1, 1, 3), memory_state=make_state(1),
+                  memory_slots=torch.tensor([1]), current_only=True)
 
 
 if __name__ == '__main__':
