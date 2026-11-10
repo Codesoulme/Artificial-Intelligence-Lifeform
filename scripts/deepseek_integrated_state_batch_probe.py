@@ -72,6 +72,32 @@ def run():
                                     pad_token_id=tokenizer.eos_token_id)
             generated[name] = [end_at_eos(row, tokenizer.eos_token_id)
                                for row in output[:, inputs['input_ids'].shape[1]:].tolist()]
+        # Exercise the packed history pages as well as the current-memory path.
+        individual_history_logits, individual_history_tokens = [], []
+        for state in (state_a, state_b):
+            single_inputs = {key: value[:1] for key, value in inputs.items()}
+            output = model(**single_inputs, memory_state=state, memory_addresses=addresses,
+                           current_only=False, use_cache=False)
+            individual_history_logits.append(output.logits[:, -1].float().cpu()[0])
+            output = model.generate(**single_inputs, memory_state=state, memory_addresses=addresses,
+                                    current_only=False, max_new_tokens=8, do_sample=False,
+                                    pad_token_id=tokenizer.eos_token_id)
+            individual_history_tokens.append(end_at_eos(
+                output[0, single_inputs['input_ids'].shape[1]:].tolist(), tokenizer.eos_token_id))
+        history_inputs = {key: value.expand(2, -1) for key, value in inputs.items()}
+        history_output = model(**history_inputs, memory_state=batch_ab, memory_addresses=addresses,
+                               current_only=False, use_cache=False)
+        packed_history_logits = history_output.logits[:, -1].float().cpu()
+        history_generation = model.generate(**history_inputs, memory_state=batch_ab, memory_addresses=addresses,
+                                            current_only=False, max_new_tokens=8, do_sample=False,
+                                            pad_token_id=tokenizer.eos_token_id)
+        packed_history_tokens = [end_at_eos(row, tokenizer.eos_token_id)
+                                 for row in history_generation[:, history_inputs['input_ids'].shape[1]:].tolist()]
+    history_differences = [float((packed_history_logits[i] - individual_history_logits[i]).abs().max())
+                           for i in range(2)]
+    history_token_checks = [packed_history_tokens[i] == individual_history_tokens[i] for i in range(2)]
+    history_argmax_checks = [int(packed_history_logits[i].argmax()) == int(individual_history_logits[i].argmax())
+                             for i in range(2)]
     differences = {'a_reordered': float((logits['ab'][0] - logits['ba'][1]).abs().max()),
                    'b_reordered': float((logits['ab'][1] - logits['ba'][0]).abs().max()),
                    'a_mixed': float((logits['ab'][0] - logits['mixed'][0]).abs().max()),
@@ -83,7 +109,11 @@ def run():
               'a_mixed': generated['ab'][0] == generated['mixed'][0],
               'disabled_plain': generated['mixed'][1] == generated['plain'][1],
               'a_expected': word_correct(decoded[0], WORDS[1]), 'b_expected': word_correct(decoded[1], WORDS[6])}
+    checks['history_a_matches_individual'] = history_differences[0] <= 0.1 and history_token_checks[0] and history_argmax_checks[0]
+    checks['history_b_matches_individual'] = history_differences[1] <= 0.1 and history_token_checks[1] and history_argmax_checks[1]
     print(json.dumps({'differences': differences, 'checks': checks}, ensure_ascii=True), flush=True)
+    print(json.dumps({'history_differences': history_differences, 'history_argmax_checks': history_argmax_checks,
+                      'history_tokens': history_token_checks}, ensure_ascii=True), flush=True)
     if (not all(torch.isfinite(value).all() for value in logits.values())
             or any(differences[key] > 1e-4 for key in ('a_reordered', 'b_reordered', 'a_mixed', 'disabled_plain'))
             or differences['a_vs_b'] == 0 or not all(checks.values())):
@@ -92,6 +122,10 @@ def run():
             or [frozen_digest(organism, state) for state in states] != digests):
         raise ValueError('Protected input or state changed')
     report = {'status': 'two_controlled_states_development_only', 'max_logit_differences': differences,
+              'history_max_logit_differences': history_differences,
+              'history_argmax_checks': history_argmax_checks,
+              'history_generated_tokens': {'packed': packed_history_tokens,
+                                           'individual': individual_history_tokens},
               'checks': checks, 'generated_tokens': generated, 'answers': decoded, 'component_sha256': before,
               'feature_config_sha256': config_sha, 'seconds': time.perf_counter() - started,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),

@@ -3,7 +3,6 @@ import json
 import sys
 import time
 from pathlib import Path
-from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -26,6 +25,7 @@ from scripts.open_base_trajectory_comparison import numeric_correct
 from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.growing import load, query
 from spora.internal_memory import observe_sourced
+from spora.batched_memory import batch_states
 from spora.language_training import frozen_digest
 from spora.open_base_memory import memory_hooks
 
@@ -55,8 +55,7 @@ def snapshot(organism, key, value, distractor=None):
 
 
 def combined_states(states):
-    return SimpleNamespace(current=[torch.cat([state.current[site] for state in states], dim=0).detach()
-                                    for site in range(2)], pages=[])
+    return batch_states(states)
 
 
 @torch.no_grad()
