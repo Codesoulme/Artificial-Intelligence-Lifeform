@@ -1,0 +1,242 @@
+{
+  "status": "memory_answer_distillation_unseen_template_probe",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "individual_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "candidate_sha256": {
+    "6": "8ee69847abfc117de0b1ca5104bd1046d7324e17c5d96e913fa16e6b0567dddd",
+    "12": "a21ee412ba21b769c006798091669c2413160dc3c83457ed27aa3089d4641e99"
+  },
+  "held_entities": [
+    "小岚",
+    "阿明"
+  ],
+  "held_templates": {
+    "current": [
+      "告诉我{name}最常喝的是哪种饮品。",
+      "若只看最新记录，{name}偏爱什么？"
+    ],
+    "past": [
+      "在那次调整之前，{name}会选什么饮料？",
+      "更改记录之前，{name}通常喝哪种饮品？"
+    ],
+    "later": [
+      "偏好被调整以后，{name}选择什么饮品？",
+      "最新的记录显示{name}爱喝哪种？"
+    ]
+  },
+  "baseline": {
+    "correct": 9,
+    "total": 12,
+    "accuracy": 0.75,
+    "rows": [
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "告诉我小岚最常喝的是哪种饮品。",
+        "expected": "酸奶",
+        "answer": "7",
+        "correct": false
+      },
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "若只看最新记录，小岚偏爱什么？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "在那次调整之前，小岚会选什么饮料？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "更改记录之前，小岚通常喝哪种饮品？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "偏好被调整以后，小岚选择什么饮品？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "最新的记录显示小岚爱喝哪种？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "告诉我阿明最常喝的是哪种饮品。",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "若只看最新记录，阿明偏爱什么？",
+        "expected": "咖啡",
+        "answer": "用户未提供相关信息。",
+        "correct": false
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "在那次调整之前，阿明会选什么饮料？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "更改记录之前，阿明通常喝哪种饮品？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "偏好被调整以后，阿明选择什么饮品？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "最新的记录显示阿明爱喝哪种？",
+        "expected": "咖啡",
+        "answer": "用户没有提供足够的信息来回答这个问题",
+        "correct": false
+      }
+    ]
+  },
+  "candidate": {
+    "correct": 12,
+    "total": 12,
+    "accuracy": 1.0,
+    "rows": [
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "告诉我小岚最常喝的是哪种饮品。",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "若只看最新记录，小岚偏爱什么？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "在那次调整之前，小岚会选什么饮料？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "更改记录之前，小岚通常喝哪种饮品？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "偏好被调整以后，小岚选择什么饮品？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "最新的记录显示小岚爱喝哪种？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "告诉我阿明最常喝的是哪种饮品。",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "若只看最新记录，阿明偏爱什么？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "在那次调整之前，阿明会选什么饮料？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "更改记录之前，阿明通常喝哪种饮品？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "偏好被调整以后，阿明选择什么饮品？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "最新的记录显示阿明爱喝哪种？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      }
+    ]
+  },
+  "elapsed_seconds": 114.08240980003029,
+  "peak_allocated_bytes": 3806568960,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Two held entities and six unseen question templates.",
+    "Same two corrected facts per entity as supervised training, so value pairs are not held out.",
+    "Exact-value scoring can reject a correct paraphrase or a response exceeding eight generated tokens.",
+    "Development probe only; it does not test open-ended conversation or autonomous routing."
+  ]
+}

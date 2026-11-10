@@ -1,0 +1,243 @@
+{
+  "status": "memory_answer_distillation_unseen_template_probe",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "individual_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "candidate_sha256": {
+    "6": "fd1c6b0e15e0fdce53f73a7ce41473519729365e84c972008ad61fc893312720",
+    "12": "f860d6b524ada1cd340e79094d7b5ee407e48c1cb909c385c29a41668bc51409"
+  },
+  "held_entities": [
+    "小岚",
+    "阿明"
+  ],
+  "novel_held_value_pairs": true,
+  "held_templates": {
+    "current": [
+      "告诉我{name}最常喝的是哪种饮品。",
+      "若只看最新记录，{name}偏爱什么？"
+    ],
+    "past": [
+      "在那次调整之前，{name}会选什么饮料？",
+      "更改记录之前，{name}通常喝哪种饮品？"
+    ],
+    "later": [
+      "偏好被调整以后，{name}选择什么饮品？",
+      "最新的记录显示{name}爱喝哪种？"
+    ]
+  },
+  "baseline": {
+    "correct": 8,
+    "total": 12,
+    "accuracy": 0.6666666666666666,
+    "rows": [
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "告诉我小岚最常喝的是哪种饮品。",
+        "expected": "茶",
+        "answer": "茶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "若只看最新记录，小岚偏爱什么？",
+        "expected": "茶",
+        "answer": "0\n</think>\n\n0",
+        "correct": false
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "在那次调整之前，小岚会选什么饮料？",
+        "expected": "可乐",
+        "answer": "可乐",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "更改记录之前，小岚通常喝哪种饮品？",
+        "expected": "可乐",
+        "answer": "可乐",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "偏好被调整以后，小岚选择什么饮品？",
+        "expected": "茶",
+        "answer": "茶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "最新的记录显示小岚爱喝哪种？",
+        "expected": "茶",
+        "answer": "0\n</think>\n\n### 最新记录",
+        "correct": false
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "告诉我阿明最常喝的是哪种饮品。",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "若只看最新记录，阿明偏爱什么？",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "在那次调整之前，阿明会选什么饮料？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "更改记录之前，阿明通常喝哪种饮品？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "偏好被调整以后，阿明选择什么饮品？",
+        "expected": "牛奶",
+        "answer": "（不能回答这个问题）",
+        "correct": false
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "最新的记录显示阿明爱喝哪种？",
+        "expected": "牛奶",
+        "answer": "我理解您的问题可能涉及隐私或",
+        "correct": false
+      }
+    ]
+  },
+  "candidate": {
+    "correct": 12,
+    "total": 12,
+    "accuracy": 1.0,
+    "rows": [
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "告诉我小岚最常喝的是哪种饮品。",
+        "expected": "茶",
+        "answer": "茶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "若只看最新记录，小岚偏爱什么？",
+        "expected": "茶",
+        "answer": "茶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "在那次调整之前，小岚会选什么饮料？",
+        "expected": "可乐",
+        "answer": "可乐",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "更改记录之前，小岚通常喝哪种饮品？",
+        "expected": "可乐",
+        "answer": "可乐",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "偏好被调整以后，小岚选择什么饮品？",
+        "expected": "茶",
+        "answer": "茶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "最新的记录显示小岚爱喝哪种？",
+        "expected": "茶",
+        "answer": "茶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "告诉我阿明最常喝的是哪种饮品。",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "若只看最新记录，阿明偏爱什么？",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "在那次调整之前，阿明会选什么饮料？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "更改记录之前，阿明通常喝哪种饮品？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "偏好被调整以后，阿明选择什么饮品？",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "最新的记录显示阿明爱喝哪种？",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      }
+    ]
+  },
+  "elapsed_seconds": 112.70789119997062,
+  "peak_allocated_bytes": 3806653952,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Two held entities and six unseen question templates.",
+    "Same two corrected facts per entity as supervised training, so value pairs are not held out.",
+    "Exact-value scoring can reject a correct paraphrase or a response exceeding eight generated tokens.",
+    "Development probe only; it does not test open-ended conversation or autonomous routing."
+  ]
+}

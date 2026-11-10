@@ -1,0 +1,188 @@
+{
+  "status": "recovered_saved_answer_distillation_candidate_evaluation",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_integrated_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "held_entities": [
+    "小岚",
+    "阿明"
+  ],
+  "held_answers": 6,
+  "baseline": {
+    "correct": 6,
+    "total": 6,
+    "accuracy": 1.0,
+    "rows": [
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "最近小岚最喜欢什么饮品？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "小岚较早的饮品偏好是什么？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "现在记录里小岚喜欢喝哪种饮料？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "最近阿明最喜欢什么饮品？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "阿明较早的饮品偏好是什么？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "现在记录里阿明喜欢喝哪种饮料？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      }
+    ]
+  },
+  "paired_candidate_before_answer_distillation": {
+    "correct": 1,
+    "total": 6,
+    "accuracy": 0.16666666666666666,
+    "rows": [
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "最近小岚最喜欢什么饮品？",
+        "expected": "酸奶",
+        "answer": "### 牛奶\n### 日期",
+        "correct": false
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "小岚较早的饮品偏好是什么？",
+        "expected": "豆浆",
+        "answer": "答案：小岚较早的饮品",
+        "correct": false
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "现在记录里小岚喜欢喝哪种饮料？",
+        "expected": "酸奶",
+        "answer": "### 牛奶\n\n5\n###",
+        "correct": false
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "最近阿明最喜欢什么饮品？",
+        "expected": "咖啡",
+        "answer": "阿明喜欢喝咖啡。",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "阿明较早的饮品偏好是什么？",
+        "expected": "水",
+        "answer": "阿明较早的饮品偏好是",
+        "correct": false
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "现在记录里阿明喜欢喝哪种饮料？",
+        "expected": "咖啡",
+        "answer": "深度思考",
+        "correct": false
+      }
+    ]
+  },
+  "saved_candidate_after_answer_distillation": {
+    "correct": 6,
+    "total": 6,
+    "accuracy": 1.0,
+    "rows": [
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "最近小岚最喜欢什么饮品？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "小岚较早的饮品偏好是什么？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "现在记录里小岚喜欢喝哪种饮料？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "最近阿明最喜欢什么饮品？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "阿明较早的饮品偏好是什么？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "现在记录里阿明喜欢喝哪种饮料？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      }
+    ]
+  },
+  "candidate_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "elapsed_seconds": 126.40218690014444,
+  "peak_allocated_bytes": 4036988416,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "The training process saved candidate checkpoints but failed while writing its result due to a missing report-only import.",
+    "The exact per-step training trace and training-time teacher generations were not persisted and cannot be recovered.",
+    "This evaluation reconstructs the same fixed eight-entity fact schedule and scores the two held entities.",
+    "Twelve short authored prompts and exact expected-word scoring are not open-chat acceptance."
+  ]
+}

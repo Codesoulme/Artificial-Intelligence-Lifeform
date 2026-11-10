@@ -1,0 +1,388 @@
+{
+  "status": "memory_answer_supervised_joint_spora_replacement",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_individual_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "source_integrated_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "layers": [
+    6,
+    12
+  ],
+  "facts": [
+    {
+      "name": "小林",
+      "key": 6,
+      "old_value": 0,
+      "new_value": 3,
+      "old_time": 0,
+      "new_time": 1,
+      "train_split": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "old_value": 2,
+      "new_value": 5,
+      "old_time": 2,
+      "new_time": 3,
+      "train_split": true
+    },
+    {
+      "name": "小雨",
+      "key": 35,
+      "old_value": 4,
+      "new_value": 7,
+      "old_time": 4,
+      "new_time": 5,
+      "train_split": true
+    },
+    {
+      "name": "阿哲",
+      "key": 51,
+      "old_value": 6,
+      "new_value": 1,
+      "old_time": 6,
+      "new_time": 7,
+      "train_split": true
+    },
+    {
+      "name": "小梅",
+      "key": 16,
+      "old_value": 0,
+      "new_value": 3,
+      "old_time": 8,
+      "new_time": 9,
+      "train_split": true
+    },
+    {
+      "name": "阿远",
+      "key": 27,
+      "old_value": 2,
+      "new_value": 5,
+      "old_time": 10,
+      "new_time": 11,
+      "train_split": true
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "old_value": 4,
+      "new_value": 7,
+      "old_time": 12,
+      "new_time": 13,
+      "train_split": false
+    },
+    {
+      "name": "阿明",
+      "key": 10,
+      "old_value": 6,
+      "new_value": 1,
+      "old_time": 14,
+      "new_time": 15,
+      "train_split": false
+    }
+  ],
+  "training_queries": 18,
+  "held_queries": 6,
+  "held_base": {
+    "correct": 6,
+    "total": 6,
+    "accuracy": 1.0,
+    "rows": [
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "最近小岚最喜欢什么饮品？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "小岚较早的饮品偏好是什么？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "现在记录里小岚喜欢喝哪种饮料？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "最近阿明最喜欢什么饮品？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "阿明较早的饮品偏好是什么？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "现在记录里阿明喜欢喝哪种饮料？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      }
+    ]
+  },
+  "held_candidate_before": {
+    "correct": 6,
+    "total": 6,
+    "accuracy": 1.0,
+    "rows": [
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "最近小岚最喜欢什么饮品？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "小岚较早的饮品偏好是什么？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "现在记录里小岚喜欢喝哪种饮料？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "最近阿明最喜欢什么饮品？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "阿明较早的饮品偏好是什么？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "现在记录里阿明喜欢喝哪种饮料？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      }
+    ]
+  },
+  "held_candidate_after": {
+    "correct": 6,
+    "total": 6,
+    "accuracy": 1.0,
+    "rows": [
+      {
+        "name": "小岚",
+        "intent": "current",
+        "question": "最近小岚最喜欢什么饮品？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "past",
+        "question": "小岚较早的饮品偏好是什么？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "小岚",
+        "intent": "later",
+        "question": "现在记录里小岚喜欢喝哪种饮料？",
+        "expected": "酸奶",
+        "answer": "酸奶",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "current",
+        "question": "最近阿明最喜欢什么饮品？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "past",
+        "question": "阿明较早的饮品偏好是什么？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      },
+      {
+        "name": "阿明",
+        "intent": "later",
+        "question": "现在记录里阿明喜欢喝哪种饮料？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      }
+    ]
+  },
+  "teacher_training_outputs": [
+    {
+      "name": "小林",
+      "intent": "current",
+      "teacher_text": "今天我了解到，根据您的需求，"
+    },
+    {
+      "name": "小林",
+      "intent": "past",
+      "teacher_text": "茶"
+    },
+    {
+      "name": "小林",
+      "intent": "later",
+      "teacher_text": "I'm sorry, but I don't"
+    },
+    {
+      "name": "阿宁",
+      "intent": "current",
+      "teacher_text": "可乐"
+    },
+    {
+      "name": "阿宁",
+      "intent": "past",
+      "teacher_text": "牛奶"
+    },
+    {
+      "name": "阿宁",
+      "intent": "later",
+      "teacher_text": "可乐"
+    },
+    {
+      "name": "小雨",
+      "intent": "current",
+      "teacher_text": "酸奶"
+    },
+    {
+      "name": "小雨",
+      "intent": "past",
+      "teacher_text": "豆浆"
+    },
+    {
+      "name": "小雨",
+      "intent": "later",
+      "teacher_text": "酸奶"
+    },
+    {
+      "name": "阿哲",
+      "intent": "current",
+      "teacher_text": "用户想给阿哲选饮品，"
+    },
+    {
+      "name": "阿哲",
+      "intent": "past",
+      "teacher_text": "水"
+    },
+    {
+      "name": "阿哲",
+      "intent": "later",
+      "teacher_text": "咖啡"
+    },
+    {
+      "name": "小梅",
+      "intent": "current",
+      "teacher_text": "I'm sorry, but I cannot answer"
+    },
+    {
+      "name": "小梅",
+      "intent": "past",
+      "teacher_text": "茶"
+    },
+    {
+      "name": "小梅",
+      "intent": "later",
+      "teacher_text": "I'm sorry, but I don't"
+    },
+    {
+      "name": "阿远",
+      "intent": "current",
+      "teacher_text": "可乐"
+    },
+    {
+      "name": "阿远",
+      "intent": "past",
+      "teacher_text": "牛奶"
+    },
+    {
+      "name": "阿远",
+      "intent": "later",
+      "teacher_text": "可乐"
+    }
+  ],
+  "loss_trace": [
+    {
+      "step": 1,
+      "answer_cross_entropy": 2.769301176071167
+    },
+    {
+      "step": 10,
+      "answer_cross_entropy": 0.31949445605278015
+    },
+    {
+      "step": 20,
+      "answer_cross_entropy": 0.098992258310318
+    },
+    {
+      "step": 40,
+      "answer_cross_entropy": 0.012840612791478634
+    },
+    {
+      "step": 60,
+      "answer_cross_entropy": 0.001979829277843237
+    },
+    {
+      "step": 90,
+      "answer_cross_entropy": 0.0009136825101450086
+    }
+  ],
+  "candidate_checkpoints": {
+    "6": {
+      "file": "layer-6.pt",
+      "sha256": "8ee69847abfc117de0b1ca5104bd1046d7324e17c5d96e913fa16e6b0567dddd"
+    },
+    "12": {
+      "file": "layer-12.pt",
+      "sha256": "a21ee412ba21b769c006798091669c2413160dc3c83457ed27aa3089d4641e99"
+    }
+  },
+  "elapsed_seconds": 347.3615023000166,
+  "peak_allocated_bytes": 4587546624,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Six training entities and two held entities from one fixed name/key list.",
+    "One corrected fact per entity; drink values are assigned deterministically.",
+    "Held prompts use authored templates and evaluate eight-token greedy generations.",
+    "This is a narrow memory-answer learning probe, not open-chat acceptance."
+  ]
+}
