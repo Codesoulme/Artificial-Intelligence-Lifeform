@@ -1,0 +1,560 @@
+{
+  "status": "answer_trained_progressive_postmemory_spora_graft",
+  "metadata": {
+    "format": "spora-qwen-layer-replacement-candidate-v1",
+    "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "layer": 18,
+    "width": 1536,
+    "heads": 12,
+    "max_length": 128,
+    "seed": 11827,
+    "train_steps": 140,
+    "training_graft_strength": 0.05,
+    "objective": "native_memory_answer_cross_entropy_progressive_graft"
+  },
+  "source_integrated_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "upstream_pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "starting_layer18_sha256": "77943052a94b9da54ac7e8addb7ff114359724eeb777b1835818cd78cb6de67a",
+  "candidate_sha256": "5c4651cf03c7e6c10f3015092a4bec90bb72e9e0390fac678d013d3b9052ef72",
+  "training_queries": 18,
+  "held_queries": 6,
+  "held_before_at_training_strength": {
+    "correct": 5,
+    "total": 6,
+    "accuracy": 0.8333333333333334,
+    "rows": [
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "最近小梅最喜欢什么饮品？",
+        "expected": "豆浆",
+        "answer": "</think>\n\n最近小梅最喜欢喝什么",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "小梅较早的饮品偏好是什么？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "现在记录里小梅喜欢喝哪种饮料？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "最近阿远最喜欢什么饮品？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "阿远较早的饮品偏好是什么？",
+        "expected": "果汁",
+        "answer": "果汁",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "现在记录里阿远喜欢喝哪种饮料？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      }
+    ]
+  },
+  "held_strength_sweep": {
+    "0.0": {
+      "correct": 5,
+      "total": 6,
+      "accuracy": 0.8333333333333334,
+      "rows": [
+        {
+          "name": "小梅",
+          "intent": "current",
+          "question": "最近小梅最喜欢什么饮品？",
+          "expected": "豆浆",
+          "answer": "</think>\n\n最近小梅最喜欢喝什么",
+          "correct": false
+        },
+        {
+          "name": "小梅",
+          "intent": "past",
+          "question": "小梅较早的饮品偏好是什么？",
+          "expected": "咖啡",
+          "answer": "咖啡",
+          "correct": true
+        },
+        {
+          "name": "小梅",
+          "intent": "later",
+          "question": "现在记录里小梅喜欢喝哪种饮料？",
+          "expected": "豆浆",
+          "answer": "豆浆",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "current",
+          "question": "最近阿远最喜欢什么饮品？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "past",
+          "question": "阿远较早的饮品偏好是什么？",
+          "expected": "果汁",
+          "answer": "果汁",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "later",
+          "question": "现在记录里阿远喜欢喝哪种饮料？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        }
+      ]
+    },
+    "0.025": {
+      "correct": 5,
+      "total": 6,
+      "accuracy": 0.8333333333333334,
+      "rows": [
+        {
+          "name": "小梅",
+          "intent": "current",
+          "question": "最近小梅最喜欢什么饮品？",
+          "expected": "豆浆",
+          "answer": "</think>\n\n最近小梅最喜欢喝什么",
+          "correct": false
+        },
+        {
+          "name": "小梅",
+          "intent": "past",
+          "question": "小梅较早的饮品偏好是什么？",
+          "expected": "咖啡",
+          "answer": "咖啡",
+          "correct": true
+        },
+        {
+          "name": "小梅",
+          "intent": "later",
+          "question": "现在记录里小梅喜欢喝哪种饮料？",
+          "expected": "豆浆",
+          "answer": "豆浆",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "current",
+          "question": "最近阿远最喜欢什么饮品？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "past",
+          "question": "阿远较早的饮品偏好是什么？",
+          "expected": "果汁",
+          "answer": "果汁",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "later",
+          "question": "现在记录里阿远喜欢喝哪种饮料？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        }
+      ]
+    },
+    "0.05": {
+      "correct": 5,
+      "total": 6,
+      "accuracy": 0.8333333333333334,
+      "rows": [
+        {
+          "name": "小梅",
+          "intent": "current",
+          "question": "最近小梅最喜欢什么饮品？",
+          "expected": "豆浆",
+          "answer": "</think>\n\n最近小梅最喜欢喝什么",
+          "correct": false
+        },
+        {
+          "name": "小梅",
+          "intent": "past",
+          "question": "小梅较早的饮品偏好是什么？",
+          "expected": "咖啡",
+          "answer": "咖啡",
+          "correct": true
+        },
+        {
+          "name": "小梅",
+          "intent": "later",
+          "question": "现在记录里小梅喜欢喝哪种饮料？",
+          "expected": "豆浆",
+          "answer": "豆浆",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "current",
+          "question": "最近阿远最喜欢什么饮品？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "past",
+          "question": "阿远较早的饮品偏好是什么？",
+          "expected": "果汁",
+          "answer": "果汁",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "later",
+          "question": "现在记录里阿远喜欢喝哪种饮料？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        }
+      ]
+    },
+    "0.075": {
+      "correct": 5,
+      "total": 6,
+      "accuracy": 0.8333333333333334,
+      "rows": [
+        {
+          "name": "小梅",
+          "intent": "current",
+          "question": "最近小梅最喜欢什么饮品？",
+          "expected": "豆浆",
+          "answer": "</think>\n\n最近小梅最喜欢喝什么",
+          "correct": false
+        },
+        {
+          "name": "小梅",
+          "intent": "past",
+          "question": "小梅较早的饮品偏好是什么？",
+          "expected": "咖啡",
+          "answer": "咖啡",
+          "correct": true
+        },
+        {
+          "name": "小梅",
+          "intent": "later",
+          "question": "现在记录里小梅喜欢喝哪种饮料？",
+          "expected": "豆浆",
+          "answer": "豆浆",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "current",
+          "question": "最近阿远最喜欢什么饮品？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "past",
+          "question": "阿远较早的饮品偏好是什么？",
+          "expected": "果汁",
+          "answer": "果汁",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "later",
+          "question": "现在记录里阿远喜欢喝哪种饮料？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        }
+      ]
+    },
+    "0.1": {
+      "correct": 5,
+      "total": 6,
+      "accuracy": 0.8333333333333334,
+      "rows": [
+        {
+          "name": "小梅",
+          "intent": "current",
+          "question": "最近小梅最喜欢什么饮品？",
+          "expected": "豆浆",
+          "answer": "</think>\n\n最近小梅最喜欢喝什么",
+          "correct": false
+        },
+        {
+          "name": "小梅",
+          "intent": "past",
+          "question": "小梅较早的饮品偏好是什么？",
+          "expected": "咖啡",
+          "answer": "咖啡",
+          "correct": true
+        },
+        {
+          "name": "小梅",
+          "intent": "later",
+          "question": "现在记录里小梅喜欢喝哪种饮料？",
+          "expected": "豆浆",
+          "answer": "豆浆",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "current",
+          "question": "最近阿远最喜欢什么饮品？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "past",
+          "question": "阿远较早的饮品偏好是什么？",
+          "expected": "果汁",
+          "answer": "果汁",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "later",
+          "question": "现在记录里阿远喜欢喝哪种饮料？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        }
+      ]
+    },
+    "0.2": {
+      "correct": 4,
+      "total": 6,
+      "accuracy": 0.6666666666666666,
+      "rows": [
+        {
+          "name": "小梅",
+          "intent": "current",
+          "question": "最近小梅最喜欢什么饮品？",
+          "expected": "豆浆",
+          "answer": "</think>\n\n最近小梅最喜欢喝什么",
+          "correct": false
+        },
+        {
+          "name": "小梅",
+          "intent": "past",
+          "question": "小梅较早的饮品偏好是什么？",
+          "expected": "咖啡",
+          "answer": "咖啡",
+          "correct": true
+        },
+        {
+          "name": "小梅",
+          "intent": "later",
+          "question": "现在记录里小梅喜欢喝哪种饮料？",
+          "expected": "豆浆",
+          "answer": "4",
+          "correct": false
+        },
+        {
+          "name": "阿远",
+          "intent": "current",
+          "question": "最近阿远最喜欢什么饮品？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "past",
+          "question": "阿远较早的饮品偏好是什么？",
+          "expected": "果汁",
+          "answer": "果汁",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "later",
+          "question": "现在记录里阿远喜欢喝哪种饮料？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        }
+      ]
+    },
+    "0.4": {
+      "correct": 3,
+      "total": 6,
+      "accuracy": 0.5,
+      "rows": [
+        {
+          "name": "小梅",
+          "intent": "current",
+          "question": "最近小梅最喜欢什么饮品？",
+          "expected": "豆浆",
+          "answer": "</think>\n\n最近小梅最喜欢喝什么",
+          "correct": false
+        },
+        {
+          "name": "小梅",
+          "intent": "past",
+          "question": "小梅较早的饮品偏好是什么？",
+          "expected": "咖啡",
+          "answer": "咖啡",
+          "correct": true
+        },
+        {
+          "name": "小梅",
+          "intent": "later",
+          "question": "现在记录里小梅喜欢喝哪种饮料？",
+          "expected": "豆浆",
+          "answer": "4",
+          "correct": false
+        },
+        {
+          "name": "阿远",
+          "intent": "current",
+          "question": "最近阿远最喜欢什么饮品？",
+          "expected": "水",
+          "answer": "阿远喜欢的饮品是咖啡。",
+          "correct": false
+        },
+        {
+          "name": "阿远",
+          "intent": "past",
+          "question": "阿远较早的饮品偏好是什么？",
+          "expected": "果汁",
+          "answer": "果汁",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "later",
+          "question": "现在记录里阿远喜欢喝哪种饮料？",
+          "expected": "水",
+          "answer": "水",
+          "correct": true
+        }
+      ]
+    },
+    "1.0": {
+      "correct": 2,
+      "total": 6,
+      "accuracy": 0.3333333333333333,
+      "rows": [
+        {
+          "name": "小梅",
+          "intent": "current",
+          "question": "最近小梅最喜欢什么饮品？",
+          "expected": "豆浆",
+          "answer": "嗯，这个问题看起来很简单，就是问",
+          "correct": false
+        },
+        {
+          "name": "小梅",
+          "intent": "past",
+          "question": "小梅较早的饮品偏好是什么？",
+          "expected": "咖啡",
+          "answer": "咖啡",
+          "correct": true
+        },
+        {
+          "name": "小梅",
+          "intent": "later",
+          "question": "现在记录里小梅喜欢喝哪种饮料？",
+          "expected": "豆浆",
+          "answer": "AI understood the question about the user's",
+          "correct": false
+        },
+        {
+          "name": "阿远",
+          "intent": "current",
+          "question": "最近阿远最喜欢什么饮品？",
+          "expected": "水",
+          "answer": "## 悄常水",
+          "correct": true
+        },
+        {
+          "name": "阿远",
+          "intent": "past",
+          "question": "阿远较早的饮品偏好是什么？",
+          "expected": "果汁",
+          "answer": "深度-first 优先",
+          "correct": false
+        },
+        {
+          "name": "阿远",
+          "intent": "later",
+          "question": "现在记录里阿远喜欢喝哪种饮料？",
+          "expected": "水",
+          "answer": "上升的线",
+          "correct": false
+        }
+      ]
+    }
+  },
+  "loss_trace": [
+    {
+      "step": 1,
+      "answer_cross_entropy": 0.3943162262439728
+    },
+    {
+      "step": 10,
+      "answer_cross_entropy": 0.020360255613923073
+    },
+    {
+      "step": 20,
+      "answer_cross_entropy": 0.020081443712115288
+    },
+    {
+      "step": 40,
+      "answer_cross_entropy": 0.03869255632162094
+    },
+    {
+      "step": 80,
+      "answer_cross_entropy": 0.002893519587814808
+    },
+    {
+      "step": 120,
+      "answer_cross_entropy": 0.010232692584395409
+    },
+    {
+      "step": 140,
+      "answer_cross_entropy": 0.05912940204143524
+    }
+  ],
+  "elapsed_seconds": 400.5311879001092,
+  "peak_allocated_bytes": 4400505344,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Six training entities and two held entities from one finite beverage-memory task.",
+    "Fixed blend strength during optimization; strength sweep reuses the same held set.",
+    "Layer 18 keeps the original Qwen layer in the residual blend; this is a staged graft.",
+    "No autonomous language routing or broad open-chat evaluation."
+  ]
+}
