@@ -8,12 +8,13 @@ import torch
 
 from spora.growing import new_state
 from spora.integrated_checkpoint import (_digest, IntegratedSPORARuntime, load_integrated,
-                                         load_integrated_runtime, save_integrated)
+                                         load_integrated_runtime, save_integrated, replacement_feature_variant_sha256)
 from spora.integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
 from spora.internal_memory import WriteControl, attach, read_provenance
 from spora.language_training import frozen_digest
 from spora.named_address import NamedAddressBinding, address_basis_sha256, feature_files_sha256
 from spora.temporal import TemporalConfig, TemporalSPORA
+from spora.structure_transfer import SPORALayerReplacement
 from tests.test_integrated_open_base import Base
 
 
@@ -22,7 +23,7 @@ class IntegratedCheckpointTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         (self.root / 'model.safetensors').write_bytes(b'base weights')
-        (self.root / 'config.json').write_text('{"hidden_size":3,"num_hidden_layers":3}', encoding='utf-8')
+        (self.root / 'config.json').write_text('{"hidden_size":3,"num_hidden_layers":3,"num_attention_heads":1}', encoding='utf-8')
         for name in ('tokenizer.json', 'tokenizer_config.json'):
             (self.root / name).write_text('{}', encoding='utf-8')
         self.base_sha = hashlib.sha256(b'base weights').hexdigest()
@@ -47,7 +48,7 @@ class IntegratedCheckpointTests(unittest.TestCase):
 
     def base(self):
         model = Base()
-        model.config = SimpleNamespace(hidden_size=3)
+        model.config = SimpleNamespace(hidden_size=3, num_attention_heads=1)
         return model
 
     def save(self):
@@ -185,6 +186,68 @@ class IntegratedCheckpointTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'variant'):
             self.save()
         self.assertEqual(self.path.read_bytes(), original)
+
+    def test_structural_checkpoint_restores_layers_binding_and_output(self):
+        torch.manual_seed(349)
+        replacement = SPORALayerReplacement(3, 1, max_length=8, layer_idx=1).eval()
+        replacements = {1: replacement}
+        variant = replacement_feature_variant_sha256(self.root, replacements)
+        self.organism.named_address_binding.feature_variant_sha256 = variant
+        source = self.base()
+        source.model.layers[1] = replacement
+        reference = IntegratedOpenBase(source, self.reader, (0, 2))
+        x = torch.randn(1, 4, 3)
+        addresses = [torch.randn(1, 64), torch.randn(1, 64)]
+        expected = reference(x, memory_state=self.state, memory_addresses=addresses, current_only=True)
+        save_integrated(self.path, self.organism, self.state, self.reader, self.root, (0, 2), replacements=replacements)
+        payload = torch.load(self.path, weights_only=True)
+        self.assertEqual(payload['metadata']['format'], 'spora-integrated-open-base-v3')
+        restored, organism, state = load_integrated(self.path, self.base(), self.root)
+        self.assertEqual(organism.named_address_binding.feature_variant_sha256, variant)
+        self.assertIsInstance(restored.base.model.layers[1], SPORALayerReplacement)
+        actual = restored(x, memory_state=state, memory_addresses=addresses, current_only=True)
+        torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+
+    def test_structural_checkpoint_rejects_mismatch_and_preserves_inputs(self):
+        layer = SPORALayerReplacement(3, 1, max_length=8, layer_idx=1)
+        variants = {1: layer}
+        self.organism.named_address_binding.feature_variant_sha256 = replacement_feature_variant_sha256(self.root, variants)
+        save_integrated(self.path, self.organism, self.state, self.reader, self.root, (0, 2), replacements=variants)
+        before = self.path.read_bytes()
+        with torch.no_grad():
+            layer.position.weight[0, 0] += 1
+        with self.assertRaisesRegex(ValueError, 'variant'):
+            save_integrated(self.path, self.organism, self.state, self.reader, self.root, (0, 2), replacements=variants)
+        self.assertEqual(before, self.path.read_bytes())
+        payload = torch.load(self.path, weights_only=True)
+        payload['tensors']['replacement/1/position.weight'][0, 0] += 1
+        payload['integrity_sha256'] = _digest(payload['metadata'], payload['tensors'])
+        torch.save(payload, self.path)
+        base = self.base()
+        prior_layer = base.model.layers[1]
+        with self.assertRaisesRegex(ValueError, 'replacement'):
+            load_integrated(self.path, base, self.root)
+        self.assertIs(base.model.layers[1], prior_layer)
+
+    def test_structural_runtime_write_preserves_replacement(self):
+        controller = WriteControl()
+        with torch.no_grad():
+            for parameter in controller.parameters():
+                parameter.zero_()
+            controller.network[-1].bias[0] = 20
+        self.state = attach(self.organism, self.state, controller)
+        native = NativeSPORAMemoryReader(3, 64, 0.5)
+        native.initialize_from_legacy(self.reader)
+        layer = SPORALayerReplacement(3, 1, max_length=8, layer_idx=1)
+        variants = {1: layer}
+        self.organism.named_address_binding.feature_variant_sha256 = replacement_feature_variant_sha256(self.root, variants)
+        save_integrated(self.path, self.organism, self.state, native, self.root, (0, 2), replacements=variants)
+        runtime = load_integrated_runtime(self.path, self.base(), self.root)
+        self.assertTrue(runtime.observe_sourced(4, 2, 'direct', 1.0)['current_write'])
+        recovered = load_integrated_runtime(self.path, self.base(), self.root)
+        self.assertEqual(recovered.state.cursor, 1)
+        self.assertIsInstance(recovered.decoder.base.model.layers[1], SPORALayerReplacement)
+        torch.testing.assert_close(recovered.decoder.base.model.layers[1].position.weight, layer.position.weight)
 
     def test_invalid_layer_indices_do_not_overwrite_checkpoint(self):
         self.save()

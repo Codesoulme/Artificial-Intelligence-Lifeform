@@ -1,0 +1,101 @@
+{
+  "before": {
+    "rows": [
+      {
+        "question": "小林现在喜欢什么饮品？",
+        "intent": "current",
+        "expected": "水",
+        "answer": "水",
+        "token_ids": [
+          52510,
+          151643
+        ],
+        "exact_correct": true
+      },
+      {
+        "question": "小林以前喜欢什么饮品？",
+        "intent": "past",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "token_ids": [
+          104602,
+          151643
+        ],
+        "exact_correct": true
+      }
+    ],
+    "state_digest": "43f18da84cde510f0dee6e9bf00c9f2c9cfd3640ec090bfaef2d121dcda6efb3"
+  },
+  "after_independent_process": {
+    "rows": [
+      {
+        "question": "小林现在喜欢什么饮品？",
+        "intent": "current",
+        "expected": "水",
+        "answer": "水",
+        "token_ids": [
+          52510,
+          151643
+        ],
+        "exact_correct": true
+      },
+      {
+        "question": "小林以前喜欢什么饮品？",
+        "intent": "past",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "token_ids": [
+          104602,
+          151643
+        ],
+        "exact_correct": true
+      }
+    ],
+    "state_digest": "43f18da84cde510f0dee6e9bf00c9f2c9cfd3640ec090bfaef2d121dcda6efb3",
+    "checkpoint_sha256": "a26c966250bb2aac33948db189c4f74c4aff8fbaa4c94ffb761a416415446ec5",
+    "replacement_lengths": {
+      "6": 768,
+      "12": 768
+    }
+  },
+  "same_tokens": [
+    true,
+    true
+  ],
+  "structural_format": "spora-integrated-open-base-v3",
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "replacement_specs": [
+    {
+      "index": 6,
+      "width": 1536,
+      "heads": 12,
+      "max_length": 768,
+      "sha256": "dce90966a4fd933aaff9b88b6613c5c307e7ae232bd284c79e9d688178ec6667"
+    },
+    {
+      "index": 12,
+      "width": 1536,
+      "heads": 12,
+      "max_length": 768,
+      "sha256": "4294483068ef891e188575dbfbab850a50c2219ee7f5c55a6b2584e7271414e4"
+    }
+  ],
+  "checkpoint_sha256": "a26c966250bb2aac33948db189c4f74c4aff8fbaa4c94ffb761a416415446ec5",
+  "checkpoint_bytes": 244114744,
+  "protected_sha256": {
+    "base": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "source": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+    "pair": {
+      "6": "602922906bc63709ccaf2e06d51900683920cfa90c53fe174ac56b3b2bf70255",
+      "12": "32c0235c693db0f1b52338cb28306648e31152290f7a18bc72e552c7383863c5"
+    }
+  },
+  "elapsed_seconds": 296.31865989998914,
+  "limitations": [
+    "Synthetic state with one explicitly addressed entity and two controlled facts.",
+    "No automatic language routing; caller provides addresses and time slots.",
+    "Independent reload is not a crash recovery or multi-user test.",
+    "The large frozen base weights and tokenizer remain separate files.",
+    "Finite short-answer samples do not establish open-chat quality."
+  ]
+}

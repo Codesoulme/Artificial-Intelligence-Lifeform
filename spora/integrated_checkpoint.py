@@ -1,8 +1,10 @@
-"""Experimental checkpoint joining an individual and its open-base reader.
+"""Experimental checkpoint joining an individual, reader and optional SPORA layers.
 
 The base weights remain separate. Their on-disk digest and tokenizer/config
 fingerprint are checked, but a caller-supplied in-memory base is not proven to
-have been loaded from those files. Load it from the verified directory.
+have been loaded from those files. Load it from the verified directory. The
+structural format embeds replacement tensors and checks their declared layout;
+it does not serialize unsupported blends or the full frozen base.
 """
 import hashlib
 import json
@@ -12,12 +14,14 @@ import torch
 
 from .integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
 from .language_training import atomic_save
-from .named_address import feature_files_sha256
+from .named_address import feature_files_sha256, structural_feature_sha256
+from .structure_transfer import SPORALayerReplacement, SPORALayerBlend
 from .state_codec import flatten, restore
 from .internal_memory import observe_sourced as observe_spora_sourced
 
 FORMAT = 'spora-integrated-open-base-v2'
 LEGACY_FORMAT = 'spora-integrated-open-base-v1'
+STRUCTURAL_FORMAT = 'spora-integrated-open-base-v3'
 
 
 class IntegratedSPORARuntime:
@@ -47,7 +51,7 @@ class IntegratedSPORARuntime:
         destination = self.checkpoint_path if checkpoint_path is None else Path(checkpoint_path)
         if destination is not None:
             save_integrated(destination, self.organism, candidate, self.decoder.reader,
-                            self.model_dir, self.decoder.layer_indices)
+                            self.model_dir, self.decoder.layer_indices, replacements=self._replacements())
         self.state = candidate
         return decision
 
@@ -56,9 +60,15 @@ class IntegratedSPORARuntime:
         if destination is None:
             raise ValueError('A checkpoint destination is required')
         save_integrated(destination, self.organism, self.state, self.decoder.reader,
-                        self.model_dir, self.decoder.layer_indices)
+                        self.model_dir, self.decoder.layer_indices, replacements=self._replacements())
         self.checkpoint_path = destination
         return destination
+
+    def _replacements(self):
+        layers = self.decoder.base.model.layers
+        if any(isinstance(layer, SPORALayerBlend) for layer in layers):
+            raise ValueError('Cannot persist an unsupported blended structural layer')
+        return {index: layer for index, layer in enumerate(layers) if isinstance(layer, SPORALayerReplacement)}
 
 
 def _file_sha256(path):
@@ -88,14 +98,50 @@ def _digest(metadata, tensors):
     return digest.hexdigest()
 
 
-def _validate_binding(model, base_sha, config_sha):
+def _validate_binding(model, base_sha, config_sha, expected_variant=None):
     binding = getattr(model, 'named_address_binding', None)
     if binding is not None:
         binding.validate(model)
         if binding.feature_model_sha256 != base_sha or binding.feature_config_sha256 != config_sha:
             raise ValueError('Individual binding does not match base files')
-        if binding.feature_variant_sha256 is not None:
-            raise ValueError('Integrated checkpoint does not yet verify a structural feature variant')
+        if binding.feature_variant_sha256 != expected_variant:
+            raise ValueError('Individual binding does not match the structural feature variant')
+
+
+def _replacement_bundle(replacements):
+    if not isinstance(replacements, dict):
+        raise ValueError('Structural replacements must be an indexed mapping')
+    if any(type(index) is not int or index < 0 for index in replacements):
+        raise ValueError('Invalid structural replacement index')
+    specs, tensors = [], {}
+    for index, layer in sorted(replacements.items()):
+        if (type(index) is not int or index < 0 or type(layer) is not SPORALayerReplacement
+                or layer.layer_idx != index or not 0 < layer.max_length <= 32768):
+            raise ValueError('Invalid structural replacement')
+        spec = {'index': index, 'width': layer.width, 'heads': layer.block.heads,
+                'max_length': layer.max_length}
+        state = layer.state_dict()
+        with torch.random.fork_rng(devices=[]):
+            expected = SPORALayerReplacement(layer.width, layer.block.heads,
+                                              layer.max_length, layer_idx=index).state_dict()
+        if (set(state) != set(expected) or any(state[k].shape != v.shape or state[k].dtype != v.dtype
+                                               for k, v in expected.items())):
+            raise ValueError('Invalid structural replacement tensors')
+        spec['sha256'] = _digest(spec, state)
+        specs.append(spec)
+        tensors.update({f'replacement/{index}/{name}': tensor.detach().cpu().clone() for name, tensor in state.items()})
+    return specs, tensors
+
+
+def replacement_feature_variant_sha256(model_dir, replacements):
+    """Fingerprint supplied replacement tensors; caller owns the loaded base's provenance."""
+    if not replacements:
+        raise ValueError('At least one structural replacement is required')
+    specs, _ = _replacement_bundle(replacements)
+    return structural_feature_sha256(_file_sha256(Path(model_dir)/'model.safetensors'),
+                                     feature_files_sha256(model_dir),
+                                     {x['index']: x['sha256'] for x in specs},
+                                     {x['index']: x['max_length'] for x in specs})
 
 
 def _validate_base_config(directory, hidden_width, layers):
@@ -109,7 +155,7 @@ def _validate_base_config(directory, hidden_width, layers):
         raise ValueError('Reader does not match base configuration')
 
 
-def save_integrated(path, organism, state, reader, model_dir, layer_indices):
+def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, replacements=None):
     if type(reader) not in (ScaledOpenBaseMemory, NativeSPORAMemoryReader):
         raise ValueError('Expected a supported scaled SPORA memory reader')
     if (not isinstance(layer_indices, (tuple, list)) or len(layer_indices) != 2
@@ -125,7 +171,17 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices):
     _validate_base_config(directory, reader.hidden_width, layer_indices)
     base_sha = _file_sha256(directory / 'model.safetensors')
     config_sha = feature_files_sha256(directory)
-    _validate_binding(organism, base_sha, config_sha)
+    replacements = {} if replacements is None else replacements
+    specs, replacement_tensors = _replacement_bundle(replacements)
+    with (directory/'config.json').open(encoding='utf-8') as stream:
+        base_config = json.load(stream)
+    if any(spec['index'] >= base_config['num_hidden_layers'] or spec['index'] in layer_indices
+           or spec['width'] != base_config['hidden_size'] or spec['heads'] != base_config.get('num_attention_heads')
+           for spec in specs):
+        raise ValueError('Structural replacement does not match base configuration')
+    variant = (structural_feature_sha256(base_sha, config_sha, {x['index']: x['sha256'] for x in specs},
+                                         {x['index']: x['max_length'] for x in specs}) if specs else None)
+    _validate_binding(organism, base_sha, config_sha, variant)
     schema, individual = flatten(organism, state)
     reader_tensors = reader.state_dict()
     with torch.random.fork_rng(devices=[]):
@@ -136,11 +192,14 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices):
                    for k, v in reference.items())):
         raise ValueError('Invalid reader tensor set, shape or dtype')
     tensors = {**{'individual/' + k: v.detach().cpu().clone() for k, v in individual.items()},
-               **{'reader/' + k: v.detach().cpu().clone() for k, v in reader_tensors.items()}}
-    metadata = {'format': FORMAT, 'base_sha256': base_sha, 'feature_config_sha256': config_sha,
+               **{'reader/' + k: v.detach().cpu().clone() for k, v in reader_tensors.items()}, **replacement_tensors}
+    metadata = {'format': STRUCTURAL_FORMAT if specs else FORMAT, 'base_sha256': base_sha, 'feature_config_sha256': config_sha,
                 'individual_schema': schema, 'reader': {'hidden_width': reader.hidden_width,
                 'memory_width': reader.memory_width, 'strength': reader.strength, 'layers': list(layer_indices),
                 'kind': 'native-spora-delta-site' if type(reader) is NativeSPORAMemoryReader else 'scaled-open-base'}}
+    if specs:
+        metadata['replacements'] = specs
+        metadata['feature_variant_sha256'] = variant
     integrity = _digest(metadata, tensors)
     atomic_save({'metadata': metadata, 'tensors': tensors, 'integrity_sha256': integrity}, path)
 
@@ -150,7 +209,7 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     if not isinstance(payload, dict) or set(payload) != {'metadata', 'tensors', 'integrity_sha256'}:
         raise ValueError('Invalid integrated checkpoint')
     metadata, tensors = payload['metadata'], payload['tensors']
-    if (not isinstance(metadata, dict) or metadata.get('format') not in (FORMAT, LEGACY_FORMAT)
+    if (not isinstance(metadata, dict) or metadata.get('format') not in (FORMAT, LEGACY_FORMAT, STRUCTURAL_FORMAT)
             or not isinstance(tensors, dict)):
         raise ValueError('Unsupported integrated checkpoint')
     if _digest(metadata, tensors) != payload['integrity_sha256']:
@@ -169,16 +228,59 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         raise ValueError('Base hidden width mismatch')
     individual_tensors = {k[len('individual/'):]: v for k, v in tensors.items() if k.startswith('individual/')}
     reader_tensors = {k[len('reader/'):]: v for k, v in tensors.items() if k.startswith('reader/')}
-    if len(individual_tensors) + len(reader_tensors) != len(tensors):
+    replacement_tensors = {k: v for k, v in tensors.items() if k.startswith('replacement/')}
+    if len(individual_tensors) + len(reader_tensors) + len(replacement_tensors) != len(tensors):
         raise ValueError('Unexpected integrated checkpoint tensor')
+    format_name = metadata['format']
+    layers = getattr(getattr(base, 'model', None), 'layers', None)
+    if not isinstance(layers, torch.nn.ModuleList):
+        raise ValueError('Expected base.model.layers as a ModuleList')
+    loaded_replacements, hashes, lengths, consumed = {}, {}, {}, set()
+    if format_name == STRUCTURAL_FORMAT:
+        specs = metadata.get('replacements')
+        if not isinstance(specs, list) or not specs:
+            raise ValueError('Invalid structural replacement metadata')
+        for spec in specs:
+            if not isinstance(spec, dict) or set(spec) != {'index', 'width', 'heads', 'max_length', 'sha256'}:
+                raise ValueError('Invalid structural replacement metadata')
+            index, width, heads, length = spec['index'], spec['width'], spec['heads'], spec['max_length']
+            if (type(index) is not int or index < 0 or index >= len(layers) or index in loaded_replacements
+                    or index in config['layers'] or type(width) is not int or width != config['hidden_width']
+                    or type(heads) is not int or heads != getattr(base.config, 'num_attention_heads', None)
+                    or type(length) is not int or not 0 < length <= 32768):
+                raise ValueError('Invalid structural replacement configuration')
+            prefix = f'replacement/{index}/'
+            state_dict = {key[len(prefix):]: value for key, value in replacement_tensors.items() if key.startswith(prefix)}
+            consumed.update(key for key in replacement_tensors if key.startswith(prefix))
+            identity = {k: spec[k] for k in ('index', 'width', 'heads', 'max_length')}
+            if _digest(identity, state_dict) != spec['sha256']:
+                raise ValueError('Structural replacement digest mismatch')
+            with torch.random.fork_rng(devices=[]):
+                block = SPORALayerReplacement(width, heads, length, layer_idx=index)
+            expected_state = block.state_dict()
+            if (set(state_dict) != set(expected_state) or any(state_dict[k].shape != value.shape
+                    or state_dict[k].dtype != value.dtype for k, value in expected_state.items())):
+                raise ValueError('Invalid structural replacement tensors')
+            block.load_state_dict(state_dict, strict=True)
+            loaded_replacements[index] = block
+            hashes[index], lengths[index] = spec['sha256'], length
+        if consumed != set(replacement_tensors):
+            raise ValueError('Unexpected structural replacement tensor')
+        variant = structural_feature_sha256(base_sha, config_sha, hashes, lengths)
+        if metadata.get('feature_variant_sha256') != variant:
+            raise ValueError('Structural replacement variant mismatch')
+    else:
+        if replacement_tensors or 'replacements' in metadata or 'feature_variant_sha256' in metadata:
+            raise ValueError('Structural replacements require a structural checkpoint')
+        variant = None
     organism, state = restore(metadata['individual_schema'], individual_tensors, individual_device)
     if organism.config.memory_width != config['memory_width']:
         raise ValueError('Reader and individual memory widths differ')
-    _validate_binding(organism, base_sha, config_sha)
+    _validate_binding(organism, base_sha, config_sha, variant)
     kind = config.get('kind', 'scaled-open-base')
     if kind == 'scaled-open-base':
         reader_type = ScaledOpenBaseMemory
-    elif kind == 'native-spora-delta-site' and metadata['format'] == FORMAT:
+    elif kind == 'native-spora-delta-site' and metadata['format'] in (FORMAT, STRUCTURAL_FORMAT):
         reader_type = NativeSPORAMemoryReader
     else:
         raise ValueError('Unsupported integrated reader kind')
@@ -189,10 +291,21 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         raise ValueError('Invalid reader tensor set, shape or dtype')
     reader.load_state_dict(reader_tensors, strict=True)
     try:
-        reader.to(next(base.parameters()).device)
+        device = next(base.parameters()).device
     except StopIteration:
-        pass
-    integrated = IntegratedOpenBase(base, reader, config['layers'])
+        device = torch.device('cpu')
+    reader.to(device)
+    for block in loaded_replacements.values():
+        block.to(device).eval()
+    previous = {index: layers[index] for index in set(loaded_replacements) | set(config['layers'])}
+    try:
+        for index, block in loaded_replacements.items():
+            layers[index] = block
+        integrated = IntegratedOpenBase(base, reader, config['layers'])
+    except Exception:
+        for index, layer in previous.items():
+            layers[index] = layer
+        raise
     return integrated, organism, state
 
 
