@@ -1,0 +1,3000 @@
+{
+  "status": "multi_entity_memory_strength_and_structure_factor_probe",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "original_individual_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "integrated_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "individual_frozen_digest": "da68e934f59c29cba354dbee4e0daa46a5d8a2ebe72300cafca4d3a240bef11e",
+  "native_reader_strength": 0.5,
+  "strengths": [
+    0.1,
+    0.25,
+    0.5,
+    0.75
+  ],
+  "entities": [
+    "小林",
+    "阿宁",
+    "小雨",
+    "阿哲"
+  ],
+  "queries": 24,
+  "candidate_sha256": {
+    "plain_pair": {
+      "6": "fa4f76911b2302f513507d5b655c3eb064a13c9ce7ac03b265d2d5b74b6a0b15",
+      "12": "4b4c0e370d90c5e3bcbf8d5eab11a82f111cf0193da1d02ad2b36e3f37334307"
+    },
+    "memory_conditioned_layer6": {
+      "6": "40db72ea9f3ba71b7755e0d4ae378a2807bac7aad32c75eecab48444435cd3fe",
+      "12": "4b4c0e370d90c5e3bcbf8d5eab11a82f111cf0193da1d02ad2b36e3f37334307"
+    },
+    "joint_memory_v2": {
+      "6": "c5f1556376f0736b79743a729c9064c0bbc6b314c9b2409a03a53596e6509e0d",
+      "12": "6f3a8167a40f555c2499a67603c016274056c7770fe67975dcd00d8aebfd4a9a"
+    }
+  },
+  "summary": {
+    "plain_pair@0.1": {
+      "top1_agreement": 0.4166666666666667,
+      "mean_kl_nats": 1.577901378273964,
+      "max_logit_abs_diff": 9.265625,
+      "queries": 24
+    },
+    "memory_conditioned_layer6@0.1": {
+      "top1_agreement": 0.3333333333333333,
+      "mean_kl_nats": 1.5183891309425235,
+      "max_logit_abs_diff": 9.63037109375,
+      "queries": 24
+    },
+    "joint_memory_v2@0.1": {
+      "top1_agreement": 0.3333333333333333,
+      "mean_kl_nats": 1.4423149243618052,
+      "max_logit_abs_diff": 9.642578125,
+      "queries": 24
+    },
+    "plain_pair@0.25": {
+      "top1_agreement": 0.0,
+      "mean_kl_nats": 2.998283858100573,
+      "max_logit_abs_diff": 11.50439453125,
+      "queries": 24
+    },
+    "memory_conditioned_layer6@0.25": {
+      "top1_agreement": 0.0,
+      "mean_kl_nats": 2.8876249343156815,
+      "max_logit_abs_diff": 11.30517578125,
+      "queries": 24
+    },
+    "joint_memory_v2@0.25": {
+      "top1_agreement": 0.041666666666666664,
+      "mean_kl_nats": 2.445443739493688,
+      "max_logit_abs_diff": 10.296875,
+      "queries": 24
+    },
+    "plain_pair@0.5": {
+      "top1_agreement": 0.0,
+      "mean_kl_nats": 4.614389091730118,
+      "max_logit_abs_diff": 12.26171875,
+      "queries": 24
+    },
+    "memory_conditioned_layer6@0.5": {
+      "top1_agreement": 0.0,
+      "mean_kl_nats": 3.926185578107834,
+      "max_logit_abs_diff": 11.91796875,
+      "queries": 24
+    },
+    "joint_memory_v2@0.5": {
+      "top1_agreement": 0.08333333333333333,
+      "mean_kl_nats": 2.700571363170942,
+      "max_logit_abs_diff": 11.1962890625,
+      "queries": 24
+    },
+    "plain_pair@0.75": {
+      "top1_agreement": 0.0,
+      "mean_kl_nats": 4.969105859597524,
+      "max_logit_abs_diff": 12.9140625,
+      "queries": 24
+    },
+    "memory_conditioned_layer6@0.75": {
+      "top1_agreement": 0.16666666666666666,
+      "mean_kl_nats": 3.768524006009102,
+      "max_logit_abs_diff": 14.44921875,
+      "queries": 24
+    },
+    "joint_memory_v2@0.75": {
+      "top1_agreement": 0.375,
+      "mean_kl_nats": 2.0013607864578566,
+      "max_logit_abs_diff": 12.505859375,
+      "queries": 24
+    }
+  },
+  "rows": [
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 0.2656037211418152,
+      "max_logit_abs_diff": 8.48828125
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 0.17657139897346497,
+      "max_logit_abs_diff": 7.48193359375
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 0.11755028367042542,
+      "max_logit_abs_diff": 8.765625
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 0.33263352513313293,
+      "max_logit_abs_diff": 7.216796875
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 0.32967638969421387,
+      "max_logit_abs_diff": 7.1171875
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 0.3221421539783478,
+      "max_logit_abs_diff": 7.373046875
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 1,
+      "kl_nats": 0.7764553427696228,
+      "max_logit_abs_diff": 9.1875
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 1,
+      "kl_nats": 0.7507811784744263,
+      "max_logit_abs_diff": 8.6328125
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 1,
+      "kl_nats": 0.5662157535552979,
+      "max_logit_abs_diff": 9.642578125
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.4174102544784546,
+      "max_logit_abs_diff": 7.248046875
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.5365703105926514,
+      "max_logit_abs_diff": 7.630859375
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.801465392112732,
+      "max_logit_abs_diff": 6.982421875
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.7559852600097656,
+      "max_logit_abs_diff": 8.517578125
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.8619160652160645,
+      "max_logit_abs_diff": 8.26953125
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.5939807891845703,
+      "max_logit_abs_diff": 8.333984375
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.599672317504883,
+      "max_logit_abs_diff": 9.265625
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.104567766189575,
+      "max_logit_abs_diff": 9.209228515625
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.989283323287964,
+      "max_logit_abs_diff": 8.87890625
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 0.9358435273170471,
+      "max_logit_abs_diff": 8.51171875
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 0.676416277885437,
+      "max_logit_abs_diff": 7.1455078125
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 0.5313225984573364,
+      "max_logit_abs_diff": 8.27734375
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.5525256395339966,
+      "max_logit_abs_diff": 6.962890625
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.538451910018921,
+      "max_logit_abs_diff": 7.40185546875
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.6797962188720703,
+      "max_logit_abs_diff": 7.0703125
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 1,
+      "kl_nats": 1.0530426502227783,
+      "max_logit_abs_diff": 7.6650390625
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 1.2516834735870361,
+      "max_logit_abs_diff": 7.6796875
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 1.0269010066986084,
+      "max_logit_abs_diff": 7.2578125
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 1.152851939201355,
+      "max_logit_abs_diff": 7.75830078125
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.317183494567871,
+      "max_logit_abs_diff": 8.05419921875
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.4076695442199707,
+      "max_logit_abs_diff": 6.22265625
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.842949628829956,
+      "max_logit_abs_diff": 8.17578125
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.1889705657958984,
+      "max_logit_abs_diff": 8.859375
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.8631560802459717,
+      "max_logit_abs_diff": 7.888671875
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.9229180812835693,
+      "max_logit_abs_diff": 9.1209716796875
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.686493158340454,
+      "max_logit_abs_diff": 9.63037109375
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.4182469844818115,
+      "max_logit_abs_diff": 8.09228515625
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 0.1558249592781067,
+      "max_logit_abs_diff": 8.095458984375
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 0.09628265351057053,
+      "max_logit_abs_diff": 7.3153076171875
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 0.07123146206140518,
+      "max_logit_abs_diff": 8.197265625
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 0.25276216864585876,
+      "max_logit_abs_diff": 6.92578125
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 0.2468654364347458,
+      "max_logit_abs_diff": 7.3660888671875
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 0.31253451108932495,
+      "max_logit_abs_diff": 7.6787109375
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 1,
+      "kl_nats": 0.748360276222229,
+      "max_logit_abs_diff": 8.994140625
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 1,
+      "kl_nats": 0.6247568726539612,
+      "max_logit_abs_diff": 8.529296875
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 1,
+      "kl_nats": 0.4757838249206543,
+      "max_logit_abs_diff": 8.9677734375
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.2084600925445557,
+      "max_logit_abs_diff": 6.9970703125
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.2512590885162354,
+      "max_logit_abs_diff": 7.605224609375
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.5227632522583008,
+      "max_logit_abs_diff": 5.9697265625
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.047138214111328,
+      "max_logit_abs_diff": 7.640625
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.170186996459961,
+      "max_logit_abs_diff": 8.5234375
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.0284478664398193,
+      "max_logit_abs_diff": 7.984375
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.5018463134765625,
+      "max_logit_abs_diff": 8.8603515625
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.076997756958008,
+      "max_logit_abs_diff": 9.298583984375
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.260481595993042,
+      "max_logit_abs_diff": 9.190673828125
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.3148001432418823,
+      "max_logit_abs_diff": 7.2545166015625
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 0.8503896594047546,
+      "max_logit_abs_diff": 6.31494140625
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 0.5099823474884033,
+      "max_logit_abs_diff": 6.81982421875
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.097907781600952,
+      "max_logit_abs_diff": 7.16015625
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.9890055656433105,
+      "max_logit_abs_diff": 7.6171875
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.1249136924743652,
+      "max_logit_abs_diff": 7.435546875
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 1,
+      "kl_nats": 1.1889214515686035,
+      "max_logit_abs_diff": 8.15673828125
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 1.0336601734161377,
+      "max_logit_abs_diff": 7.84423828125
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 1,
+      "kl_nats": 0.8278111219406128,
+      "max_logit_abs_diff": 7.35205078125
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 0.9137450456619263,
+      "max_logit_abs_diff": 6.60595703125
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 0.9552493095397949,
+      "max_logit_abs_diff": 6.904296875
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 0.9947850108146667,
+      "max_logit_abs_diff": 5.6171875
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.8645458221435547,
+      "max_logit_abs_diff": 7.36669921875
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.2636353969573975,
+      "max_logit_abs_diff": 7.2138671875
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.0404202938079834,
+      "max_logit_abs_diff": 6.8095703125
+    },
+    {
+      "strength": 0.1,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.9674289226531982,
+      "max_logit_abs_diff": 9.095703125
+    },
+    {
+      "strength": 0.1,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.463768243789673,
+      "max_logit_abs_diff": 9.28125
+    },
+    {
+      "strength": 0.1,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.1286730766296387,
+      "max_logit_abs_diff": 8.14666748046875
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.8447813987731934,
+      "max_logit_abs_diff": 10.4169921875
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.3776695728302,
+      "max_logit_abs_diff": 9.0390625
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.551616907119751,
+      "max_logit_abs_diff": 9.66796875
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.7494254112243652,
+      "max_logit_abs_diff": 9.96875
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.748490571975708,
+      "max_logit_abs_diff": 8.533203125
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.7347660064697266,
+      "max_logit_abs_diff": 8.16552734375
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 3.6756186485290527,
+      "max_logit_abs_diff": 9.824462890625
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 4.059760570526123,
+      "max_logit_abs_diff": 9.449462890625
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 2.6163220405578613,
+      "max_logit_abs_diff": 8.91015625
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.2403459548950195,
+      "max_logit_abs_diff": 8.359375
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.265354633331299,
+      "max_logit_abs_diff": 8.216796875
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.6517949104309082,
+      "max_logit_abs_diff": 7.294921875
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.085336208343506,
+      "max_logit_abs_diff": 9.606689453125
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.893831491470337,
+      "max_logit_abs_diff": 9.5367431640625
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.3214715719223022,
+      "max_logit_abs_diff": 9.724609375
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.430568695068359,
+      "max_logit_abs_diff": 10.9921875
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.969316005706787,
+      "max_logit_abs_diff": 10.26953125
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.462779998779297,
+      "max_logit_abs_diff": 10.296875
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 4.410750389099121,
+      "max_logit_abs_diff": 9.8486328125
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.7765650749206543,
+      "max_logit_abs_diff": 9.205078125
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.8536624908447266,
+      "max_logit_abs_diff": 8.6171875
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.4693117141723633,
+      "max_logit_abs_diff": 7.86328125
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.9738380908966064,
+      "max_logit_abs_diff": 7.859375
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.612365245819092,
+      "max_logit_abs_diff": 7.6376953125
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 2.3496458530426025,
+      "max_logit_abs_diff": 10.1796875
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 2.5219125747680664,
+      "max_logit_abs_diff": 9.83203125
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 2.337827444076538,
+      "max_logit_abs_diff": 9.6328125
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.7008543014526367,
+      "max_logit_abs_diff": 9.6796875
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.491816282272339,
+      "max_logit_abs_diff": 8.736328125
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.6616604328155518,
+      "max_logit_abs_diff": 7.763671875
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.7907094955444336,
+      "max_logit_abs_diff": 9.57843017578125
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.9282073974609375,
+      "max_logit_abs_diff": 9.707763671875
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.4563446044921875,
+      "max_logit_abs_diff": 7.66796875
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.407458782196045,
+      "max_logit_abs_diff": 9.583984375
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.1426572799682617,
+      "max_logit_abs_diff": 9.50390625
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.5897703170776367,
+      "max_logit_abs_diff": 9.4521484375
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.4570655822753906,
+      "max_logit_abs_diff": 9.849609375
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.076768159866333,
+      "max_logit_abs_diff": 9.544921875
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.472679615020752,
+      "max_logit_abs_diff": 9.100830078125
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.5374112129211426,
+      "max_logit_abs_diff": 9.419189453125
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.5814385414123535,
+      "max_logit_abs_diff": 9.1796875
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.8805253505706787,
+      "max_logit_abs_diff": 8.323158264160156
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 4.473818302154541,
+      "max_logit_abs_diff": 9.662109375
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 4.0913262367248535,
+      "max_logit_abs_diff": 9.0390625
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 2.3681588172912598,
+      "max_logit_abs_diff": 8.78125
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.8452097177505493,
+      "max_logit_abs_diff": 8.2001953125
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.9688750505447388,
+      "max_logit_abs_diff": 8.03125
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.4766466617584229,
+      "max_logit_abs_diff": 6.93896484375
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.1369054317474365,
+      "max_logit_abs_diff": 9.604736328125
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.949873447418213,
+      "max_logit_abs_diff": 9.486572265625
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 1.2785849571228027,
+      "max_logit_abs_diff": 9.056640625
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.7121963500976562,
+      "max_logit_abs_diff": 10.33984375
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.5679447650909424,
+      "max_logit_abs_diff": 9.703125
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.899247646331787,
+      "max_logit_abs_diff": 9.46875
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 4.147085189819336,
+      "max_logit_abs_diff": 9.30517578125
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.622249126434326,
+      "max_logit_abs_diff": 8.521484375
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.9350714683532715,
+      "max_logit_abs_diff": 9.01953125
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.8355045318603516,
+      "max_logit_abs_diff": 9.078125
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.0881171226501465,
+      "max_logit_abs_diff": 8.8212890625
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.609229803085327,
+      "max_logit_abs_diff": 8.873046875
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 2.9703829288482666,
+      "max_logit_abs_diff": 9.146484375
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 3.2242510318756104,
+      "max_logit_abs_diff": 9.28564453125
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 2.1101880073547363,
+      "max_logit_abs_diff": 8.5478515625
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.924225091934204,
+      "max_logit_abs_diff": 9.133544921875
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.8321905136108398,
+      "max_logit_abs_diff": 8.630859375
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.1265345811843872,
+      "max_logit_abs_diff": 7.009765625
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.3692848682403564,
+      "max_logit_abs_diff": 9.1328125
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.619630813598633,
+      "max_logit_abs_diff": 8.88671875
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.461158514022827,
+      "max_logit_abs_diff": 7.5234375
+    },
+    {
+      "strength": 0.25,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.394916534423828,
+      "max_logit_abs_diff": 11.50439453125
+    },
+    {
+      "strength": 0.25,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.530914068222046,
+      "max_logit_abs_diff": 11.30517578125
+    },
+    {
+      "strength": 0.25,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.22224235534668,
+      "max_logit_abs_diff": 9.953125
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.7502496242523193,
+      "max_logit_abs_diff": 10.63671875
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.6382362842559814,
+      "max_logit_abs_diff": 9.775390625
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.354628086090088,
+      "max_logit_abs_diff": 9.3740234375
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.1409544944763184,
+      "max_logit_abs_diff": 11.38671875
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.1297574043273926,
+      "max_logit_abs_diff": 10.87109375
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.3481385707855225,
+      "max_logit_abs_diff": 10.029296875
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 9.41318416595459,
+      "max_logit_abs_diff": 11.9921875
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 6.581084728240967,
+      "max_logit_abs_diff": 11.033203125
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 3.587691307067871,
+      "max_logit_abs_diff": 10.800537109375
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 5.465808868408203,
+      "max_logit_abs_diff": 9.998046875
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.739366054534912,
+      "max_logit_abs_diff": 10.8018798828125
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.4273147583007812,
+      "max_logit_abs_diff": 10.8280029296875
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.2619457244873047,
+      "max_logit_abs_diff": 11.5126953125
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.060835361480713,
+      "max_logit_abs_diff": 11.91796875
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.9886616468429565,
+      "max_logit_abs_diff": 11.171875
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.785022020339966,
+      "max_logit_abs_diff": 11.232421875
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.8246562480926514,
+      "max_logit_abs_diff": 10.357666015625
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 1.9158748388290405,
+      "max_logit_abs_diff": 10.11474609375
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.75221848487854,
+      "max_logit_abs_diff": 10.15234375
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.317417860031128,
+      "max_logit_abs_diff": 8.546875
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.2507104873657227,
+      "max_logit_abs_diff": 10.2685546875
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.8004021644592285,
+      "max_logit_abs_diff": 10.662109375
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.6411051750183105,
+      "max_logit_abs_diff": 9.865234375
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.31001877784729,
+      "max_logit_abs_diff": 8.4755859375
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 4.9406538009643555,
+      "max_logit_abs_diff": 11.28125
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 4.143167495727539,
+      "max_logit_abs_diff": 10.919921875
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 3.049955368041992,
+      "max_logit_abs_diff": 9.861328125
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 5.155128002166748,
+      "max_logit_abs_diff": 10.837890625
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.7188825607299805,
+      "max_logit_abs_diff": 10.265625
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.7588906288146973,
+      "max_logit_abs_diff": 9.709228515625
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.9091296195983887,
+      "max_logit_abs_diff": 11.890625
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.8308610916137695,
+      "max_logit_abs_diff": 11.845703125
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.1406443119049072,
+      "max_logit_abs_diff": 10.0
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.874584197998047,
+      "max_logit_abs_diff": 10.087890625
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.720160961151123,
+      "max_logit_abs_diff": 9.63671875
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.4125654697418213,
+      "max_logit_abs_diff": 8.8291015625
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.6940650939941406,
+      "max_logit_abs_diff": 10.7578125
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.671055316925049,
+      "max_logit_abs_diff": 9.509765625
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.9490306377410889,
+      "max_logit_abs_diff": 9.0625
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.762800693511963,
+      "max_logit_abs_diff": 11.51953125
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.8207204341888428,
+      "max_logit_abs_diff": 10.7265625
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.51495623588562,
+      "max_logit_abs_diff": 9.9033203125
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 10.585057258605957,
+      "max_logit_abs_diff": 11.36328125
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 7.7189788818359375,
+      "max_logit_abs_diff": 11.267578125
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 3.9894707202911377,
+      "max_logit_abs_diff": 10.673828125
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 5.575592041015625,
+      "max_logit_abs_diff": 10.939453125
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.180507183074951,
+      "max_logit_abs_diff": 11.734375
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.968648910522461,
+      "max_logit_abs_diff": 10.9105224609375
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.2572975158691406,
+      "max_logit_abs_diff": 11.515625
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.2226712703704834,
+      "max_logit_abs_diff": 11.5576171875
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.0540878772735596,
+      "max_logit_abs_diff": 10.328125
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.035318374633789,
+      "max_logit_abs_diff": 10.345703125
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.0897016525268555,
+      "max_logit_abs_diff": 10.19390869140625
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 1.7114373445510864,
+      "max_logit_abs_diff": 9.856201171875
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 4.243368148803711,
+      "max_logit_abs_diff": 11.6728515625
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.4985134601593018,
+      "max_logit_abs_diff": 10.03515625
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 4.282917022705078,
+      "max_logit_abs_diff": 10.727104187011719
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.0898821353912354,
+      "max_logit_abs_diff": 12.26171875
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.139883041381836,
+      "max_logit_abs_diff": 11.173828125
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.585723638534546,
+      "max_logit_abs_diff": 9.447265625
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 7.500762462615967,
+      "max_logit_abs_diff": 10.3203125
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 5.893097877502441,
+      "max_logit_abs_diff": 10.74609375
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 3.312164068222046,
+      "max_logit_abs_diff": 9.669921875
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 5.865206718444824,
+      "max_logit_abs_diff": 9.7060546875
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.794865131378174,
+      "max_logit_abs_diff": 9.48828125
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.645850658416748,
+      "max_logit_abs_diff": 9.39892578125
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.831777334213257,
+      "max_logit_abs_diff": 11.39453125
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.9620163440704346,
+      "max_logit_abs_diff": 11.46875
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.1116340160369873,
+      "max_logit_abs_diff": 9.89453125
+    },
+    {
+      "strength": 0.5,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 5.054929256439209,
+      "max_logit_abs_diff": 11.84814453125
+    },
+    {
+      "strength": 0.5,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.890912055969238,
+      "max_logit_abs_diff": 11.66650390625
+    },
+    {
+      "strength": 0.5,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.142697334289551,
+      "max_logit_abs_diff": 11.1962890625
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.6397998332977295,
+      "max_logit_abs_diff": 11.62890625
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.266846179962158,
+      "max_logit_abs_diff": 10.9765625
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "current",
+      "question": "小林现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 1.0757946968078613,
+      "max_logit_abs_diff": 9.41796875
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.63639760017395,
+      "max_logit_abs_diff": 11.1484375
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 1.8021260499954224,
+      "max_logit_abs_diff": 10.40625
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "current",
+      "question": "目前小林偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 0.806277334690094,
+      "max_logit_abs_diff": 9.32568359375
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 8.7288236618042,
+      "max_logit_abs_diff": 12.47509765625
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 6.020751953125,
+      "max_logit_abs_diff": 12.880859375
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "past",
+      "question": "小林过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 3.486052989959717,
+      "max_logit_abs_diff": 12.505859375
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 5.433505058288574,
+      "max_logit_abs_diff": 11.44140625
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.3252954483032227,
+      "max_logit_abs_diff": 9.59375
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "past",
+      "question": "更正前小林喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.5404152870178223,
+      "max_logit_abs_diff": 9.140625
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 4.807005882263184,
+      "max_logit_abs_diff": 11.07421875
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 4.375993251800537,
+      "max_logit_abs_diff": 10.8984375
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "later",
+      "question": "更正后小林改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.75874924659729,
+      "max_logit_abs_diff": 10.43359375
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 5.534001350402832,
+      "max_logit_abs_diff": 11.3125
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.709498405456543,
+      "max_logit_abs_diff": 10.859375
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小林",
+      "intent": "later",
+      "question": "小林后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.4561851024627686,
+      "max_logit_abs_diff": 9.763671875
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.457524299621582,
+      "max_logit_abs_diff": 11.703125
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.0978024005889893,
+      "max_logit_abs_diff": 10.9765625
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "阿宁现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 1.0872656106948853,
+      "max_logit_abs_diff": 8.76171875
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.786381483078003,
+      "max_logit_abs_diff": 10.333984375
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 2.270705223083496,
+      "max_logit_abs_diff": 9.908203125
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "current",
+      "question": "目前阿宁偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 1.5632864236831665,
+      "max_logit_abs_diff": 8.318359375
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 5.475396156311035,
+      "max_logit_abs_diff": 11.876953125
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 4.018265247344971,
+      "max_logit_abs_diff": 14.44921875
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "阿宁过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 2.4274983406066895,
+      "max_logit_abs_diff": 12.02734375
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.373795032501221,
+      "max_logit_abs_diff": 11.28515625
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.7886252403259277,
+      "max_logit_abs_diff": 9.501953125
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "past",
+      "question": "更正前阿宁喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.0634756088256836,
+      "max_logit_abs_diff": 9.45703125
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 4.928255558013916,
+      "max_logit_abs_diff": 10.732421875
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 4.284298896789551,
+      "max_logit_abs_diff": 10.81298828125
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "更正后阿宁改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.3825684785842896,
+      "max_logit_abs_diff": 10.34765625
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 6.096639633178711,
+      "max_logit_abs_diff": 12.3125
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.643161296844482,
+      "max_logit_abs_diff": 11.125
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿宁",
+      "intent": "later",
+      "question": "阿宁后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.664427399635315,
+      "max_logit_abs_diff": 8.630859375
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.1468615531921387,
+      "max_logit_abs_diff": 11.55859375
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 2.5936386585235596,
+      "max_logit_abs_diff": 11.0546875
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "current",
+      "question": "小雨现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 0.9998465776443481,
+      "max_logit_abs_diff": 9.2080078125
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.9763505458831787,
+      "max_logit_abs_diff": 11.23046875
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 2.2054872512817383,
+      "max_logit_abs_diff": 10.39453125
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "current",
+      "question": "目前小雨偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 0.8499927520751953,
+      "max_logit_abs_diff": 9.689453125
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 10.273904800415039,
+      "max_logit_abs_diff": 12.75
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 6.864121437072754,
+      "max_logit_abs_diff": 12.3115234375
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "past",
+      "question": "小雨过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 4.031808853149414,
+      "max_logit_abs_diff": 11.89453125
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 6.685279369354248,
+      "max_logit_abs_diff": 11.4609375
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.4902782440185547,
+      "max_logit_abs_diff": 9.80859375
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "past",
+      "question": "更正前小雨喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.719823837280273,
+      "max_logit_abs_diff": 9.7890625
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 4.473168849945068,
+      "max_logit_abs_diff": 10.94921875
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 4.223178863525391,
+      "max_logit_abs_diff": 10.83984375
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "later",
+      "question": "更正后小雨改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.7510958909988403,
+      "max_logit_abs_diff": 10.306640625
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 6.11193323135376,
+      "max_logit_abs_diff": 10.6640625
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 5.170587539672852,
+      "max_logit_abs_diff": 10.1484375
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "小雨",
+      "intent": "later",
+      "question": "小雨后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 1.5438566207885742,
+      "max_logit_abs_diff": 9.1640625
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 4.008502960205078,
+      "max_logit_abs_diff": 12.9140625
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.321748971939087,
+      "max_logit_abs_diff": 12.12109375
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "阿哲现在喜欢什么饮品？",
+      "top1_agreement": 1,
+      "kl_nats": 1.1711819171905518,
+      "max_logit_abs_diff": 10.27734375
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.000344753265381,
+      "max_logit_abs_diff": 11.185546875
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 2.701784133911133,
+      "max_logit_abs_diff": 10.666015625
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "current",
+      "question": "目前阿哲偏爱喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 1.7677032947540283,
+      "max_logit_abs_diff": 9.12890625
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 8.31009578704834,
+      "max_logit_abs_diff": 12.47998046875
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 6.335511207580566,
+      "max_logit_abs_diff": 13.1328125
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "阿哲过去喜欢哪种饮料？",
+      "top1_agreement": 0,
+      "kl_nats": 4.228824138641357,
+      "max_logit_abs_diff": 10.33203125
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 5.394680023193359,
+      "max_logit_abs_diff": 11.38671875
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 3.263990879058838,
+      "max_logit_abs_diff": 10.025390625
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "past",
+      "question": "更正前阿哲喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 2.188725471496582,
+      "max_logit_abs_diff": 9.51953125
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.5304360389709473,
+      "max_logit_abs_diff": 10.962890625
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 3.387500286102295,
+      "max_logit_abs_diff": 11.3359375
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "更正后阿哲改喜欢什么饮品？",
+      "top1_agreement": 0,
+      "kl_nats": 1.629977822303772,
+      "max_logit_abs_diff": 10.43359375
+    },
+    {
+      "strength": 0.75,
+      "condition": "plain_pair",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 5.449457168579102,
+      "max_logit_abs_diff": 11.376953125
+    },
+    {
+      "strength": 0.75,
+      "condition": "memory_conditioned_layer6",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 0,
+      "kl_nats": 4.283379077911377,
+      "max_logit_abs_diff": 10.50390625
+    },
+    {
+      "strength": 0.75,
+      "condition": "joint_memory_v2",
+      "name": "阿哲",
+      "intent": "later",
+      "question": "阿哲后来最喜欢喝什么？",
+      "top1_agreement": 1,
+      "kl_nats": 1.8378251791000366,
+      "max_logit_abs_diff": 10.142578125
+    }
+  ],
+  "elapsed_seconds": 345.10365210007876,
+  "peak_allocated_bytes": 4269176320,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Four fixed entities, one corrected fact each and 24 authored questions.",
+    "Measures next-token agreement with the same integrated base at each tested reader strength.",
+    "No generated-answer quality or automatic entity/time routing evaluated.",
+    "Strength values below the native 0.5 setting are diagnostic only, not an accepted runtime policy."
+  ]
+}
