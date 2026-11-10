@@ -29,9 +29,9 @@ from spora.integrated_open_base import ScaledOpenBaseMemory
 from spora.internal_memory import observe_sourced
 from spora.language_training import frozen_digest
 from spora.named_address import feature_files_sha256
+from spora.temporal_routing import CURRENT, LATER, PAST, route_spec
 
-OUTPUT = ROOT / 'runs/deepseek-temporal-intent-router-verified-20261110'
-CURRENT, PAST, LATER = 0, 1, 2
+OUTPUT = ROOT / 'runs/deepseek-temporal-intent-router-predicted-route-20261110'
 TRAIN = {
     CURRENT: (f'{NAMES[0]}现在喜欢的饮品是什么？', f'{NAMES[0]}目前偏爱喝什么？',
               f'我记得{NAMES[0]}喜欢哪种饮料？', f'{NAMES[0]}当前最爱喝什么饮品？'),
@@ -153,20 +153,17 @@ def run():
                                     value=tokenizer.pad_token_id if name == 'input_ids' else 0)
                               for item in inputs], dim=0) for name in ('input_ids', 'attention_mask')}
     with torch.inference_mode():
-        predicted = router(features['held']).argmax(-1).to('cuda')
+        predicted = router(features['held']).argmax(-1).tolist()
         row_addresses, row_slots, expected_values = [], [], []
-        for row in held:
+        for row, intent in zip(held, predicted):
             label = row['label']
             expected_values.append(6 if label in (CURRENT, LATER) else 1)
-            if label == CURRENT:
-                row_slots.append(0)
+            slot, event_time = route_spec(intent)
+            row_slots.append(slot)
+            if event_time is None:
                 row_addresses.append(current_addresses(organism, key, 'cuda'))
-            elif label == PAST:
-                row_slots.append(1)
-                row_addresses.append(temporal_addresses(organism, key, 0, 'cuda'))
             else:
-                row_slots.append(1)
-                row_addresses.append(temporal_addresses(organism, key, 1, 'cuda'))
+                row_addresses.append(temporal_addresses(organism, key, event_time, 'cuda'))
         addresses = [torch.cat([item[site] for item in row_addresses]) for site in range(2)]
         base_model, loaded_organism, loaded_state = load_integrated(checkpoint, base, MODEL, individual_device='cuda')
         generations = base_model.generate(**batch, memory_state=loaded_state, memory_addresses=addresses,
@@ -176,7 +173,7 @@ def run():
     for i, row in enumerate(held):
         tokens = generations[i, max_len:].tolist()
         answer = tokenizer.decode(tokens, skip_special_tokens=True).strip()
-        native = int(predicted[i])
+        native = predicted[i]
         answer_correct = word_correct(answer, WORDS[expected_values[i]])
         results.append({'question': row['text'], 'expected_intent': row['label'],
                         'predicted_intent': native, 'router_correct': native == row['label'],

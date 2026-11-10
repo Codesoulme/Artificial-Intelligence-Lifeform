@@ -1,0 +1,211 @@
+{
+  "status": "learned_temporal_address_router_development_only",
+  "events": [
+    {
+      "time": 0,
+      "value": 1,
+      "action": "new"
+    },
+    {
+      "time": 1,
+      "value": 6,
+      "action": "correct"
+    }
+  ],
+  "training_rows": [
+    {
+      "text": "小林现在喜欢的饮品是什么？",
+      "label": 0,
+      "predicted_slot": 0
+    },
+    {
+      "text": "小林目前偏爱喝什么？",
+      "label": 0,
+      "predicted_slot": 0
+    },
+    {
+      "text": "我记得小林喜欢哪种饮料？",
+      "label": 0,
+      "predicted_slot": 0
+    },
+    {
+      "text": "小林当前最爱喝什么饮品？",
+      "label": 0,
+      "predicted_slot": 0
+    },
+    {
+      "text": "小林过去喜欢的饮品是什么？",
+      "label": 1,
+      "predicted_slot": 1
+    },
+    {
+      "text": "小林以前最爱喝什么？",
+      "label": 1,
+      "predicted_slot": 1
+    },
+    {
+      "text": "更正之前，小林喜欢哪种饮料？",
+      "label": 1,
+      "predicted_slot": 1
+    },
+    {
+      "text": "小林原来偏爱喝什么饮品？",
+      "label": 1,
+      "predicted_slot": 1
+    },
+    {
+      "text": "小林后来喜欢的饮品是什么？",
+      "label": 2,
+      "predicted_slot": 2
+    },
+    {
+      "text": "更正之后，小林最爱喝什么？",
+      "label": 2,
+      "predicted_slot": 2
+    },
+    {
+      "text": "小林之后改成偏爱什么饮料？",
+      "label": 2,
+      "predicted_slot": 2
+    },
+    {
+      "text": "小林更新后喜欢哪种饮品？",
+      "label": 2,
+      "predicted_slot": 2
+    }
+  ],
+  "held_rows": [
+    {
+      "question": "小林现阶段爱喝哪种饮料？",
+      "expected_intent": 0,
+      "predicted_intent": 0,
+      "router_correct": true,
+      "expected_value": 6,
+      "answer": "水",
+      "answer_correct": true,
+      "ended_with_eos": true
+    },
+    {
+      "question": "截至目前，小林的饮品偏好是什么？",
+      "expected_intent": 0,
+      "predicted_intent": 0,
+      "router_correct": true,
+      "expected_value": 6,
+      "answer": "我是一个AI助手，无法主动学习或适应您的需求。",
+      "answer_correct": false,
+      "ended_with_eos": true
+    },
+    {
+      "question": "现在记录的小林最爱喝什么？",
+      "expected_intent": 0,
+      "predicted_intent": 0,
+      "router_correct": true,
+      "expected_value": 6,
+      "answer": "水",
+      "answer_correct": true,
+      "ended_with_eos": true
+    },
+    {
+      "question": "小林原先爱喝哪种饮料？",
+      "expected_intent": 1,
+      "predicted_intent": 1,
+      "router_correct": true,
+      "expected_value": 1,
+      "answer": "咖啡",
+      "answer_correct": true,
+      "ended_with_eos": true
+    },
+    {
+      "question": "变更以前，小林的饮品偏好是什么？",
+      "expected_intent": 1,
+      "predicted_intent": 1,
+      "router_correct": true,
+      "expected_value": 1,
+      "answer": "咖啡",
+      "answer_correct": true,
+      "ended_with_eos": true
+    },
+    {
+      "question": "之前记录的小林最爱喝什么？",
+      "expected_intent": 1,
+      "predicted_intent": 1,
+      "router_correct": true,
+      "expected_value": 1,
+      "answer": "咖啡",
+      "answer_correct": true,
+      "ended_with_eos": true
+    },
+    {
+      "question": "小林变更以后爱喝哪种饮料？",
+      "expected_intent": 2,
+      "predicted_intent": 2,
+      "router_correct": true,
+      "expected_value": 6,
+      "answer": "水",
+      "answer_correct": true,
+      "ended_with_eos": true
+    },
+    {
+      "question": "后续记录中，小林的饮品偏好是什么？",
+      "expected_intent": 2,
+      "predicted_intent": 2,
+      "router_correct": true,
+      "expected_value": 6,
+      "answer": "水",
+      "answer_correct": true,
+      "ended_with_eos": true
+    },
+    {
+      "question": "修改完成后，小林最爱喝什么？",
+      "expected_intent": 2,
+      "predicted_intent": 2,
+      "router_correct": true,
+      "expected_value": 6,
+      "answer": "水",
+      "answer_correct": true,
+      "ended_with_eos": true
+    }
+  ],
+  "losses": [
+    {
+      "step": 1,
+      "loss": 1.5241972208023071
+    },
+    {
+      "step": 100,
+      "loss": 0.04465887323021889
+    },
+    {
+      "step": 300,
+      "loss": 0.02997312694787979
+    },
+    {
+      "step": 600,
+      "loss": 0.027295125648379326
+    }
+  ],
+  "summary": {
+    "train_router_accuracy": 1.0,
+    "held_router_accuracy": 1.0,
+    "held_answer_accuracy": 0.8888888888888888,
+    "held_examples": 9
+  },
+  "component_sha256": {
+    "weight": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "original": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+    "adapter": "9ae4f34c1de9cbc84ba54f3e75e6279d21f55297493ec6786b274750e08ecf6c",
+    "adapter_report": "479e4133ce1d01ba3d47cb4fc1a74a7e985c31b1c75d7a0f27cf85ee176715e7"
+  },
+  "checkpoint_sha256": "d8059ed61a8109e6d068b78ed43323794c9770091f1ca3af461058e86150f8ce",
+  "feature_config_sha256": "6e8dfbb504fa35aead3329dfe76649dc29c9419aee7b146a094d5483a17ec351",
+  "seconds": 138.08183840010315,
+  "peak_allocated_bytes": 3599055872,
+  "limitations": [
+    "Only 4 synthetic training templates per time class and 3 held templates per class.",
+    "All questions use one known name, one address and two controlled drink values.",
+    "Time route is a trained experimental classifier, not native SPORA temporal reasoning.",
+    "Small held set with one seed; templates are authored by the experimenter.",
+    "No unknown time, uncertain date, multi-event natural dialogue, writes or open chat tested.",
+    "Base and tokenizer remain separate; state persists only in the integrated checkpoint."
+  ]
+}
