@@ -129,6 +129,21 @@ class IntegratedOpenBaseTests(unittest.TestCase):
             self.assertEqual(model._memory_context.get()[2].tolist(), [True, False])
         self.assertIsNone(model._memory_context.get())
 
+    def test_distinct_batch_states_follow_row_and_mask(self):
+        model = IntegratedOpenBase(Base(), make_reader(), (0, 2))
+        x = torch.ones(2, 1, 3)
+        a, b = make_state(1.), make_state(2.)
+        def batch(first, second):
+            return SimpleNamespace(current=[torch.cat((first.current[i], second.current[i])) for i in range(2)], pages=[])
+        forward = model(x, memory_state=batch(a, b), current_only=True)
+        reverse = model(x, memory_state=batch(b, a), current_only=True)
+        self.assertFalse(torch.equal(forward[0], forward[1]))
+        self.assertTrue(torch.equal(forward[0], reverse[1]))
+        self.assertTrue(torch.equal(forward[1], reverse[0]))
+        masked = model(x, memory_state=batch(a, b), memory_read_mask=torch.tensor([True, False]), current_only=True)
+        self.assertTrue(torch.equal(masked[0], forward[0]))
+        self.assertTrue(torch.equal(masked[1], model(x)[1]))
+
 
 if __name__ == '__main__':
     unittest.main()
