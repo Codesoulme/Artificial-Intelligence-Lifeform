@@ -1,0 +1,9 @@
+# Padding and cache correctness in SPORA replacement layers
+
+The full-sequence SPORA replacement previously ignored the attention mask. Consequently, left-padding content could influence valid token states. Its cached path also rejected a common two-dimensional padding mask, and a rejected mask could be detected only after modifying the cache. These are implementation defects; the earlier single-item experiments had no left padding, so this finding alone does not explain their layer-18 accuracy loss.
+
+The replacement now accepts 2-D binary padding masks and 4-D boolean or additive masks, combines them with causality, and handles fully masked rows without nonfinite gradients. Cached prefill and single-token continuation use the same rules. Invalid masks are checked before cache mutation. Existing no-mask behavior is retained; the checkpoint format and parameter shapes are unchanged.
+
+On two standalone DeepSeek prompts, we compared unmodified decoder layers, the layer-6/12 replacements, and all three replacements including the sequence-distilled layer 18. For all three configurations, batched versus single-item logits and cached versus full continuation logits had the same top token. The largest observed absolute logit differences were 0.02344 and 0.02344 respectively, consistent with small FP16 computational differences in this sample. Individual results and model hashes are in `runs/deepseek-spora-padding-cache-probe-20261111.json`.
+
+The accompanying regression suite covers left padding, causal masks, cached/full parity, invalid masks, finite gradients and cache integrity. This probe does not activate the integrated memory reader or establish generation quality. Only two short prompts and one continuation token were evaluated; the replacement checkpoints remain limited to 128 positions. The 10% blend still intentionally disables caching because its two branches cannot share a mutable cache safely.

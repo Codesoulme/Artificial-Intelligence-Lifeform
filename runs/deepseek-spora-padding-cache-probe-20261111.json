@@ -1,0 +1,71 @@
+{
+  "texts": [
+    "今天天气不错。",
+    "请用一句简单的话解释为什么春天会有花朵。"
+  ],
+  "batch_attention_mask": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  ],
+  "results": {
+    "original": {
+      "batch_vs_single_max_logit_delta": 0.0234375,
+      "batch_vs_single_argmax_equal": true,
+      "prefill_vs_full_max_logit_delta": 0.0,
+      "cached_vs_full_continuation_max_logit_delta": 0.017578125,
+      "cached_vs_full_continuation_argmax_equal": true
+    },
+    "pair": {
+      "batch_vs_single_max_logit_delta": 0.0234375,
+      "batch_vs_single_argmax_equal": true,
+      "prefill_vs_full_max_logit_delta": 0.0234375,
+      "cached_vs_full_continuation_max_logit_delta": 0.017578125,
+      "cached_vs_full_continuation_argmax_equal": true
+    },
+    "triple": {
+      "batch_vs_single_max_logit_delta": 0.021484375,
+      "batch_vs_single_argmax_equal": true,
+      "prefill_vs_full_max_logit_delta": 0.021484375,
+      "cached_vs_full_continuation_max_logit_delta": 0.0234375,
+      "cached_vs_full_continuation_argmax_equal": true
+    }
+  },
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "layer18_sha256": "f8f61e2746c9e43adb1789a682870c43f7416d5c45bb32fe4ef20a6013c28e34",
+  "elapsed_seconds": 63.17705779988319,
+  "limitations": [
+    "Two short standalone prompts; no integrated memory reader.",
+    "FP16 floating point comparisons may vary by hardware.",
+    "Parity checks do not measure language quality or open chat."
+  ]
+}

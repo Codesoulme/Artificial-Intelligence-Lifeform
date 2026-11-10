@@ -5,12 +5,44 @@ from torch import nn
 from .model import CausalBlock, ModelConfig
 
 
+def _attention_mask(mask, batch, heads, queries, keys, past, device, dtype):
+    """Convert padding or additive attention masks and enforce causality."""
+    if mask is None:
+        return None
+    if not isinstance(mask, torch.Tensor):
+        raise ValueError('Attention mask must be a tensor')
+    if mask.ndim == 2:
+        if mask.shape != (batch, keys) or not bool(((mask == 0) | (mask == 1)).all()):
+            raise ValueError('Invalid 2-D padding attention mask')
+        allowed = mask.to(device=device, dtype=torch.bool)[:, None, None, :]
+        additive = torch.zeros((batch, 1, 1, keys), device=device, dtype=dtype)
+        additive = additive.masked_fill(~allowed, float('-inf'))
+    elif mask.ndim == 4:
+        if (mask.shape[0] not in (1, batch) or mask.shape[1] not in (1, heads)
+                or mask.shape[2] not in (1, queries) or mask.shape[3] != keys):
+            raise ValueError('Invalid 4-D attention mask shape')
+        if mask.dtype == torch.bool:
+            allowed = mask.to(device=device)
+            additive = torch.zeros(mask.shape, device=device, dtype=dtype).masked_fill(~allowed, float('-inf'))
+        elif mask.is_floating_point():
+            if bool(torch.isnan(mask).any()) or bool(torch.isposinf(mask).any()):
+                raise ValueError('Invalid additive attention mask values')
+            additive = mask.to(device=device, dtype=dtype)
+        else:
+            raise ValueError('4-D attention mask must be boolean or additive floating point')
+    else:
+        raise ValueError('Attention mask must be 2-D or 4-D')
+    query_index = torch.arange(past, past + queries, device=device)[:, None]
+    key_index = torch.arange(keys, device=device)[None, :]
+    return additive.masked_fill((key_index > query_index)[None, None, :, :], float('-inf'))
+
+
 class SPORALayerReplacement(nn.Module):
     """A distilled SPORA causal block with learned absolute position input.
 
-    It accepts the Qwen2 decoder-layer call shape for full-sequence evaluation.
-    Autoregressive KV caching is deliberately rejected until an incremental
-    cache implementation is added and parity-tested.
+    It accepts Qwen2 decoder-layer calls and supports a mutable cache for
+    prefill and single-token continuation. Position embeddings remain bounded
+    by the checkpoint's configured maximum length.
     """
 
     attention_type = 'full_attention'
@@ -49,7 +81,9 @@ class SPORALayerReplacement(nn.Module):
         hidden_dtype = hidden_states.dtype
         positions = self.position(position_ids.to(self.position.weight.device))
         values = hidden_states.to(device=positions.device, dtype=positions.dtype) + positions
-        return self.block(values).to(device=hidden_states.device, dtype=hidden_dtype)
+        mask = _attention_mask(attention_mask, batch, self.block.heads, length, length, 0,
+                               values.device, values.dtype)
+        return self.block(values, attention_mask=mask).to(device=hidden_states.device, dtype=hidden_dtype)
 
     def _cached_forward(self, hidden_states, attention_mask, position_ids,
                         past_key_values, use_cache, cache_position):
@@ -80,16 +114,10 @@ class SPORALayerReplacement(nn.Module):
         qkv = self.block.qkv(self.block.norm1(values)).reshape(
             b, n, 3, self.block.heads, head_width).permute(2, 0, 3, 1, 4)
         query, key, value = qkv.unbind(0)
+        mask = _attention_mask(attention_mask, b, self.block.heads, n, past_length + n, past_length,
+                               query.device, query.dtype)
         cache_kwargs = {} if cache_position is None else {'cache_position': cache_position}
         key, value = past_key_values.update(key, value, self.layer_idx, cache_kwargs)
-        mask = attention_mask
-        if mask is not None:
-            if mask.shape[-1] != key.shape[-2] or mask.shape[-2] not in (1, n):
-                raise ValueError('Cached attention mask has incompatible query/key lengths')
-            if mask.is_floating_point():
-                mask = mask.to(device=query.device, dtype=query.dtype)
-            else:
-                mask = mask.to(device=query.device)
         attended = torch.nn.functional.scaled_dot_product_attention(
             query, key, value, attn_mask=mask,
             is_causal=mask is None and past_length == 0 and n > 1)

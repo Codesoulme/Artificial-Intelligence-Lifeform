@@ -80,6 +80,81 @@ class StructureTransferTests(unittest.TestCase):
         cached = torch.cat(incremental, dim=1)
         torch.testing.assert_close(cached, full, atol=2e-6, rtol=2e-6)
 
+    def test_left_padding_cannot_influence_valid_tokens(self):
+        torch.manual_seed(123)
+        layer = SPORALayerReplacement(16, 4, max_length=8, layer_idx=2).eval()
+        values = torch.randn(2, 5, 16)
+        changed = values.clone()
+        changed[0, :2] = torch.randn_like(changed[0, :2]) * 20
+        mask = torch.tensor([[0, 0, 1, 1, 1], [1, 1, 1, 1, 1]])
+        positions = torch.tensor([[0, 0, 0, 1, 2], [0, 1, 2, 3, 4]])
+        with torch.no_grad():
+            first = layer(values, attention_mask=mask, position_ids=positions)
+            second = layer(changed, attention_mask=mask, position_ids=positions)
+        torch.testing.assert_close(first[0, 2:], second[0, 2:], atol=2e-6, rtol=2e-6)
+        torch.testing.assert_close(first[1], second[1])
+        self.assertTrue(torch.isfinite(first).all())
+
+    def test_cached_left_padding_matches_full_forward(self):
+        torch.manual_seed(124)
+        layer = SPORALayerReplacement(16, 4, max_length=8, layer_idx=2).eval()
+        values = torch.randn(2, 5, 16)
+        mask = torch.tensor([[0, 0, 1, 1, 1], [1, 1, 1, 1, 1]])
+        positions = torch.tensor([[0, 0, 0, 1, 2], [0, 1, 2, 3, 4]])
+        with torch.no_grad():
+            full = layer(values, attention_mask=mask, position_ids=positions)
+            cache = self.Cache()
+            prefill = layer(values[:, :4], attention_mask=mask[:, :4], position_ids=positions[:, :4],
+                            past_key_values=cache, use_cache=True)
+            last = layer(values[:, 4:], attention_mask=mask, position_ids=positions[:, 4:],
+                         past_key_values=cache, use_cache=True)
+        torch.testing.assert_close(prefill[0, 2:], full[0, 2:4], atol=2e-6, rtol=2e-6)
+        torch.testing.assert_close(last, full[:, 4:], atol=2e-6, rtol=2e-6)
+
+    def test_four_dimensional_additive_mask_preserves_causality(self):
+        torch.manual_seed(125)
+        layer = SPORALayerReplacement(16, 4, max_length=8).eval()
+        values = torch.randn(1, 4, 16)
+        changed = values.clone()
+        changed[:, -1] += 100
+        # An all-zero 4-D mask does not authorize future attention.
+        additive = torch.zeros(1, 1, 4, 4)
+        with torch.no_grad():
+            first = layer(values, attention_mask=additive)
+            second = layer(changed, attention_mask=additive)
+        torch.testing.assert_close(first[:, :3], second[:, :3], atol=2e-6, rtol=2e-6)
+
+    def test_masked_padding_has_finite_gradients_and_4d_parity(self):
+        torch.manual_seed(126)
+        layer = SPORALayerReplacement(16, 4, max_length=8).eval()
+        values = torch.randn(1, 4, 16, requires_grad=True)
+        padding = torch.tensor([[0, 0, 1, 1]])
+        additive = torch.zeros(1, 1, 4, 4)
+        additive[..., :2] = float('-inf')
+        positions = torch.tensor([[0, 0, 0, 1]])
+        padded = layer(values, attention_mask=padding, position_ids=positions)
+        masked = layer(values, attention_mask=additive, position_ids=positions)
+        torch.testing.assert_close(padded, masked)
+        padded.square().sum().backward()
+        self.assertTrue(torch.isfinite(values.grad).all())
+        self.assertTrue(all(torch.isfinite(p.grad).all() for p in layer.parameters()))
+
+    def test_invalid_attention_masks_are_rejected(self):
+        layer = SPORALayerReplacement(16, 4, max_length=8)
+        values = torch.randn(1, 3, 16)
+        for mask in (torch.tensor([[1, 2, 1]]), torch.ones(1, 2), torch.ones(1, 1, 3, 2),
+                     torch.full((1, 1, 3, 3), float('nan'))):
+            with self.assertRaisesRegex(ValueError, 'attention mask'):
+                layer(values, attention_mask=mask)
+
+    def test_invalid_cached_mask_does_not_modify_cache(self):
+        layer = SPORALayerReplacement(16, 4, max_length=8, layer_idx=2)
+        cache = self.Cache()
+        with self.assertRaisesRegex(ValueError, 'attention mask'):
+            layer(torch.randn(1, 3, 16), attention_mask=torch.ones(1, 2),
+                  past_key_values=cache, use_cache=True)
+        self.assertEqual(cache.get_seq_length(2), 0)
+
     def test_blend_endpoints_and_cache_guard(self):
         torch.manual_seed(42)
         teacher = torch.nn.Linear(16, 16, bias=False)

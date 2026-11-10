@@ -47,13 +47,17 @@ class CausalBlock(nn.Module):
         self.qkv, self.out = nn.Linear(d, 3*d), nn.Linear(d, d)
         self.ff = nn.Sequential(nn.Linear(d, 4*d), nn.GELU(), nn.Linear(4*d, d))
 
-    def forward(self, x):
+    def forward(self, x, attention_mask=None):
         b, n, d = x.shape
         qkv = self.qkv(self.norm1(x)).reshape(b, n, 3, self.heads, d//self.heads)
         q, k, v = qkv.permute(2, 0, 3, 1, 4).unbind(0)
         scores = (q @ k.transpose(-1, -2)) / math.sqrt(d//self.heads)
         mask = torch.ones(n, n, device=x.device, dtype=torch.bool).tril()
-        weights = scores.masked_fill(~mask, float('-inf')).softmax(-1)
+        if attention_mask is not None:
+            scores = scores + attention_mask
+        scores = scores.masked_fill(~mask, float('-inf'))
+        empty = torch.isneginf(scores).all(dim=-1, keepdim=True)
+        weights = scores.masked_fill(empty, 0.0).softmax(-1).masked_fill(empty, 0.0)
         x = x + self.out((weights @ v).transpose(1, 2).reshape(b, n, d))
         return x + self.ff(self.norm2(x))
 
