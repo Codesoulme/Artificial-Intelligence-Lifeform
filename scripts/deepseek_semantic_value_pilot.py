@@ -35,6 +35,7 @@ TRAIN_TEMPLATES = ('{name}喜欢喝什么？', '请问{name}偏爱的饮品是�
 HELD_TEMPLATES = ('{name}喜欢的饮品是什么？', '请告诉我{name}爱喝什么。')
 HELD_VALUES = (1, 6)
 STEPS = 160
+PRONOUN_TEMPLATES = ('我爱喝什么？', '你爱喝什么？', '我最喜欢喝什么？', '你最喜欢喝什么？')
 
 
 def word_correct(text, expected):
@@ -104,13 +105,14 @@ def evaluate(base, tokenizer, adapter, bases, states, names, keys):
     return {'summary': summary, 'rows': rows}
 
 
-def run(output=OUTPUT, steps=STEPS, initial=None, word_ratio=1, seed=4634, balanced=False):
+def run(output=OUTPUT, steps=STEPS, initial=None, word_ratio=1, seed=4634, balanced=False, pronouns=False):
     output = Path(output).resolve()
     runs = (ROOT / 'runs').resolve()
     if not output.is_relative_to(runs) or output == runs or output.exists():
         raise ValueError('Expected a new output directory under runs')
     if (type(steps) is not int or not 1 <= steps <= 4000 or type(word_ratio) is not int
-            or not 1 <= word_ratio <= 7 or type(balanced) is not bool):
+            or not 1 <= word_ratio <= 7 or type(balanced) is not bool or type(pronouns) is not bool
+            or (pronouns and not balanced)):
         raise ValueError('Invalid training schedule')
     initial = Path(initial).resolve() if initial is not None else None
     if initial is not None and not initial.is_relative_to(runs):
@@ -166,7 +168,9 @@ def run(output=OUTPUT, steps=STEPS, initial=None, word_ratio=1, seed=4634, balan
     if not balanced and steps > len(tasks) * block:
         raise ValueError('Training schedule exceeds one task permutation')
     schedule = balanced_schedule(steps, word_ratio, seed) if balanced else None
-    value_counts = {'word': [0] * len(WORDS), 'numeric_replay': [0] * len(WORDS)}
+    value_counts = {'word': [0] * len(WORDS), 'pronoun_word': [0] * len(WORDS), 'numeric_replay': [0] * len(WORDS)}
+    pronoun_generator = torch.Generator().manual_seed(seed + 1)
+    word_steps = 0
     log = []
     for step in range(steps):
         if balanced:
@@ -175,13 +179,18 @@ def run(output=OUTPUT, steps=STEPS, initial=None, word_ratio=1, seed=4634, balan
             name, key, template, value = tasks[order[step // block]]
             other = (value + 1) % 8
             group = 'word' if step % block < word_ratio else 'numeric_replay'
-        value_counts[group][value] += 1
         if group == 'word':
-            question = template.format(name=name)
+            if pronouns and word_steps % 3 != 0:
+                question = PRONOUN_TEMPLATES[int(torch.randint(len(PRONOUN_TEMPLATES), (1,), generator=pronoun_generator))]
+                group = 'pronoun_word'
+            else:
+                question = template.format(name=name)
+            word_steps += 1
             answers = [WORDS[value], WORDS[other]]
         else:
             question = f'对象{key}的值是多少？'
             answers = [value, other]
+        value_counts[group][value] += 1
         inputs, labels = answer_batch(tokenizer, question, answers, 'cuda')
         memory = combined_states([states[(key, value)], states[(key, other)]])
         addresses = [basis[key:key+1] for basis in bases]
@@ -220,7 +229,7 @@ def run(output=OUTPUT, steps=STEPS, initial=None, word_ratio=1, seed=4634, balan
     report = {'status': 'finite_semantic_value_development_only', 'weight_sha256': WEIGHT_SHA,
               'individual_sha256': INDIVIDUAL_SHA, 'parent_sha256': protected[initial] if initial is not None else protected[SELECTOR],
               'adapter_sha256': sha(checkpoint), 'steps': steps, 'word_ratio': word_ratio, 'seed': seed,
-              'balanced_schedule': balanced, 'primary_value_counts': value_counts,
+              'balanced_schedule': balanced, 'pronoun_training': pronouns, 'primary_value_counts': value_counts,
               'optimizer_restarted': initial is not None, 'learning_rate': 0.0002,
               'train_names': list(NAMES), 'held_names': list(UNKNOWN[:2]), 'vocabulary': WORDS,
               'held_values': HELD_VALUES, 'log': log, 'baseline': baseline, 'adapted': adapted,
@@ -247,5 +256,6 @@ if __name__ == '__main__':
     parser.add_argument('--word-ratio', type=int, default=1)
     parser.add_argument('--seed', type=int, default=4634)
     parser.add_argument('--balanced', action='store_true')
+    parser.add_argument('--pronouns', action='store_true')
     args = parser.parse_args()
-    run(args.output, args.steps, args.initial, args.word_ratio, args.seed, args.balanced)
+    run(args.output, args.steps, args.initial, args.word_ratio, args.seed, args.balanced, args.pronouns)

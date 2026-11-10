@@ -27,7 +27,7 @@ ADAPTER = ROOT / 'runs/deepseek-semantic-value-continuation-20261110/adapter.pt'
 OUTPUT = ROOT / 'runs/deepseek-semantic-value-all-values-audit-20261110.json'
 
 
-def run(adapter_path=ADAPTER, output=OUTPUT, fresh=False, distractor=None, correction=False):
+def run(adapter_path=ADAPTER, output=OUTPUT, fresh=False, distractor=None, correction=False, pronouns=False):
     runs = (ROOT / 'runs').resolve()
     adapter_path, output = Path(adapter_path).resolve(), Path(output).resolve()
     if not adapter_path.is_relative_to(runs) or not output.is_relative_to(runs) or output.exists():
@@ -81,8 +81,12 @@ def run(adapter_path=ADAPTER, output=OUTPUT, fresh=False, distractor=None, corre
     results = []
     old_values, old_templates = pilot.HELD_VALUES, pilot.HELD_TEMPLATES
     try:
+        if fresh and pronouns:
+            raise ValueError('Choose either fresh name or pronoun questions')
         if fresh:
             pilot.HELD_TEMPLATES = ('{name}最爱喝哪种饮料？', '说说{name}偏好喝的东西。')
+        if pronouns:
+            pilot.HELD_TEMPLATES = ('我喜欢的饮品是什么？', '你喜欢的饮品是什么？')
         for pair in ((0, 1), (2, 3), (4, 5), (6, 7)):
             pilot.HELD_VALUES = pair
             result = pilot.evaluate(base, tokenizer, adapter, bases, states, names, keys)
@@ -95,6 +99,7 @@ def run(adapter_path=ADAPTER, output=OUTPUT, fresh=False, distractor=None, corre
             or any(frozen_digest(organism, state) != state_digests[key] for key, state in states.items())):
         raise ValueError('Protected input changed')
     report = {'status': 'development_only', 'adapter_sha256': before[adapter_path], 'fresh_cases': fresh,
+              'pronoun_questions': pronouns,
               'fixed_distractor': distractor,
               'correction': correction, 'writes': writes,
               'names': names, 'keys': keys, 'results': results,
@@ -114,5 +119,6 @@ if __name__ == '__main__':
     parser.add_argument('--fresh', action='store_true')
     parser.add_argument('--distractor', type=int, choices=range(16))
     parser.add_argument('--correction', action='store_true')
+    parser.add_argument('--pronouns', action='store_true')
     args = parser.parse_args()
-    run(args.adapter, args.output, args.fresh, args.distractor, args.correction)
+    run(args.adapter, args.output, args.fresh, args.distractor, args.correction, args.pronouns)
