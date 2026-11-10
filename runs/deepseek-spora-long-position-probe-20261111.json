@@ -1,0 +1,88 @@
+{
+  "results": {
+    "original": [
+      {
+        "name": "schedule",
+        "prompt": "我正在和朋友规划一次周末出行。我们先讨论过天气，也看过公共交通路线。最初打算星期六上午去城市公园，后来发现那天有一场持续一整天的雨，大家就决定更改计划。小林建议去室内美术馆，小周表示她需要下午四点以前回家。我们还商量了午餐，最后决定在美术馆附近的一家面馆吃饭。接着我查了美术馆的开放时间，星期天下午可以参观。大家最后约定星期天下午一点半在美术馆门口集合，参观结束后各自回家。请只回答：我们最终约定在哪里集合？",
+        "reference": "美术馆门口",
+        "prompt_tokens": 131,
+        "reference_mean_nll": 9.339106559753418,
+        "answer": "我们最终约定在美术馆附近的一家面馆集合。",
+        "generated_tokens": 13,
+        "ended_with_eos": true
+      },
+      {
+        "name": "correction",
+        "prompt": "我正在整理一份家庭采购清单，请仔细区分原计划和后来的变更。今天早上我打算买牛奶、苹果、面条和一包纸巾。下午家人告诉我冰箱里还有足够的牛奶，所以不用再买牛奶。家里的苹果也刚买过，于是把苹果从清单里划掉。面条已经吃完，需要保留在清单上。纸巾数量不多，也仍然需要买。后来家人提出还需要一瓶酱油，我把酱油添加到了清单的末尾。购物前我再次核对：面条、纸巾、酱油需要买，牛奶和苹果不需要买。请只回答：后来新添加到购物清单的是什么？",
+        "reference": "酱油",
+        "prompt_tokens": 143,
+        "reference_mean_nll": 9.64699935913086,
+        "answer": "您添加到购物清单的是 **一瓶酱油**。",
+        "generated_tokens": 12,
+        "ended_with_eos": true
+      }
+    ],
+    "extended_pair": [
+      {
+        "name": "schedule",
+        "prompt": "我正在和朋友规划一次周末出行。我们先讨论过天气，也看过公共交通路线。最初打算星期六上午去城市公园，后来发现那天有一场持续一整天的雨，大家就决定更改计划。小林建议去室内美术馆，小周表示她需要下午四点以前回家。我们还商量了午餐，最后决定在美术馆附近的一家面馆吃饭。接着我查了美术馆的开放时间，星期天下午可以参观。大家最后约定星期天下午一点半在美术馆门口集合，参观结束后各自回家。请只回答：我们最终约定在哪里集合？",
+        "reference": "美术馆门口",
+        "prompt_tokens": 131,
+        "reference_mean_nll": 11.478490829467773,
+        "answer": "我们最终约定在美术馆附近的一家面馆门口集合，参观结束后各自回家。",
+        "generated_tokens": 19,
+        "ended_with_eos": true
+      },
+      {
+        "name": "correction",
+        "prompt": "我正在整理一份家庭采购清单，请仔细区分原计划和后来的变更。今天早上我打算买牛奶、苹果、面条和一包纸巾。下午家人告诉我冰箱里还有足够的牛奶，所以不用再买牛奶。家里的苹果也刚买过，于是把苹果从清单里划掉。面条已经吃完，需要保留在清单上。纸巾数量不多，也仍然需要买。后来家人提出还需要一瓶酱油，我把酱油添加到了清单的末尾。购物前我再次核对：面条、纸巾、酱油需要买，牛奶和苹果不需要买。请只回答：后来新添加到购物清单的是什么？",
+        "reference": "酱油",
+        "prompt_tokens": 143,
+        "reference_mean_nll": 12.470431327819824,
+        "answer": "后来新添加到购物清单的是酱油。",
+        "generated_tokens": 10,
+        "ended_with_eos": true
+      }
+    ],
+    "extended_triple": [
+      {
+        "name": "schedule",
+        "prompt": "我正在和朋友规划一次周末出行。我们先讨论过天气，也看过公共交通路线。最初打算星期六上午去城市公园，后来发现那天有一场持续一整天的雨，大家就决定更改计划。小林建议去室内美术馆，小周表示她需要下午四点以前回家。我们还商量了午餐，最后决定在美术馆附近的一家面馆吃饭。接着我查了美术馆的开放时间，星期天下午可以参观。大家最后约定星期天下午一点半在美术馆门口集合，参观结束后各自回家。请只回答：我们最终约定在哪里集合？",
+        "reference": "美术馆门口",
+        "prompt_tokens": 131,
+        "reference_mean_nll": 11.66816234588623,
+        "answer": "我们最终约定在下午一点半在美术馆附近集合，参观结束后各自回家。",
+        "generated_tokens": 18,
+        "ended_with_eos": true
+      },
+      {
+        "name": "correction",
+        "prompt": "我正在整理一份家庭采购清单，请仔细区分原计划和后来的变更。今天早上我打算买牛奶、苹果、面条和一包纸巾。下午家人告诉我冰箱里还有足够的牛奶，所以不用再买牛奶。家里的苹果也刚买过，于是把苹果从清单里划掉。面条已经吃完，需要保留在清单上。纸巾数量不多，也仍然需要买。后来家人提出还需要一瓶酱油，我把酱油添加到了清单的末尾。购物前我再次核对：面条、纸巾、酱油需要买，牛奶和苹果不需要买。请只回答：后来新添加到购物清单的是什么？",
+        "reference": "酱油",
+        "prompt_tokens": 143,
+        "reference_mean_nll": 14.056382179260254,
+        "answer": "在整理家庭采购清单时，我首先计划购买牛奶、苹果、面条和一包纸巾。然而，",
+        "generated_tokens": 24,
+        "ended_with_eos": false
+      }
+    ]
+  },
+  "extended_length": 256,
+  "old_length": 128,
+  "new_position_initialization": "zero",
+  "short_max_logit_delta_after_extension": 0.0,
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "layer18_sha256": "f8f61e2746c9e43adb1789a682870c43f7416d5c45bb32fe4ef20a6013c28e34",
+  "elapsed_seconds": 83.66235619992949,
+  "peak_allocated_bytes": 4046222848,
+  "limitations": [
+    "Two manually authored long prompts; memory reader not active.",
+    "New position embeddings are untrained zeros, not learned extrapolation.",
+    "NLL is a narrow teacher-forced metric, not open-chat acceptance.",
+    "Generation capped at 24 tokens with a closed reasoning prefix."
+  ]
+}

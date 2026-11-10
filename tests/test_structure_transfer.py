@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
+from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement, apply_position_tails
 
 
 class StructureTransferTests(unittest.TestCase):
@@ -53,6 +53,47 @@ class StructureTransferTests(unittest.TestCase):
             layer(values, use_cache=True)
         with self.assertRaisesRegex(ValueError, 'position IDs'):
             layer(values, position_ids=torch.tensor([[0, 1, 8]]))
+
+    def test_extend_positions_preserves_existing_outputs_and_cache(self):
+        torch.manual_seed(127)
+        layer = SPORALayerReplacement(16, 4, max_length=4, layer_idx=2).eval()
+        values = torch.randn(1, 7, 16)
+        with torch.no_grad():
+            previous = layer(values[:, :4])
+        old_position = layer.position.weight.detach().clone()
+        layer.extend_positions(8)
+        torch.testing.assert_close(layer.position.weight[:4], old_position, rtol=0, atol=0)
+        torch.testing.assert_close(layer.position.weight[4:], torch.zeros_like(layer.position.weight[4:]))
+        with torch.no_grad():
+            preserved = layer(values[:, :4])
+            extended = layer(values)
+            cache = self.Cache()
+            prefill = layer(values[:, :4], past_key_values=cache, use_cache=True)
+            rest = [layer(values[:, i:i+1], past_key_values=cache, use_cache=True)
+                    for i in range(4, 7)]
+        torch.testing.assert_close(previous, preserved, rtol=0, atol=0)
+        torch.testing.assert_close(torch.cat([prefill, *rest], dim=1), extended, atol=2e-6, rtol=2e-6)
+        with self.assertRaisesRegex(ValueError, 'larger'):
+            layer.extend_positions(8)
+
+    def test_position_tail_restore_validates_all_before_mutating(self):
+        layers = {1: SPORALayerReplacement(8, 2, max_length=4, layer_idx=1),
+                  2: SPORALayerReplacement(8, 2, max_length=4, layer_idx=2)}
+        sources = {'1': 'digest-one', '2': 'digest-two'}
+        tails = {'1': torch.ones(4, 8), '2': torch.full((4, 8), 2.)}
+        payload = {'format': 'spora-position-tail-v1', 'base_weight_sha256': 'base',
+                   'sources': sources, 'old_length': 4, 'new_length': 8, 'tails': tails}
+        prefixes = {i: block.position.weight.detach().clone() for i, block in layers.items()}
+        bad = dict(payload, tails={'1': tails['1'], '2': torch.full((4, 8), float('nan'))})
+        with self.assertRaisesRegex(ValueError, 'position tail'):
+            apply_position_tails(layers, bad, 'base', sources)
+        self.assertEqual([block.max_length for block in layers.values()], [4, 4])
+        with self.assertRaisesRegex(ValueError, 'provenance'):
+            apply_position_tails(layers, payload, 'other-base', sources)
+        apply_position_tails(layers, payload, 'base', sources)
+        for i, block in layers.items():
+            torch.testing.assert_close(block.position.weight[:4], prefixes[i], atol=0, rtol=0)
+            torch.testing.assert_close(block.position.weight[4:], tails[str(i)], atol=0, rtol=0)
 
     def test_output_returns_to_teacher_dtype(self):
         layer = SPORALayerReplacement(16, 4, max_length=8).half().eval()

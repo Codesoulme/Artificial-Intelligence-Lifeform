@@ -61,6 +61,24 @@ class SPORALayerReplacement(nn.Module):
         self.position = nn.Embedding(max_length, width)
         self.block = CausalBlock(config)
 
+    def extend_positions(self, max_length):
+        """Preserve learned positions and zero-initialize new, untrained positions.
+
+        Call before constructing an optimizer, because this replaces a parameter.
+        Extending the table does not establish long-context model quality.
+        """
+        if type(max_length) is not int or max_length <= self.max_length:
+            raise ValueError('Extended position limit must be a larger integer')
+        old = self.position.weight
+        weights = torch.zeros((max_length, self.width), device=old.device, dtype=old.dtype)
+        replacement = nn.Embedding.from_pretrained(weights, freeze=not old.requires_grad)
+        with torch.no_grad():
+            replacement.weight.zero_()
+            replacement.weight[:self.max_length].copy_(old)
+        replacement.weight.requires_grad_(old.requires_grad)
+        self.position = replacement
+        self.max_length = max_length
+
     def forward(self, hidden_states, attention_mask=None, position_ids=None, past_key_values=None,
                 use_cache=False, cache_position=None, position_embeddings=None, **kwargs):
         if use_cache or past_key_values is not None:
@@ -157,3 +175,37 @@ class SPORALayerBlend(nn.Module):
         replacement_kwargs['past_key_values'] = None
         spora = self.spora_layer(hidden_states, *args, **replacement_kwargs)
         return teacher + self.strength * (spora.to(device=teacher.device, dtype=teacher.dtype) - teacher)
+
+
+def apply_position_tails(blocks, payload, expected_base_sha256, expected_sources):
+    """Apply a checked tail-only experiment to its exact source candidates.
+
+    Validate the entire payload before changing any block. Construct an
+    optimizer only after applying, since extending replaces each position table.
+    Caller must compute expected source-file digests from the loaded candidates.
+    """
+    if (not isinstance(blocks, dict) or not blocks or any(
+            type(key) is not int or not isinstance(value, SPORALayerReplacement)
+            for key, value in blocks.items())):
+        raise ValueError('Expected indexed SPORA replacement blocks')
+    keys = {str(key) for key in blocks}
+    if (not isinstance(payload, dict) or payload.get('format') != 'spora-position-tail-v1'
+            or payload.get('base_weight_sha256') != expected_base_sha256
+            or not isinstance(expected_sources, dict) or set(expected_sources) != keys
+            or payload.get('sources') != expected_sources):
+        raise ValueError('Position tail provenance mismatch')
+    old, new, tails = payload.get('old_length'), payload.get('new_length'), payload.get('tails')
+    if (type(old) is not int or type(new) is not int or old <= 0 or new <= old
+            or not isinstance(tails, dict) or set(tails) != keys):
+        raise ValueError('Invalid position tail metadata')
+    for index, block in blocks.items():
+        tensor = tails[str(index)]
+        if (block.layer_idx != index or block.max_length != old or not isinstance(tensor, torch.Tensor)
+                or not tensor.is_floating_point() or tensor.shape != (new-old, block.width)
+                or not bool(torch.isfinite(tensor).all())):
+            raise ValueError('Invalid position tail tensor or source block')
+    for index, block in blocks.items():
+        block.extend_positions(new)
+        with torch.no_grad():
+            block.position.weight[old:].copy_(tails[str(index)].to(
+                device=block.position.weight.device, dtype=block.position.weight.dtype))
