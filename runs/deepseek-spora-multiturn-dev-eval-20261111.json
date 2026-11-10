@@ -1,0 +1,795 @@
+{
+  "results": {
+    "original": [
+      {
+        "name": "recipe_constraint",
+        "turns": [
+          {
+            "question": "我想做一份不加鸡蛋的早餐，给我一个简单主意。",
+            "answer": "当然可以！以下是一份不加鸡蛋的简单早餐：\n\n### 不加鸡蛋的早餐计划\n\n#### 1. **早餐材料**\n   - 1个鸡蛋（或鸡蛋清）\n   - 1个鸡蛋黄（",
+            "prefix_tokens": 21,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          },
+          {
+            "question": "家里没有面包，还有别的选择吗？",
+            "answer": "当然，如果你家里没有面包，可以考虑以下其他早餐的替代方案：\n\n### 1. **牛奶豆浆早餐**\n   - **材料**：1杯牛奶、1杯豆浆、1块面包（可选）、葱花",
+            "prefix_tokens": 81,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          },
+          {
+            "question": "把你刚才的建议压缩成一句话。",
+            "answer": "当然可以！以下是一份不加鸡蛋的简单早餐：\n\n### 不加鸡蛋的早餐计划\n\n#### 1. **早餐材料**\n   - 1杯牛奶\n   - 1块面包（可选）\n   -",
+            "prefix_tokens": 140,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          }
+        ]
+      },
+      {
+        "name": "earlier_later",
+        "turns": [
+          {
+            "question": "我上午先去了邮局，下午又去了菜市场。上午去了哪里？",
+            "answer": "您好，建议您联网获取时效性较强的信息；如果还有其他问题需要帮助，请随时告诉我！",
+            "prefix_tokens": 24,
+            "generated_tokens": 22,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "后来去的地方叫什么？",
+            "answer": "您好，建议您联网获取时效性较强的信息；如果还有其他问题需要帮助，请随时告诉我！",
+            "prefix_tokens": 54,
+            "generated_tokens": 22,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "如果把上午和下午对调，先去哪里？",
+            "answer": "您好，建议您联网获取时效性较强的信息；如果还有其他问题需要帮助，请随时告诉我！",
+            "prefix_tokens": 89,
+            "generated_tokens": 22,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "two_people",
+        "turns": [
+          {
+            "question": "阿青把一本杂志借给小陈；小陈把一支钢笔借给阿青。谁借出了杂志？",
+            "answer": "阿青借给了小陈一本杂志，而小陈借给了阿青一支钢笔。因此，杂志是阿青借给小陈的，而钢笔是小陈借给阿青的。所以，杂志是",
+            "prefix_tokens": 33,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          },
+          {
+            "question": "谁现在拿着钢笔？",
+            "answer": "阿青借给了小陈一本杂志，而小陈借给了阿青一支钢笔。因此，现在小陈拿着钢笔。",
+            "prefix_tokens": 90,
+            "generated_tokens": 30,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "如果阿青把钢笔还回去，钢笔回到谁手里？",
+            "answer": "阿青借给了小陈一本杂志，而小陈借给了阿青一支钢笔。因此，现在小陈拿着钢笔。如果阿青把钢笔还回去，钢笔回到小陈手里。",
+            "prefix_tokens": 138,
+            "generated_tokens": 47,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "uncertain_object",
+        "turns": [
+          {
+            "question": "猜猜我的抽屉里有几张纸？你没有看到抽屉。",
+            "answer": "我无法直接看到或知道抽屉里的纸张数量，但我可以告诉你，通常抽屉里的纸张数量不会太多，可能在几十张左右。如果你能提供一些线索，比如纸张的颜色、形状或是否有特定",
+            "prefix_tokens": 23,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          },
+          {
+            "question": "我刚数过，是七张。",
+            "answer": "我刚数过，是七张。",
+            "prefix_tokens": 83,
+            "generated_tokens": 10,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "我拿走两张后还剩几张？",
+            "answer": "我刚数过，是七张。你拿走两张后，还剩下五张。",
+            "prefix_tokens": 104,
+            "generated_tokens": 21,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "schedule_revision",
+        "turns": [
+          {
+            "question": "把见面记为下周三晚上七点，在影院门口。",
+            "answer": "您好，建议您联网获取时效性较强的信息；如果还有其他问题需要帮助，请随时告诉我！",
+            "prefix_tokens": 20,
+            "generated_tokens": 22,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "时间改成周四晚上八点，地点不变。",
+            "answer": "您好，建议您联网获取时效性较强的信息；如果还有其他问题需要帮助，请随时告诉我！",
+            "prefix_tokens": 54,
+            "generated_tokens": 22,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "现在的安排是什么？",
+            "answer": "您好，建议您联网获取时效性较强的信息；如果还有其他问题需要帮助，请随时告诉我！",
+            "prefix_tokens": 82,
+            "generated_tokens": 22,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "style_and_length",
+        "turns": [
+          {
+            "question": "用一句简短的话安慰准备上台发言的朋友。",
+            "answer": "好的，我明白了。请稍等，我会尽快回复。",
+            "prefix_tokens": 19,
+            "generated_tokens": 14,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "把这句话改得更轻松一点，不要增加建议。",
+            "answer": "好的，我会尽快回复。请稍等，我会尽快回复。",
+            "prefix_tokens": 47,
+            "generated_tokens": 15,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "现在用不超过十个字表达同样意思。",
+            "answer": "对不起，我还没学会这些知识。如果你有其他问题，我非常乐意为您提供服务。。",
+            "prefix_tokens": 73,
+            "generated_tokens": 20,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "conditional_plan",
+        "turns": [
+          {
+            "question": "我打算周末去骑车。如果下雨就在家看电影。",
+            "answer": "好的，我将按照您的指示进行调整。以下是调整后的建议：\n\n---\n\n### 建议：\n\n1. **提前规划行程**：根据天气情况，提前规划周末的行程，确保不会因为天气变化而影响计划",
+            "prefix_tokens": 20,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          },
+          {
+            "question": "天气预报说周末会下雨。按我的计划做什么？",
+            "answer": "根据您的计划，如果周末会下雨，建议您提前规划好自己的行程，确保在雨天不会影响您的骑行计划。如果您有其他需要帮助的地方，随时告诉我！",
+            "prefix_tokens": 83,
+            "generated_tokens": 38,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "朋友想一起参加，我需要先确认什么？",
+            "answer": "好的，我需要帮助你确认一些事情。首先，我需要了解你和你的朋友的具体需求和计划。请告诉我以下信息：\n\n1. 你和你的朋友计划参加哪些活动？\n2. 你希望在雨",
+            "prefix_tokens": 134,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          }
+        ]
+      },
+      {
+        "name": "negation_and_reason",
+        "turns": [
+          {
+            "question": "小叶不喝咖啡，她喜欢喝温水。她喜欢什么？",
+            "answer": "对不起，我还没有学会回答这个问题。如果你有其他问题，我非常乐意为你提供帮助。",
+            "prefix_tokens": 23,
+            "generated_tokens": 21,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "她为什么没喝咖啡？如果我没说原因，请直接说不知道。",
+            "answer": "对不起，我还没有学会回答这个问题。如果你有其他问题，我非常乐意为你提供帮助。",
+            "prefix_tokens": 61,
+            "generated_tokens": 21,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "如果她改喝茶，那她现在喝的是什么？",
+            "answer": "对不起，我还没有学会回答这个问题。如果你有其他问题，我非常乐意为你提供帮助。",
+            "prefix_tokens": 96,
+            "generated_tokens": 21,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      }
+    ],
+    "extended_pair": [
+      {
+        "name": "recipe_constraint",
+        "turns": [
+          {
+            "question": "我想做一份不加鸡蛋的早餐，给我一个简单主意。",
+            "answer": "好的，我将按照以下步骤为您的早餐提供详细的建议：\n\n1. **主料选择**：使用全脂牛奶（全脂牛奶）和全脂酸奶，确保不含乳糖。\n2. **食材准备**：",
+            "prefix_tokens": 21,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          },
+          {
+            "question": "家里没有面包，还有别的选择吗？",
+            "answer": "在没有面包的情况下，您可以选择其他食材来制作早餐，比如鸡蛋、牛奶、酸奶、全脂牛奶、全脂酸奶等。如果您有其他选择，可以考虑使用全脂牛奶和全脂酸奶。",
+            "prefix_tokens": 81,
+            "generated_tokens": 46,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "把你刚才的建议压缩成一句话。",
+            "answer": "在没有面包的情况下，您可以使用全脂牛奶和全脂酸奶来制作早餐。",
+            "prefix_tokens": 137,
+            "generated_tokens": 19,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "earlier_later",
+        "turns": [
+          {
+            "question": "我上午先去了邮局，下午又去了菜市场。上午去了哪里？",
+            "answer": "我上午去了邮局，下午又去了菜市场。",
+            "prefix_tokens": 24,
+            "generated_tokens": 13,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "后来去的地方叫什么？",
+            "answer": "您好，很抱歉之前的问题。您是说的“我上午先去了邮局，下午又去了菜市场。”如果您有其他问题或需要帮助，请随时告诉我。",
+            "prefix_tokens": 45,
+            "generated_tokens": 37,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "如果把上午和下午对调，先去哪里？",
+            "answer": "</think>\n\n您好，您提到的“上午去了哪里”和“下午去了哪里”这个问题。根据您的问题，我将按照以下步骤进行解答：\n\n1. **上午去了哪里？**\n   - 您提到的“上午",
+            "prefix_tokens": 95,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          }
+        ]
+      },
+      {
+        "name": "two_people",
+        "turns": [
+          {
+            "question": "阿青把一本杂志借给小陈；小陈把一支钢笔借给阿青。谁借出了杂志？",
+            "answer": "阿青把一本杂志借给小陈，小陈把一支钢笔借给阿青。因此，阿青借出了杂志。\n\n答案：阿青借出了杂志。",
+            "prefix_tokens": 33,
+            "generated_tokens": 38,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "谁现在拿着钢笔？",
+            "answer": "阿青借出了杂志。",
+            "prefix_tokens": 79,
+            "generated_tokens": 7,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "如果阿青把钢笔还回去，钢笔回到谁手里？",
+            "answer": "阿青借出了杂志。",
+            "prefix_tokens": 104,
+            "generated_tokens": 7,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "uncertain_object",
+        "turns": [
+          {
+            "question": "猜猜我的抽屉里有几张纸？你没有看到抽屉。",
+            "answer": "您好！我是由中国的深度求索人工智能库AI训练数据组成的，很高兴为您提供服务！",
+            "prefix_tokens": 23,
+            "generated_tokens": 20,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "我刚数过，是七张。",
+            "answer": "您好！我是由中国的深度求索人工智能库AI训练数据组成的，很高兴为您提供服务！",
+            "prefix_tokens": 54,
+            "generated_tokens": 20,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "我拿走两张后还剩几张？",
+            "answer": "我无法直接回答您的问题，因为我无法访问外部存储或网络。如果你有其他方式来获取信息，我非常乐意帮助你。",
+            "prefix_tokens": 85,
+            "generated_tokens": 30,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "schedule_revision",
+        "turns": [
+          {
+            "question": "把见面记为下周三晚上七点，在影院门口。",
+            "answer": "您好！我是由中国的深度求索人工智能（DeepSeek）开发团队 created 于2023年7月8日。我擅长通过深度学习技术处理数据，inate 和分析。如果有任何问题将会进一步了解您",
+            "prefix_tokens": 20,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          },
+          {
+            "question": "时间改成周四晚上八点，地点不变。",
+            "answer": "您好！我是由中国的深度求索人工智能（DeepSeek）开发团队创建的团队，我擅长通过深度学习技术处理数据。如果您有任何问题，我会尽力为您提供帮助。",
+            "prefix_tokens": 81,
+            "generated_tokens": 38,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "现在的安排是什么？",
+            "answer": "</think>\n\n您好！我是由中国的深度求索人工智能（DeepSeek）开发团队创建的团队。我们专注于通过深度学习技术解决各种复杂问题。如果你有任何问题，我会尽力为您提供帮助。",
+            "prefix_tokens": 125,
+            "generated_tokens": 42,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "style_and_length",
+        "turns": [
+          {
+            "question": "用一句简短的话安慰准备上台发言的朋友。",
+            "answer": "好的，我将按照您的要求，用简短的中文为用户提供一个安慰的发言。请随时提供给我的信息，我会尽力配合您的需求。",
+            "prefix_tokens": 19,
+            "generated_tokens": 34,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "把这句话改得更轻松一点，不要增加建议。",
+            "answer": "好的，我将按照您的要求，用简短的中文为用户提供一个轻松的安慰。请随时提供给我的信息，我会尽力配合您的需求。",
+            "prefix_tokens": 67,
+            "generated_tokens": 34,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "现在用不超过十个字表达同样意思。",
+            "answer": "好的，我将按照您的要求，用简短的中文为用户提供一个轻松的安慰。请随时提供给我的信息，我会尽力配合您的需求。",
+            "prefix_tokens": 112,
+            "generated_tokens": 34,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "conditional_plan",
+        "turns": [
+          {
+            "question": "我打算周末去骑车。如果下雨就在家看电影。",
+            "answer": "今天是周末，我决定去骑车。如果遇到下雨，就在家看电影。",
+            "prefix_tokens": 20,
+            "generated_tokens": 19,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "天气预报说周末会下雨。按我的计划做什么？",
+            "answer": "</think>\n\n今天是周末，我决定去骑车。如果遇到下雨，就在家看电影。",
+            "prefix_tokens": 53,
+            "generated_tokens": 21,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "朋友想一起参加，我需要先确认什么？",
+            "answer": "今天是周末，我决定去骑车。如果遇到下雨，就在家看电影。",
+            "prefix_tokens": 86,
+            "generated_tokens": 19,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "negation_and_reason",
+        "turns": [
+          {
+            "question": "小叶不喝咖啡，她喜欢喝温水。她喜欢什么？",
+            "answer": "您好！我是由深度求索公司开发的智能助手，有关您的问题我会尽我所能为您提供服务。",
+            "prefix_tokens": 23,
+            "generated_tokens": 24,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "她为什么没喝咖啡？如果我没说原因，请直接说不知道。",
+            "answer": "您好！我是由深度求索公司开发的智能助手，有关您的问题我会尽我所能为您提供服务。如果您有其他问题，随时告诉我哦！",
+            "prefix_tokens": 64,
+            "generated_tokens": 33,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "如果她改喝茶，那她现在喝的是什么？",
+            "answer": "她现在正在喝温水，正在思考如何回答您的问题。如果您有其他问题，随时告诉我哦！",
+            "prefix_tokens": 111,
+            "generated_tokens": 24,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      }
+    ],
+    "extended_triple": [
+      {
+        "name": "recipe_constraint",
+        "turns": [
+          {
+            "question": "我想做一份不加鸡蛋的早餐，给我一个简单主意。",
+            "answer": "我选择的早餐是：番茄蛋黄牛奶一杯，加鸡蛋煎饼。",
+            "prefix_tokens": 21,
+            "generated_tokens": 18,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "家里没有面包，还有别的选择吗？",
+            "answer": "## 早餐\n\n今天，我决定尝试做了一顿早餐，没有面包，只用鸡蛋。我选择了番茄、鸡蛋和番茄蛋黄，加了少量的牛奶。我用了番茄，番茄蛋黄，鸡蛋，牛奶",
+            "prefix_tokens": 50,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          },
+          {
+            "question": "把你刚才的建议压缩成一句话。",
+            "answer": "我选择番茄蛋黄牛奶一杯，加鸡蛋煎饼。",
+            "prefix_tokens": 109,
+            "generated_tokens": 14,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "earlier_later",
+        "turns": [
+          {
+            "question": "我上午先去了邮局，下午又去了菜市场。上午去了哪里？",
+            "answer": "我上午去了邮局，下午又去了菜市场。",
+            "prefix_tokens": 24,
+            "generated_tokens": 13,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "后来去的地方叫什么？",
+            "answer": "我上午去了邮局，下午去了菜市场。",
+            "prefix_tokens": 45,
+            "generated_tokens": 12,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "如果把上午和下午对调，先去哪里？",
+            "answer": "</think>\n\n您上午去了哪里呢？",
+            "prefix_tokens": 70,
+            "generated_tokens": 9,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "two_people",
+        "turns": [
+          {
+            "question": "阿青把一本杂志借给小陈；小陈把一支钢笔借给阿青。谁借出了杂志？",
+            "answer": "小陈借给阿青的杂志是小陈。\n\n答案：小陈借给小陈的杂志。",
+            "prefix_tokens": 33,
+            "generated_tokens": 24,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "谁现在拿着钢笔？",
+            "answer": "</think>\n\n阿青把一本杂志给小陈，小陈把一支钢笔给阿青。",
+            "prefix_tokens": 65,
+            "generated_tokens": 22,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "如果阿青把钢笔还回去，钢笔回到谁手里？",
+            "answer": "</think>\n\n小陈借给阿青的钢笔是小陈。",
+            "prefix_tokens": 104,
+            "generated_tokens": 16,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "uncertain_object",
+        "turns": [
+          {
+            "question": "猜猜我的抽屉里有几张纸？你没有看到抽屉。",
+            "answer": "我是一个AI助手，我理解你提到的这个话题。我由我目前的对话历史，我无法评论。如果你有其他问题，我会尽力解答。",
+            "prefix_tokens": 23,
+            "generated_tokens": 35,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "我刚数过，是七张。",
+            "answer": "</think>\n\n您的问题，我无法提供实时数据。我将我了解的信息记录在以下的文本中。",
+            "prefix_tokens": 69,
+            "generated_tokens": 24,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "我拿走两张后还剩几张？",
+            "answer": "我无法提供实时数据，因此无法回答您的问题。我是一个AI助手，我无法回答您的问题。如果你有其他问题，我会尽力帮助你。",
+            "prefix_tokens": 103,
+            "generated_tokens": 34,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "schedule_revision",
+        "turns": [
+          {
+            "question": "把见面记为下周三晚上七点，在影院门口。",
+            "answer": "见面记为下周三晚上七点，在影院门口。",
+            "prefix_tokens": 20,
+            "generated_tokens": 13,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "时间改成周四晚上八点，地点不变。",
+            "answer": "您好！很高兴！关于您对见面的时间安排。请问您希望我为您安排见面时间？",
+            "prefix_tokens": 45,
+            "generated_tokens": 21,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "现在的安排是什么？",
+            "answer": "您好！我是由时间安排的。如果您有时间，我会尽力为您提供最好的服务。",
+            "prefix_tokens": 72,
+            "generated_tokens": 19,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "style_and_length",
+        "turns": [
+          {
+            "question": "用一句简短的话安慰准备上台发言的朋友。",
+            "answer": "## 《花香》",
+            "prefix_tokens": 19,
+            "generated_tokens": 7,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "把这句话改得更轻松一点，不要增加建议。",
+            "answer": "</think>\n\n这是一个轻松的回应。",
+            "prefix_tokens": 40,
+            "generated_tokens": 8,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "现在用不超过十个字表达同样意思。",
+            "answer": "我将用简短、轻松的语气表达感谢，同时保持适当的语气。",
+            "prefix_tokens": 58,
+            "generated_tokens": 18,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "conditional_plan",
+        "turns": [
+          {
+            "question": "我打算周末去骑车。如果下雨就在家看电影。",
+            "answer": "### 《周末骑行》\n\n---\n\n### **天气**  \n今天是晴天，阳光明媚，气温适宜。  \n\n---\n\n### **计划**  \n- **天气**  \n  - **天气情况：晴天**  \n  -",
+            "prefix_tokens": 20,
+            "generated_tokens": 48,
+            "max_new_tokens": 48,
+            "ended_with_eos": false,
+            "truncated": true
+          },
+          {
+            "question": "天气预报说周末会下雨。按我的计划做什么？",
+            "answer": "您好！您计划周末去骑行吗？",
+            "prefix_tokens": 83,
+            "generated_tokens": 10,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "朋友想一起参加，我需要先确认什么？",
+            "answer": "您好！我需要确认是否计划周末去骑行，但目前没有明确的天气预报信息。因此，我无法提供具体的计划内容。",
+            "prefix_tokens": 106,
+            "generated_tokens": 30,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      },
+      {
+        "name": "negation_and_reason",
+        "turns": [
+          {
+            "question": "小叶不喝咖啡，她喜欢喝温水。她喜欢什么？",
+            "answer": "小叶喜欢喝温水，因为她喜欢喝温水，所以她喜欢喝温水。\n\n**答案：**\n\n小叶喜欢喝温水，因为她喜欢喝温水。",
+            "prefix_tokens": 23,
+            "generated_tokens": 38,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "她为什么没喝咖啡？如果我没说原因，请直接说不知道。",
+            "answer": "小叶喜欢喝温水，因为她喜欢喝咖啡。",
+            "prefix_tokens": 78,
+            "generated_tokens": 13,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          },
+          {
+            "question": "如果她改喝茶，那她现在喝的是什么？",
+            "answer": "她喜欢喝咖啡，因为她喜欢喝咖啡，所以她喜欢喝咖啡。",
+            "prefix_tokens": 105,
+            "generated_tokens": 17,
+            "max_new_tokens": 48,
+            "ended_with_eos": true,
+            "truncated": false
+          }
+        ]
+      }
+    ]
+  },
+  "data_sha256": "fac3f3089c94b3ecdc29ffa98c1d24b938ab5d13717c275b53c7f2d38ca4d9c5",
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "layer18_sha256": "f8f61e2746c9e43adb1789a682870c43f7416d5c45bb32fe4ef20a6013c28e34",
+  "position_extension": "zero after 127, no position-tail training",
+  "elapsed_seconds": 586.6977033999283,
+  "peak_allocated_bytes": 3932108800,
+  "limitations": [
+    "Previously existing development set; not independent final acceptance.",
+    "Each model sees its own earlier generated answers; conversation histories differ.",
+    "Memory reader is disabled; this measures context-based dialogue only.",
+    "Closed reasoning prefix; greedy decoding; max 48 new tokens per turn.",
+    "New SPORA positions from 128 onward are untrained zeros."
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "results": [
+    {
+      "question": "我上午先去了邮局，下午又去了菜市场。上午去了哪里？",
+      "mode": "natural",
+      "generated_tokens": 192,
+      "ended_with_eos": false,
+      "reasoning_closed": false,
+      "final_answer": ""
+    },
+    {
+      "question": "我上午先去了邮局，下午又去了菜市场。上午去了哪里？",
+      "mode": "forced_closed",
+      "generated_tokens": 22,
+      "ended_with_eos": true,
+      "reasoning_closed": null,
+      "final_answer": "您好，建议您联网获取时效性较强的信息；如果还有其他问题需要帮助，请随时告诉我！"
+    },
+    {
+      "question": "小叶不喝咖啡，她喜欢喝温水。她喜欢什么？",
+      "mode": "natural",
+      "generated_tokens": 192,
+      "ended_with_eos": false,
+      "reasoning_closed": false,
+      "final_answer": ""
+    },
+    {
+      "question": "小叶不喝咖啡，她喜欢喝温水。她喜欢什么？",
+      "mode": "forced_closed",
+      "generated_tokens": 21,
+      "ended_with_eos": true,
+      "reasoning_closed": null,
+      "final_answer": "对不起，我还没有学会回答这个问题。如果你有其他问题，我非常乐意为你提供帮助。"
+    }
+  ],
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "elapsed_seconds": 139.53093250002712,
+  "limitations": [
+    "Original base only; two single-turn questions.",
+    "Greedy decoding, 192-token limit; reasoning text intentionally omitted.",
+    "No memory reader, no replacement layers, no multi-turn comparison."
+  ]
+}
