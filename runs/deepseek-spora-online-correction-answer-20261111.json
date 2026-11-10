@@ -1,0 +1,186 @@
+{
+  "status": "online_correction_generated_answer_development_probe",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_individual_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "source_integrated_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "replacement_candidate_sha256": {
+    "6": "895309c6fbf29a97c39b89373898afc3eadb30bab8bc43b2c3ca80ac445e14b9",
+    "12": "8b28b5430af1a3e15613497dd0ab7cc6320a239195d93430599539cea048ed43"
+  },
+  "entity": "阿远",
+  "events": [
+    {
+      "time": 0,
+      "value": 3,
+      "action": "new"
+    },
+    {
+      "time": 1,
+      "value": 6,
+      "action": "correct"
+    },
+    {
+      "time": 2,
+      "value": 0,
+      "action": "correct"
+    }
+  ],
+  "event_provenance": [
+    {
+      "source": "direct",
+      "action": "new",
+      "quality": 1.0,
+      "valid_at": 0,
+      "quality_resolution": 0.00392156862745098
+    },
+    {
+      "source": "direct",
+      "action": "correct",
+      "quality": 1.0,
+      "valid_at": 1,
+      "quality_resolution": 0.00392156862745098
+    },
+    {
+      "source": "direct",
+      "action": "correct",
+      "quality": 1.0,
+      "valid_at": 2,
+      "quality_resolution": 0.00392156862745098
+    }
+  ],
+  "rows": [
+    {
+      "condition": "base",
+      "question": "改正后阿远最喜欢喝什么饮料？",
+      "intent": "current",
+      "expected": "水",
+      "answer": "水",
+      "correct": true
+    },
+    {
+      "condition": "spora_pair",
+      "question": "改正后阿远最喜欢喝什么饮料？",
+      "intent": "current",
+      "expected": "水",
+      "answer": "水",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "偏好调整之前，阿远喝什么？",
+      "intent": "past",
+      "expected": "果汁",
+      "answer": "I am sorry, I cannot answer that",
+      "correct": false
+    },
+    {
+      "condition": "spora_pair",
+      "question": "偏好调整之前，阿远喝什么？",
+      "intent": "past",
+      "expected": "果汁",
+      "answer": "果汁",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "第一次更正后，阿远喝什么？",
+      "intent": "later",
+      "expected": "水",
+      "answer": "水池中的水减少了。",
+      "correct": true
+    },
+    {
+      "condition": "spora_pair",
+      "question": "第一次更正后，阿远喝什么？",
+      "intent": "later",
+      "expected": "水",
+      "answer": "水",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "更正后阿远现在爱喝什么？",
+      "intent": "current",
+      "expected": "茶",
+      "answer": "0\n</think>\n\n0",
+      "correct": false
+    },
+    {
+      "condition": "spora_pair",
+      "question": "更正后阿远现在爱喝什么？",
+      "intent": "current",
+      "expected": "茶",
+      "answer": "茶",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "最早的记录里阿远喜欢什么饮料？",
+      "intent": "past",
+      "expected": "果汁",
+      "answer": "果汁",
+      "correct": true
+    },
+    {
+      "condition": "spora_pair",
+      "question": "最早的记录里阿远喜欢什么饮料？",
+      "intent": "past",
+      "expected": "果汁",
+      "answer": "果汁",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "上一次调整后的偏好是什么？",
+      "intent": "later",
+      "expected": "水",
+      "answer": "我无法查找您所提及的特定",
+      "correct": false
+    },
+    {
+      "condition": "spora_pair",
+      "question": "上一次调整后的偏好是什么？",
+      "intent": "later",
+      "expected": "水",
+      "answer": "水",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "最新改过之后，阿远喝什么？",
+      "intent": "later",
+      "expected": "茶",
+      "answer": "我是一个AI助手，由中国的深度",
+      "correct": false
+    },
+    {
+      "condition": "spora_pair",
+      "question": "最新改过之后，阿远喝什么？",
+      "intent": "later",
+      "expected": "茶",
+      "answer": "茶",
+      "correct": true
+    }
+  ],
+  "summary": {
+    "base": {
+      "correct": 3,
+      "total": 7,
+      "accuracy": 0.42857142857142855
+    },
+    "spora_pair": {
+      "correct": 7,
+      "total": 7,
+      "accuracy": 1.0
+    }
+  },
+  "elapsed_seconds": 99.11719150003046,
+  "peak_allocated_bytes": 3806439936,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "One entity, one key, three sequential drink-preference events and seven authored questions.",
+    "Entity address and temporal page are supplied by the probe, not parsed by the model.",
+    "Eight-token generations and exact word-in-answer scoring are not open-chat acceptance.",
+    "Memory write controller and base language weights remain frozen."
+  ]
+}

@@ -1,0 +1,187 @@
+{
+  "status": "online_correction_generated_answer_development_probe",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_individual_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "source_integrated_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "replacement_candidate_sha256": {
+    "6": "895309c6fbf29a97c39b89373898afc3eadb30bab8bc43b2c3ca80ac445e14b9",
+    "12": "8b28b5430af1a3e15613497dd0ab7cc6320a239195d93430599539cea048ed43"
+  },
+  "entity": "小梅",
+  "entity_index": 4,
+  "events": [
+    {
+      "time": 0,
+      "value": 1,
+      "action": "new"
+    },
+    {
+      "time": 1,
+      "value": 4,
+      "action": "correct"
+    },
+    {
+      "time": 2,
+      "value": 0,
+      "action": "correct"
+    }
+  ],
+  "event_provenance": [
+    {
+      "source": "direct",
+      "action": "new",
+      "quality": 1.0,
+      "valid_at": 0,
+      "quality_resolution": 0.00392156862745098
+    },
+    {
+      "source": "direct",
+      "action": "correct",
+      "quality": 1.0,
+      "valid_at": 1,
+      "quality_resolution": 0.00392156862745098
+    },
+    {
+      "source": "direct",
+      "action": "correct",
+      "quality": 1.0,
+      "valid_at": 2,
+      "quality_resolution": 0.00392156862745098
+    }
+  ],
+  "rows": [
+    {
+      "condition": "base",
+      "question": "改正后小梅最喜欢喝什么饮料？",
+      "intent": "current",
+      "expected": "豆浆",
+      "answer": "根据要求，我无法直接回答这个问题",
+      "correct": false
+    },
+    {
+      "condition": "spora_pair",
+      "question": "改正后小梅最喜欢喝什么饮料？",
+      "intent": "current",
+      "expected": "豆浆",
+      "answer": "豆浆",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "偏好调整之前，小梅喝什么？",
+      "intent": "past",
+      "expected": "咖啡",
+      "answer": "在我们的系统中，小梅已经",
+      "correct": false
+    },
+    {
+      "condition": "spora_pair",
+      "question": "偏好调整之前，小梅喝什么？",
+      "intent": "past",
+      "expected": "咖啡",
+      "answer": "咖啡",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "第一次更正后，小梅喝什么？",
+      "intent": "later",
+      "expected": "豆浆",
+      "answer": "inals",
+      "correct": false
+    },
+    {
+      "condition": "spora_pair",
+      "question": "第一次更正后，小梅喝什么？",
+      "intent": "later",
+      "expected": "豆浆",
+      "answer": "豆浆",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "更正后小梅现在爱喝什么？",
+      "intent": "current",
+      "expected": "茶",
+      "answer": "0\n```",
+      "correct": false
+    },
+    {
+      "condition": "spora_pair",
+      "question": "更正后小梅现在爱喝什么？",
+      "intent": "current",
+      "expected": "茶",
+      "answer": "茶",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "最早的记录里小梅喜欢什么饮料？",
+      "intent": "past",
+      "expected": "咖啡",
+      "answer": "在我们的讨论中，我们始终坚持一个",
+      "correct": false
+    },
+    {
+      "condition": "spora_pair",
+      "question": "最早的记录里小梅喜欢什么饮料？",
+      "intent": "past",
+      "expected": "咖啡",
+      "answer": "咖啡",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "上一次调整后的偏好是什么？",
+      "intent": "later",
+      "expected": "豆浆",
+      "answer": "4",
+      "correct": false
+    },
+    {
+      "condition": "spora_pair",
+      "question": "上一次调整后的偏好是什么？",
+      "intent": "later",
+      "expected": "豆浆",
+      "answer": "豆浆",
+      "correct": true
+    },
+    {
+      "condition": "base",
+      "question": "最新改过之后，小梅喝什么？",
+      "intent": "later",
+      "expected": "茶",
+      "answer": "0",
+      "correct": false
+    },
+    {
+      "condition": "spora_pair",
+      "question": "最新改过之后，小梅喝什么？",
+      "intent": "later",
+      "expected": "茶",
+      "answer": "茶",
+      "correct": true
+    }
+  ],
+  "summary": {
+    "base": {
+      "correct": 0,
+      "total": 7,
+      "accuracy": 0.0
+    },
+    "spora_pair": {
+      "correct": 7,
+      "total": 7,
+      "accuracy": 1.0
+    }
+  },
+  "elapsed_seconds": 86.92704010009766,
+  "peak_allocated_bytes": 3806439936,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "One entity, one key, three sequential drink-preference events and seven authored questions.",
+    "Entity address and temporal page are supplied by the probe, not parsed by the model.",
+    "Eight-token generations and exact word-in-answer scoring are not open-chat acceptance.",
+    "Memory write controller and base language weights remain frozen."
+  ]
+}
