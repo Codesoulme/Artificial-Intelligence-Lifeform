@@ -26,7 +26,7 @@ from spora.named_address import feature_files_sha256
 OUTPUT = ROOT / 'runs/deepseek-mmc-pair-probe-20261110'
 
 
-def build_text(document, pair):
+def build_text(document, pair, current_sentence_tail=False):
     mapping = document['subtoken_map']
     speakers = [s for segment in document['speakers'] for s in segment]
     previous, current = pair['previous'], pair['current']
@@ -36,6 +36,15 @@ def build_text(document, pair):
         return None
     begin = mapping[max(0, previous['start'] - 40)]
     end = c1
+    if current_sentence_tail:
+        sentence_map = document['sentence_map']
+        if len(sentence_map) != len(mapping):
+            raise ValueError('Sentence map length mismatch')
+        cursor = current['end']
+        while (cursor + 1 < len(mapping) and sentence_map[cursor + 1] == sentence_map[current['end']]
+               and speakers[cursor + 1] == current['speaker']):
+            cursor += 1
+        end = mapping[cursor]
     token_speaker = {}
     for token, speaker in zip(mapping, speakers):
         if begin <= token <= end:
@@ -62,13 +71,13 @@ def build_text(document, pair):
     return ''.join(parts)
 
 
-def select_pairs(documents, per_class):
+def select_pairs(documents, per_class, current_sentence_tail=False):
     if type(per_class) is not int or per_class < 1:
         raise ValueError('Positive per-class count required')
     candidates = []
     for document in documents:
         for pair in pair_candidates(document):
-            text = build_text(document, pair)
+            text = build_text(document, pair, current_sentence_tail=current_sentence_tail)
             if text is None:
                 continue
             identifier = f"{document['doc_key']}:{pair['previous']['start']}:{pair['current']['start']}"

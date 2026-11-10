@@ -8,6 +8,7 @@ class MMCPairTests(unittest.TestCase):
     def document(self, key='scene_1'):
         return {'doc_key': key, 'tokens': ['\u6211', '\u559c\u6b22', '\u8336', '\u4f60', '\u5462'],
                 'subtoken_map': [0, 1, 2, 3, 4],
+                'sentence_map': [0, 0, 0, 1, 1],
                 'speakers': [['Alice', 'Alice', 'Alice', 'Bob', 'Bob']],
                 'clusters': [[[0, 0], [3, 3]]]}
 
@@ -22,6 +23,23 @@ class MMCPairTests(unittest.TestCase):
         self.assertNotIn('Alice', text)
         self.assertNotIn('Bob', text)
         self.assertNotIn('\u5462', text)
+
+    def test_current_sentence_tail_stops_before_next_speaker(self):
+        document = self.document()
+        document['tokens'].append('\u597d')
+        document['subtoken_map'].append(5)
+        document['sentence_map'].append(1)
+        document['speakers'][0].append('Alice')
+        pair = list(pair_candidates(document))[0]
+        text = build_text(document, pair, current_sentence_tail=True)
+        self.assertTrue(text.endswith('</m2>\u5462'))
+        self.assertNotIn('\u597d', text)
+
+    def test_current_sentence_tail_requires_aligned_map(self):
+        document = self.document()
+        document['sentence_map'].pop()
+        with self.assertRaisesRegex(ValueError, 'Sentence map'):
+            build_text(document, list(pair_candidates(document))[0], current_sentence_tail=True)
 
     def test_excludes_duplicate_span_across_clusters(self):
         document = self.document()
