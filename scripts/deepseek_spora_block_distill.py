@@ -151,7 +151,7 @@ def run(logit_distill=False):
     train_features = _collect(base, tokenizer, train_messages)
     held_features = _collect(base, tokenizer, held_messages)
     replacement = SPORALayerReplacement(config.hidden_size, config.num_attention_heads,
-                                        max_length=MAX_LENGTH).to('cuda').train()
+                                        max_length=MAX_LENGTH, layer_idx=LAYER).to('cuda').train()
     if logit_distill:
         warm = torch.load(WARMSTART, map_location='cpu', weights_only=True)
         if (warm.get('metadata', {}).get('base_weight_sha256') != WEIGHT_SHA

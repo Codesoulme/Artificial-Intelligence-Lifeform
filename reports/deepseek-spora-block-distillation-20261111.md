@@ -4,7 +4,7 @@
 
 The local DeepSeek-R1-Distill-Qwen-1.5B has 28 Qwen2 decoder layers, hidden width 1536, 12 query heads and 2 key/value heads. SPORA's `CausalBlock` uses full multi-head attention, learned absolute position embeddings and a 4x GELU feed-forward block. Qwen uses grouped-query attention with RoPE and a wider SwiGLU block. Because the internal operations differ, this pilot replaces one middle decoder layer with a randomly initialized SPORA causal block and distills it from the frozen teacher; no DeepSeek model file or original SPORA individual is changed.
 
-The replacement wrapper matches the full-sequence Qwen2 decoder call, casts outputs back to the teacher dtype and rejects KV-cache use until incremental-cache parity exists. The experiment selected layer 12, used 48 authored Chinese training pairs and 24 project development prompts, and scored 310 next-token positions.
+The replacement wrapper matches the full-sequence Qwen2 decoder call, casts outputs back to the teacher dtype, and now supports Qwen2's dynamic KV cache for prefill plus one-token incremental decoding. The experiment selected layer 12, used 48 authored Chinese training pairs and 24 project development prompts, and scored 310 next-token positions.
 
 ## Distillation comparison
 
@@ -22,6 +22,6 @@ The 240-step hidden-fit starting candidate SHA-256 is `9b0758b6379c627036ffdc744
 
 ## Decision and limits
 
-The result demonstrates that one SPORA-native transformer block can substitute for a middle DeepSeek layer with measurable but nontrivial output deviation after less than three minutes of local distillation. It does not establish reliable generated conversation, multiple replaced layers, long contexts, or autoregressive inference. The next structural work is to add incremental causal-state handling, then test two separated layer replacements and a broader held corpus before any larger conversion. The memory sites at layers 5 and 17 remain separate from this layer-12 candidate.
+The result demonstrates that one SPORA-native transformer block can substitute for a middle DeepSeek layer with measurable but nontrivial output deviation after less than three minutes of local distillation. Cached generation completed for two prompts, eight tokens each, using the 88.71% candidate; this is a runtime smoke test only. One short answer begins with a generic uncertainty response, so it does not validate answer quality. Multiple replaced layers, longer contexts and broader prompts remain untested. The memory sites at layers 5 and 17 remain separate from this layer-12 candidate.
 
 The training material and held scenarios are project-authored and small. Their scores are architecture diagnostics only; they are not independent Chinese-chat acceptance results.

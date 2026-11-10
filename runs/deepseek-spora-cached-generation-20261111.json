@@ -1,0 +1,29 @@
+{
+  "status": "spora_block_replacement_cached_generation_smoke",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "replacement_sha256": "4b4c0e370d90c5e3bcbf8d5eab11a82f111cf0193da1d02ad2b36e3f37334307",
+  "layer": 12,
+  "rows": [
+    {
+      "prompt": "你好，请用一句话介绍你自己。",
+      "generated_tokens": 8,
+      "text": "您好！我是由中国的深度求索",
+      "finite": true
+    },
+    {
+      "prompt": "小林过去喜欢咖啡，现在喜欢水。她过去喜欢什么？",
+      "generated_tokens": 8,
+      "text": "嗯，这个问题看起来有点奇怪。小",
+      "finite": true
+    }
+  ],
+  "elapsed_seconds": 57.623692400055006,
+  "peak_allocated_bytes": 3682950656,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Only one SPORA replacement layer and two short prompts.",
+    "Eight-token greedy smoke test, not quality or open-chat acceptance.",
+    "Replacement uses learned absolute positions and is limited to its trained 128-position range.",
+    "No memory reader was attached at layer 12 in this smoke test."
+  ]
+}
