@@ -144,6 +144,43 @@ class IntegratedOpenBaseTests(unittest.TestCase):
         self.assertTrue(torch.equal(masked[0], forward[0]))
         self.assertTrue(torch.equal(masked[1], model(x)[1]))
 
+    def test_masked_rows_are_not_sent_to_reader(self):
+        reader = make_reader()
+        model = IntegratedOpenBase(Base(), reader, (0, 2))
+        x = torch.ones(3, 1, 3, requires_grad=True)
+        memory = SimpleNamespace(current=[torch.eye(3).repeat(3, 1, 1) for _ in range(2)], pages=[])
+        addresses = [torch.eye(3) for _ in range(2)]
+        seen = []
+        handle = reader.register_forward_pre_hook(lambda module, args: seen.append(
+            (args[0].shape[0], args[1][0].shape[0], args[3].shape[0])))
+        try:
+            out = model(x, memory_state=memory, memory_addresses=addresses,
+                        memory_read_mask=torch.tensor([False, True, False]), current_only=True)
+            self.assertEqual(seen, [(1, 1, 1), (1, 1, 1)])
+            out.sum().backward()
+            self.assertTrue(torch.isfinite(x.grad).all())
+            self.assertTrue(all(p.grad is not None and torch.isfinite(p.grad).all()
+                                for p in list(reader.out.parameters()) + [reader.gate]))
+            seen.clear()
+            model(x.detach(), memory_state=memory, memory_read_mask=torch.tensor([False]), current_only=True)
+            self.assertEqual(seen, [])
+        finally:
+            handle.remove()
+
+    def test_inactive_nonfinite_state_does_not_contaminate_gradients(self):
+        reader = make_reader()
+        model = IntegratedOpenBase(Base(), reader, (0, 2))
+        x = torch.ones(2, 1, 3, requires_grad=True)
+        matrices = [torch.eye(3).repeat(2, 1, 1) for _ in range(2)]
+        for matrix in matrices:
+            matrix[1].fill_(float('nan'))
+        memory = SimpleNamespace(current=matrices, pages=[])
+        result = model(x, memory_state=memory, memory_read_mask=torch.tensor([True, False]), current_only=True)
+        result.sum().backward()
+        self.assertTrue(torch.isfinite(result).all())
+        self.assertTrue(torch.isfinite(x.grad).all())
+        self.assertTrue(all(p.grad is not None and torch.isfinite(p.grad).all() for p in reader.parameters()))
+
 
 if __name__ == '__main__':
     unittest.main()

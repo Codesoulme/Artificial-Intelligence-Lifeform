@@ -46,13 +46,27 @@ class _MemoryDecoderLayer(nn.Module):
             return output
         matrices, addresses, read_mask = active
         address = None if addresses is None else addresses[self.site]
-        if read_mask is not None and read_mask.shape[0] not in (1, output.shape[0]):
-            raise ValueError('Memory read mask must match the decoder batch')
-        injected = self._reader(output, matrices[self.site], self.site, address)
         if read_mask is None:
-            return injected
-        mask = read_mask.to(device=output.device).reshape(-1, 1, 1)
-        return torch.where(mask, injected, output)
+            return self._reader(output, matrices[self.site], self.site, address)
+        if not isinstance(output, torch.Tensor) or output.ndim != 3:
+            raise ValueError('Layer output must have shape [batch, sequence, hidden_width]')
+        batch = output.shape[0]
+        if read_mask.shape[0] not in (1, batch):
+            raise ValueError('Memory read mask must match the decoder batch')
+        mask = read_mask.to(device=output.device).expand(batch)
+        selected = mask.nonzero(as_tuple=True)[0]
+        if not selected.numel():
+            return output
+
+        def selected_rows(tensor, name):
+            if not isinstance(tensor, torch.Tensor) or tensor.ndim < 1 or tensor.shape[0] not in (1, batch):
+                raise ValueError(f'{name} must have a singleton or matching batch')
+            return tensor if tensor.shape[0] == 1 else tensor.index_select(0, selected.to(tensor.device))
+
+        selected_matrices = tuple(selected_rows(matrix, 'Memory matrix') for matrix in matrices[self.site])
+        selected_address = None if address is None else selected_rows(address, 'Memory address')
+        injected = self._reader(output.index_select(0, selected), selected_matrices, self.site, selected_address)
+        return output.index_copy(0, selected, injected)
 
 
 class IntegratedOpenBase(nn.Module):
@@ -64,7 +78,8 @@ class IntegratedOpenBase(nn.Module):
     ``memory_read_mask`` optionally selects which batch rows receive the read;
     its boolean vector must have length one or match the decoder batch. The
     caller decides the mask and must account for any generation batch expansion.
-    Masked rows still pass through the reader before their residual is discarded.
+    Masked rows skip the reader; state snapshots are still created for the call.
+    This is not an access control boundary.
     """
 
     def __init__(self, base, reader, layer_indices):
