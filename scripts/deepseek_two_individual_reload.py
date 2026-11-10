@@ -28,7 +28,7 @@ from spora.integrated_open_base import ScaledOpenBaseMemory
 from spora.language_training import frozen_digest
 from spora.named_address import feature_files_sha256
 
-OUTPUT = ROOT / 'runs/deepseek-two-individual-reload-20261110'
+OUTPUT = ROOT / 'runs/deepseek-two-individual-history-diagnostic-20261110'
 
 
 def verify(checkpoint, expected):
@@ -48,25 +48,37 @@ def verify(checkpoint, expected):
     model, organism, state = load_integrated(checkpoint, base, MODEL)
     model.eval()
     digest = frozen_digest(organism, state)
+    if not state.pages or not any(torch.count_nonzero(page[site][0]).item()
+                                  for page in state.pages if isinstance(page, list)
+                                  for site in range(len(organism.memories))):
+        raise ValueError('Checkpoint has no active historical memory')
     key = torch.tensor([KEYS[0]], dtype=torch.long)
     with torch.inference_mode():
         native = int(query(organism, state, key, torch.zeros_like(key), torch.zeros_like(key)).argmax(-1))
     addresses = [F.normalize(site.current_basis.to('cuda').float(), dim=-1)[KEYS[0]:KEYS[0] + 1]
                  for site in organism.memories]
     inputs = closed_think_inputs(tokenizer, f'{NAMES[0]}喜欢的饮品是什么？', 'cuda')
+    generations = {}
     with torch.inference_mode():
-        output = model.generate(**inputs, memory_state=state, memory_addresses=addresses, current_only=True,
-                                max_new_tokens=8, do_sample=False, pad_token_id=tokenizer.eos_token_id)
-    tokens = output[0, inputs['input_ids'].shape[1]:].tolist()
-    answer = tokenizer.decode(tokens, skip_special_tokens=True).strip()
+        for mode, current_only in (('current_only', True), ('with_history', False)):
+            output = model.generate(**inputs, memory_state=state, memory_addresses=addresses,
+                                    current_only=current_only, max_new_tokens=16, do_sample=False,
+                                    pad_token_id=tokenizer.eos_token_id)
+            tokens = output[0, inputs['input_ids'].shape[1]:].tolist()
+            answer = tokenizer.decode(tokens, skip_special_tokens=True).strip()
+            generations[mode] = {'tokens': tokens, 'answer': answer,
+                                 'correct': word_correct(answer, WORDS[expected]),
+                                 'ended_with_eos': tokenizer.eos_token_id in tokens}
     if (sha(checkpoint) != before['checkpoint'] or sha(MODEL / 'model.safetensors') != before['weight']
             or sha(INDIVIDUAL) != before['original'] or feature_files_sha256(MODEL) != config_sha
             or frozen_digest(organism, state) != digest):
         raise ValueError('Protected input changed')
     return {'pid': os.getpid(), 'checkpoint_sha256': before['checkpoint'], 'state_digest': digest,
-            'native_value': native, 'expected_value': expected, 'tokens': tokens, 'answer': answer,
-            'correct': native == expected and word_correct(answer, WORDS[expected]),
-            'ended_with_eos': tokenizer.eos_token_id in tokens,
+            'history_pages': len(state.pages),
+            'native_value': native, 'expected_value': expected, 'generations': generations,
+            'native_correct': native == expected,
+            'current_only_correct': generations['current_only']['correct'],
+            'with_history_correct': generations['with_history']['correct'],
             'seconds': time.perf_counter() - started, 'peak_allocated_bytes': torch.cuda.max_memory_allocated()}
 
 
@@ -96,6 +108,10 @@ def run():
     reader = ScaledOpenBaseMemory(data['state']['query.0.weight'].shape[1], organism.config.memory_width, 0.5)
     reader.load_state_dict(data['state'], strict=True)
     states = [snapshot(organism, KEYS[0], value, distractor=15) for value in (1, 6)]
+    if any(not state.pages or not any(torch.count_nonzero(page[site][0]).item()
+                                      for page in state.pages if isinstance(page, list)
+                                      for site in range(len(organism.memories))) for state in states):
+        raise ValueError('Expected nonempty active history in each individual')
     digests = [frozen_digest(organism, state) for state in states]
     OUTPUT.mkdir(parents=False, exist_ok=False)
     checkpoints = [OUTPUT / f'individual-{value}.pt' for value in (1, 6)]
@@ -113,24 +129,29 @@ def run():
         if child.returncode:
             raise RuntimeError(f'Independent verification failed: {child.stderr[-4000:]}')
         results.append(json.loads(child.stdout.strip().splitlines()[-1]))
-    if (len({result['pid'] for result in results}) != 2 or any(not result['correct'] for result in results)
+    if (len({result['pid'] for result in results}) != 2
+            or any(not result['native_correct'] or not result['current_only_correct'] for result in results)
             or [result['state_digest'] for result in results] != digests
             or [result['checkpoint_sha256'] for result in results] != hashes
             or [sha(path) for path in checkpoints] != hashes or frozen_digest(organism, original) != original_digest
             or [frozen_digest(organism, state) for state in states] != digests
             or any(sha(path) != before[name] for name, path in files.items())):
         raise ValueError('Reload mismatch or protected source changed')
-    report = {'status': 'two_individual_independent_reload_development_only', 'results': results,
+    report = {'status': 'two_individual_history_independent_reload_development_only', 'results': results,
+              'summary': {'individuals': len(results), 'native_current_correct': sum(r['native_correct'] for r in results),
+                          'current_only_answer_correct': sum(r['current_only_correct'] for r in results),
+                          'current_plus_history_answer_correct': sum(r['with_history_correct'] for r in results)},
               'component_sha256': before, 'feature_config_sha256': config_sha, 'seconds': time.perf_counter() - started,
               'limitations': ['Two controlled states derived from one model and fixed address, not independently trained individuals.',
                               'One fixed prompt, two finite values, and explicitly supplied memory address.',
                               'Frozen DeepSeek and tokenizer remain separate files and are reloaded in each process.',
+                              'Full history is loaded, but the experimental decoder reader is trained only for current memory.',
                               'Normal restart is not crash recovery, open-domain memory or identity authentication.',
                               'Forced closed reasoning and short answer do not establish general conversation.']}
     with (OUTPUT / 'result.json').open('x', encoding='utf-8', newline='\n') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
-    print(json.dumps({'correct': sum(result['correct'] for result in results), 'pids': [r['pid'] for r in results]}), flush=True)
+    print(json.dumps({'summary': report['summary'], 'pids': [r['pid'] for r in results]}), flush=True)
 
 
 if __name__ == '__main__':

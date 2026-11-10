@@ -7,7 +7,7 @@ class TwoIndividualReloadTests(unittest.TestCase):
     def test_output_is_isolated_under_runs(self):
         self.assertTrue(OUTPUT.is_absolute())
         self.assertEqual(OUTPUT.parent.name, 'runs')
-        self.assertEqual(OUTPUT.name, 'deepseek-two-individual-reload-20261110')
+        self.assertEqual(OUTPUT.name, 'deepseek-two-individual-history-diagnostic-20261110')
 
 
 if __name__ == '__main__':
