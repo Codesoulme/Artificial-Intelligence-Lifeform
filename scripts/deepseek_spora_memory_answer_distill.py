@@ -68,7 +68,7 @@ def _load_candidate(path, layer, base):
     return block
 
 
-def _facts(model, state, value_pairs=None):
+def _facts(model, state, value_pairs=None, train_indices=None):
     schedule = []
     if value_pairs is None:
         value_pairs = [((index * 2) % len(WORDS), ((index * 2) % len(WORDS) + 3) % len(WORDS))
@@ -77,6 +77,9 @@ def _facts(model, state, value_pairs=None):
                                                           for v in pair) or pair[0] == pair[1]
                                       for pair in value_pairs):
         raise ValueError('Expected eight distinct two-value fact assignments')
+    train_indices = set(range(6)) if train_indices is None else set(train_indices)
+    if len(train_indices) != 6 or not train_indices <= set(range(8)):
+        raise ValueError('Exactly six of eight entities must be assigned to training')
     for index, (name, key) in enumerate(zip(NAMES[:8], KEYS[:8])):
         old, new = value_pairs[index]
         for value in (old, new):
@@ -87,7 +90,7 @@ def _facts(model, state, value_pairs=None):
                 raise ValueError(f'Fact write rejected for {name}: {decision}')
         schedule.append({'name': name, 'key': key, 'old_value': old, 'new_value': new,
                          'old_time': 2 * index, 'new_time': 2 * index + 1,
-                         'train_split': index < 6})
+                         'train_split': index in train_indices})
     return state, schedule
 
 

@@ -32,7 +32,7 @@ TEMPLATES = {
 }
 
 
-def run(candidate_dir=TRAINED_OUTPUT, output=OUTPUT, novel_value_pairs=False):
+def run(candidate_dir=TRAINED_OUTPUT, output=OUTPUT, novel_value_pairs=False, held_indices=(6, 7)):
     candidate_dir = Path(candidate_dir)
     output = Path(output)
     if output.exists():
@@ -49,10 +49,11 @@ def run(candidate_dir=TRAINED_OUTPUT, output=OUTPUT, novel_value_pairs=False):
     base.requires_grad_(False)
     integrated, organism, _ = load_integrated(SOURCE_CHECKPOINT, base, MODEL, individual_device='cuda')
     value_pairs = ((0, 1), (2, 3), (4, 5), (6, 7), (1, 2), (3, 4), (5, 0), (7, 2))
+    train_indices = set(range(8)) - set(held_indices)
     state, facts = _facts(organism, fresh_controlled_state(organism),
-                          value_pairs if novel_value_pairs else None)
+                          value_pairs if novel_value_pairs else None, train_indices)
     held_rows = []
-    for index in (6, 7):
+    for index in held_indices:
         fact = facts[index]
         for intent, variants in TEMPLATES.items():
             expected = fact['old_value'] if intent == 'past' else fact['new_value']
@@ -79,7 +80,7 @@ def run(candidate_dir=TRAINED_OUTPUT, output=OUTPUT, novel_value_pairs=False):
         'base_weight_sha256': WEIGHT_SHA,
         'individual_checkpoint_sha256': sha(SOURCE_CHECKPOINT),
         'candidate_sha256': {str(layer): sha(path) for layer, path in trained_paths.items()},
-        'held_entities': [NAMES[6], NAMES[7]],
+        'held_entities': [NAMES[index] for index in held_indices],
         'novel_held_value_pairs': novel_value_pairs,
         'held_templates': TEMPLATES,
         'baseline': baseline,
@@ -106,5 +107,6 @@ if __name__ == '__main__':
     parser.add_argument('--candidate-dir', type=Path, default=TRAINED_OUTPUT)
     parser.add_argument('--output', type=Path, default=OUTPUT)
     parser.add_argument('--novel-value-pairs', action='store_true')
+    parser.add_argument('--held-indices', type=int, nargs=2, default=(6, 7))
     args = parser.parse_args()
-    run(args.candidate_dir, args.output, args.novel_value_pairs)
+    run(args.candidate_dir, args.output, args.novel_value_pairs, tuple(args.held_indices))

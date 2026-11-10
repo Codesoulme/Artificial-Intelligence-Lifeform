@@ -1,0 +1,243 @@
+{
+  "status": "memory_answer_distillation_unseen_template_probe",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "individual_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "candidate_sha256": {
+    "6": "895309c6fbf29a97c39b89373898afc3eadb30bab8bc43b2c3ca80ac445e14b9",
+    "12": "8b28b5430af1a3e15613497dd0ab7cc6320a239195d93430599539cea048ed43"
+  },
+  "held_entities": [
+    "小梅",
+    "阿远"
+  ],
+  "novel_held_value_pairs": true,
+  "held_templates": {
+    "current": [
+      "告诉我{name}最常喝的是哪种饮品。",
+      "若只看最新记录，{name}偏爱什么？"
+    ],
+    "past": [
+      "在那次调整之前，{name}会选什么饮料？",
+      "更改记录之前，{name}通常喝哪种饮品？"
+    ],
+    "later": [
+      "偏好被调整以后，{name}选择什么饮品？",
+      "最新的记录显示{name}爱喝哪种？"
+    ]
+  },
+  "baseline": {
+    "correct": 6,
+    "total": 12,
+    "accuracy": 0.5,
+    "rows": [
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "告诉我小梅最常喝的是哪种饮品。",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "若只看最新记录，小梅偏爱什么？",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "在那次调整之前，小梅会选什么饮料？",
+        "expected": "咖啡",
+        "answer": "在任何情况下，包括调整之前，",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "更改记录之前，小梅通常喝哪种饮品？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "偏好被调整以后，小梅选择什么饮品？",
+        "expected": "牛奶",
+        "answer": "得分：3.9",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "最新的记录显示小梅爱喝哪种？",
+        "expected": "牛奶",
+        "answer": "我只能记住当前的信息。如果你有",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "告诉我阿远最常喝的是哪种饮品。",
+        "expected": "豆浆",
+        "answer": "4 �ink",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "若只看最新记录，阿远偏爱什么？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "在那次调整之前，阿远会选什么饮料？",
+        "expected": "果汁",
+        "answer": "I'm sorry, but I cannot answer",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "更改记录之前，阿远通常喝哪种饮品？",
+        "expected": "果汁",
+        "answer": "I am sorry, there is no information",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "偏好被调整以后，阿远选择什么饮品？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "最新的记录显示阿远爱喝哪种？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      }
+    ]
+  },
+  "candidate": {
+    "correct": 11,
+    "total": 12,
+    "accuracy": 0.9166666666666666,
+    "rows": [
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "告诉我小梅最常喝的是哪种饮品。",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "若只看最新记录，小梅偏爱什么？",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "在那次调整之前，小梅会选什么饮料？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "更改记录之前，小梅通常喝哪种饮品？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "偏好被调整以后，小梅选择什么饮品？",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "最新的记录显示小梅爱喝哪种？",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "告诉我阿远最常喝的是哪种饮品。",
+        "expected": "豆浆",
+        "answer": "4",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "若只看最新记录，阿远偏爱什么？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "在那次调整之前，阿远会选什么饮料？",
+        "expected": "果汁",
+        "answer": "果汁",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "更改记录之前，阿远通常喝哪种饮品？",
+        "expected": "果汁",
+        "answer": "果汁",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "偏好被调整以后，阿远选择什么饮品？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "最新的记录显示阿远爱喝哪种？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      }
+    ]
+  },
+  "elapsed_seconds": 122.25378470006399,
+  "peak_allocated_bytes": 3806568960,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Two held entities and six unseen question templates.",
+    "For the novel-value split, both directed old-to-new pairs are absent from training; the eight-value vocabulary itself is shared.",
+    "Exact-value scoring can reject a correct paraphrase or a response exceeding eight generated tokens.",
+    "Development probe only; it does not test open-ended conversation or autonomous routing."
+  ]
+}
