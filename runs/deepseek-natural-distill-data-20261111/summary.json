@@ -1,0 +1,56 @@
+{
+  "format": "spora-natural-teacher-sequence-summary-v1",
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "train_source_sha256": "fed5fcd04a3b46c2e81eac9d69db25179721ffb52710265e4b13b66c8aed7519",
+  "dev_source_sha256": "fac3f3089c94b3ecdc29ffa98c1d24b938ab5d13717c275b53c7f2d38ca4d9c5",
+  "tokenizer_sha256": {
+    "tokenizer.json": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+    "tokenizer_config.json": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5"
+  },
+  "rows": [
+    {
+      "topic": "planning",
+      "question": "明早出门总是急，怎么提前准备？",
+      "seed": 83021,
+      "file": "trajectory-0.pt",
+      "sha256": "19238dbe6fe8c7d5bd0b791a536c92451ca7f3ed75eceb7699d11420c4f804c4",
+      "prefix_tokens": 15,
+      "generated_tokens": 512,
+      "reasoning_closed": false,
+      "ended_with_eos": false,
+      "reused": false
+    },
+    {
+      "topic": "support",
+      "question": "刚学画画，画得很笨拙。",
+      "seed": 83022,
+      "file": "trajectory-1.pt",
+      "sha256": "6f09dca81563165b90ad5bf7e5a716d4ac91f0c8ddd7dbdb395c2fd50a1d1b1a",
+      "prefix_tokens": 14,
+      "generated_tokens": 512,
+      "reasoning_closed": true,
+      "ended_with_eos": false,
+      "reused": false
+    },
+    {
+      "topic": "task_breakdown",
+      "question": "我得写一张明信片，可一直没动笔。",
+      "seed": 83023,
+      "file": "trajectory-2.pt",
+      "sha256": "1fafdaa8cbf16086bf8ae3401aa42afb36e60470f8417ea88daa4e735a1a0182",
+      "prefix_tokens": 19,
+      "generated_tokens": 512,
+      "reasoning_closed": false,
+      "ended_with_eos": false,
+      "reused": false
+    }
+  ],
+  "elapsed_seconds": 403.175935999956,
+  "peak_allocated_bytes": 3592475648,
+  "limitations": [
+    "Only three project-authored training prompts.",
+    "Teacher output can be incomplete, incorrect or repetitive.",
+    "512-token cap; token sequences are local training data, not proof of quality.",
+    "Exact development prompt overlap checked; conceptual overlap remains possible."
+  ]
+}

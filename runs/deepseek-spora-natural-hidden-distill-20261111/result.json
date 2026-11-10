@@ -1,0 +1,294 @@
+{
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "teacher_data_sha256": "f44c76eb26fc52b415febe89c3b26ee92782d5a7a6134353261b13eb835f7ee3",
+  "teacher_trajectory_sha256": [
+    "19238dbe6fe8c7d5bd0b791a536c92451ca7f3ed75eceb7699d11420c4f804c4",
+    "6f09dca81563165b90ad5bf7e5a716d4ac91f0c8ddd7dbdb395c2fd50a1d1b1a",
+    "1fafdaa8cbf16086bf8ae3401aa42afb36e60470f8417ea88daa4e735a1a0182"
+  ],
+  "seed": 18073,
+  "steps_per_layer": 120,
+  "max_length": 768,
+  "layers": {
+    "6": {
+      "metadata": {
+        "format": "spora-qwen-layer-replacement-candidate-v1",
+        "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+        "layer": 6,
+        "width": 1536,
+        "heads": 12,
+        "max_length": 768,
+        "seed": 18073,
+        "train_steps": 120,
+        "objective": "local_residual_hidden_distillation_natural_and_memory"
+      },
+      "start_sha256": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+      "candidate_sha256": "cb1afda63bb925e4a240858f954caa0c4ed13087405effb7db87dae40274736c",
+      "held_before": [
+        {
+          "relative_residual_mse": 1.34894859790802,
+          "hidden_cosine": 0.9052426218986511,
+          "length": 531,
+          "group": "held_natural"
+        },
+        {
+          "relative_residual_mse": 0.9128506183624268,
+          "hidden_cosine": 0.9319081902503967,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.9865694046020508,
+          "hidden_cosine": 0.9109376072883606,
+          "length": 20,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.9150605797767639,
+          "hidden_cosine": 0.9235619902610779,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.893619179725647,
+          "hidden_cosine": 0.924773633480072,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.9611490368843079,
+          "hidden_cosine": 0.9101449847221375,
+          "length": 20,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.8757473230361938,
+          "hidden_cosine": 0.9144946932792664,
+          "length": 17,
+          "group": "held_memory"
+        }
+      ],
+      "held_after": [
+        {
+          "relative_residual_mse": 1.1642131805419922,
+          "hidden_cosine": 0.915481448173523,
+          "length": 531,
+          "group": "held_natural"
+        },
+        {
+          "relative_residual_mse": 0.6592168807983398,
+          "hidden_cosine": 0.9477254152297974,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.8193487524986267,
+          "hidden_cosine": 0.9209030270576477,
+          "length": 20,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.7000686526298523,
+          "hidden_cosine": 0.9375816583633423,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.8181297183036804,
+          "hidden_cosine": 0.9266467690467834,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.8831055164337158,
+          "hidden_cosine": 0.9129190444946289,
+          "length": 20,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.8398537635803223,
+          "hidden_cosine": 0.9132222533226013,
+          "length": 17,
+          "group": "held_memory"
+        }
+      ],
+      "loss_trace": [
+        {
+          "step": 1,
+          "group": "train_natural",
+          "length": 526,
+          "relative_residual_mse": 1.3291641473770142
+        },
+        {
+          "step": 20,
+          "group": "train_memory",
+          "length": 20,
+          "relative_residual_mse": 0.8112609386444092
+        },
+        {
+          "step": 40,
+          "group": "train_memory",
+          "length": 16,
+          "relative_residual_mse": 0.6571261286735535
+        },
+        {
+          "step": 80,
+          "group": "train_memory",
+          "length": 16,
+          "relative_residual_mse": 0.6743597388267517
+        },
+        {
+          "step": 120,
+          "group": "train_memory",
+          "length": 19,
+          "relative_residual_mse": 0.6288501620292664
+        }
+      ]
+    },
+    "12": {
+      "metadata": {
+        "format": "spora-qwen-layer-replacement-candidate-v1",
+        "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+        "layer": 12,
+        "width": 1536,
+        "heads": 12,
+        "max_length": 768,
+        "seed": 18073,
+        "train_steps": 120,
+        "objective": "local_residual_hidden_distillation_natural_and_memory"
+      },
+      "start_sha256": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6",
+      "candidate_sha256": "2a1b52ecb07a070326fd08ab559fe337a37c9ad8a6ab6e4fdc1c52c8fa5efe70",
+      "held_before": [
+        {
+          "relative_residual_mse": 1.5063585042953491,
+          "hidden_cosine": 0.9454724788665771,
+          "length": 531,
+          "group": "held_natural"
+        },
+        {
+          "relative_residual_mse": 1.0751004219055176,
+          "hidden_cosine": 0.9722667336463928,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 1.0630286931991577,
+          "hidden_cosine": 0.9617732167243958,
+          "length": 20,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 1.0677084922790527,
+          "hidden_cosine": 0.9703545570373535,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 1.0857445001602173,
+          "hidden_cosine": 0.9707527160644531,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 1.1062586307525635,
+          "hidden_cosine": 0.9680196046829224,
+          "length": 20,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 1.059510588645935,
+          "hidden_cosine": 0.9671512842178345,
+          "length": 17,
+          "group": "held_memory"
+        }
+      ],
+      "held_after": [
+        {
+          "relative_residual_mse": 1.3253401517868042,
+          "hidden_cosine": 0.9512299299240112,
+          "length": 531,
+          "group": "held_natural"
+        },
+        {
+          "relative_residual_mse": 0.6656278371810913,
+          "hidden_cosine": 0.9803240299224854,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.7967643141746521,
+          "hidden_cosine": 0.9672891497612,
+          "length": 20,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.6907612681388855,
+          "hidden_cosine": 0.9778416752815247,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.727148175239563,
+          "hidden_cosine": 0.97767573595047,
+          "length": 17,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.8180639147758484,
+          "hidden_cosine": 0.97333163022995,
+          "length": 20,
+          "group": "held_memory"
+        },
+        {
+          "relative_residual_mse": 0.7430640459060669,
+          "hidden_cosine": 0.9737229943275452,
+          "length": 17,
+          "group": "held_memory"
+        }
+      ],
+      "loss_trace": [
+        {
+          "step": 1,
+          "group": "train_natural",
+          "length": 527,
+          "relative_residual_mse": 1.4841768741607666
+        },
+        {
+          "step": 20,
+          "group": "train_memory",
+          "length": 19,
+          "relative_residual_mse": 0.9619792103767395
+        },
+        {
+          "step": 40,
+          "group": "train_memory",
+          "length": 16,
+          "relative_residual_mse": 0.7957317233085632
+        },
+        {
+          "step": 80,
+          "group": "train_memory",
+          "length": 16,
+          "relative_residual_mse": 0.575023353099823
+        },
+        {
+          "step": 120,
+          "group": "train_memory",
+          "length": 19,
+          "relative_residual_mse": 0.6269490122795105
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "Two natural trajectories trained, one held; not an independent language benchmark.",
+    "Teacher hidden-state targets may not preserve generated answers.",
+    "Memory examples are controlled finite-domain reads with supplied addresses.",
+    "Each block is trained independently using teacher, not student, hidden inputs.",
+    "No online learning, autonomous routing, or final chat acceptance."
+  ],
+  "elapsed_seconds": 185.9720387000125,
+  "peak_allocated_bytes": 3787477504
+}

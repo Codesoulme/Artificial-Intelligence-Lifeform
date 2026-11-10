@@ -60,10 +60,13 @@ def _load_candidate(path, layer, base):
     payload = torch.load(path, map_location='cpu', weights_only=True)
     meta = payload.get('metadata', {})
     if (meta.get('base_weight_sha256') != WEIGHT_SHA or meta.get('layer') != layer
-            or meta.get('format') != 'spora-qwen-layer-replacement-candidate-v1'):
+            or meta.get('format') != 'spora-qwen-layer-replacement-candidate-v1'
+            or meta.get('width') != base.config.hidden_size
+            or meta.get('heads') != base.config.num_attention_heads
+            or type(meta.get('max_length')) is not int or not 0 < meta['max_length'] <= 65536):
         raise ValueError(f'Candidate provenance mismatch for layer {layer}')
     block = SPORALayerReplacement(base.config.hidden_size, base.config.num_attention_heads,
-                                 max_length=128, layer_idx=layer).to('cuda')
+                                 max_length=meta['max_length'], layer_idx=layer).to('cuda')
     block.load_state_dict(payload['state'], strict=True)
     return block
 
