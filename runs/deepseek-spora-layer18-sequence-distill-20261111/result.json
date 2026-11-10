@@ -1,0 +1,333 @@
+{
+  "metadata": {
+    "format": "spora-qwen-layer-replacement-candidate-v1",
+    "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "layer": 18,
+    "width": 1536,
+    "heads": 12,
+    "max_length": 128,
+    "seed": 37162,
+    "train_steps": 120,
+    "objective": "full_replacement_multi_token_kl_and_ce"
+  },
+  "source_integrated_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "upstream_pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "start_sha256": "7ac9041582421f26e55d34aa0192f42e310dad76e09d7f3360c09fce909e2f45",
+  "candidate_sha256": "f8f61e2746c9e43adb1789a682870c43f7416d5c45bb32fe4ef20a6013c28e34",
+  "training_memory_questions": 36,
+  "training_general_questions": [
+    "简短介绍春天。",
+    "如何理解诚信？",
+    "一加一等于几？",
+    "描述一只小猫。",
+    "朋友难过时怎么安慰？",
+    "写一句问候语。",
+    "太阳为什么会发光？",
+    "介绍一次愉快的散步。"
+  ],
+  "general_train_target_tokens": 76,
+  "memory_train_target_tokens": 78,
+  "memory_before": {
+    "correct": 3,
+    "total": 12,
+    "accuracy": 0.25,
+    "rows": [
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "此刻小梅爱喝哪种饮料？",
+        "expected": "豆浆",
+        "answer": "</think>\n\n您好，我理解您爱",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "最近小梅最喜欢什么饮品？",
+        "expected": "豆浆",
+        "answer": "嗯，这个问题看起来挺简单，就是",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "在改口以前，小梅常喝什么？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "小梅较早的饮品偏好是什么？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "更新以后小梅偏爱什么？",
+        "expected": "豆浆",
+        "answer": "更新后，小梅可能偏爱",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "现在记录里小梅喜欢喝哪种饮料？",
+        "expected": "豆浆",
+        "answer": "AI",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "此刻阿远爱喝哪种饮料？",
+        "expected": "水",
+        "answer": "**阿远爱喝哪种饮料？",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "最近阿远最喜欢什么饮品？",
+        "expected": "水",
+        "answer": "### 您的 favorite饮品",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "在改口以前，阿远常喝什么？",
+        "expected": "果汁",
+        "answer": "3.3 级别",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "阿远较早的饮品偏好是什么？",
+        "expected": "果汁",
+        "answer": "### 用户可能的偏好包括：\n-",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "更新以后阿远偏爱什么？",
+        "expected": "水",
+        "answer": "油",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "现在记录里阿远喜欢喝哪种饮料？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      }
+    ]
+  },
+  "memory_after": {
+    "correct": 5,
+    "total": 12,
+    "accuracy": 0.4166666666666667,
+    "rows": [
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "此刻小梅爱喝哪种饮料？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "最近小梅最喜欢什么饮品？",
+        "expected": "豆浆",
+        "answer": "</think>\n\n了解小梅的饮食偏好",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "在改口以前，小梅常喝什么？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "小梅较早的饮品偏好是什么？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "更新以后小梅偏爱什么？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "现在记录里小梅喜欢喝哪种饮料？",
+        "expected": "豆浆",
+        "answer": "</think>\n\n您好，我了解您的需求",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "此刻阿远爱喝哪种饮料？",
+        "expected": "水",
+        "answer": "**阿远爱喝哪种饮料？",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "最近阿远最喜欢什么饮品？",
+        "expected": "水",
+        "answer": "### 您的 favorite饮品",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "在改口以前，阿远常喝什么？",
+        "expected": "果汁",
+        "answer": "3.3 级别",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "阿远较早的饮品偏好是什么？",
+        "expected": "果汁",
+        "answer": "### 用户偏好预测\n\n- **最近",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "更新以后阿远偏爱什么？",
+        "expected": "水",
+        "answer": "油",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "现在记录里阿远喜欢喝哪种饮料？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      }
+    ]
+  },
+  "exact_before": 3,
+  "exact_after": 5,
+  "general_teacher": [
+    {
+      "question": "给朋友说一句鼓励的话。",
+      "answer": "好的！以下是一句鼓励的话，适合送给朋友："
+    },
+    {
+      "question": "请简单介绍雨的形成。",
+      "answer": "雨的形成是自然界的天体现象，由地球"
+    },
+    {
+      "question": "什么是公正？",
+      "answer": "公正是指在法律和道德标准下，对所有行为"
+    }
+  ],
+  "general_before": [
+    {
+      "question": "给朋友说一句鼓励的话。",
+      "answer": "好的！以下是一句鼓励的话，您可以根据内容调整"
+    },
+    {
+      "question": "请简单介绍雨的形成。",
+      "answer": "雨的形成通常与水汽的蒸发有关，具体"
+    },
+    {
+      "question": "什么是公正？",
+      "answer": "公正是指不偏见，公正是人的自由，公正"
+    }
+  ],
+  "general_after": [
+    {
+      "question": "给朋友说一句鼓励的话。",
+      "answer": "好的！以下是一句鼓励的话，您可以根据内容调整"
+    },
+    {
+      "question": "请简单介绍雨的形成。",
+      "answer": "雨的形成过程可以从以下几个方面来理解：\n\n1."
+    },
+    {
+      "question": "什么是公正？",
+      "answer": "公正是指不偏见，公正是人的自由，公正"
+    }
+  ],
+  "trace": [
+    {
+      "step": 1,
+      "kind": "general",
+      "target_tokens": 10,
+      "loss": 0.40515661239624023,
+      "kl_per_token": 0.2664892375469208,
+      "cross_entropy": 0.5546694993972778
+    },
+    {
+      "step": 20,
+      "kind": "memory",
+      "target_tokens": 2,
+      "loss": 0.6970993876457214,
+      "kl_per_token": 0.6476930379867554,
+      "cross_entropy": 0.04940635710954666
+    },
+    {
+      "step": 40,
+      "kind": "general",
+      "target_tokens": 10,
+      "loss": 0.6072412729263306,
+      "kl_per_token": 0.30057671666145325,
+      "cross_entropy": 1.2266583442687988
+    },
+    {
+      "step": 80,
+      "kind": "memory",
+      "target_tokens": 2,
+      "loss": 0.43360206484794617,
+      "kl_per_token": 0.42512625455856323,
+      "cross_entropy": 0.00847580749541521
+    },
+    {
+      "step": 120,
+      "kind": "memory",
+      "target_tokens": 2,
+      "loss": 0.7212917804718018,
+      "kl_per_token": 0.6722098588943481,
+      "cross_entropy": 0.049081917852163315
+    }
+  ],
+  "elapsed_seconds": 423.20059350016527,
+  "peak_allocated_bytes": 4591232000,
+  "limitations": [
+    "General teacher continuations limited to ten tokens, held to twelve.",
+    "Only eight generic training questions and three held general questions.",
+    "Held memory entities used in previous development; one finite beverage domain.",
+    "Memory address and time slot supplied by the evaluator."
+  ]
+}
