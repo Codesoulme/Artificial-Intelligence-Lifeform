@@ -48,6 +48,19 @@ HELD = {
     UNKNOWN: ('你和我各自喜欢什么饮料？', '朋友说：“我最爱喝{word}。”',
               '小雨喜欢的饮料是{word}。', '我喜欢{word}，你呢？'),
 }
+AMBIGUOUS_TRAIN = {
+    UNKNOWN: ('我爱喝{word}，你喜欢什么？', '你喜欢{word}，那我呢？',
+              '我喜欢{word}，你也一样吗？', '你和我分别喜欢什么？',
+              '朋友告诉我：“你喜欢{word}。”', '她说：“我不喜欢{word}。”',
+              '我问你喜欢什么饮品。', '你问我最爱喝什么。'),
+}
+NOVEL = {
+    SPEAKER: ('我现在偏爱{word}。', '我对{word}很有兴趣。', '我的饮料喜好是什么？'),
+    ADDRESSEE: ('你现在偏爱{word}。', '你对{word}很有兴趣。', '你的饮料喜好是什么？'),
+    UNKNOWN: ('我偏爱{word}，你喜欢哪种？', '你爱喝{word}，我的呢？',
+              '我和你谁喜欢{word}？', '他说过：“我的最爱是{word}。”',
+              '我转告你，她最爱{word}。', '你知道我和她分别喜欢什么吗？'),
+}
 EXTERNAL_LABELS = {
     '0f74a3bb70e8f416432612e5bab35da02ca308cf3a5436237ce1fa89a5602f69': SPEAKER,
     '27e5f960ef2c4001df2961da1e3d748232cf140d03d7cf29060214397b52016b': SPEAKER,
@@ -88,7 +101,7 @@ def evaluate(logits, rows):
     return {'examples': len(result), 'correct': sum(r['correct'] for r in result), 'rows': result}
 
 
-def run(output=OUTPUT, reader_path=None):
+def run(output=OUTPUT, reader_path=None, expanded=False):
     output = Path(output).resolve()
     runs = (ROOT / 'runs').resolve()
     if not output.is_relative_to(runs) or output.exists():
@@ -128,11 +141,14 @@ def run(output=OUTPUT, reader_path=None):
             or tuple(value_data.get('vocabulary', ())) != WORDS or value_data.get('abstain') != ABSTAIN):
         raise ValueError('Value component provenance mismatch')
     train, held = build_cases(TRAIN), build_cases(HELD)
+    if expanded:
+        train += build_cases(AMBIGUOUS_TRAIN)
+    novel = build_cases(NOVEL)
     external = sample_archive(ARCHIVE, topic=True)
     if set(r['text_sha256'] for r in external) != set(EXTERNAL_LABELS):
         raise ValueError('External audit set differs from annotated sample')
     external = [dict(row, label=EXTERNAL_LABELS[row['text_sha256']]) for row in external]
-    if {r['text'] for r in train} & ({r['text'] for r in held} | {r['text'] for r in external}):
+    if {r['text'] for r in train} & ({r['text'] for r in held} | {r['text'] for r in external} | {r['text'] for r in novel}):
         raise ValueError('Training and audit text overlap')
     events = [
         {'role': 'user', 'participant_key': 22, 'text': '我喜欢喝水。', 'expected_key': 22, 'expected_value': 6},
@@ -163,7 +179,7 @@ def run(output=OUTPUT, reader_path=None):
         integrated.reader.load_state_dict(reader_data['state'], strict=True)
     integrated.eval()
     saved_digest = frozen_digest(organism, saved)
-    splits = {'train': train, 'held': held, 'external': external, 'events': events, 'questions': questions}
+    splits = {'train': train, 'held': held, 'novel': novel, 'external': external, 'events': events, 'questions': questions}
     vectors = {}
     for name, rows in splits.items():
         features, masks = extract(base, tokenizer, [r['text'] for r in rows], batch_size=2)
@@ -184,7 +200,7 @@ def run(output=OUTPUT, reader_path=None):
     value.load_state_dict(value_data['state'], strict=True)
     with torch.no_grad():
         results = {name: evaluate(subject(vectors[name]), rows) for name, rows in
-                   (('train', train), ('held', held), ('external', external))}
+                   (('train', train), ('held', held), ('novel', novel), ('external', external))}
         event_subject = subject(vectors['events']).argmax(-1).tolist()
         question_subject = subject(vectors['questions']).argmax(-1).tolist()
         fact, values = value(vectors['events'])
@@ -231,7 +247,7 @@ def run(output=OUTPUT, reader_path=None):
     torch.save({'format': 'deepseek-relative-subject-development-v1', 'state': subject.state_dict(),
                 'weight_sha256': WEIGHT_SHA, 'feature_config_sha256': config_sha, 'hidden_indices': [6, 18]}, checkpoint)
     report = {'status': 'relative_identity_isolated_research_only', 'subject_sha256': sha(checkpoint),
-              'results': results, 'events': event_results, 'questions': question_results,
+              'expanded': expanded, 'results': results, 'events': event_results, 'questions': question_results,
               'native_values_self_then_participants': native, 'component_sha256': before,
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Self and two participants use manually assigned experimental slots; no identity authentication or slot management.',
@@ -244,6 +260,7 @@ def run(output=OUTPUT, reader_path=None):
         json.dump(report, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
     print(json.dumps({'subject_held': results['held']['correct'], 'subject_held_total': results['held']['examples'],
+                      'subject_novel': results['novel']['correct'], 'subject_novel_total': results['novel']['examples'],
                       'subject_external': results['external']['correct'], 'subject_external_total': results['external']['examples'],
                       'correct_writes': sum(r['correct_write'] for r in event_results),
                       'unexpected_writes': sum(r['unexpected_write'] for r in event_results),
@@ -254,5 +271,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=OUTPUT)
     parser.add_argument('--reader', type=Path)
+    parser.add_argument('--expanded', action='store_true')
     args = parser.parse_args()
-    run(args.output, args.reader)
+    run(args.output, args.reader, args.expanded)
