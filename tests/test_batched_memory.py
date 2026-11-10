@@ -41,6 +41,15 @@ class BatchedMemoryTests(unittest.TestCase):
         self.assertTrue(torch.equal(batched.pages[0][0][0][0], a.pages[0].materialize(0)[0][0]))
         self.assertTrue(torch.equal(batched.pages[0][0][0][1], b.pages[0].materialize(0)[0][0]))
 
+    def test_batches_two_event_histories_without_mixing_rows(self):
+        a, b = state(1., 2.), state(3., 4.)
+        batched = batch_states([a, b])
+        selected_a = batched.pages[0][0][0][0]
+        selected_b = batched.pages[0][0][0][1]
+        self.assertTrue(torch.equal(selected_a, a.pages[0][0][0][0]))
+        self.assertTrue(torch.equal(selected_b, b.pages[0][0][0][0]))
+        self.assertNotEqual(float(selected_a[0, 0]), float(selected_b[0, 0]))
+
     def test_rejects_mismatched_or_nonfinite_states(self):
         with self.assertRaisesRegex(ValueError, '(?i)at least one'):
             batch_states([])
