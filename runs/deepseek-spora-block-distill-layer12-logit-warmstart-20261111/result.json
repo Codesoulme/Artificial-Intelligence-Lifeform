@@ -1,0 +1,81 @@
+{
+  "status": "single_layer_spora_structure_distillation_candidate",
+  "format": "spora-qwen-layer-replacement-candidate-v1",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "base_config_sha256": "37bd455e9679d2959536270fed49d25cc7c290a64f6e52abb97c71345a9cee41",
+  "train_source_sha256": "fed5fcd04a3b46c2e81eac9d69db25179721ffb52710265e4b13b66c8aed7519",
+  "held_source_sha256": "fac3f3089c94b3ecdc29ffa98c1d24b938ab5d13717c275b53c7f2d38ca4d9c5",
+  "layer": 12,
+  "width": 1536,
+  "heads": 12,
+  "max_length": 128,
+  "seed": 90217,
+  "train_steps": 160,
+  "distillation_objective": "next_token_kl_plus_hidden_alignment",
+  "train_sequences": 48,
+  "held_sequences": 24,
+  "initial_held_hidden": {
+    "relative_mse": 9.82646750647594e-05,
+    "mean_cosine": 0.9730901792645454,
+    "examples": 24
+  },
+  "final_held_hidden": {
+    "relative_mse": 9.927397756352245e-05,
+    "mean_cosine": 0.9725256413221359,
+    "examples": 24
+  },
+  "full_model_agreement": {
+    "token_top1_agreement": 0.8870967741935484,
+    "mean_token_kl_nats": 0.05039436699977765,
+    "held_sequences": 24,
+    "scored_next_tokens": 310
+  },
+  "loss_trace": [
+    {
+      "step": 1,
+      "loss": 0.009865186177194118,
+      "relative_mse": 0.0003485286724753678,
+      "mean_cosine": 0.9610339403152466,
+      "logit_kl": 0.11240103095769882
+    },
+    {
+      "step": 40,
+      "loss": 0.0065327417105436325,
+      "relative_mse": 0.00016167006106115878,
+      "mean_cosine": 0.9734345078468323,
+      "logit_kl": 0.0742904469370842
+    },
+    {
+      "step": 80,
+      "loss": 0.005944216623902321,
+      "relative_mse": 0.00022017846640665084,
+      "mean_cosine": 0.9682697057723999,
+      "logit_kl": 0.051020167768001556
+    },
+    {
+      "step": 120,
+      "loss": 0.002060060855001211,
+      "relative_mse": 6.577288877451792e-05,
+      "mean_cosine": 0.9878984689712524,
+      "logit_kl": 0.01568269543349743
+    },
+    {
+      "step": 160,
+      "loss": 0.005908578168600798,
+      "relative_mse": 6.420062709366903e-05,
+      "mean_cosine": 0.9877855181694031,
+      "logit_kl": 0.0924585834145546
+    }
+  ],
+  "candidate_sha256": "4b4c0e370d90c5e3bcbf8d5eab11a82f111cf0193da1d02ad2b36e3f37334307",
+  "elapsed_seconds": 126.46267130016349,
+  "peak_allocated_bytes": 4280531968,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "One distilled layer and one project-authored training source; no open-web corpus used.",
+    "Held scenarios are project development material and not independent chat acceptance.",
+    "The candidate replaces a layer only for full-sequence forward; KV-cache generation is rejected.",
+    "No base weights or original SPORA individual are changed.",
+    "A single block does not prove multi-layer replacement stability or retained free chat."
+  ]
+}
