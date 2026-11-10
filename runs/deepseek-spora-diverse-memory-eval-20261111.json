@@ -1,0 +1,281 @@
+{
+  "results": {
+    "integrated_base": {
+      "total": 8,
+      "exact_correct": 4,
+      "contains_correct": 6,
+      "rows": [
+        {
+          "name": "小桐",
+          "intent": "current",
+          "question": "记忆里小桐如今偏好的饮料是哪一种？",
+          "expected": "果汁",
+          "conflict": "酸奶",
+          "answer": "I am sorry, I cannot answer that",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "小桐",
+          "intent": "past",
+          "question": "更改记录之前，小桐最中意的饮品是哪种？",
+          "expected": "酸奶",
+          "conflict": "果汁",
+          "answer": "酸奶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "阿舟",
+          "intent": "current",
+          "question": "记忆里阿舟如今偏好的饮料是哪一种？",
+          "expected": "茶",
+          "conflict": "豆浆",
+          "answer": "茶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "阿舟",
+          "intent": "past",
+          "question": "更改记录之前，阿舟最中意的饮品是哪种？",
+          "expected": "豆浆",
+          "conflict": "茶",
+          "answer": "豆浆",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "小榆",
+          "intent": "current",
+          "question": "记忆里小榆如今偏好的饮料是哪一种？",
+          "expected": "可乐",
+          "conflict": "牛奶",
+          "answer": "可乐",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "小榆",
+          "intent": "past",
+          "question": "更改记录之前，小榆最中意的饮品是哪种？",
+          "expected": "牛奶",
+          "conflict": "可乐",
+          "answer": "我是一个AI助手,并尽量为您提供",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "阿璇",
+          "intent": "current",
+          "question": "记忆里阿璇如今偏好的饮料是哪一种？",
+          "expected": "水",
+          "conflict": "咖啡",
+          "answer": "水是生命之源，是我们每天",
+          "exact_correct": false,
+          "contains_correct": true
+        },
+        {
+          "name": "阿璇",
+          "intent": "past",
+          "question": "更改记录之前，阿璇最中意的饮品是哪种？",
+          "expected": "咖啡",
+          "conflict": "水",
+          "answer": "用户询问的是关于咖啡的记录，",
+          "exact_correct": false,
+          "contains_correct": true
+        }
+      ]
+    },
+    "old_pair": {
+      "total": 8,
+      "exact_correct": 6,
+      "contains_correct": 6,
+      "rows": [
+        {
+          "name": "小桐",
+          "intent": "current",
+          "question": "记忆里小桐如今偏好的饮料是哪一种？",
+          "expected": "果汁",
+          "conflict": "酸奶",
+          "answer": "作为AI，我无法知道您的当前",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "小桐",
+          "intent": "past",
+          "question": "更改记录之前，小桐最中意的饮品是哪种？",
+          "expected": "酸奶",
+          "conflict": "果汁",
+          "answer": "酸奶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "阿舟",
+          "intent": "current",
+          "question": "记忆里阿舟如今偏好的饮料是哪一种？",
+          "expected": "茶",
+          "conflict": "豆浆",
+          "answer": "茶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "阿舟",
+          "intent": "past",
+          "question": "更改记录之前，阿舟最中意的饮品是哪种？",
+          "expected": "豆浆",
+          "conflict": "茶",
+          "answer": "</think>\n\n要回答“更改记录之前",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "小榆",
+          "intent": "current",
+          "question": "记忆里小榆如今偏好的饮料是哪一种？",
+          "expected": "可乐",
+          "conflict": "牛奶",
+          "answer": "可乐",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "小榆",
+          "intent": "past",
+          "question": "更改记录之前，小榆最中意的饮品是哪种？",
+          "expected": "牛奶",
+          "conflict": "可乐",
+          "answer": "牛奶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "阿璇",
+          "intent": "current",
+          "question": "记忆里阿璇如今偏好的饮料是哪一种？",
+          "expected": "水",
+          "conflict": "咖啡",
+          "answer": "水",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "阿璇",
+          "intent": "past",
+          "question": "更改记录之前，阿璇最中意的饮品是哪种？",
+          "expected": "咖啡",
+          "conflict": "水",
+          "answer": "咖啡",
+          "exact_correct": true,
+          "contains_correct": true
+        }
+      ]
+    },
+    "new_pair": {
+      "total": 8,
+      "exact_correct": 6,
+      "contains_correct": 6,
+      "rows": [
+        {
+          "name": "小桐",
+          "intent": "current",
+          "question": "记忆里小桐如今偏好的饮料是哪一种？",
+          "expected": "果汁",
+          "conflict": "酸奶",
+          "answer": "作为一个AI，我无法知道你的当前",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "小桐",
+          "intent": "past",
+          "question": "更改记录之前，小桐最中意的饮品是哪种？",
+          "expected": "酸奶",
+          "conflict": "果汁",
+          "answer": "酸奶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "阿舟",
+          "intent": "current",
+          "question": "记忆里阿舟如今偏好的饮料是哪一种？",
+          "expected": "茶",
+          "conflict": "豆浆",
+          "answer": "茶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "阿舟",
+          "intent": "past",
+          "question": "更改记录之前，阿舟最中意的饮品是哪种？",
+          "expected": "豆浆",
+          "conflict": "茶",
+          "answer": "豆浆",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "小榆",
+          "intent": "current",
+          "question": "记忆里小榆如今偏好的饮料是哪一种？",
+          "expected": "可乐",
+          "conflict": "牛奶",
+          "answer": "可乐",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "小榆",
+          "intent": "past",
+          "question": "更改记录之前，小榆最中意的饮品是哪种？",
+          "expected": "牛奶",
+          "conflict": "可乐",
+          "answer": "我不能 answer that question.",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "阿璇",
+          "intent": "current",
+          "question": "记忆里阿璇如今偏好的饮料是哪一种？",
+          "expected": "水",
+          "conflict": "咖啡",
+          "answer": "水",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "阿璇",
+          "intent": "past",
+          "question": "更改记录之前，阿璇最中意的饮品是哪种？",
+          "expected": "咖啡",
+          "conflict": "水",
+          "answer": "咖啡",
+          "exact_correct": true,
+          "contains_correct": true
+        }
+      ]
+    }
+  },
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "old_pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "new_pair_sha256": {
+    "6": "602922906bc63709ccaf2e06d51900683920cfa90c53fe174ac56b3b2bf70255",
+    "12": "32c0235c693db0f1b52338cb28306648e31152290f7a18bc72e552c7383863c5"
+  },
+  "elapsed_seconds": 127.65351239987649,
+  "limitations": [
+    "Eight previously inspected questions in a finite beverage domain.",
+    "Addresses and temporal slots supplied programmatically.",
+    "Short closed-reasoning answers; not autonomous memory or open-chat validation."
+  ]
+}

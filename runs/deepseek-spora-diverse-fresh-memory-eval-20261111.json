@@ -1,0 +1,401 @@
+{
+  "results": {
+    "integrated_base": {
+      "total": 12,
+      "exact_correct": 5,
+      "contains_correct": 5,
+      "rows": [
+        {
+          "name": "林默",
+          "intent": "current",
+          "question": "请说出林默目前记录的饮品偏好。",
+          "expected": "豆浆",
+          "conflict": "茶",
+          "answer": "4 条回答\n\n202",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "林默",
+          "intent": "past",
+          "question": "在记录修改以前，林默偏爱的饮料是什么？",
+          "expected": "茶",
+          "conflict": "豆浆",
+          "answer": "茶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "桐雨",
+          "intent": "current",
+          "question": "请说出桐雨目前记录的饮品偏好。",
+          "expected": "酸奶",
+          "conflict": "牛奶",
+          "answer": "7",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "桐雨",
+          "intent": "past",
+          "question": "在记录修改以前，桐雨偏爱的饮料是什么？",
+          "expected": "牛奶",
+          "conflict": "酸奶",
+          "answer": "我是一个AI助手，由人工智能AI",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "星河",
+          "intent": "current",
+          "question": "请说出星河目前记录的饮品偏好。",
+          "expected": "可乐",
+          "conflict": "咖啡",
+          "answer": "可乐",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "星河",
+          "intent": "past",
+          "question": "在记录修改以前，星河偏爱的饮料是什么？",
+          "expected": "咖啡",
+          "conflict": "可乐",
+          "answer": "### 解答\n这可能是一个敏感",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "柳鸣",
+          "intent": "current",
+          "question": "请说出柳鸣目前记录的饮品偏好。",
+          "expected": "水",
+          "conflict": "果汁",
+          "answer": "6",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "柳鸣",
+          "intent": "past",
+          "question": "在记录修改以前，柳鸣偏爱的饮料是什么？",
+          "expected": "果汁",
+          "conflict": "水",
+          "answer": "I am sorry, there is no public",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "若竹",
+          "intent": "current",
+          "question": "请说出若竹目前记录的饮品偏好。",
+          "expected": "牛奶",
+          "conflict": "可乐",
+          "answer": "目前，我无法访问外部存储或",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "若竹",
+          "intent": "past",
+          "question": "在记录修改以前，若竹偏爱的饮料是什么？",
+          "expected": "可乐",
+          "conflict": "牛奶",
+          "answer": "可乐",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "柯岚",
+          "intent": "current",
+          "question": "请说出柯岚目前记录的饮品偏好。",
+          "expected": "咖啡",
+          "conflict": "酸奶",
+          "answer": "咖啡",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "柯岚",
+          "intent": "past",
+          "question": "在记录修改以前，柯岚偏爱的饮料是什么？",
+          "expected": "酸奶",
+          "conflict": "咖啡",
+          "answer": "酸奶",
+          "exact_correct": true,
+          "contains_correct": true
+        }
+      ]
+    },
+    "old_pair": {
+      "total": 12,
+      "exact_correct": 9,
+      "contains_correct": 9,
+      "rows": [
+        {
+          "name": "林默",
+          "intent": "current",
+          "question": "请说出林默目前记录的饮品偏好。",
+          "expected": "豆浆",
+          "conflict": "茶",
+          "answer": "4",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "林默",
+          "intent": "past",
+          "question": "在记录修改以前，林默偏爱的饮料是什么？",
+          "expected": "茶",
+          "conflict": "豆浆",
+          "answer": "茶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "桐雨",
+          "intent": "current",
+          "question": "请说出桐雨目前记录的饮品偏好。",
+          "expected": "酸奶",
+          "conflict": "牛奶",
+          "answer": "### 愿意听觉记忆",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "桐雨",
+          "intent": "past",
+          "question": "在记录修改以前，桐雨偏爱的饮料是什么？",
+          "expected": "牛奶",
+          "conflict": "酸奶",
+          "answer": "牛奶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "星河",
+          "intent": "current",
+          "question": "请说出星河目前记录的饮品偏好。",
+          "expected": "可乐",
+          "conflict": "咖啡",
+          "answer": "可乐",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "星河",
+          "intent": "past",
+          "question": "在记录修改以前，星河偏爱的饮料是什么？",
+          "expected": "咖啡",
+          "conflict": "可乐",
+          "answer": "咖啡",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "柳鸣",
+          "intent": "current",
+          "question": "请说出柳鸣目前记录的饮品偏好。",
+          "expected": "水",
+          "conflict": "果汁",
+          "answer": "柳鸣目前记录的饮品偏好包括",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "柳鸣",
+          "intent": "past",
+          "question": "在记录修改以前，柳鸣偏爱的饮料是什么？",
+          "expected": "果汁",
+          "conflict": "水",
+          "answer": "果汁",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "若竹",
+          "intent": "current",
+          "question": "请说出若竹目前记录的饮品偏好。",
+          "expected": "牛奶",
+          "conflict": "可乐",
+          "answer": "牛奶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "若竹",
+          "intent": "past",
+          "question": "在记录修改以前，若竹偏爱的饮料是什么？",
+          "expected": "可乐",
+          "conflict": "牛奶",
+          "answer": "可乐",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "柯岚",
+          "intent": "current",
+          "question": "请说出柯岚目前记录的饮品偏好。",
+          "expected": "咖啡",
+          "conflict": "酸奶",
+          "answer": "咖啡",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "柯岚",
+          "intent": "past",
+          "question": "在记录修改以前，柯岚偏爱的饮料是什么？",
+          "expected": "酸奶",
+          "conflict": "咖啡",
+          "answer": "酸奶",
+          "exact_correct": true,
+          "contains_correct": true
+        }
+      ]
+    },
+    "new_pair": {
+      "total": 12,
+      "exact_correct": 8,
+      "contains_correct": 8,
+      "rows": [
+        {
+          "name": "林默",
+          "intent": "current",
+          "question": "请说出林默目前记录的饮品偏好。",
+          "expected": "豆浆",
+          "conflict": "茶",
+          "answer": "4 条",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "林默",
+          "intent": "past",
+          "question": "在记录修改以前，林默偏爱的饮料是什么？",
+          "expected": "茶",
+          "conflict": "豆浆",
+          "answer": "茶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "桐雨",
+          "intent": "current",
+          "question": "请说出桐雨目前记录的饮品偏好。",
+          "expected": "酸奶",
+          "conflict": "牛奶",
+          "answer": "酸奶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "桐雨",
+          "intent": "past",
+          "question": "在记录修改以前，桐雨偏爱的饮料是什么？",
+          "expected": "牛奶",
+          "conflict": "酸奶",
+          "answer": "牛奶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "星河",
+          "intent": "current",
+          "question": "请说出星河目前记录的饮品偏好。",
+          "expected": "可乐",
+          "conflict": "咖啡",
+          "answer": "### 8\n\n8",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "星河",
+          "intent": "past",
+          "question": "在记录修改以前，星河偏爱的饮料是什么？",
+          "expected": "咖啡",
+          "conflict": "可乐",
+          "answer": "咖啡",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "柳鸣",
+          "intent": "current",
+          "question": "请说出柳鸣目前记录的饮品偏好。",
+          "expected": "水",
+          "conflict": "果汁",
+          "answer": "柳鸣目前记录的饮品偏好包括",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "柳鸣",
+          "intent": "past",
+          "question": "在记录修改以前，柳鸣偏爱的饮料是什么？",
+          "expected": "果汁",
+          "conflict": "水",
+          "answer": "**I am sorry, I cannot answer",
+          "exact_correct": false,
+          "contains_correct": false
+        },
+        {
+          "name": "若竹",
+          "intent": "current",
+          "question": "请说出若竹目前记录的饮品偏好。",
+          "expected": "牛奶",
+          "conflict": "可乐",
+          "answer": "牛奶",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "若竹",
+          "intent": "past",
+          "question": "在记录修改以前，若竹偏爱的饮料是什么？",
+          "expected": "可乐",
+          "conflict": "牛奶",
+          "answer": "可乐",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "柯岚",
+          "intent": "current",
+          "question": "请说出柯岚目前记录的饮品偏好。",
+          "expected": "咖啡",
+          "conflict": "酸奶",
+          "answer": "咖啡",
+          "exact_correct": true,
+          "contains_correct": true
+        },
+        {
+          "name": "柯岚",
+          "intent": "past",
+          "question": "在记录修改以前，柯岚偏爱的饮料是什么？",
+          "expected": "酸奶",
+          "conflict": "咖啡",
+          "answer": "酸奶",
+          "exact_correct": true,
+          "contains_correct": true
+        }
+      ]
+    }
+  },
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "old_pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "new_pair_sha256": {
+    "6": "602922906bc63709ccaf2e06d51900683920cfa90c53fe174ac56b3b2bf70255",
+    "12": "32c0235c693db0f1b52338cb28306648e31152290f7a18bc72e552c7383863c5"
+  },
+  "elapsed_seconds": 129.40471250005066,
+  "limitations": [
+    "12 questions in a finite beverage domain; prior exposure depends on the caller.",
+    "Addresses and temporal slots supplied programmatically.",
+    "Short closed-reasoning answers; not autonomous memory or open-chat validation."
+  ]
+}

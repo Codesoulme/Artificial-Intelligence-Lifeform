@@ -32,7 +32,8 @@ def run():
     training = json.loads((NEW/'result.json').read_text(encoding='utf-8'))
     for layer in (6, 12):
         info = training['layers'][str(layer)]
-        if sha(NEW/f'layer-{layer}.pt') != info['candidate_sha256'] or sha(PAIR/f'layer-{layer}.pt') != info['start_sha256']:
+        root_hash = info.get('root_sha256', info['start_sha256'])
+        if sha(NEW/f'layer-{layer}.pt') != info['candidate_sha256'] or sha(PAIR/f'layer-{layer}.pt') != root_hash:
             raise ValueError('Candidate provenance mismatch')
     torch.set_num_threads(2)
     started = time.perf_counter()
@@ -85,7 +86,7 @@ def run():
               'old_pair_sha256': {str(i): sha(PAIR/f'layer-{i}.pt') for i in (6, 12)},
               'new_pair_sha256': {str(i): sha(NEW/f'layer-{i}.pt') for i in (6, 12)},
               'elapsed_seconds': time.perf_counter()-started,
-              'limitations': ['Eight previously inspected questions in a finite beverage domain.',
+              'limitations': [f'{len(rows)} questions in a finite beverage domain; prior exposure depends on the caller.',
                               'Addresses and temporal slots supplied programmatically.',
                               'Short closed-reasoning answers; not autonomous memory or open-chat validation.']}
     with OUTPUT.open('x', encoding='utf-8', newline='\n') as stream:

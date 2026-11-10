@@ -28,7 +28,8 @@ def run():
     training = json.loads((NEW/'result.json').read_text(encoding='utf-8'))
     for layer in (6, 12):
         info = training['layers'][str(layer)]
-        if sha(NEW/f'layer-{layer}.pt') != info['candidate_sha256'] or sha(PAIR/f'layer-{layer}.pt') != info['start_sha256']:
+        root_hash = info.get('root_sha256', info['start_sha256'])
+        if sha(NEW/f'layer-{layer}.pt') != info['candidate_sha256'] or sha(PAIR/f'layer-{layer}.pt') != root_hash:
             raise ValueError('Candidate provenance mismatch')
     torch.set_num_threads(2)
     torch.cuda.reset_peak_memory_stats()
@@ -68,7 +69,8 @@ def run():
                                                    'ended_with_eos', 'elapsed_seconds')}), flush=True)
     report = {'results': results, 'base_sha256': WEIGHT_SHA,
               'pair_sha256': {str(i): sha(NEW/f'layer-{i}.pt') for i in (6, 12)},
-              'teacher_data_sha256': training['teacher_data_sha256'], 'temperature': 0.6, 'top_p': 0.95,
+              'teacher_data_sha256': training.get('teacher_data_sha256', training.get('natural_data_sha256')),
+              'temperature': 0.6, 'top_p': 0.95,
               'max_new_tokens': MAX_NEW, 'elapsed_seconds': time.perf_counter()-started,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Two previously inspected questions with one seed each.',

@@ -1,0 +1,39 @@
+{
+  "results": [
+    {
+      "question": "我上午先去了邮局，下午又去了菜市场。上午去了哪里？",
+      "seed": 4830,
+      "generated_tokens": 383,
+      "reasoning_closed": true,
+      "ended_with_eos": true,
+      "final_answer": "根据你的描述，用户上午去了邮局，下午去了菜市场。具体来说，上午去了邮局，下午去了菜市场。因此，答案是：\n\n上午去了邮局，下午去了菜市场。",
+      "elapsed_seconds": 75.47599550010636
+    },
+    {
+      "question": "小叶不喝咖啡，她喜欢喝温水。她喜欢什么？",
+      "seed": 4830,
+      "generated_tokens": 285,
+      "reasoning_closed": true,
+      "ended_with_eos": true,
+      "final_answer": "小叶喜欢温水，喜欢温顺，喜欢舒适的生活，可能喜欢自然和安静的生活方式。她可能喜欢健康的生活，喜欢与自然和谐相处，喜欢轻松愉快的生活。",
+      "elapsed_seconds": 65.64041529991664
+    }
+  ],
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "pair_sha256": {
+    "6": "32203760f5c4237295b64a278e5b7ef19a5406750d1fc0f6447a14ce2e750e6b",
+    "12": "669c778dcf76a389fc037c6d807f8700db476475f1b58d9790d5546bae263c4a"
+  },
+  "teacher_data_sha256": "f44c76eb26fc52b415febe89c3b26ee92782d5a7a6134353261b13eb835f7ee3",
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "max_new_tokens": 512,
+  "elapsed_seconds": 196.13006679993123,
+  "peak_allocated_bytes": 3700602368,
+  "limitations": [
+    "Two previously inspected questions with one seed each.",
+    "No SPORA memory reader; reasoning text intentionally omitted.",
+    "Teacher samples and maximum generation were capped at 512 tokens.",
+    "Natural long-position training used only two incomplete trajectories."
+  ]
+}

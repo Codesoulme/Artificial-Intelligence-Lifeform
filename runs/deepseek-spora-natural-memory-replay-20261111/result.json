@@ -1,0 +1,82 @@
+{
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "natural_data_sha256": "f44c76eb26fc52b415febe89c3b26ee92782d5a7a6134353261b13eb835f7ee3",
+  "seed": 712911,
+  "steps": 90,
+  "memory_training_questions": 36,
+  "natural_training_prefixes": 4,
+  "layers": {
+    "6": {
+      "metadata": {
+        "format": "spora-qwen-layer-replacement-candidate-v1",
+        "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+        "layer": 6,
+        "width": 1536,
+        "heads": 12,
+        "max_length": 768,
+        "seed": 712911,
+        "train_steps": 90,
+        "objective": "memory_answer_replay_with_natural_prefix_kl"
+      },
+      "start_sha256": "cb1afda63bb925e4a240858f954caa0c4ed13087405effb7db87dae40274736c",
+      "root_sha256": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+      "candidate_sha256": "32203760f5c4237295b64a278e5b7ef19a5406750d1fc0f6447a14ce2e750e6b"
+    },
+    "12": {
+      "metadata": {
+        "format": "spora-qwen-layer-replacement-candidate-v1",
+        "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+        "layer": 12,
+        "width": 1536,
+        "heads": 12,
+        "max_length": 768,
+        "seed": 712911,
+        "train_steps": 90,
+        "objective": "memory_answer_replay_with_natural_prefix_kl"
+      },
+      "start_sha256": "2a1b52ecb07a070326fd08ab559fe337a37c9ad8a6ab6e4fdc1c52c8fa5efe70",
+      "root_sha256": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6",
+      "candidate_sha256": "669c778dcf76a389fc037c6d807f8700db476475f1b58d9790d5546bae263c4a"
+    }
+  },
+  "trace": [
+    {
+      "step": 1,
+      "group": "natural_kl",
+      "loss": 0.0
+    },
+    {
+      "step": 10,
+      "group": "natural_kl",
+      "loss": 3.89080960303545e-05
+    },
+    {
+      "step": 20,
+      "group": "memory_answer_ce",
+      "loss": 0.03645680472254753
+    },
+    {
+      "step": 40,
+      "group": "natural_kl",
+      "loss": 7.611648470629007e-05
+    },
+    {
+      "step": 60,
+      "group": "memory_answer_ce",
+      "loss": 0.022113308310508728
+    },
+    {
+      "step": 90,
+      "group": "memory_answer_ce",
+      "loss": 0.009278123266994953
+    }
+  ],
+  "limitations": [
+    "Controlled memory questions and two incomplete teacher sequences only.",
+    "Natural KL is measured at the last token of four prefixes, not full trajectories.",
+    "No autonomous memory routing or independent open-chat acceptance."
+  ],
+  "elapsed_seconds": 308.0887106000446,
+  "peak_allocated_bytes": 4884207616
+}
