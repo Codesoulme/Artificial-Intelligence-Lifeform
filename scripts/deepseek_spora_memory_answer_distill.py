@@ -108,11 +108,11 @@ def _rows(facts, tokenizer):
                 answer = tokenizer(WORDS[expected], add_special_tokens=False, return_tensors='pt').input_ids
                 answer = answer.to('cuda')
                 answer = torch.cat((answer, torch.tensor([[tokenizer.eos_token_id]], device='cuda')), dim=1)
-            other = fact['old_value'] if intent != 'past' else fact['new_value']
-            split.append({'name': fact['name'], 'key': fact['key'], 'intent': intent,
+                other = fact['old_value'] if intent != 'past' else fact['new_value']
+                split.append({'name': fact['name'], 'key': fact['key'], 'intent': intent,
                               'question': question, 'value': expected, 'answer_ids': answer,
-                          'other_value': other, 'prefix': prefix,
-                          'event_time': event_time, 'variant': variant_index})
+                              'other_value': other, 'prefix': prefix,
+                              'event_time': event_time, 'variant': variant_index})
     return training, held
 
 
