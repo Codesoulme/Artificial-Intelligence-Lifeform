@@ -1,0 +1,110 @@
+{
+  "writes": [
+    {
+      "value": 2,
+      "action": "new",
+      "seconds": 3.158916300162673,
+      "revision": 1,
+      "cursor": 3,
+      "changed_tensors": 8,
+      "tensor_bytes_written": 205200,
+      "manifest_bytes": 15714
+    },
+    {
+      "value": 5,
+      "action": "correct",
+      "seconds": 0.24447829998098314,
+      "revision": 2,
+      "cursor": 4,
+      "changed_tensors": 8,
+      "tensor_bytes_written": 205200,
+      "manifest_bytes": 15714
+    }
+  ],
+  "before": {
+    "rows": [
+      {
+        "question": "小苏现在喜欢什么饮品？",
+        "intent": "current",
+        "expected": "可乐",
+        "answer": "可乐",
+        "token_ids": [
+          30440,
+          99350,
+          151643
+        ],
+        "exact_correct": true
+      },
+      {
+        "question": "小苏以前喜欢什么饮品？",
+        "intent": "past",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "token_ids": [
+          106477,
+          151643
+        ],
+        "exact_correct": true
+      }
+    ],
+    "state_digest": "15e720706eb1f5e97c9dccf4314e624d661fe6d3a8000e15ee1a94d2394d5644",
+    "cursor": 4,
+    "revision": 2
+  },
+  "after_independent_process": {
+    "rows": [
+      {
+        "question": "小苏现在喜欢什么饮品？",
+        "intent": "current",
+        "expected": "可乐",
+        "answer": "可乐",
+        "token_ids": [
+          30440,
+          99350,
+          151643
+        ],
+        "exact_correct": true
+      },
+      {
+        "question": "小苏以前喜欢什么饮品？",
+        "intent": "past",
+        "expected": "牛奶",
+        "answer": "牛奶",
+        "token_ids": [
+          106477,
+          151643
+        ],
+        "exact_correct": true
+      }
+    ],
+    "state_digest": "15e720706eb1f5e97c9dccf4314e624d661fe6d3a8000e15ee1a94d2394d5644",
+    "cursor": 4,
+    "revision": 2,
+    "replacement_lengths": {
+      "6": 768,
+      "12": 768
+    }
+  },
+  "same_tokens": [
+    true,
+    true
+  ],
+  "bootstrap_sha256": "a26c966250bb2aac33948db189c4f74c4aff8fbaa4c94ffb761a416415446ec5",
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "database_bytes_before_close": 4546560,
+  "wal_bytes_before_close": 4589712,
+  "database_bytes_after_close": 4558848,
+  "full_checkpoint_bytes": 244114744,
+  "full_checkpoint_seconds": 49.22907099989243,
+  "initial_load_and_store_seconds": 36.76701519987546,
+  "elapsed_seconds": 343.3534922997933,
+  "peak_allocated_bytes": 3802211840,
+  "limitations": [
+    "Two synthetic writes and two caller-addressed short questions.",
+    "Tensor bytes are logical payload, not total SQLite or device I/O.",
+    "Single process measurements with uncontrolled external GPU/disk load.",
+    "Bootstrap hashes verified on open; in-session stat and tensor-version checks are not tamper proof.",
+    "Separate frozen base and structural bootstrap files remain necessary.",
+    "Independent reload does not by itself simulate power loss or prove open-chat ability."
+  ]
+}
