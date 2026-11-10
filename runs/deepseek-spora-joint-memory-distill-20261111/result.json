@@ -1,0 +1,218 @@
+{
+  "status": "joint_memory_conditioned_two_layer_spora_distillation",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "individual_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "start_candidates_sha256": {
+    "6": "40db72ea9f3ba71b7755e0d4ae378a2807bac7aad32c75eecab48444435cd3fe",
+    "12": "4b4c0e370d90c5e3bcbf8d5eab11a82f111cf0193da1d02ad2b36e3f37334307"
+  },
+  "candidate_checkpoints": {
+    "6": {
+      "path": "layer-6.pt",
+      "sha256": "36bd20acb6a75f5ea32884eb8d398f7260e2ae1c3049df34f2c6668c62f8c3bd"
+    },
+    "12": {
+      "path": "layer-12.pt",
+      "sha256": "92f88206f5084eca2cfd3adc5795f0822d120f821b1940998baddcc0834586bd"
+    }
+  },
+  "layers": [
+    6,
+    12
+  ],
+  "training_examples": 12,
+  "held_examples": 9,
+  "held_before": {
+    "top1_agreement": 0.7238805970149254,
+    "mean_token_kl_nats": 0.44841102877659583,
+    "scored_tokens": 134
+  },
+  "held_after": {
+    "top1_agreement": 0.7238805970149254,
+    "mean_token_kl_nats": 0.25696181450317157,
+    "scored_tokens": 134
+  },
+  "held_rows_before": [
+    {
+      "question": "小林现阶段爱喝哪种饮料？",
+      "intent": 0,
+      "agreement": 11,
+      "tokens": 14,
+      "kl_sum": 5.85958194732666
+    },
+    {
+      "question": "截至目前，小林的饮品偏好是什么？",
+      "intent": 0,
+      "agreement": 8,
+      "tokens": 15,
+      "kl_sum": 8.074569702148438
+    },
+    {
+      "question": "现在记录的小林最爱喝什么？",
+      "intent": 0,
+      "agreement": 12,
+      "tokens": 14,
+      "kl_sum": 5.470253944396973
+    },
+    {
+      "question": "小林原先爱喝哪种饮料？",
+      "intent": 1,
+      "agreement": 12,
+      "tokens": 14,
+      "kl_sum": 2.6251776218414307
+    },
+    {
+      "question": "变更以前，小林的饮品偏好是什么？",
+      "intent": 1,
+      "agreement": 11,
+      "tokens": 16,
+      "kl_sum": 11.616302490234375
+    },
+    {
+      "question": "之前记录的小林最爱喝什么？",
+      "intent": 1,
+      "agreement": 9,
+      "tokens": 14,
+      "kl_sum": 6.278777599334717
+    },
+    {
+      "question": "小林变更以后爱喝哪种饮料？",
+      "intent": 2,
+      "agreement": 13,
+      "tokens": 15,
+      "kl_sum": 7.667873382568359
+    },
+    {
+      "question": "后续记录中，小林的饮品偏好是什么？",
+      "intent": 2,
+      "agreement": 11,
+      "tokens": 17,
+      "kl_sum": 7.449756622314453
+    },
+    {
+      "question": "修改完成后，小林最爱喝什么？",
+      "intent": 2,
+      "agreement": 10,
+      "tokens": 15,
+      "kl_sum": 5.0447845458984375
+    }
+  ],
+  "held_rows_after": [
+    {
+      "question": "小林现阶段爱喝哪种饮料？",
+      "intent": 0,
+      "agreement": 12,
+      "tokens": 14,
+      "kl_sum": 3.290008544921875
+    },
+    {
+      "question": "截至目前，小林的饮品偏好是什么？",
+      "intent": 0,
+      "agreement": 8,
+      "tokens": 15,
+      "kl_sum": 5.647222995758057
+    },
+    {
+      "question": "现在记录的小林最爱喝什么？",
+      "intent": 0,
+      "agreement": 13,
+      "tokens": 14,
+      "kl_sum": 2.1602253913879395
+    },
+    {
+      "question": "小林原先爱喝哪种饮料？",
+      "intent": 1,
+      "agreement": 13,
+      "tokens": 14,
+      "kl_sum": 1.3690203428268433
+    },
+    {
+      "question": "变更以前，小林的饮品偏好是什么？",
+      "intent": 1,
+      "agreement": 10,
+      "tokens": 16,
+      "kl_sum": 5.005944728851318
+    },
+    {
+      "question": "之前记录的小林最爱喝什么？",
+      "intent": 1,
+      "agreement": 8,
+      "tokens": 14,
+      "kl_sum": 4.834740161895752
+    },
+    {
+      "question": "小林变更以后爱喝哪种饮料？",
+      "intent": 2,
+      "agreement": 11,
+      "tokens": 15,
+      "kl_sum": 4.533130168914795
+    },
+    {
+      "question": "后续记录中，小林的饮品偏好是什么？",
+      "intent": 2,
+      "agreement": 11,
+      "tokens": 17,
+      "kl_sum": 4.474126815795898
+    },
+    {
+      "question": "修改完成后，小林最爱喝什么？",
+      "intent": 2,
+      "agreement": 11,
+      "tokens": 15,
+      "kl_sum": 3.1184639930725098
+    }
+  ],
+  "loss_trace": [
+    {
+      "step": 1,
+      "loss": 0.01941043511033058,
+      "logit_kl": 0.1972079873085022,
+      "relative_mse_layer7": 0.00019552477169781923,
+      "relative_mse_layer13": 0.00033191812690347433
+    },
+    {
+      "step": 20,
+      "loss": 0.014784506522119045,
+      "logit_kl": 0.10351886600255966,
+      "relative_mse_layer7": 0.0002182906464440748,
+      "relative_mse_layer13": 0.0003460682346485555
+    },
+    {
+      "step": 40,
+      "loss": 0.015322988852858543,
+      "logit_kl": 0.10412885993719101,
+      "relative_mse_layer7": 0.00023252169194165617,
+      "relative_mse_layer13": 0.00037321331910789013
+    },
+    {
+      "step": 60,
+      "loss": 0.015030480921268463,
+      "logit_kl": 0.10743025690317154,
+      "relative_mse_layer7": 0.00021314795594662428,
+      "relative_mse_layer13": 0.0003372404316905886
+    },
+    {
+      "step": 80,
+      "loss": 0.012705331668257713,
+      "logit_kl": 0.07351459562778473,
+      "relative_mse_layer7": 0.00020987773314118385,
+      "relative_mse_layer13": 0.00031607819255441427
+    },
+    {
+      "step": 100,
+      "loss": 0.013680120930075645,
+      "logit_kl": 0.08279567211866379,
+      "relative_mse_layer7": 0.00022375336266122758,
+      "relative_mse_layer13": 0.0003415235842112452
+    }
+  ],
+  "elapsed_seconds": 384.9421251001768,
+  "peak_allocated_bytes": 4870592512,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Twelve temporal training prompts and nine authored holdout prompts.",
+    "One individual, one key, two values and one routed event history.",
+    "The DeepSeek base, SPORA memory reader and write controller remain frozen.",
+    "No generated answers, other memory tasks or broader language-domain checks included."
+  ]
+}
