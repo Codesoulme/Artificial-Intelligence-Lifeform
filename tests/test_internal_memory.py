@@ -43,6 +43,22 @@ class InternalTests(unittest.TestCase):
             with self.assertRaises(ValueError):observe_sourced(self.model,state,3,8,'direct',quality)
         with self.assertRaises(ValueError):observe_sourced(self.model,state,3,8,'direct',1.,state.cursor+1)
 
+    def test_nonfinite_write_logits_leave_all_state_unchanged(self):
+        for invalid in (float('nan'), float('inf'), float('-inf')):
+            with self.subTest(invalid=invalid):
+                self.force_action(0)
+                before=copy.deepcopy(self.state)
+                with torch.no_grad():self.model.write_control.network[-1].bias[0]=invalid
+                with self.assertRaisesRegex(ValueError,'finite action logits'):
+                    observe_sourced(self.model,self.state,3,7,'direct',1.)
+                self.assertEqual(self.state.cursor,before.cursor)
+                for a,b in zip(self.state.current,before.current):self.assertTrue(torch.equal(a,b))
+                for ap,bp in zip(self.state.pages,before.pages):
+                    for a_site,b_site in zip(ap,bp):
+                        for a,b in zip(a_site,b_site):self.assertTrue(torch.equal(a,b))
+                self.assertTrue(torch.equal(self.state.internal.evidence,before.internal.evidence))
+                for a,b in zip(self.state.internal.provenance,before.internal.provenance):self.assertTrue(torch.equal(a,b))
+
     def test_old_source_unknown_and_no_read_mutation(self):
         self.state.internal.start_cursor=0
         before=flatten(self.model,self.state)[0]

@@ -125,7 +125,12 @@ def observe_sourced(model, state, key, value, source, quality, valid_at=None):
         raise ValueError('Invalid effective time or explicit growth required')
     si = SOURCES.index(source)
     features, address, old_value, old_quality = write_features(model, state, key, value, si, quality, valid_at)
-    probabilities = model.write_control(features).softmax(-1)[0]
+    logits = model.write_control(features)
+    if logits.shape != (1, len(ACTIONS)) or not bool(torch.isfinite(logits).all()):
+        raise ValueError('Write controller must return finite action logits')
+    probabilities = logits.softmax(-1)[0]
+    if not bool(torch.isfinite(probabilities).all()):
+        raise ValueError('Write controller returned invalid probabilities')
     action = int(probabilities.argmax())
     confidence = float(probabilities[action])
     reason = 'learned_decision'
