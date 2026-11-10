@@ -178,6 +178,14 @@ class IntegratedCheckpointTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'width'):
             load_integrated(self.path, base, self.root)
 
+    def test_variant_bound_binding_cannot_enter_unversioned_integrated_checkpoint(self):
+        self.save()
+        original = self.path.read_bytes()
+        self.organism.named_address_binding.feature_variant_sha256 = 'f'*64
+        with self.assertRaisesRegex(ValueError, 'variant'):
+            self.save()
+        self.assertEqual(self.path.read_bytes(), original)
+
     def test_invalid_layer_indices_do_not_overwrite_checkpoint(self):
         self.save()
         previous = self.path.read_bytes()

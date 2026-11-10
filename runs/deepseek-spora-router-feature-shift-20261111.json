@@ -1,0 +1,1910 @@
+{
+  "results": {
+    "original": {
+      "temporal_correct": 9,
+      "temporal_total": 9,
+      "temporal_rows": [
+        {
+          "question": "小林现阶段爱喝哪种饮料？",
+          "expected": 0,
+          "predicted": 0,
+          "correct": true
+        },
+        {
+          "question": "截至目前，小林的饮品偏好是什么？",
+          "expected": 0,
+          "predicted": 0,
+          "correct": true
+        },
+        {
+          "question": "现在记录的小林最爱喝什么？",
+          "expected": 0,
+          "predicted": 0,
+          "correct": true
+        },
+        {
+          "question": "小林原先爱喝哪种饮料？",
+          "expected": 1,
+          "predicted": 1,
+          "correct": true
+        },
+        {
+          "question": "变更以前，小林的饮品偏好是什么？",
+          "expected": 1,
+          "predicted": 1,
+          "correct": true
+        },
+        {
+          "question": "之前记录的小林最爱喝什么？",
+          "expected": 1,
+          "predicted": 1,
+          "correct": true
+        },
+        {
+          "question": "小林变更以后爱喝哪种饮料？",
+          "expected": 2,
+          "predicted": 2,
+          "correct": true
+        },
+        {
+          "question": "后续记录中，小林的饮品偏好是什么？",
+          "expected": 2,
+          "predicted": 2,
+          "correct": true
+        },
+        {
+          "question": "修改完成后，小林最爱喝什么？",
+          "expected": 2,
+          "predicted": 2,
+          "correct": true
+        }
+      ],
+      "name_groups": {
+        "known": {
+          "total": 20,
+          "exact_span": 20,
+          "accepted": 19,
+          "correct_address": 19
+        },
+        "unbound": {
+          "total": 4,
+          "exact_span": 4,
+          "accepted": 0,
+          "correct_address": 0
+        },
+        "no_name": {
+          "total": 6,
+          "exact_span": 0,
+          "accepted": 0,
+          "correct_address": 0
+        },
+        "multiple_names": {
+          "total": 6,
+          "exact_span": 0,
+          "accepted": 0,
+          "correct_address": 0
+        }
+      },
+      "name_rows": [
+        {
+          "question": "小林眼下记着什么数？",
+          "group": "known",
+          "expected_key": 6,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9942829608917236,
+            0.9856901168823242
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小林的最新数字。",
+          "group": "known",
+          "expected_key": 6,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9952375292778015,
+            0.9815884828567505
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿宁眼下记着什么数？",
+          "group": "known",
+          "expected_key": 22,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9971660375595093,
+            0.9933439493179321
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿宁的最新数字。",
+          "group": "known",
+          "expected_key": 22,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9969267249107361,
+            0.9917206764221191
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小雨眼下记着什么数？",
+          "group": "known",
+          "expected_key": 35,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.9944326877593994,
+            0.9830062389373779
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小雨的最新数字。",
+          "group": "known",
+          "expected_key": 35,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.997225284576416,
+            0.975833535194397
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿哲眼下记着什么数？",
+          "group": "known",
+          "expected_key": 51,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9979414939880371,
+            0.9917944669723511
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿哲的最新数字。",
+          "group": "known",
+          "expected_key": 51,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9928406476974487,
+            0.9829663038253784
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小梅眼下记着什么数？",
+          "group": "known",
+          "expected_key": 16,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.996401309967041,
+            0.9889490604400635
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小梅的最新数字。",
+          "group": "known",
+          "expected_key": 16,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9970369935035706,
+            0.9839746952056885
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿远眼下记着什么数？",
+          "group": "known",
+          "expected_key": 27,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9974725246429443,
+            0.9938888549804688
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿远的最新数字。",
+          "group": "known",
+          "expected_key": 27,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9945530891418457,
+            0.9881398677825928
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小岚眼下记着什么数？",
+          "group": "known",
+          "expected_key": 42,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9967471957206726,
+            0.9959607720375061
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小岚的最新数字。",
+          "group": "known",
+          "expected_key": 42,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9940130710601807,
+            0.992581844329834
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿明眼下记着什么数？",
+          "group": "known",
+          "expected_key": 10,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9964069128036499,
+            0.985957145690918
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿明的最新数字。",
+          "group": "known",
+          "expected_key": 10,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9877482652664185,
+            0.9658997058868408
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿松眼下记着什么数？",
+          "group": "known",
+          "expected_key": 0,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9916057586669922,
+            0.9570678472518921
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿松的最新数字。",
+          "group": "known",
+          "expected_key": 0,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9881497621536255,
+            0.9153709411621094
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小雪眼下记着什么数？",
+          "group": "known",
+          "expected_key": 1,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9807409644126892,
+            0.9129584431648254
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "我想知道小雪的最新数字。",
+          "group": "known",
+          "expected_key": 1,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9861667156219482,
+            0.9138018488883972
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿禾眼下记着什么数？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.5516605377197266,
+            0.725151002407074
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "我想知道阿禾的最新数字。",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.6226961612701416,
+            0.7556943893432617
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小青眼下记着什么数？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.6106297373771667,
+            0.6239612102508545
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "我想知道小青的最新数字。",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.6633487343788147,
+            0.6188337206840515
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "现在是什么数字？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "刚才记住的内容有哪些？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "给我一个放松建议。",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "你可以帮我写诗吗？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "目前保存了多少？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "我想知道最新消息。",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小林和阿宁各记了什么数？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.7290046215057373,
+            0.7434638738632202
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小雨与阿哲的数字相同吗？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "比较小梅和阿远的值。",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小岚与阿明各是多少？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "阿松和小雪现在记录的数字？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.8296330571174622,
+            0.7587392330169678
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小青和阿禾的数值是什么？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            35
+          ],
+          "similarities": [
+            0.4699847400188446,
+            0.44939732551574707
+          ],
+          "correct_address": false
+        }
+      ]
+    },
+    "old_pair": {
+      "temporal_correct": 9,
+      "temporal_total": 9,
+      "temporal_rows": [
+        {
+          "question": "小林现阶段爱喝哪种饮料？",
+          "expected": 0,
+          "predicted": 0,
+          "correct": true
+        },
+        {
+          "question": "截至目前，小林的饮品偏好是什么？",
+          "expected": 0,
+          "predicted": 0,
+          "correct": true
+        },
+        {
+          "question": "现在记录的小林最爱喝什么？",
+          "expected": 0,
+          "predicted": 0,
+          "correct": true
+        },
+        {
+          "question": "小林原先爱喝哪种饮料？",
+          "expected": 1,
+          "predicted": 1,
+          "correct": true
+        },
+        {
+          "question": "变更以前，小林的饮品偏好是什么？",
+          "expected": 1,
+          "predicted": 1,
+          "correct": true
+        },
+        {
+          "question": "之前记录的小林最爱喝什么？",
+          "expected": 1,
+          "predicted": 1,
+          "correct": true
+        },
+        {
+          "question": "小林变更以后爱喝哪种饮料？",
+          "expected": 2,
+          "predicted": 2,
+          "correct": true
+        },
+        {
+          "question": "后续记录中，小林的饮品偏好是什么？",
+          "expected": 2,
+          "predicted": 2,
+          "correct": true
+        },
+        {
+          "question": "修改完成后，小林最爱喝什么？",
+          "expected": 2,
+          "predicted": 2,
+          "correct": true
+        }
+      ],
+      "name_groups": {
+        "known": {
+          "total": 20,
+          "exact_span": 20,
+          "accepted": 17,
+          "correct_address": 17
+        },
+        "unbound": {
+          "total": 4,
+          "exact_span": 4,
+          "accepted": 0,
+          "correct_address": 0
+        },
+        "no_name": {
+          "total": 6,
+          "exact_span": 0,
+          "accepted": 0,
+          "correct_address": 0
+        },
+        "multiple_names": {
+          "total": 6,
+          "exact_span": 0,
+          "accepted": 0,
+          "correct_address": 0
+        }
+      },
+      "name_rows": [
+        {
+          "question": "小林眼下记着什么数？",
+          "group": "known",
+          "expected_key": 6,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9942829608917236,
+            0.9822663068771362
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小林的最新数字。",
+          "group": "known",
+          "expected_key": 6,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9952375292778015,
+            0.9659316539764404
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿宁眼下记着什么数？",
+          "group": "known",
+          "expected_key": 22,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9971660375595093,
+            0.979308545589447
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿宁的最新数字。",
+          "group": "known",
+          "expected_key": 22,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9969267249107361,
+            0.9677799940109253
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小雨眼下记着什么数？",
+          "group": "known",
+          "expected_key": 35,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.9944326877593994,
+            0.9737640023231506
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小雨的最新数字。",
+          "group": "known",
+          "expected_key": 35,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.997225284576416,
+            0.9758111238479614
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿哲眼下记着什么数？",
+          "group": "known",
+          "expected_key": 51,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9979414939880371,
+            0.9816739559173584
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿哲的最新数字。",
+          "group": "known",
+          "expected_key": 51,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9928406476974487,
+            0.9733238220214844
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小梅眼下记着什么数？",
+          "group": "known",
+          "expected_key": 16,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.996401309967041,
+            0.9515477418899536
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小梅的最新数字。",
+          "group": "known",
+          "expected_key": 16,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9970369935035706,
+            0.9549583196640015
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿远眼下记着什么数？",
+          "group": "known",
+          "expected_key": 27,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9974725246429443,
+            0.981486439704895
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿远的最新数字。",
+          "group": "known",
+          "expected_key": 27,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9945530891418457,
+            0.9707064628601074
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小岚眼下记着什么数？",
+          "group": "known",
+          "expected_key": 42,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9967471957206726,
+            0.9936807155609131
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小岚的最新数字。",
+          "group": "known",
+          "expected_key": 42,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9940130710601807,
+            0.9902599453926086
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿明眼下记着什么数？",
+          "group": "known",
+          "expected_key": 10,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9964069128036499,
+            0.9661192893981934
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿明的最新数字。",
+          "group": "known",
+          "expected_key": 10,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9877482652664185,
+            0.9438604116439819
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿松眼下记着什么数？",
+          "group": "known",
+          "expected_key": 0,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9916057586669922,
+            0.930493950843811
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿松的最新数字。",
+          "group": "known",
+          "expected_key": 0,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9881497621536255,
+            0.9018915891647339
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小雪眼下记着什么数？",
+          "group": "known",
+          "expected_key": 1,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9807409644126892,
+            0.910642147064209
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "我想知道小雪的最新数字。",
+          "group": "known",
+          "expected_key": 1,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9861667156219482,
+            0.8791682720184326
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "阿禾眼下记着什么数？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.5516605377197266,
+            0.7141132950782776
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "我想知道阿禾的最新数字。",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.6226961612701416,
+            0.6848857998847961
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小青眼下记着什么数？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.6106297373771667,
+            0.6311032176017761
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "我想知道小青的最新数字。",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.6633487343788147,
+            0.5672731399536133
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "现在是什么数字？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "刚才记住的内容有哪些？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "给我一个放松建议。",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "你可以帮我写诗吗？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "目前保存了多少？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "我想知道最新消息。",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小林和阿宁各记了什么数？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.7290046215057373,
+            0.7593166828155518
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小雨与阿哲的数字相同吗？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "比较小梅和阿远的值。",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小岚与阿明各是多少？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "阿松和小雪现在记录的数字？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.8296330571174622,
+            0.7035899758338928
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小青和阿禾的数值是什么？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            35
+          ],
+          "similarities": [
+            0.47735702991485596,
+            0.552101731300354
+          ],
+          "correct_address": false
+        }
+      ]
+    },
+    "new_pair": {
+      "temporal_correct": 9,
+      "temporal_total": 9,
+      "temporal_rows": [
+        {
+          "question": "小林现阶段爱喝哪种饮料？",
+          "expected": 0,
+          "predicted": 0,
+          "correct": true
+        },
+        {
+          "question": "截至目前，小林的饮品偏好是什么？",
+          "expected": 0,
+          "predicted": 0,
+          "correct": true
+        },
+        {
+          "question": "现在记录的小林最爱喝什么？",
+          "expected": 0,
+          "predicted": 0,
+          "correct": true
+        },
+        {
+          "question": "小林原先爱喝哪种饮料？",
+          "expected": 1,
+          "predicted": 1,
+          "correct": true
+        },
+        {
+          "question": "变更以前，小林的饮品偏好是什么？",
+          "expected": 1,
+          "predicted": 1,
+          "correct": true
+        },
+        {
+          "question": "之前记录的小林最爱喝什么？",
+          "expected": 1,
+          "predicted": 1,
+          "correct": true
+        },
+        {
+          "question": "小林变更以后爱喝哪种饮料？",
+          "expected": 2,
+          "predicted": 2,
+          "correct": true
+        },
+        {
+          "question": "后续记录中，小林的饮品偏好是什么？",
+          "expected": 2,
+          "predicted": 2,
+          "correct": true
+        },
+        {
+          "question": "修改完成后，小林最爱喝什么？",
+          "expected": 2,
+          "predicted": 2,
+          "correct": true
+        }
+      ],
+      "name_groups": {
+        "known": {
+          "total": 20,
+          "exact_span": 20,
+          "accepted": 17,
+          "correct_address": 17
+        },
+        "unbound": {
+          "total": 4,
+          "exact_span": 4,
+          "accepted": 0,
+          "correct_address": 0
+        },
+        "no_name": {
+          "total": 6,
+          "exact_span": 0,
+          "accepted": 0,
+          "correct_address": 0
+        },
+        "multiple_names": {
+          "total": 6,
+          "exact_span": 0,
+          "accepted": 0,
+          "correct_address": 0
+        }
+      },
+      "name_rows": [
+        {
+          "question": "小林眼下记着什么数？",
+          "group": "known",
+          "expected_key": 6,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9942829608917236,
+            0.9834244847297668
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小林的最新数字。",
+          "group": "known",
+          "expected_key": 6,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9952375292778015,
+            0.9672852754592896
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿宁眼下记着什么数？",
+          "group": "known",
+          "expected_key": 22,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9971660375595093,
+            0.9813216328620911
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿宁的最新数字。",
+          "group": "known",
+          "expected_key": 22,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9969267249107361,
+            0.971262514591217
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小雨眼下记着什么数？",
+          "group": "known",
+          "expected_key": 35,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.9944326877593994,
+            0.9725657105445862
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小雨的最新数字。",
+          "group": "known",
+          "expected_key": 35,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.997225284576416,
+            0.9788915514945984
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿哲眼下记着什么数？",
+          "group": "known",
+          "expected_key": 51,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9979414939880371,
+            0.9859711527824402
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿哲的最新数字。",
+          "group": "known",
+          "expected_key": 51,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9928406476974487,
+            0.9736046195030212
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小梅眼下记着什么数？",
+          "group": "known",
+          "expected_key": 16,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.996401309967041,
+            0.9559288024902344
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小梅的最新数字。",
+          "group": "known",
+          "expected_key": 16,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9970369935035706,
+            0.9612435698509216
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿远眼下记着什么数？",
+          "group": "known",
+          "expected_key": 27,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9974725246429443,
+            0.9835033416748047
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿远的最新数字。",
+          "group": "known",
+          "expected_key": 27,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9945530891418457,
+            0.9698094129562378
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小岚眼下记着什么数？",
+          "group": "known",
+          "expected_key": 42,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9967471957206726,
+            0.994835376739502
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小岚的最新数字。",
+          "group": "known",
+          "expected_key": 42,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9940130710601807,
+            0.9916563034057617
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿明眼下记着什么数？",
+          "group": "known",
+          "expected_key": 10,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9964069128036499,
+            0.9667366147041321
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿明的最新数字。",
+          "group": "known",
+          "expected_key": 10,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9877482652664185,
+            0.9404929280281067
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿松眼下记着什么数？",
+          "group": "known",
+          "expected_key": 0,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9916057586669922,
+            0.932865560054779
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿松的最新数字。",
+          "group": "known",
+          "expected_key": 0,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9881497621536255,
+            0.8949532508850098
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小雪眼下记着什么数？",
+          "group": "known",
+          "expected_key": 1,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9807409644126892,
+            0.9113192558288574
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "我想知道小雪的最新数字。",
+          "group": "known",
+          "expected_key": 1,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9861667156219482,
+            0.8799388408660889
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "阿禾眼下记着什么数？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.5516605377197266,
+            0.722846269607544
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "我想知道阿禾的最新数字。",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.6226961612701416,
+            0.6955513954162598
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小青眼下记着什么数？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.6106297373771667,
+            0.6422339677810669
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "我想知道小青的最新数字。",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.6633487343788147,
+            0.5500454902648926
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "现在是什么数字？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "刚才记住的内容有哪些？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "给我一个放松建议。",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "你可以帮我写诗吗？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "目前保存了多少？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "我想知道最新消息。",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小林和阿宁各记了什么数？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.7290046215057373,
+            0.7645623087882996
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小雨与阿哲的数字相同吗？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "比较小梅和阿远的值。",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小岚与阿明各是多少？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "阿松和小雪现在记录的数字？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.8296330571174622,
+            0.716590166091919
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小青和阿禾的数值是什么？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            35
+          ],
+          "similarities": [
+            0.47735702991485596,
+            0.5372127294540405
+          ],
+          "correct_address": false
+        }
+      ]
+    }
+  },
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "feature_config_sha256": "6e8dfbb504fa35aead3329dfe76649dc29c9419aee7b146a094d5483a17ec351",
+  "locator_sha256": "7f2d90453fa5f3768ba30925afc54a814b55ef9262b89bf13285960d1e84f15a",
+  "projection_sha256": "b782388e60a6bb132c893475e00d4f3b3e00e43eef606eceda080b71719de519",
+  "old_pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "new_pair_sha256": {
+    "6": "602922906bc63709ccaf2e06d51900683920cfa90c53fe174ac56b3b2bf70255",
+    "12": "32c0235c693db0f1b52338cb28306648e31152290f7a18bc72e552c7383863c5"
+  },
+  "named_individual_sha256": "a18a5df1b5e0a65f1c152df95b81c2513cb64878324dd18a280aa3d8bde845cc",
+  "elapsed_seconds": 97.40034159994684,
+  "peak_allocated_bytes": 4058386944,
+  "limitations": [
+    "All templates and names were previously used during development.",
+    "Temporal classifier is retrained on original features only in this run.",
+    "No fine-tuning on replacement features; tests feature compatibility.",
+    "Read-only feature tests with no SPORA memory injection, writes or answer generation.",
+    "Unknown and multiple-name examples are small and do not establish safety."
+  ]
+}

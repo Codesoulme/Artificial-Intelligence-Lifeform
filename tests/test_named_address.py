@@ -7,7 +7,7 @@ import torch
 
 from spora.durable import TensorStore
 from spora.growing import load, new_state, save
-from spora.named_address import NamedAddressBinding, address_basis_sha256, feature_files_sha256
+from spora.named_address import NamedAddressBinding, address_basis_sha256, feature_files_sha256, structural_feature_sha256
 from spora.state_codec import flatten, restore
 from spora.temporal import TemporalConfig, TemporalSPORA
 
@@ -120,6 +120,42 @@ class NamedAddressTests(unittest.TestCase):
             before = feature_files_sha256(root)
             (root / 'tokenizer.json').write_text('{"changed":true}', encoding='utf-8')
             self.assertNotEqual(before, feature_files_sha256(root))
+
+    def test_structural_fingerprint_tracks_layer_weights_and_position_lengths(self):
+        layers = {6: '1'*64, 12: '2'*64}
+        lengths = {6: 128, 12: 128}
+        digest = structural_feature_sha256(self.digest, self.feature_digest, layers, lengths)
+        self.assertEqual(digest, structural_feature_sha256(self.digest, self.feature_digest,
+                                                           {12: '2'*64, 6: '1'*64}, {12: 128, 6: 128}))
+        self.assertNotEqual(digest, structural_feature_sha256(self.digest, self.feature_digest, layers, {6: 768, 12: 128}))
+        self.assertNotEqual(digest, structural_feature_sha256(self.digest, self.feature_digest,
+                                                              {6: '3'*64, 12: '2'*64}, lengths))
+        self.assertNotEqual(digest, structural_feature_sha256(self.digest, self.feature_digest, layers, lengths,
+                                                              position_tails={6: '4'*64, 12: None}))
+        with self.assertRaises(ValueError):
+            structural_feature_sha256(self.digest, self.feature_digest, layers, {6: 128})
+        with self.assertRaises(ValueError):
+            structural_feature_sha256(self.digest, self.feature_digest, layers, lengths, position_tails={6: '4'*64})
+
+    def test_variant_binding_requires_exact_declared_feature_variant_after_reload(self):
+        variant = structural_feature_sha256(self.digest, self.feature_digest, {6: '1'*64}, {6: 128})
+        old = self.model.named_address_binding
+        with self.assertRaisesRegex(ValueError, 'variant'):
+            old(self.features, self.model, self.digest, self.feature_digest, feature_variant_sha256=variant)
+        bound = NamedAddressBinding(64, 64, self.digest, 0.9, basis_sha256=address_basis_sha256(self.model),
+                                    feature_config_sha256=self.feature_digest, feature_variant_sha256=variant)
+        with torch.no_grad():
+            bound.weights.copy_(old.weights)
+        self.model.named_address_binding = bound
+        schema, tensors = flatten(self.model, self.state)
+        restored, _ = restore(schema, tensors)
+        rebound = restored.named_address_binding
+        with self.assertRaisesRegex(ValueError, 'variant'):
+            rebound(self.features, restored, self.digest, self.feature_digest)
+        with self.assertRaisesRegex(ValueError, 'variant'):
+            rebound(self.features, restored, self.digest, self.feature_digest, feature_variant_sha256='f'*64)
+        result = rebound(self.features, restored, self.digest, self.feature_digest, feature_variant_sha256=variant)
+        self.assertEqual(result['indices'].tolist(), [[7, 7]])
 
     def test_schema_and_tensor_corruption_are_rejected(self):
         schema, tensors = flatten(self.model, self.state)

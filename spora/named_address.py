@@ -41,13 +41,42 @@ def feature_files_sha256(model_dir):
     return hashlib.sha256(json.dumps(entries, separators=(',', ':')).encode('ascii')).hexdigest()
 
 
+def structural_feature_sha256(base_sha256, config_sha256, replacements, position_lengths, *, position_tails=None):
+    """Fingerprint a declared feature-producing base and replacement layout.
+
+    The caller must compute each digest from the actual loaded files and declare
+    any other changes affecting features separately. This does not authenticate
+    supplied features or infer the in-memory model's true structure.
+    """
+    def valid_hash(value):
+        return isinstance(value, str) and re.fullmatch(r'[0-9a-f]{64}', value) is not None
+
+    if position_tails is None and isinstance(replacements, dict):
+        position_tails = {index: None for index in replacements}
+    if (not valid_hash(base_sha256) or not valid_hash(config_sha256)
+            or not isinstance(replacements, dict) or not isinstance(position_lengths, dict)
+            or set(replacements) != set(position_lengths)
+            or not isinstance(position_tails, dict) or set(replacements) != set(position_tails)
+            or any(type(index) is not int or index < 0 or not valid_hash(digest)
+                   for index, digest in replacements.items())
+            or any(type(length) is not int or length <= 0 for length in position_lengths.values())
+            or any(tail is not None and not valid_hash(tail) for tail in position_tails.values())):
+        raise ValueError('Invalid structural feature fingerprint inputs')
+    payload = {'format': 'spora-structural-feature-v1', 'base_sha256': base_sha256,
+               'feature_config_sha256': config_sha256,
+               'replacements': [[index, replacements[index], position_lengths[index], position_tails[index]]
+                                for index in sorted(replacements)]}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode('ascii')).hexdigest()
+
+
 class NamedAddressBinding(nn.Module):
     def __init__(self, feature_width, memory_width, feature_model_sha256, threshold,
                  feature_layers=(6, 18), feature_contract='question-mean-v1',
-                 basis_sha256=None, feature_config_sha256=None):
+                 basis_sha256=None, feature_config_sha256=None, feature_variant_sha256=None):
         super().__init__()
         self._validate_config(feature_width, memory_width, feature_model_sha256, threshold,
-                              feature_layers, feature_contract, basis_sha256, feature_config_sha256)
+                              feature_layers, feature_contract, basis_sha256, feature_config_sha256,
+                              feature_variant_sha256)
         self.feature_width = feature_width
         self.memory_width = memory_width
         self.feature_model_sha256 = feature_model_sha256
@@ -56,11 +85,13 @@ class NamedAddressBinding(nn.Module):
         self.feature_contract = feature_contract
         self.basis_sha256 = basis_sha256
         self.feature_config_sha256 = feature_config_sha256
+        self.feature_variant_sha256 = feature_variant_sha256
         self.register_buffer('weights', torch.zeros(2, feature_width, memory_width))
 
     @staticmethod
     def _validate_config(feature_width, memory_width, feature_model_sha256, threshold,
-                         feature_layers, feature_contract, basis_sha256=None, feature_config_sha256=None):
+                         feature_layers, feature_contract, basis_sha256=None, feature_config_sha256=None,
+                         feature_variant_sha256=None):
         if (type(feature_width) is not int or not 1 <= feature_width <= 16384
                 or type(memory_width) is not int or not 1 <= memory_width <= 4096):
             raise ValueError('Invalid binding widths')
@@ -79,6 +110,9 @@ class NamedAddressBinding(nn.Module):
         if basis_sha256 is not None and any(not isinstance(value, str) or not re.fullmatch(r'[0-9a-f]{64}', value)
                                             for value in (basis_sha256, feature_config_sha256)):
             raise ValueError('Invalid binding fingerprint')
+        if feature_variant_sha256 is not None and (basis_sha256 is None or not isinstance(feature_variant_sha256, str)
+                or not re.fullmatch(r'[0-9a-f]{64}', feature_variant_sha256)):
+            raise ValueError('Invalid structural feature variant fingerprint')
 
     def config_dict(self):
         result = {'feature_width': self.feature_width, 'memory_width': self.memory_width,
@@ -86,6 +120,8 @@ class NamedAddressBinding(nn.Module):
                 'feature_layers': list(self.feature_layers), 'feature_contract': self.feature_contract}
         if self.basis_sha256 is not None:
             result.update(basis_sha256=self.basis_sha256, feature_config_sha256=self.feature_config_sha256)
+        if self.feature_variant_sha256 is not None:
+            result['feature_variant_sha256'] = self.feature_variant_sha256
         return result
 
     def validate(self, model):
@@ -101,11 +137,13 @@ class NamedAddressBinding(nn.Module):
             raise ValueError('Address basis fingerprint mismatch')
 
     def forward(self, features, model, feature_model_sha256, feature_config_sha256=None, *,
-                feature_contract='question-mean-v1', allow_legacy_unbound=False):
+                feature_contract='question-mean-v1', allow_legacy_unbound=False, feature_variant_sha256=None):
         if feature_model_sha256 != self.feature_model_sha256:
             raise ValueError('Feature encoder mismatch')
         if feature_contract != self.feature_contract:
             raise ValueError('Feature pooling contract mismatch')
+        if feature_variant_sha256 != self.feature_variant_sha256:
+            raise ValueError('Feature variant mismatch')
         if type(allow_legacy_unbound) is not bool:
             raise ValueError('Legacy permission must be boolean')
         if self.basis_sha256 is None:

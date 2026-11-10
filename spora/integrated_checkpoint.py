@@ -94,6 +94,8 @@ def _validate_binding(model, base_sha, config_sha):
         binding.validate(model)
         if binding.feature_model_sha256 != base_sha or binding.feature_config_sha256 != config_sha:
             raise ValueError('Individual binding does not match base files')
+        if binding.feature_variant_sha256 is not None:
+            raise ValueError('Integrated checkpoint does not yet verify a structural feature variant')
 
 
 def _validate_base_config(directory, hidden_width, layers):
