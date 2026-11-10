@@ -1,0 +1,60 @@
+{
+  "results": [
+    {
+      "question": "我上午先去了邮局，下午又去了菜市场。上午去了哪里？",
+      "seed": 4830,
+      "generated_tokens": 406,
+      "reasoning_closed": true,
+      "ended_with_eos": true,
+      "final_answer": "上午去了邮局。",
+      "elapsed_seconds": 110.47507490008138
+    },
+    {
+      "question": "我上午先去了邮局，下午又去了菜市场。上午去了哪里？",
+      "seed": 4831,
+      "generated_tokens": 512,
+      "reasoning_closed": false,
+      "ended_with_eos": false,
+      "final_answer": "",
+      "elapsed_seconds": 135.584929500008
+    },
+    {
+      "question": "小叶不喝咖啡，她喜欢喝温水。她喜欢什么？",
+      "seed": 4830,
+      "generated_tokens": 432,
+      "reasoning_closed": true,
+      "ended_with_eos": true,
+      "final_answer": "小叶喜欢喝温水，而咖啡是她不喜欢的饮品。因此，她可能喜欢温水，而温水可能与她的健康、舒适或她不喜欢的咖啡有关。她可能喜欢温水，因为它被认为是一种健康、宁静或温顺的饮品。",
+      "elapsed_seconds": 100.84931540000252
+    },
+    {
+      "question": "小叶不喝咖啡，她喜欢喝温水。她喜欢什么？",
+      "seed": 4831,
+      "generated_tokens": 436,
+      "reasoning_closed": true,
+      "ended_with_eos": true,
+      "final_answer": "小叶喜欢喝温水，因为她不喜欢喝咖啡。温水可能代表她喜欢凉爽的环境，如客厅、花园或自然环境。此外，她可能更喜欢安静的场所，因为咖啡可能带来噪音。她可能喜欢喝温热的茶，如绿茶或红茶，以缓解压力。因此，小叶喜欢的可能是温水、安静的环境、凉爽的气候、温热的茶类以及安静的场所。",
+      "elapsed_seconds": 103.89499439997599
+    }
+  ],
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "settings": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "max_new_tokens": 512,
+    "seeds": [
+      4830,
+      4831
+    ],
+    "system_prompt": false,
+    "reasoning_prefix": "chat template"
+  },
+  "elapsed_seconds": 492.6996959000826,
+  "peak_allocated_bytes": 3592622080,
+  "limitations": [
+    "Two previously inspected development questions and two seeds, not a benchmark.",
+    "512-token cap is below the model-card evaluation budget.",
+    "No SPORA layers or memory reader; reasoning text intentionally omitted.",
+    "FP16 CUDA results may differ from the original BF16 weights."
+  ]
+}

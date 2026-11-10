@@ -1,0 +1,38 @@
+{
+  "question": "我上午先去了邮局，下午又去了菜市场。上午去了哪里？",
+  "seed": 4830,
+  "results": {
+    "pair": {
+      "generated_tokens": 424,
+      "reasoning_closed": true,
+      "ended_with_eos": true,
+      "final_answer": "用户可能是在某个平台上，需要帮助完成某个任务，可能是学生、员工，或者是需要帮助解决问题的人。用户的身份和需求比较模糊，可能需要更多的信息来回答这个问题。",
+      "elapsed_seconds": 93.6948851000052
+    },
+    "triple": {
+      "generated_tokens": 63,
+      "reasoning_closed": false,
+      "ended_with_eos": true,
+      "final_answer": "",
+      "elapsed_seconds": 15.662602399941534
+    }
+  },
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "layer18_sha256": "f8f61e2746c9e43adb1789a682870c43f7416d5c45bb32fe4ef20a6013c28e34",
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "max_new_tokens": 512,
+  "position_extension": "zero beyond 127 up to 767; no long-position training",
+  "elapsed_seconds": 195.3735861000605,
+  "peak_allocated_bytes": 3955591680,
+  "limitations": [
+    "Only one previously inspected question and one random seed per candidate.",
+    "New position vectors are untrained; this is not a long-context model.",
+    "No SPORA memory reader; reasoning text intentionally omitted.",
+    "A 512-token cap is below the official evaluation budget."
+  ]
+}
