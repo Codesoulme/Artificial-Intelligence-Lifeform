@@ -1,0 +1,73 @@
+{
+  "status": "native_memory_plus_layer6_replacement_development_probe",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "individual_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "candidate_sha256": "fa4f76911b2302f513507d5b655c3eb064a13c9ce7ac03b265d2d5b74b6a0b15",
+  "layers": [
+    5,
+    6,
+    17
+  ],
+  "memory_reader_active": true,
+  "rows": [
+    {
+      "question": "小林现阶段爱喝哪种饮料？",
+      "intent": "current",
+      "expected_value": 6,
+      "top1_agreement": 0,
+      "tokens": 1,
+      "kl_sum": 1.3448909521102905,
+      "max_logit_abs_diff": 8.615234375,
+      "teacher_top1_token": 52510,
+      "candidate_top1_token": 30709
+    },
+    {
+      "question": "小林原先爱喝哪种饮料？",
+      "intent": "past",
+      "expected_value": 1,
+      "top1_agreement": 1,
+      "tokens": 1,
+      "kl_sum": 1.056660771369934,
+      "max_logit_abs_diff": 8.890625,
+      "teacher_top1_token": 104602,
+      "candidate_top1_token": 104602
+    },
+    {
+      "question": "小林变更以后爱喝哪种饮料？",
+      "intent": "later",
+      "expected_value": 6,
+      "top1_agreement": 1,
+      "tokens": 1,
+      "kl_sum": 1.140977382659912,
+      "max_logit_abs_diff": 6.7265625,
+      "teacher_top1_token": 52510,
+      "candidate_top1_token": 52510
+    },
+    {
+      "question": "截至目前，小林的饮品偏好是什么？",
+      "intent": "current",
+      "expected_value": 6,
+      "top1_agreement": 0,
+      "tokens": 1,
+      "kl_sum": 1.0720914602279663,
+      "max_logit_abs_diff": 8.33935546875,
+      "teacher_top1_token": 35946,
+      "candidate_top1_token": 32294
+    }
+  ],
+  "summary": {
+    "top1_agreement": 0.5,
+    "mean_token_kl_nats": 1.1536551415920258,
+    "scored_tokens": 4,
+    "max_logit_abs_diff": 8.890625
+  },
+  "elapsed_seconds": 87.01982970000245,
+  "peak_allocated_bytes": 3702458880,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Four authored temporal prompts, one fact address and one integrated state.",
+    "Compares next-token distributions, not generated answers or memory-value accuracy.",
+    "The layer-6 replacement was distilled without memory injection; this measures transfer under memory context only.",
+    "No writes, multi-layer replacement, or concurrency tested."
+  ]
+}

@@ -22,6 +22,6 @@ The 240-step hidden-fit starting candidate SHA-256 is `9b0758b6379c627036ffdc744
 
 ## Decision and limits
 
-The result demonstrates that one SPORA-native transformer block can substitute for a middle DeepSeek layer with measurable but nontrivial output deviation after less than three minutes of local distillation. Cached generation completed for two prompts, eight tokens each, using the 88.71% candidate; this is a runtime smoke test only. One short answer begins with a generic uncertainty response, so it does not validate answer quality. Multiple replaced layers, longer contexts and broader prompts remain untested. The memory sites at layers 5 and 17 remain separate from this layer-12 candidate.
+The result demonstrates that one SPORA-native transformer block can substitute for a middle DeepSeek layer with measurable but nontrivial output deviation after less than three minutes of local distillation. Cached generation completed for two prompts, eight tokens each, using the 88.71% candidate; this is a runtime smoke test only. One short answer begins with a generic uncertainty response, so it does not validate answer quality. Subsequent two-layer and active-memory probes are summarized in `reports/deepseek-spora-multilayer-and-memory-interaction-20261111.md`.
 
 The training material and held scenarios are project-authored and small. Their scores are architecture diagnostics only; they are not independent Chinese-chat acceptance results.

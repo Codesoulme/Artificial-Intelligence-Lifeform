@@ -1,0 +1,35 @@
+{
+  "status": "two_layer_spora_replacement_development_probe",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "layers": [
+    6,
+    12
+  ],
+  "conditions": {
+    "layer6": {
+      "token_top1_agreement": 0.867741935483871,
+      "mean_token_kl_nats": 0.059531263069760414,
+      "scored_next_tokens": 310
+    },
+    "layer12": {
+      "token_top1_agreement": 0.8903225806451613,
+      "mean_token_kl_nats": 0.08451340419630851,
+      "scored_next_tokens": 310
+    },
+    "layer6_plus_layer12": {
+      "token_top1_agreement": 0.9806451612903225,
+      "mean_token_kl_nats": 0.009859008173788748,
+      "scored_next_tokens": 310
+    }
+  },
+  "held_sequences": 24,
+  "elapsed_seconds": 81.69417489995249,
+  "peak_allocated_bytes": 4018784768,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Reuses a layer-12 candidate distilled on layer-12 activations; the paired layer-6 shift is not jointly distilled.",
+    "No SPORA memory reader is active in this measurement.",
+    "Twenty-four project development sequences only; not a chat capability evaluation.",
+    "Full-sequence logits only; KV-cache generation was checked separately for layer 12."
+  ]
+}

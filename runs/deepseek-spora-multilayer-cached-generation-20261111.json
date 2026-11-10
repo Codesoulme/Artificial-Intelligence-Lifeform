@@ -1,0 +1,35 @@
+{
+  "status": "two_spora_layer_cached_generation_smoke",
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "candidate_sha256": {
+    "6": "fa4f76911b2302f513507d5b655c3eb064a13c9ce7ac03b265d2d5b74b6a0b15",
+    "12": "4b4c0e370d90c5e3bcbf8d5eab11a82f111cf0193da1d02ad2b36e3f37334307"
+  },
+  "layers": [
+    6,
+    12
+  ],
+  "rows": [
+    {
+      "prompt": "你好，请用一句话介绍你自己。",
+      "generated_tokens": 8,
+      "text": "您好！我是由中国的深度求索",
+      "finite": true
+    },
+    {
+      "prompt": "冬天对着玻璃哈气，为什么玻璃会变模糊？",
+      "generated_tokens": 8,
+      "text": "嗯，冬天的时候，如果对着玻璃",
+      "finite": true
+    }
+  ],
+  "elapsed_seconds": 50.561649800045416,
+  "peak_allocated_bytes": 3797999104,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Two prompts and eight greedy tokens each; not a response-quality evaluation.",
+    "Layer-6 and layer-12 blocks were distilled separately, not jointly trained.",
+    "The SPORA memory reader is not active in this generation smoke test.",
+    "Both replacement blocks use 128-position learned absolute embeddings."
+  ]
+}

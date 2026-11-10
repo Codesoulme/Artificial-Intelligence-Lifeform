@@ -69,15 +69,15 @@ def _encode(tokenizer, messages):
 
 
 @torch.inference_mode()
-def _collect(base, tokenizer, messages):
+def _collect(base, tokenizer, messages, layer_index):
     rows = []
     for message in messages:
         ids = _encode(tokenizer, message)
         mask = torch.ones_like(ids)
         outputs = base.model(input_ids=ids, attention_mask=mask, use_cache=False,
                              output_hidden_states=True, return_dict=True)
-        source = outputs.hidden_states[LAYER][0].detach().to(device='cpu', dtype=torch.float16)
-        target = outputs.hidden_states[LAYER + 1][0].detach().to(device='cpu', dtype=torch.float16)
+        source = outputs.hidden_states[layer_index][0].detach().to(device='cpu', dtype=torch.float16)
+        target = outputs.hidden_states[layer_index + 1][0].detach().to(device='cpu', dtype=torch.float16)
         rows.append((source, target))
     return rows
 
@@ -97,17 +97,17 @@ def _measure(block, examples):
 
 
 @torch.inference_mode()
-def _full_model_agreement(base, block, tokenizer, messages):
-    layer = base.model.layers[LAYER]
+def _full_model_agreement(base, block, tokenizer, messages, layer_index):
+    layer = base.model.layers[layer_index]
     baseline_top1, candidate_top1, divergences = [], [], []
     try:
         for message in messages:
             ids = _encode(tokenizer, message)
             mask = torch.ones_like(ids)
-            base.model.layers[LAYER] = layer
+            base.model.layers[layer_index] = layer
             teacher_logits = base(input_ids=ids, attention_mask=mask, use_cache=False,
                                   return_dict=True).logits[:, :-1].float()
-            base.model.layers[LAYER] = block
+            base.model.layers[layer_index] = block
             student_logits = base(input_ids=ids, attention_mask=mask, use_cache=False,
                                   return_dict=True).logits[:, :-1].float()
             p = teacher_logits.softmax(-1)
@@ -117,7 +117,7 @@ def _full_model_agreement(base, block, tokenizer, messages):
             baseline_top1.extend(teacher_logits.argmax(-1).flatten().tolist())
             candidate_top1.extend(student_logits.argmax(-1).flatten().tolist())
     finally:
-        base.model.layers[LAYER] = layer
+        base.model.layers[layer_index] = layer
     return {
         'token_top1_agreement': sum(a == b for a, b in zip(baseline_top1, candidate_top1)) / len(baseline_top1),
         'mean_token_kl_nats': sum(divergences) / len(divergences),
@@ -126,8 +126,15 @@ def _full_model_agreement(base, block, tokenizer, messages):
     }
 
 
-def run(logit_distill=False):
-    output_dir = LOGIT_OUTPUT if logit_distill else OUTPUT
+def run(logit_distill=False, layer_index=LAYER):
+    if type(layer_index) is not int or layer_index < 0:
+        raise ValueError('Layer index must be a nonnegative integer')
+    if logit_distill and layer_index != LAYER:
+        raise ValueError('Logit warm-start experiment is currently bound to layer 12')
+    if layer_index == LAYER:
+        output_dir = LOGIT_OUTPUT if logit_distill else OUTPUT
+    else:
+        output_dir = ROOT / f'runs/deepseek-spora-block-distill-layer{layer_index}-20261111'
     if output_dir.exists():
         raise FileExistsError(output_dir)
     if sha(MODEL / 'model.safetensors') != WEIGHT_SHA:
@@ -144,18 +151,18 @@ def run(logit_distill=False):
     base.requires_grad_(False)
     config = base.config
     if (config.model_type != 'qwen2' or config.hidden_size != 1536 or config.num_hidden_layers != 28
-            or LAYER >= config.num_hidden_layers):
+            or layer_index >= config.num_hidden_layers):
         raise ValueError('Unexpected DeepSeek/Qwen architecture')
     train_messages = _training_texts()
     held_messages = _held_messages()
-    train_features = _collect(base, tokenizer, train_messages)
-    held_features = _collect(base, tokenizer, held_messages)
+    train_features = _collect(base, tokenizer, train_messages, layer_index)
+    held_features = _collect(base, tokenizer, held_messages, layer_index)
     replacement = SPORALayerReplacement(config.hidden_size, config.num_attention_heads,
-                                        max_length=MAX_LENGTH, layer_idx=LAYER).to('cuda').train()
+                                        max_length=MAX_LENGTH, layer_idx=layer_index).to('cuda').train()
     if logit_distill:
         warm = torch.load(WARMSTART, map_location='cpu', weights_only=True)
         if (warm.get('metadata', {}).get('base_weight_sha256') != WEIGHT_SHA
-                or warm.get('metadata', {}).get('layer') != LAYER
+                or warm.get('metadata', {}).get('layer') != layer_index
                 or warm.get('metadata', {}).get('format') != 'spora-qwen-layer-replacement-candidate-v1'):
             raise ValueError('Warm-start candidate provenance mismatch')
         replacement.load_state_dict(warm['state'], strict=True)
@@ -180,16 +187,16 @@ def run(logit_distill=False):
         if logit_distill:
             ids = _encode(tokenizer, train_messages[row_index])
             mask = torch.ones_like(ids)
-            layer = base.model.layers[LAYER]
+            layer = base.model.layers[layer_index]
             with torch.no_grad():
                 teacher_logits = base(input_ids=ids, attention_mask=mask, use_cache=False,
                                       return_dict=True).logits[:, :-1].float()
             try:
-                base.model.layers[LAYER] = replacement
+                base.model.layers[layer_index] = replacement
                 student_logits = base(input_ids=ids, attention_mask=mask, use_cache=False,
                                       return_dict=True).logits[:, :-1].float()
             finally:
-                base.model.layers[LAYER] = layer
+                base.model.layers[layer_index] = layer
             temperature = 2.0
             teacher_log_probs = (teacher_logits / temperature).log_softmax(-1)
             teacher_probs = teacher_log_probs.exp()
@@ -215,7 +222,7 @@ def run(logit_distill=False):
             updates.append(row)
     replacement.eval()
     held_hidden = _measure(replacement, held_features)
-    full_agreement = _full_model_agreement(base, replacement, tokenizer, held_messages)
+    full_agreement = _full_model_agreement(base, replacement, tokenizer, held_messages, layer_index)
     state = {name: tensor.detach().cpu() for name, tensor in replacement.state_dict().items()}
     checkpoint = output_dir / 'replacement.pt'
     output_dir.mkdir(parents=False, exist_ok=False)
@@ -225,7 +232,7 @@ def run(logit_distill=False):
         'base_config_sha256': _hash(MODEL / 'config.json'),
         'train_source_sha256': _hash(TRAIN_SOURCE),
         'held_source_sha256': _hash(HELD_SOURCE),
-        'layer': LAYER,
+        'layer': layer_index,
         'width': config.hidden_size,
         'heads': config.num_attention_heads,
         'max_length': MAX_LENGTH,
@@ -265,4 +272,6 @@ def run(logit_distill=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--logit-distill', action='store_true')
-    run(logit_distill=parser.parse_args().logit_distill)
+    parser.add_argument('--layer-index', type=int, default=LAYER)
+    args = parser.parse_args()
+    run(logit_distill=args.logit_distill, layer_index=args.layer_index)
