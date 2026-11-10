@@ -93,6 +93,42 @@ class IntegratedOpenBaseTests(unittest.TestCase):
         self.assertTrue(all(p.grad is not None for p in reader.parameters()))
         self.assertTrue(all(t.grad is None for t in memory.current))
 
+    def test_per_request_read_mask_preserves_unselected_output(self):
+        model = IntegratedOpenBase(Base(), make_reader(), (0, 2))
+        x = torch.ones(2, 1, 3)
+        memory = make_state(1.)
+        plain = model(x)
+        selected = model(x, memory_state=memory, current_only=True)
+        mask = torch.tensor([True, False])
+        for method in (model.forward, model.generate):
+            result = method(x, memory_state=memory, memory_read_mask=mask, current_only=True)
+            self.assertTrue(torch.equal(result[0], selected[0]))
+            self.assertTrue(torch.equal(result[1], plain[1]))
+            self.assertFalse(torch.equal(result[0], plain[0]))
+        broadcast = model(x, memory_state=memory, memory_read_mask=torch.tensor([False]), current_only=True)
+        self.assertTrue(torch.equal(broadcast, plain))
+
+    def test_read_mask_rejects_invalid_or_mismatched_batch(self):
+        model = IntegratedOpenBase(Base(), make_reader(), (0, 2))
+        x = torch.ones(2, 1, 3)
+        plain = model(x)
+        with self.assertRaisesRegex(ValueError, 'require a memory state'):
+            model(x, memory_read_mask=torch.tensor([True]))
+        for bad in (torch.tensor([1, 0]), torch.empty(0, dtype=torch.bool), torch.ones(2, 1, dtype=torch.bool)):
+            with self.subTest(mask=bad), self.assertRaisesRegex(ValueError, 'boolean vector'):
+                model(x, memory_state=make_state(1), memory_read_mask=bad)
+        with self.assertRaisesRegex(ValueError, 'decoder batch'):
+            model(x, memory_state=make_state(1), memory_read_mask=torch.tensor([True, False, True]))
+        self.assertTrue(torch.equal(model(x), plain))
+
+    def test_read_mask_is_snapshotted_for_call(self):
+        model = IntegratedOpenBase(Base(), make_reader(), (0, 2))
+        mask = torch.tensor([True, False])
+        with model._snapshot(make_state(1), None, True, mask):
+            mask.fill_(False)
+            self.assertEqual(model._memory_context.get()[2].tolist(), [True, False])
+        self.assertIsNone(model._memory_context.get())
+
 
 if __name__ == '__main__':
     unittest.main()

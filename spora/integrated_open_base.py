@@ -44,9 +44,15 @@ class _MemoryDecoderLayer(nn.Module):
         active = self._memory_context.get()
         if active is None:
             return output
-        matrices, addresses = active
+        matrices, addresses, read_mask = active
         address = None if addresses is None else addresses[self.site]
-        return self._reader(output, matrices[self.site], self.site, address)
+        if read_mask is not None and read_mask.shape[0] not in (1, output.shape[0]):
+            raise ValueError('Memory read mask must match the decoder batch')
+        injected = self._reader(output, matrices[self.site], self.site, address)
+        if read_mask is None:
+            return injected
+        mask = read_mask.to(device=output.device).reshape(-1, 1, 1)
+        return torch.where(mask, injected, output)
 
 
 class IntegratedOpenBase(nn.Module):
@@ -55,6 +61,10 @@ class IntegratedOpenBase(nn.Module):
     Memory is optional so that ordinary base forwards remain possible. The
     reader is applied only when ``memory_state`` is supplied to ``forward`` or
     ``generate``. A model cache must not be reused across memory changes.
+    ``memory_read_mask`` optionally selects which batch rows receive the read;
+    its boolean vector must have length one or match the decoder batch. The
+    caller decides the mask and must account for any generation batch expansion.
+    Masked rows still pass through the reader before their residual is discarded.
     """
 
     def __init__(self, base, reader, layer_indices):
@@ -79,43 +89,47 @@ class IntegratedOpenBase(nn.Module):
             layers[index] = _MemoryDecoderLayer(layers[index], reader, site, self._memory_context)
 
     @contextmanager
-    def _snapshot(self, state, addresses, current_only):
+    def _snapshot(self, state, addresses, current_only, read_mask):
         if type(current_only) is not bool:
             raise ValueError('current_only must be a boolean')
         if self._memory_context.get() is not None:
             raise ValueError('Nested memory calls are not supported')
         if state is None:
-            if addresses is not None:
-                raise ValueError('Addresses require a memory state')
+            if addresses is not None or read_mask is not None:
+                raise ValueError('Addresses and read mask require a memory state')
             yield
             return
         if addresses is not None and (not isinstance(addresses, (tuple, list)) or len(addresses) != 2
                                       or any(not isinstance(address, torch.Tensor) for address in addresses)):
             raise ValueError('Addresses must contain one tensor per site')
+        if read_mask is not None and (not isinstance(read_mask, torch.Tensor) or read_mask.dtype != torch.bool
+                                      or read_mask.ndim != 1 or not read_mask.numel()):
+            raise ValueError('Memory read mask must be a nonempty boolean vector')
         with torch.no_grad():
             matrices = tuple(tuple(t.detach().clone() for t in
                                    [state.current[site]] + ([] if current_only else
                                     [history_site(page, site)[0] for page in state.pages]))
                              for site in range(2))
             fixed_addresses = None if addresses is None else tuple(address.detach().clone() for address in addresses)
-        token = self._memory_context.set((matrices, fixed_addresses))
+            fixed_mask = None if read_mask is None else read_mask.detach().clone()
+        token = self._memory_context.set((matrices, fixed_addresses, fixed_mask))
         try:
             yield
         finally:
             self._memory_context.reset(token)
 
-    def forward(self, *args, memory_state=None, memory_addresses=None, current_only=False, **kwargs):
+    def forward(self, *args, memory_state=None, memory_addresses=None, memory_read_mask=None, current_only=False, **kwargs):
         if memory_state is not None and len(args) > 1:
             raise ValueError('Memory calls accept at most one positional base argument')
         if memory_state is not None and kwargs.get('past_key_values') is not None:
             raise ValueError('External key-value caches are not supported with memory state')
-        with self._snapshot(memory_state, memory_addresses, current_only):
+        with self._snapshot(memory_state, memory_addresses, current_only, memory_read_mask):
             return self.base(*args, **kwargs)
 
-    def generate(self, *args, memory_state=None, memory_addresses=None, current_only=False, **kwargs):
+    def generate(self, *args, memory_state=None, memory_addresses=None, memory_read_mask=None, current_only=False, **kwargs):
         if memory_state is not None and len(args) > 1:
             raise ValueError('Memory calls accept at most one positional base argument')
         if memory_state is not None and kwargs.get('past_key_values') is not None:
             raise ValueError('External key-value caches are not supported with memory state')
-        with self._snapshot(memory_state, memory_addresses, current_only):
+        with self._snapshot(memory_state, memory_addresses, current_only, memory_read_mask):
             return self.base.generate(*args, **kwargs)
