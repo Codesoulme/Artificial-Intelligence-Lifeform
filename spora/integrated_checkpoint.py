@@ -14,9 +14,51 @@ from .integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, S
 from .language_training import atomic_save
 from .named_address import feature_files_sha256
 from .state_codec import flatten, restore
+from .internal_memory import observe_sourced as observe_spora_sourced
 
 FORMAT = 'spora-integrated-open-base-v2'
 LEGACY_FORMAT = 'spora-integrated-open-base-v1'
+
+
+class IntegratedSPORARuntime:
+    """Own one decoder, one SPORA individual and its durable evolving state."""
+
+    def __init__(self, decoder, organism, state, model_dir, checkpoint_path=None):
+        if not isinstance(decoder, IntegratedOpenBase):
+            raise ValueError('Expected an integrated open-base decoder')
+        if (not hasattr(organism, 'write_control') or state.internal is None
+                or type(decoder.reader) is not NativeSPORAMemoryReader):
+            raise ValueError('Runtime requires native SPORA sites and controlled individual memory')
+        self.decoder = decoder
+        self.organism = organism
+        self.state = state
+        self.model_dir = Path(model_dir)
+        self.checkpoint_path = None if checkpoint_path is None else Path(checkpoint_path)
+
+    def generate(self, *args, **kwargs):
+        if 'memory_state' in kwargs:
+            raise ValueError('Runtime owns the memory state')
+        return self.decoder.generate(*args, memory_state=self.state, **kwargs)
+
+    def observe_sourced(self, key, value, source, quality, valid_at=None, *, checkpoint_path=None):
+        """Apply one guarded SPORA write; publish the new state only after save."""
+        candidate, decision = observe_spora_sourced(
+            self.organism, self.state, key, value, source, quality, valid_at)
+        destination = self.checkpoint_path if checkpoint_path is None else Path(checkpoint_path)
+        if destination is not None:
+            save_integrated(destination, self.organism, candidate, self.decoder.reader,
+                            self.model_dir, self.decoder.layer_indices)
+        self.state = candidate
+        return decision
+
+    def save(self, path=None):
+        destination = self.checkpoint_path if path is None else Path(path)
+        if destination is None:
+            raise ValueError('A checkpoint destination is required')
+        save_integrated(destination, self.organism, self.state, self.decoder.reader,
+                        self.model_dir, self.decoder.layer_indices)
+        self.checkpoint_path = destination
+        return destination
 
 
 def _file_sha256(path):
@@ -150,3 +192,13 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         pass
     integrated = IntegratedOpenBase(base, reader, config['layers'])
     return integrated, organism, state
+
+
+def load_integrated_runtime(path, base, model_dir, *, individual_device='cpu'):
+    decoder, organism, state = load_integrated(path, base, model_dir,
+                                                individual_device=individual_device)
+    if type(decoder.reader) is not NativeSPORAMemoryReader:
+        raise ValueError('Integrated runtime requires native SPORA DeltaMemorySite reader')
+    if not hasattr(organism, 'write_control') or state.internal is None:
+        raise ValueError('Integrated checkpoint does not contain guarded write controls')
+    return IntegratedSPORARuntime(decoder, organism, state, model_dir, path)

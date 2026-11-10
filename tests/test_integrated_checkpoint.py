@@ -7,8 +7,10 @@ from types import SimpleNamespace
 import torch
 
 from spora.growing import new_state
-from spora.integrated_checkpoint import _digest, load_integrated, save_integrated
+from spora.integrated_checkpoint import (_digest, IntegratedSPORARuntime, load_integrated,
+                                         load_integrated_runtime, save_integrated)
 from spora.integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
+from spora.internal_memory import WriteControl, attach, read_provenance
 from spora.language_training import frozen_digest
 from spora.named_address import NamedAddressBinding, address_basis_sha256, feature_files_sha256
 from spora.temporal import TemporalConfig, TemporalSPORA
@@ -90,6 +92,56 @@ class IntegratedCheckpointTests(unittest.TestCase):
         torch.save(payload, self.path)
         model, _, _ = load_integrated(self.path, self.base(), self.root)
         self.assertIs(type(model.reader), ScaledOpenBaseMemory)
+
+    def test_integrated_runtime_writes_corrects_and_recovers_atomically(self):
+        controller = WriteControl()
+        with torch.no_grad():
+            for parameter in controller.parameters():
+                parameter.zero_()
+            controller.network[-1].bias[0] = 20
+        self.state = attach(self.organism, self.state, controller)
+        native = NativeSPORAMemoryReader(3, 64, 0.5)
+        native.initialize_from_legacy(self.reader)
+        save_integrated(self.path, self.organism, self.state, native, self.root, (0, 2))
+        runtime = load_integrated_runtime(self.path, self.base(), self.root)
+        self.assertIsInstance(runtime, IntegratedSPORARuntime)
+        initial_digest = frozen_digest(runtime.organism, runtime.state)
+        with self.assertRaises(OSError):
+            runtime.observe_sourced(4, 2, 'direct', 1.0, checkpoint_path=self.root / 'missing' / 'state.pt')
+        self.assertEqual(frozen_digest(runtime.organism, runtime.state), initial_digest)
+        self.assertEqual(runtime.state.cursor, 0)
+
+        first = runtime.observe_sourced(4, 2, 'direct', 1.0)
+        self.assertTrue(first['current_write'])
+        self.assertEqual(runtime.state.cursor, 1)
+        key = torch.tensor([4])
+        modes = torch.ones_like(key)
+        _, old_bound = runtime.organism.representation(key, modes, torch.tensor([0]))
+        native_site = runtime.organism.memories[-1]
+        old_address = runtime.organism.memory_address(native_site, old_bound, key, modes)
+        old_read_before_correction = native_site.retrieve([runtime.state.pages[0][-1][0]], old_address).clone()
+        with torch.no_grad():
+            for parameter in runtime.organism.write_control.parameters():
+                parameter.zero_()
+            runtime.organism.write_control.network[-1].bias[1] = 20
+        corrected = runtime.observe_sourced(4, 5, 'direct', 1.0)
+        self.assertTrue(corrected['current_write'])
+        self.assertEqual(runtime.state.cursor, 2)
+
+        recovered = load_integrated_runtime(self.path, self.base(), self.root)
+        self.assertEqual(recovered.state.cursor, 2)
+        key = torch.tensor([4])
+        modes = torch.ones_like(key)
+        for event_index, expected_action in ((0, 'new'), (1, 'correct')):
+            self.assertEqual(read_provenance(recovered.organism, recovered.state, 4, event_index)['action'],
+                             expected_action)
+            event_time = torch.tensor([event_index])
+            _, bound = recovered.organism.representation(key, modes, event_time)
+            site = recovered.organism.memories[-1]
+            address = recovered.organism.memory_address(site, bound, key, modes)
+            retrieved = site.retrieve([recovered.state.pages[0][-1][0]], address)
+            self.assertTrue(torch.isfinite(retrieved).all())
+        self.assertFalse(torch.allclose(retrieved, old_read_before_correction))
 
     def test_wrong_base_or_configuration_is_rejected(self):
         self.save()

@@ -10,6 +10,15 @@ Can the open-base memory reader at DeepSeek decoder layers be replaced by SPORA'
 
 This replaces the memory read unit, not DeepSeek's Transformer blocks, attention, tokenizer, or base weights. Memory writes and temporal routing are still performed by the existing SPORA state/controller path and the separate experimental router.
 
+The next integration slice adds `IntegratedSPORARuntime`, which owns the
+decoder, controlled SPORA individual and evolving state. A sourced observation
+is proposed through SPORA's existing controller and native `TemporalSite`
+(a `DeltaMemorySite` subclass). If a checkpoint path is configured, the
+candidate state is atomically saved before it becomes the runtime's live state;
+a failed save leaves the prior state active. Runtime reload restores the native
+reader, write controller, provenance and memory pages from one integrated
+checkpoint.
+
 ## Evidence
 
 | Measure | Legacy reader | Native SPORA site |
@@ -22,7 +31,9 @@ This replaces the memory read unit, not DeepSeek's Transformer blocks, attention
 
 The run-time difference is not treated as a speedup: it is one alternating experiment per implementation, and GPU contention and thermal conditions were not controlled. Both runs use one name, one memory address, two drink values, 12 synthetic router examples and 9 authored holdout prompts. The one wrong answer is a base-model refusal to “截至目前，小林的饮品偏好是什么？”, even though the router chose the correct current-memory page.
 
-Unit tests verify one-page and multi-page output equivalence after weight mapping, checkpoint save/load, v1 checkpoint compatibility, temporal-slot integration, and the existing read-mask comparison. The focused suite passed 23 tests.
+Unit tests verify one-page and multi-page output equivalence after weight mapping, checkpoint save/load, v1 checkpoint compatibility, temporal-slot integration, write-failure rollback, new-fact/correction provenance, and reload of both events. The focused suite passed 24 tests after adding the runtime transaction test.
+
+The correction test also surfaced a remaining memory limitation: two event-time addresses written into the same RLS history page can overlap, so a later correction can shift the earlier address's retrieved vector. Provenance retains the distinct `new` and `correct` labels, but this test does not establish interference-free old-value recall. Page-boundary/capacity and address-separation effects need a dedicated evaluation before claiming robust correction behavior.
 
 The full 751-test suite exposed unrelated local-state failures: P114 disk-story tests hit their memory guard with about 2.46 GB of physical memory available, and a P28 test could not find its required isolated PyArrow 19.0.1 vendor. It also caught a stale read-mask benchmark unpacking the pre-slot context tuple; that benchmark was updated and its test now passes.
 
