@@ -1,0 +1,168 @@
+{
+  "status": "post_memory_layer18_answer_distillation",
+  "metadata": {
+    "format": "spora-qwen-layer-replacement-candidate-v1",
+    "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "layer": 18,
+    "width": 1536,
+    "heads": 12,
+    "max_length": 128,
+    "seed": 71263,
+    "train_steps": 120,
+    "objective": "native_memory_answer_cross_entropy_after_layer17"
+  },
+  "source_integrated_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "upstream_pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "start_layer18_sha256": "3c888a5075123549add4f270983155014c3a9591a655fe7dfbef8193fccc0c2d",
+  "candidate_sha256": "77943052a94b9da54ac7e8addb7ff114359724eeb777b1835818cd78cb6de67a",
+  "training_queries": 18,
+  "held_queries": 6,
+  "held_before": {
+    "correct": 0,
+    "total": 6,
+    "accuracy": 0.0,
+    "rows": [
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "最近小梅最喜欢什么饮品？",
+        "expected": "豆浆",
+        "answer": "嗯，我最喜欢喝的饮品是什么呢",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "小梅较早的饮品偏好是什么？",
+        "expected": "咖啡",
+        "answer": "每个消费者都有自己的偏好，每个人的独特",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "现在记录里小梅喜欢喝哪种饮料？",
+        "expected": "豆浆",
+        "answer": "我是一个一共有1000",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "最近阿远最喜欢什么饮品？",
+        "expected": "水",
+        "answer": "阿远喜欢的饮品是哪几种",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "阿远较早的饮品偏好是什么？",
+        "expected": "果汁",
+        "answer": "用户最近的偏好是未知的，",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "现在记录里阿远喜欢喝哪种饮料？",
+        "expected": "水",
+        "answer": "现在记录里阿远喜欢哪种饮料",
+        "correct": false
+      }
+    ]
+  },
+  "held_after": {
+    "correct": 1,
+    "total": 6,
+    "accuracy": 0.16666666666666666,
+    "rows": [
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "最近小梅最喜欢什么饮品？",
+        "expected": "豆浆",
+        "answer": "我们是通过网络电话与小梅",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "小梅较早的饮品偏好是什么？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "现在记录里小梅喜欢喝哪种饮料？",
+        "expected": "豆浆",
+        "answer": "很乐口味",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "最近阿远最喜欢什么饮品？",
+        "expected": "水",
+        "answer": "## 悄常饮品",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "阿远较早的饮品偏好是什么？",
+        "expected": "果汁",
+        "answer": "深度-first  -  -  -",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "现在记录里阿远喜欢喝哪种饮料？",
+        "expected": "水",
+        "answer": "您好！我无法确定现在记录里",
+        "correct": false
+      }
+    ]
+  },
+  "loss_trace": [
+    {
+      "step": 1,
+      "answer_cross_entropy": 3.826906204223633
+    },
+    {
+      "step": 10,
+      "answer_cross_entropy": 1.6720807552337646
+    },
+    {
+      "step": 20,
+      "answer_cross_entropy": 6.656109809875488
+    },
+    {
+      "step": 40,
+      "answer_cross_entropy": 1.0813684463500977
+    },
+    {
+      "step": 80,
+      "answer_cross_entropy": 0.10257435590028763
+    },
+    {
+      "step": 120,
+      "answer_cross_entropy": 0.011369798332452774
+    }
+  ],
+  "elapsed_seconds": 278.5569305000827,
+  "peak_allocated_bytes": 4586324992,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Six training entities and two held entities in one finite beverage domain.",
+    "Only layer 18 is tuned; layers 6 and 12 are fixed answer-distilled blocks.",
+    "Current memory reader and write controller remain frozen.",
+    "Exact-word scoring and short answers do not establish open-chat behavior."
+  ]
+}

@@ -41,9 +41,11 @@ class SPORALayerReplacement(nn.Module):
             raise ValueError('Sequence length outside replacement position range')
         if position_ids is None:
             position_ids = torch.arange(length, device=hidden_states.device).expand(batch, -1)
-        if (position_ids.shape != (batch, length) or position_ids.dtype != torch.long
+        if (position_ids.ndim != 2 or position_ids.shape[0] not in (1, batch)
+                or position_ids.shape[1] != length or position_ids.dtype != torch.long
                 or bool(((position_ids < 0) | (position_ids >= self.max_length)).any())):
             raise ValueError('Invalid absolute position IDs')
+        position_ids = position_ids.expand(batch, -1)
         hidden_dtype = hidden_states.dtype
         positions = self.position(position_ids.to(self.position.weight.device))
         values = hidden_states.to(device=positions.device, dtype=positions.dtype) + positions
@@ -63,9 +65,11 @@ class SPORALayerReplacement(nn.Module):
         if position_ids is None:
             previous = int(past_key_values.get_seq_length(self.layer_idx))
             position_ids = torch.arange(previous, previous + length, device=hidden_states.device).expand(batch, -1)
-        if (position_ids.shape != (batch, length) or position_ids.dtype != torch.long
+        if (position_ids.ndim != 2 or position_ids.shape[0] not in (1, batch)
+                or position_ids.shape[1] != length or position_ids.dtype != torch.long
                 or bool(((position_ids < 0) | (position_ids >= self.max_length)).any())):
             raise ValueError('Invalid absolute position IDs')
+        position_ids = position_ids.expand(batch, -1)
         past_length = int(past_key_values.get_seq_length(self.layer_idx))
         if past_length and length != 1:
             raise ValueError('Cached continuation currently accepts exactly one new token')
@@ -93,3 +97,35 @@ class SPORALayerReplacement(nn.Module):
         values = values + self.block.out(attended)
         values = values + self.block.ff(self.block.norm2(values))
         return values.to(device=hidden_states.device, dtype=hidden_states.dtype)
+
+
+class SPORALayerBlend(nn.Module):
+    """Full-sequence progressive graft of a SPORA block into a teacher layer.
+
+    The scalar blend is an explicit structural interpolation control. KV cache
+    is rejected because both branches would otherwise mutate the same cache.
+    """
+
+    def __init__(self, teacher_layer, spora_layer, strength):
+        super().__init__()
+        if not isinstance(teacher_layer, nn.Module) or not isinstance(spora_layer, SPORALayerReplacement):
+            raise ValueError('Expected a teacher decoder layer and SPORA replacement')
+        if (isinstance(strength, bool) or not isinstance(strength, (float, int))
+                or not 0.0 <= float(strength) <= 1.0):
+            raise ValueError('Blend strength must be in [0, 1]')
+        self.teacher_layer = teacher_layer
+        self.spora_layer = spora_layer
+        self.strength = float(strength)
+        self.attention_type = getattr(teacher_layer, 'attention_type', 'full_attention')
+
+    def forward(self, hidden_states, *args, **kwargs):
+        if kwargs.get('use_cache', False) or kwargs.get('past_key_values') is not None:
+            raise ValueError('Blended SPORA layers require cache-disabled full-sequence evaluation')
+        teacher = self.teacher_layer(hidden_states, *args, **kwargs)
+        if not isinstance(teacher, torch.Tensor):
+            raise ValueError('Teacher decoder layer must return a tensor')
+        replacement_kwargs = dict(kwargs)
+        replacement_kwargs['use_cache'] = False
+        replacement_kwargs['past_key_values'] = None
+        spora = self.spora_layer(hidden_states, *args, **replacement_kwargs)
+        return teacher + self.strength * (spora.to(device=teacher.device, dtype=teacher.dtype) - teacher)

@@ -1,0 +1,191 @@
+{
+  "status": "post_memory_site_layer18_spora_distillation",
+  "metadata": {
+    "format": "spora-qwen-layer-replacement-candidate-v1",
+    "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "layer": 18,
+    "width": 1536,
+    "heads": 12,
+    "max_length": 128,
+    "seed": 63109,
+    "train_steps": 320,
+    "objective": "hidden_distillation_after_native_memory_and_spora_pair"
+  },
+  "base_weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_integrated_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "upstream_pair_sha256": {
+    "6": "e721287dba0b5896bd38ba8437a5dda807928d8cfb91d4356d809d1a16ebae76",
+    "12": "4f9e366216aaa72ce8a4fcc826cf3a70ff9819988d3dc7b822c58cfd1be92af6"
+  },
+  "train_entities": [
+    "小林",
+    "阿宁",
+    "小雨",
+    "阿哲",
+    "小岚",
+    "阿明"
+  ],
+  "held_entities": [
+    "小梅",
+    "阿远"
+  ],
+  "training_sequences": 18,
+  "held_sequences": 6,
+  "held_base_pair": {
+    "correct": 5,
+    "total": 6,
+    "accuracy": 0.8333333333333334,
+    "rows": [
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "最近小梅最喜欢什么饮品？",
+        "expected": "豆浆",
+        "answer": "</think>\n\n最近小梅最喜欢喝什么",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "小梅较早的饮品偏好是什么？",
+        "expected": "咖啡",
+        "answer": "咖啡",
+        "correct": true
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "现在记录里小梅喜欢喝哪种饮料？",
+        "expected": "豆浆",
+        "answer": "豆浆",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "最近阿远最喜欢什么饮品？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "阿远较早的饮品偏好是什么？",
+        "expected": "果汁",
+        "answer": "果汁",
+        "correct": true
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "现在记录里阿远喜欢喝哪种饮料？",
+        "expected": "水",
+        "answer": "水",
+        "correct": true
+      }
+    ]
+  },
+  "held_with_layer18": {
+    "correct": 0,
+    "total": 6,
+    "accuracy": 0.0,
+    "rows": [
+      {
+        "name": "小梅",
+        "intent": "current",
+        "question": "最近小梅最喜欢什么饮品？",
+        "expected": "豆浆",
+        "answer": "嗯，我最喜欢喝的饮品是什么呢",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "past",
+        "question": "小梅较早的饮品偏好是什么？",
+        "expected": "咖啡",
+        "answer": "每个消费者都有自己的偏好，每个人的独特",
+        "correct": false
+      },
+      {
+        "name": "小梅",
+        "intent": "later",
+        "question": "现在记录里小梅喜欢喝哪种饮料？",
+        "expected": "豆浆",
+        "answer": "我是一个一共有1000",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "current",
+        "question": "最近阿远最喜欢什么饮品？",
+        "expected": "水",
+        "answer": "阿远喜欢的饮品是哪几种",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "past",
+        "question": "阿远较早的饮品偏好是什么？",
+        "expected": "果汁",
+        "answer": "用户最近的偏好是未知的，",
+        "correct": false
+      },
+      {
+        "name": "阿远",
+        "intent": "later",
+        "question": "现在记录里阿远喜欢喝哪种饮料？",
+        "expected": "水",
+        "answer": "现在记录里阿远喜欢哪种饮料",
+        "correct": false
+      }
+    ]
+  },
+  "loss_trace": [
+    {
+      "step": 1,
+      "loss": 0.007095846813172102,
+      "relative_mse": 0.000526425545103848,
+      "mean_cosine": 0.9343057870864868
+    },
+    {
+      "step": 40,
+      "loss": 0.0037458264268934727,
+      "relative_mse": 0.0003428123309276998,
+      "mean_cosine": 0.9659698605537415
+    },
+    {
+      "step": 80,
+      "loss": 0.001752460841089487,
+      "relative_mse": 0.00016636328655295074,
+      "mean_cosine": 0.9841390252113342
+    },
+    {
+      "step": 160,
+      "loss": 0.0007243301952257752,
+      "relative_mse": 7.540843944298103e-05,
+      "mean_cosine": 0.9935107827186584
+    },
+    {
+      "step": 240,
+      "loss": 0.0005736433668062091,
+      "relative_mse": 5.982744551147334e-05,
+      "mean_cosine": 0.9948618412017822
+    },
+    {
+      "step": 320,
+      "loss": 0.0005024988786317408,
+      "relative_mse": 4.7035970055731013e-05,
+      "mean_cosine": 0.9954453706741333
+    }
+  ],
+  "candidate_sha256": "3c888a5075123549add4f270983155014c3a9591a655fe7dfbef8193fccc0c2d",
+  "elapsed_seconds": 180.0316165999975,
+  "peak_allocated_bytes": 4354322944,
+  "device": "NVIDIA GeForce GTX 1060 with Max-Q Design",
+  "limitations": [
+    "Layer 18 is trained to match local activations under the paired blocks and active memory, not directly on answer loss.",
+    "Six training entities and two held entities, one finite drink-memory domain.",
+    "This is a third-layer post-memory path probe, not a full backbone conversion."
+  ]
+}

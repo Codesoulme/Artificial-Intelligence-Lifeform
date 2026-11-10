@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from spora.structure_transfer import SPORALayerReplacement
+from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
 
 
 class StructureTransferTests(unittest.TestCase):
@@ -35,6 +35,16 @@ class StructureTransferTests(unittest.TestCase):
         self.assertEqual(first.shape, values.shape)
         torch.testing.assert_close(first[:, :4], second[:, :4])
         self.assertFalse(torch.equal(first[:, 4], second[:, 4]))
+
+    def test_singleton_position_ids_broadcast_across_batch(self):
+        torch.manual_seed(12)
+        layer = SPORALayerReplacement(16, 4, max_length=8).eval()
+        values = torch.randn(3, 5, 16)
+        positions = torch.arange(5).reshape(1, -1)
+        with torch.no_grad():
+            broadcast = layer(values, position_ids=positions)
+            explicit = layer(values, position_ids=positions.expand(3, -1))
+        torch.testing.assert_close(broadcast, explicit)
 
     def test_rejects_cache_and_invalid_positions(self):
         layer = SPORALayerReplacement(16, 4, max_length=8)
@@ -69,6 +79,20 @@ class StructureTransferTests(unittest.TestCase):
                                          use_cache=True))
         cached = torch.cat(incremental, dim=1)
         torch.testing.assert_close(cached, full, atol=2e-6, rtol=2e-6)
+
+    def test_blend_endpoints_and_cache_guard(self):
+        torch.manual_seed(42)
+        teacher = torch.nn.Linear(16, 16, bias=False)
+        replacement = SPORALayerReplacement(16, 4, max_length=8, layer_idx=0)
+        values = torch.randn(1, 3, 16)
+        reference = teacher(values)
+        full = replacement(values)
+        zero = SPORALayerBlend(teacher, replacement, 0.0)
+        one = SPORALayerBlend(teacher, replacement, 1.0)
+        torch.testing.assert_close(zero(values), reference)
+        torch.testing.assert_close(one(values), full)
+        with self.assertRaisesRegex(ValueError, 'cache-disabled'):
+            one(values, use_cache=True)
 
 
 if __name__ == '__main__':
