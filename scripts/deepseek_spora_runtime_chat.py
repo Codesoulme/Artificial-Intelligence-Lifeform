@@ -46,6 +46,7 @@ CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/indi
 TEMPORAL = ROOT/'runs/deepseek-spora-temporal-gate-train-20261111/temporal.pt'
 READ_INTENT_RECOVERY_FLOOR = 2.0
 INTENT = ROOT/'runs/deepseek-spora-read-intent-gate-v4-20261111'
+MEMORY_DOMAIN_ANCHORS = ('饮品', '饮料', '喝', '偏好', '饮用')
 
 
 class SporaChat:
@@ -101,6 +102,9 @@ class SporaChat:
         result = {'question': question, 'accepted': False, 'answer': None,
                   'temporal_intent': temporal_intent, 'intent_logit': intent_logit,
                   'entity_score': entity_score}
+        if not any(anchor in question for anchor in MEMORY_DOMAIN_ANCHORS):
+            result['reason'] = 'unsupported_memory_predicate'
+            return result
         intent_confident = intent_logit >= self.intent_data['threshold']
         intent_recovered = (intent_logit >= READ_INTENT_RECOVERY_FLOOR
                             and entity_score >= self.entity_data['gate_threshold'] and single)

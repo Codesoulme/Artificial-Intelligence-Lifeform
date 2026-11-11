@@ -1,0 +1,170 @@
+{
+  "status": "promoted_v4_negative_generalization_audit",
+  "total": 16,
+  "rejected": 16,
+  "rows": [
+    {
+      "question": "小林最喜欢什么颜色？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 0,
+      "intent_logit": 2.774322748184204,
+      "entity_score": 0.9586353898048401,
+      "reason": "unsupported_memory_predicate"
+    },
+    {
+      "question": "小林平时喜欢做什么运动？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 1,
+      "intent_logit": 2.806410551071167,
+      "entity_score": 0.9800662994384766,
+      "reason": "unsupported_memory_predicate"
+    },
+    {
+      "question": "小林的饮料记录是谁告诉你的？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -1.6397508382797241,
+      "entity_score": 0.20291228592395782,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "question": "把小林的饮料偏好修改成牛奶。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -4.366034030914307,
+      "entity_score": 0.3625679314136505,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "question": "请为小林写一首短诗。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -7.041749000549316,
+      "entity_score": 0.0192961897701025,
+      "reason": "unsupported_memory_predicate"
+    },
+    {
+      "question": "请给小林一句生日祝福。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -5.744151592254639,
+      "entity_score": 0.04335987567901611,
+      "reason": "unsupported_memory_predicate"
+    },
+    {
+      "question": "小林和阿宁各自喜欢什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -3.322812795639038,
+      "entity_score": 0.04037762060761452,
+      "reason": "unsupported_memory_predicate"
+    },
+    {
+      "question": "请分别查询小林与小雨的饮料。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -4.720445156097412,
+      "entity_score": 0.0004888817202299833,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "question": "小雪过去喜欢喝什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 1,
+      "intent_logit": 3.1720497608184814,
+      "entity_score": 0.9940283298492432,
+      "intent_recovered": false,
+      "indices": [
+        1,
+        1
+      ],
+      "similarities": [
+        0.9983751773834229,
+        0.9953144788742065
+      ],
+      "reason": "unknown_memory"
+    },
+    {
+      "question": "小林的饮料偏好是否可靠？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -1.4325119256973267,
+      "entity_score": 0.5177912712097168,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "question": "解释一下你为什么能记住信息。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -3.6102867126464844,
+      "entity_score": 0.007311916910111904,
+      "reason": "unsupported_memory_predicate"
+    },
+    {
+      "question": "请总结我们之前讨论过的所有话题。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 1,
+      "intent_logit": 0.38273459672927856,
+      "entity_score": 0.01399705745279789,
+      "reason": "unsupported_memory_predicate"
+    },
+    {
+      "question": "我今天很累，给我一个放松建议。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -3.9421093463897705,
+      "entity_score": 0.17834068834781647,
+      "reason": "unsupported_memory_predicate"
+    },
+    {
+      "question": "你能帮我设计一个饮料广告吗？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -8.58442211151123,
+      "entity_score": 0.007651603780686855,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "question": "小林现在的工作是什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 0,
+      "intent_logit": 3.713538408279419,
+      "entity_score": 0.9537697434425354,
+      "reason": "unsupported_memory_predicate"
+    },
+    {
+      "question": "如果小林喜欢茶，请提醒我。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -5.616672992706299,
+      "entity_score": 0.15254069864749908,
+      "reason": "unsupported_memory_predicate"
+    }
+  ],
+  "limitations": [
+    "Manually authored finite negative set.",
+    "One controlled memory entity and beverage facts.",
+    "This does not establish adversarial safety or open-domain understanding."
+  ]
+}
