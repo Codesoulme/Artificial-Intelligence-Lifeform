@@ -1,0 +1,2640 @@
+{
+  "groups": {
+    "fresh_non_read": {
+      "total": 60,
+      "entity_only_accepted": 3,
+      "combined_accepted": 0,
+      "correct_address": 0
+    },
+    "known_memory": {
+      "total": 20,
+      "entity_only_accepted": 20,
+      "combined_accepted": 10,
+      "correct_address": 10
+    },
+    "known_non_memory": {
+      "total": 20,
+      "entity_only_accepted": 1,
+      "combined_accepted": 0,
+      "correct_address": 0
+    },
+    "multiple_names": {
+      "total": 12,
+      "entity_only_accepted": 0,
+      "combined_accepted": 0,
+      "correct_address": 0
+    },
+    "no_name": {
+      "total": 6,
+      "entity_only_accepted": 0,
+      "combined_accepted": 0,
+      "correct_address": 0
+    },
+    "unbound_memory": {
+      "total": 12,
+      "entity_only_accepted": 0,
+      "combined_accepted": 0,
+      "correct_address": 0
+    }
+  },
+  "rows": [
+    {
+      "question": "我想查阅小林现在的饮品偏好。",
+      "label": 1,
+      "key": 6,
+      "group": "known_memory",
+      "intent_logit": 4.8989787101745605,
+      "entity_score": 0.948157787322998,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9877105355262756,
+      "entity_only_accepted": true,
+      "combined_accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的小林喜欢什么饮料。",
+      "label": 1,
+      "key": 6,
+      "group": "known_memory",
+      "intent_logit": 1.4111435413360596,
+      "entity_score": 0.8076328635215759,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9630763530731201,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给小林写一句鼓励的话。",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.399052619934082,
+      "entity_score": 0.37553831934928894,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.976072371006012,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果小林向你打招呼，你会怎么回应？",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.07066535949707,
+      "entity_score": 0.14524872601032257,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9887984991073608,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅阿宁现在的饮品偏好。",
+      "label": 1,
+      "key": 22,
+      "group": "known_memory",
+      "intent_logit": 4.587162971496582,
+      "entity_score": 0.9419571757316589,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9923779964447021,
+      "entity_only_accepted": true,
+      "combined_accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的阿宁喜欢什么饮料。",
+      "label": 1,
+      "key": 22,
+      "group": "known_memory",
+      "intent_logit": 1.49566650390625,
+      "entity_score": 0.7872126698493958,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9883186221122742,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给阿宁写一句鼓励的话。",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -5.97925329208374,
+      "entity_score": 0.48052161931991577,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9913549423217773,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果阿宁向你打招呼，你会怎么回应？",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.228708744049072,
+      "entity_score": 0.14298969507217407,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9703464508056641,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅小雨现在的饮品偏好。",
+      "label": 1,
+      "key": 35,
+      "group": "known_memory",
+      "intent_logit": 4.821438312530518,
+      "entity_score": 0.9470546841621399,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9806147217750549,
+      "entity_only_accepted": true,
+      "combined_accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的小雨喜欢什么饮料。",
+      "label": 1,
+      "key": 35,
+      "group": "known_memory",
+      "intent_logit": 1.471124529838562,
+      "entity_score": 0.8062000274658203,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9573557376861572,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给小雨写一句鼓励的话。",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.376196384429932,
+      "entity_score": 0.45969358086586,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9830498099327087,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果小雨向你打招呼，你会怎么回应？",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.1733222007751465,
+      "entity_score": 0.14982320368289948,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9854252338409424,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅阿哲现在的饮品偏好。",
+      "label": 1,
+      "key": 51,
+      "group": "known_memory",
+      "intent_logit": 4.573244094848633,
+      "entity_score": 0.9330804944038391,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9768303036689758,
+      "entity_only_accepted": true,
+      "combined_accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的阿哲喜欢什么饮料。",
+      "label": 1,
+      "key": 51,
+      "group": "known_memory",
+      "intent_logit": 1.8235048055648804,
+      "entity_score": 0.7901732325553894,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9855157732963562,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给阿哲写一句鼓励的话。",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.226339817047119,
+      "entity_score": 0.38523992896080017,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9942557215690613,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果阿哲向你打招呼，你会怎么回应？",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.070390701293945,
+      "entity_score": 0.14406704902648926,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9899001121520996,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅小梅现在的饮品偏好。",
+      "label": 1,
+      "key": 16,
+      "group": "known_memory",
+      "intent_logit": 4.654438495635986,
+      "entity_score": 0.9326421618461609,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9754751920700073,
+      "entity_only_accepted": true,
+      "combined_accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的小梅喜欢什么饮料。",
+      "label": 1,
+      "key": 16,
+      "group": "known_memory",
+      "intent_logit": 1.4518548250198364,
+      "entity_score": 0.7736294269561768,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9572209119796753,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给小梅写一句鼓励的话。",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.522156238555908,
+      "entity_score": 0.3674033582210541,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9911431074142456,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果小梅向你打招呼，你会怎么回应？",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.120325088500977,
+      "entity_score": 0.1457248330116272,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9679260849952698,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅阿远现在的饮品偏好。",
+      "label": 1,
+      "key": 27,
+      "group": "known_memory",
+      "intent_logit": 4.275264263153076,
+      "entity_score": 0.9235761761665344,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9903795719146729,
+      "entity_only_accepted": true,
+      "combined_accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的阿远喜欢什么饮料。",
+      "label": 1,
+      "key": 27,
+      "group": "known_memory",
+      "intent_logit": 1.6398922204971313,
+      "entity_score": 0.7709416151046753,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9926979541778564,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给阿远写一句鼓励的话。",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -5.6557698249816895,
+      "entity_score": 0.5052397847175598,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.992917537689209,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果阿远向你打招呼，你会怎么回应？",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -5.340574741363525,
+      "entity_score": 0.2025844156742096,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9852173328399658,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅小岚现在的饮品偏好。",
+      "label": 1,
+      "key": 42,
+      "group": "known_memory",
+      "intent_logit": 4.1031060218811035,
+      "entity_score": 0.9142243266105652,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9951110482215881,
+      "entity_only_accepted": true,
+      "combined_accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的小岚喜欢什么饮料。",
+      "label": 1,
+      "key": 42,
+      "group": "known_memory",
+      "intent_logit": 1.4010452032089233,
+      "entity_score": 0.7974141836166382,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9510127902030945,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给小岚写一句鼓励的话。",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.708149433135986,
+      "entity_score": 0.40261054039001465,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9919512271881104,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果小岚向你打招呼，你会怎么回应？",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.2246832847595215,
+      "entity_score": 0.1504194736480713,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9923161864280701,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅阿明现在的饮品偏好。",
+      "label": 1,
+      "key": 10,
+      "group": "known_memory",
+      "intent_logit": 3.9110469818115234,
+      "entity_score": 0.9467191696166992,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9785068035125732,
+      "entity_only_accepted": true,
+      "combined_accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的阿明喜欢什么饮料。",
+      "label": 1,
+      "key": 10,
+      "group": "known_memory",
+      "intent_logit": 1.146278738975525,
+      "entity_score": 0.768299400806427,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9861592650413513,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给阿明写一句鼓励的话。",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.692087173461914,
+      "entity_score": 0.4232286512851715,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9761949777603149,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果阿明向你打招呼，你会怎么回应？",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.605695724487305,
+      "entity_score": 0.14805889129638672,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9870958924293518,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅阿松现在的饮品偏好。",
+      "label": 1,
+      "key": 0,
+      "group": "known_memory",
+      "intent_logit": 4.44350528717041,
+      "entity_score": 0.9576103091239929,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.96979820728302,
+      "entity_only_accepted": true,
+      "combined_accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的阿松喜欢什么饮料。",
+      "label": 1,
+      "key": 0,
+      "group": "known_memory",
+      "intent_logit": 1.5777907371520996,
+      "entity_score": 0.8326482176780701,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.9768301248550415,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给阿松写一句鼓励的话。",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.048386096954346,
+      "entity_score": 0.5586261749267578,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.9819970726966858,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果阿松向你打招呼，你会怎么回应？",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.159827709197998,
+      "entity_score": 0.20038966834545135,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.973528265953064,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅小雪现在的饮品偏好。",
+      "label": 1,
+      "key": 1,
+      "group": "known_memory",
+      "intent_logit": 4.562175750732422,
+      "entity_score": 0.958996057510376,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.981893002986908,
+      "entity_only_accepted": true,
+      "combined_accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的小雪喜欢什么饮料。",
+      "label": 1,
+      "key": 1,
+      "group": "known_memory",
+      "intent_logit": 1.3112423419952393,
+      "entity_score": 0.8339856266975403,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.9303142428398132,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给小雪写一句鼓励的话。",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.414283752441406,
+      "entity_score": 0.5952253341674805,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.9758840799331665,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果小雪向你打招呼，你会怎么回应？",
+      "label": 0,
+      "key": null,
+      "group": "known_non_memory",
+      "intent_logit": -6.233608245849609,
+      "entity_score": 0.2058141529560089,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.9709445834159851,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅林默现在的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 3.056319236755371,
+      "entity_score": 0.6718237400054932,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的林默喜欢什么饮料。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 1.3760040998458862,
+      "entity_score": 0.5972567796707153,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅桐雨现在的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 2.622568130493164,
+      "entity_score": 0.6058192253112793,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.6956359148025513,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的桐雨喜欢什么饮料。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 0.49485617876052856,
+      "entity_score": 0.5370898842811584,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.5828955173492432,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅星河现在的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 3.0397796630859375,
+      "entity_score": 0.5486333966255188,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的星河喜欢什么饮料。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 0.9645941257476807,
+      "entity_score": 0.4807966351509094,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅柳鸣现在的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 3.6546883583068848,
+      "entity_score": 0.8158220648765564,
+      "single_span": true,
+      "indices": [
+        35,
+        42
+      ],
+      "address_score": 0.5379809141159058,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的柳鸣喜欢什么饮料。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 1.3189300298690796,
+      "entity_score": 0.6893917322158813,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.5368441343307495,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅若竹现在的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 2.0841712951660156,
+      "entity_score": 0.46185725927352905,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的若竹喜欢什么饮料。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 0.5211960673332214,
+      "entity_score": 0.501464307308197,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅柯岚现在的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 4.639475345611572,
+      "entity_score": 0.8812453746795654,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.8173636198043823,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的柯岚喜欢什么饮料。",
+      "label": 0,
+      "key": null,
+      "group": "unbound_memory",
+      "intent_logit": 2.410773754119873,
+      "entity_score": 0.7927330136299133,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9018484354019165,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说小林爱喝什么，再说阿宁爱喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -2.922476291656494,
+      "entity_score": 0.4204426109790802,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询小林与阿宁的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -3.0401439666748047,
+      "entity_score": 0.017253171652555466,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9965564608573914,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说阿宁爱喝什么，再说小雨爱喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -2.955760955810547,
+      "entity_score": 0.43268439173698425,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询阿宁与小雨的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -3.081338882446289,
+      "entity_score": 0.021333565935492516,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9910735487937927,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说小雨爱喝什么，再说阿哲爱喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -2.4186081886291504,
+      "entity_score": 0.47596949338912964,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询小雨与阿哲的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -2.770580768585205,
+      "entity_score": 0.01888217031955719,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9924221038818359,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说阿哲爱喝什么，再说小梅爱喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -2.468451976776123,
+      "entity_score": 0.44905346632003784,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询阿哲与小梅的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -2.832908868789673,
+      "entity_score": 0.017140738666057587,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9941479563713074,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说小梅爱喝什么，再说阿远爱喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -2.3982436656951904,
+      "entity_score": 0.37445592880249023,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询小梅与阿远的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -2.9165120124816895,
+      "entity_score": 0.017688287422060966,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9875110983848572,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说阿远爱喝什么，再说小岚爱喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -2.532503604888916,
+      "entity_score": 0.38885602355003357,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询阿远与小岚的饮品偏好。",
+      "label": 0,
+      "key": null,
+      "group": "multiple_names",
+      "intent_logit": -3.0423669815063477,
+      "entity_score": 0.024300312623381615,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9911602735519409,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "你能不能讲一件有趣的小事？",
+      "label": 0,
+      "key": null,
+      "group": "no_name",
+      "intent_logit": -8.126382827758789,
+      "entity_score": 0.035356100648641586,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "告诉我今天的计划。",
+      "label": 0,
+      "key": null,
+      "group": "no_name",
+      "intent_logit": -7.685370445251465,
+      "entity_score": 0.00246069417335093,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "之前我们聊过哪些话题？",
+      "label": 0,
+      "key": null,
+      "group": "no_name",
+      "intent_logit": -0.9817121028900146,
+      "entity_score": 0.009352178312838078,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "现在记录的内容是什么？",
+      "label": 0,
+      "key": null,
+      "group": "no_name",
+      "intent_logit": -0.614422082901001,
+      "entity_score": 0.08384507149457932,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给我一些睡前放松的方法。",
+      "label": 0,
+      "key": null,
+      "group": "no_name",
+      "intent_logit": -5.51946496963501,
+      "entity_score": 0.018563054502010345,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "解释一下如何记忆。",
+      "label": 0,
+      "key": null,
+      "group": "no_name",
+      "intent_logit": -7.229897975921631,
+      "entity_score": 0.004395012278109789,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "为小林编写一句节日祝福。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -5.463474273681641,
+      "entity_score": 0.2805343568325043,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9890594482421875,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "帮我想想怎样安慰小林。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -7.664967060089111,
+      "entity_score": 0.017845887690782547,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9692433476448059,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "别读取小林的饮料记录。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -1.9647085666656494,
+      "entity_score": 0.39089149236679077,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9680891036987305,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我不想知道小林过去喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.1487417221069336,
+      "entity_score": 0.8692759871482849,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请把小林偏好的饮料改成水。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -3.584019422531128,
+      "entity_score": 0.35230395197868347,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9880572557449341,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "是谁提供了小林的饮料偏好信息？",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": 0.7175760269165039,
+      "entity_score": 0.590026319026947,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9691364765167236,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "为阿宁编写一句节日祝福。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -5.394368648529053,
+      "entity_score": 0.3003014922142029,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.98350989818573,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "帮我想想怎样安慰阿宁。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -7.389362812042236,
+      "entity_score": 0.021469060331583023,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9364493489265442,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "别读取阿宁的饮料记录。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -1.7745506763458252,
+      "entity_score": 0.3887186050415039,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9873839616775513,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我不想知道阿宁过去喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.4830946922302246,
+      "entity_score": 0.8047688603401184,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请把阿宁偏好的饮料改成水。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -3.7549033164978027,
+      "entity_score": 0.31988298892974854,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9900063276290894,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "是谁提供了阿宁的饮料偏好信息？",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": 0.5595798492431641,
+      "entity_score": 0.5435723662376404,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9814440608024597,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "为小雨编写一句节日祝福。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -5.6152119636535645,
+      "entity_score": 0.32184669375419617,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9852778911590576,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "帮我想想怎样安慰小雨。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -7.71611213684082,
+      "entity_score": 0.019745277240872383,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9761697053909302,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "别读取小雨的饮料记录。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -1.8815234899520874,
+      "entity_score": 0.3879505395889282,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9722007513046265,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我不想知道小雨过去喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.527810573577881,
+      "entity_score": 0.8603676557540894,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请把小雨偏好的饮料改成水。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -3.966351270675659,
+      "entity_score": 0.2820723354816437,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9851917624473572,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "是谁提供了小雨的饮料偏好信息？",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": 0.6896809935569763,
+      "entity_score": 0.5892969369888306,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9682376384735107,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "为阿哲编写一句节日祝福。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -5.142942428588867,
+      "entity_score": 0.2708505392074585,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9931292533874512,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "帮我想想怎样安慰阿哲。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -7.355865001678467,
+      "entity_score": 0.016683092340826988,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9582725167274475,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "别读取阿哲的饮料记录。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -1.988925576210022,
+      "entity_score": 0.29248639941215515,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9877293109893799,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我不想知道阿哲过去喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.435105800628662,
+      "entity_score": 0.7780958414077759,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请把阿哲偏好的饮料改成水。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -4.112452030181885,
+      "entity_score": 0.2763972878456116,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9914104342460632,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "是谁提供了阿哲的饮料偏好信息？",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": 0.7052015662193298,
+      "entity_score": 0.4893418252468109,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.987807035446167,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "为小梅编写一句节日祝福。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -5.472403049468994,
+      "entity_score": 0.2933475971221924,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9904417991638184,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "帮我想想怎样安慰小梅。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -7.6776652336120605,
+      "entity_score": 0.015638142824172974,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9792071580886841,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "别读取小梅的饮料记录。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.3643505573272705,
+      "entity_score": 0.32283779978752136,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.986519455909729,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我不想知道小梅过去喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.3634815216064453,
+      "entity_score": 0.8514619469642639,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请把小梅偏好的饮料改成水。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -3.8956613540649414,
+      "entity_score": 0.32398492097854614,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9921557307243347,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "是谁提供了小梅的饮料偏好信息？",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": 0.5742015838623047,
+      "entity_score": 0.5452247858047485,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9708783030509949,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "为阿远编写一句节日祝福。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -5.0392374992370605,
+      "entity_score": 0.34940698742866516,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9926949739456177,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "帮我想想怎样安慰阿远。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -7.281937599182129,
+      "entity_score": 0.020376624539494514,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9490759372711182,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "别读取阿远的饮料记录。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -1.8572925329208374,
+      "entity_score": 0.3458220362663269,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9923043251037598,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我不想知道阿远过去喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.9594006538391113,
+      "entity_score": 0.7506693005561829,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请把阿远偏好的饮料改成水。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -3.997161388397217,
+      "entity_score": 0.278295636177063,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9900442361831665,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "是谁提供了阿远的饮料偏好信息？",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": 1.1037789583206177,
+      "entity_score": 0.5458202958106995,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9878830909729004,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "为小岚编写一句节日祝福。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -5.960114479064941,
+      "entity_score": 0.2590376138687134,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9943057298660278,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "帮我想想怎样安慰小岚。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -7.768935680389404,
+      "entity_score": 0.015219850465655327,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9868708848953247,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "别读取小岚的饮料记录。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.266818046569824,
+      "entity_score": 0.3677397668361664,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9817591905593872,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我不想知道小岚过去喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.5781548023223877,
+      "entity_score": 0.8388235569000244,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请把小岚偏好的饮料改成水。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -4.2243781089782715,
+      "entity_score": 0.25232499837875366,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9943931698799133,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "是谁提供了小岚的饮料偏好信息？",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": 0.26189088821411133,
+      "entity_score": 0.5565295815467834,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9931303262710571,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "为阿明编写一句节日祝福。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -5.937192916870117,
+      "entity_score": 0.2945176661014557,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9935334324836731,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "帮我想想怎样安慰阿明。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -8.311201095581055,
+      "entity_score": 0.015771817415952682,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9668350219726562,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "别读取阿明的饮料记录。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.5425052642822266,
+      "entity_score": 0.359761118888855,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9836356043815613,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我不想知道阿明过去喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -3.0570216178894043,
+      "entity_score": 0.8188502192497253,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请把阿明偏好的饮料改成水。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -4.3935866355896,
+      "entity_score": 0.2986421287059784,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9899849891662598,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "是谁提供了阿明的饮料偏好信息？",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": 0.04329831153154373,
+      "entity_score": 0.5044807195663452,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.983181893825531,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "为阿松编写一句节日祝福。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -5.344940185546875,
+      "entity_score": 0.38618597388267517,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.9901286363601685,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "帮我想想怎样安慰阿松。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -7.675861835479736,
+      "entity_score": 0.022113649174571037,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.9170449376106262,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "别读取阿松的饮料记录。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.4402432441711426,
+      "entity_score": 0.3874378502368927,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.9664372205734253,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我不想知道阿松过去喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.6894092559814453,
+      "entity_score": 0.8469577431678772,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请把阿松偏好的饮料改成水。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -4.283267021179199,
+      "entity_score": 0.3392223119735718,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.9835875630378723,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "是谁提供了阿松的饮料偏好信息？",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": 0.4028174877166748,
+      "entity_score": 0.5442264676094055,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.9607608318328857,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "为小雪编写一句节日祝福。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -5.787400722503662,
+      "entity_score": 0.42782989144325256,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.9824978113174438,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "帮我想想怎样安慰小雪。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -7.846231937408447,
+      "entity_score": 0.026370689272880554,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.9407892227172852,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "别读取小雪的饮料记录。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.3196444511413574,
+      "entity_score": 0.46867722272872925,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.9669956564903259,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我不想知道小雪过去喝什么。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -2.607651948928833,
+      "entity_score": 0.9018403887748718,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请把小雪偏好的饮料改成水。",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": -4.062431812286377,
+      "entity_score": 0.41533222794532776,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.9807826280593872,
+      "entity_only_accepted": false,
+      "combined_accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "是谁提供了小雪的饮料偏好信息？",
+      "label": 0,
+      "key": null,
+      "group": "fresh_non_read",
+      "intent_logit": 0.4331172704696655,
+      "entity_score": 0.6972252726554871,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.9641228914260864,
+      "entity_only_accepted": true,
+      "combined_accepted": false,
+      "correct_address": false
+    }
+  ],
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "intent_sha256": "182794cee9820fc8fcbcf778b15008b77750b574c4c57fd8757a6f057273a02c",
+  "router_sha256": "750d7402c71d690d1aaeba8241b04d218a3047f74752ba90e5159d6b1cc4dc4b",
+  "entity_gate_sha256": "0b93a9ef31f45e2dd4dd7c3a99863bb90301196567988096dcdb5e33727c6751",
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "intent_threshold": 3.2912871837615967,
+  "train_count": 280,
+  "calibration_count": 52,
+  "held_count": 130,
+  "trace": [
+    {
+      "step": 1,
+      "loss": 0.6951169371604919
+    },
+    {
+      "step": 100,
+      "loss": 0.04542415589094162
+    },
+    {
+      "step": 250,
+      "loss": 0.031632356345653534
+    },
+    {
+      "step": 450,
+      "loss": 0.027814701199531555
+    }
+  ],
+  "extra_read_templates": [
+    "我想知道{name}眼下爱喝哪种东西。",
+    "能否从记录里找出{name}此刻喝的饮品？",
+    "调出{name}最新一条饮品偏好。",
+    "请检索{name}当前保留的饮料信息。",
+    "有关{name}的较早饮品记录，请查一下。",
+    "回看{name}上一次改动前的饮料。",
+    "查找{name}更新之后保存的饮品。",
+    "从历史里找出{name}后来选的饮料。"
+  ],
+  "extra_non_read_templates": [
+    "不用打开{name}的饮品记忆。",
+    "请不要检索{name}的饮料信息。",
+    "替{name}构思一段生日祝词。",
+    "把{name}的偏好改写成一条新记录。",
+    "我只想听{name}的近况，不用查饮料。",
+    "你认为{name}会不会喜欢茶？"
+  ],
+  "calibration_rows": [
+    {
+      "question": "我想查小岚目前的饮料记录。",
+      "label": 1,
+      "key": 42,
+      "group": "read",
+      "logit": 6.0807671546936035,
+      "accepted": true
+    },
+    {
+      "question": "请回忆小岚过去喜欢喝什么。",
+      "label": 1,
+      "key": 42,
+      "group": "read",
+      "logit": -0.006044706329703331,
+      "accepted": false
+    },
+    {
+      "question": "小岚后来最喜欢的饮品是什么？",
+      "label": 1,
+      "key": 42,
+      "group": "read",
+      "logit": 4.980595111846924,
+      "accepted": true
+    },
+    {
+      "question": "查询小岚现在保存的数字。",
+      "label": 1,
+      "key": 42,
+      "group": "read",
+      "logit": 7.8767547607421875,
+      "accepted": true
+    },
+    {
+      "question": "给小岚写一句安慰的话。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -7.314068794250488,
+      "accepted": false
+    },
+    {
+      "question": "帮小岚想一个礼物。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -5.362669944763184,
+      "accepted": false
+    },
+    {
+      "question": "别告诉我小岚最爱的饮品。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -2.344292163848877,
+      "accepted": false
+    },
+    {
+      "question": "我不想查询小岚以前的饮料。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 2.2925047874450684,
+      "accepted": false
+    },
+    {
+      "question": "把小岚的偏好更新为茶。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -3.9836807250976562,
+      "accepted": false
+    },
+    {
+      "question": "记录小岚现在喜欢果汁。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 2.8512516021728516,
+      "accepted": false
+    },
+    {
+      "question": "若小岚爱喝牛奶，请通知我。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -4.59409761428833,
+      "accepted": false
+    },
+    {
+      "question": "小岚的饮品消息来源是谁？",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 0.3044847249984741,
+      "accepted": false
+    },
+    {
+      "question": "我想查阿明目前的饮料记录。",
+      "label": 1,
+      "key": 10,
+      "group": "read",
+      "logit": 6.080298900604248,
+      "accepted": true
+    },
+    {
+      "question": "请回忆阿明过去喜欢喝什么。",
+      "label": 1,
+      "key": 10,
+      "group": "read",
+      "logit": -0.37558919191360474,
+      "accepted": false
+    },
+    {
+      "question": "阿明后来最喜欢的饮品是什么？",
+      "label": 1,
+      "key": 10,
+      "group": "read",
+      "logit": 5.023322582244873,
+      "accepted": true
+    },
+    {
+      "question": "查询阿明现在保存的数字。",
+      "label": 1,
+      "key": 10,
+      "group": "read",
+      "logit": 7.446356296539307,
+      "accepted": true
+    },
+    {
+      "question": "给阿明写一句安慰的话。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -7.279417991638184,
+      "accepted": false
+    },
+    {
+      "question": "帮阿明想一个礼物。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -5.819840908050537,
+      "accepted": false
+    },
+    {
+      "question": "别告诉我阿明最爱的饮品。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -2.513972520828247,
+      "accepted": false
+    },
+    {
+      "question": "我不想查询阿明以前的饮料。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 2.0437941551208496,
+      "accepted": false
+    },
+    {
+      "question": "把阿明的偏好更新为茶。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -4.4782233238220215,
+      "accepted": false
+    },
+    {
+      "question": "记录阿明现在喜欢果汁。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 2.310204267501831,
+      "accepted": false
+    },
+    {
+      "question": "若阿明爱喝牛奶，请通知我。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -5.519250392913818,
+      "accepted": false
+    },
+    {
+      "question": "阿明的饮品消息来源是谁？",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 0.020679006353020668,
+      "accepted": false
+    },
+    {
+      "question": "我想查阿松目前的饮料记录。",
+      "label": 1,
+      "key": 0,
+      "group": "read",
+      "logit": 6.52070426940918,
+      "accepted": true
+    },
+    {
+      "question": "请回忆阿松过去喜欢喝什么。",
+      "label": 1,
+      "key": 0,
+      "group": "read",
+      "logit": 0.2250054031610489,
+      "accepted": false
+    },
+    {
+      "question": "阿松后来最喜欢的饮品是什么？",
+      "label": 1,
+      "key": 0,
+      "group": "read",
+      "logit": 5.421961784362793,
+      "accepted": true
+    },
+    {
+      "question": "查询阿松现在保存的数字。",
+      "label": 1,
+      "key": 0,
+      "group": "read",
+      "logit": 8.180904388427734,
+      "accepted": true
+    },
+    {
+      "question": "给阿松写一句安慰的话。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -6.665694713592529,
+      "accepted": false
+    },
+    {
+      "question": "帮阿松想一个礼物。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -4.987613677978516,
+      "accepted": false
+    },
+    {
+      "question": "别告诉我阿松最爱的饮品。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -2.0926003456115723,
+      "accepted": false
+    },
+    {
+      "question": "我不想查询阿松以前的饮料。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 1.8769997358322144,
+      "accepted": false
+    },
+    {
+      "question": "把阿松的偏好更新为茶。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -3.6192586421966553,
+      "accepted": false
+    },
+    {
+      "question": "记录阿松现在喜欢果汁。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 2.9579176902770996,
+      "accepted": false
+    },
+    {
+      "question": "若阿松爱喝牛奶，请通知我。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -4.886107921600342,
+      "accepted": false
+    },
+    {
+      "question": "阿松的饮品消息来源是谁？",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 0.533222496509552,
+      "accepted": false
+    },
+    {
+      "question": "我想查小雪目前的饮料记录。",
+      "label": 1,
+      "key": 1,
+      "group": "read",
+      "logit": 6.631852626800537,
+      "accepted": true
+    },
+    {
+      "question": "请回忆小雪过去喜欢喝什么。",
+      "label": 1,
+      "key": 1,
+      "group": "read",
+      "logit": 0.03348515182733536,
+      "accepted": false
+    },
+    {
+      "question": "小雪后来最喜欢的饮品是什么？",
+      "label": 1,
+      "key": 1,
+      "group": "read",
+      "logit": 5.537802219390869,
+      "accepted": true
+    },
+    {
+      "question": "查询小雪现在保存的数字。",
+      "label": 1,
+      "key": 1,
+      "group": "read",
+      "logit": 8.131768226623535,
+      "accepted": true
+    },
+    {
+      "question": "给小雪写一句安慰的话。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -7.059803485870361,
+      "accepted": false
+    },
+    {
+      "question": "帮小雪想一个礼物。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -4.82084846496582,
+      "accepted": false
+    },
+    {
+      "question": "别告诉我小雪最爱的饮品。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -1.8805148601531982,
+      "accepted": false
+    },
+    {
+      "question": "我不想查询小雪以前的饮料。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 2.5907649993896484,
+      "accepted": false
+    },
+    {
+      "question": "把小雪的偏好更新为茶。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -3.7394042015075684,
+      "accepted": false
+    },
+    {
+      "question": "记录小雪现在喜欢果汁。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 3.2912869453430176,
+      "accepted": false
+    },
+    {
+      "question": "若小雪爱喝牛奶，请通知我。",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": -4.774500370025635,
+      "accepted": false
+    },
+    {
+      "question": "小雪的饮品消息来源是谁？",
+      "label": 0,
+      "key": null,
+      "group": "non_read",
+      "logit": 0.6184445023536682,
+      "accepted": false
+    },
+    {
+      "question": "请讲个笑话。",
+      "label": 0,
+      "key": null,
+      "group": "no_name",
+      "logit": -9.577033996582031,
+      "accepted": false
+    },
+    {
+      "question": "我有点累，聊聊天。",
+      "label": 0,
+      "key": null,
+      "group": "no_name",
+      "logit": -7.510084629058838,
+      "accepted": false
+    },
+    {
+      "question": "怎么安排周末？",
+      "label": 0,
+      "key": null,
+      "group": "no_name",
+      "logit": -4.985000133514404,
+      "accepted": false
+    },
+    {
+      "question": "解释一下记忆。",
+      "label": 0,
+      "key": null,
+      "group": "no_name",
+      "logit": -6.976237773895264,
+      "accepted": false
+    }
+  ],
+  "elapsed_seconds": 127.61758639989421,
+  "peak_allocated_bytes": 3860258304,
+  "limitations": [
+    "Synthetic templates; earlier audit questions were already inspected during development.",
+    "Threshold calibrated on a small, nonrepresentative set of negatives.",
+    "Time intent, actual memory state, generation and writes are not tested here.",
+    "Unsupported, adversarial, cross-language and identity requests are not covered.",
+    "The gate is not an access-control boundary or a general language understanding system."
+  ]
+}

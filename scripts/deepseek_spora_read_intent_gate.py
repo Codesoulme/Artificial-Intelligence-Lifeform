@@ -50,6 +50,8 @@ STEPS = 450
 SEED = 29018
 EXTRA_READ = ()
 EXTRA_NON_READ = ()
+INIT_CHECKPOINT = None
+LEARNING_RATE = 0.0006
 
 
 def run():
@@ -116,7 +118,12 @@ def run():
     n_train, n_cal = len(train), len(calibration)
     labels = torch.tensor([r['label'] for r in train], dtype=torch.float32)
     intent = nn.Linear(question_vectors.shape[-1], 1)
-    optimizer = torch.optim.AdamW(intent.parameters(), lr=0.0006, weight_decay=0.02)
+    if INIT_CHECKPOINT is not None:
+        initial = torch.load(INIT_CHECKPOINT, map_location='cpu', weights_only=True)
+        if initial.get('format') != 'spora-finite-read-intent-v1' or initial.get('base_sha256') != WEIGHT_SHA:
+            raise ValueError('Intent initialization provenance mismatch')
+        intent.load_state_dict(initial['state'], strict=True)
+    optimizer = torch.optim.AdamW(intent.parameters(), lr=LEARNING_RATE, weight_decay=0.02)
     pos_weight = (len(labels)-labels.sum())/labels.sum()
     trace = []
     for step in range(STEPS):
@@ -171,6 +178,8 @@ def run():
                  'feature_variant_sha256': router['feature_variant_sha256'], 'router_sha256': sha(ROUTER/'router.pt'),
                  'entity_gate_sha256': sha(GATE/'gate.pt'), 'threshold': threshold, 'state': intent.state_dict()}, checkpoint)
     report = {'groups': groups, 'rows': outcomes, 'base_sha256': WEIGHT_SHA, 'intent_sha256': sha(checkpoint),
+              'initial_intent_sha256': sha(INIT_CHECKPOINT) if INIT_CHECKPOINT is not None else None,
+              'learning_rate': LEARNING_RATE, 'steps': STEPS,
               'router_sha256': sha(ROUTER/'router.pt'), 'entity_gate_sha256': sha(GATE/'gate.pt'),
               'feature_variant_sha256': router['feature_variant_sha256'], 'intent_threshold': threshold,
               'train_count': n_train, 'calibration_count': n_cal, 'held_count': len(held), 'trace': trace,
