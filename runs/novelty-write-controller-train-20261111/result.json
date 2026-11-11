@@ -1,0 +1,42 @@
+{
+  "status": "research_only_controller_candidate",
+  "controller_sha256": "c3c4c740e9dc99ac92d9e64dbf4f0f00e0a45a0c3d4370c12cae0dae7a6e88fb",
+  "train": {
+    "novelty": {
+      "accuracy": 0.999750018119812,
+      "correct": 11997,
+      "total": 12000,
+      "steps": 500
+    },
+    "legacy": {
+      "accuracy": 0.999666690826416,
+      "correct": 11996,
+      "total": 12000,
+      "steps": 500
+    }
+  },
+  "held": {
+    "novelty": {
+      "accuracy": 0.999750018119812,
+      "correct": 3999,
+      "total": 4000
+    },
+    "legacy": {
+      "accuracy": 1.0,
+      "correct": 4000,
+      "total": 4000
+    }
+  },
+  "dataset": {
+    "train": 12000,
+    "held": 4000,
+    "seed": 90120
+  },
+  "seconds": 9.93011430000115,
+  "limitations": [
+    "Synthetic policy traces with labels defined by the intended write protocol.",
+    "The held split is generated from the same rule distribution.",
+    "No language parsing, source verification or real individual was used.",
+    "Candidate weights are not connected to a checkpoint."
+  ]
+}
