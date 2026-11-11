@@ -1,4 +1,5 @@
 """Probe an isolated reader candidate on fresh questions and misuse controls."""
+import argparse
 import json
 import tempfile
 import time
@@ -8,9 +9,12 @@ from scripts import deepseek_spora_long_memory_generate_parity as p
 from scripts.deepseek_named_binding_probe import KEYS, NAMES
 
 
-def main():
-    source = p.ROOT / 'runs/deepseek-spora-reader-mixed-answer-20261112'
-    output = p.ROOT / 'runs/deepseek-spora-mixed-reader-holdout-20261112.json'
+def main(source=p.ROOT / 'runs/deepseek-spora-reader-mixed-answer-20261112',
+         output=p.ROOT / 'runs/deepseek-spora-mixed-reader-holdout-20261112.json'):
+    source, output = Path(source).resolve(), Path(output).resolve()
+    runs = (p.ROOT / 'runs').resolve()
+    if not source.is_relative_to(runs) or not output.is_relative_to(runs) or output == runs:
+        raise ValueError('Candidate and output must be under runs')
     if output.exists():
         raise FileExistsError(output)
     report = json.loads((source / 'result.json').read_text(encoding='utf-8'))
@@ -123,4 +127,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--source', type=Path, default=p.ROOT / 'runs/deepseek-spora-reader-mixed-answer-20261112')
+    parser.add_argument('--output', type=Path, default=p.ROOT / 'runs/deepseek-spora-mixed-reader-holdout-20261112.json')
+    args = parser.parse_args()
+    main(args.source, args.output)

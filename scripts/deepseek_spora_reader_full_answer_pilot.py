@@ -15,7 +15,7 @@ SEED = 98117
 STEPS = 12
 
 
-def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS):
+def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, replay_weight=0.0):
     output = Path(output).resolve()
     if not output.is_relative_to((p.ROOT / 'runs').resolve()) or output == (p.ROOT / 'runs').resolve():
         raise ValueError('Output must be a new directory under runs')
@@ -25,6 +25,8 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS):
         raise ValueError('Invalid objective')
     if type(steps) is not int or not 1 <= steps <= 1000:
         raise ValueError('Invalid step count')
+    if not math.isfinite(replay_weight) or not 0 <= replay_weight <= 10 or (replay_weight and objective != 'mixed'):
+        raise ValueError('Replay requires mixed objective and weight in [0, 10]')
     if output.exists():
         raise FileExistsError(output)
     source_sha = p.sha(p.runtime.CHECKPOINT)
@@ -84,6 +86,26 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS):
                                   'answer': answer, 'prompt': prompt, 'ids': ids, 'spec': spec,
                                   'value_position': int(positions[0]), 'value_token': value_ids[0],
                                   'competitor_tokens': [ids[0] for ids in competitor_ids]})
+
+        replays = []
+        if replay_weight:
+            for index in (2, 3):
+                key, name = KEYS[index], NAMES[index]
+                for value in (3, 4):
+                    state = p.fresh_controlled_state(organism)
+                    for fact in (1, value):
+                        state, decision = p.observe_sourced(organism, state, key, fact, 'direct', 1.0)
+                        if not decision['current_write']:
+                            raise ValueError('Replay write rejected')
+                    for template in ('{name}当下喜欢什么饮料？', '你知道{name}爱喝什么吗？'):
+                        question = template.format(name=name)
+                        prompt = p.closed_think_inputs(tokenizer, question, 'cuda')
+                        spec = p._memory_args(organism, state, {'key': key, 'intent': 'current', 'event_time': 0})
+                        with p.torch.no_grad():
+                            teacher = decoder(**prompt, **spec).logits[:, -1, :].float().log_softmax(-1).cpu()
+                        replays.append({'question': question, 'key': key, 'value': value, 'prompt': prompt,
+                                        'state': state, 'state_digest': p.frozen_digest(organism, state),
+                                        'spec': spec, 'teacher': teacher})
 
         def evaluate():
             rows = []
@@ -165,9 +187,20 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS):
                 loss = (loss.detach() + direct_loss.detach()) * 0.5
             else:
                 loss.backward()
+            replay_loss_value = None
+            if replay_weight:
+                replay = replays[step % len(replays)]
+                replay_logits = decoder(**replay['prompt'], **replay['spec']).logits[:, -1, :].float()
+                replay_loss = p.torch.nn.functional.kl_div(replay_logits.log_softmax(-1),
+                    replay['teacher'].to(device), log_target=True, reduction='batchmean')
+                if not bool(p.torch.isfinite(replay_loss)):
+                    raise ValueError('Nonfinite replay loss')
+                (replay_weight * replay_loss).backward()
+                replay_loss_value = float(replay_loss.detach())
             grad = p.torch.nn.utils.clip_grad_norm_(parameters, 1.0, error_if_nonfinite=True)
             optimizer.step()
-            trace.append({'step': step + 1, 'loss': float(loss.detach()), 'gradient_norm': float(grad)})
+            trace.append({'step': step + 1, 'loss': float(loss.detach()), 'gradient_norm': float(grad),
+                          'replay_kl': replay_loss_value})
             print(json.dumps(trace[-1]), flush=True)
         after = evaluate()
         ordinary_after = ordinary_answers()
@@ -175,17 +208,21 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS):
             raise ValueError('Original state changed')
         if any(p.frozen_digest(organism, item['state']) != item['state_digest'] for item in cases):
             raise ValueError('Temporary state changed')
+        if any(p.frozen_digest(organism, item['state']) != item['state_digest'] for item in replays):
+            raise ValueError('Replay state changed')
         reader_state = {key: value.detach().cpu().clone() for key, value in decoder.reader.state_dict().items()}
     if p.sha(p.runtime.CHECKPOINT) != source_sha or p.sha(p.MODEL / 'model.safetensors') != p.WEIGHT_SHA:
         raise ValueError('Protected source changed')
     output.mkdir(parents=False, exist_ok=False)
     p.torch.save({'state': reader_state, 'source_checkpoint_sha256': source_sha,
                   'base_sha256': p.WEIGHT_SHA, 'steps': steps, 'seed': SEED,
-                  'learning_rate': learning_rate, 'objective': objective}, output / 'reader.pt')
+                  'learning_rate': learning_rate, 'objective': objective, 'replay_weight': replay_weight}, output / 'reader.pt')
     report = {'before': before, 'after': after, 'trace': trace, 'source_checkpoint_sha256': source_sha,
               'ordinary_before': ordinary_before, 'ordinary_after': ordinary_after,
               'ordinary_tokens_match': [a['token_ids'] == b['token_ids'] for a, b in zip(ordinary_before, ordinary_after)],
-              'learning_rate': learning_rate, 'objective': objective, 'base_sha256': p.WEIGHT_SHA,
+              'learning_rate': learning_rate, 'objective': objective, 'replay_weight': replay_weight,
+              'replay_examples': [{'question': r['question'], 'key': r['key'], 'value': r['value']} for r in replays],
+              'base_sha256': p.WEIGHT_SHA,
               'candidate_sha256': p.sha(output / 'reader.pt'),
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': p.torch.cuda.max_memory_allocated(),
               'limitations': ['Four training examples, two held examples; two seen values and artificial facts.',
@@ -207,5 +244,6 @@ if __name__ == '__main__':
     parser.add_argument('--learning-rate', type=float, default=1e-4)
     parser.add_argument('--objective', choices=('full', 'value_contrastive', 'mixed'), default='full')
     parser.add_argument('--steps', type=int, default=STEPS)
+    parser.add_argument('--replay-weight', type=float, default=0.0)
     options = parser.parse_args()
-    main(options.output, options.learning_rate, options.objective, options.steps)
+    main(options.output, options.learning_rate, options.objective, options.steps, options.replay_weight)
