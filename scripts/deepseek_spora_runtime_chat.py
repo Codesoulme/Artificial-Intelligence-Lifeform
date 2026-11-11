@@ -28,7 +28,6 @@ from scripts.deepseek_semantic_value_pilot import WORDS
 from scripts.deepseek_spora_composed_router_answer_eval import _memory_args
 from scripts.deepseek_spora_memory_answer_distill import SOURCE_CHECKPOINT
 from scripts.deepseek_spora_recalibrate_name_router import OUTPUT as ROUTER
-from scripts.deepseek_spora_read_intent_gate import OUTPUT as INTENT
 from scripts.deepseek_spora_single_entity_gate import OUTPUT as ENTITY
 from scripts.deepseek_spora_gate_fresh_intent_audit import KNOWN
 from scripts.deepseek_named_binding_migrate import OUTPUT as NAMED
@@ -46,6 +45,7 @@ from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 TEMPORAL = ROOT/'runs/deepseek-spora-temporal-gate-train-20261111/temporal.pt'
 READ_INTENT_RECOVERY_FLOOR = 2.0
+INTENT = ROOT/'runs/deepseek-spora-read-intent-gate-v4-20261111'
 
 
 class SporaChat:
