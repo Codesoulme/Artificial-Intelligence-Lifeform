@@ -35,7 +35,7 @@ from scripts.deepseek_temporal_intent_router import TRAIN
 from scripts.spora_event_scan_selector import select_event
 from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.current_memory_status import current_memory_status
-from spora.growing import load
+from spora.growing import load, query
 from spora.integrated_checkpoint import load_integrated, replacement_feature_variant_sha256
 from spora.named_address import address_basis_sha256, feature_files_sha256
 from spora.internal_memory import observe_sourced
@@ -60,6 +60,27 @@ def _supported_beverage_evidence(logits, value_count):
             or not bool(torch.isfinite(logits).all())):
         raise ValueError('Invalid native memory output evidence')
     return int(logits.argmax(-1)[0]) < len(WORDS)
+
+
+def _prepare_memory_read(organism, state, key, mode, event_time):
+    """Derive layer read arguments and output evidence from one selection.
+
+    This couples the inputs, but does not prove that the neural reader and
+    output evidence agree, or that the selected event is factually correct.
+    """
+    if mode not in ('current', 'past', 'later'):
+        raise ValueError('Unsupported memory mode')
+    if mode == 'current' and event_time is not None:
+        raise ValueError('Current memory must not select a historical event')
+    if mode != 'current' and (type(event_time) is not int or event_time < 0):
+        raise ValueError('Historical memory requires an event time')
+    event = 0 if event_time is None else event_time
+    args = _memory_args(organism, state, {'key': key, 'intent': mode, 'event_time': event})
+    device = next(organism.parameters()).device
+    keys = torch.tensor([key], dtype=torch.long, device=device)
+    modes = torch.zeros_like(keys) if mode == 'current' else torch.ones_like(keys)
+    times = torch.full_like(keys, event)
+    return args, query(organism, state, keys, modes, times)
 
 
 class SporaChat:
@@ -211,28 +232,22 @@ class SporaChat:
         if identity_guard is not None and identity_guard.authorize(question, selected, key) is not True:
             result['reason'] = 'identity_guard_rejected'
             return result
-        if current_memory_status(self.organism, self.state, key)['status'] != 'known':
+        organism, state = self.organism, self.state
+        if current_memory_status(organism, state, key)['status'] != 'known':
             result['reason'] = 'unknown_memory'
             return result
         mode = 'current' if temporal_intent == 0 else 'past' if temporal_intent == 1 else 'later'
         selection = None if mode == 'current' else select_event(
-            self.organism, self.state,
+            organism, state,
             key, 'effective_previous' if mode == 'past' else 'effective_latest',
-            as_of=self.state.cursor-1)
+            as_of=state.cursor-1)
         result['memory_event_selection'] = selection
         if selection is not None and selection['status'] != 'experimental_candidate':
             result['reason'] = 'memory_event_abstain'
             return result
         event_time = None if selection is None else selection['event_time']
-        args = _memory_args(self.organism, self.state, {'key': key, 'intent': mode,
-                                                        'event_time': 0 if event_time is None else event_time})
-        device = next(self.organism.parameters()).device
-        key_tensor = torch.tensor([key], dtype=torch.long, device=device)
-        mode_tensor = torch.zeros_like(key_tensor) if mode == 'current' else torch.ones_like(key_tensor)
-        time_tensor = torch.zeros_like(key_tensor) if event_time is None else torch.tensor([event_time], device=device)
-        memory_logits = __import__('spora.growing', fromlist=['query']).query(
-            self.organism, self.state, key_tensor, mode_tensor, time_tensor)
-        if not _supported_beverage_evidence(memory_logits, self.organism.config.value_count):
+        args, memory_logits = _prepare_memory_read(organism, state, key, mode, event_time)
+        if not _supported_beverage_evidence(memory_logits, organism.config.value_count):
             result['reason'] = 'unsupported_memory_value'
             return result
         prefix = closed_think_inputs(self.tokenizer, question, 'cuda')
