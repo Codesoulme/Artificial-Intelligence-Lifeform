@@ -1,0 +1,56 @@
+{
+  "status": "explicit_event_cross_page_development_only",
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "candidate_sha256": {
+    "6": "602922906bc63709ccaf2e06d51900683920cfa90c53fe174ac56b3b2bf70255",
+    "12": "32c0235c693db0f1b52338cb28306648e31152290f7a18bc72e552c7383863c5"
+  },
+  "question": "小林后来喜欢的饮品是什么？",
+  "cursor": 65,
+  "page_count": 2,
+  "first_write": {
+    "action": "new",
+    "confidence": 0.9999020099639893,
+    "reason": "learned_decision",
+    "source": "direct",
+    "history_time": 0,
+    "current_write": true
+  },
+  "later_write": {
+    "action": "correct",
+    "confidence": 0.9999923706054688,
+    "reason": "learned_decision",
+    "source": "direct",
+    "history_time": 64,
+    "current_write": true
+  },
+  "rows": [
+    {
+      "event_time": 0,
+      "memory_slot": 1,
+      "expected_value": 1,
+      "expected_word": "咖啡",
+      "native_value": 1,
+      "answer": "咖啡",
+      "answer_exact": true
+    },
+    {
+      "event_time": 64,
+      "memory_slot": 2,
+      "expected_value": 6,
+      "expected_word": "水",
+      "native_value": 6,
+      "answer": "水",
+      "answer_exact": true
+    }
+  ],
+  "elapsed_seconds": 145.77951480005868,
+  "peak_allocated_bytes": 3717467136,
+  "limitations": [
+    "Event times and entity address are supplied by the experiment, not inferred.",
+    "One synthetic two-page trajectory and one question; no broad language claim.",
+    "Tests decoder output alongside native finite-symbol value; either may fail.",
+    "Does not evaluate arbitrary timeline resolution, autonomous writing or restart."
+  ]
+}

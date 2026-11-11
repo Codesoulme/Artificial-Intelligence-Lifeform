@@ -1,0 +1,37 @@
+import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
+
+from scripts.spora_event_scan_selector import select_event
+
+
+class EventScanTests(unittest.TestCase):
+    def setUp(self):
+        self.model = SimpleNamespace(config=SimpleNamespace(key_count=8))
+        self.state = SimpleNamespace(cursor=6, internal=SimpleNamespace(start_cursor=0))
+        self.rows = [{'action': 'new'}, {'action': 'repeat'}, {'action': 'correct'},
+                     {'reason': 'unknown_event', 'source': None}, {'action': 'defer'}, {'action': 'correct'}]
+
+    def test_order_selects_belief_changes_only(self):
+        with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=self.rows):
+            for order, expected in (('first', 0), ('previous', 2), ('latest', 5)):
+                result = select_event(self.model, self.state, 1, order)
+                self.assertEqual(result['event_time'], expected)
+                self.assertEqual(result['status'], 'experimental_candidate')
+                self.assertIn('neural_unknown', result['warning'])
+
+    def test_uncertainty_incomplete_history_and_budget_abstain(self):
+        with patch('scripts.spora_event_scan_selector.read_provenance_batch',
+                   return_value=[{'action': 'new'}, {'reason': 'uncertain_numeric_provenance'}]):
+            self.assertEqual(select_event(self.model, self.state, 1, 'latest')['reason'], 'uncertain_provenance')
+        self.assertEqual(select_event(self.model, self.state, 1, 'latest', max_scan=5)['reason'], 'scan_budget_exceeded')
+        self.state.internal.start_cursor = 1
+        self.assertEqual(select_event(self.model, self.state, 1, 'latest')['reason'], 'incomplete_provenance_history')
+
+    def test_single_candidate_has_no_previous(self):
+        with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=[{'action': 'new'}]):
+            self.assertEqual(select_event(self.model, self.state, 1, 'previous')['reason'], 'insufficient_observed_candidates')
+
+
+if __name__ == '__main__':
+    unittest.main()
