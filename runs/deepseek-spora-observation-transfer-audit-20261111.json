@@ -1,0 +1,342 @@
+{
+  "status": "development_only_no_writes",
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "checkpoint_sha256": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f",
+  "probe_sha256": "4f8b125ae59f59c42a2748051791493324c81f1ef45e1f5aeaaaf5807bfefed2",
+  "replacement_layers": [
+    6,
+    12
+  ],
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "base": [
+    {
+      "group": "positive",
+      "text": "小林喜欢喝咖啡。",
+      "expected": 1,
+      "predicted": 1,
+      "correct": true,
+      "fact_logit": 3.360527515411377
+    },
+    {
+      "group": "positive",
+      "text": "阿宁最喜欢的饮料是水。",
+      "expected": 6,
+      "predicted": 6,
+      "correct": true,
+      "fact_logit": 6.350116729736328
+    },
+    {
+      "group": "positive",
+      "text": "小雨偏爱的饮品是酸奶。",
+      "expected": 7,
+      "predicted": 7,
+      "correct": true,
+      "fact_logit": 2.1724627017974854
+    },
+    {
+      "group": "positive",
+      "text": "小梅最近爱喝豆浆。",
+      "expected": 4,
+      "predicted": 4,
+      "correct": true,
+      "fact_logit": 4.344958782196045
+    },
+    {
+      "group": "positive",
+      "text": "阿明现在最想喝的是果汁。",
+      "expected": 3,
+      "predicted": 3,
+      "correct": true,
+      "fact_logit": 2.765648603439331
+    },
+    {
+      "group": "positive",
+      "text": "小岚说她最喜欢喝茶。",
+      "expected": 0,
+      "predicted": 0,
+      "correct": true,
+      "fact_logit": 2.745882272720337
+    },
+    {
+      "group": "negative",
+      "text": "小林不喜欢喝咖啡。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -3.9261584281921387
+    },
+    {
+      "group": "negative",
+      "text": "小林喜欢喝咖啡吗？",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -3.868936061859131
+    },
+    {
+      "group": "negative",
+      "text": "要是小林喜欢喝咖啡就好了。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -2.3522510528564453
+    },
+    {
+      "group": "negative",
+      "text": "我不确定小林是否喜欢喝咖啡。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -6.396089553833008
+    },
+    {
+      "group": "negative",
+      "text": "小林以前爱喝咖啡，现在不知道。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -0.9277782440185547
+    },
+    {
+      "group": "negative",
+      "text": "小林喜欢咖啡还是牛奶？",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -2.6331608295440674
+    },
+    {
+      "group": "negative",
+      "text": "小林喜欢喝热巧克力。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": 3.9743776321411133
+    },
+    {
+      "group": "negative",
+      "text": "小林觉得水太难喝了。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -1.4793081283569336
+    },
+    {
+      "group": "negative",
+      "text": "阿宁说小林不爱喝牛奶。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -0.27356913685798645
+    },
+    {
+      "group": "negative",
+      "text": "小林禁止我喝她的酸奶。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -0.9094458818435669
+    },
+    {
+      "group": "negative",
+      "text": "小林喜欢用咖啡色画画。",
+      "expected": 8,
+      "predicted": 1,
+      "correct": false,
+      "fact_logit": 2.1583850383758545
+    },
+    {
+      "group": "negative",
+      "text": "小林买了果汁送给阿宁。",
+      "expected": 8,
+      "predicted": 3,
+      "correct": false,
+      "fact_logit": 3.105062246322632
+    },
+    {
+      "group": "negative",
+      "text": "小林说阿宁喜欢喝豆浆。",
+      "expected": 8,
+      "predicted": 4,
+      "correct": false,
+      "fact_logit": 1.2274324893951416
+    },
+    {
+      "group": "negative",
+      "text": "小林不再喜欢水了。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -4.377713680267334
+    }
+  ],
+  "replaced": [
+    {
+      "group": "positive",
+      "text": "小林喜欢喝咖啡。",
+      "expected": 1,
+      "predicted": 1,
+      "correct": true,
+      "fact_logit": 2.742732524871826
+    },
+    {
+      "group": "positive",
+      "text": "阿宁最喜欢的饮料是水。",
+      "expected": 6,
+      "predicted": 6,
+      "correct": true,
+      "fact_logit": 5.802938461303711
+    },
+    {
+      "group": "positive",
+      "text": "小雨偏爱的饮品是酸奶。",
+      "expected": 7,
+      "predicted": 7,
+      "correct": true,
+      "fact_logit": 2.223790168762207
+    },
+    {
+      "group": "positive",
+      "text": "小梅最近爱喝豆浆。",
+      "expected": 4,
+      "predicted": 4,
+      "correct": true,
+      "fact_logit": 4.132562160491943
+    },
+    {
+      "group": "positive",
+      "text": "阿明现在最想喝的是果汁。",
+      "expected": 3,
+      "predicted": 3,
+      "correct": true,
+      "fact_logit": 2.697439432144165
+    },
+    {
+      "group": "positive",
+      "text": "小岚说她最喜欢喝茶。",
+      "expected": 0,
+      "predicted": 0,
+      "correct": true,
+      "fact_logit": 2.348914623260498
+    },
+    {
+      "group": "negative",
+      "text": "小林不喜欢喝咖啡。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -3.3325746059417725
+    },
+    {
+      "group": "negative",
+      "text": "小林喜欢喝咖啡吗？",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -2.9896013736724854
+    },
+    {
+      "group": "negative",
+      "text": "要是小林喜欢喝咖啡就好了。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -1.022694706916809
+    },
+    {
+      "group": "negative",
+      "text": "我不确定小林是否喜欢喝咖啡。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -5.926158428192139
+    },
+    {
+      "group": "negative",
+      "text": "小林以前爱喝咖啡，现在不知道。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -0.7290359735488892
+    },
+    {
+      "group": "negative",
+      "text": "小林喜欢咖啡还是牛奶？",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -2.005305767059326
+    },
+    {
+      "group": "negative",
+      "text": "小林喜欢喝热巧克力。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": 3.200331926345825
+    },
+    {
+      "group": "negative",
+      "text": "小林觉得水太难喝了。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -1.0855380296707153
+    },
+    {
+      "group": "negative",
+      "text": "阿宁说小林不爱喝牛奶。",
+      "expected": 8,
+      "predicted": 2,
+      "correct": false,
+      "fact_logit": 0.25539448857307434
+    },
+    {
+      "group": "negative",
+      "text": "小林禁止我喝她的酸奶。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -1.0066195726394653
+    },
+    {
+      "group": "negative",
+      "text": "小林喜欢用咖啡色画画。",
+      "expected": 8,
+      "predicted": 1,
+      "correct": false,
+      "fact_logit": 1.8005034923553467
+    },
+    {
+      "group": "negative",
+      "text": "小林买了果汁送给阿宁。",
+      "expected": 8,
+      "predicted": 3,
+      "correct": false,
+      "fact_logit": 2.6671011447906494
+    },
+    {
+      "group": "negative",
+      "text": "小林说阿宁喜欢喝豆浆。",
+      "expected": 8,
+      "predicted": 4,
+      "correct": false,
+      "fact_logit": 1.698688268661499
+    },
+    {
+      "group": "negative",
+      "text": "小林不再喜欢水了。",
+      "expected": 8,
+      "predicted": 8,
+      "correct": true,
+      "fact_logit": -3.9278132915496826
+    }
+  ],
+  "elapsed_seconds": 31.39289959999951,
+  "limitations": [
+    "Twenty authored examples; some match previous training templates.",
+    "A value probe alone does not determine entity or authorize a write.",
+    "No probe adaptation and no real memory writes.",
+    "Results are not evidence of general language understanding."
+  ]
+}
