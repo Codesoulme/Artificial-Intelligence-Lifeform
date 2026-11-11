@@ -1,0 +1,670 @@
+{
+  "status": "development_only_no_writes",
+  "summary": {
+    "known_total": 24,
+    "known_correct": 22,
+    "known_rejected": 2,
+    "known_wrong_accepted": 0,
+    "unknown_total": 16,
+    "unknown_false_accept": 12
+  },
+  "rows": [
+    {
+      "name": "小林",
+      "expected": 6,
+      "text": "请查一下小林记下的数字。",
+      "single_span": true,
+      "predicted": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9455873966217041,
+        0.8278781175613403
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "小林",
+      "expected": 6,
+      "text": "小林的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9657289385795593,
+        0.8616961240768433
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "小林",
+      "expected": 6,
+      "text": "告诉我小林之前留下的偏好。",
+      "single_span": true,
+      "predicted": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9614202380180359,
+        0.8162193298339844
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "阿宁",
+      "expected": 22,
+      "text": "请查一下阿宁记下的数字。",
+      "single_span": true,
+      "predicted": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9342629313468933,
+        0.8794389367103577
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "阿宁",
+      "expected": 22,
+      "text": "阿宁的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9809883832931519,
+        0.9349864721298218
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "阿宁",
+      "expected": 22,
+      "text": "告诉我阿宁之前留下的偏好。",
+      "single_span": true,
+      "predicted": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9510864019393921,
+        0.8935289978981018
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "小雨",
+      "expected": 35,
+      "text": "请查一下小雨记下的数字。",
+      "single_span": true,
+      "predicted": [
+        35,
+        35
+      ],
+      "similarities": [
+        0.9598353505134583,
+        0.8652859926223755
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "小雨",
+      "expected": 35,
+      "text": "小雨的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        35,
+        35
+      ],
+      "similarities": [
+        0.9758404493331909,
+        0.902708888053894
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "小雨",
+      "expected": 35,
+      "text": "告诉我小雨之前留下的偏好。",
+      "single_span": true,
+      "predicted": [
+        35,
+        35
+      ],
+      "similarities": [
+        0.9735503196716309,
+        0.8702715039253235
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "阿哲",
+      "expected": 51,
+      "text": "请查一下阿哲记下的数字。",
+      "single_span": true,
+      "predicted": [
+        51,
+        51
+      ],
+      "similarities": [
+        0.8751130104064941,
+        0.8267613053321838
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "阿哲",
+      "expected": 51,
+      "text": "阿哲的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        51,
+        51
+      ],
+      "similarities": [
+        0.9811299443244934,
+        0.868245005607605
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "阿哲",
+      "expected": 51,
+      "text": "告诉我阿哲之前留下的偏好。",
+      "single_span": true,
+      "predicted": [
+        51,
+        51
+      ],
+      "similarities": [
+        0.9186291694641113,
+        0.8135572075843811
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "小梅",
+      "expected": 16,
+      "text": "请查一下小梅记下的数字。",
+      "single_span": true,
+      "predicted": [
+        16,
+        16
+      ],
+      "similarities": [
+        0.953921377658844,
+        0.8309228420257568
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "小梅",
+      "expected": 16,
+      "text": "小梅的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        16,
+        16
+      ],
+      "similarities": [
+        0.9654339551925659,
+        0.8809600472450256
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "小梅",
+      "expected": 16,
+      "text": "告诉我小梅之前留下的偏好。",
+      "single_span": true,
+      "predicted": [
+        16,
+        16
+      ],
+      "similarities": [
+        0.9696714282035828,
+        0.8324062824249268
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "阿远",
+      "expected": 27,
+      "text": "请查一下阿远记下的数字。",
+      "single_span": true,
+      "predicted": [
+        27,
+        27
+      ],
+      "similarities": [
+        0.9103015661239624,
+        0.8794277310371399
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "阿远",
+      "expected": 27,
+      "text": "阿远的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        27,
+        27
+      ],
+      "similarities": [
+        0.9845236539840698,
+        0.9526462554931641
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "阿远",
+      "expected": 27,
+      "text": "告诉我阿远之前留下的偏好。",
+      "single_span": true,
+      "predicted": [
+        27,
+        27
+      ],
+      "similarities": [
+        0.9431980848312378,
+        0.8988397717475891
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "小岚",
+      "expected": 42,
+      "text": "请查一下小岚记下的数字。",
+      "single_span": true,
+      "predicted": [
+        42,
+        42
+      ],
+      "similarities": [
+        0.948658287525177,
+        0.9506176710128784
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "小岚",
+      "expected": 42,
+      "text": "小岚的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        42,
+        42
+      ],
+      "similarities": [
+        0.9724307060241699,
+        0.9672986268997192
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "小岚",
+      "expected": 42,
+      "text": "告诉我小岚之前留下的偏好。",
+      "single_span": true,
+      "predicted": [
+        42,
+        42
+      ],
+      "similarities": [
+        0.9644713401794434,
+        0.9549205899238586
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "阿明",
+      "expected": 10,
+      "text": "请查一下阿明记下的数字。",
+      "single_span": true,
+      "predicted": [
+        10,
+        10
+      ],
+      "similarities": [
+        0.8578731417655945,
+        0.7491511702537537
+      ],
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "name": "阿明",
+      "expected": 10,
+      "text": "阿明的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        10,
+        10
+      ],
+      "similarities": [
+        0.9735020399093628,
+        0.8058878183364868
+      ],
+      "accepted": true,
+      "correct": true
+    },
+    {
+      "name": "阿明",
+      "expected": 10,
+      "text": "告诉我阿明之前留下的偏好。",
+      "single_span": true,
+      "predicted": [
+        10,
+        10
+      ],
+      "similarities": [
+        0.9097493886947632,
+        0.7432875037193298
+      ],
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "name": "小林林",
+      "expected": null,
+      "text": "请查一下小林林记下的数字。",
+      "single_span": true,
+      "predicted": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9455873966217041,
+        0.8278781175613403
+      ],
+      "accepted": true,
+      "correct": false
+    },
+    {
+      "name": "小林林",
+      "expected": null,
+      "text": "小林林的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9701507091522217,
+        0.9080921411514282
+      ],
+      "accepted": true,
+      "correct": false
+    },
+    {
+      "name": "林小林",
+      "expected": null,
+      "text": "请查一下林小林记下的数字。",
+      "single_span": true,
+      "predicted": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9273279905319214,
+        0.8948839902877808
+      ],
+      "accepted": true,
+      "correct": false
+    },
+    {
+      "name": "林小林",
+      "expected": null,
+      "text": "林小林的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9682614803314209,
+        0.9376282095909119
+      ],
+      "accepted": true,
+      "correct": false
+    },
+    {
+      "name": "小宁",
+      "expected": null,
+      "text": "请查一下小宁记下的数字。",
+      "single_span": true,
+      "predicted": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.5907562971115112,
+        0.530320942401886
+      ],
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "name": "小宁",
+      "expected": null,
+      "text": "小宁的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        6,
+        35
+      ],
+      "similarities": [
+        0.649010181427002,
+        0.5396690368652344
+      ],
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "name": "阿宁宁",
+      "expected": null,
+      "text": "请查一下阿宁宁记下的数字。",
+      "single_span": true,
+      "predicted": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9520754814147949,
+        0.9521264433860779
+      ],
+      "accepted": true,
+      "correct": false
+    },
+    {
+      "name": "阿宁宁",
+      "expected": null,
+      "text": "阿宁宁的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9747418761253357,
+        0.981087327003479
+      ],
+      "accepted": true,
+      "correct": false
+    },
+    {
+      "name": "小羽",
+      "expected": null,
+      "text": "请查一下小羽记下的数字。",
+      "single_span": true,
+      "predicted": [
+        35,
+        42
+      ],
+      "similarities": [
+        0.519269585609436,
+        0.5364155173301697
+      ],
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "name": "小羽",
+      "expected": null,
+      "text": "小羽的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        6,
+        42
+      ],
+      "similarities": [
+        0.5534546375274658,
+        0.552836537361145
+      ],
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "name": "阿哲哲",
+      "expected": null,
+      "text": "请查一下阿哲哲记下的数字。",
+      "single_span": true,
+      "predicted": [
+        51,
+        51
+      ],
+      "similarities": [
+        0.9349794983863831,
+        0.8773298859596252
+      ],
+      "accepted": true,
+      "correct": false
+    },
+    {
+      "name": "阿哲哲",
+      "expected": null,
+      "text": "阿哲哲的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        51,
+        51
+      ],
+      "similarities": [
+        0.9735209941864014,
+        0.912395715713501
+      ],
+      "accepted": true,
+      "correct": false
+    },
+    {
+      "name": "梅小梅",
+      "expected": null,
+      "text": "请查一下梅小梅记下的数字。",
+      "single_span": true,
+      "predicted": [
+        16,
+        16
+      ],
+      "similarities": [
+        0.9334349632263184,
+        0.9334046840667725
+      ],
+      "accepted": true,
+      "correct": false
+    },
+    {
+      "name": "梅小梅",
+      "expected": null,
+      "text": "梅小梅的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        16,
+        16
+      ],
+      "similarities": [
+        0.9610761404037476,
+        0.9612123966217041
+      ],
+      "accepted": true,
+      "correct": false
+    },
+    {
+      "name": "阿远远",
+      "expected": null,
+      "text": "请查一下阿远远记下的数字。",
+      "single_span": true,
+      "predicted": [
+        27,
+        27
+      ],
+      "similarities": [
+        0.8743597865104675,
+        0.8773746490478516
+      ],
+      "accepted": true,
+      "correct": false
+    },
+    {
+      "name": "阿远远",
+      "expected": null,
+      "text": "阿远远的记录目前是什么？",
+      "single_span": true,
+      "predicted": [
+        27,
+        27
+      ],
+      "similarities": [
+        0.9734063744544983,
+        0.8814425468444824
+      ],
+      "accepted": true,
+      "correct": false
+    }
+  ],
+  "source_hashes": {
+    "D:\\SPORA\\runs\\open-base-deepseek-r1-1.5b-ad9f0ae\\model.safetensors": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "D:\\SPORA\\runs\\deepseek-spora-output-v2-checkpoint-20261111\\individual-with-output-v2.pt": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f",
+    "D:\\SPORA\\runs\\deepseek-spora-cluener-locator-retrained-20261111\\locator.pt": "13bf8102f687c4ceb0b9729d8455426eabdf36fae7fab409c932587a7f2dd459",
+    "D:\\SPORA\\runs\\deepseek-spora-named-binding-retrained-20261111\\binding.pt": "5ce6bb74e595eddc22e1cae6a7a936198a6ab818204bdf85e116a2ab8252ae2d"
+  },
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "address_basis_sha256": "f56882d3ae18db4e3e55cf07a1780f2b8e9d2ecc99691070d2e4601b404798ea",
+  "threshold": 0.7660595907440185,
+  "seconds": 42.76347259999966,
+  "limitations": [
+    "Forty manually authored queries, small fixed set of names.",
+    "Single subject-span agreement is not proof that the subject is correct.",
+    "Expected labels are used only for metrics; no state or individual was modified.",
+    "The binding was trained on whole-question pooling; this audit uses predicted name spans.",
+    "No real chat, source trust, or write capability was evaluated."
+  ]
+}
