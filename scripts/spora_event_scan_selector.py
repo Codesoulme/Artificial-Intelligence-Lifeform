@@ -46,6 +46,11 @@ def select_event(model, state, key, order, as_of=None, max_scan=4096, batch_size
     effective_candidates = {}
     for event, row in zip(events, rows):
         if row.get('reason') == 'unknown_event':
+            # With a complete event-key index this event is known to belong to
+            # the requested key. An unreadable neural value cannot be treated
+            # as absence without risking a false historical answer.
+            if event_keys is not None:
+                return {'status': 'abstain', 'reason': 'indexed_event_unreadable', 'event_time': event}
             continue
         if 'reason' in row:
             return {'status': 'abstain', 'reason': 'uncertain_provenance', 'event_time': event}

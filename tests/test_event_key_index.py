@@ -62,6 +62,18 @@ class EventKeyIndexTests(unittest.TestCase):
         self.assertEqual(result['reason'], 'insufficient_effective_candidates')
         read.assert_called_once_with(self.model, state, [], 16)
 
+    def test_indexed_unknown_event_must_not_be_silently_skipped(self):
+        state, _ = self.writes()
+        rows = [{'action': 'new', 'source': 'direct', 'valid_at': 0},
+                {'reason': 'unknown_event', 'source': None}]
+        with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=rows):
+            for order in ('latest', 'previous', 'effective_previous'):
+                kwargs = {'as_of': 2} if order.startswith('effective_') else {}
+                result = select_event(self.model, state, 2, order, **kwargs)
+                self.assertEqual(result['status'], 'abstain')
+                self.assertEqual(result['reason'], 'indexed_event_unreadable')
+                self.assertEqual(result['event_time'], 2)
+
     def test_growth_and_serialization_preserve_index(self):
         state, _ = self.writes()
         state = grow(self.model, state)
