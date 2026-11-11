@@ -12,6 +12,7 @@ from spora.integrated_checkpoint import (_digest, IntegratedSPORARuntime, load_i
                                          load_integrated_runtime, save_integrated, replacement_feature_variant_sha256)
 from spora.integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
 from spora.internal_memory import WriteControl, attach, read_provenance
+from spora.identity_fingerprints import IdentityFingerprints
 from spora.memory_output import MemoryOutputAdapter
 from spora.language_training import frozen_digest
 from spora.named_address import NamedAddressBinding, address_basis_sha256, feature_files_sha256
@@ -66,6 +67,14 @@ class IntegratedCheckpointTests(unittest.TestCase):
         self.assertEqual(frozen_digest(organism, state), frozen_digest(self.organism, self.state))
         self.assertEqual(organism.named_address_binding.feature_contract, 'name-span-mean-v1')
         self.assertTrue(torch.equal(model(x, memory_state=state, memory_addresses=addresses, current_only=True), expected))
+
+    def test_identity_fingerprints_survive_integrated_checkpoint(self):
+        self.organism.identity_fingerprints = IdentityFingerprints(self.organism.config.key_count)
+        self.organism.identity_fingerprints.bind(6, '小林')
+        self.save()
+        _, organism, _ = load_integrated(self.path, self.base(), self.root)
+        self.assertEqual(organism.identity_fingerprints.lookup('小林'), 6)
+        self.assertIsNone(organism.identity_fingerprints.lookup('小林子'))
 
     def test_native_spora_reader_roundtrip_preserves_outputs(self):
         legacy = self.reader

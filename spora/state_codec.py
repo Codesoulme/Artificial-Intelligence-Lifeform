@@ -52,6 +52,12 @@ def flatten(model, state):
             raise ValueError('Invalid named address binding')
         model.named_address_binding.validate(model)
         schema['named_address_binding'] = model.named_address_binding.config_dict()
+    if hasattr(model, 'identity_fingerprints'):
+        from .identity_fingerprints import IdentityFingerprints
+        if not isinstance(model.identity_fingerprints, IdentityFingerprints):
+            raise ValueError('Invalid identity fingerprint module')
+        model.identity_fingerprints.validate(model)
+        schema['identity_fingerprints'] = model.identity_fingerprints.config_dict()
     if hasattr(model, 'awake_core'):
         model.awake_core.validate()
         schema['awake_core'] = model.awake_core.config_dict()
@@ -98,6 +104,9 @@ def restore(schema, tensors, device='cpu'):
     if 'named_address_binding' in schema:
         from .named_address import NamedAddressBinding
         model.named_address_binding = NamedAddressBinding(**schema['named_address_binding']).to(device)
+    if 'identity_fingerprints' in schema:
+        from .identity_fingerprints import IdentityFingerprints
+        model.identity_fingerprints = IdentityFingerprints(**schema['identity_fingerprints']).to(device)
     if 'awake_core' in schema:
         from .awake import AwakeCore, AwakeConfig
         model.awake_core = AwakeCore(AwakeConfig(**schema['awake_core'])).to(device)
