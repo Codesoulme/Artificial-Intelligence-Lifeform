@@ -1,0 +1,76 @@
+{
+  "status": "surprise_trajectory_development_probe",
+  "events": [
+    {
+      "label": "new",
+      "value": 2,
+      "quality": 0.4,
+      "action": "new",
+      "current_write": true,
+      "novelty": 1.0,
+      "novelty_components": {
+        "new_fact": 1.0,
+        "value_change": 0.0,
+        "quality_gain": 0.4,
+        "time_change": 0.0
+      },
+      "cursor": 1
+    },
+    {
+      "label": "quality_upgrade",
+      "value": 2,
+      "quality": 0.9,
+      "action": "defer",
+      "current_write": false,
+      "novelty": 1.0,
+      "novelty_components": {
+        "new_fact": 0.0,
+        "value_change": 1.0,
+        "quality_gain": 0.5000001728534699,
+        "time_change": 1.0
+      },
+      "cursor": 2
+    },
+    {
+      "label": "correction",
+      "value": 3,
+      "quality": 0.9,
+      "action": "correct",
+      "current_write": true,
+      "novelty": 1.0,
+      "novelty_components": {
+        "new_fact": 0.0,
+        "value_change": 1.0,
+        "quality_gain": 0.5000001728534699,
+        "time_change": 1.0
+      },
+      "cursor": 3
+    },
+    {
+      "label": "repeat",
+      "value": 3,
+      "quality": 0.9,
+      "action": "defer",
+      "current_write": false,
+      "novelty": 1.0,
+      "novelty_components": {
+        "new_fact": 0.0,
+        "value_change": 1.0,
+        "quality_gain": 2.622604370339232e-07,
+        "time_change": 1.0
+      },
+      "cursor": 4
+    }
+  ],
+  "expected_novelty_order": [
+    "new",
+    "correction",
+    "quality_upgrade",
+    "repeat"
+  ],
+  "limitations": [
+    "Synthetic controlled actions and one key.",
+    "Controller actions are forced to isolate novelty labels.",
+    "No language parser or learned novelty controller was evaluated."
+  ]
+}
