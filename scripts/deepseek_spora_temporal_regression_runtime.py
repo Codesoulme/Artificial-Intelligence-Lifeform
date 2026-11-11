@@ -91,7 +91,7 @@ def main():
     report = {'status': 'temporary_temporal_head_runtime_contrast', 'summary': summary, 'rows': rows,
               'source_checkpoint_sha256': source_sha, 'candidate_sha256': info['temporal_sha256'],
               'seconds': time.perf_counter() - started,
-              'limitations': ['Three known names, two manually written facts and four authored questions.',
+              'limitations': [f'Three known names, two manually written facts and {len(QUESTIONS)} authored questions.',
                               'Regression and fresh questions were previously inspected during development.',
                               'Fixed numerical memory values, not a natural language write or general timeline.',
                               'End-to-end other gates may abstain before or after temporal classification.',
