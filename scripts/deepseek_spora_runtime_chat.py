@@ -118,7 +118,7 @@ class SporaChat:
                                     candidate.source, candidate.quality, candidate.valid_at)
 
     @torch.no_grad()
-    def answer(self, question):
+    def answer(self, question, *, identity_guard=None):
         if not isinstance(question, str) or not question.strip():
             raise ValueError('A nonempty Chinese question is required')
         features, masks = extract(self.base, self.tokenizer, [question], batch_size=1)
@@ -172,6 +172,12 @@ class SporaChat:
             result['reason'] = 'name_binding_rejected'
             return result
         key = int(indices[0, 0])
+        # Experimental opt-in only: reject before inspecting memory state or
+        # generating. The caller must supply trustworthy enrollment and span
+        # verification; the default route has no such guard.
+        if identity_guard is not None and identity_guard.authorize(question, selected, key) is not True:
+            result['reason'] = 'identity_guard_rejected'
+            return result
         if current_memory_status(self.organism, self.state, key)['status'] != 'known':
             result['reason'] = 'unknown_memory'
             return result
