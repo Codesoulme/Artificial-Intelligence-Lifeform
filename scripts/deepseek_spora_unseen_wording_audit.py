@@ -13,7 +13,7 @@ from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.internal_memory import observe_sourced
 import torch
 
-OUTPUT = ROOT/'runs/deepseek-spora-unseen-wording-audit-v2-20261111.json'
+OUTPUT = ROOT/'runs/deepseek-spora-unseen-wording-audit-v3-20261111.json'
 V4 = ROOT/'runs/deepseek-spora-read-intent-gate-v4-20261111'
 
 CASES = (

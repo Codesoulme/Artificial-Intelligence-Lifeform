@@ -264,7 +264,7 @@ class IntegratedOpenBase(nn.Module):
             return self.base(*args, **kwargs)
 
     def generate(self, *args, memory_state=None, memory_addresses=None, memory_read_mask=None, memory_slots=None,
-                 current_only=False, memory_output_logits=None, **kwargs):
+                 current_only=False, memory_output_logits=None, memory_output_gain=1.0, **kwargs):
         if memory_state is not None and len(args) > 1:
             raise ValueError('Memory calls accept at most one positional base argument')
         if memory_state is not None and kwargs.get('past_key_values') is not None:
@@ -272,7 +272,7 @@ class IntegratedOpenBase(nn.Module):
         if memory_output_logits is not None:
             if self.output_adapter is None:
                 raise ValueError('Memory output adapter is not attached')
-            processor = MemoryOutputLogitsProcessor(self.output_adapter, memory_output_logits)
+            processor = MemoryOutputLogitsProcessor(self.output_adapter, memory_output_logits, memory_output_gain)
             existing = kwargs.get('logits_processor')
             kwargs['logits_processor'] = ([processor] if existing is None else [processor] + list(existing))
         with self._snapshot(memory_state, memory_addresses, current_only, memory_read_mask, memory_slots):

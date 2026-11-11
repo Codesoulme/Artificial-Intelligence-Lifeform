@@ -54,12 +54,15 @@ class MemoryOutputAdapter(nn.Module):
 class MemoryOutputLogitsProcessor(LogitsProcessor):
     """Add one fixed memory bias to every generation step in a call."""
 
-    def __init__(self, adapter, memory_logits):
+    def __init__(self, adapter, memory_logits, gain=1.0):
         if not isinstance(adapter, MemoryOutputAdapter):
             raise ValueError('Memory output adapter required')
         if memory_logits.ndim != 2 or memory_logits.shape[0] < 1:
             raise ValueError('Batch memory logits required')
+        if isinstance(gain, bool) or not isinstance(gain, (int, float)) or not math.isfinite(gain) or gain <= 0:
+            raise ValueError('Memory output gain must be finite and positive')
         self.bias = adapter(memory_logits).detach()
+        self.gain = float(gain)
         self._applied = False
 
     def __call__(self, input_ids, scores):
@@ -70,4 +73,4 @@ class MemoryOutputLogitsProcessor(LogitsProcessor):
             return scores
         self._applied = True
         bias = self.bias if self.bias.shape[0] == scores.shape[0] else self.bias.expand(scores.shape[0], -1)
-        return scores + bias.to(device=scores.device, dtype=scores.dtype)
+        return scores + self.gain * bias.to(device=scores.device, dtype=scores.dtype)

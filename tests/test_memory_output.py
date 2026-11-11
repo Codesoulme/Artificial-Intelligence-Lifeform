@@ -26,6 +26,9 @@ class MemoryOutputTests(unittest.TestCase):
         self.assertTrue(torch.isfinite(result).all())
         second = processor(torch.zeros(2, 2, dtype=torch.long), scores)
         self.assertTrue(torch.equal(second, scores))
+        boosted = MemoryOutputLogitsProcessor(adapter, torch.tensor([[4., 0., 0., 0.]]), gain=2.)
+        boosted_result = boosted(torch.zeros(1, 1, dtype=torch.long), torch.zeros(1, 9))
+        self.assertTrue(torch.equal(boosted_result, result[:1] * 2))
         with self.assertRaises(ValueError):
             processor(torch.zeros(2, 1, dtype=torch.long), torch.zeros(2, 8))
 

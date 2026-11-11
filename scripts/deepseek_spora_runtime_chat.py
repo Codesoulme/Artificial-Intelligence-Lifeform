@@ -152,14 +152,22 @@ class SporaChat:
         time_tensor = torch.zeros_like(key_tensor) if event_time is None else torch.tensor([event_time], device=device)
         memory_logits = __import__('spora.growing', fromlist=['query']).query(
             self.organism, self.state, key_tensor, mode_tensor, time_tensor)
+        expected_first = int(self.decoder.output_adapter(memory_logits).argmax(-1)[0])
         prefix = closed_think_inputs(self.tokenizer, question, 'cuda')
         ids = self.decoder.generate(**prefix, **args, memory_output_logits=memory_logits,
                                     max_new_tokens=32, do_sample=False,
                                     pad_token_id=self.tokenizer.pad_token_id,
                                     eos_token_id=self.tokenizer.eos_token_id)
-        result['accepted'], result['reason'] = True, 'routed'
-        result['answer'] = self.tokenizer.decode(
-            ids[0, prefix['input_ids'].shape[1]:], skip_special_tokens=True).strip()
+        tail = ids[0, prefix['input_ids'].shape[1]:]
+        retried = bool(tail.numel() and int(tail[0]) != expected_first)
+        if retried:
+            ids = self.decoder.generate(**prefix, **args, memory_output_logits=memory_logits,
+                                        memory_output_gain=2.0, max_new_tokens=32, do_sample=False,
+                                        pad_token_id=self.tokenizer.pad_token_id,
+                                        eos_token_id=self.tokenizer.eos_token_id)
+            tail = ids[0, prefix['input_ids'].shape[1]:]
+        result['accepted'], result['reason'], result['output_retry'] = True, 'routed', retried
+        result['answer'] = self.tokenizer.decode(tail, skip_special_tokens=True).strip()
         result['key'] = key
         return result
 
