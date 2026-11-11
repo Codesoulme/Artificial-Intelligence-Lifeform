@@ -10,8 +10,9 @@
 - 两页开发后续：16 条合成轨迹、2048 事件，无扰动时原方案可信且正确 1977 条，候选 2048 条；候选参数由前一实验挑选，并非独立最终评估。人工高斯扰动 RMS 10% 时，两者分别为 930 和 905 条可信且正确，不能推断候选更抗扰，也不能把扰动等同于真实睡眠或损坏。
 - 实际个体的模型参数配合临时新状态，在 12 个此前开发用过的数字键上各写入 64、128 条受控事件；两个密度下旧方案均拒答 12/12，候选均正确选择 12/12，值记忆张量逐位相同。样本小且重复使用，不能推断自然语言或真实用户表现。
 - 含独立精度与事件键的整合检查点保存、重载测试通过；相关回归共 68 项通过。该测试不证明进程崩溃恢复及长时间数值稳定性。
-- 单个完整模型对照于加载阶段出现 Windows access violation，调用栈位于 `integrated_checkpoint.py` 的 `_replacement_bundle` 复制张量处；没有产生回答或评测结果。底层原因尚未确认，不能把它归因于显存或声称故障已修复。使用的流式加载器仅作研究用途，等价性只经过小样本验证。
+- 完整模型的首次对照于加载阶段出现 Windows access violation，调用栈位于 `integrated_checkpoint.py` 的 `_replacement_bundle` 复制张量处。相同实验再运行一次成功，但底层原因尚未确认；不能把它归因于显存或声称故障已修复。使用的流式加载器仅作研究用途，等价性只经过小样本验证。
+- 第二次完整模型对照只含一个已知姓名、64 条人工写入和一个人工问题：旧方案在来源不确定时拒答；新方案选择了正确的第 62 条经历，但默认输出错误地回答“水”（正确为“果汁”）。仅在该次诊断中临时关闭输出偏置后，回答为“果汁”。这一对照表明输出环节值得继续查证，不足以证明关闭偏置普遍有益，更不证明自然对话或长期记忆能力。两份状态的值记忆张量相同，原个体未被改动。结果保存在 `runs/deepseek-spora-independent-provenance-runtime-20261112.json`。
 
 每页增加一个 `memory_width × memory_width` 的 float32 精度矩阵。当前宽度为 90，即每页 32,400 字节，不含其他张量和容器开销；随页数线性增长，写入也增加矩阵运算。
 
-实验脚本为 `scripts/deepseek_spora_provenance_ridge_pilot.py`、`scripts/deepseek_spora_provenance_ridge_holdout.py`、`scripts/deepseek_spora_independent_provenance_state_audit.py` 和 `scripts/deepseek_spora_independent_provenance_runtime.py`。输出保存在本机 `runs/`。后续需定位底层异常、完成完整模型多例对照，再用未参与调参的数据检查来源、时间、纠错和抗干扰；在此之前不将候选用于真实个体或称为已验证的通用持久记忆。
+实验脚本为 `scripts/deepseek_spora_provenance_ridge_pilot.py`、`scripts/deepseek_spora_provenance_ridge_holdout.py`、`scripts/deepseek_spora_independent_provenance_state_audit.py` 和 `scripts/deepseek_spora_independent_provenance_runtime.py`。输出保存在本机 `runs/`。后续需定位底层异常、调查输出偏置并完成完整模型多例对照，再用未参与调参的数据检查来源、时间、纠错和抗干扰；在此之前不将候选用于真实个体或称为已验证的通用持久记忆。
