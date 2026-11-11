@@ -15,12 +15,14 @@ SEED = 98117
 STEPS = 12
 
 
-def main(output=OUTPUT, learning_rate=1e-4):
+def main(output=OUTPUT, learning_rate=1e-4, objective='full'):
     output = Path(output).resolve()
     if not output.is_relative_to((p.ROOT / 'runs').resolve()) or output == (p.ROOT / 'runs').resolve():
         raise ValueError('Output must be a new directory under runs')
     if not math.isfinite(learning_rate) or not 0 < learning_rate <= 1e-3:
         raise ValueError('Invalid learning rate')
+    if objective not in ('full', 'value_contrastive'):
+        raise ValueError('Invalid objective')
     if output.exists():
         raise FileExistsError(output)
     source_sha = p.sha(p.runtime.CHECKPOINT)
@@ -66,11 +68,20 @@ def main(output=OUTPUT, learning_rate=1e-4):
                     prompt = p.closed_think_inputs(tokenizer, question, 'cuda')
                     target = tokenizer(answer, add_special_tokens=False, return_tensors='pt').input_ids.to('cuda')
                     target = p.torch.cat((target, p.torch.tensor([[tokenizer.eos_token_id]], device=device)), dim=1)
+                    value_ids = tokenizer(p.WORDS[value], add_special_tokens=False).input_ids
+                    competitor_ids = [tokenizer(p.WORDS[v], add_special_tokens=False).input_ids for v in (1, 3, 4) if v != value]
+                    if len(value_ids) != 1 or any(len(ids) != 1 for ids in competitor_ids):
+                        raise ValueError('Pilot requires single-token value classes')
+                    positions = (target[0] == value_ids[0]).nonzero(as_tuple=True)[0]
+                    if positions.numel() != 1:
+                        raise ValueError('Target value must occur at exactly one answer position')
                     ids = p.torch.cat((prompt['input_ids'], target), dim=1)
                     spec = p._memory_args(organism, state, {'key': key, 'intent': 'current', 'event_time': 0})
                     cases.append({'group': group, 'key': key, 'name': name, 'value': value, 'state': state,
                                   'state_digest': p.frozen_digest(organism, state), 'question': question,
-                                  'answer': answer, 'prompt': prompt, 'ids': ids, 'spec': spec})
+                                  'answer': answer, 'prompt': prompt, 'ids': ids, 'spec': spec,
+                                  'value_position': int(positions[0]), 'value_token': value_ids[0],
+                                  'competitor_tokens': [ids[0] for ids in competitor_ids]})
 
         def evaluate():
             rows = []
@@ -83,6 +94,8 @@ def main(output=OUTPUT, learning_rate=1e-4):
                     scores = forced.logits[:, prefix - 1:prefix - 1 + target.shape[1]].float()
                     forced_loss = p.torch.nn.functional.cross_entropy(
                         scores.reshape(-1, scores.shape[-1]), target.reshape(-1))
+                    value_logits = scores[0, item['value_position']]
+                    value_margin = value_logits[item['value_token']] - value_logits[item['competitor_tokens']].max()
                     ids = decoder.generate(**item['prompt'], **{**item['spec'], 'use_cache': True},
                         max_new_tokens=24, do_sample=False, pad_token_id=tokenizer.pad_token_id,
                         eos_token_id=tokenizer.eos_token_id)
@@ -91,7 +104,7 @@ def main(output=OUTPUT, learning_rate=1e-4):
                 rows.append({'group': item['group'], 'name': item['name'], 'question': item['question'],
                              'expected_value': p.WORDS[item['value']], 'target_sentence': item['answer'],
                              'answer': text, 'token_ids': tail, 'ended_eos': tokenizer.eos_token_id in tail,
-                             'teacher_forced_loss': float(forced_loss)})
+                             'teacher_forced_loss': float(forced_loss), 'value_margin': float(value_margin)})
             return rows
 
         def ordinary_answers():
@@ -123,7 +136,14 @@ def main(output=OUTPUT, learning_rate=1e-4):
             targets = item['ids'][:, prefix_len:]
             if scores.shape[:2] != targets.shape:
                 raise ValueError('Causal answer alignment mismatch')
-            loss = p.torch.nn.functional.cross_entropy(scores.reshape(-1, scores.shape[-1]), targets.reshape(-1))
+            if objective == 'full':
+                loss = p.torch.nn.functional.cross_entropy(scores.reshape(-1, scores.shape[-1]), targets.reshape(-1))
+            else:
+                value_logits = scores[:, item['value_position'], :]
+                target_id = item['value_token']
+                competitors = value_logits[:, item['competitor_tokens']]
+                margin_loss = p.torch.nn.functional.softplus(competitors - value_logits[:, target_id:target_id + 1]).mean()
+                loss = p.torch.nn.functional.cross_entropy(value_logits, targets[:, item['value_position']]) + margin_loss
             if not bool(p.torch.isfinite(loss)):
                 raise ValueError('Nonfinite loss')
             loss.backward()
@@ -143,15 +163,15 @@ def main(output=OUTPUT, learning_rate=1e-4):
     output.mkdir(parents=False, exist_ok=False)
     p.torch.save({'state': reader_state, 'source_checkpoint_sha256': source_sha,
                   'base_sha256': p.WEIGHT_SHA, 'steps': STEPS, 'seed': SEED,
-                  'learning_rate': learning_rate}, output / 'reader.pt')
+                  'learning_rate': learning_rate, 'objective': objective}, output / 'reader.pt')
     report = {'before': before, 'after': after, 'trace': trace, 'source_checkpoint_sha256': source_sha,
               'ordinary_before': ordinary_before, 'ordinary_after': ordinary_after,
               'ordinary_tokens_match': [a['token_ids'] == b['token_ids'] for a, b in zip(ordinary_before, ordinary_after)],
-              'learning_rate': learning_rate, 'base_sha256': p.WEIGHT_SHA,
+              'learning_rate': learning_rate, 'objective': objective, 'base_sha256': p.WEIGHT_SHA,
               'candidate_sha256': p.sha(output / 'reader.pt'),
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': p.torch.cuda.max_memory_allocated(),
               'limitations': ['Four training examples, two held examples; two seen values and artificial facts.',
-                              'Full-answer teacher forcing with no output bias; not normal chat training.',
+                              'Teacher forcing with no output bias; not normal chat training.',
                               'Address and fact supplied numerically; no routing or unknown-memory evaluation.',
                               'Only two ordinary prompts tested without any memory; no evaluation with unrelated memory.',
                               'Candidate is isolated and is not adopted by default.',
@@ -167,5 +187,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', type=Path, default=OUTPUT)
     parser.add_argument('--learning-rate', type=float, default=1e-4)
+    parser.add_argument('--objective', choices=('full', 'value_contrastive'), default='full')
     options = parser.parse_args()
-    main(options.output, options.learning_rate)
+    main(options.output, options.learning_rate, options.objective)
