@@ -1,0 +1,6418 @@
+{
+  "status": "research_only_no_writes",
+  "threshold": 0.299444317817688,
+  "classes": [
+    "affirmative",
+    "negation",
+    "hypothesis",
+    "third_party",
+    "action",
+    "question_history"
+  ],
+  "checkpoint_sha256": "2c47f638d460f651bf0808831d8ff69e7a8b3d5c25eed69a6660e20510971456",
+  "source_hashes": {
+    "D:\\SPORA\\runs\\open-base-deepseek-r1-1.5b-ad9f0ae\\model.safetensors": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "D:\\SPORA\\runs\\deepseek-spora-output-v2-checkpoint-20261111\\individual-with-output-v2.pt": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f"
+  },
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "replacement_layers": [
+    6,
+    12
+  ],
+  "results": {
+    "train": {
+      "positive_total": 99,
+      "positive_accepted": 99,
+      "negative_total": 330,
+      "negative_accepted": 0,
+      "rows": [
+        {
+          "text": "小林喜欢喝茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3550432026386261,
+          "affirmative_probability": 0.3550432026386261,
+          "accepted": true
+        },
+        {
+          "text": "小林最喜欢的饮料是茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5312132835388184,
+          "affirmative_probability": 0.5312132835388184,
+          "accepted": true
+        },
+        {
+          "text": "我知道小林爱喝茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4318622946739197,
+          "affirmative_probability": 0.4318622946739197,
+          "accepted": true
+        },
+        {
+          "text": "小林不喜欢喝茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.43733474612236023,
+          "affirmative_probability": 0.2265273630619049,
+          "accepted": false
+        },
+        {
+          "text": "小林从来不喝茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5142461657524109,
+          "affirmative_probability": 0.17246481776237488,
+          "accepted": false
+        },
+        {
+          "text": "小林以后不再喜欢茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5703573822975159,
+          "affirmative_probability": 0.10903007537126541,
+          "accepted": false
+        },
+        {
+          "text": "我猜小林可能喜欢茶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4726977050304413,
+          "affirmative_probability": 0.15018871426582336,
+          "accepted": false
+        },
+        {
+          "text": "假如小林喜欢茶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.37187641859054565,
+          "affirmative_probability": 0.20538516342639923,
+          "accepted": false
+        },
+        {
+          "text": "小林说朋友喜欢茶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.32436826825141907,
+          "affirmative_probability": 0.17279961705207825,
+          "accepted": false
+        },
+        {
+          "text": "小林给朋友买了茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5253627300262451,
+          "affirmative_probability": 0.12362039089202881,
+          "accepted": false
+        },
+        {
+          "text": "小林为客人准备了茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7257351875305176,
+          "affirmative_probability": 0.07682628184556961,
+          "accepted": false
+        },
+        {
+          "text": "小林是否爱喝茶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.361908495426178,
+          "affirmative_probability": 0.15496355295181274,
+          "accepted": false
+        },
+        {
+          "text": "小林以前喝茶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.47472450137138367,
+          "affirmative_probability": 0.127062126994133,
+          "accepted": false
+        },
+        {
+          "text": "小林喜欢喝咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.41289860010147095,
+          "affirmative_probability": 0.41289860010147095,
+          "accepted": true
+        },
+        {
+          "text": "小林最喜欢的饮料是咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5275852680206299,
+          "affirmative_probability": 0.5275852680206299,
+          "accepted": true
+        },
+        {
+          "text": "我知道小林爱喝咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5016754865646362,
+          "affirmative_probability": 0.5016754865646362,
+          "accepted": true
+        },
+        {
+          "text": "小林不喜欢喝咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.43678227066993713,
+          "affirmative_probability": 0.23526820540428162,
+          "accepted": false
+        },
+        {
+          "text": "小林从来不喝咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.536058247089386,
+          "affirmative_probability": 0.16450048983097076,
+          "accepted": false
+        },
+        {
+          "text": "小林以后不再喜欢咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5655047297477722,
+          "affirmative_probability": 0.10772307962179184,
+          "accepted": false
+        },
+        {
+          "text": "我猜小林可能喜欢咖啡。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4747677743434906,
+          "affirmative_probability": 0.14928176999092102,
+          "accepted": false
+        },
+        {
+          "text": "假如小林喜欢咖啡就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3727199137210846,
+          "affirmative_probability": 0.19571077823638916,
+          "accepted": false
+        },
+        {
+          "text": "小林说朋友喜欢咖啡。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.31719034910202026,
+          "affirmative_probability": 0.17205415666103363,
+          "accepted": false
+        },
+        {
+          "text": "小林给朋友买了咖啡。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5397958159446716,
+          "affirmative_probability": 0.12160593271255493,
+          "accepted": false
+        },
+        {
+          "text": "小林为客人准备了咖啡。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7274882793426514,
+          "affirmative_probability": 0.07702606171369553,
+          "accepted": false
+        },
+        {
+          "text": "小林是否爱喝咖啡？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4329410195350647,
+          "affirmative_probability": 0.16243502497673035,
+          "accepted": false
+        },
+        {
+          "text": "小林以前喝咖啡，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5848420262336731,
+          "affirmative_probability": 0.1113208457827568,
+          "accepted": false
+        },
+        {
+          "text": "小林喜欢喝牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.42590469121932983,
+          "affirmative_probability": 0.42590469121932983,
+          "accepted": true
+        },
+        {
+          "text": "小林最喜欢的饮料是牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5316001176834106,
+          "affirmative_probability": 0.5316001176834106,
+          "accepted": true
+        },
+        {
+          "text": "我知道小林爱喝牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5163034796714783,
+          "affirmative_probability": 0.5163034796714783,
+          "accepted": true
+        },
+        {
+          "text": "小林不喜欢喝牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4517088234424591,
+          "affirmative_probability": 0.23933351039886475,
+          "accepted": false
+        },
+        {
+          "text": "小林从来不喝牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5449365377426147,
+          "affirmative_probability": 0.16992920637130737,
+          "accepted": false
+        },
+        {
+          "text": "小林以后不再喜欢牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5772162079811096,
+          "affirmative_probability": 0.10824210196733475,
+          "accepted": false
+        },
+        {
+          "text": "我猜小林可能喜欢牛奶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.47429585456848145,
+          "affirmative_probability": 0.15449725091457367,
+          "accepted": false
+        },
+        {
+          "text": "假如小林喜欢牛奶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.37081968784332275,
+          "affirmative_probability": 0.20454475283622742,
+          "accepted": false
+        },
+        {
+          "text": "小林说朋友喜欢牛奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3162727952003479,
+          "affirmative_probability": 0.17544065415859222,
+          "accepted": false
+        },
+        {
+          "text": "小林给朋友买了牛奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5133002996444702,
+          "affirmative_probability": 0.1310507357120514,
+          "accepted": false
+        },
+        {
+          "text": "小林为客人准备了牛奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7130275368690491,
+          "affirmative_probability": 0.0823623463511467,
+          "accepted": false
+        },
+        {
+          "text": "小林是否爱喝牛奶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4159756302833557,
+          "affirmative_probability": 0.17162925004959106,
+          "accepted": false
+        },
+        {
+          "text": "小林以前喝牛奶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.576915442943573,
+          "affirmative_probability": 0.11903631687164307,
+          "accepted": false
+        },
+        {
+          "text": "小林喜欢喝果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.41886481642723083,
+          "affirmative_probability": 0.41886481642723083,
+          "accepted": true
+        },
+        {
+          "text": "小林最喜欢的饮料是果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5322386622428894,
+          "affirmative_probability": 0.5322386622428894,
+          "accepted": true
+        },
+        {
+          "text": "我知道小林爱喝果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5050789713859558,
+          "affirmative_probability": 0.5050789713859558,
+          "accepted": true
+        },
+        {
+          "text": "小林不喜欢喝果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4429541826248169,
+          "affirmative_probability": 0.23836961388587952,
+          "accepted": false
+        },
+        {
+          "text": "小林从来不喝果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5326321721076965,
+          "affirmative_probability": 0.1716540902853012,
+          "accepted": false
+        },
+        {
+          "text": "小林以后不再喜欢果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5605095028877258,
+          "affirmative_probability": 0.11049126088619232,
+          "accepted": false
+        },
+        {
+          "text": "我猜小林可能喜欢果汁。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.47908276319503784,
+          "affirmative_probability": 0.15267477929592133,
+          "accepted": false
+        },
+        {
+          "text": "假如小林喜欢果汁就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.38176631927490234,
+          "affirmative_probability": 0.2009529024362564,
+          "accepted": false
+        },
+        {
+          "text": "小林说朋友喜欢果汁。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3060227632522583,
+          "affirmative_probability": 0.17825448513031006,
+          "accepted": false
+        },
+        {
+          "text": "小林给朋友买了果汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5312144160270691,
+          "affirmative_probability": 0.1286085844039917,
+          "accepted": false
+        },
+        {
+          "text": "小林为客人准备了果汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7164837718009949,
+          "affirmative_probability": 0.08322391659021378,
+          "accepted": false
+        },
+        {
+          "text": "小林是否爱喝果汁？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4166254699230194,
+          "affirmative_probability": 0.16755805909633636,
+          "accepted": false
+        },
+        {
+          "text": "小林以前喝果汁，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5622742772102356,
+          "affirmative_probability": 0.11866293102502823,
+          "accepted": false
+        },
+        {
+          "text": "小林喜欢喝豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4054778218269348,
+          "affirmative_probability": 0.4054778218269348,
+          "accepted": true
+        },
+        {
+          "text": "小林最喜欢的饮料是豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5253780484199524,
+          "affirmative_probability": 0.5253780484199524,
+          "accepted": true
+        },
+        {
+          "text": "我知道小林爱喝豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4957583546638489,
+          "affirmative_probability": 0.4957583546638489,
+          "accepted": true
+        },
+        {
+          "text": "小林不喜欢喝豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.43355792760849,
+          "affirmative_probability": 0.23614855110645294,
+          "accepted": false
+        },
+        {
+          "text": "小林从来不喝豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5264114737510681,
+          "affirmative_probability": 0.17250646650791168,
+          "accepted": false
+        },
+        {
+          "text": "小林以后不再喜欢豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5598672032356262,
+          "affirmative_probability": 0.11055943369865417,
+          "accepted": false
+        },
+        {
+          "text": "我猜小林可能喜欢豆浆。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4717075824737549,
+          "affirmative_probability": 0.15408839285373688,
+          "accepted": false
+        },
+        {
+          "text": "假如小林喜欢豆浆就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.361061692237854,
+          "affirmative_probability": 0.20638567209243774,
+          "accepted": false
+        },
+        {
+          "text": "小林说朋友喜欢豆浆。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.30076831579208374,
+          "affirmative_probability": 0.17737917602062225,
+          "accepted": false
+        },
+        {
+          "text": "小林给朋友买了豆浆。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5270869135856628,
+          "affirmative_probability": 0.12703344225883484,
+          "accepted": false
+        },
+        {
+          "text": "小林为客人准备了豆浆。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7201128005981445,
+          "affirmative_probability": 0.08239878714084625,
+          "accepted": false
+        },
+        {
+          "text": "小林是否爱喝豆浆？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.41744568943977356,
+          "affirmative_probability": 0.16766071319580078,
+          "accepted": false
+        },
+        {
+          "text": "小林以前喝豆浆，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5683409571647644,
+          "affirmative_probability": 0.11532063782215118,
+          "accepted": false
+        },
+        {
+          "text": "小林喜欢喝可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4477772116661072,
+          "affirmative_probability": 0.4477772116661072,
+          "accepted": true
+        },
+        {
+          "text": "小林最喜欢的饮料是可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5650384426116943,
+          "affirmative_probability": 0.5650384426116943,
+          "accepted": true
+        },
+        {
+          "text": "我知道小林爱喝可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5338420271873474,
+          "affirmative_probability": 0.5338420271873474,
+          "accepted": true
+        },
+        {
+          "text": "小林不喜欢喝可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.410249263048172,
+          "affirmative_probability": 0.25945478677749634,
+          "accepted": false
+        },
+        {
+          "text": "小林从来不喝可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.49787405133247375,
+          "affirmative_probability": 0.18979546427726746,
+          "accepted": false
+        },
+        {
+          "text": "小林以后不再喜欢可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5430106520652771,
+          "affirmative_probability": 0.1103246733546257,
+          "accepted": false
+        },
+        {
+          "text": "我猜小林可能喜欢可乐。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.5004745721817017,
+          "affirmative_probability": 0.14560729265213013,
+          "accepted": false
+        },
+        {
+          "text": "假如小林喜欢可乐就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3797716498374939,
+          "affirmative_probability": 0.21174976229667664,
+          "accepted": false
+        },
+        {
+          "text": "小林说朋友喜欢可乐。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3314002752304077,
+          "affirmative_probability": 0.1677236109972,
+          "accepted": false
+        },
+        {
+          "text": "小林给朋友买了可乐。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5468565821647644,
+          "affirmative_probability": 0.12451643496751785,
+          "accepted": false
+        },
+        {
+          "text": "小林为客人准备了可乐。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7427749037742615,
+          "affirmative_probability": 0.07479718327522278,
+          "accepted": false
+        },
+        {
+          "text": "小林是否爱喝可乐？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.41505348682403564,
+          "affirmative_probability": 0.17733393609523773,
+          "accepted": false
+        },
+        {
+          "text": "小林以前喝可乐，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5623762011528015,
+          "affirmative_probability": 0.12966829538345337,
+          "accepted": false
+        },
+        {
+          "text": "小林喜欢喝水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3360256552696228,
+          "affirmative_probability": 0.3360256552696228,
+          "accepted": true
+        },
+        {
+          "text": "小林最喜欢的饮料是水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5175292491912842,
+          "affirmative_probability": 0.5175292491912842,
+          "accepted": true
+        },
+        {
+          "text": "我知道小林爱喝水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.42046892642974854,
+          "affirmative_probability": 0.42046892642974854,
+          "accepted": true
+        },
+        {
+          "text": "小林不喜欢喝水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.44309279322624207,
+          "affirmative_probability": 0.21030868589878082,
+          "accepted": false
+        },
+        {
+          "text": "小林从来不喝水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5096204280853271,
+          "affirmative_probability": 0.1695970743894577,
+          "accepted": false
+        },
+        {
+          "text": "小林以后不再喜欢水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5703797340393066,
+          "affirmative_probability": 0.10830588638782501,
+          "accepted": false
+        },
+        {
+          "text": "我猜小林可能喜欢水。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.485464483499527,
+          "affirmative_probability": 0.14570410549640656,
+          "accepted": false
+        },
+        {
+          "text": "假如小林喜欢水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3770553767681122,
+          "affirmative_probability": 0.1953449547290802,
+          "accepted": false
+        },
+        {
+          "text": "小林说朋友喜欢水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3050970733165741,
+          "affirmative_probability": 0.17195148766040802,
+          "accepted": false
+        },
+        {
+          "text": "小林给朋友买了水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5356281995773315,
+          "affirmative_probability": 0.11971615254878998,
+          "accepted": false
+        },
+        {
+          "text": "小林为客人准备了水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7250266075134277,
+          "affirmative_probability": 0.07352090626955032,
+          "accepted": false
+        },
+        {
+          "text": "小林是否爱喝水？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.3796404302120209,
+          "affirmative_probability": 0.14988979697227478,
+          "accepted": false
+        },
+        {
+          "text": "小林以前喝水，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5076550841331482,
+          "affirmative_probability": 0.10664593428373337,
+          "accepted": false
+        },
+        {
+          "text": "小林喜欢喝酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4146330952644348,
+          "affirmative_probability": 0.4146330952644348,
+          "accepted": true
+        },
+        {
+          "text": "小林最喜欢的饮料是酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5280745029449463,
+          "affirmative_probability": 0.5280745029449463,
+          "accepted": true
+        },
+        {
+          "text": "我知道小林爱喝酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5086794495582581,
+          "affirmative_probability": 0.5086794495582581,
+          "accepted": true
+        },
+        {
+          "text": "小林不喜欢喝酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.43717658519744873,
+          "affirmative_probability": 0.23778702318668365,
+          "accepted": false
+        },
+        {
+          "text": "小林从来不喝酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5266038775444031,
+          "affirmative_probability": 0.1748124659061432,
+          "accepted": false
+        },
+        {
+          "text": "小林以后不再喜欢酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5617693662643433,
+          "affirmative_probability": 0.11090298742055893,
+          "accepted": false
+        },
+        {
+          "text": "我猜小林可能喜欢酸奶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.47862109541893005,
+          "affirmative_probability": 0.1507779210805893,
+          "accepted": false
+        },
+        {
+          "text": "假如小林喜欢酸奶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3712077736854553,
+          "affirmative_probability": 0.1990566998720169,
+          "accepted": false
+        },
+        {
+          "text": "小林说朋友喜欢酸奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.32401004433631897,
+          "affirmative_probability": 0.17449739575386047,
+          "accepted": false
+        },
+        {
+          "text": "小林给朋友买了酸奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5175694823265076,
+          "affirmative_probability": 0.13325907289981842,
+          "accepted": false
+        },
+        {
+          "text": "小林为客人准备了酸奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.711993396282196,
+          "affirmative_probability": 0.08501110225915909,
+          "accepted": false
+        },
+        {
+          "text": "小林是否爱喝酸奶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.41167232394218445,
+          "affirmative_probability": 0.17004191875457764,
+          "accepted": false
+        },
+        {
+          "text": "小林以前喝酸奶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.56261146068573,
+          "affirmative_probability": 0.11696631461381912,
+          "accepted": false
+        },
+        {
+          "text": "小林喜欢喝茉莉花茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.45877328515052795,
+          "affirmative_probability": 0.45877328515052795,
+          "accepted": true
+        },
+        {
+          "text": "小林最喜欢的饮料是茉莉花茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5964037775993347,
+          "affirmative_probability": 0.5964037775993347,
+          "accepted": true
+        },
+        {
+          "text": "我知道小林爱喝茉莉花茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5486634969711304,
+          "affirmative_probability": 0.5486634969711304,
+          "accepted": true
+        },
+        {
+          "text": "小林不喜欢喝茉莉花茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4179771840572357,
+          "affirmative_probability": 0.24624595046043396,
+          "accepted": false
+        },
+        {
+          "text": "小林从来不喝茉莉花茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5069913864135742,
+          "affirmative_probability": 0.17373710870742798,
+          "accepted": false
+        },
+        {
+          "text": "小林以后不再喜欢茉莉花茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5565471649169922,
+          "affirmative_probability": 0.11369583010673523,
+          "accepted": false
+        },
+        {
+          "text": "我猜小林可能喜欢茉莉花茶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4793165922164917,
+          "affirmative_probability": 0.1726834923028946,
+          "accepted": false
+        },
+        {
+          "text": "假如小林喜欢茉莉花茶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.37027421593666077,
+          "affirmative_probability": 0.2361491173505783,
+          "accepted": false
+        },
+        {
+          "text": "小林说朋友喜欢茉莉花茶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3425310254096985,
+          "affirmative_probability": 0.1941467821598053,
+          "accepted": false
+        },
+        {
+          "text": "小林给朋友买了茉莉花茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5594562292098999,
+          "affirmative_probability": 0.1315242350101471,
+          "accepted": false
+        },
+        {
+          "text": "小林为客人准备了茉莉花茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7641509175300598,
+          "affirmative_probability": 0.0746999979019165,
+          "accepted": false
+        },
+        {
+          "text": "小林是否爱喝茉莉花茶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.46386316418647766,
+          "affirmative_probability": 0.17210033535957336,
+          "accepted": false
+        },
+        {
+          "text": "小林以前喝茉莉花茶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.6118786334991455,
+          "affirmative_probability": 0.11540940403938293,
+          "accepted": false
+        },
+        {
+          "text": "小林喜欢喝苏打水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3959958851337433,
+          "affirmative_probability": 0.3959958851337433,
+          "accepted": true
+        },
+        {
+          "text": "小林最喜欢的饮料是苏打水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5345436930656433,
+          "affirmative_probability": 0.5345436930656433,
+          "accepted": true
+        },
+        {
+          "text": "我知道小林爱喝苏打水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.48129427433013916,
+          "affirmative_probability": 0.48129427433013916,
+          "accepted": true
+        },
+        {
+          "text": "小林不喜欢喝苏打水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4313531816005707,
+          "affirmative_probability": 0.2215922325849533,
+          "accepted": false
+        },
+        {
+          "text": "小林从来不喝苏打水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5241128206253052,
+          "affirmative_probability": 0.15447202324867249,
+          "accepted": false
+        },
+        {
+          "text": "小林以后不再喜欢苏打水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5718668699264526,
+          "affirmative_probability": 0.09284192323684692,
+          "accepted": false
+        },
+        {
+          "text": "我猜小林可能喜欢苏打水。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.49745985865592957,
+          "affirmative_probability": 0.13028088212013245,
+          "accepted": false
+        },
+        {
+          "text": "假如小林喜欢苏打水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.394843190908432,
+          "affirmative_probability": 0.17388826608657837,
+          "accepted": false
+        },
+        {
+          "text": "小林说朋友喜欢苏打水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3518415689468384,
+          "affirmative_probability": 0.14803443849086761,
+          "accepted": false
+        },
+        {
+          "text": "小林给朋友买了苏打水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5505408048629761,
+          "affirmative_probability": 0.1065867468714714,
+          "accepted": false
+        },
+        {
+          "text": "小林为客人准备了苏打水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.737632155418396,
+          "affirmative_probability": 0.06796231120824814,
+          "accepted": false
+        },
+        {
+          "text": "小林是否爱喝苏打水？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.46874091029167175,
+          "affirmative_probability": 0.14218170940876007,
+          "accepted": false
+        },
+        {
+          "text": "小林以前喝苏打水，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.6067858934402466,
+          "affirmative_probability": 0.09712010622024536,
+          "accepted": false
+        },
+        {
+          "text": "小林喜欢喝绿豆汤。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4194183945655823,
+          "affirmative_probability": 0.4194183945655823,
+          "accepted": true
+        },
+        {
+          "text": "小林最喜欢的饮料是绿豆汤。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5497391819953918,
+          "affirmative_probability": 0.5497391819953918,
+          "accepted": true
+        },
+        {
+          "text": "我知道小林爱喝绿豆汤。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5112366676330566,
+          "affirmative_probability": 0.5112366676330566,
+          "accepted": true
+        },
+        {
+          "text": "小林不喜欢喝绿豆汤。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.44221144914627075,
+          "affirmative_probability": 0.2342398464679718,
+          "accepted": false
+        },
+        {
+          "text": "小林从来不喝绿豆汤。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5285916328430176,
+          "affirmative_probability": 0.16995210945606232,
+          "accepted": false
+        },
+        {
+          "text": "小林以后不再喜欢绿豆汤。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5768235921859741,
+          "affirmative_probability": 0.10491134971380234,
+          "accepted": false
+        },
+        {
+          "text": "我猜小林可能喜欢绿豆汤。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4907684624195099,
+          "affirmative_probability": 0.14746491611003876,
+          "accepted": false
+        },
+        {
+          "text": "假如小林喜欢绿豆汤就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.38076138496398926,
+          "affirmative_probability": 0.20527581870555878,
+          "accepted": false
+        },
+        {
+          "text": "小林说朋友喜欢绿豆汤。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3194698691368103,
+          "affirmative_probability": 0.1715676337480545,
+          "accepted": false
+        },
+        {
+          "text": "小林给朋友买了绿豆汤。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5460332036018372,
+          "affirmative_probability": 0.12299392372369766,
+          "accepted": false
+        },
+        {
+          "text": "小林为客人准备了绿豆汤。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7400569319725037,
+          "affirmative_probability": 0.07610516250133514,
+          "accepted": false
+        },
+        {
+          "text": "小林是否爱喝绿豆汤？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.43801602721214294,
+          "affirmative_probability": 0.16198693215847015,
+          "accepted": false
+        },
+        {
+          "text": "小林以前喝绿豆汤，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5842528939247131,
+          "affirmative_probability": 0.11226698756217957,
+          "accepted": false
+        },
+        {
+          "text": "阿宁喜欢喝茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3426062762737274,
+          "affirmative_probability": 0.3426062762737274,
+          "accepted": true
+        },
+        {
+          "text": "阿宁最喜欢的饮料是茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.533044159412384,
+          "affirmative_probability": 0.533044159412384,
+          "accepted": true
+        },
+        {
+          "text": "我知道阿宁爱喝茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.40932267904281616,
+          "affirmative_probability": 0.40932267904281616,
+          "accepted": true
+        },
+        {
+          "text": "阿宁不喜欢喝茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.44471654295921326,
+          "affirmative_probability": 0.22767144441604614,
+          "accepted": false
+        },
+        {
+          "text": "阿宁从来不喝茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5271864533424377,
+          "affirmative_probability": 0.1650419980287552,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以后不再喜欢茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5685489773750305,
+          "affirmative_probability": 0.11017586290836334,
+          "accepted": false
+        },
+        {
+          "text": "我猜阿宁可能喜欢茶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4521917402744293,
+          "affirmative_probability": 0.16701088845729828,
+          "accepted": false
+        },
+        {
+          "text": "假如阿宁喜欢茶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3436286449432373,
+          "affirmative_probability": 0.22608493268489838,
+          "accepted": false
+        },
+        {
+          "text": "阿宁说朋友喜欢茶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2826862037181854,
+          "affirmative_probability": 0.18616065382957458,
+          "accepted": false
+        },
+        {
+          "text": "阿宁给朋友买了茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.4758383631706238,
+          "affirmative_probability": 0.137595072388649,
+          "accepted": false
+        },
+        {
+          "text": "阿宁为客人准备了茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6693854928016663,
+          "affirmative_probability": 0.0933208018541336,
+          "accepted": false
+        },
+        {
+          "text": "阿宁是否爱喝茶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.38715699315071106,
+          "affirmative_probability": 0.15346238017082214,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以前喝茶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.45885956287384033,
+          "affirmative_probability": 0.13897843658924103,
+          "accepted": false
+        },
+        {
+          "text": "阿宁喜欢喝咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.40566787123680115,
+          "affirmative_probability": 0.40566787123680115,
+          "accepted": true
+        },
+        {
+          "text": "阿宁最喜欢的饮料是咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5256069302558899,
+          "affirmative_probability": 0.5256069302558899,
+          "accepted": true
+        },
+        {
+          "text": "我知道阿宁爱喝咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.48458346724510193,
+          "affirmative_probability": 0.48458346724510193,
+          "accepted": true
+        },
+        {
+          "text": "阿宁不喜欢喝咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.43562620878219604,
+          "affirmative_probability": 0.24345099925994873,
+          "accepted": false
+        },
+        {
+          "text": "阿宁从来不喝咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5406152009963989,
+          "affirmative_probability": 0.1628836691379547,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以后不再喜欢咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5656539797782898,
+          "affirmative_probability": 0.10820364207029343,
+          "accepted": false
+        },
+        {
+          "text": "我猜阿宁可能喜欢咖啡。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4547521471977234,
+          "affirmative_probability": 0.16520607471466064,
+          "accepted": false
+        },
+        {
+          "text": "假如阿宁喜欢咖啡就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.34724169969558716,
+          "affirmative_probability": 0.21602419018745422,
+          "accepted": false
+        },
+        {
+          "text": "阿宁说朋友喜欢咖啡。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.27635112404823303,
+          "affirmative_probability": 0.18390633165836334,
+          "accepted": false
+        },
+        {
+          "text": "阿宁给朋友买了咖啡。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.49186885356903076,
+          "affirmative_probability": 0.1350783109664917,
+          "accepted": false
+        },
+        {
+          "text": "阿宁为客人准备了咖啡。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6743946075439453,
+          "affirmative_probability": 0.09303531795740128,
+          "accepted": false
+        },
+        {
+          "text": "阿宁是否爱喝咖啡？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.46123751997947693,
+          "affirmative_probability": 0.15759578347206116,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以前喝咖啡，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5733572840690613,
+          "affirmative_probability": 0.1263757199048996,
+          "accepted": false
+        },
+        {
+          "text": "阿宁喜欢喝牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4186573922634125,
+          "affirmative_probability": 0.4186573922634125,
+          "accepted": true
+        },
+        {
+          "text": "阿宁最喜欢的饮料是牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5298950672149658,
+          "affirmative_probability": 0.5298950672149658,
+          "accepted": true
+        },
+        {
+          "text": "我知道阿宁爱喝牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.49810630083084106,
+          "affirmative_probability": 0.49810630083084106,
+          "accepted": true
+        },
+        {
+          "text": "阿宁不喜欢喝牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4521907567977905,
+          "affirmative_probability": 0.24530456960201263,
+          "accepted": false
+        },
+        {
+          "text": "阿宁从来不喝牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5509129166603088,
+          "affirmative_probability": 0.1676086038351059,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以后不再喜欢牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.578438937664032,
+          "affirmative_probability": 0.10957876592874527,
+          "accepted": false
+        },
+        {
+          "text": "我猜阿宁可能喜欢牛奶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4541804790496826,
+          "affirmative_probability": 0.1715172827243805,
+          "accepted": false
+        },
+        {
+          "text": "假如阿宁喜欢牛奶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.33660411834716797,
+          "affirmative_probability": 0.228547140955925,
+          "accepted": false
+        },
+        {
+          "text": "阿宁说朋友喜欢牛奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2751995027065277,
+          "affirmative_probability": 0.1874447613954544,
+          "accepted": false
+        },
+        {
+          "text": "阿宁给朋友买了牛奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.47276410460472107,
+          "affirmative_probability": 0.14315861463546753,
+          "accepted": false
+        },
+        {
+          "text": "阿宁为客人准备了牛奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6613243818283081,
+          "affirmative_probability": 0.09773154556751251,
+          "accepted": false
+        },
+        {
+          "text": "阿宁是否爱喝牛奶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4455477297306061,
+          "affirmative_probability": 0.16724161803722382,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以前喝牛奶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5706613659858704,
+          "affirmative_probability": 0.13010112941265106,
+          "accepted": false
+        },
+        {
+          "text": "阿宁喜欢喝果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.41474059224128723,
+          "affirmative_probability": 0.41474059224128723,
+          "accepted": true
+        },
+        {
+          "text": "阿宁最喜欢的饮料是果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5319331288337708,
+          "affirmative_probability": 0.5319331288337708,
+          "accepted": true
+        },
+        {
+          "text": "我知道阿宁爱喝果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4891963005065918,
+          "affirmative_probability": 0.4891963005065918,
+          "accepted": true
+        },
+        {
+          "text": "阿宁不喜欢喝果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4412444233894348,
+          "affirmative_probability": 0.24815914034843445,
+          "accepted": false
+        },
+        {
+          "text": "阿宁从来不喝果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5376811623573303,
+          "affirmative_probability": 0.17025509476661682,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以后不再喜欢果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5605852603912354,
+          "affirmative_probability": 0.11127648502588272,
+          "accepted": false
+        },
+        {
+          "text": "我猜阿宁可能喜欢果汁。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.45671725273132324,
+          "affirmative_probability": 0.16899248957633972,
+          "accepted": false
+        },
+        {
+          "text": "假如阿宁喜欢果汁就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3496924936771393,
+          "affirmative_probability": 0.2216230183839798,
+          "accepted": false
+        },
+        {
+          "text": "阿宁说朋友喜欢果汁。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.26379111409187317,
+          "affirmative_probability": 0.1916404664516449,
+          "accepted": false
+        },
+        {
+          "text": "阿宁给朋友买了果汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.486104279756546,
+          "affirmative_probability": 0.1421901434659958,
+          "accepted": false
+        },
+        {
+          "text": "阿宁为客人准备了果汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6637919545173645,
+          "affirmative_probability": 0.09964127838611603,
+          "accepted": false
+        },
+        {
+          "text": "阿宁是否爱喝果汁？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4460742473602295,
+          "affirmative_probability": 0.16273511946201324,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以前喝果汁，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5533424019813538,
+          "affirmative_probability": 0.13216333091259003,
+          "accepted": false
+        },
+        {
+          "text": "阿宁喜欢喝豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.40201857686042786,
+          "affirmative_probability": 0.40201857686042786,
+          "accepted": true
+        },
+        {
+          "text": "阿宁最喜欢的饮料是豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5247629880905151,
+          "affirmative_probability": 0.5247629880905151,
+          "accepted": true
+        },
+        {
+          "text": "我知道阿宁爱喝豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4772758483886719,
+          "affirmative_probability": 0.4772758483886719,
+          "accepted": true
+        },
+        {
+          "text": "阿宁不喜欢喝豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.43787968158721924,
+          "affirmative_probability": 0.24219928681850433,
+          "accepted": false
+        },
+        {
+          "text": "阿宁从来不喝豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5349814295768738,
+          "affirmative_probability": 0.169087216258049,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以后不再喜欢豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5618199706077576,
+          "affirmative_probability": 0.11009988933801651,
+          "accepted": false
+        },
+        {
+          "text": "我猜阿宁可能喜欢豆浆。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4478739798069,
+          "affirmative_probability": 0.16990800201892853,
+          "accepted": false
+        },
+        {
+          "text": "假如阿宁喜欢豆浆就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3315957188606262,
+          "affirmative_probability": 0.22281384468078613,
+          "accepted": false
+        },
+        {
+          "text": "阿宁说朋友喜欢豆浆。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2610406279563904,
+          "affirmative_probability": 0.18853355944156647,
+          "accepted": false
+        },
+        {
+          "text": "阿宁给朋友买了豆浆。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.4819214344024658,
+          "affirmative_probability": 0.13996633887290955,
+          "accepted": false
+        },
+        {
+          "text": "阿宁为客人准备了豆浆。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6672704815864563,
+          "affirmative_probability": 0.09872519224882126,
+          "accepted": false
+        },
+        {
+          "text": "阿宁是否爱喝豆浆？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.44664210081100464,
+          "affirmative_probability": 0.16256070137023926,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以前喝豆浆，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5580885410308838,
+          "affirmative_probability": 0.12735144793987274,
+          "accepted": false
+        },
+        {
+          "text": "阿宁喜欢喝可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.43646255135536194,
+          "affirmative_probability": 0.43646255135536194,
+          "accepted": true
+        },
+        {
+          "text": "阿宁最喜欢的饮料是可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5549060702323914,
+          "affirmative_probability": 0.5549060702323914,
+          "accepted": true
+        },
+        {
+          "text": "我知道阿宁爱喝可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5126059651374817,
+          "affirmative_probability": 0.5126059651374817,
+          "accepted": true
+        },
+        {
+          "text": "阿宁不喜欢喝可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.40840017795562744,
+          "affirmative_probability": 0.26775482296943665,
+          "accepted": false
+        },
+        {
+          "text": "阿宁从来不喝可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4997367560863495,
+          "affirmative_probability": 0.18882516026496887,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以后不再喜欢可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5348371863365173,
+          "affirmative_probability": 0.11212208122015,
+          "accepted": false
+        },
+        {
+          "text": "我猜阿宁可能喜欢可乐。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.47932958602905273,
+          "affirmative_probability": 0.1642322838306427,
+          "accepted": false
+        },
+        {
+          "text": "假如阿宁喜欢可乐就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.35544177889823914,
+          "affirmative_probability": 0.235038623213768,
+          "accepted": false
+        },
+        {
+          "text": "阿宁说朋友喜欢可乐。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.28681299090385437,
+          "affirmative_probability": 0.18455465137958527,
+          "accepted": false
+        },
+        {
+          "text": "阿宁给朋友买了可乐。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.4995950758457184,
+          "affirmative_probability": 0.13920021057128906,
+          "accepted": false
+        },
+        {
+          "text": "阿宁为客人准备了可乐。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6907817125320435,
+          "affirmative_probability": 0.09121229499578476,
+          "accepted": false
+        },
+        {
+          "text": "阿宁是否爱喝可乐？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4481683373451233,
+          "affirmative_probability": 0.17063039541244507,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以前喝可乐，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5644281506538391,
+          "affirmative_probability": 0.13968324661254883,
+          "accepted": false
+        },
+        {
+          "text": "阿宁喜欢喝水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3305937945842743,
+          "affirmative_probability": 0.3305937945842743,
+          "accepted": true
+        },
+        {
+          "text": "阿宁最喜欢的饮料是水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5175999402999878,
+          "affirmative_probability": 0.5175999402999878,
+          "accepted": true
+        },
+        {
+          "text": "我知道阿宁爱喝水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4085906445980072,
+          "affirmative_probability": 0.4085906445980072,
+          "accepted": true
+        },
+        {
+          "text": "阿宁不喜欢喝水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4484609365463257,
+          "affirmative_probability": 0.21551433205604553,
+          "accepted": false
+        },
+        {
+          "text": "阿宁从来不喝水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5203841924667358,
+          "affirmative_probability": 0.16623272001743317,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以后不再喜欢水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5683714747428894,
+          "affirmative_probability": 0.10933554172515869,
+          "accepted": false
+        },
+        {
+          "text": "我猜阿宁可能喜欢水。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.46356284618377686,
+          "affirmative_probability": 0.16012728214263916,
+          "accepted": false
+        },
+        {
+          "text": "假如阿宁喜欢水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3470287322998047,
+          "affirmative_probability": 0.2132197618484497,
+          "accepted": false
+        },
+        {
+          "text": "阿宁说朋友喜欢水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.26324325799942017,
+          "affirmative_probability": 0.1857636719942093,
+          "accepted": false
+        },
+        {
+          "text": "阿宁给朋友买了水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.4908420741558075,
+          "affirmative_probability": 0.13107706606388092,
+          "accepted": false
+        },
+        {
+          "text": "阿宁为客人准备了水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6745482683181763,
+          "affirmative_probability": 0.08685163408517838,
+          "accepted": false
+        },
+        {
+          "text": "阿宁是否爱喝水？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.40910956263542175,
+          "affirmative_probability": 0.1490156203508377,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以前喝水，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.49803733825683594,
+          "affirmative_probability": 0.12323600053787231,
+          "accepted": false
+        },
+        {
+          "text": "阿宁喜欢喝酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4051019847393036,
+          "affirmative_probability": 0.4051019847393036,
+          "accepted": true
+        },
+        {
+          "text": "阿宁最喜欢的饮料是酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.528454601764679,
+          "affirmative_probability": 0.528454601764679,
+          "accepted": true
+        },
+        {
+          "text": "我知道阿宁爱喝酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.48964524269104004,
+          "affirmative_probability": 0.48964524269104004,
+          "accepted": true
+        },
+        {
+          "text": "阿宁不喜欢喝酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4359981119632721,
+          "affirmative_probability": 0.2454427033662796,
+          "accepted": false
+        },
+        {
+          "text": "阿宁从来不喝酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5326169729232788,
+          "affirmative_probability": 0.17279118299484253,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以后不再喜欢酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5633260607719421,
+          "affirmative_probability": 0.1113521158695221,
+          "accepted": false
+        },
+        {
+          "text": "我猜阿宁可能喜欢酸奶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4599256217479706,
+          "affirmative_probability": 0.1652279496192932,
+          "accepted": false
+        },
+        {
+          "text": "假如阿宁喜欢酸奶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.34559518098831177,
+          "affirmative_probability": 0.2173689901828766,
+          "accepted": false
+        },
+        {
+          "text": "阿宁说朋友喜欢酸奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2826882302761078,
+          "affirmative_probability": 0.18536105751991272,
+          "accepted": false
+        },
+        {
+          "text": "阿宁给朋友买了酸奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.4751395583152771,
+          "affirmative_probability": 0.1447717547416687,
+          "accepted": false
+        },
+        {
+          "text": "阿宁为客人准备了酸奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6596288681030273,
+          "affirmative_probability": 0.10132566094398499,
+          "accepted": false
+        },
+        {
+          "text": "阿宁是否爱喝酸奶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.44037672877311707,
+          "affirmative_probability": 0.16498470306396484,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以前喝酸奶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5571547746658325,
+          "affirmative_probability": 0.12910102307796478,
+          "accepted": false
+        },
+        {
+          "text": "阿宁喜欢喝茉莉花茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4593503773212433,
+          "affirmative_probability": 0.4593503773212433,
+          "accepted": true
+        },
+        {
+          "text": "阿宁最喜欢的饮料是茉莉花茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5963571071624756,
+          "affirmative_probability": 0.5963571071624756,
+          "accepted": true
+        },
+        {
+          "text": "我知道阿宁爱喝茉莉花茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5347164869308472,
+          "affirmative_probability": 0.5347164869308472,
+          "accepted": true
+        },
+        {
+          "text": "阿宁不喜欢喝茉莉花茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.41656455397605896,
+          "affirmative_probability": 0.2588309943675995,
+          "accepted": false
+        },
+        {
+          "text": "阿宁从来不喝茉莉花茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5053139328956604,
+          "affirmative_probability": 0.1751987785100937,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以后不再喜欢茉莉花茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5559760928153992,
+          "affirmative_probability": 0.1125388815999031,
+          "accepted": false
+        },
+        {
+          "text": "我猜阿宁可能喜欢茉莉花茶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.45396751165390015,
+          "affirmative_probability": 0.19461221992969513,
+          "accepted": false
+        },
+        {
+          "text": "假如阿宁喜欢茉莉花茶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.334249883890152,
+          "affirmative_probability": 0.2627699375152588,
+          "accepted": false
+        },
+        {
+          "text": "阿宁说朋友喜欢茉莉花茶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2979462146759033,
+          "affirmative_probability": 0.21424831449985504,
+          "accepted": false
+        },
+        {
+          "text": "阿宁给朋友买了茉莉花茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5141124129295349,
+          "affirmative_probability": 0.14784272015094757,
+          "accepted": false
+        },
+        {
+          "text": "阿宁为客人准备了茉莉花茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7154282927513123,
+          "affirmative_probability": 0.09210877120494843,
+          "accepted": false
+        },
+        {
+          "text": "阿宁是否爱喝茉莉花茶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4969148337841034,
+          "affirmative_probability": 0.16469129920005798,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以前喝茉莉花茶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.6126935482025146,
+          "affirmative_probability": 0.12725912034511566,
+          "accepted": false
+        },
+        {
+          "text": "阿宁喜欢喝苏打水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.39607635140419006,
+          "affirmative_probability": 0.39607635140419006,
+          "accepted": true
+        },
+        {
+          "text": "阿宁最喜欢的饮料是苏打水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5280951857566833,
+          "affirmative_probability": 0.5280951857566833,
+          "accepted": true
+        },
+        {
+          "text": "我知道阿宁爱喝苏打水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4702747166156769,
+          "affirmative_probability": 0.4702747166156769,
+          "accepted": true
+        },
+        {
+          "text": "阿宁不喜欢喝苏打水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4364657402038574,
+          "affirmative_probability": 0.22839237749576569,
+          "accepted": false
+        },
+        {
+          "text": "阿宁从来不喝苏打水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5300759077072144,
+          "affirmative_probability": 0.15343952178955078,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以后不再喜欢苏打水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5746162533760071,
+          "affirmative_probability": 0.09011168777942657,
+          "accepted": false
+        },
+        {
+          "text": "我猜阿宁可能喜欢苏打水。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.47466251254081726,
+          "affirmative_probability": 0.14425291121006012,
+          "accepted": false
+        },
+        {
+          "text": "假如阿宁喜欢苏打水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.36927440762519836,
+          "affirmative_probability": 0.1916835457086563,
+          "accepted": false
+        },
+        {
+          "text": "阿宁说朋友喜欢苏打水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.31071966886520386,
+          "affirmative_probability": 0.15935340523719788,
+          "accepted": false
+        },
+        {
+          "text": "阿宁给朋友买了苏打水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5093562602996826,
+          "affirmative_probability": 0.11797228455543518,
+          "accepted": false
+        },
+        {
+          "text": "阿宁为客人准备了苏打水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6918231248855591,
+          "affirmative_probability": 0.07985502481460571,
+          "accepted": false
+        },
+        {
+          "text": "阿宁是否爱喝苏打水？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4986913502216339,
+          "affirmative_probability": 0.13796241581439972,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以前喝苏打水，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.6072315573692322,
+          "affirmative_probability": 0.10417419672012329,
+          "accepted": false
+        },
+        {
+          "text": "阿宁喜欢喝绿豆汤。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.41838449239730835,
+          "affirmative_probability": 0.41838449239730835,
+          "accepted": true
+        },
+        {
+          "text": "阿宁最喜欢的饮料是绿豆汤。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5519286394119263,
+          "affirmative_probability": 0.5519286394119263,
+          "accepted": true
+        },
+        {
+          "text": "我知道阿宁爱喝绿豆汤。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.498885840177536,
+          "affirmative_probability": 0.498885840177536,
+          "accepted": true
+        },
+        {
+          "text": "阿宁不喜欢喝绿豆汤。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.439129114151001,
+          "affirmative_probability": 0.24507293105125427,
+          "accepted": false
+        },
+        {
+          "text": "阿宁从来不喝绿豆汤。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.532331645488739,
+          "affirmative_probability": 0.1697315275669098,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以后不再喜欢绿豆汤。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5758171677589417,
+          "affirmative_probability": 0.10588117688894272,
+          "accepted": false
+        },
+        {
+          "text": "我猜阿宁可能喜欢绿豆汤。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4659745395183563,
+          "affirmative_probability": 0.1661582738161087,
+          "accepted": false
+        },
+        {
+          "text": "假如阿宁喜欢绿豆汤就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.34817805886268616,
+          "affirmative_probability": 0.22900602221488953,
+          "accepted": false
+        },
+        {
+          "text": "阿宁说朋友喜欢绿豆汤。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2750124931335449,
+          "affirmative_probability": 0.18909327685832977,
+          "accepted": false
+        },
+        {
+          "text": "阿宁给朋友买了绿豆汤。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.4988967776298523,
+          "affirmative_probability": 0.13921180367469788,
+          "accepted": false
+        },
+        {
+          "text": "阿宁为客人准备了绿豆汤。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6870898008346558,
+          "affirmative_probability": 0.09294393658638,
+          "accepted": false
+        },
+        {
+          "text": "阿宁是否爱喝绿豆汤？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.46715047955513,
+          "affirmative_probability": 0.1591821312904358,
+          "accepted": false
+        },
+        {
+          "text": "阿宁以前喝绿豆汤，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5889350175857544,
+          "affirmative_probability": 0.12126070261001587,
+          "accepted": false
+        },
+        {
+          "text": "小雨喜欢喝茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3576258718967438,
+          "affirmative_probability": 0.3576258718967438,
+          "accepted": true
+        },
+        {
+          "text": "小雨最喜欢的饮料是茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5396666526794434,
+          "affirmative_probability": 0.5396666526794434,
+          "accepted": true
+        },
+        {
+          "text": "我知道小雨爱喝茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.432542085647583,
+          "affirmative_probability": 0.432542085647583,
+          "accepted": true
+        },
+        {
+          "text": "小雨不喜欢喝茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4514322578907013,
+          "affirmative_probability": 0.2271634042263031,
+          "accepted": false
+        },
+        {
+          "text": "小雨从来不喝茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5350821614265442,
+          "affirmative_probability": 0.16366714239120483,
+          "accepted": false
+        },
+        {
+          "text": "小雨以后不再喜欢茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5808886885643005,
+          "affirmative_probability": 0.10957463085651398,
+          "accepted": false
+        },
+        {
+          "text": "我猜小雨可能喜欢茶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.47676289081573486,
+          "affirmative_probability": 0.1518712043762207,
+          "accepted": false
+        },
+        {
+          "text": "假如小雨喜欢茶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3636902868747711,
+          "affirmative_probability": 0.21275976300239563,
+          "accepted": false
+        },
+        {
+          "text": "小雨说朋友喜欢茶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.31816455721855164,
+          "affirmative_probability": 0.1792551726102829,
+          "accepted": false
+        },
+        {
+          "text": "小雨给朋友买了茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5097647905349731,
+          "affirmative_probability": 0.13297806680202484,
+          "accepted": false
+        },
+        {
+          "text": "小雨为客人准备了茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7148455381393433,
+          "affirmative_probability": 0.08121286332607269,
+          "accepted": false
+        },
+        {
+          "text": "小雨是否爱喝茶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.3675386607646942,
+          "affirmative_probability": 0.15426507592201233,
+          "accepted": false
+        },
+        {
+          "text": "小雨以前喝茶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.46032777428627014,
+          "affirmative_probability": 0.1351868063211441,
+          "accepted": false
+        },
+        {
+          "text": "小雨喜欢喝咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4146648347377777,
+          "affirmative_probability": 0.4146648347377777,
+          "accepted": true
+        },
+        {
+          "text": "小雨最喜欢的饮料是咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5349727272987366,
+          "affirmative_probability": 0.5349727272987366,
+          "accepted": true
+        },
+        {
+          "text": "我知道小雨爱喝咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5069893002510071,
+          "affirmative_probability": 0.5069893002510071,
+          "accepted": true
+        },
+        {
+          "text": "小雨不喜欢喝咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.442842036485672,
+          "affirmative_probability": 0.23986554145812988,
+          "accepted": false
+        },
+        {
+          "text": "小雨从来不喝咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5463189482688904,
+          "affirmative_probability": 0.16059187054634094,
+          "accepted": false
+        },
+        {
+          "text": "小雨以后不再喜欢咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5768469572067261,
+          "affirmative_probability": 0.10795556753873825,
+          "accepted": false
+        },
+        {
+          "text": "我猜小雨可能喜欢咖啡。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4796845316886902,
+          "affirmative_probability": 0.1497846394777298,
+          "accepted": false
+        },
+        {
+          "text": "假如小雨喜欢咖啡就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3682693839073181,
+          "affirmative_probability": 0.19921523332595825,
+          "accepted": false
+        },
+        {
+          "text": "小雨说朋友喜欢咖啡。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3123064637184143,
+          "affirmative_probability": 0.17753787338733673,
+          "accepted": false
+        },
+        {
+          "text": "小雨给朋友买了咖啡。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5231517553329468,
+          "affirmative_probability": 0.13095839321613312,
+          "accepted": false
+        },
+        {
+          "text": "小雨为客人准备了咖啡。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7171351313591003,
+          "affirmative_probability": 0.08140826970338821,
+          "accepted": false
+        },
+        {
+          "text": "小雨是否爱喝咖啡？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4391154646873474,
+          "affirmative_probability": 0.1607661247253418,
+          "accepted": false
+        },
+        {
+          "text": "小雨以前喝咖啡，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5765177011489868,
+          "affirmative_probability": 0.11744549870491028,
+          "accepted": false
+        },
+        {
+          "text": "小雨喜欢喝牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.42349740862846375,
+          "affirmative_probability": 0.42349740862846375,
+          "accepted": true
+        },
+        {
+          "text": "小雨最喜欢的饮料是牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5391181111335754,
+          "affirmative_probability": 0.5391181111335754,
+          "accepted": true
+        },
+        {
+          "text": "我知道小雨爱喝牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5161091089248657,
+          "affirmative_probability": 0.5161091089248657,
+          "accepted": true
+        },
+        {
+          "text": "小雨不喜欢喝牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4607807695865631,
+          "affirmative_probability": 0.2396487295627594,
+          "accepted": false
+        },
+        {
+          "text": "小雨从来不喝牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5591638088226318,
+          "affirmative_probability": 0.1629546582698822,
+          "accepted": false
+        },
+        {
+          "text": "小雨以后不再喜欢牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.592103123664856,
+          "affirmative_probability": 0.10717839747667313,
+          "accepted": false
+        },
+        {
+          "text": "我猜小雨可能喜欢牛奶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4779033064842224,
+          "affirmative_probability": 0.15647438168525696,
+          "accepted": false
+        },
+        {
+          "text": "假如小雨喜欢牛奶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3627181351184845,
+          "affirmative_probability": 0.209552600979805,
+          "accepted": false
+        },
+        {
+          "text": "小雨说朋友喜欢牛奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3093796968460083,
+          "affirmative_probability": 0.1820533275604248,
+          "accepted": false
+        },
+        {
+          "text": "小雨给朋友买了牛奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5010184645652771,
+          "affirmative_probability": 0.14009104669094086,
+          "accepted": false
+        },
+        {
+          "text": "小雨为客人准备了牛奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.703231155872345,
+          "affirmative_probability": 0.08643540740013123,
+          "accepted": false
+        },
+        {
+          "text": "小雨是否爱喝牛奶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4189131259918213,
+          "affirmative_probability": 0.17007581889629364,
+          "accepted": false
+        },
+        {
+          "text": "小雨以前喝牛奶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5688926577568054,
+          "affirmative_probability": 0.12257200479507446,
+          "accepted": false
+        },
+        {
+          "text": "小雨喜欢喝果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.42135921120643616,
+          "affirmative_probability": 0.42135921120643616,
+          "accepted": true
+        },
+        {
+          "text": "小雨最喜欢的饮料是果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5421315431594849,
+          "affirmative_probability": 0.5421315431594849,
+          "accepted": true
+        },
+        {
+          "text": "我知道小雨爱喝果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5071586966514587,
+          "affirmative_probability": 0.5071586966514587,
+          "accepted": true
+        },
+        {
+          "text": "小雨不喜欢喝果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.44952115416526794,
+          "affirmative_probability": 0.24243038892745972,
+          "accepted": false
+        },
+        {
+          "text": "小雨从来不喝果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5454055070877075,
+          "affirmative_probability": 0.16606995463371277,
+          "accepted": false
+        },
+        {
+          "text": "小雨以后不再喜欢果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5732824206352234,
+          "affirmative_probability": 0.11008618026971817,
+          "accepted": false
+        },
+        {
+          "text": "我猜小雨可能喜欢果汁。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.481456995010376,
+          "affirmative_probability": 0.1538957804441452,
+          "accepted": false
+        },
+        {
+          "text": "假如小雨喜欢果汁就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3728104531764984,
+          "affirmative_probability": 0.20649129152297974,
+          "accepted": false
+        },
+        {
+          "text": "小雨说朋友喜欢果汁。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.298427015542984,
+          "affirmative_probability": 0.1852564513683319,
+          "accepted": false
+        },
+        {
+          "text": "小雨给朋友买了果汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5170623660087585,
+          "affirmative_probability": 0.13768824934959412,
+          "accepted": false
+        },
+        {
+          "text": "小雨为客人准备了果汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7050333619117737,
+          "affirmative_probability": 0.08810880780220032,
+          "accepted": false
+        },
+        {
+          "text": "小雨是否爱喝果汁？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.42213910818099976,
+          "affirmative_probability": 0.16573163866996765,
+          "accepted": false
+        },
+        {
+          "text": "小雨以前喝果汁，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5573883056640625,
+          "affirmative_probability": 0.12258308380842209,
+          "accepted": false
+        },
+        {
+          "text": "小雨喜欢喝豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.40965592861175537,
+          "affirmative_probability": 0.40965592861175537,
+          "accepted": true
+        },
+        {
+          "text": "小雨最喜欢的饮料是豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5341573357582092,
+          "affirmative_probability": 0.5341573357582092,
+          "accepted": true
+        },
+        {
+          "text": "我知道小雨爱喝豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.49993884563446045,
+          "affirmative_probability": 0.49993884563446045,
+          "accepted": true
+        },
+        {
+          "text": "小雨不喜欢喝豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.44409307837486267,
+          "affirmative_probability": 0.23841696977615356,
+          "accepted": false
+        },
+        {
+          "text": "小雨从来不喝豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5432145595550537,
+          "affirmative_probability": 0.1659136712551117,
+          "accepted": false
+        },
+        {
+          "text": "小雨以后不再喜欢豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5730546712875366,
+          "affirmative_probability": 0.10988473147153854,
+          "accepted": false
+        },
+        {
+          "text": "我猜小雨可能喜欢豆浆。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.47280529141426086,
+          "affirmative_probability": 0.15645518898963928,
+          "accepted": false
+        },
+        {
+          "text": "假如小雨喜欢豆浆就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3520272970199585,
+          "affirmative_probability": 0.20946112275123596,
+          "accepted": false
+        },
+        {
+          "text": "小雨说朋友喜欢豆浆。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.29661357402801514,
+          "affirmative_probability": 0.18240226805210114,
+          "accepted": false
+        },
+        {
+          "text": "小雨给朋友买了豆浆。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5135720372200012,
+          "affirmative_probability": 0.1363147348165512,
+          "accepted": false
+        },
+        {
+          "text": "小雨为客人准备了豆浆。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7097799181938171,
+          "affirmative_probability": 0.08702170848846436,
+          "accepted": false
+        },
+        {
+          "text": "小雨是否爱喝豆浆？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4238358438014984,
+          "affirmative_probability": 0.16646739840507507,
+          "accepted": false
+        },
+        {
+          "text": "小雨以前喝豆浆，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5612074732780457,
+          "affirmative_probability": 0.12153656780719757,
+          "accepted": false
+        },
+        {
+          "text": "小雨喜欢喝可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4437262713909149,
+          "affirmative_probability": 0.4437262713909149,
+          "accepted": true
+        },
+        {
+          "text": "小雨最喜欢的饮料是可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5718716382980347,
+          "affirmative_probability": 0.5718716382980347,
+          "accepted": true
+        },
+        {
+          "text": "我知道小雨爱喝可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5314363241195679,
+          "affirmative_probability": 0.5314363241195679,
+          "accepted": true
+        },
+        {
+          "text": "小雨不喜欢喝可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.41919273138046265,
+          "affirmative_probability": 0.2585650086402893,
+          "accepted": false
+        },
+        {
+          "text": "小雨从来不喝可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5155899524688721,
+          "affirmative_probability": 0.1782938539981842,
+          "accepted": false
+        },
+        {
+          "text": "小雨以后不再喜欢可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5557827353477478,
+          "affirmative_probability": 0.10587268322706223,
+          "accepted": false
+        },
+        {
+          "text": "我猜小雨可能喜欢可乐。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.5050697326660156,
+          "affirmative_probability": 0.14424371719360352,
+          "accepted": false
+        },
+        {
+          "text": "假如小雨喜欢可乐就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.37581828236579895,
+          "affirmative_probability": 0.21266204118728638,
+          "accepted": false
+        },
+        {
+          "text": "小雨说朋友喜欢可乐。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.32613086700439453,
+          "affirmative_probability": 0.17371900379657745,
+          "accepted": false
+        },
+        {
+          "text": "小雨给朋友买了可乐。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5324132442474365,
+          "affirmative_probability": 0.13392400741577148,
+          "accepted": false
+        },
+        {
+          "text": "小雨为客人准备了可乐。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7335489392280579,
+          "affirmative_probability": 0.07854945957660675,
+          "accepted": false
+        },
+        {
+          "text": "小雨是否爱喝可乐？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.42317208647727966,
+          "affirmative_probability": 0.17390792071819305,
+          "accepted": false
+        },
+        {
+          "text": "小雨以前喝可乐，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5582935214042664,
+          "affirmative_probability": 0.13309051096439362,
+          "accepted": false
+        },
+        {
+          "text": "小雨喜欢喝水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.33647310733795166,
+          "affirmative_probability": 0.33647310733795166,
+          "accepted": true
+        },
+        {
+          "text": "小雨最喜欢的饮料是水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5250809192657471,
+          "affirmative_probability": 0.5250809192657471,
+          "accepted": true
+        },
+        {
+          "text": "我知道小雨爱喝水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4250357151031494,
+          "affirmative_probability": 0.4250357151031494,
+          "accepted": true
+        },
+        {
+          "text": "小雨不喜欢喝水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4575231969356537,
+          "affirmative_probability": 0.21015602350234985,
+          "accepted": false
+        },
+        {
+          "text": "小雨从来不喝水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5289373993873596,
+          "affirmative_probability": 0.16159719228744507,
+          "accepted": false
+        },
+        {
+          "text": "小雨以后不再喜欢水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5836840271949768,
+          "affirmative_probability": 0.10790278017520905,
+          "accepted": false
+        },
+        {
+          "text": "我猜小雨可能喜欢水。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4889349937438965,
+          "affirmative_probability": 0.14645877480506897,
+          "accepted": false
+        },
+        {
+          "text": "假如小雨喜欢水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.37278681993484497,
+          "affirmative_probability": 0.1958896517753601,
+          "accepted": false
+        },
+        {
+          "text": "小雨说朋友喜欢水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.29869458079338074,
+          "affirmative_probability": 0.17861022055149078,
+          "accepted": false
+        },
+        {
+          "text": "小雨给朋友买了水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5221483111381531,
+          "affirmative_probability": 0.1282925307750702,
+          "accepted": false
+        },
+        {
+          "text": "小雨为客人准备了水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7143604755401611,
+          "affirmative_probability": 0.0774315819144249,
+          "accepted": false
+        },
+        {
+          "text": "小雨是否爱喝水？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.3826354146003723,
+          "affirmative_probability": 0.14990565180778503,
+          "accepted": false
+        },
+        {
+          "text": "小雨以前喝水，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.49681583046913147,
+          "affirmative_probability": 0.11116362363100052,
+          "accepted": false
+        },
+        {
+          "text": "小雨喜欢喝酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4145086407661438,
+          "affirmative_probability": 0.4145086407661438,
+          "accepted": true
+        },
+        {
+          "text": "小雨最喜欢的饮料是酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5396265983581543,
+          "affirmative_probability": 0.5396265983581543,
+          "accepted": true
+        },
+        {
+          "text": "我知道小雨爱喝酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5087202191352844,
+          "affirmative_probability": 0.5087202191352844,
+          "accepted": true
+        },
+        {
+          "text": "小雨不喜欢喝酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.44350603222846985,
+          "affirmative_probability": 0.24124561250209808,
+          "accepted": false
+        },
+        {
+          "text": "小雨从来不喝酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5382965207099915,
+          "affirmative_probability": 0.16990283131599426,
+          "accepted": false
+        },
+        {
+          "text": "小雨以后不再喜欢酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5745649933815002,
+          "affirmative_probability": 0.11057202517986298,
+          "accepted": false
+        },
+        {
+          "text": "我猜小雨可能喜欢酸奶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.48337680101394653,
+          "affirmative_probability": 0.1516982614994049,
+          "accepted": false
+        },
+        {
+          "text": "假如小雨喜欢酸奶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3646846413612366,
+          "affirmative_probability": 0.203448086977005,
+          "accepted": false
+        },
+        {
+          "text": "小雨说朋友喜欢酸奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3182048499584198,
+          "affirmative_probability": 0.17975905537605286,
+          "accepted": false
+        },
+        {
+          "text": "小雨给朋友买了酸奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5031550526618958,
+          "affirmative_probability": 0.14261184632778168,
+          "accepted": false
+        },
+        {
+          "text": "小雨为客人准备了酸奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7011633515357971,
+          "affirmative_probability": 0.08981738239526749,
+          "accepted": false
+        },
+        {
+          "text": "小雨是否爱喝酸奶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4165182411670685,
+          "affirmative_probability": 0.16871845722198486,
+          "accepted": false
+        },
+        {
+          "text": "小雨以前喝酸奶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5566211342811584,
+          "affirmative_probability": 0.1219935417175293,
+          "accepted": false
+        },
+        {
+          "text": "小雨喜欢喝茉莉花茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.463461309671402,
+          "affirmative_probability": 0.463461309671402,
+          "accepted": true
+        },
+        {
+          "text": "小雨最喜欢的饮料是茉莉花茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.6068112850189209,
+          "affirmative_probability": 0.6068112850189209,
+          "accepted": true
+        },
+        {
+          "text": "我知道小雨爱喝茉莉花茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.5563862919807434,
+          "affirmative_probability": 0.5563862919807434,
+          "accepted": true
+        },
+        {
+          "text": "小雨不喜欢喝茉莉花茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4332718253135681,
+          "affirmative_probability": 0.2471005916595459,
+          "accepted": false
+        },
+        {
+          "text": "小雨从来不喝茉莉花茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5220924019813538,
+          "affirmative_probability": 0.16705167293548584,
+          "accepted": false
+        },
+        {
+          "text": "小雨以后不再喜欢茉莉花茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.567903995513916,
+          "affirmative_probability": 0.11137774586677551,
+          "accepted": false
+        },
+        {
+          "text": "我猜小雨可能喜欢茉莉花茶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.476516455411911,
+          "affirmative_probability": 0.17459028959274292,
+          "accepted": false
+        },
+        {
+          "text": "假如小雨喜欢茉莉花茶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.36249858140945435,
+          "affirmative_probability": 0.2346537858247757,
+          "accepted": false
+        },
+        {
+          "text": "小雨说朋友喜欢茉莉花茶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3359721601009369,
+          "affirmative_probability": 0.2003573477268219,
+          "accepted": false
+        },
+        {
+          "text": "小雨给朋友买了茉莉花茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5418782830238342,
+          "affirmative_probability": 0.14195095002651215,
+          "accepted": false
+        },
+        {
+          "text": "小雨为客人准备了茉莉花茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7533330917358398,
+          "affirmative_probability": 0.07906877249479294,
+          "accepted": false
+        },
+        {
+          "text": "小雨是否爱喝茉莉花茶？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.47043824195861816,
+          "affirmative_probability": 0.17037327587604523,
+          "accepted": false
+        },
+        {
+          "text": "小雨以前喝茉莉花茶，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.606306791305542,
+          "affirmative_probability": 0.12212482839822769,
+          "accepted": false
+        },
+        {
+          "text": "小雨喜欢喝苏打水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.39752283692359924,
+          "affirmative_probability": 0.39752283692359924,
+          "accepted": true
+        },
+        {
+          "text": "小雨最喜欢的饮料是苏打水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.539320170879364,
+          "affirmative_probability": 0.539320170879364,
+          "accepted": true
+        },
+        {
+          "text": "我知道小雨爱喝苏打水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4854530394077301,
+          "affirmative_probability": 0.4854530394077301,
+          "accepted": true
+        },
+        {
+          "text": "小雨不喜欢喝苏打水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.44506070017814636,
+          "affirmative_probability": 0.22157622873783112,
+          "accepted": false
+        },
+        {
+          "text": "小雨从来不喝苏打水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5335246920585632,
+          "affirmative_probability": 0.15189510583877563,
+          "accepted": false
+        },
+        {
+          "text": "小雨以后不再喜欢苏打水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5787161588668823,
+          "affirmative_probability": 0.0924912616610527,
+          "accepted": false
+        },
+        {
+          "text": "我猜小雨可能喜欢苏打水。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4996417462825775,
+          "affirmative_probability": 0.13186752796173096,
+          "accepted": false
+        },
+        {
+          "text": "假如小雨喜欢苏打水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.38918766379356384,
+          "affirmative_probability": 0.175471231341362,
+          "accepted": false
+        },
+        {
+          "text": "小雨说朋友喜欢苏打水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3475775718688965,
+          "affirmative_probability": 0.15307188034057617,
+          "accepted": false
+        },
+        {
+          "text": "小雨给朋友买了苏打水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5368790626525879,
+          "affirmative_probability": 0.11524748057126999,
+          "accepted": false
+        },
+        {
+          "text": "小雨为客人准备了苏打水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7277261018753052,
+          "affirmative_probability": 0.07079508900642395,
+          "accepted": false
+        },
+        {
+          "text": "小雨是否爱喝苏打水？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4716150164604187,
+          "affirmative_probability": 0.14156866073608398,
+          "accepted": false
+        },
+        {
+          "text": "小雨以前喝苏打水，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.6009365320205688,
+          "affirmative_probability": 0.10191988945007324,
+          "accepted": false
+        },
+        {
+          "text": "小雨喜欢喝绿豆汤。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.42092165350914,
+          "affirmative_probability": 0.42092165350914,
+          "accepted": true
+        },
+        {
+          "text": "小雨最喜欢的饮料是绿豆汤。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.558472752571106,
+          "affirmative_probability": 0.558472752571106,
+          "accepted": true
+        },
+        {
+          "text": "我知道小雨爱喝绿豆汤。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.516709566116333,
+          "affirmative_probability": 0.516709566116333,
+          "accepted": true
+        },
+        {
+          "text": "小雨不喜欢喝绿豆汤。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.45050740242004395,
+          "affirmative_probability": 0.23805569112300873,
+          "accepted": false
+        },
+        {
+          "text": "小雨从来不喝绿豆汤。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5424972772598267,
+          "affirmative_probability": 0.16417744755744934,
+          "accepted": false
+        },
+        {
+          "text": "小雨以后不再喜欢绿豆汤。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5897632241249084,
+          "affirmative_probability": 0.10388655960559845,
+          "accepted": false
+        },
+        {
+          "text": "我猜小雨可能喜欢绿豆汤。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.4921683669090271,
+          "affirmative_probability": 0.14967645704746246,
+          "accepted": false
+        },
+        {
+          "text": "假如小雨喜欢绿豆汤就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.37190571427345276,
+          "affirmative_probability": 0.2136116921901703,
+          "accepted": false
+        },
+        {
+          "text": "小雨说朋友喜欢绿豆汤。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.3127816915512085,
+          "affirmative_probability": 0.17952761054039001,
+          "accepted": false
+        },
+        {
+          "text": "小雨给朋友买了绿豆汤。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.5310361981391907,
+          "affirmative_probability": 0.13336975872516632,
+          "accepted": false
+        },
+        {
+          "text": "小雨为客人准备了绿豆汤。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.7311204671859741,
+          "affirmative_probability": 0.0802648738026619,
+          "accepted": false
+        },
+        {
+          "text": "小雨是否爱喝绿豆汤？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4453294277191162,
+          "affirmative_probability": 0.1602098047733307,
+          "accepted": false
+        },
+        {
+          "text": "小雨以前喝绿豆汤，现在不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5825316905975342,
+          "affirmative_probability": 0.1165149137377739,
+          "accepted": false
+        }
+      ]
+    },
+    "calibration": {
+      "positive_total": 20,
+      "positive_accepted": 16,
+      "negative_total": 50,
+      "negative_accepted": 0,
+      "rows": [
+        {
+          "text": "阿哲最中意喝茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 1,
+          "confidence": 0.27622249722480774,
+          "affirmative_probability": 0.27578917145729065,
+          "accepted": false
+        },
+        {
+          "text": "阿哲平时最爱喝茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 1,
+          "confidence": 0.3069552183151245,
+          "affirmative_probability": 0.28111281991004944,
+          "accepted": false
+        },
+        {
+          "text": "阿哲完全不喝茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4551185667514801,
+          "affirmative_probability": 0.16835397481918335,
+          "accepted": false
+        },
+        {
+          "text": "也许阿哲喜欢茶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 0,
+          "confidence": 0.27227547764778137,
+          "affirmative_probability": 0.27227547764778137,
+          "accepted": false
+        },
+        {
+          "text": "听说阿哲喜欢茶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.2809995412826538,
+          "affirmative_probability": 0.2809995412826538,
+          "accepted": false
+        },
+        {
+          "text": "阿哲替同事带了茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.2980075180530548,
+          "affirmative_probability": 0.14913509786128998,
+          "accepted": false
+        },
+        {
+          "text": "你知道阿哲是否爱喝茶吗？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.45503851771354675,
+          "affirmative_probability": 0.16519352793693542,
+          "accepted": false
+        },
+        {
+          "text": "阿哲最中意喝咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3010883927345276,
+          "affirmative_probability": 0.3010883927345276,
+          "accepted": true
+        },
+        {
+          "text": "阿哲平时最爱喝咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3249214291572571,
+          "affirmative_probability": 0.3249214291572571,
+          "accepted": true
+        },
+        {
+          "text": "阿哲完全不喝咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.469842791557312,
+          "affirmative_probability": 0.15990053117275238,
+          "accepted": false
+        },
+        {
+          "text": "也许阿哲喜欢咖啡。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 0,
+          "confidence": 0.2689701020717621,
+          "affirmative_probability": 0.2689701020717621,
+          "accepted": false
+        },
+        {
+          "text": "听说阿哲喜欢咖啡。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.27691054344177246,
+          "affirmative_probability": 0.27691054344177246,
+          "accepted": false
+        },
+        {
+          "text": "阿哲替同事带了咖啡。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.3059757351875305,
+          "affirmative_probability": 0.15191026031970978,
+          "accepted": false
+        },
+        {
+          "text": "你知道阿哲是否爱喝咖啡吗？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5260162353515625,
+          "affirmative_probability": 0.16730225086212158,
+          "accepted": false
+        },
+        {
+          "text": "阿哲最中意喝牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3053630292415619,
+          "affirmative_probability": 0.3053630292415619,
+          "accepted": true
+        },
+        {
+          "text": "阿哲平时最爱喝牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3340648114681244,
+          "affirmative_probability": 0.3340648114681244,
+          "accepted": true
+        },
+        {
+          "text": "阿哲完全不喝牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4690774083137512,
+          "affirmative_probability": 0.16748660802841187,
+          "accepted": false
+        },
+        {
+          "text": "也许阿哲喜欢牛奶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 0,
+          "confidence": 0.27175042033195496,
+          "affirmative_probability": 0.27175042033195496,
+          "accepted": false
+        },
+        {
+          "text": "听说阿哲喜欢牛奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.27862653136253357,
+          "affirmative_probability": 0.27862653136253357,
+          "accepted": false
+        },
+        {
+          "text": "阿哲替同事带了牛奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.29131072759628296,
+          "affirmative_probability": 0.15610696375370026,
+          "accepted": false
+        },
+        {
+          "text": "你知道阿哲是否爱喝牛奶吗？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5125570893287659,
+          "affirmative_probability": 0.1751275211572647,
+          "accepted": false
+        },
+        {
+          "text": "阿哲最中意喝果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.299444317817688,
+          "affirmative_probability": 0.299444317817688,
+          "accepted": true
+        },
+        {
+          "text": "阿哲平时最爱喝果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.33322450518608093,
+          "affirmative_probability": 0.33322450518608093,
+          "accepted": true
+        },
+        {
+          "text": "阿哲完全不喝果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.46087536215782166,
+          "affirmative_probability": 0.16962161660194397,
+          "accepted": false
+        },
+        {
+          "text": "也许阿哲喜欢果汁。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 0,
+          "confidence": 0.27007007598876953,
+          "affirmative_probability": 0.27007007598876953,
+          "accepted": false
+        },
+        {
+          "text": "听说阿哲喜欢果汁。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.2785669267177582,
+          "affirmative_probability": 0.2785669267177582,
+          "accepted": false
+        },
+        {
+          "text": "阿哲替同事带了果汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.30717194080352783,
+          "affirmative_probability": 0.15640267729759216,
+          "accepted": false
+        },
+        {
+          "text": "你知道阿哲是否爱喝果汁吗？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5090389251708984,
+          "affirmative_probability": 0.17149575054645538,
+          "accepted": false
+        },
+        {
+          "text": "阿哲最中意喝豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.29948166012763977,
+          "affirmative_probability": 0.29948166012763977,
+          "accepted": true
+        },
+        {
+          "text": "阿哲平时最爱喝豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3220076858997345,
+          "affirmative_probability": 0.3220076858997345,
+          "accepted": true
+        },
+        {
+          "text": "阿哲完全不喝豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4546799659729004,
+          "affirmative_probability": 0.16916750371456146,
+          "accepted": false
+        },
+        {
+          "text": "也许阿哲喜欢豆浆。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 0,
+          "confidence": 0.2709173262119293,
+          "affirmative_probability": 0.2709173262119293,
+          "accepted": false
+        },
+        {
+          "text": "听说阿哲喜欢豆浆。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.2793654203414917,
+          "affirmative_probability": 0.2793654203414917,
+          "accepted": false
+        },
+        {
+          "text": "阿哲替同事带了豆浆。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.30301156640052795,
+          "affirmative_probability": 0.15587958693504333,
+          "accepted": false
+        },
+        {
+          "text": "你知道阿哲是否爱喝豆浆吗？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5107016563415527,
+          "affirmative_probability": 0.17299318313598633,
+          "accepted": false
+        },
+        {
+          "text": "阿哲最中意喝可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3155754506587982,
+          "affirmative_probability": 0.3155754506587982,
+          "accepted": true
+        },
+        {
+          "text": "阿哲平时最爱喝可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3515668213367462,
+          "affirmative_probability": 0.3515668213367462,
+          "accepted": true
+        },
+        {
+          "text": "阿哲完全不喝可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4453085660934448,
+          "affirmative_probability": 0.17385533452033997,
+          "accepted": false
+        },
+        {
+          "text": "也许阿哲喜欢可乐。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 0,
+          "confidence": 0.27371540665626526,
+          "affirmative_probability": 0.27371540665626526,
+          "accepted": false
+        },
+        {
+          "text": "听说阿哲喜欢可乐。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.28059783577919006,
+          "affirmative_probability": 0.28059783577919006,
+          "accepted": false
+        },
+        {
+          "text": "阿哲替同事带了可乐。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.32439953088760376,
+          "affirmative_probability": 0.1578836590051651,
+          "accepted": false
+        },
+        {
+          "text": "你知道阿哲是否爱喝可乐吗？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5119194984436035,
+          "affirmative_probability": 0.17993023991584778,
+          "accepted": false
+        },
+        {
+          "text": "阿哲最中意喝水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 1,
+          "confidence": 0.2742098271846771,
+          "affirmative_probability": 0.25920581817626953,
+          "accepted": false
+        },
+        {
+          "text": "阿哲平时最爱喝水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 1,
+          "confidence": 0.312071293592453,
+          "affirmative_probability": 0.2654745578765869,
+          "accepted": false
+        },
+        {
+          "text": "阿哲完全不喝水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4511481821537018,
+          "affirmative_probability": 0.15807266533374786,
+          "accepted": false
+        },
+        {
+          "text": "也许阿哲喜欢水。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 1,
+          "confidence": 0.26392319798469543,
+          "affirmative_probability": 0.25991904735565186,
+          "accepted": false
+        },
+        {
+          "text": "听说阿哲喜欢水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.2678540349006653,
+          "affirmative_probability": 0.2678540349006653,
+          "accepted": false
+        },
+        {
+          "text": "阿哲替同事带了水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.30556416511535645,
+          "affirmative_probability": 0.1440717726945877,
+          "accepted": false
+        },
+        {
+          "text": "你知道阿哲是否爱喝水吗？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.47481629252433777,
+          "affirmative_probability": 0.15894192457199097,
+          "accepted": false
+        },
+        {
+          "text": "阿哲最中意喝酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3097439706325531,
+          "affirmative_probability": 0.3097439706325531,
+          "accepted": true
+        },
+        {
+          "text": "阿哲平时最爱喝酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3266970217227936,
+          "affirmative_probability": 0.3266970217227936,
+          "accepted": true
+        },
+        {
+          "text": "阿哲完全不喝酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4502757787704468,
+          "affirmative_probability": 0.17328126728534698,
+          "accepted": false
+        },
+        {
+          "text": "也许阿哲喜欢酸奶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 0,
+          "confidence": 0.2689250409603119,
+          "affirmative_probability": 0.2689250409603119,
+          "accepted": false
+        },
+        {
+          "text": "听说阿哲喜欢酸奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.2785830795764923,
+          "affirmative_probability": 0.2785830795764923,
+          "accepted": false
+        },
+        {
+          "text": "阿哲替同事带了酸奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.29249370098114014,
+          "affirmative_probability": 0.15973876416683197,
+          "accepted": false
+        },
+        {
+          "text": "你知道阿哲是否爱喝酸奶吗？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5024638175964355,
+          "affirmative_probability": 0.17613671720027924,
+          "accepted": false
+        },
+        {
+          "text": "阿哲最中意喝热巧克力。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.30887970328330994,
+          "affirmative_probability": 0.30887970328330994,
+          "accepted": true
+        },
+        {
+          "text": "阿哲平时最爱喝热巧克力。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.35079967975616455,
+          "affirmative_probability": 0.35079967975616455,
+          "accepted": true
+        },
+        {
+          "text": "阿哲完全不喝热巧克力。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.44979768991470337,
+          "affirmative_probability": 0.16393578052520752,
+          "accepted": false
+        },
+        {
+          "text": "也许阿哲喜欢热巧克力。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 0,
+          "confidence": 0.2725605070590973,
+          "affirmative_probability": 0.2725605070590973,
+          "accepted": false
+        },
+        {
+          "text": "听说阿哲喜欢热巧克力。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.2772173583507538,
+          "affirmative_probability": 0.2772173583507538,
+          "accepted": false
+        },
+        {
+          "text": "阿哲替同事带了热巧克力。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.3314521908760071,
+          "affirmative_probability": 0.15128232538700104,
+          "accepted": false
+        },
+        {
+          "text": "你知道阿哲是否爱喝热巧克力吗？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5196071863174438,
+          "affirmative_probability": 0.17171268165111542,
+          "accepted": false
+        },
+        {
+          "text": "阿哲最中意喝冰红茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3106478452682495,
+          "affirmative_probability": 0.3106478452682495,
+          "accepted": true
+        },
+        {
+          "text": "阿哲平时最爱喝冰红茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.34063082933425903,
+          "affirmative_probability": 0.34063082933425903,
+          "accepted": true
+        },
+        {
+          "text": "阿哲完全不喝冰红茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4425055980682373,
+          "affirmative_probability": 0.17642447352409363,
+          "accepted": false
+        },
+        {
+          "text": "也许阿哲喜欢冰红茶。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 0,
+          "confidence": 0.27359285950660706,
+          "affirmative_probability": 0.27359285950660706,
+          "accepted": false
+        },
+        {
+          "text": "听说阿哲喜欢冰红茶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.28322333097457886,
+          "affirmative_probability": 0.28322333097457886,
+          "accepted": false
+        },
+        {
+          "text": "阿哲替同事带了冰红茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.29934144020080566,
+          "affirmative_probability": 0.16024138033390045,
+          "accepted": false
+        },
+        {
+          "text": "你知道阿哲是否爱喝冰红茶吗？",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.5355124473571777,
+          "affirmative_probability": 0.17127689719200134,
+          "accepted": false
+        }
+      ]
+    },
+    "held": {
+      "positive_total": 52,
+      "positive_accepted": 52,
+      "negative_total": 156,
+      "negative_accepted": 0,
+      "rows": [
+        {
+          "text": "据我所知，小梅最喜欢的饮品是茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3631010055541992,
+          "affirmative_probability": 0.3631010055541992,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.37114328145980835,
+          "affirmative_probability": 0.37114328145980835,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5237486958503723,
+          "affirmative_probability": 0.17021112143993378,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢茶了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5044024586677551,
+          "affirmative_probability": 0.14319176971912384,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢茶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3131586015224457,
+          "affirmative_probability": 0.2023276835680008,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢茶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2358277440071106,
+          "affirmative_probability": 0.2051333487033844,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6609794497489929,
+          "affirmative_probability": 0.08975575119256973,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝茶，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.34761032462120056,
+          "affirmative_probability": 0.13346333801746368,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.35779687762260437,
+          "affirmative_probability": 0.35779687762260437,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3763887584209442,
+          "affirmative_probability": 0.3763887584209442,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5457947254180908,
+          "affirmative_probability": 0.16400443017482758,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢咖啡了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5107301473617554,
+          "affirmative_probability": 0.13737298548221588,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢咖啡就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3128652274608612,
+          "affirmative_probability": 0.19281451404094696,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢咖啡。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2308209389448166,
+          "affirmative_probability": 0.20397743582725525,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了咖啡。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6621223092079163,
+          "affirmative_probability": 0.09040742367506027,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝咖啡，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.43185877799987793,
+          "affirmative_probability": 0.13127583265304565,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.36801445484161377,
+          "affirmative_probability": 0.36801445484161377,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.38126230239868164,
+          "affirmative_probability": 0.38126230239868164,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5533486008644104,
+          "affirmative_probability": 0.16836358606815338,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢牛奶了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5186852216720581,
+          "affirmative_probability": 0.14188377559185028,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢牛奶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3126688301563263,
+          "affirmative_probability": 0.20113374292850494,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢牛奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.22838765382766724,
+          "affirmative_probability": 0.20861351490020752,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了牛奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.644539475440979,
+          "affirmative_probability": 0.09608316421508789,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝牛奶，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.42727020382881165,
+          "affirmative_probability": 0.13877061009407043,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.36199429631233215,
+          "affirmative_probability": 0.36199429631233215,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3827286958694458,
+          "affirmative_probability": 0.3827286958694458,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5433393120765686,
+          "affirmative_probability": 0.1707998514175415,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢果汁了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5053502917289734,
+          "affirmative_probability": 0.13998956978321075,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢果汁就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.32320383191108704,
+          "affirmative_probability": 0.1978365182876587,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢果汁。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.22064317762851715,
+          "affirmative_probability": 0.21349237859249115,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了果汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6526838541030884,
+          "affirmative_probability": 0.09673497825860977,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝果汁，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.41180071234703064,
+          "affirmative_probability": 0.13716042041778564,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.35805124044418335,
+          "affirmative_probability": 0.35805124044418335,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3765498101711273,
+          "affirmative_probability": 0.3765498101711273,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5383963584899902,
+          "affirmative_probability": 0.1711457371711731,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢豆浆了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4979003965854645,
+          "affirmative_probability": 0.14399677515029907,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢豆浆就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3059256374835968,
+          "affirmative_probability": 0.2044733613729477,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢豆浆。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2175283581018448,
+          "affirmative_probability": 0.2130149006843567,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了豆浆。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6582286357879639,
+          "affirmative_probability": 0.09505690634250641,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝豆浆，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4205213189125061,
+          "affirmative_probability": 0.13673841953277588,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.37787652015686035,
+          "affirmative_probability": 0.37787652015686035,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3941807150840759,
+          "affirmative_probability": 0.3941807150840759,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5155273079872131,
+          "affirmative_probability": 0.18705207109451294,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢可乐了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.47942113876342773,
+          "affirmative_probability": 0.14260882139205933,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢可乐就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3271713852882385,
+          "affirmative_probability": 0.20400461554527283,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢可乐。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.23663228750228882,
+          "affirmative_probability": 0.20605893433094025,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了可乐。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6839750409126282,
+          "affirmative_probability": 0.08741655945777893,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝可乐，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4239492416381836,
+          "affirmative_probability": 0.14793458580970764,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.34880244731903076,
+          "affirmative_probability": 0.34880244731903076,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.36664506793022156,
+          "affirmative_probability": 0.36664506793022156,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5215771198272705,
+          "affirmative_probability": 0.165321946144104,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢水了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5150516629219055,
+          "affirmative_probability": 0.13552111387252808,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.31978875398635864,
+          "affirmative_probability": 0.18654119968414307,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.21989169716835022,
+          "affirmative_probability": 0.20734186470508575,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6621535420417786,
+          "affirmative_probability": 0.0857367292046547,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝水，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.3717694580554962,
+          "affirmative_probability": 0.11700224131345749,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.35912346839904785,
+          "affirmative_probability": 0.35912346839904785,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3820893168449402,
+          "affirmative_probability": 0.3820893168449402,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5358637571334839,
+          "affirmative_probability": 0.17535126209259033,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢酸奶了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5052371621131897,
+          "affirmative_probability": 0.14454570412635803,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢酸奶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.31133726239204407,
+          "affirmative_probability": 0.20059047639369965,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢酸奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2366081327199936,
+          "affirmative_probability": 0.20707230269908905,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了酸奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6463524103164673,
+          "affirmative_probability": 0.09803227335214615,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝酸奶，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4184108078479767,
+          "affirmative_probability": 0.13544218242168427,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是柠檬水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.38430213928222656,
+          "affirmative_probability": 0.38430213928222656,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是柠檬水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.4016435742378235,
+          "affirmative_probability": 0.4016435742378235,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝柠檬水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5647773742675781,
+          "affirmative_probability": 0.16723358631134033,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢柠檬水了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5300968885421753,
+          "affirmative_probability": 0.14517977833747864,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢柠檬水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3099532723426819,
+          "affirmative_probability": 0.2202564924955368,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢柠檬水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.23548974096775055,
+          "affirmative_probability": 0.22035540640354156,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了柠檬水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6619908809661865,
+          "affirmative_probability": 0.09788336604833603,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝柠檬水，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4314512312412262,
+          "affirmative_probability": 0.14094774425029755,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是苹果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3683100640773773,
+          "affirmative_probability": 0.3683100640773773,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是苹果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.39391812682151794,
+          "affirmative_probability": 0.39391812682151794,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝苹果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5250601768493652,
+          "affirmative_probability": 0.1728903353214264,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢苹果汁了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.49871212244033813,
+          "affirmative_probability": 0.13985157012939453,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢苹果汁就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.32906851172447205,
+          "affirmative_probability": 0.2105642408132553,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢苹果汁。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2507438063621521,
+          "affirmative_probability": 0.20892062783241272,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了苹果汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6930725574493408,
+          "affirmative_probability": 0.0860878974199295,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝苹果汁，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.43858829140663147,
+          "affirmative_probability": 0.14022570848464966,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是白开水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3626191020011902,
+          "affirmative_probability": 0.3626191020011902,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是白开水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.37816229462623596,
+          "affirmative_probability": 0.37816229462623596,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝白开水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5427864789962769,
+          "affirmative_probability": 0.1626690924167633,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢白开水了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5225589275360107,
+          "affirmative_probability": 0.13330931961536407,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢白开水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3167186975479126,
+          "affirmative_probability": 0.20410500466823578,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢白开水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.2268705815076828,
+          "affirmative_probability": 0.20581063628196716,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了白开水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6815541386604309,
+          "affirmative_probability": 0.08696115016937256,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝白开水，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.45606866478919983,
+          "affirmative_probability": 0.12277363240718842,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是汽水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3761056363582611,
+          "affirmative_probability": 0.3761056363582611,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是汽水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3987598419189453,
+          "affirmative_probability": 0.3987598419189453,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝汽水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5450107455253601,
+          "affirmative_probability": 0.17418809235095978,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢汽水了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5253477692604065,
+          "affirmative_probability": 0.13991476595401764,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢汽水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.30107444524765015,
+          "affirmative_probability": 0.21432165801525116,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢汽水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.23551256954669952,
+          "affirmative_probability": 0.2153303474187851,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了汽水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6728507280349731,
+          "affirmative_probability": 0.09158235043287277,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝汽水，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4284905791282654,
+          "affirmative_probability": 0.14464864134788513,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是橙汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3802449405193329,
+          "affirmative_probability": 0.3802449405193329,
+          "accepted": true
+        },
+        {
+          "text": "小梅偏爱的饮料是橙汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.40063053369522095,
+          "affirmative_probability": 0.40063053369522095,
+          "accepted": true
+        },
+        {
+          "text": "小梅从来不喝橙汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5489141941070557,
+          "affirmative_probability": 0.17234648764133453,
+          "accepted": false
+        },
+        {
+          "text": "小梅不再喜欢橙汁了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5351181030273438,
+          "affirmative_probability": 0.13607162237167358,
+          "accepted": false
+        },
+        {
+          "text": "如果小梅喜欢橙汁就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3230912685394287,
+          "affirmative_probability": 0.2144446074962616,
+          "accepted": false
+        },
+        {
+          "text": "小梅说阿明喜欢橙汁。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 3,
+          "confidence": 0.24026887118816376,
+          "affirmative_probability": 0.21648278832435608,
+          "accepted": false
+        },
+        {
+          "text": "小梅给客人准备了橙汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6724780797958374,
+          "affirmative_probability": 0.09335972368717194,
+          "accepted": false
+        },
+        {
+          "text": "小梅曾经喝橙汁，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4153580963611603,
+          "affirmative_probability": 0.14698372781276703,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.36679568886756897,
+          "affirmative_probability": 0.36679568886756897,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是茶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3615865707397461,
+          "affirmative_probability": 0.3615865707397461,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝茶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5257242321968079,
+          "affirmative_probability": 0.15397897362709045,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢茶了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.49326932430267334,
+          "affirmative_probability": 0.14156076312065125,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢茶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3048590123653412,
+          "affirmative_probability": 0.19654728472232819,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢茶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.21651364862918854,
+          "affirmative_probability": 0.21651364862918854,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了茶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.636864185333252,
+          "affirmative_probability": 0.09117323905229568,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝茶，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.3421158492565155,
+          "affirmative_probability": 0.12875793874263763,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.36030569672584534,
+          "affirmative_probability": 0.36030569672584534,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是咖啡。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.36304619908332825,
+          "affirmative_probability": 0.36304619908332825,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝咖啡。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5337384343147278,
+          "affirmative_probability": 0.1501416712999344,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢咖啡了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.49902117252349854,
+          "affirmative_probability": 0.13373802602291107,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢咖啡就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.30842170119285583,
+          "affirmative_probability": 0.18677514791488647,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢咖啡。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.21157404780387878,
+          "affirmative_probability": 0.21157404780387878,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了咖啡。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6432073712348938,
+          "affirmative_probability": 0.0900232121348381,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝咖啡，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4180785119533539,
+          "affirmative_probability": 0.12448754906654358,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.36635011434555054,
+          "affirmative_probability": 0.36635011434555054,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是牛奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3673993647098541,
+          "affirmative_probability": 0.3673993647098541,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝牛奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5486103892326355,
+          "affirmative_probability": 0.1527148336172104,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢牛奶了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5126431584358215,
+          "affirmative_probability": 0.13756635785102844,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢牛奶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.2978913187980652,
+          "affirmative_probability": 0.19668854773044586,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢牛奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.2196115255355835,
+          "affirmative_probability": 0.2196115255355835,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了牛奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6283131837844849,
+          "affirmative_probability": 0.09506231546401978,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝牛奶，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4227561354637146,
+          "affirmative_probability": 0.1332152783870697,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3654770851135254,
+          "affirmative_probability": 0.3654770851135254,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3681926429271698,
+          "affirmative_probability": 0.3681926429271698,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5374001860618591,
+          "affirmative_probability": 0.1544443517923355,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢果汁了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.494478315114975,
+          "affirmative_probability": 0.13454751670360565,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢果汁就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3109215199947357,
+          "affirmative_probability": 0.1920553594827652,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢果汁。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.22397248446941376,
+          "affirmative_probability": 0.22397248446941376,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了果汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.636686384677887,
+          "affirmative_probability": 0.09496233612298965,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝果汁，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4020891785621643,
+          "affirmative_probability": 0.12972185015678406,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.35796692967414856,
+          "affirmative_probability": 0.35796692967414856,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是豆浆。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3625663220882416,
+          "affirmative_probability": 0.3625663220882416,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝豆浆。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5333195924758911,
+          "affirmative_probability": 0.1542673110961914,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢豆浆了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.48791906237602234,
+          "affirmative_probability": 0.13890500366687775,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢豆浆就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.29400283098220825,
+          "affirmative_probability": 0.19770441949367523,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢豆浆。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.2212757021188736,
+          "affirmative_probability": 0.2212757021188736,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了豆浆。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6410597562789917,
+          "affirmative_probability": 0.09336651116609573,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝豆浆，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.410185307264328,
+          "affirmative_probability": 0.12968455255031586,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3765439987182617,
+          "affirmative_probability": 0.3765439987182617,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是可乐。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.37412744760513306,
+          "affirmative_probability": 0.37412744760513306,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝可乐。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5059071779251099,
+          "affirmative_probability": 0.16800691187381744,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢可乐了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4634976089000702,
+          "affirmative_probability": 0.13640770316123962,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢可乐就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.31884080171585083,
+          "affirmative_probability": 0.19911256432533264,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢可乐。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.21762695908546448,
+          "affirmative_probability": 0.21762695908546448,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了可乐。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6611977815628052,
+          "affirmative_probability": 0.08772389590740204,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝可乐，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4217095673084259,
+          "affirmative_probability": 0.13411858677864075,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.35125622153282166,
+          "affirmative_probability": 0.35125622153282166,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.34242528676986694,
+          "affirmative_probability": 0.34242528676986694,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5193318724632263,
+          "affirmative_probability": 0.1527056246995926,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢水了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5095682144165039,
+          "affirmative_probability": 0.13404706120491028,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3102194666862488,
+          "affirmative_probability": 0.1847609281539917,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.21248996257781982,
+          "affirmative_probability": 0.21248996257781982,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6452835202217102,
+          "affirmative_probability": 0.08453576266765594,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝水，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.36029568314552307,
+          "affirmative_probability": 0.11406451463699341,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.361621230840683,
+          "affirmative_probability": 0.361621230840683,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是酸奶。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3684844374656677,
+          "affirmative_probability": 0.3684844374656677,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝酸奶。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5300003886222839,
+          "affirmative_probability": 0.15878593921661377,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢酸奶了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4985540211200714,
+          "affirmative_probability": 0.13903965055942535,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢酸奶就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.30435675382614136,
+          "affirmative_probability": 0.19071047008037567,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢酸奶。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.21635830402374268,
+          "affirmative_probability": 0.21635830402374268,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了酸奶。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6281071901321411,
+          "affirmative_probability": 0.09767801314592361,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝酸奶，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.40910834074020386,
+          "affirmative_probability": 0.13089574873447418,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是柠檬水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3877348005771637,
+          "affirmative_probability": 0.3877348005771637,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是柠檬水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3867340385913849,
+          "affirmative_probability": 0.3867340385913849,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝柠檬水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5576622486114502,
+          "affirmative_probability": 0.1525585949420929,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢柠檬水了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5179234743118286,
+          "affirmative_probability": 0.14139197766780853,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢柠檬水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.30134448409080505,
+          "affirmative_probability": 0.2186306267976761,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢柠檬水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.23550912737846375,
+          "affirmative_probability": 0.23550912737846375,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了柠檬水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6394882798194885,
+          "affirmative_probability": 0.09739057719707489,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝柠檬水，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.41816043853759766,
+          "affirmative_probability": 0.13332872092723846,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是苹果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.36897167563438416,
+          "affirmative_probability": 0.36897167563438416,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是苹果汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3694837987422943,
+          "affirmative_probability": 0.3694837987422943,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝苹果汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5231344699859619,
+          "affirmative_probability": 0.1545172929763794,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢苹果汁了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.4928499758243561,
+          "affirmative_probability": 0.13493108749389648,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢苹果汁就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3212750256061554,
+          "affirmative_probability": 0.20300738513469696,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢苹果汁。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.22223930060863495,
+          "affirmative_probability": 0.22223930060863495,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了苹果汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6743600964546204,
+          "affirmative_probability": 0.08539564162492752,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝苹果汁，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.43288153409957886,
+          "affirmative_probability": 0.1324486881494522,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是白开水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.36384984850883484,
+          "affirmative_probability": 0.36384984850883484,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是白开水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.35443538427352905,
+          "affirmative_probability": 0.35443538427352905,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝白开水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5381413102149963,
+          "affirmative_probability": 0.14356443285942078,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢白开水了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5118686556816101,
+          "affirmative_probability": 0.12915641069412231,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢白开水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.30614373087882996,
+          "affirmative_probability": 0.19111816585063934,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢白开水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.21589258313179016,
+          "affirmative_probability": 0.21589258313179016,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了白开水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.654986560344696,
+          "affirmative_probability": 0.08663466572761536,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝白开水，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4478644132614136,
+          "affirmative_probability": 0.11701884120702744,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是汽水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3784663677215576,
+          "affirmative_probability": 0.3784663677215576,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是汽水。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.3806197941303253,
+          "affirmative_probability": 0.3806197941303253,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝汽水。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5361034274101257,
+          "affirmative_probability": 0.1563708782196045,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢汽水了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.51239013671875,
+          "affirmative_probability": 0.13610246777534485,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢汽水就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.28741252422332764,
+          "affirmative_probability": 0.20937687158584595,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢汽水。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.22925153374671936,
+          "affirmative_probability": 0.22925153374671936,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了汽水。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6491854786872864,
+          "affirmative_probability": 0.09201602637767792,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝汽水，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4279095530509949,
+          "affirmative_probability": 0.1330922544002533,
+          "accepted": false
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是橙汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.37699928879737854,
+          "affirmative_probability": 0.37699928879737854,
+          "accepted": true
+        },
+        {
+          "text": "阿远偏爱的饮料是橙汁。",
+          "label": 0,
+          "kind": "affirmative",
+          "prediction": 0,
+          "confidence": 0.38073983788490295,
+          "affirmative_probability": 0.38073983788490295,
+          "accepted": true
+        },
+        {
+          "text": "阿远从来不喝橙汁。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5396741628646851,
+          "affirmative_probability": 0.1567859947681427,
+          "accepted": false
+        },
+        {
+          "text": "阿远不再喜欢橙汁了。",
+          "label": 1,
+          "kind": "negation",
+          "prediction": 1,
+          "confidence": 0.5237799882888794,
+          "affirmative_probability": 0.13035215437412262,
+          "accepted": false
+        },
+        {
+          "text": "如果阿远喜欢橙汁就好了。",
+          "label": 2,
+          "kind": "hypothesis",
+          "prediction": 2,
+          "confidence": 0.3155445456504822,
+          "affirmative_probability": 0.20744726061820984,
+          "accepted": false
+        },
+        {
+          "text": "阿远说阿明喜欢橙汁。",
+          "label": 3,
+          "kind": "third_party",
+          "prediction": 0,
+          "confidence": 0.23200565576553345,
+          "affirmative_probability": 0.23200565576553345,
+          "accepted": false
+        },
+        {
+          "text": "阿远给客人准备了橙汁。",
+          "label": 4,
+          "kind": "action",
+          "prediction": 4,
+          "confidence": 0.6545278429985046,
+          "affirmative_probability": 0.09291873127222061,
+          "accepted": false
+        },
+        {
+          "text": "阿远曾经喝橙汁，后来不清楚。",
+          "label": 5,
+          "kind": "question_history",
+          "prediction": 5,
+          "confidence": 0.4112662374973297,
+          "affirmative_probability": 0.1349114328622818,
+          "accepted": false
+        }
+      ]
+    }
+  },
+  "seconds": 56.84087920000093,
+  "limitations": [
+    "Synthetic templates and finite names/values.",
+    "No independent dialogue, source trust, temporal resolution or write authorization.",
+    "Threshold selected on finite calibration data and is not a safety guarantee.",
+    "No persistent memory writes."
+  ]
+}
