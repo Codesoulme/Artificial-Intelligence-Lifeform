@@ -52,7 +52,7 @@ class MemoryOutputAdapter(nn.Module):
 
 
 class MemoryOutputLogitsProcessor(LogitsProcessor):
-    """Add one fixed memory bias to every generation step in a call."""
+    """Add one fixed memory bias to the first generation step in a call."""
 
     def __init__(self, adapter, memory_logits, gain=1.0):
         if not isinstance(adapter, MemoryOutputAdapter):
