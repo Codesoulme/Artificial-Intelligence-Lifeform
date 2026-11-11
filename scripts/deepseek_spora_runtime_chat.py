@@ -41,6 +41,8 @@ from spora.named_address import address_basis_sha256, feature_files_sha256
 from spora.internal_memory import observe_sourced
 from spora.memory_output import MemoryOutputAdapter
 from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
+from spora.working_checkpoint_lock import lock_working_checkpoint
+from spora.durable import RevisionConflict
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 WORKING_CHECKPOINT = ROOT/'runs/spora-runtime-individual/individual.pt'
@@ -60,9 +62,10 @@ def _supported_beverage_evidence(logits, value_count):
 
 
 class SporaChat:
-    def __init__(self, base, tokenizer, decoder, organism, state, gates):
+    def __init__(self, base, tokenizer, decoder, organism, state, gates, working_sha256=None):
         self.base, self.tokenizer, self.decoder = base, tokenizer, decoder
         self.organism, self.state = organism, state
+        self._working_sha256 = working_sha256
         self.router, self.entity_data, self.intent_data, self.temporal, self.temporal_data = gates
         self.bases = torch.stack([F.normalize(site.current_basis.detach().cpu().float(), dim=-1)
                                   for site in organism.memories])
@@ -78,13 +81,19 @@ class SporaChat:
     def observe_sourced(self, key, value, source='direct', quality=1.0, valid_at=None):
         """Write one guarded fact and atomically publish the same individual."""
         from spora.integrated_checkpoint import save_integrated
-        candidate, decision = observe_sourced(self.organism, self.state, key, value,
-                                              source, quality, valid_at)
-        WORKING_CHECKPOINT.parent.mkdir(parents=True, exist_ok=True)
-        save_integrated(WORKING_CHECKPOINT, self.organism, candidate, self.decoder.reader,
-                        MODEL, self.decoder.layer_indices, replacements=self._replacements(),
-                        output_adapter=self.decoder.output_adapter)
-        self.state = candidate
+        with lock_working_checkpoint(WORKING_CHECKPOINT):
+            current_sha = sha(WORKING_CHECKPOINT) if WORKING_CHECKPOINT.exists() else None
+            if current_sha != self._working_sha256:
+                raise RevisionConflict('Working checkpoint changed; reload before writing')
+            candidate, decision = observe_sourced(self.organism, self.state, key, value,
+                                                  source, quality, valid_at)
+            save_integrated(WORKING_CHECKPOINT, self.organism, candidate, self.decoder.reader,
+                            MODEL, self.decoder.layer_indices, replacements=self._replacements(),
+                            output_adapter=self.decoder.output_adapter)
+            # Publish the committed state before hashing, so an I/O error cannot
+            # leave this process behind a file that was already replaced.
+            self.state = candidate
+            self._working_sha256 = sha(WORKING_CHECKPOINT)
         return decision
 
     @torch.no_grad()
@@ -182,6 +191,7 @@ def load_chat():
     if sha(MODEL/'model.safetensors') != WEIGHT_SHA or not CHECKPOINT.exists():
         raise ValueError('Protected model or integrated checkpoint unavailable')
     checkpoint = WORKING_CHECKPOINT if WORKING_CHECKPOINT.exists() else CHECKPOINT
+    working_sha = sha(checkpoint) if checkpoint == WORKING_CHECKPOINT else None
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     base = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False,
                                                 torch_dtype=torch.float16, attn_implementation='sdpa').to('cuda').eval()
@@ -230,8 +240,11 @@ def load_chat():
     temporal_width = temporal_data['state']['weight'].shape[1]
     temporal = nn.Linear(temporal_width, 4).eval()
     temporal.load_state_dict(temporal_data['state'], strict=True)
+    if ((checkpoint == WORKING_CHECKPOINT and sha(WORKING_CHECKPOINT) != working_sha)
+            or (checkpoint == CHECKPOINT and WORKING_CHECKPOINT.exists())):
+        raise RevisionConflict('Working checkpoint changed during load; retry')
     return SporaChat(base, tokenizer, decoder, organism, state,
-                     (router, entity_data, intent_data, temporal, temporal_data))
+                     (router, entity_data, intent_data, temporal, temporal_data), working_sha256=working_sha)
 
 
 def main():

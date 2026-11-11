@@ -17,6 +17,7 @@ class RuntimeChatPersistenceTests(unittest.TestCase):
             destination = root / 'working' / 'individual.pt'
             chat = object.__new__(chat_module.SporaChat)
             chat.state = object()
+            chat._working_sha256 = None
             previous = chat.state
             candidate = object()
             chat.organism = object()
@@ -42,6 +43,7 @@ class RuntimeChatPersistenceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             chat = object.__new__(chat_module.SporaChat)
             chat.state = object()
+            chat._working_sha256 = None
             previous = chat.state
             chat.organism = object()
             chat.decoder = SimpleNamespace(reader=object(), layer_indices=(0, 1),
@@ -53,6 +55,22 @@ class RuntimeChatPersistenceTests(unittest.TestCase):
                 with self.assertRaises(OSError):
                     chat.observe_sourced(1, 2)
             self.assertIs(chat.state, previous)
+
+    def test_stale_working_checkpoint_refuses_write(self):
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / 'individual.pt'
+            destination.write_bytes(b'newer state')
+            chat = object.__new__(chat_module.SporaChat)
+            chat.state = object()
+            previous = chat.state
+            chat._working_sha256 = None
+            with patch.object(chat_module, 'WORKING_CHECKPOINT', destination), \
+                 patch.object(chat_module, 'observe_sourced') as observe:
+                with self.assertRaises(chat_module.RevisionConflict):
+                    chat.observe_sourced(1, 2)
+                observe.assert_not_called()
+            self.assertIs(chat.state, previous)
+            self.assertEqual(destination.read_bytes(), b'newer state')
 
     def test_generic_preference_does_not_identify_a_beverage(self):
         for question in ('小林的颜色偏好是什么？', '小林的工作偏好是什么？'):
