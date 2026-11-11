@@ -1,0 +1,92 @@
+{
+  "status": "unified_route_entry_controlled_probe",
+  "rows": [
+    {
+      "question": "小林现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 2.6332504749298096,
+      "entity_score": 0.9939999580383301,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "key": 6
+    },
+    {
+      "question": "小林改口以前喜欢什么饮料？",
+      "accepted": true,
+      "answer": "咖啡",
+      "temporal_intent": 1,
+      "intent_logit": 5.9355597496032715,
+      "entity_score": 0.993152379989624,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 2,
+        "effective_time": 2,
+        "candidate_count": 4,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6
+    },
+    {
+      "question": "小林后来喜欢喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 2,
+      "intent_logit": 3.285627841949463,
+      "entity_score": 0.9919598698616028,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 3,
+        "effective_time": 3,
+        "candidate_count": 4,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6
+    },
+    {
+      "question": "请给小林写一句鼓励的话。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -8.057950019836426,
+      "entity_score": 0.024313274770975113,
+      "reason": "not_confident_read_intent"
+    }
+  ],
+  "accepted": 3,
+  "rejected": 1,
+  "limitations": [
+    "One controlled entity and two finite values.",
+    "The key/value writes are supplied by the probe.",
+    "This is not an open-world or independent language evaluation."
+  ]
+}
