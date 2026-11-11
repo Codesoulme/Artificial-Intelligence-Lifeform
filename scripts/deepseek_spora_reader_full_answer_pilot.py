@@ -15,14 +15,16 @@ SEED = 98117
 STEPS = 12
 
 
-def main(output=OUTPUT, learning_rate=1e-4, objective='full'):
+def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS):
     output = Path(output).resolve()
     if not output.is_relative_to((p.ROOT / 'runs').resolve()) or output == (p.ROOT / 'runs').resolve():
         raise ValueError('Output must be a new directory under runs')
     if not math.isfinite(learning_rate) or not 0 < learning_rate <= 1e-3:
         raise ValueError('Invalid learning rate')
-    if objective not in ('full', 'value_contrastive'):
+    if objective not in ('full', 'value_contrastive', 'mixed'):
         raise ValueError('Invalid objective')
+    if type(steps) is not int or not 1 <= steps <= 1000:
+        raise ValueError('Invalid step count')
     if output.exists():
         raise FileExistsError(output)
     source_sha = p.sha(p.runtime.CHECKPOINT)
@@ -96,6 +98,8 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full'):
                         scores.reshape(-1, scores.shape[-1]), target.reshape(-1))
                     value_logits = scores[0, item['value_position']]
                     value_margin = value_logits[item['value_token']] - value_logits[item['competitor_tokens']].max()
+                    first_logits = scores[0, 0]
+                    first_margin = first_logits[item['value_token']] - first_logits[item['competitor_tokens']].max()
                     ids = decoder.generate(**item['prompt'], **{**item['spec'], 'use_cache': True},
                         max_new_tokens=24, do_sample=False, pad_token_id=tokenizer.pad_token_id,
                         eos_token_id=tokenizer.eos_token_id)
@@ -104,7 +108,8 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full'):
                 rows.append({'group': item['group'], 'name': item['name'], 'question': item['question'],
                              'expected_value': p.WORDS[item['value']], 'target_sentence': item['answer'],
                              'answer': text, 'token_ids': tail, 'ended_eos': tokenizer.eos_token_id in tail,
-                             'teacher_forced_loss': float(forced_loss), 'value_margin': float(value_margin)})
+                             'teacher_forced_loss': float(forced_loss), 'value_margin': float(value_margin),
+                             'first_value_margin': float(first_margin)})
             return rows
 
         def ordinary_answers():
@@ -123,7 +128,7 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full'):
         ordinary_before = ordinary_answers()
         order = [item for item in cases if item['group'] == 'train']
         trace = []
-        for step in range(STEPS):
+        for step in range(steps):
             if step % len(order) == 0:
                 rng.shuffle(order)
             item = order[step % len(order)]
@@ -136,7 +141,7 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full'):
             targets = item['ids'][:, prefix_len:]
             if scores.shape[:2] != targets.shape:
                 raise ValueError('Causal answer alignment mismatch')
-            if objective == 'full':
+            if objective in ('full', 'mixed'):
                 loss = p.torch.nn.functional.cross_entropy(scores.reshape(-1, scores.shape[-1]), targets.reshape(-1))
             else:
                 value_logits = scores[:, item['value_position'], :]
@@ -146,7 +151,20 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full'):
                 loss = p.torch.nn.functional.cross_entropy(value_logits, targets[:, item['value_position']]) + margin_loss
             if not bool(p.torch.isfinite(loss)):
                 raise ValueError('Nonfinite loss')
-            loss.backward()
+            if objective == 'mixed':
+                (loss * 0.5).backward()
+                direct_target = p.torch.tensor([[item['value_token'], tokenizer.eos_token_id]], device=device)
+                direct_ids = p.torch.cat((item['prompt']['input_ids'], direct_target), dim=1)
+                direct = decoder(input_ids=direct_ids, attention_mask=p.torch.ones_like(direct_ids), **item['spec'])
+                direct_scores = direct.logits[:, prefix_len - 1:prefix_len + 1].float()
+                direct_loss = p.torch.nn.functional.cross_entropy(
+                    direct_scores.reshape(-1, direct_scores.shape[-1]), direct_target.reshape(-1))
+                if not bool(p.torch.isfinite(direct_loss)):
+                    raise ValueError('Nonfinite direct-answer loss')
+                (direct_loss * 0.5).backward()
+                loss = (loss.detach() + direct_loss.detach()) * 0.5
+            else:
+                loss.backward()
             grad = p.torch.nn.utils.clip_grad_norm_(parameters, 1.0, error_if_nonfinite=True)
             optimizer.step()
             trace.append({'step': step + 1, 'loss': float(loss.detach()), 'gradient_norm': float(grad)})
@@ -162,7 +180,7 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full'):
         raise ValueError('Protected source changed')
     output.mkdir(parents=False, exist_ok=False)
     p.torch.save({'state': reader_state, 'source_checkpoint_sha256': source_sha,
-                  'base_sha256': p.WEIGHT_SHA, 'steps': STEPS, 'seed': SEED,
+                  'base_sha256': p.WEIGHT_SHA, 'steps': steps, 'seed': SEED,
                   'learning_rate': learning_rate, 'objective': objective}, output / 'reader.pt')
     report = {'before': before, 'after': after, 'trace': trace, 'source_checkpoint_sha256': source_sha,
               'ordinary_before': ordinary_before, 'ordinary_after': ordinary_after,
@@ -187,6 +205,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', type=Path, default=OUTPUT)
     parser.add_argument('--learning-rate', type=float, default=1e-4)
-    parser.add_argument('--objective', choices=('full', 'value_contrastive'), default='full')
+    parser.add_argument('--objective', choices=('full', 'value_contrastive', 'mixed'), default='full')
+    parser.add_argument('--steps', type=int, default=STEPS)
     options = parser.parse_args()
-    main(options.output, options.learning_rate, options.objective)
+    main(options.output, options.learning_rate, options.objective, options.steps)
