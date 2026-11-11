@@ -31,6 +31,15 @@ def select_event(model, state, key, order, as_of=None, max_scan=4096, batch_size
             continue
         if 'reason' in row:
             return {'status': 'abstain', 'reason': 'uncertain_provenance', 'event_time': event}
+        # A deferred direct/report observation may describe an earlier fact
+        # that changes the effective ordering. It is not safe to silently skip
+        # it and return a confidently wrong earlier candidate. This deliberately
+        # abstains until that observation is resolved; it does not accept it as
+        # truth or guarantee that unknown neural reads reveal every event.
+        if effective and row.get('action') == 'defer' and row.get('source') in ('direct', 'report'):
+            valid_at = row.get('valid_at')
+            if type(valid_at) is not int or valid_at < 0 or valid_at <= as_of:
+                return {'status': 'abstain', 'reason': 'unresolved_factual_observation', 'event_time': event}
         if row.get('action') in ('new', 'correct'):
             candidates.append(event)
             if effective:

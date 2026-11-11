@@ -47,6 +47,25 @@ class EventScanTests(unittest.TestCase):
             self.assertEqual(select_event(self.model, self.state, 1, 'effective_latest', as_of=5)['reason'],
                              'missing_effective_time')
 
+    def test_deferred_factual_observation_blocks_effective_selection(self):
+        rows = [{'action': 'new', 'source': 'direct', 'valid_at': 0},
+                {'action': 'correct', 'source': 'direct', 'valid_at': 4},
+                {'action': 'defer', 'source': 'direct', 'valid_at': 2}]
+        with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=rows):
+            for order in ('effective_first', 'effective_latest', 'effective_previous'):
+                result = select_event(self.model, self.state, 1, order, as_of=5)
+                self.assertEqual(result['reason'], 'unresolved_factual_observation')
+                self.assertEqual(result['event_time'], 2)
+            self.assertEqual(select_event(self.model, self.state, 1, 'effective_latest', as_of=1)['event_time'], 0)
+            self.assertEqual(select_event(self.model, self.state, 1, 'previous')['event_time'], 0)
+
+    def test_deferred_nonfactual_observation_does_not_block(self):
+        rows = [{'action': 'new', 'source': 'direct', 'valid_at': 0},
+                {'action': 'correct', 'source': 'direct', 'valid_at': 4},
+                {'action': 'defer', 'source': 'inference', 'valid_at': 2}]
+        with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=rows):
+            self.assertEqual(select_event(self.model, self.state, 1, 'effective_previous', as_of=5)['event_time'], 0)
+
 
 if __name__ == '__main__':
     unittest.main()
