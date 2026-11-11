@@ -9,6 +9,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -18,11 +19,14 @@ import pyarrow.parquet as parquet
 import torch
 from torch import nn
 from torch.nn import functional as F
+from transformers import AutoTokenizer
 from scripts import deepseek_spora_runtime_chat as runtime
 from scripts.deepseek_cluener_span_audit import SOURCE, SOURCE_SHA, character_mask, labeled_names, select_rows
 from scripts.deepseek_cluener_locator_train import TRAIN, TRAIN_SHA
 from scripts.deepseek_learned_name_span import single_span_mask
 from scripts.deepseek_spora_cluener_locator_retrain import OUTPUT as LOCATOR
+from scripts.deepseek_spora_prefix_features import load_prefix
+from scripts.deepseek_spora_prefix_parity_audit import OUTPUT as PARITY
 from spora.identity_fingerprints import IdentityFingerprints
 
 OUTPUT = ROOT / 'runs/deepseek-spora-cluener-dual-span-audit-20261111.json'
@@ -73,11 +77,20 @@ def main():
         raise ValueError('Candidate locator digest mismatch')
     candidate_data = torch.load(candidate_path, map_location='cpu', weights_only=True)
     source_sha = runtime.sha(runtime.CHECKPOINT)
+    parity = json.loads(PARITY.read_text(encoding='utf-8'))
+    if (parity['source_checkpoint_sha256'] != source_sha or parity['examples'] != 10
+            or parity['span_matches'] != parity['examples'] or parity['max_entity_score_difference'] > 0.001):
+        raise ValueError('Prefix parity evidence missing or inconsistent')
     torch.set_num_threads(2)
     started = time.perf_counter()
     with tempfile.TemporaryDirectory() as directory:
         runtime.WORKING_CHECKPOINT = Path(directory) / 'unused.pt'
-        chat = runtime.load_chat()
+        base, router, variant = load_prefix()
+        if variant != parity['feature_variant_sha256']:
+            raise ValueError('Prefix feature variant differs from parity evidence')
+        tokenizer = AutoTokenizer.from_pretrained(runtime.MODEL, local_files_only=True, trust_remote_code=False)
+        tokenizer.padding_side = 'right'
+        chat = SimpleNamespace(base=base, router=router, tokenizer=tokenizer)
         if candidate_data.get('feature_variant_sha256') != chat.router.get('feature_variant_sha256'):
             raise ValueError('Candidate locator feature variant mismatch')
         questions = [row['text'] for row in selected]
@@ -148,7 +161,8 @@ def main():
                               'One reference name is oracle-enrolled per single-name example.',
                               'Previous experiments used the same validation split for development.',
                               'Annotation errors, tokenizer boundary merges, and base pretraining overlap are possible.',
-                              'No memory read/write, identity enrollment workflow or real user state evaluated.']}
+                              'No memory read/write, identity enrollment workflow or real user state evaluated.',
+                              'Reduced prefix agrees with full-model span and gate outputs on ten development examples only.']}
     with OUTPUT.open('x', encoding='utf-8', newline='\n') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
