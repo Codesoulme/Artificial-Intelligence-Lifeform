@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+import torch
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -57,6 +58,16 @@ class RuntimeChatPersistenceTests(unittest.TestCase):
         for question in ('小林的颜色偏好是什么？', '小林的工作偏好是什么？'):
             self.assertFalse(any(word in question for word in chat_module.MEMORY_DOMAIN_ANCHORS))
         self.assertTrue(any(word in '小林喜欢喝什么？' for word in chat_module.MEMORY_DOMAIN_ANCHORS))
+
+    def test_unsupported_and_unknown_values_do_not_reach_output_head(self):
+        for value in range(17):
+            evidence = torch.zeros(1, 17)
+            evidence[0, value] = 10
+            self.assertEqual(chat_module._supported_beverage_evidence(evidence, 17), value < 8)
+        with self.assertRaises(ValueError):
+            chat_module._supported_beverage_evidence(torch.full((1, 17), float('nan')), 17)
+        with self.assertRaises(ValueError):
+            chat_module._supported_beverage_evidence(torch.zeros(2, 17), 17)
 
 
 if __name__ == '__main__':

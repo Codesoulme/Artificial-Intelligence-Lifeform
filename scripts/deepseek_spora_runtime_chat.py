@@ -51,6 +51,14 @@ ENTITY = ROOT/'runs/deepseek-spora-single-entity-gate-v2-20261111'
 MEMORY_DOMAIN_ANCHORS = ('饮品', '饮料', '喝', '饮用')
 
 
+def _supported_beverage_evidence(logits, value_count):
+    """Only finite-symbol values with a defined beverage vocabulary can be used."""
+    if (not isinstance(logits, torch.Tensor) or logits.ndim != 2 or logits.shape != (1, value_count)
+            or not bool(torch.isfinite(logits).all())):
+        raise ValueError('Invalid native memory output evidence')
+    return int(logits.argmax(-1)[0]) < len(WORDS)
+
+
 class SporaChat:
     def __init__(self, base, tokenizer, decoder, organism, state, gates):
         self.base, self.tokenizer, self.decoder = base, tokenizer, decoder
@@ -155,6 +163,9 @@ class SporaChat:
         time_tensor = torch.zeros_like(key_tensor) if event_time is None else torch.tensor([event_time], device=device)
         memory_logits = __import__('spora.growing', fromlist=['query']).query(
             self.organism, self.state, key_tensor, mode_tensor, time_tensor)
+        if not _supported_beverage_evidence(memory_logits, self.organism.config.value_count):
+            result['reason'] = 'unsupported_memory_value'
+            return result
         prefix = closed_think_inputs(self.tokenizer, question, 'cuda')
         ids = self.decoder.generate(**prefix, **args, memory_output_logits=memory_logits,
                                     max_new_tokens=32, do_sample=False,

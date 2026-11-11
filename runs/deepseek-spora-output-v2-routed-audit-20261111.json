@@ -1,0 +1,543 @@
+{
+  "candidate_sha256": "37b245d863145e8ae90d9594539971a8b48e053a0ddc059de7570bf3bdb096b3",
+  "scores": {
+    "old": {
+      "positive_routes": 6,
+      "positive_exact": 4,
+      "negative_rejected": 4
+    },
+    "candidate": {
+      "positive_routes": 6,
+      "positive_exact": 6,
+      "negative_rejected": 4
+    }
+  },
+  "rows": [
+    {
+      "question": "小林现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 2.765702962875366,
+      "entity_score": 0.994081437587738,
+      "intent_recovered": true,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6,
+      "adapter": "old",
+      "expected_key": 6,
+      "expected_intent": 0,
+      "expected_value": 7,
+      "route_correct": true,
+      "exact": false
+    },
+    {
+      "question": "小林现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "酸奶",
+      "temporal_intent": 0,
+      "intent_logit": 2.765702962875366,
+      "entity_score": 0.994081437587738,
+      "intent_recovered": true,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6,
+      "adapter": "candidate",
+      "expected_key": 6,
+      "expected_intent": 0,
+      "expected_value": 7,
+      "route_correct": true,
+      "exact": true
+    },
+    {
+      "question": "小林改口以前喜欢什么饮料？",
+      "accepted": true,
+      "answer": "咖啡",
+      "temporal_intent": 1,
+      "intent_logit": 5.889869213104248,
+      "entity_score": 0.9941278696060181,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 0,
+        "effective_time": 0,
+        "candidate_count": 2,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6,
+      "adapter": "old",
+      "expected_key": 6,
+      "expected_intent": 1,
+      "expected_value": 1,
+      "route_correct": true,
+      "exact": true
+    },
+    {
+      "question": "小林改口以前喜欢什么饮料？",
+      "accepted": true,
+      "answer": "咖啡",
+      "temporal_intent": 1,
+      "intent_logit": 5.889869213104248,
+      "entity_score": 0.9941278696060181,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 0,
+        "effective_time": 0,
+        "candidate_count": 2,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6,
+      "adapter": "candidate",
+      "expected_key": 6,
+      "expected_intent": 1,
+      "expected_value": 1,
+      "route_correct": true,
+      "exact": true
+    },
+    {
+      "question": "小林后来喜欢喝什么？",
+      "accepted": true,
+      "answer": "酸奶",
+      "temporal_intent": 2,
+      "intent_logit": 3.7358553409576416,
+      "entity_score": 0.9908215999603271,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 2,
+        "effective_time": 2,
+        "candidate_count": 2,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6,
+      "adapter": "old",
+      "expected_key": 6,
+      "expected_intent": 2,
+      "expected_value": 7,
+      "route_correct": true,
+      "exact": true
+    },
+    {
+      "question": "小林后来喜欢喝什么？",
+      "accepted": true,
+      "answer": "酸奶",
+      "temporal_intent": 2,
+      "intent_logit": 3.7358553409576416,
+      "entity_score": 0.9908215999603271,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 2,
+        "effective_time": 2,
+        "candidate_count": 2,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6,
+      "adapter": "candidate",
+      "expected_key": 6,
+      "expected_intent": 2,
+      "expected_value": 7,
+      "route_correct": true,
+      "exact": true
+    },
+    {
+      "question": "阿宁现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "豆浆",
+      "temporal_intent": 0,
+      "intent_logit": 3.2164993286132812,
+      "entity_score": 0.9963712692260742,
+      "intent_recovered": false,
+      "indices": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9994678497314453,
+        0.9983007311820984
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 22,
+      "adapter": "old",
+      "expected_key": 22,
+      "expected_intent": 0,
+      "expected_value": 4,
+      "route_correct": true,
+      "exact": true
+    },
+    {
+      "question": "阿宁现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "豆浆",
+      "temporal_intent": 0,
+      "intent_logit": 3.2164993286132812,
+      "entity_score": 0.9963712692260742,
+      "intent_recovered": false,
+      "indices": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9994678497314453,
+        0.9983007311820984
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 22,
+      "adapter": "candidate",
+      "expected_key": 22,
+      "expected_intent": 0,
+      "expected_value": 4,
+      "route_correct": true,
+      "exact": true
+    },
+    {
+      "question": "阿宁改口以前喜欢什么饮料？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 1,
+      "intent_logit": 6.07269811630249,
+      "entity_score": 0.9949594736099243,
+      "intent_recovered": false,
+      "indices": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9994678497314453,
+        0.9983007311820984
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 1,
+        "effective_time": 1,
+        "candidate_count": 2,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 22,
+      "adapter": "old",
+      "expected_key": 22,
+      "expected_intent": 1,
+      "expected_value": 3,
+      "route_correct": true,
+      "exact": false
+    },
+    {
+      "question": "阿宁改口以前喜欢什么饮料？",
+      "accepted": true,
+      "answer": "果汁",
+      "temporal_intent": 1,
+      "intent_logit": 6.07269811630249,
+      "entity_score": 0.9949594736099243,
+      "intent_recovered": false,
+      "indices": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9994678497314453,
+        0.9983007311820984
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 1,
+        "effective_time": 1,
+        "candidate_count": 2,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 22,
+      "adapter": "candidate",
+      "expected_key": 22,
+      "expected_intent": 1,
+      "expected_value": 3,
+      "route_correct": true,
+      "exact": true
+    },
+    {
+      "question": "阿宁后来喜欢喝什么？",
+      "accepted": true,
+      "answer": "豆浆",
+      "temporal_intent": 2,
+      "intent_logit": 3.7374322414398193,
+      "entity_score": 0.9928672313690186,
+      "intent_recovered": false,
+      "indices": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9994678497314453,
+        0.9983007311820984
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 3,
+        "effective_time": 3,
+        "candidate_count": 2,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 22,
+      "adapter": "old",
+      "expected_key": 22,
+      "expected_intent": 2,
+      "expected_value": 4,
+      "route_correct": true,
+      "exact": true
+    },
+    {
+      "question": "阿宁后来喜欢喝什么？",
+      "accepted": true,
+      "answer": "豆浆",
+      "temporal_intent": 2,
+      "intent_logit": 3.7374322414398193,
+      "entity_score": 0.9928672313690186,
+      "intent_recovered": false,
+      "indices": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9994678497314453,
+        0.9983007311820984
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 3,
+        "effective_time": 3,
+        "candidate_count": 2,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 22,
+      "adapter": "candidate",
+      "expected_key": 22,
+      "expected_intent": 2,
+      "expected_value": 4,
+      "route_correct": true,
+      "exact": true
+    },
+    {
+      "question": "小雪以前喜欢喝什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 1,
+      "intent_logit": 3.743911027908325,
+      "entity_score": 0.9979473948478699,
+      "intent_recovered": false,
+      "indices": [
+        1,
+        1
+      ],
+      "similarities": [
+        0.9983751773834229,
+        0.9953144788742065
+      ],
+      "reason": "unknown_memory",
+      "adapter": "old",
+      "expected_key": null,
+      "expected_intent": null,
+      "expected_value": null,
+      "route_correct": true,
+      "exact": false
+    },
+    {
+      "question": "小雪以前喜欢喝什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 1,
+      "intent_logit": 3.743911027908325,
+      "entity_score": 0.9979473948478699,
+      "intent_recovered": false,
+      "indices": [
+        1,
+        1
+      ],
+      "similarities": [
+        0.9983751773834229,
+        0.9953144788742065
+      ],
+      "reason": "unknown_memory",
+      "adapter": "candidate",
+      "expected_key": null,
+      "expected_intent": null,
+      "expected_value": null,
+      "route_correct": true,
+      "exact": false
+    },
+    {
+      "question": "给小林写一句鼓励的话。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -6.222775936126709,
+      "entity_score": 0.37574899196624756,
+      "reason": "unsupported_memory_predicate",
+      "adapter": "old",
+      "expected_key": null,
+      "expected_intent": null,
+      "expected_value": null,
+      "route_correct": true,
+      "exact": false
+    },
+    {
+      "question": "给小林写一句鼓励的话。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -6.222775936126709,
+      "entity_score": 0.37574899196624756,
+      "reason": "unsupported_memory_predicate",
+      "adapter": "candidate",
+      "expected_key": null,
+      "expected_intent": null,
+      "expected_value": null,
+      "route_correct": true,
+      "exact": false
+    },
+    {
+      "question": "小林和阿宁分别喜欢喝什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -4.410300254821777,
+      "entity_score": 0.03476893529295921,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "adapter": "old",
+      "expected_key": null,
+      "expected_intent": null,
+      "expected_value": null,
+      "route_correct": true,
+      "exact": false
+    },
+    {
+      "question": "小林和阿宁分别喜欢喝什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -4.410300254821777,
+      "entity_score": 0.03476893529295921,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "adapter": "candidate",
+      "expected_key": null,
+      "expected_intent": null,
+      "expected_value": null,
+      "route_correct": true,
+      "exact": false
+    },
+    {
+      "question": "小林的颜色偏好是什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 1,
+      "intent_logit": 2.5224061012268066,
+      "entity_score": 0.8806160688400269,
+      "reason": "unsupported_memory_predicate",
+      "adapter": "old",
+      "expected_key": null,
+      "expected_intent": null,
+      "expected_value": null,
+      "route_correct": true,
+      "exact": false
+    },
+    {
+      "question": "小林的颜色偏好是什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 1,
+      "intent_logit": 2.5224061012268066,
+      "entity_score": 0.8806160688400269,
+      "reason": "unsupported_memory_predicate",
+      "adapter": "candidate",
+      "expected_key": null,
+      "expected_intent": null,
+      "expected_value": null,
+      "route_correct": true,
+      "exact": false
+    }
+  ],
+  "limitations": [
+    "Two bound names and six authored positive questions; not an independent benchmark.",
+    "Controlled interleaved facts, not automatic observation or persistence.",
+    "No general dialogue or open-domain memory claim.",
+    "Positive questions and finite drink vocabulary may overlap prior development."
+  ]
+}
