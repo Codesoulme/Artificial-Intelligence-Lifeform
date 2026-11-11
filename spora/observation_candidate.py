@@ -40,6 +40,8 @@ class ObservationCandidate:
             if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))
                                       or not math.isfinite(value) or not 0 <= value <= 1):
                 raise ValueError(f'{name} must be finite and in [0, 1]')
+        if self.confidence is None:
+            raise ValueError('confidence must be finite and in [0, 1]')
         if self.valid_at is not None and (type(self.valid_at) is not int or self.valid_at < 0):
             raise ValueError('valid_at must be a nonnegative integer or None')
         if not isinstance(self.evidence_text, str):
@@ -52,8 +54,9 @@ def write_guard(candidate, *, key_count, value_count, current_cursor, minimum_co
     candidate.validate(key_count=key_count, value_count=value_count)
     if type(current_cursor) is not int or current_cursor < 0:
         raise ValueError('Current cursor must be a nonnegative integer')
-    if not isinstance(minimum_confidence, (int, float)) or not math.isfinite(minimum_confidence):
-        raise ValueError('Minimum confidence must be finite')
+    if (isinstance(minimum_confidence, bool) or not isinstance(minimum_confidence, (int, float))
+            or not math.isfinite(minimum_confidence) or not 0 <= minimum_confidence <= 1):
+        raise ValueError('Minimum confidence must be finite and in [0, 1]')
     reasons = []
     if candidate.claim_type != 'affirmative':
         reasons.append('claim_is_not_affirmative')

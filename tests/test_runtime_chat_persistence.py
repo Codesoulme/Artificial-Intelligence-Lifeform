@@ -10,6 +10,23 @@ from spora.observation_candidate import ObservationCandidate
 
 
 class RuntimeChatPersistenceTests(unittest.TestCase):
+    def test_candidate_text_must_match_its_finite_value_before_persisting(self):
+        chat = object.__new__(chat_module.SporaChat)
+        chat.organism = SimpleNamespace(config=SimpleNamespace(key_count=8, value_count=17))
+        chat.state = SimpleNamespace(cursor=4)
+        candidates = [
+            ObservationCandidate(1, '汽水', 6, 'affirmative', 'direct', 1.0, 4, .99, '小林喜欢汽水'),
+            ObservationCandidate(1, None, 6, 'affirmative', 'direct', 1.0, 4, .99, ''),
+            ObservationCandidate(1, '水', 16, 'affirmative', 'direct', 1.0, 4, .99, '小林喜欢水'),
+        ]
+        with patch.object(chat, 'observe_sourced') as observe:
+            for candidate in candidates:
+                with self.subTest(candidate=candidate):
+                    result = chat.observe_candidate(candidate)
+                    self.assertEqual(result['action'], 'defer')
+                    self.assertIn('finite_value_text_mismatch', result['reasons'])
+        observe.assert_not_called()
+
     def test_unresolved_candidate_defers_without_calling_persistence(self):
         chat = object.__new__(chat_module.SporaChat)
         chat.organism = SimpleNamespace(config=SimpleNamespace(key_count=8, value_count=8))

@@ -27,6 +27,15 @@ class ObservationCandidateTests(unittest.TestCase):
         self.assertFalse(decision['write'])
         self.assertIn('effective_time_unresolved', decision['reasons'])
 
+    def test_confidence_and_floor_reject_invalid_values(self):
+        candidate = ObservationCandidate(3, '水', 6, 'affirmative', 'direct', 1.0, 4, None, '小林喜欢水')
+        with self.assertRaises(ValueError):
+            write_guard(candidate, key_count=8, value_count=8, current_cursor=4)
+        candidate = ObservationCandidate(3, '水', 6, 'affirmative', 'direct', 1.0, 4, .99, '小林喜欢水')
+        for floor in (-.1, 1.1, True, float('nan')):
+            with self.subTest(floor=floor), self.assertRaises(ValueError):
+                write_guard(candidate, key_count=8, value_count=8, current_cursor=4, minimum_confidence=floor)
+
 
 if __name__ == '__main__':
     unittest.main()

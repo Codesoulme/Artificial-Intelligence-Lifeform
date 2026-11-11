@@ -105,6 +105,13 @@ class SporaChat:
         decision = write_guard(candidate, key_count=self.organism.config.key_count,
                                value_count=self.organism.config.value_count,
                                current_cursor=self.state.cursor)
+        # This runtime's output adapter has exactly the beverage vocabulary in
+        # WORDS. Never silently coerce a parsed surface value to another symbol.
+        if candidate.value_index is not None and (
+                candidate.value_index >= len(WORDS)
+                or candidate.value_text != WORDS[candidate.value_index]):
+            decision['reasons'].append('finite_value_text_mismatch')
+            decision['write'] = False
         if not decision['write']:
             return {'action': 'defer', 'reason': 'candidate_guard', 'reasons': decision['reasons']}
         return self.observe_sourced(candidate.subject_key, candidate.value_index,
