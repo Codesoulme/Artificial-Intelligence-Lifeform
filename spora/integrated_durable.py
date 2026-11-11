@@ -1,6 +1,6 @@
 """Experimental incremental individual state bound to a structural bootstrap.
 
-The immutable v3 checkpoint holds the reader and replacement layers; TensorStore
+The immutable v3/v4 checkpoint holds the reader and replacement layers; TensorStore
 holds the evolving neural individual. The large DeepSeek base remains separate.
 Only a single writer with explicit revision checks is supported. Bootstrap hashes
 are verified on open; a cheap file-stat guard and tensor version counters detect
@@ -11,7 +11,7 @@ from pathlib import Path
 import torch
 
 from .durable import TensorStore
-from .integrated_checkpoint import (STRUCTURAL_FORMAT, _file_sha256, _validate_binding,
+from .integrated_checkpoint import (STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT, _file_sha256, _validate_binding,
                                     load_integrated)
 from .integrated_open_base import NativeSPORAMemoryReader
 from .internal_memory import observe_sourced
@@ -30,8 +30,8 @@ def _bootstrap_metadata(path):
     if not isinstance(payload, dict) or not isinstance(payload.get('metadata'), dict):
         raise ValueError('Invalid structural bootstrap')
     meta = payload['metadata']
-    if meta.get('format') != STRUCTURAL_FORMAT or not meta.get('replacements'):
-        raise ValueError('A structural v3 bootstrap is required')
+    if meta.get('format') not in (STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT) or not meta.get('replacements'):
+        raise ValueError('A structural v3 or v4 bootstrap is required')
     return {'format': STORE_FORMAT, 'bootstrap_sha256': _file_sha256(path),
             'base_sha256': meta.get('base_sha256'), 'feature_config_sha256': meta.get('feature_config_sha256'),
             'feature_variant_sha256': meta.get('feature_variant_sha256')}
@@ -42,11 +42,14 @@ def _decoder_signature(decoder):
         return tuple((name, id(tensor), tensor._version, tuple(tensor.shape), str(tensor.dtype), str(tensor.device))
                      for name, tensor in sorted(module.state_dict(keep_vars=True).items()))
     layers = decoder.base.model.layers
+    adapter = decoder.output_adapter
     shape = tuple((i, id(layer), getattr(layer, 'max_length', None),
                    getattr(layer, 'layer_idx', None), layer.training) for i, layer in enumerate(layers))
     return (id(decoder.base), decoder.base.training, id(decoder.reader), decoder.reader.training,
             getattr(decoder.reader, 'strength', None), tuple(decoder.layer_indices), shape,
-            tensors(decoder.base), tensors(decoder.reader))
+            tensors(decoder.base), tensors(decoder.reader),
+            None if adapter is None else (id(adapter), adapter.training,
+                                          tuple(sorted(adapter.config_dict().items())), tensors(adapter)))
 
 
 def _require_runtime(decoder, organism, state):

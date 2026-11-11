@@ -13,6 +13,7 @@ from spora.integrated_checkpoint import save_integrated
 from spora.integrated_durable import create_integrated_durable, load_integrated_durable
 from spora.integrated_open_base import NativeSPORAMemoryReader
 from spora.internal_memory import WriteControl, attach
+from spora.memory_output import MemoryOutputAdapter
 from spora.language_training import frozen_digest
 from spora.structure_transfer import SPORALayerReplacement
 from spora.temporal import TemporalConfig, TemporalSPORA
@@ -24,7 +25,7 @@ class IntegratedDurableTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         (self.root/'model.safetensors').write_bytes(b'base weights')
-        (self.root/'config.json').write_text('{"hidden_size":3,"num_hidden_layers":3,"num_attention_heads":1}', encoding='utf-8')
+        (self.root/'config.json').write_text('{"hidden_size":3,"num_hidden_layers":3,"num_attention_heads":1,"vocab_size":9}', encoding='utf-8')
         for name in ('tokenizer.json', 'tokenizer_config.json'):
             (self.root/name).write_text('{}', encoding='utf-8')
         organism = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=64,
@@ -68,6 +69,31 @@ class IntegratedDurableTests(unittest.TestCase):
             self.assertEqual(restored.state.cursor, 1)
             self.assertEqual(frozen_digest(restored.organism, restored.state), digest)
             self.assertIsInstance(restored.decoder.base.model.layers[1], SPORALayerReplacement)
+
+    def test_v4_adapter_survives_incremental_write_and_rejects_mutation(self):
+        from spora.integrated_checkpoint import load_integrated
+        decoder, organism, state = load_integrated(self.bootstrap, self.base(), self.root)
+        replacement = decoder.base.model.layers[1]
+        adapter = MemoryOutputAdapter(organism.config.value_count, 9, rank=4)
+        with torch.no_grad():
+            adapter.rank_to_vocab.weight[0, 0] = 0.5
+        save_integrated(self.bootstrap, organism, state, decoder.reader, self.root, (0, 2),
+                        replacements={1: replacement}, output_adapter=adapter)
+        original = self.bootstrap.read_bytes()
+        with self.create() as runtime:
+            expected = {name: tensor.detach().clone() for name, tensor in
+                        runtime.decoder.output_adapter.state_dict().items()}
+            runtime.observe_sourced(4, 2, 'direct', 1.0)
+            with torch.no_grad():
+                runtime.decoder.output_adapter.rank_to_vocab.weight[0, 0] += 1
+            with self.assertRaisesRegex(ValueError, '[Dd]ecoder'):
+                runtime.observe_sourced(5, 3, 'direct', 1.0)
+            self.assertEqual(runtime.state.cursor, 1)
+        self.assertEqual(self.bootstrap.read_bytes(), original)
+        with self.open() as restored:
+            self.assertEqual(restored.state.cursor, 1)
+            for name, tensor in restored.decoder.output_adapter.state_dict().items():
+                self.assertTrue(torch.equal(tensor, expected[name]), name)
 
     def test_failed_transaction_does_not_publish_state(self):
         with self.create() as runtime:

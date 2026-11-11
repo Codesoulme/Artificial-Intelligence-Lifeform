@@ -1,0 +1,23 @@
+{
+  "initial_cursor": 2,
+  "final_cursor": 3,
+  "revision": 1,
+  "decision": {
+    "action": "new",
+    "confidence": 0.9999020099639893,
+    "reason": "learned_decision",
+    "source": "direct",
+    "history_time": 2,
+    "current_write": true
+  },
+  "incremental_tensor_bytes": 205200,
+  "state_digest_equal": true,
+  "output_adapter_loaded": true,
+  "bootstrap_unchanged": true,
+  "bootstrap_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "limitations": [
+    "Temporary isolated store; no user memory was changed.",
+    "Same-process store read, not a real-model crash recovery test.",
+    "Not integrated with the interactive chat entry."
+  ]
+}
