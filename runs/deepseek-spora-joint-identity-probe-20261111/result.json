@@ -1,0 +1,1559 @@
+{
+  "status": "research_only_no_writes",
+  "checkpoint_sha256": "61ee378608ac098e0f9990979d610ef0d2efa401b514de36f32f9401bd52317b",
+  "source_checkpoint_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "threshold": 0.4947420656681061,
+  "unknown_index": 64,
+  "results": {
+    "train": {
+      "known_total": 16,
+      "known_correct": 16,
+      "known_wrong_accepted": 0,
+      "known_rejected": 0,
+      "unknown_total": 64,
+      "unknown_false_accept": 0,
+      "rows": [
+        {
+          "text": "小林现在喜欢喝什么？",
+          "expected_key": 6,
+          "kind": "known",
+          "predicted_class": 6,
+          "score": 0.9796730279922485,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "小林哥现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9961479902267456,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小林姐现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9973002076148987,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小林仔现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9948310256004333,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "老小林现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9987286925315857,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小林的饮料偏好。",
+          "expected_key": 6,
+          "kind": "known",
+          "predicted_class": 6,
+          "score": 0.9624037146568298,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请查询小林哥的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9953708052635193,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小林姐的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9950813055038452,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小林仔的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9911360740661621,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询老小林的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9960840940475464,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿宁现在喜欢喝什么？",
+          "expected_key": 22,
+          "kind": "known",
+          "predicted_class": 22,
+          "score": 0.9767687320709229,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "阿宁哥现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9913158416748047,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿宁姐现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9961338043212891,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿宁仔现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9957451224327087,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "老阿宁现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9968788623809814,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿宁的饮料偏好。",
+          "expected_key": 22,
+          "kind": "known",
+          "predicted_class": 22,
+          "score": 0.96677166223526,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请查询阿宁哥的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9938989877700806,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿宁姐的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9942576885223389,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿宁仔的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9917016625404358,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询老阿宁的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9959378242492676,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小雨现在喜欢喝什么？",
+          "expected_key": 35,
+          "kind": "known",
+          "predicted_class": 35,
+          "score": 0.9800668954849243,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "小雨哥现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.996921181678772,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小雨姐现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9960265159606934,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小雨仔现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9936546087265015,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "老小雨现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.998714804649353,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小雨的饮料偏好。",
+          "expected_key": 35,
+          "kind": "known",
+          "predicted_class": 35,
+          "score": 0.9653769135475159,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请查询小雨哥的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9959114789962769,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小雨姐的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9935410022735596,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小雨仔的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9894018769264221,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询老小雨的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9965564012527466,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿哲现在喜欢喝什么？",
+          "expected_key": 51,
+          "kind": "known",
+          "predicted_class": 51,
+          "score": 0.9744205474853516,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "阿哲哥现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9914558529853821,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿哲姐现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9977533221244812,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿哲仔现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9944162368774414,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "老阿哲现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9978067278862,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿哲的饮料偏好。",
+          "expected_key": 51,
+          "kind": "known",
+          "predicted_class": 51,
+          "score": 0.9626646637916565,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请查询阿哲哥的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9907666444778442,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿哲姐的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9960269927978516,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿哲仔的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9903081059455872,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询老阿哲的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9967191815376282,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小梅现在喜欢喝什么？",
+          "expected_key": 16,
+          "kind": "known",
+          "predicted_class": 16,
+          "score": 0.982761800289154,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "小梅哥现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9926774501800537,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小梅姐现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9970404505729675,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小梅仔现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9956647753715515,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "老小梅现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9988378882408142,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小梅的饮料偏好。",
+          "expected_key": 16,
+          "kind": "known",
+          "predicted_class": 16,
+          "score": 0.9662006497383118,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请查询小梅哥的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9951750040054321,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小梅姐的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9945474863052368,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小梅仔的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9906255006790161,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询老小梅的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9971967935562134,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿远现在喜欢喝什么？",
+          "expected_key": 27,
+          "kind": "known",
+          "predicted_class": 27,
+          "score": 0.9829024076461792,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "阿远哥现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9946182370185852,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿远姐现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9975650310516357,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿远仔现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.996311366558075,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "老阿远现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9969496130943298,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿远的饮料偏好。",
+          "expected_key": 27,
+          "kind": "known",
+          "predicted_class": 27,
+          "score": 0.970038890838623,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请查询阿远哥的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9946198463439941,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿远姐的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9946724772453308,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿远仔的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9922564029693604,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询老阿远的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9966031312942505,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小岚现在喜欢喝什么？",
+          "expected_key": 42,
+          "kind": "known",
+          "predicted_class": 42,
+          "score": 0.9814518094062805,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "小岚哥现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9961620569229126,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小岚姐现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9969015121459961,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小岚仔现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9950867295265198,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "老小岚现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9981251358985901,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小岚的饮料偏好。",
+          "expected_key": 42,
+          "kind": "known",
+          "predicted_class": 42,
+          "score": 0.9674665331840515,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请查询小岚哥的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9948329925537109,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小岚姐的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9943218231201172,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询小岚仔的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9908568263053894,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询老小岚的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9961966276168823,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿明现在喜欢喝什么？",
+          "expected_key": 10,
+          "kind": "known",
+          "predicted_class": 10,
+          "score": 0.9786000847816467,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "阿明哥现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9936107993125916,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿明姐现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9968554973602295,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿明仔现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9961450099945068,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "老阿明现在喜欢喝什么？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9981829524040222,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿明的饮料偏好。",
+          "expected_key": 10,
+          "kind": "known",
+          "predicted_class": 10,
+          "score": 0.9669094681739807,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请查询阿明哥的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9923464059829712,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿明姐的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9946581721305847,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询阿明仔的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9908220767974854,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请查询老阿明的饮料偏好。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.997490406036377,
+          "accepted": false,
+          "correct_key": false
+        }
+      ]
+    },
+    "calibration": {
+      "known_total": 8,
+      "known_correct": 3,
+      "known_wrong_accepted": 0,
+      "known_rejected": 5,
+      "unknown_total": 16,
+      "unknown_false_accept": 0,
+      "rows": [
+        {
+          "text": "我想查小林爱喝哪种饮品。",
+          "expected_key": 6,
+          "kind": "known",
+          "predicted_class": 6,
+          "score": 0.5683975219726562,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "我想查小林子爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9459254741668701,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查大小林爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9551060795783997,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查阿宁爱喝哪种饮品。",
+          "expected_key": 22,
+          "kind": "known",
+          "predicted_class": 22,
+          "score": 0.5974090099334717,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "我想查阿宁子爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.894447386264801,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查大阿宁爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9794684052467346,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查小雨爱喝哪种饮品。",
+          "expected_key": 35,
+          "kind": "known",
+          "predicted_class": 64,
+          "score": 0.6566358804702759,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查小雨子爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9829849600791931,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查大小雨爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9395447373390198,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查阿哲爱喝哪种饮品。",
+          "expected_key": 51,
+          "kind": "known",
+          "predicted_class": 64,
+          "score": 0.571338951587677,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查阿哲子爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9460208415985107,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查大阿哲爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9893800616264343,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查小梅爱喝哪种饮品。",
+          "expected_key": 16,
+          "kind": "known",
+          "predicted_class": 64,
+          "score": 0.4947420656681061,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查小梅子爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9274837374687195,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查大小梅爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9065380096435547,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查阿远爱喝哪种饮品。",
+          "expected_key": 27,
+          "kind": "known",
+          "predicted_class": 64,
+          "score": 0.5853562951087952,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查阿远子爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9140454530715942,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查大阿远爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9888389110565186,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查小岚爱喝哪种饮品。",
+          "expected_key": 42,
+          "kind": "known",
+          "predicted_class": 64,
+          "score": 0.7110425233840942,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查小岚子爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9775042533874512,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查大小岚爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.8089556694030762,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查阿明爱喝哪种饮品。",
+          "expected_key": 10,
+          "kind": "known",
+          "predicted_class": 10,
+          "score": 0.5582087635993958,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "我想查阿明子爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9511750936508179,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "我想查大阿明爱喝哪种饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9899717569351196,
+          "accepted": false,
+          "correct_key": false
+        }
+      ]
+    },
+    "held": {
+      "known_total": 16,
+      "known_correct": 12,
+      "known_wrong_accepted": 0,
+      "known_rejected": 4,
+      "unknown_total": 48,
+      "unknown_false_accept": 5,
+      "rows": [
+        {
+          "text": "小林目前喜欢什么饮料？",
+          "expected_key": 6,
+          "kind": "known",
+          "predicted_class": 6,
+          "score": 0.944884717464447,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "小林宁目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 6,
+          "score": 0.6804943084716797,
+          "accepted": true,
+          "correct_key": false
+        },
+        {
+          "text": "小林明目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 6,
+          "score": 0.760080099105835,
+          "accepted": true,
+          "correct_key": false
+        },
+        {
+          "text": "陈小林目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.8716753721237183,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说小林爱喝的饮品。",
+          "expected_key": 6,
+          "kind": "known",
+          "predicted_class": 6,
+          "score": 0.536383330821991,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请说说小林宁爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.8563879132270813,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说小林明爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.8428987264633179,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说陈小林爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9624571204185486,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿宁目前喜欢什么饮料？",
+          "expected_key": 22,
+          "kind": "known",
+          "predicted_class": 22,
+          "score": 0.8233258128166199,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "阿宁宁目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 22,
+          "score": 0.5608423352241516,
+          "accepted": true,
+          "correct_key": false
+        },
+        {
+          "text": "阿宁明目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.7259406447410583,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "陈阿宁目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9224308133125305,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说阿宁爱喝的饮品。",
+          "expected_key": 22,
+          "kind": "known",
+          "predicted_class": 22,
+          "score": 0.49650323390960693,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请说说阿宁宁爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.7734985947608948,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说阿宁明爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9308695197105408,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说陈阿宁爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9325144290924072,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小雨目前喜欢什么饮料？",
+          "expected_key": 35,
+          "kind": "known",
+          "predicted_class": 35,
+          "score": 0.8881738781929016,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "小雨宁目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.5349116325378418,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小雨明目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 35,
+          "score": 0.5186412334442139,
+          "accepted": true,
+          "correct_key": false
+        },
+        {
+          "text": "陈小雨目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.976525068283081,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说小雨爱喝的饮品。",
+          "expected_key": 35,
+          "kind": "known",
+          "predicted_class": 64,
+          "score": 0.4635116159915924,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说小雨宁爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9421015381813049,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说小雨明爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9395108819007874,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说陈小雨爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9788032174110413,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿哲目前喜欢什么饮料？",
+          "expected_key": 51,
+          "kind": "known",
+          "predicted_class": 51,
+          "score": 0.7613237500190735,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "阿哲宁目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.7255200743675232,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿哲明目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.6421597003936768,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "陈阿哲目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9148754477500916,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说阿哲爱喝的饮品。",
+          "expected_key": 51,
+          "kind": "known",
+          "predicted_class": 51,
+          "score": 0.5954055190086365,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请说说阿哲宁爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.8576058149337769,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说阿哲明爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.8691779971122742,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说陈阿哲爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9270055890083313,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小梅目前喜欢什么饮料？",
+          "expected_key": 16,
+          "kind": "known",
+          "predicted_class": 16,
+          "score": 0.916396975517273,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "小梅宁目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.6240670680999756,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小梅明目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.6084409356117249,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "陈小梅目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.8803144693374634,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说小梅爱喝的饮品。",
+          "expected_key": 16,
+          "kind": "known",
+          "predicted_class": 64,
+          "score": 0.5636366605758667,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说小梅宁爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9519822597503662,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说小梅明爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9398568868637085,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说陈小梅爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9663494229316711,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿远目前喜欢什么饮料？",
+          "expected_key": 27,
+          "kind": "known",
+          "predicted_class": 27,
+          "score": 0.9082061648368835,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "阿远宁目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.5258081555366516,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿远明目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.6306310892105103,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "陈阿远目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9052858948707581,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说阿远爱喝的饮品。",
+          "expected_key": 27,
+          "kind": "known",
+          "predicted_class": 64,
+          "score": 0.5060305595397949,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说阿远宁爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.8398367762565613,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说阿远明爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9139200448989868,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说陈阿远爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9649429321289062,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小岚目前喜欢什么饮料？",
+          "expected_key": 42,
+          "kind": "known",
+          "predicted_class": 42,
+          "score": 0.8873983025550842,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "小岚宁目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.6070212125778198,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "小岚明目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 42,
+          "score": 0.5424838662147522,
+          "accepted": true,
+          "correct_key": false
+        },
+        {
+          "text": "陈小岚目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.94561368227005,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说小岚爱喝的饮品。",
+          "expected_key": 42,
+          "kind": "known",
+          "predicted_class": 42,
+          "score": 0.696420431137085,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "请说说小岚宁爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.8188232779502869,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说小岚明爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.7319929003715515,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说陈小岚爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9448990821838379,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿明目前喜欢什么饮料？",
+          "expected_key": 10,
+          "kind": "known",
+          "predicted_class": 10,
+          "score": 0.8519584536552429,
+          "accepted": true,
+          "correct_key": true
+        },
+        {
+          "text": "阿明宁目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.8511884808540344,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "阿明明目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.8132385611534119,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "陈阿明目前喜欢什么饮料？",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9431344866752625,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说阿明爱喝的饮品。",
+          "expected_key": 10,
+          "kind": "known",
+          "predicted_class": 64,
+          "score": 0.5187678933143616,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说阿明宁爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9236056804656982,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说阿明明爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.7009521126747131,
+          "accepted": false,
+          "correct_key": false
+        },
+        {
+          "text": "请说说陈阿明爱喝的饮品。",
+          "expected_key": null,
+          "kind": "unknown",
+          "predicted_class": 64,
+          "score": 0.9636645317077637,
+          "accepted": false,
+          "correct_key": false
+        }
+      ]
+    }
+  },
+  "seconds": 96.1897957000001,
+  "limitations": [
+    "Eight supervised enrolled names; fixed address classes, no dynamic enrollment.",
+    "Synthetic wording and negative transformations; same names across splits.",
+    "Small calibration sample; thresholds do not certify identity or reliability.",
+    "A correct class does not prove source trust, fact accuracy or write authorization.",
+    "Experimental model is not connected to default runtime or user state."
+  ]
+}
