@@ -1,0 +1,326 @@
+{
+  "status": "development_only_no_user_state",
+  "baseline": {
+    "known_total": 4,
+    "known_correct_key": 2,
+    "known_wrong_key": 0,
+    "known_rejected": 2,
+    "unknown_total": 8,
+    "unknown_false_accept": 4
+  },
+  "combined": {
+    "known_total": 4,
+    "known_correct_key": 2,
+    "known_wrong_key": 0,
+    "known_rejected": 2,
+    "unknown_total": 8,
+    "unknown_false_accept": 0
+  },
+  "rows": [
+    {
+      "group": "known",
+      "expected_key": 6,
+      "question": "我想了解小林目前喜欢喝什么饮品。",
+      "runtime": {
+        "question": "我想了解小林目前喜欢喝什么饮品。",
+        "accepted": true,
+        "answer": "水",
+        "temporal_intent": 0,
+        "intent_logit": 3.3105061054229736,
+        "entity_score": 0.9710631966590881,
+        "intent_recovered": false,
+        "indices": [
+          6,
+          6
+        ],
+        "similarities": [
+          0.9989994168281555,
+          0.9901775121688843
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 6
+      },
+      "gate_score": 0.7479369640350342,
+      "gate_accepted": true,
+      "baseline_accepted": true,
+      "combined_accepted": true
+    },
+    {
+      "group": "known",
+      "expected_key": 22,
+      "question": "告诉我阿宁的饮料喜好。",
+      "runtime": {
+        "question": "告诉我阿宁的饮料喜好。",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 3,
+        "intent_logit": -2.9514424800872803,
+        "entity_score": 0.3876541554927826,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.5783589482307434,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "known",
+      "expected_key": 35,
+      "question": "小雨现在常喝哪种饮料？",
+      "runtime": {
+        "question": "小雨现在常喝哪种饮料？",
+        "accepted": true,
+        "answer": "牛奶",
+        "temporal_intent": 0,
+        "intent_logit": 5.481052875518799,
+        "entity_score": 0.9561008214950562,
+        "intent_recovered": false,
+        "indices": [
+          35,
+          35
+        ],
+        "similarities": [
+          0.9985212087631226,
+          0.9961802959442139
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 35
+      },
+      "gate_score": 0.8723388314247131,
+      "gate_accepted": true,
+      "baseline_accepted": true,
+      "combined_accepted": true
+    },
+    {
+      "group": "known",
+      "expected_key": 51,
+      "question": "阿哲爱喝什么饮品？",
+      "runtime": {
+        "question": "阿哲爱喝什么饮品？",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 0,
+        "intent_logit": 0.9525777697563171,
+        "entity_score": 0.8571922183036804,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.6624714136123657,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "我想了解小林乐目前喜欢喝什么饮品。",
+      "runtime": {
+        "question": "我想了解小林乐目前喜欢喝什么饮品。",
+        "accepted": true,
+        "answer": "水",
+        "temporal_intent": 0,
+        "intent_logit": 3.774824857711792,
+        "entity_score": 0.972732663154602,
+        "intent_recovered": false,
+        "indices": [
+          6,
+          6
+        ],
+        "similarities": [
+          0.9989994168281555,
+          0.9901801943778992
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 6
+      },
+      "gate_score": 0.46087217330932617,
+      "gate_accepted": false,
+      "baseline_accepted": true,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "我想了解林小林目前喜欢喝什么饮品。",
+      "runtime": {
+        "question": "我想了解林小林目前喜欢喝什么饮品。",
+        "accepted": true,
+        "answer": "水",
+        "temporal_intent": 0,
+        "intent_logit": 3.68613600730896,
+        "entity_score": 0.9599456787109375,
+        "intent_recovered": false,
+        "indices": [
+          6,
+          6
+        ],
+        "similarities": [
+          0.9839138984680176,
+          0.9607478976249695
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 6
+      },
+      "gate_score": 0.42816680669784546,
+      "gate_accepted": false,
+      "baseline_accepted": true,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "告诉我阿宁悦的饮料喜好。",
+      "runtime": {
+        "question": "告诉我阿宁悦的饮料喜好。",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 3,
+        "intent_logit": -3.384406805038452,
+        "entity_score": 0.3526173233985901,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.406114399433136,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "告诉我宁阿宁的饮料喜好。",
+      "runtime": {
+        "question": "告诉我宁阿宁的饮料喜好。",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 3,
+        "intent_logit": -3.168341875076294,
+        "entity_score": 0.22372403740882874,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.22543661296367645,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "小雨晴现在常喝哪种饮料？",
+      "runtime": {
+        "question": "小雨晴现在常喝哪种饮料？",
+        "accepted": true,
+        "answer": "牛奶",
+        "temporal_intent": 0,
+        "intent_logit": 5.337762355804443,
+        "entity_score": 0.940588653087616,
+        "intent_recovered": false,
+        "indices": [
+          35,
+          35
+        ],
+        "similarities": [
+          0.9863812923431396,
+          0.9630435705184937
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 35
+      },
+      "gate_score": 0.65439373254776,
+      "gate_accepted": false,
+      "baseline_accepted": true,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "小小雨现在常喝哪种饮料？",
+      "runtime": {
+        "question": "小小雨现在常喝哪种饮料？",
+        "accepted": true,
+        "answer": "牛奶",
+        "temporal_intent": 0,
+        "intent_logit": 5.020841121673584,
+        "entity_score": 0.9061383008956909,
+        "intent_recovered": false,
+        "indices": [
+          35,
+          35
+        ],
+        "similarities": [
+          0.9819392561912537,
+          0.9660711288452148
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 35
+      },
+      "gate_score": 0.6236039400100708,
+      "gate_accepted": false,
+      "baseline_accepted": true,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "阿哲轩爱喝什么饮品？",
+      "runtime": {
+        "question": "阿哲轩爱喝什么饮品？",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 0,
+        "intent_logit": 1.9971452951431274,
+        "entity_score": 0.8984692096710205,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.39777112007141113,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "哲阿哲爱喝什么饮品？",
+      "runtime": {
+        "question": "哲阿哲爱喝什么饮品？",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 2,
+        "intent_logit": 1.0355077981948853,
+        "entity_score": 0.6807635426521301,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.2589094340801239,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    }
+  ],
+  "source_checkpoint_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "gate_sha256": "79dda51df02da1855bf4bdd8058f02355e38a0786e2932885e612155ba107c52",
+  "threshold": 0.7262625098228455,
+  "seconds": 39.15628410000136,
+  "limitations": [
+    "Twelve manually authored questions; prior experiments informed their construction.",
+    "Four known people with supervised pre-existing address bindings.",
+    "Only key correctness is scored; answer content is included but not evaluated.",
+    "Gate is an offline additional veto, not integrated into the runtime.",
+    "No real user state was opened or modified; no language-derived writes."
+  ]
+}
