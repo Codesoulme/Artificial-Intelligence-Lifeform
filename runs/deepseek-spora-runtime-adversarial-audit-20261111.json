@@ -1,0 +1,279 @@
+{
+  "status": "bounded_runtime_adversarial_audit",
+  "cases": [
+    {
+      "group": "positive",
+      "question": "小林现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 2.765702962875366,
+      "entity_score": 0.994081437587738,
+      "intent_recovered": true,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "positive",
+      "question": "小林目前最喜欢哪种饮料？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 6.565840244293213,
+      "entity_score": 0.9617359042167664,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "positive",
+      "question": "小林改口以前喜欢什么饮料？",
+      "accepted": true,
+      "answer": "咖啡",
+      "temporal_intent": 1,
+      "intent_logit": 5.889869213104248,
+      "entity_score": 0.9941278696060181,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 0,
+        "effective_time": 0,
+        "candidate_count": 2,
+        "checked_events": 2,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "negation",
+      "question": "不要查询小林喜欢喝什么。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 0,
+      "intent_logit": -3.064521551132202,
+      "entity_score": 0.9535078406333923,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "negation",
+      "question": "别告诉我小林喜欢什么饮料。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -4.517560958862305,
+      "entity_score": 0.4076787233352661,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "negation",
+      "question": "小林不喜欢喝什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -1.4652456045150757,
+      "entity_score": 0.9664767980575562,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "write",
+      "question": "请把小林喜欢的饮料改成牛奶。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -4.856020927429199,
+      "entity_score": 0.7488266229629517,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "write",
+      "question": "记住小林现在喜欢喝果汁。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 0,
+      "intent_logit": -0.4832179546356201,
+      "entity_score": 0.9783637523651123,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "other_predicate",
+      "question": "小林喜欢喝饮料的时间是什么时候？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": 0.721124529838562,
+      "entity_score": 0.9162868857383728,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "other_predicate",
+      "question": "小林喜欢喝的饮料是什么颜色？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 0,
+      "intent_logit": 0.9253293871879578,
+      "entity_score": 0.974653959274292,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "other_predicate",
+      "question": "小林喜欢喝的饮料是谁买的？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -0.41103506088256836,
+      "entity_score": 0.9534128904342651,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "other_predicate",
+      "question": "小林每周喝几次饮料？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": 0.5701190233230591,
+      "entity_score": 0.6998366713523865,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "other_predicate",
+      "question": "小林在哪里购买喜欢的饮料？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": 1.2448430061340332,
+      "entity_score": 0.9292976260185242,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "hypothetical",
+      "question": "如果小林喜欢喝牛奶，她会买吗？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -4.4317946434021,
+      "entity_score": 0.8718753457069397,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "hypothetical",
+      "question": "假设小林喜欢喝果汁，写一首诗。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -5.025700092315674,
+      "entity_score": 0.878843367099762,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "mixed",
+      "question": "小林喜欢喝什么？另外小林住在哪里？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": 0.4384556710720062,
+      "entity_score": 0.9023036360740662,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "mixed",
+      "question": "小林喜欢喝什么？并告诉我她的职业。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -2.8478682041168213,
+      "entity_score": 0.38180068135261536,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false
+    },
+    {
+      "group": "unknown_entity",
+      "question": "小雪现在喜欢喝什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 0,
+      "intent_logit": 2.5254647731781006,
+      "entity_score": 0.9969768524169922,
+      "intent_recovered": true,
+      "indices": [
+        1,
+        1
+      ],
+      "similarities": [
+        0.9983751773834229,
+        0.9953144788742065
+      ],
+      "reason": "unknown_memory"
+    },
+    {
+      "group": "cross_domain",
+      "question": "小林喜欢什么颜色？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 0,
+      "intent_logit": 0.9240054488182068,
+      "entity_score": 0.9623885750770569,
+      "reason": "unsupported_memory_predicate"
+    },
+    {
+      "group": "cross_domain",
+      "question": "小林最喜欢的食物是什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 0,
+      "intent_logit": 2.0277721881866455,
+      "entity_score": 0.9711952805519104,
+      "reason": "unsupported_memory_predicate"
+    }
+  ],
+  "candidate_sha256": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f",
+  "elapsed_seconds": 49.916636999998445,
+  "limitations": [
+    "Single manually bound entity and two finite beverage values.",
+    "Manually authored challenge set; no population estimate.",
+    "Isolated memory, not a write to the real user individual.",
+    "Acceptance alone does not establish that the answer is correct."
+  ]
+}
