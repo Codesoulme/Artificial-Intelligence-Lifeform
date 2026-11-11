@@ -75,6 +75,8 @@ class InternalState:
     router_cursor: int = -1
     encoding: int = 2
     event_keys: object = None
+    provenance_precision: object = None
+    provenance_ridge: object = None
 
     def metadata(self):
         return {k: getattr(self, k) for k in ('start_cursor', 'informative', 'corrections', 'router_cursor', 'encoding')}
@@ -102,6 +104,22 @@ class InternalState:
             if (bool(((keys[:state.cursor] < 0) | (keys[:state.cursor] >= model.config.key_count)).any())
                     or bool((keys[state.cursor:] != -1).any())):
                 raise ValueError('Incomplete or invalid event-key index')
+        if self.provenance_precision is None:
+            if self.provenance_ridge is not None:
+                raise ValueError('Missing independent provenance precision')
+        else:
+            if (isinstance(self.provenance_ridge, bool) or not isinstance(self.provenance_ridge, (int, float))
+                    or not math.isfinite(self.provenance_ridge) or not 0.0001 <= self.provenance_ridge <= 1.0
+                    or not isinstance(self.provenance_precision, list)
+                    or len(self.provenance_precision) != len(state.pages)):
+                raise ValueError('Invalid independent provenance precision')
+            for matrix in self.provenance_precision:
+                if (not isinstance(matrix, torch.Tensor) or matrix.shape != (width, width)
+                        or matrix.dtype != torch.float32 or matrix.device != self.evidence.device
+                        or not bool(torch.isfinite(matrix).all()) or bool((matrix.diagonal() <= 0).any())
+                        or not torch.allclose(matrix, matrix.T, atol=0.0001, rtol=0.0001)):
+                    raise ValueError('Invalid independent provenance precision matrix')
+                tensors.append(matrix)
         if self.router_factors is None:
             if self.router_cursor != -1:
                 raise ValueError('Missing router factors')
@@ -146,6 +164,24 @@ def enable_event_key_index(model, state):
     pages = [torch.full((model.config.time_count,), -1, dtype=torch.int64, device=state.internal.evidence.device)
              for _ in state.pages]
     return replace(state, internal=state.internal.invalidate_router(event_keys=pages))
+
+
+def enable_independent_provenance(model, state, ridge=0.003):
+    """Opt into a separate provenance RLS inverse on a fresh state only.
+
+    Existing histories cannot recover the required inverse without replay.
+    This experimental option adds one width-by-width tensor per page.
+    """
+    if (state.internal is None or state.cursor != 0 or state.internal.provenance_precision is not None
+            or isinstance(ridge, bool) or not isinstance(ridge, (int, float))
+            or not math.isfinite(ridge) or not 0.0001 <= ridge <= 1.0):
+        raise ValueError('Fresh controlled state and valid provenance ridge required')
+    state.internal.validate(model, state)
+    width = model.config.memory_width
+    pages = [torch.eye(width, dtype=torch.float32, device=state.internal.evidence.device) / float(ridge)
+             for _ in state.pages]
+    return replace(state, internal=state.internal.invalidate_router(provenance_precision=pages,
+                                                                    provenance_ridge=float(ridge)))
 
 
 @torch.no_grad()
@@ -213,7 +249,8 @@ def observe_sourced(model, state, key, value, source, quality, valid_at=None):
     modes, times = torch.ones_like(keys), torch.tensor([local], device=features.device)
     _, bound = model.representation(keys, modes, times)
     q = model.memory_address(model.memories[-1], bound, keys, modes)[0]
-    precision = state.pages[page][-1][1][0]
+    precision = (state.pages[page][-1][1][0] if internal.provenance_precision is None
+                 else internal.provenance_precision[page])
     projected = precision @ q
     gain = projected/(1+(q*projected).sum())
     quality_code=round(quality*255)
@@ -222,6 +259,15 @@ def observe_sourced(model, state, key, value, source, quality, valid_at=None):
                         F.one_hot(torch.tensor(action, device=q.device), 5), q.new_tensor(bits)]).float()
     provenance = list(internal.provenance)
     provenance[page] = (provenance[page]+(target-provenance[page]@q)[:, None]*gain[None]).detach()
+    provenance_precision = internal.provenance_precision
+    if provenance_precision is not None:
+        updated_precision = precision - projected[:, None] * gain[None]
+        updated_precision = (updated_precision + updated_precision.T) * 0.5
+        if (not bool(torch.isfinite(updated_precision).all())
+                or bool((updated_precision.diagonal() <= 0).any())):
+            raise ValueError('Independent provenance precision became invalid')
+        provenance_precision = list(provenance_precision)
+        provenance_precision[page] = updated_precision.detach()
     evidence = internal.evidence
     if action in (0, 1, 2):
         evidence_target = q.new_tensor([1., max(quality, old_quality) if action == 2 else quality, valid_at/1024])
@@ -233,6 +279,7 @@ def observe_sourced(model, state, key, value, source, quality, valid_at=None):
         event_keys[page] = event_keys[page].clone()
         event_keys[page][local] = key
     updated.internal = internal.invalidate_router(evidence=evidence, provenance=provenance, event_keys=event_keys,
+                          provenance_precision=provenance_precision,
                           informative=internal.informative+int(action in (0, 1, 2)),
                           corrections=internal.corrections+int(action == 1))
     return updated, {'action': ACTIONS[action], 'confidence': confidence, 'reason': reason,

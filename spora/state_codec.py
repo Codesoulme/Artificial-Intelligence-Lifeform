@@ -93,6 +93,10 @@ def flatten(model, state):
             schema['internal']['event_key_index'] = True
             for p, tensor in enumerate(state.internal.event_keys):
                 tensors[f'internal/event_keys/{p}'] = tensor
+        if state.internal.provenance_precision is not None:
+            schema['internal']['provenance_ridge'] = state.internal.provenance_ridge
+            for p, tensor in enumerate(state.internal.provenance_precision):
+                tensors[f'internal/provenance_precision/{p}'] = tensor
         tensors['internal/evidence']=state.internal.evidence
         for p,tensor in enumerate(state.internal.provenance):
             tensors[f'internal/provenance/{p}']=tensor
@@ -172,9 +176,13 @@ def restore(schema, tensors, device='cpu'):
             raise ValueError('Invalid event-key index metadata')
         event_keys = ([tensors[f'internal/event_keys/{p}'].to(device) for p in range(len(pages))]
                       if has_event_keys else None)
+        provenance_ridge = internal_metadata.pop('provenance_ridge', None)
+        provenance_precision = ([tensors[f'internal/provenance_precision/{p}'].to(device) for p in range(len(pages))]
+                                if provenance_ridge is not None else None)
         state.internal=InternalState(evidence=tensors['internal/evidence'].to(device),
             provenance=[tensors[f'internal/provenance/{p}'].to(device) for p in range(len(pages))],
-            router_factors=factors,event_keys=event_keys,**internal_metadata)
+            router_factors=factors,event_keys=event_keys,provenance_precision=provenance_precision,
+            provenance_ridge=provenance_ridge,**internal_metadata)
     check, expected = flatten(model, state)
     if set(tensors) != set(expected):
         raise ValueError('Missing or unexpected tensors')

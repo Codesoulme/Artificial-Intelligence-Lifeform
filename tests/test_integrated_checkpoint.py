@@ -11,7 +11,8 @@ from spora.growing import new_state
 from spora.integrated_checkpoint import (_digest, IntegratedSPORARuntime, load_integrated,
                                          load_integrated_runtime, save_integrated, replacement_feature_variant_sha256)
 from spora.integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
-from spora.internal_memory import WriteControl, attach, enable_event_key_index, observe_sourced, read_provenance
+from spora.internal_memory import (WriteControl, attach, enable_event_key_index,
+                                   enable_independent_provenance, observe_sourced, read_provenance)
 from spora.identity_fingerprints import IdentityFingerprints
 from spora.historical_resolutions import HistoricalResolutions
 from spora.memory_output import MemoryOutputAdapter
@@ -99,6 +100,20 @@ class IntegratedCheckpointTests(unittest.TestCase):
         self.state, _ = observe_sourced(self.organism, self.state, 5, 4, 'direct', 1.0)
         self.save()
         _, organism, state = load_integrated(self.path, self.base(), self.root)
+        self.assertEqual(state.internal.event_keys[0][:3].tolist(), [2, 5, -1])
+        self.assertEqual(frozen_digest(organism, state), frozen_digest(self.organism, self.state))
+
+    def test_independent_provenance_survives_integrated_checkpoint(self):
+        self.state = attach(self.organism, self.state, WriteControl())
+        self.state = enable_event_key_index(self.organism, self.state)
+        self.state = enable_independent_provenance(self.organism, self.state, ridge=0.003)
+        self.state, _ = observe_sourced(self.organism, self.state, 2, 3, 'direct', 1.0)
+        self.state, _ = observe_sourced(self.organism, self.state, 5, 4, 'direct', 1.0)
+        self.save()
+        _, organism, state = load_integrated(self.path, self.base(), self.root)
+        self.assertEqual(state.internal.provenance_ridge, self.state.internal.provenance_ridge)
+        self.assertTrue(torch.equal(state.internal.provenance_precision[0],
+                                    self.state.internal.provenance_precision[0]))
         self.assertEqual(state.internal.event_keys[0][:3].tolist(), [2, 5, -1])
         self.assertEqual(frozen_digest(organism, state), frozen_digest(self.organism, self.state))
 
