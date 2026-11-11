@@ -15,6 +15,15 @@ SEED = 98117
 STEPS = 12
 
 
+def unique_token_span(sequence, value):
+    if not value:
+        raise ValueError('Empty value token sequence')
+    found = [i for i in range(len(sequence) - len(value) + 1) if sequence[i:i + len(value)] == value]
+    if len(found) != 1:
+        raise ValueError('Value token sequence must occur exactly once')
+    return found[0]
+
+
 def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, replay_weight=0.0, dataset='small'):
     output = Path(output).resolve()
     if not output.is_relative_to((p.ROOT / 'runs').resolve()) or output == (p.ROOT / 'runs').resolve():
@@ -27,7 +36,7 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
         raise ValueError('Invalid step count')
     if not math.isfinite(replay_weight) or not 0 <= replay_weight <= 10 or (replay_weight and objective != 'mixed'):
         raise ValueError('Replay requires mixed objective and weight in [0, 10]')
-    if dataset not in ('small', 'diverse') or (dataset == 'diverse' and replay_weight):
+    if dataset not in ('small', 'diverse', 'diverse_multi') or (dataset != 'small' and replay_weight):
         raise ValueError('Invalid dataset or overlapping replay split')
     if output.exists():
         raise FileExistsError(output)
@@ -57,9 +66,11 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
             schedule = [('train', i, v, '请说出{name}现在爱喝的饮品。') for i in (0, 1) for v in (3, 4)]
             schedule += [('held', 6, v, '提到饮料时，{name}如今会选什么？') for v in (3, 4)]
         else:
-            schedule = [('train', i, v, q) for i in (0, 1, 2, 3) for v in (0, 1, 2, 3, 4, 6, 7)
+            train_values = tuple(range(8)) if dataset == 'diverse_multi' else (0, 1, 2, 3, 4, 6, 7)
+            held_values = (1, 3, 4, 5, 7) if dataset == 'diverse_multi' else (1, 3, 4, 7)
+            schedule = [('train', i, v, q) for i in (0, 1, 2, 3) for v in train_values
                         for q in ('请说出{name}现在爱喝的饮品。', '记录中{name}当前最想喝什么？')]
-            schedule += [('held', i, v, '如果点饮料，{name}如今会选什么？') for i in (6, 7) for v in (1, 3, 4, 7)]
+            schedule += [('held', i, v, '如果点饮料，{name}如今会选什么？') for i in (6, 7) for v in held_values]
         for group, index, value, template in schedule:
             key, name = KEYS[index], NAMES[index]
             state = p.fresh_controlled_state(organism)
@@ -81,11 +92,9 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
             target = p.torch.cat((target, p.torch.tensor([[tokenizer.eos_token_id]], device=device)), dim=1)
             value_ids = tokenizer(p.WORDS[value], add_special_tokens=False).input_ids
             competitor_ids = [tokenizer(p.WORDS[v], add_special_tokens=False).input_ids for v in (1, 3, 4) if v != value]
-            if len(value_ids) != 1 or any(len(ids) != 1 for ids in competitor_ids):
-                raise ValueError('Pilot requires single-token value classes')
-            positions = (target[0] == value_ids[0]).nonzero(as_tuple=True)[0]
-            if positions.numel() != 1:
-                raise ValueError('Target value must occur at exactly one answer position')
+            if not value_ids or any(not ids for ids in competitor_ids):
+                raise ValueError('Empty tokenized value')
+            position = unique_token_span(target[0, :-1].tolist(), value_ids)
             ids = p.torch.cat((prompt['input_ids'], target), dim=1)
             spec = p._memory_args(organism, state, {'key': key, 'intent': 'current', 'event_time': 0})
             selected_dev = (dataset == 'small' or group == 'held' or
@@ -94,7 +103,7 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
                           'evaluate': selected_dev,
                           'state_digest': p.frozen_digest(organism, state), 'question': question,
                           'answer': answer, 'prompt': prompt, 'ids': ids, 'spec': spec,
-                          'value_position': int(positions[0]), 'value_token': value_ids[0],
+                          'value_position': position, 'value_token': value_ids[0], 'value_tokens': value_ids,
                           'competitor_tokens': [ids[0] for ids in competitor_ids]})
 
         replays = []
@@ -187,10 +196,10 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
                 raise ValueError('Nonfinite loss')
             if objective == 'mixed':
                 (loss * 0.5).backward()
-                direct_target = p.torch.tensor([[item['value_token'], tokenizer.eos_token_id]], device=device)
+                direct_target = p.torch.tensor([item['value_tokens'] + [tokenizer.eos_token_id]], device=device)
                 direct_ids = p.torch.cat((item['prompt']['input_ids'], direct_target), dim=1)
                 direct = decoder(input_ids=direct_ids, attention_mask=p.torch.ones_like(direct_ids), **item['spec'])
-                direct_scores = direct.logits[:, prefix_len - 1:prefix_len + 1].float()
+                direct_scores = direct.logits[:, prefix_len - 1:prefix_len - 1 + direct_target.shape[1]].float()
                 direct_loss = p.torch.nn.functional.cross_entropy(
                     direct_scores.reshape(-1, direct_scores.shape[-1]), direct_target.reshape(-1))
                 if not bool(p.torch.isfinite(direct_loss)):
@@ -261,6 +270,6 @@ if __name__ == '__main__':
     parser.add_argument('--objective', choices=('full', 'value_contrastive', 'mixed'), default='full')
     parser.add_argument('--steps', type=int, default=STEPS)
     parser.add_argument('--replay-weight', type=float, default=0.0)
-    parser.add_argument('--dataset', choices=('small', 'diverse'), default='small')
+    parser.add_argument('--dataset', choices=('small', 'diverse', 'diverse_multi'), default='small')
     options = parser.parse_args()
     main(options.output, options.learning_rate, options.objective, options.steps, options.replay_weight, options.dataset)
