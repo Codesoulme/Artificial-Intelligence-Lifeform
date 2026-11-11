@@ -29,7 +29,7 @@ from spora.observation_candidate import ObservationCandidate, write_guard
 from spora.structure_transfer import SPORALayerReplacement
 
 VALUE = ROOT / 'runs/deepseek-spora-value-span-probe-v3-20261111/span-head.pt'
-OUTPUT = ROOT / 'runs/deepseek-spora-end-to-end-candidate-audit-20261111.json'
+OUTPUT = ROOT / 'runs/deepseek-spora-end-to-end-candidate-audit-corrected-v2-20261111.json'
 NAME_TO_KEY = dict(zip(NAMES, KEYS))
 
 
@@ -94,29 +94,42 @@ def main():
         name = next((name for name in NAME_TO_KEY if name in row['text']), None)
         value_text = value_row['value']
         value_index = WORDS.index(value_text) if value_text in WORDS else None
-        candidate = ObservationCandidate(NAME_TO_KEY.get(name) if address_ok else None, value_text,
+        expected_value = row['text'][row['start']:row['end']] if row['positive'] else None
+        candidate = ObservationCandidate(address[0] if address_ok else None, value_text,
                                          value_index, CLASSES[polarity_index], 'direct', 1.0,
                                          state.cursor, float(probabilities[0]), row['text'])
         guard = write_guard(candidate, key_count=organism.config.key_count,
                             value_count=organism.config.value_count, current_cursor=state.cursor)
+        if not polarity_ok:
+            guard['reasons'].append('polarity_gate_rejected')
+        if not value_row['accepted']:
+            guard['reasons'].append('value_gate_rejected')
+        guard['write'] = not guard['reasons']
         rows_out.append({'text': row['text'], 'positive': row['positive'], 'name': name,
                          'predicted_address': address, 'address_ok': address_ok,
+                         'expected_address': NAME_TO_KEY.get(name),
+                         'address_correct': bool(address_ok and name is not None and address[0] == NAME_TO_KEY[name]),
                          'polarity': CLASSES[polarity_index], 'polarity_ok': polarity_ok,
-                         'value': value_text, 'value_index': value_index,
+                         'value': value_text, 'value_index': value_index, 'expected_value': expected_value,
+                         'value_exact': bool(row['positive'] and value_text == expected_value),
                          'value_accepted': value_row['accepted'], 'write_guard': guard})
     positives = [row for row in rows_out if row['positive']]
     negatives = [row for row in rows_out if not row['positive']]
-    summary = {'examples': len(rows_out), 'known_positive_write_allowed': sum(row['write_guard']['write'] for row in positives if row['value_index'] is not None),
-               'known_positive_total': sum(row['value_index'] is not None for row in positives),
-               'unknown_positive_deferred': sum(not row['write_guard']['write'] for row in positives if row['value_index'] is None),
+    summary = {'examples': len(rows_out), 'known_positive_write_allowed': sum(row['write_guard']['write'] for row in positives if row['expected_value'] in WORDS),
+               'known_positive_total': sum(row['expected_value'] in WORDS for row in positives),
+               'unknown_positive_deferred': sum(not row['write_guard']['write'] for row in positives if row['expected_value'] not in WORDS),
+               'unknown_positive_total': sum(row['expected_value'] not in WORDS for row in positives),
+               'positive_value_exact': sum(row['value_exact'] for row in positives),
                'negative_write_allowed': sum(row['write_guard']['write'] for row in negatives),
-               'negative_total': len(negatives), 'positive_address_correct': sum(row['address_ok'] for row in positives if row['name'] in NAME_TO_KEY)}
+               'negative_total': len(negatives), 'positive_address_accepted': sum(row['address_ok'] for row in positives),
+               'positive_address_correct': sum(row['address_correct'] for row in positives)}
     if any(sha(Path(path)) != digest for path, digest in source.items()):
         raise ValueError('Protected input changed')
     report = {'status': 'development_only_no_writes', 'summary': summary, 'source_hashes': source,
               'feature_variant_sha256': variant, 'replacement_layers': sorted(blocks), 'rows': rows_out,
               'seconds': time.perf_counter() - started,
               'limitations': ['Held synthetic split; no independent memory dialogue.',
+                              'The expected name and key are scoring labels only; candidates use predicted addresses.',
                               'The direct source and current time are supplied by the audit, not inferred by the parser.',
                               'Unknown open-vocabulary values are intentionally deferred by the finite write guard.',
                               'No state mutation, checkpoint write, or response generation occurred.']}
