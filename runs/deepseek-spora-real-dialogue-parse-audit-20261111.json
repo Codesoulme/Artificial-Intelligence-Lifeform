@@ -1,0 +1,125 @@
+{
+  "status": "real_dialogue_read_only_parse_audit",
+  "source": "DuLeMon local test selection",
+  "source_rows": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "summary": {
+    "examples": 7,
+    "accepted": 0,
+    "expected_writes": 0,
+    "polarity_affirmative": 1,
+    "value_nonabstain": 5
+  },
+  "source_hashes": {
+    "D:\\SPORA\\runs\\open-base-deepseek-r1-1.5b-ad9f0ae\\model.safetensors": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "D:\\SPORA\\runs\\deepseek-spora-output-v2-checkpoint-20261111\\individual-with-output-v2.pt": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f",
+    "D:\\SPORA\\runs\\deepseek-spora-cluener-locator-retrained-20261111\\locator.pt": "13bf8102f687c4ceb0b9729d8455426eabdf36fae7fab409c932587a7f2dd459",
+    "D:\\SPORA\\runs\\deepseek-spora-polarity-gate-20261111\\gate.pt": "2c47f638d460f651bf0808831d8ff69e7a8b3d5c25eed69a6660e20510971456",
+    "D:\\SPORA\\runs\\deepseek-spora-value-span-probe-v3-20261111\\span-head.pt": "6f98cea9f4f28156e5de08735c71067f087f65f728f61f17e4544fa9381f1c3c"
+  },
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "replacement_layers": [
+    6,
+    12
+  ],
+  "rows": [
+    {
+      "text": "没有，我不喜欢喝咖啡，什么样的都不喜欢，我喜欢喝奶茶",
+      "label": "mixed_correction",
+      "write": false,
+      "subject_single": false,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value_accepted": false,
+      "value": null,
+      "accepted": false,
+      "acceptance_reason": "guarded_reject"
+    },
+    {
+      "text": "我爱喝橙汁",
+      "label": "unaddressed_affirmation",
+      "write": false,
+      "subject_single": false,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value_accepted": true,
+      "value": "橙汁",
+      "accepted": false,
+      "acceptance_reason": "guarded_reject"
+    },
+    {
+      "text": "对呀，我喜欢一边看电视，一边喝呢",
+      "label": "no_value_affirmation",
+      "write": false,
+      "subject_single": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value_accepted": true,
+      "value": "看电视",
+      "accepted": false,
+      "acceptance_reason": "guarded_reject"
+    },
+    {
+      "text": "原来你喜欢这样的生活，那你是不是经常喝醉？",
+      "label": "question",
+      "write": false,
+      "subject_single": false,
+      "polarity": "question_history",
+      "polarity_ok": false,
+      "value_accepted": false,
+      "value": null,
+      "accepted": false,
+      "acceptance_reason": "guarded_reject"
+    },
+    {
+      "text": "嗯，我在喝呢，你喜欢喝咖啡吗？",
+      "label": "question",
+      "write": false,
+      "subject_single": false,
+      "polarity": "question_history",
+      "polarity_ok": false,
+      "value_accepted": true,
+      "value": "咖啡",
+      "accepted": false,
+      "acceptance_reason": "guarded_reject"
+    },
+    {
+      "text": "哈哈，我喜欢喝炒奶，你喝过吗？",
+      "label": "unaddressed_affirmation",
+      "write": false,
+      "subject_single": false,
+      "polarity": "question_history",
+      "polarity_ok": false,
+      "value_accepted": true,
+      "value": "炒奶，你喝过吗",
+      "accepted": false,
+      "acceptance_reason": "guarded_reject"
+    },
+    {
+      "text": "小度，你喜欢喝什么饮料啊？",
+      "label": "question",
+      "write": false,
+      "subject_single": true,
+      "polarity": "question_history",
+      "polarity_ok": false,
+      "value_accepted": true,
+      "value": "饮料",
+      "accepted": false,
+      "acceptance_reason": "guarded_reject"
+    }
+  ],
+  "seconds": 28.927185000000463,
+  "limitations": [
+    "Seven selected turns, manually labeled for write eligibility.",
+    "No entity is supplied for first-person statements, so rejecting them is intentional.",
+    "The local archive selection and labels are not an independent benchmark.",
+    "No persistent memory write or response generation was performed."
+  ]
+}
