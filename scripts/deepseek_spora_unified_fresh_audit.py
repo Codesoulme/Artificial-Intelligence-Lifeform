@@ -11,7 +11,7 @@ from scripts.deepseek_spora_runtime_chat import load_chat
 from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.internal_memory import observe_sourced
 
-OUTPUT = ROOT/'runs/deepseek-spora-unified-fresh-audit-20261111.json'
+OUTPUT = ROOT/'runs/deepseek-spora-unified-fresh-audit-v2-20261111.json'
 
 
 def run():

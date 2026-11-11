@@ -44,6 +44,7 @@ from spora.memory_output import MemoryOutputAdapter
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 TEMPORAL = ROOT/'runs/deepseek-spora-temporal-gate-train-20261111/temporal.pt'
+READ_INTENT_RECOVERY_FLOOR = 2.0
 
 
 class SporaChat:
@@ -80,9 +81,14 @@ class SporaChat:
         result = {'question': question, 'accepted': False, 'answer': None,
                   'temporal_intent': temporal_intent, 'intent_logit': intent_logit,
                   'entity_score': entity_score}
-        if intent_logit < self.intent_data['threshold']:
+        intent_confident = intent_logit >= self.intent_data['threshold']
+        intent_recovered = (intent_logit >= READ_INTENT_RECOVERY_FLOOR
+                            and entity_score >= self.entity_data['gate_threshold'] and single)
+        if not intent_confident and not intent_recovered:
             result['reason'] = 'not_confident_read_intent'
+            result['intent_recovered'] = False
             return result
+        result['intent_recovered'] = not intent_confident
         if entity_score < self.entity_data['gate_threshold']:
             result['reason'] = 'not_single_entity'
             return result
