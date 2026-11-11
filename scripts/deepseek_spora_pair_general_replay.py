@@ -25,11 +25,13 @@ from spora.language_training import atomic_save, frozen_digest
 
 OUTPUT = ROOT / 'runs/deepseek-spora-pair-general-replay-20261112'
 REFERENCE = ROOT / 'runs/deepseek-spora-layer18-broad-pilot-20261112/result.json'
+REFERENCE_PAIR_FIELD = 'upstream_pair_sha256'
 PAIR = broad.PAIR
 _facts = broad._facts
 STEPS = 120
 SEED = 88041
 GENERATE = 32
+CONSTRAINT_EXAMPLES = ()
 
 
 def generate(base, tokenizer, questions):
@@ -56,7 +58,7 @@ def main():
         raise ValueError('General training and development question overlap')
     reference = json.loads(REFERENCE.read_text(encoding='utf-8'))
     for i in (6, 12):
-        if sha(PAIR / f'layer-{i}.pt') != reference['upstream_pair_sha256'][str(i)]:
+        if sha(PAIR / f'layer-{i}.pt') != reference[REFERENCE_PAIR_FIELD][str(i)]:
             raise ValueError('Upstream pair digest mismatch')
     source_sha = sha(SOURCE_CHECKPOINT)
     torch.manual_seed(SEED)
@@ -92,6 +94,19 @@ def main():
     memory = [{'row': row, 'ids': torch.cat((row['prefix']['input_ids'], row['answer_ids']), dim=1),
                'prefix_length': row['prefix']['input_ids'].shape[1], 'length': row['answer_ids'].shape[1]}
               for row in train_rows]
+    constraints = []
+    for question, answer in CONSTRAINT_EXAMPLES:
+        if question in QUESTIONS or question in broad.TRAIN_GENERAL or not question.strip() or not answer.strip():
+            raise ValueError('Invalid or overlapping constraint example')
+        prefix = closed_think_inputs(tokenizer, question, 'cuda')['input_ids']
+        target = tokenizer(answer, add_special_tokens=False, return_tensors='pt').input_ids.to('cuda')
+        if target.shape[1] == 0:
+            raise ValueError('Empty constraint target')
+        target = torch.cat((target, torch.tensor([[tokenizer.eos_token_id]], device='cuda')), dim=1)
+        if prefix.shape[1] + target.shape[1] > min(replacements[i].max_length for i in (6, 12)):
+            raise ValueError('Constraint example exceeds position limit')
+        constraints.append({'ids': torch.cat((prefix, target), dim=1), 'prefix_length': prefix.shape[1],
+                            'length': target.shape[1]})
     memory_before = _evaluate(integrated, base, organism, state, replacements, original_layers, tokenizer, held_rows)
     for i in (6, 12):
         base.model.layers[i] = replacements[i].eval()
@@ -103,15 +118,16 @@ def main():
     rng = random.Random(SEED)
     trace = []
     for step in range(STEPS):
-        is_general = step % 3 == 0
-        item = rng.choice(general if is_general else memory)
+        kind = ('general' if step % 4 == 0 else 'constraint' if step % 4 == 1 else 'memory') if constraints else (
+            'general' if step % 3 == 0 else 'memory')
+        item = rng.choice({'general': general, 'memory': memory, 'constraint': constraints}[kind])
         ids = item['ids']
         args = {'input_ids': ids, 'attention_mask': torch.ones_like(ids)}
-        logits = (base(**args, use_cache=False).logits if is_general else
-                  integrated(**args, **_memory_args(organism, state, item['row'])).logits)
+        logits = (integrated(**args, **_memory_args(organism, state, item['row'])).logits if kind == 'memory' else
+                  base(**args, use_cache=False).logits)
         start = item['prefix_length'] - 1
         values = logits[:, start:start + item['length'], :].float()
-        if is_general:
+        if kind == 'general':
             teacher = item['teacher'].to('cuda', dtype=torch.float32)
             loss = F.kl_div(F.log_softmax(values / 2., dim=-1), F.softmax(teacher / 2., dim=-1),
                             reduction='batchmean') * 4. / item['length']
@@ -124,8 +140,8 @@ def main():
         loss.backward()
         torch.nn.utils.clip_grad_norm_(params, 1.0)
         optimizer.step()
-        if step in (0, 19, 39, 79, 119):
-            trace.append({'step': step + 1, 'kind': 'general' if is_general else 'memory', 'loss': float(loss.detach())})
+        if step in (0, 1, 19, 39, 79, 119) or step == STEPS - 1:
+            trace.append({'step': step + 1, 'kind': kind, 'loss': float(loss.detach())})
             print(json.dumps(trace[-1]), flush=True)
     for block in replacements.values():
         block.eval()
@@ -142,7 +158,8 @@ def main():
         metadata = {'format': 'spora-qwen-layer-replacement-candidate-v1', 'base_weight_sha256': WEIGHT_SHA,
                     'layer': i, 'width': base.config.hidden_size, 'heads': base.config.num_attention_heads,
                     'max_length': block.max_length, 'seed': SEED, 'train_steps': STEPS,
-                    'objective': 'paired_memory_ce_and_general_raw_teacher_kl'}
+                    'objective': ('paired_memory_and_constraint_ce_and_general_raw_teacher_kl' if constraints else
+                                  'paired_memory_ce_and_general_raw_teacher_kl')}
         atomic_save({'metadata': metadata, 'state': {k: v.detach().cpu() for k, v in block.state_dict().items()}}, path)
         checks[str(i)] = sha(path)
     summary = {'held_memory_before_exact': exact_memory(memory_before), 'held_memory_after_exact': exact_memory(memory_after),
@@ -153,8 +170,9 @@ def main():
     report = {'status': 'pair_general_memory_replay_pilot', 'summary': summary, 'trace': trace,
               'raw_general': raw_general, 'before_general': before_general, 'after_general': after_general,
               'memory_before': memory_before, 'memory_after': memory_after, 'candidate_sha256': checks,
-              'source_pair_sha256': reference['upstream_pair_sha256'], 'source_checkpoint_sha256': source_sha,
+              'source_pair_sha256': reference[REFERENCE_PAIR_FIELD], 'source_checkpoint_sha256': source_sha,
               'base_sha256': WEIGHT_SHA, 'steps': STEPS, 'seed': SEED,
+              'constraint_examples': [{'question': q, 'answer': a} for q, a in CONSTRAINT_EXAMPLES],
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Authored general prompts and previously used memory questions, not independent holdout.',
                               'Raw teacher can be incorrect; exact output matching does not prove quality.',
