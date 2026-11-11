@@ -1,0 +1,3311 @@
+{
+  "results": {
+    "ungated": {
+      "calibration": {
+        "known": {
+          "total": 20,
+          "accepted": 10,
+          "correct": 10,
+          "rows": [
+            {
+              "question": "小林最近记下的饮料偏好是什么？",
+              "expected_key": 6,
+              "group": "known",
+              "gate_score": 0.9908608198165894,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.996551513671875,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的小林钟意哪种饮料？",
+              "expected_key": 6,
+              "group": "known",
+              "gate_score": 0.7954374551773071,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿宁最近记下的饮料偏好是什么？",
+              "expected_key": 22,
+              "group": "known",
+              "gate_score": 0.9927449226379395,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.9982982873916626,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的阿宁钟意哪种饮料？",
+              "expected_key": 22,
+              "group": "known",
+              "gate_score": 0.7490745782852173,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小雨最近记下的饮料偏好是什么？",
+              "expected_key": 35,
+              "group": "known",
+              "gate_score": 0.9920341372489929,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.9962043762207031,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的小雨钟意哪种饮料？",
+              "expected_key": 35,
+              "group": "known",
+              "gate_score": 0.7165156006813049,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿哲最近记下的饮料偏好是什么？",
+              "expected_key": 51,
+              "group": "known",
+              "gate_score": 0.990760326385498,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.9984610080718994,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的阿哲钟意哪种饮料？",
+              "expected_key": 51,
+              "group": "known",
+              "gate_score": 0.6582372188568115,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小梅最近记下的饮料偏好是什么？",
+              "expected_key": 16,
+              "group": "known",
+              "gate_score": 0.9928011894226074,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9970536231994629,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的小梅钟意哪种饮料？",
+              "expected_key": 16,
+              "group": "known",
+              "gate_score": 0.6838382482528687,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿远最近记下的饮料偏好是什么？",
+              "expected_key": 27,
+              "group": "known",
+              "gate_score": 0.9929149150848389,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.9989477396011353,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的阿远钟意哪种饮料？",
+              "expected_key": 27,
+              "group": "known",
+              "gate_score": 0.7215005159378052,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小岚最近记下的饮料偏好是什么？",
+              "expected_key": 42,
+              "group": "known",
+              "gate_score": 0.9914950132369995,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9992214441299438,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的小岚钟意哪种饮料？",
+              "expected_key": 42,
+              "group": "known",
+              "gate_score": 0.6743715405464172,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿明最近记下的饮料偏好是什么？",
+              "expected_key": 10,
+              "group": "known",
+              "gate_score": 0.9920130372047424,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9972057342529297,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的阿明钟意哪种饮料？",
+              "expected_key": 10,
+              "group": "known",
+              "gate_score": 0.6908313035964966,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿松最近记下的饮料偏好是什么？",
+              "expected_key": 0,
+              "group": "known",
+              "gate_score": 0.9942392110824585,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9969225525856018,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的阿松钟意哪种饮料？",
+              "expected_key": 0,
+              "group": "known",
+              "gate_score": 0.750836193561554,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小雪最近记下的饮料偏好是什么？",
+              "expected_key": 1,
+              "group": "known",
+              "gate_score": 0.995209276676178,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9953169226646423,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的小雪钟意哪种饮料？",
+              "expected_key": 1,
+              "group": "known",
+              "gate_score": 0.7417832016944885,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "unbound": {
+          "total": 4,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "阿禾最近记下的饮料偏好是什么？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9885961413383484,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.5536214113235474,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "旧记录里的阿禾钟意哪种饮料？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.6278563737869263,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小青最近记下的饮料偏好是什么？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9929282069206238,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.614569365978241,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "旧记录里的小青钟意哪种饮料？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.7944108843803406,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "no_name": {
+          "total": 4,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "把我刚才的笔记概括一下。",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.08003965020179749,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "现在记录的饮料是什么？",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.1435084193944931,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "聊聊你最近学了什么。",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.5737636685371399,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "请解释什么是历史记忆。",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.013771666213870049,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "multiple_names": {
+          "total": 6,
+          "accepted": 1,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "小林和阿宁分别偏爱什么饮品？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.02760220319032669,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小雨与阿哲的饮料有什么区别？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.005306463222950697,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小梅和阿远都喝什么？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.029693542048335075,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9970536231994629,
+              "accepted": true,
+              "correct": false
+            },
+            {
+              "question": "小岚与阿明以前各喝什么？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.03904304280877113,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿松和小雪现在的饮料记录？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.3149978518486023,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小青和阿禾更喜欢哪些饮品？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.27017828822135925,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        }
+      },
+      "held": {
+        "numeric_known": {
+          "total": 20,
+          "accepted": 20,
+          "correct": 20,
+          "rows": [
+            {
+              "question": "小林眼下记着什么数？",
+              "expected_key": 6,
+              "group": "numeric_known",
+              "gate_score": 0.9645686745643616,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.996551513671875,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道小林的最新数字。",
+              "expected_key": 6,
+              "group": "numeric_known",
+              "gate_score": 0.8825088739395142,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9894170165061951,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "阿宁眼下记着什么数？",
+              "expected_key": 22,
+              "group": "numeric_known",
+              "gate_score": 0.9674234390258789,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.9982982873916626,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道阿宁的最新数字。",
+              "expected_key": 22,
+              "group": "numeric_known",
+              "gate_score": 0.8869081735610962,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.9909940958023071,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小雨眼下记着什么数？",
+              "expected_key": 35,
+              "group": "numeric_known",
+              "gate_score": 0.9518904685974121,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.9962043762207031,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道小雨的最新数字。",
+              "expected_key": 35,
+              "group": "numeric_known",
+              "gate_score": 0.8670065402984619,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.9936509132385254,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "阿哲眼下记着什么数？",
+              "expected_key": 51,
+              "group": "numeric_known",
+              "gate_score": 0.9724886417388916,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.9984610080718994,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道阿哲的最新数字。",
+              "expected_key": 51,
+              "group": "numeric_known",
+              "gate_score": 0.8640347719192505,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.990119993686676,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小梅眼下记着什么数？",
+              "expected_key": 16,
+              "group": "numeric_known",
+              "gate_score": 0.9433091878890991,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9970536231994629,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道小梅的最新数字。",
+              "expected_key": 16,
+              "group": "numeric_known",
+              "gate_score": 0.8843556642532349,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9919443130493164,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "阿远眼下记着什么数？",
+              "expected_key": 27,
+              "group": "numeric_known",
+              "gate_score": 0.9520348906517029,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.9989477396011353,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道阿远的最新数字。",
+              "expected_key": 27,
+              "group": "numeric_known",
+              "gate_score": 0.9001092910766602,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.989936113357544,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小岚眼下记着什么数？",
+              "expected_key": 42,
+              "group": "numeric_known",
+              "gate_score": 0.9463638663291931,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9992214441299438,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道小岚的最新数字。",
+              "expected_key": 42,
+              "group": "numeric_known",
+              "gate_score": 0.8872842788696289,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9945849180221558,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "阿明眼下记着什么数？",
+              "expected_key": 10,
+              "group": "numeric_known",
+              "gate_score": 0.9488158226013184,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9972057342529297,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道阿明的最新数字。",
+              "expected_key": 10,
+              "group": "numeric_known",
+              "gate_score": 0.890833854675293,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9894124269485474,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "阿松眼下记着什么数？",
+              "expected_key": 0,
+              "group": "numeric_known",
+              "gate_score": 0.9733932018280029,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9969225525856018,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道阿松的最新数字。",
+              "expected_key": 0,
+              "group": "numeric_known",
+              "gate_score": 0.8976594805717468,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9806773066520691,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小雪眼下记着什么数？",
+              "expected_key": 1,
+              "group": "numeric_known",
+              "gate_score": 0.9751204252243042,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9953169226646423,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道小雪的最新数字。",
+              "expected_key": 1,
+              "group": "numeric_known",
+              "gate_score": 0.9138769507408142,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9818654656410217,
+              "accepted": true,
+              "correct": true
+            }
+          ]
+        },
+        "fresh_beverage": {
+          "total": 30,
+          "accepted": 30,
+          "correct": 30,
+          "rows": [
+            {
+              "question": "在保存的信息中，小林目前爱喝哪种饮料？",
+              "expected_key": 6,
+              "group": "fresh_beverage",
+              "gate_score": 0.748207151889801,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9929965734481812,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，小林最喜欢哪种饮品？",
+              "expected_key": 6,
+              "group": "fresh_beverage",
+              "gate_score": 0.9402172565460205,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9937366247177124,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，小林更喜欢喝什么？",
+              "expected_key": 6,
+              "group": "fresh_beverage",
+              "gate_score": 0.983233630657196,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9889746904373169,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，阿宁目前爱喝哪种饮料？",
+              "expected_key": 22,
+              "group": "fresh_beverage",
+              "gate_score": 0.7487467527389526,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.9808374047279358,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，阿宁最喜欢哪种饮品？",
+              "expected_key": 22,
+              "group": "fresh_beverage",
+              "gate_score": 0.9309016466140747,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.9864750504493713,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，阿宁更喜欢喝什么？",
+              "expected_key": 22,
+              "group": "fresh_beverage",
+              "gate_score": 0.9851881265640259,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.986186146736145,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，小雨目前爱喝哪种饮料？",
+              "expected_key": 35,
+              "group": "fresh_beverage",
+              "gate_score": 0.7762503027915955,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.9891715049743652,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，小雨最喜欢哪种饮品？",
+              "expected_key": 35,
+              "group": "fresh_beverage",
+              "gate_score": 0.9549376964569092,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.986376166343689,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，小雨更喜欢喝什么？",
+              "expected_key": 35,
+              "group": "fresh_beverage",
+              "gate_score": 0.987062394618988,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.9904112815856934,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，阿哲目前爱喝哪种饮料？",
+              "expected_key": 51,
+              "group": "fresh_beverage",
+              "gate_score": 0.7412148118019104,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.99010169506073,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，阿哲最喜欢哪种饮品？",
+              "expected_key": 51,
+              "group": "fresh_beverage",
+              "gate_score": 0.9417274594306946,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.9888052940368652,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，阿哲更喜欢喝什么？",
+              "expected_key": 51,
+              "group": "fresh_beverage",
+              "gate_score": 0.9822081923484802,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.9892432689666748,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，小梅目前爱喝哪种饮料？",
+              "expected_key": 16,
+              "group": "fresh_beverage",
+              "gate_score": 0.7773610353469849,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9848737120628357,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，小梅最喜欢哪种饮品？",
+              "expected_key": 16,
+              "group": "fresh_beverage",
+              "gate_score": 0.9390419125556946,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9867535829544067,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，小梅更喜欢喝什么？",
+              "expected_key": 16,
+              "group": "fresh_beverage",
+              "gate_score": 0.9837037920951843,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9833449125289917,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，阿远目前爱喝哪种饮料？",
+              "expected_key": 27,
+              "group": "fresh_beverage",
+              "gate_score": 0.7559067010879517,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.9890692234039307,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，阿远最喜欢哪种饮品？",
+              "expected_key": 27,
+              "group": "fresh_beverage",
+              "gate_score": 0.9496324062347412,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.9937974810600281,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，阿远更喜欢喝什么？",
+              "expected_key": 27,
+              "group": "fresh_beverage",
+              "gate_score": 0.9882124066352844,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.9922621846199036,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，小岚目前爱喝哪种饮料？",
+              "expected_key": 42,
+              "group": "fresh_beverage",
+              "gate_score": 0.7552537322044373,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9941534996032715,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，小岚最喜欢哪种饮品？",
+              "expected_key": 42,
+              "group": "fresh_beverage",
+              "gate_score": 0.9425485134124756,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9904661774635315,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，小岚更喜欢喝什么？",
+              "expected_key": 42,
+              "group": "fresh_beverage",
+              "gate_score": 0.9871504306793213,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9949760437011719,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，阿明目前爱喝哪种饮料？",
+              "expected_key": 10,
+              "group": "fresh_beverage",
+              "gate_score": 0.7553992867469788,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9932900667190552,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，阿明最喜欢哪种饮品？",
+              "expected_key": 10,
+              "group": "fresh_beverage",
+              "gate_score": 0.9485629796981812,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9923588037490845,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，阿明更喜欢喝什么？",
+              "expected_key": 10,
+              "group": "fresh_beverage",
+              "gate_score": 0.9860556125640869,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9954643249511719,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，阿松目前爱喝哪种饮料？",
+              "expected_key": 0,
+              "group": "fresh_beverage",
+              "gate_score": 0.8011338710784912,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9886598587036133,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，阿松最喜欢哪种饮品？",
+              "expected_key": 0,
+              "group": "fresh_beverage",
+              "gate_score": 0.9531053304672241,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9842365384101868,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，阿松更喜欢喝什么？",
+              "expected_key": 0,
+              "group": "fresh_beverage",
+              "gate_score": 0.98948073387146,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9874454140663147,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，小雪目前爱喝哪种饮料？",
+              "expected_key": 1,
+              "group": "fresh_beverage",
+              "gate_score": 0.8293724656105042,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9818625450134277,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，小雪最喜欢哪种饮品？",
+              "expected_key": 1,
+              "group": "fresh_beverage",
+              "gate_score": 0.9672909379005432,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9837929010391235,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，小雪更喜欢喝什么？",
+              "expected_key": 1,
+              "group": "fresh_beverage",
+              "gate_score": 0.9908784031867981,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9795888066291809,
+              "accepted": true,
+              "correct": true
+            }
+          ]
+        },
+        "temporal_development": {
+          "total": 9,
+          "accepted": 9,
+          "correct": 9,
+          "rows": [
+            {
+              "question": "小林现阶段爱喝哪种饮料？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.8383901119232178,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.996551513671875,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "截至目前，小林的饮品偏好是什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.7315510511398315,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9923305511474609,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "现在记录的小林最爱喝什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.9823898077011108,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9646584987640381,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小林原先爱喝哪种饮料？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.9320747256278992,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.996551513671875,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "变更以前，小林的饮品偏好是什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.849273145198822,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9915693998336792,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "之前记录的小林最爱喝什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.9871280193328857,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9647895693778992,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小林变更以后爱喝哪种饮料？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.8743497729301453,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.996551513671875,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "后续记录中，小林的饮品偏好是什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.7380831837654114,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9959495067596436,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改完成后，小林最爱喝什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.9611964821815491,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9817152619361877,
+              "accepted": true,
+              "correct": true
+            }
+          ]
+        },
+        "unbound": {
+          "total": 6,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "在保存的信息中，阿禾目前爱喝哪种饮料？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.7219420671463013,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.5578806400299072,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "修改记录以前，阿禾最喜欢哪种饮品？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9271070957183838,
+              "single_span": true,
+              "indices": [
+                51,
+                22
+              ],
+              "address_score": 0.5813926458358765,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "修改之后，阿禾更喜欢喝什么？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9817080497741699,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.5840075016021729,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "在保存的信息中，小青目前爱喝哪种饮料？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.8173678517341614,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.6858500838279724,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "修改记录以前，小青最喜欢哪种饮品？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9500391483306885,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.697178304195404,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "修改之后，小青更喜欢喝什么？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9855038523674011,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.657896876335144,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "no_name": {
+          "total": 6,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "现在是什么数字？",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.09602110087871552,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "刚才记住的内容有哪些？",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.02210475318133831,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "给我一个放松建议。",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.0135183809325099,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "你可以帮我写诗吗？",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.015187137760221958,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "目前保存了多少？",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.14713352918624878,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "我想知道最新消息。",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.1522679626941681,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "multiple_names": {
+          "total": 6,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "小林和阿宁各记了什么数？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.0365288145840168,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小雨与阿哲的数字相同吗？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.013273381628096104,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "比较小梅和阿远的值。",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.005311096552759409,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小岚与阿明各是多少？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.013468009419739246,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿松和小雪现在记录的数字？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.7554738521575928,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小青和阿禾的数值是什么？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.07813066244125366,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "fresh_multiple_names": {
+          "total": 8,
+          "accepted": 2,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "关于小林及阿宁，请分别说出两人的饮品。",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.0010193620109930634,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9933661222457886,
+              "accepted": true,
+              "correct": false
+            },
+            {
+              "question": "小雨与阿哲，各自最喜欢喝什么？",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.018214590847492218,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "给我小梅、阿远两个人的饮料记录。",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.06696951389312744,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小岚爱喝什么，阿明又喜欢什么？",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.8680079579353333,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "请同时回忆阿松与小雪的饮料。",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.017449505627155304,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9813569784164429,
+              "accepted": true,
+              "correct": false
+            },
+            {
+              "question": "小青和阿禾谁喝什么？",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.059728581458330154,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "对照阿宁以及小雨的偏好。",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.016758620738983154,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "分别说说阿哲和小梅的饮品。",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.0007363692275248468,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        }
+      }
+    },
+    "gated": {
+      "calibration": {
+        "known": {
+          "total": 20,
+          "accepted": 10,
+          "correct": 10,
+          "rows": [
+            {
+              "question": "小林最近记下的饮料偏好是什么？",
+              "expected_key": 6,
+              "group": "known",
+              "gate_score": 0.9908608198165894,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.996551513671875,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的小林钟意哪种饮料？",
+              "expected_key": 6,
+              "group": "known",
+              "gate_score": 0.7954374551773071,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿宁最近记下的饮料偏好是什么？",
+              "expected_key": 22,
+              "group": "known",
+              "gate_score": 0.9927449226379395,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.9982982873916626,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的阿宁钟意哪种饮料？",
+              "expected_key": 22,
+              "group": "known",
+              "gate_score": 0.7490745782852173,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小雨最近记下的饮料偏好是什么？",
+              "expected_key": 35,
+              "group": "known",
+              "gate_score": 0.9920341372489929,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.9962043762207031,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的小雨钟意哪种饮料？",
+              "expected_key": 35,
+              "group": "known",
+              "gate_score": 0.7165156006813049,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿哲最近记下的饮料偏好是什么？",
+              "expected_key": 51,
+              "group": "known",
+              "gate_score": 0.990760326385498,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.9984610080718994,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的阿哲钟意哪种饮料？",
+              "expected_key": 51,
+              "group": "known",
+              "gate_score": 0.6582372188568115,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小梅最近记下的饮料偏好是什么？",
+              "expected_key": 16,
+              "group": "known",
+              "gate_score": 0.9928011894226074,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9970536231994629,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的小梅钟意哪种饮料？",
+              "expected_key": 16,
+              "group": "known",
+              "gate_score": 0.6838382482528687,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿远最近记下的饮料偏好是什么？",
+              "expected_key": 27,
+              "group": "known",
+              "gate_score": 0.9929149150848389,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.9989477396011353,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的阿远钟意哪种饮料？",
+              "expected_key": 27,
+              "group": "known",
+              "gate_score": 0.7215005159378052,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小岚最近记下的饮料偏好是什么？",
+              "expected_key": 42,
+              "group": "known",
+              "gate_score": 0.9914950132369995,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9992214441299438,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的小岚钟意哪种饮料？",
+              "expected_key": 42,
+              "group": "known",
+              "gate_score": 0.6743715405464172,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿明最近记下的饮料偏好是什么？",
+              "expected_key": 10,
+              "group": "known",
+              "gate_score": 0.9920130372047424,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9972057342529297,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的阿明钟意哪种饮料？",
+              "expected_key": 10,
+              "group": "known",
+              "gate_score": 0.6908313035964966,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿松最近记下的饮料偏好是什么？",
+              "expected_key": 0,
+              "group": "known",
+              "gate_score": 0.9942392110824585,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9969225525856018,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的阿松钟意哪种饮料？",
+              "expected_key": 0,
+              "group": "known",
+              "gate_score": 0.750836193561554,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小雪最近记下的饮料偏好是什么？",
+              "expected_key": 1,
+              "group": "known",
+              "gate_score": 0.995209276676178,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9953169226646423,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "旧记录里的小雪钟意哪种饮料？",
+              "expected_key": 1,
+              "group": "known",
+              "gate_score": 0.7417832016944885,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "unbound": {
+          "total": 4,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "阿禾最近记下的饮料偏好是什么？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9885961413383484,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.5536214113235474,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "旧记录里的阿禾钟意哪种饮料？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.6278563737869263,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小青最近记下的饮料偏好是什么？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9929282069206238,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.614569365978241,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "旧记录里的小青钟意哪种饮料？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.7944108843803406,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "no_name": {
+          "total": 4,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "把我刚才的笔记概括一下。",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.08003965020179749,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "现在记录的饮料是什么？",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.1435084193944931,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "聊聊你最近学了什么。",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.5737636685371399,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "请解释什么是历史记忆。",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.013771666213870049,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "multiple_names": {
+          "total": 6,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "小林和阿宁分别偏爱什么饮品？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.02760220319032669,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小雨与阿哲的饮料有什么区别？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.005306463222950697,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小梅和阿远都喝什么？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.029693542048335075,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9970536231994629,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小岚与阿明以前各喝什么？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.03904304280877113,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿松和小雪现在的饮料记录？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.3149978518486023,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小青和阿禾更喜欢哪些饮品？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.27017828822135925,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        }
+      },
+      "held": {
+        "numeric_known": {
+          "total": 20,
+          "accepted": 20,
+          "correct": 20,
+          "rows": [
+            {
+              "question": "小林眼下记着什么数？",
+              "expected_key": 6,
+              "group": "numeric_known",
+              "gate_score": 0.9645686745643616,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.996551513671875,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道小林的最新数字。",
+              "expected_key": 6,
+              "group": "numeric_known",
+              "gate_score": 0.8825088739395142,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9894170165061951,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "阿宁眼下记着什么数？",
+              "expected_key": 22,
+              "group": "numeric_known",
+              "gate_score": 0.9674234390258789,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.9982982873916626,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道阿宁的最新数字。",
+              "expected_key": 22,
+              "group": "numeric_known",
+              "gate_score": 0.8869081735610962,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.9909940958023071,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小雨眼下记着什么数？",
+              "expected_key": 35,
+              "group": "numeric_known",
+              "gate_score": 0.9518904685974121,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.9962043762207031,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道小雨的最新数字。",
+              "expected_key": 35,
+              "group": "numeric_known",
+              "gate_score": 0.8670065402984619,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.9936509132385254,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "阿哲眼下记着什么数？",
+              "expected_key": 51,
+              "group": "numeric_known",
+              "gate_score": 0.9724886417388916,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.9984610080718994,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道阿哲的最新数字。",
+              "expected_key": 51,
+              "group": "numeric_known",
+              "gate_score": 0.8640347719192505,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.990119993686676,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小梅眼下记着什么数？",
+              "expected_key": 16,
+              "group": "numeric_known",
+              "gate_score": 0.9433091878890991,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9970536231994629,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道小梅的最新数字。",
+              "expected_key": 16,
+              "group": "numeric_known",
+              "gate_score": 0.8843556642532349,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9919443130493164,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "阿远眼下记着什么数？",
+              "expected_key": 27,
+              "group": "numeric_known",
+              "gate_score": 0.9520348906517029,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.9989477396011353,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道阿远的最新数字。",
+              "expected_key": 27,
+              "group": "numeric_known",
+              "gate_score": 0.9001092910766602,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.989936113357544,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小岚眼下记着什么数？",
+              "expected_key": 42,
+              "group": "numeric_known",
+              "gate_score": 0.9463638663291931,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9992214441299438,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道小岚的最新数字。",
+              "expected_key": 42,
+              "group": "numeric_known",
+              "gate_score": 0.8872842788696289,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9945849180221558,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "阿明眼下记着什么数？",
+              "expected_key": 10,
+              "group": "numeric_known",
+              "gate_score": 0.9488158226013184,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9972057342529297,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道阿明的最新数字。",
+              "expected_key": 10,
+              "group": "numeric_known",
+              "gate_score": 0.890833854675293,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9894124269485474,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "阿松眼下记着什么数？",
+              "expected_key": 0,
+              "group": "numeric_known",
+              "gate_score": 0.9733932018280029,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9969225525856018,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道阿松的最新数字。",
+              "expected_key": 0,
+              "group": "numeric_known",
+              "gate_score": 0.8976594805717468,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9806773066520691,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小雪眼下记着什么数？",
+              "expected_key": 1,
+              "group": "numeric_known",
+              "gate_score": 0.9751204252243042,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9953169226646423,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "我想知道小雪的最新数字。",
+              "expected_key": 1,
+              "group": "numeric_known",
+              "gate_score": 0.9138769507408142,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9818654656410217,
+              "accepted": true,
+              "correct": true
+            }
+          ]
+        },
+        "fresh_beverage": {
+          "total": 30,
+          "accepted": 30,
+          "correct": 30,
+          "rows": [
+            {
+              "question": "在保存的信息中，小林目前爱喝哪种饮料？",
+              "expected_key": 6,
+              "group": "fresh_beverage",
+              "gate_score": 0.748207151889801,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9929965734481812,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，小林最喜欢哪种饮品？",
+              "expected_key": 6,
+              "group": "fresh_beverage",
+              "gate_score": 0.9402172565460205,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9937366247177124,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，小林更喜欢喝什么？",
+              "expected_key": 6,
+              "group": "fresh_beverage",
+              "gate_score": 0.983233630657196,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9889746904373169,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，阿宁目前爱喝哪种饮料？",
+              "expected_key": 22,
+              "group": "fresh_beverage",
+              "gate_score": 0.7487467527389526,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.9808374047279358,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，阿宁最喜欢哪种饮品？",
+              "expected_key": 22,
+              "group": "fresh_beverage",
+              "gate_score": 0.9309016466140747,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.9864750504493713,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，阿宁更喜欢喝什么？",
+              "expected_key": 22,
+              "group": "fresh_beverage",
+              "gate_score": 0.9851881265640259,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.986186146736145,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，小雨目前爱喝哪种饮料？",
+              "expected_key": 35,
+              "group": "fresh_beverage",
+              "gate_score": 0.7762503027915955,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.9891715049743652,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，小雨最喜欢哪种饮品？",
+              "expected_key": 35,
+              "group": "fresh_beverage",
+              "gate_score": 0.9549376964569092,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.986376166343689,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，小雨更喜欢喝什么？",
+              "expected_key": 35,
+              "group": "fresh_beverage",
+              "gate_score": 0.987062394618988,
+              "single_span": true,
+              "indices": [
+                35,
+                35
+              ],
+              "address_score": 0.9904112815856934,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，阿哲目前爱喝哪种饮料？",
+              "expected_key": 51,
+              "group": "fresh_beverage",
+              "gate_score": 0.7412148118019104,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.99010169506073,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，阿哲最喜欢哪种饮品？",
+              "expected_key": 51,
+              "group": "fresh_beverage",
+              "gate_score": 0.9417274594306946,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.9888052940368652,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，阿哲更喜欢喝什么？",
+              "expected_key": 51,
+              "group": "fresh_beverage",
+              "gate_score": 0.9822081923484802,
+              "single_span": true,
+              "indices": [
+                51,
+                51
+              ],
+              "address_score": 0.9892432689666748,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，小梅目前爱喝哪种饮料？",
+              "expected_key": 16,
+              "group": "fresh_beverage",
+              "gate_score": 0.7773610353469849,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9848737120628357,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，小梅最喜欢哪种饮品？",
+              "expected_key": 16,
+              "group": "fresh_beverage",
+              "gate_score": 0.9390419125556946,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9867535829544067,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，小梅更喜欢喝什么？",
+              "expected_key": 16,
+              "group": "fresh_beverage",
+              "gate_score": 0.9837037920951843,
+              "single_span": true,
+              "indices": [
+                16,
+                16
+              ],
+              "address_score": 0.9833449125289917,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，阿远目前爱喝哪种饮料？",
+              "expected_key": 27,
+              "group": "fresh_beverage",
+              "gate_score": 0.7559067010879517,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.9890692234039307,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，阿远最喜欢哪种饮品？",
+              "expected_key": 27,
+              "group": "fresh_beverage",
+              "gate_score": 0.9496324062347412,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.9937974810600281,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，阿远更喜欢喝什么？",
+              "expected_key": 27,
+              "group": "fresh_beverage",
+              "gate_score": 0.9882124066352844,
+              "single_span": true,
+              "indices": [
+                27,
+                27
+              ],
+              "address_score": 0.9922621846199036,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，小岚目前爱喝哪种饮料？",
+              "expected_key": 42,
+              "group": "fresh_beverage",
+              "gate_score": 0.7552537322044373,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9941534996032715,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，小岚最喜欢哪种饮品？",
+              "expected_key": 42,
+              "group": "fresh_beverage",
+              "gate_score": 0.9425485134124756,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9904661774635315,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，小岚更喜欢喝什么？",
+              "expected_key": 42,
+              "group": "fresh_beverage",
+              "gate_score": 0.9871504306793213,
+              "single_span": true,
+              "indices": [
+                42,
+                42
+              ],
+              "address_score": 0.9949760437011719,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，阿明目前爱喝哪种饮料？",
+              "expected_key": 10,
+              "group": "fresh_beverage",
+              "gate_score": 0.7553992867469788,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9932900667190552,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，阿明最喜欢哪种饮品？",
+              "expected_key": 10,
+              "group": "fresh_beverage",
+              "gate_score": 0.9485629796981812,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9923588037490845,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，阿明更喜欢喝什么？",
+              "expected_key": 10,
+              "group": "fresh_beverage",
+              "gate_score": 0.9860556125640869,
+              "single_span": true,
+              "indices": [
+                10,
+                10
+              ],
+              "address_score": 0.9954643249511719,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，阿松目前爱喝哪种饮料？",
+              "expected_key": 0,
+              "group": "fresh_beverage",
+              "gate_score": 0.8011338710784912,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9886598587036133,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，阿松最喜欢哪种饮品？",
+              "expected_key": 0,
+              "group": "fresh_beverage",
+              "gate_score": 0.9531053304672241,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9842365384101868,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，阿松更喜欢喝什么？",
+              "expected_key": 0,
+              "group": "fresh_beverage",
+              "gate_score": 0.98948073387146,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9874454140663147,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "在保存的信息中，小雪目前爱喝哪种饮料？",
+              "expected_key": 1,
+              "group": "fresh_beverage",
+              "gate_score": 0.8293724656105042,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9818625450134277,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改记录以前，小雪最喜欢哪种饮品？",
+              "expected_key": 1,
+              "group": "fresh_beverage",
+              "gate_score": 0.9672909379005432,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9837929010391235,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改之后，小雪更喜欢喝什么？",
+              "expected_key": 1,
+              "group": "fresh_beverage",
+              "gate_score": 0.9908784031867981,
+              "single_span": true,
+              "indices": [
+                1,
+                1
+              ],
+              "address_score": 0.9795888066291809,
+              "accepted": true,
+              "correct": true
+            }
+          ]
+        },
+        "temporal_development": {
+          "total": 9,
+          "accepted": 9,
+          "correct": 9,
+          "rows": [
+            {
+              "question": "小林现阶段爱喝哪种饮料？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.8383901119232178,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.996551513671875,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "截至目前，小林的饮品偏好是什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.7315510511398315,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9923305511474609,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "现在记录的小林最爱喝什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.9823898077011108,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9646584987640381,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小林原先爱喝哪种饮料？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.9320747256278992,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.996551513671875,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "变更以前，小林的饮品偏好是什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.849273145198822,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9915693998336792,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "之前记录的小林最爱喝什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.9871280193328857,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9647895693778992,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "小林变更以后爱喝哪种饮料？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.8743497729301453,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.996551513671875,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "后续记录中，小林的饮品偏好是什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.7380831837654114,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9959495067596436,
+              "accepted": true,
+              "correct": true
+            },
+            {
+              "question": "修改完成后，小林最爱喝什么？",
+              "expected_key": 6,
+              "group": "temporal_development",
+              "gate_score": 0.9611964821815491,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9817152619361877,
+              "accepted": true,
+              "correct": true
+            }
+          ]
+        },
+        "unbound": {
+          "total": 6,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "在保存的信息中，阿禾目前爱喝哪种饮料？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.7219420671463013,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.5578806400299072,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "修改记录以前，阿禾最喜欢哪种饮品？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9271070957183838,
+              "single_span": true,
+              "indices": [
+                51,
+                22
+              ],
+              "address_score": 0.5813926458358765,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "修改之后，阿禾更喜欢喝什么？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9817080497741699,
+              "single_span": true,
+              "indices": [
+                22,
+                22
+              ],
+              "address_score": 0.5840075016021729,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "在保存的信息中，小青目前爱喝哪种饮料？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.8173678517341614,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.6858500838279724,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "修改记录以前，小青最喜欢哪种饮品？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9500391483306885,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.697178304195404,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "修改之后，小青更喜欢喝什么？",
+              "expected_key": null,
+              "group": "unbound",
+              "gate_score": 0.9855038523674011,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.657896876335144,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "no_name": {
+          "total": 6,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "现在是什么数字？",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.09602110087871552,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "刚才记住的内容有哪些？",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.02210475318133831,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "给我一个放松建议。",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.0135183809325099,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "你可以帮我写诗吗？",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.015187137760221958,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "目前保存了多少？",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.14713352918624878,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "我想知道最新消息。",
+              "expected_key": null,
+              "group": "no_name",
+              "gate_score": 0.1522679626941681,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "multiple_names": {
+          "total": 6,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "小林和阿宁各记了什么数？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.0365288145840168,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小雨与阿哲的数字相同吗？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.013273381628096104,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "比较小梅和阿远的值。",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.005311096552759409,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小岚与阿明各是多少？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.013468009419739246,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "阿松和小雪现在记录的数字？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.7554738521575928,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小青和阿禾的数值是什么？",
+              "expected_key": null,
+              "group": "multiple_names",
+              "gate_score": 0.07813066244125366,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        },
+        "fresh_multiple_names": {
+          "total": 8,
+          "accepted": 0,
+          "correct": 0,
+          "rows": [
+            {
+              "question": "关于小林及阿宁，请分别说出两人的饮品。",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.0010193620109930634,
+              "single_span": true,
+              "indices": [
+                6,
+                6
+              ],
+              "address_score": 0.9933661222457886,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小雨与阿哲，各自最喜欢喝什么？",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.018214590847492218,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "给我小梅、阿远两个人的饮料记录。",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.06696951389312744,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小岚爱喝什么，阿明又喜欢什么？",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.8680079579353333,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "请同时回忆阿松与小雪的饮料。",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.017449505627155304,
+              "single_span": true,
+              "indices": [
+                0,
+                0
+              ],
+              "address_score": 0.9813569784164429,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "小青和阿禾谁喝什么？",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.059728581458330154,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "对照阿宁以及小雨的偏好。",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.016758620738983154,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            },
+            {
+              "question": "分别说说阿哲和小梅的饮品。",
+              "expected_key": null,
+              "group": "fresh_multiple_names",
+              "gate_score": 0.0007363692275248468,
+              "single_span": false,
+              "indices": null,
+              "address_score": null,
+              "accepted": false,
+              "correct": false
+            }
+          ]
+        }
+      }
+    }
+  },
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "router_sha256": "750d7402c71d690d1aaeba8241b04d218a3047f74752ba90e5159d6b1cc4dc4b",
+  "gate_sha256": "0b93a9ef31f45e2dd4dd7c3a99863bb90301196567988096dcdb5e33727c6751",
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "gate_threshold": 0.5737646685371399,
+  "address_threshold": 0.9130351676216125,
+  "calibration_negatives": 10,
+  "eligible_unbound": 2,
+  "training_examples": 140,
+  "calibration_examples": 34,
+  "held_examples": 85,
+  "numeric_training_templates": [
+    "{name}当前的数字是多少？",
+    "请查询{name}现在的数值。",
+    "告诉我{name}记录的数字。",
+    "{name}目前存的数值是几？"
+  ],
+  "trace": [
+    {
+      "step": 1,
+      "loss": 0.412270188331604
+    },
+    {
+      "step": 100,
+      "loss": 0.023683512583374977
+    },
+    {
+      "step": 200,
+      "loss": 0.01945296674966812
+    },
+    {
+      "step": 400,
+      "loss": 0.016904696822166443
+    }
+  ],
+  "elapsed_seconds": 108.69662779988721,
+  "peak_allocated_bytes": 3860258304,
+  "limitations": [
+    "Synthetic questions and small calibration set; earlier held data was inspected.",
+    "Gate distinguishes single from multi/no-name, not memory intent or identity.",
+    "Unseen names and entity aliases are not robustly established.",
+    "No answer generation, automatic writes, or open-world safety validated."
+  ]
+}

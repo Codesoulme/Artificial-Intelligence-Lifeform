@@ -1,0 +1,848 @@
+{
+  "groups": {
+    "composed_development": {
+      "total": 11,
+      "correct": 11,
+      "false_read": 0,
+      "false_abstain": 0
+    },
+    "composed_negative": {
+      "total": 6,
+      "correct": 4,
+      "false_read": 2,
+      "false_abstain": 0
+    },
+    "fresh_abstain": {
+      "total": 40,
+      "correct": 40,
+      "false_read": 0,
+      "false_abstain": 0
+    },
+    "fresh_read": {
+      "total": 30,
+      "correct": 30,
+      "false_read": 0,
+      "false_abstain": 0
+    }
+  },
+  "rows": [
+    {
+      "question": "小林现阶段爱喝哪种饮料？",
+      "label": 0,
+      "group": "composed_development",
+      "winner": 0,
+      "read_confidence": 0.9681141972541809,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "截至目前，小林的饮品偏好是什么？",
+      "label": 0,
+      "group": "composed_development",
+      "winner": 0,
+      "read_confidence": 0.5040004849433899,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "现在记录的小林最爱喝什么？",
+      "label": 0,
+      "group": "composed_development",
+      "winner": 0,
+      "read_confidence": 0.9627445340156555,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "小林原先爱喝哪种饮料？",
+      "label": 1,
+      "group": "composed_development",
+      "winner": 1,
+      "read_confidence": 0.8659642934799194,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "变更以前，小林的饮品偏好是什么？",
+      "label": 1,
+      "group": "composed_development",
+      "winner": 1,
+      "read_confidence": 0.8855132460594177,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "之前记录的小林最爱喝什么？",
+      "label": 1,
+      "group": "composed_development",
+      "winner": 1,
+      "read_confidence": 0.9274511337280273,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "小林变更以后爱喝哪种饮料？",
+      "label": 2,
+      "group": "composed_development",
+      "winner": 2,
+      "read_confidence": 0.9404346942901611,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "后续记录中，小林的饮品偏好是什么？",
+      "label": 2,
+      "group": "composed_development",
+      "winner": 2,
+      "read_confidence": 0.6353031992912292,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "修改完成后，小林最爱喝什么？",
+      "label": 2,
+      "group": "composed_development",
+      "winner": 2,
+      "read_confidence": 0.9807382225990295,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "我想查阅小林现在的饮品偏好。",
+      "label": 0,
+      "group": "composed_development",
+      "winner": 0,
+      "read_confidence": 0.970642626285553,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "说说更早记录的小林喜欢什么饮料。",
+      "label": 1,
+      "group": "composed_development",
+      "winner": 1,
+      "read_confidence": 0.8363415002822876,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "不要告诉我小林现在喜欢什么饮料。",
+      "label": 3,
+      "group": "composed_negative",
+      "winner": 0,
+      "read_confidence": 0.543002188205719,
+      "predicted": 0,
+      "correct": false
+    },
+    {
+      "question": "把小林的饮料改成牛奶。",
+      "label": 3,
+      "group": "composed_negative",
+      "winner": 3,
+      "read_confidence": 0.003603116376325488,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "给小林写一句鼓励的话。",
+      "label": 3,
+      "group": "composed_negative",
+      "winner": 3,
+      "read_confidence": 0.002307119546458125,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "小林和阿宁分别爱喝什么？",
+      "label": 3,
+      "group": "composed_negative",
+      "winner": 3,
+      "read_confidence": 0.16983391344547272,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "小青以前喜欢喝什么？",
+      "label": 3,
+      "group": "composed_negative",
+      "winner": 1,
+      "read_confidence": 0.9933767914772034,
+      "predicted": 1,
+      "correct": false
+    },
+    {
+      "question": "你会说中文吗？",
+      "label": 3,
+      "group": "composed_negative",
+      "winner": 3,
+      "read_confidence": 0.07290574163198471,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "目前的记录显示小林喜欢喝哪一种？",
+      "label": 0,
+      "group": "fresh_read",
+      "winner": 0,
+      "read_confidence": 0.9928426742553711,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "在这次更正发生之前，小林喜欢什么饮品？",
+      "label": 1,
+      "group": "fresh_read",
+      "winner": 1,
+      "read_confidence": 0.8587523102760315,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "记下新偏好以后，小林改喝什么？",
+      "label": 2,
+      "group": "fresh_read",
+      "winner": 2,
+      "read_confidence": 0.8661002516746521,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "目前的记录显示阿宁喜欢喝哪一种？",
+      "label": 0,
+      "group": "fresh_read",
+      "winner": 0,
+      "read_confidence": 0.9928846955299377,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "在这次更正发生之前，阿宁喜欢什么饮品？",
+      "label": 1,
+      "group": "fresh_read",
+      "winner": 1,
+      "read_confidence": 0.8575257658958435,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "记下新偏好以后，阿宁改喝什么？",
+      "label": 2,
+      "group": "fresh_read",
+      "winner": 2,
+      "read_confidence": 0.8377035856246948,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "目前的记录显示小雨喜欢喝哪一种？",
+      "label": 0,
+      "group": "fresh_read",
+      "winner": 0,
+      "read_confidence": 0.9936727285385132,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "在这次更正发生之前，小雨喜欢什么饮品？",
+      "label": 1,
+      "group": "fresh_read",
+      "winner": 1,
+      "read_confidence": 0.8432002663612366,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "记下新偏好以后，小雨改喝什么？",
+      "label": 2,
+      "group": "fresh_read",
+      "winner": 2,
+      "read_confidence": 0.8694121837615967,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "目前的记录显示阿哲喜欢喝哪一种？",
+      "label": 0,
+      "group": "fresh_read",
+      "winner": 0,
+      "read_confidence": 0.9922536015510559,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "在这次更正发生之前，阿哲喜欢什么饮品？",
+      "label": 1,
+      "group": "fresh_read",
+      "winner": 1,
+      "read_confidence": 0.8417626023292542,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "记下新偏好以后，阿哲改喝什么？",
+      "label": 2,
+      "group": "fresh_read",
+      "winner": 2,
+      "read_confidence": 0.8502709865570068,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "目前的记录显示小梅喜欢喝哪一种？",
+      "label": 0,
+      "group": "fresh_read",
+      "winner": 0,
+      "read_confidence": 0.9923532605171204,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "在这次更正发生之前，小梅喜欢什么饮品？",
+      "label": 1,
+      "group": "fresh_read",
+      "winner": 1,
+      "read_confidence": 0.8729346990585327,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "记下新偏好以后，小梅改喝什么？",
+      "label": 2,
+      "group": "fresh_read",
+      "winner": 2,
+      "read_confidence": 0.8446691036224365,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "目前的记录显示阿远喜欢喝哪一种？",
+      "label": 0,
+      "group": "fresh_read",
+      "winner": 0,
+      "read_confidence": 0.9927741289138794,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "在这次更正发生之前，阿远喜欢什么饮品？",
+      "label": 1,
+      "group": "fresh_read",
+      "winner": 1,
+      "read_confidence": 0.8795593976974487,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "记下新偏好以后，阿远改喝什么？",
+      "label": 2,
+      "group": "fresh_read",
+      "winner": 2,
+      "read_confidence": 0.7952963709831238,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "目前的记录显示小岚喜欢喝哪一种？",
+      "label": 0,
+      "group": "fresh_read",
+      "winner": 0,
+      "read_confidence": 0.994756817817688,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "在这次更正发生之前，小岚喜欢什么饮品？",
+      "label": 1,
+      "group": "fresh_read",
+      "winner": 1,
+      "read_confidence": 0.8101967573165894,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "记下新偏好以后，小岚改喝什么？",
+      "label": 2,
+      "group": "fresh_read",
+      "winner": 2,
+      "read_confidence": 0.9029988050460815,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "目前的记录显示阿明喜欢喝哪一种？",
+      "label": 0,
+      "group": "fresh_read",
+      "winner": 0,
+      "read_confidence": 0.9948142766952515,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "在这次更正发生之前，阿明喜欢什么饮品？",
+      "label": 1,
+      "group": "fresh_read",
+      "winner": 1,
+      "read_confidence": 0.8561331033706665,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "记下新偏好以后，阿明改喝什么？",
+      "label": 2,
+      "group": "fresh_read",
+      "winner": 2,
+      "read_confidence": 0.8084084391593933,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "目前的记录显示阿松喜欢喝哪一种？",
+      "label": 0,
+      "group": "fresh_read",
+      "winner": 0,
+      "read_confidence": 0.9929757118225098,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "在这次更正发生之前，阿松喜欢什么饮品？",
+      "label": 1,
+      "group": "fresh_read",
+      "winner": 1,
+      "read_confidence": 0.8460169434547424,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "记下新偏好以后，阿松改喝什么？",
+      "label": 2,
+      "group": "fresh_read",
+      "winner": 2,
+      "read_confidence": 0.8285142183303833,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "目前的记录显示小雪喜欢喝哪一种？",
+      "label": 0,
+      "group": "fresh_read",
+      "winner": 0,
+      "read_confidence": 0.9944403767585754,
+      "predicted": 0,
+      "correct": true
+    },
+    {
+      "question": "在这次更正发生之前，小雪喜欢什么饮品？",
+      "label": 1,
+      "group": "fresh_read",
+      "winner": 1,
+      "read_confidence": 0.8807089924812317,
+      "predicted": 1,
+      "correct": true
+    },
+    {
+      "question": "记下新偏好以后，小雪改喝什么？",
+      "label": 2,
+      "group": "fresh_read",
+      "winner": 2,
+      "read_confidence": 0.872307538986206,
+      "predicted": 2,
+      "correct": true
+    },
+    {
+      "question": "别读取小林的饮品记录。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.1069236546754837,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "请为小林编写一句祝福。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.011000984348356724,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "把小林的饮品喜好调整为牛奶。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.016568250954151154,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "小林的饮品偏好是在哪一天变化的？",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.04178996384143829,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "别读取阿宁的饮品记录。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.07793483138084412,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "请为阿宁编写一句祝福。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.007720030378550291,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "把阿宁的饮品喜好调整为牛奶。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.01613878458738327,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "阿宁的饮品偏好是在哪一天变化的？",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.03777399659156799,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "别读取小雨的饮品记录。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.08434813469648361,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "请为小雨编写一句祝福。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.011093278415501118,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "把小雨的饮品喜好调整为牛奶。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.014144200831651688,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "小雨的饮品偏好是在哪一天变化的？",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.03466193377971649,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "别读取阿哲的饮品记录。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.06808508932590485,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "请为阿哲编写一句祝福。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.008780288510024548,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "把阿哲的饮品喜好调整为牛奶。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.018734006211161613,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "阿哲的饮品偏好是在哪一天变化的？",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.04072870314121246,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "别读取小梅的饮品记录。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.07312891632318497,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "请为小梅编写一句祝福。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.00982904713600874,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "把小梅的饮品喜好调整为牛奶。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.013109388761222363,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "小梅的饮品偏好是在哪一天变化的？",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.034282948821783066,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "别读取阿远的饮品记录。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.09857423603534698,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "请为阿远编写一句祝福。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.010893123224377632,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "把阿远的饮品喜好调整为牛奶。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.021799473091959953,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "阿远的饮品偏好是在哪一天变化的？",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.05223395302891731,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "别读取小岚的饮品记录。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.09204147756099701,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "请为小岚编写一句祝福。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.017329342663288116,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "把小岚的饮品喜好调整为牛奶。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.02843852899968624,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "小岚的饮品偏好是在哪一天变化的？",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.03792482614517212,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "别读取阿明的饮品记录。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.05732739344239235,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "请为阿明编写一句祝福。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.010621951892971992,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "把阿明的饮品喜好调整为牛奶。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.010678009130060673,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "阿明的饮品偏好是在哪一天变化的？",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.03525656834244728,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "别读取阿松的饮品记录。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.050959959626197815,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "请为阿松编写一句祝福。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.007114490959793329,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "把阿松的饮品喜好调整为牛奶。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.01523558795452118,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "阿松的饮品偏好是在哪一天变化的？",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.03458237648010254,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "别读取小雪的饮品记录。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.11260934919118881,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "请为小雪编写一句祝福。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.013617409393191338,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "把小雪的饮品喜好调整为牛奶。",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.01811641827225685,
+      "predicted": 3,
+      "correct": true
+    },
+    {
+      "question": "小雪的饮品偏好是在哪一天变化的？",
+      "label": 3,
+      "group": "fresh_abstain",
+      "winner": 3,
+      "read_confidence": 0.039848435670137405,
+      "predicted": 3,
+      "correct": true
+    }
+  ],
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "temporal_sha256": "84066c94d86315f5c1bab41ed9e5a80cb46ca7881bb8494bc2b6eaf48c8ad109",
+  "threshold": 0.0,
+  "calibration_false_read_before_threshold": 0,
+  "train_count": 156,
+  "calibration_count": 48,
+  "held_count": 87,
+  "trace": [
+    {
+      "step": 1,
+      "loss": 1.5523402690887451
+    },
+    {
+      "step": 100,
+      "loss": 0.037775203585624695
+    },
+    {
+      "step": 250,
+      "loss": 0.028635239228606224
+    },
+    {
+      "step": 500,
+      "loss": 0.024253256618976593
+    }
+  ],
+  "elapsed_seconds": 101.36658979998901,
+  "peak_allocated_bytes": 3860258304,
+  "limitations": [
+    "Synthetic finite-domain temporal questions and previously inspected development cases.",
+    "Threshold uses small calibration negatives and is not a calibrated probability.",
+    "Labels past/later assume a two-event experiment; no arbitrary timeline resolution.",
+    "No memory reads, state writes, or actual answer generation in this probe.",
+    "No identity, unrestricted names or open-world safety guarantees."
+  ]
+}

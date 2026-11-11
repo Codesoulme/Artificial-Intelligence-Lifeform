@@ -1,0 +1,969 @@
+{
+  "groups": {
+    "known_memory": {
+      "total": 20,
+      "accepted": 20,
+      "correct_address": 20
+    },
+    "known_non_memory": {
+      "total": 20,
+      "accepted": 1,
+      "correct_address": 0
+    },
+    "multiple_names": {
+      "total": 12,
+      "accepted": 0,
+      "correct_address": 0
+    },
+    "no_name": {
+      "total": 6,
+      "accepted": 0,
+      "correct_address": 0
+    },
+    "unbound_memory": {
+      "total": 12,
+      "accepted": 0,
+      "correct_address": 0
+    }
+  },
+  "rows": [
+    {
+      "question": "我想查阅小林现在的饮品偏好。",
+      "group": "known_memory",
+      "expected_key": 6,
+      "gate_score": 0.948157787322998,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9877105355262756,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的小林喜欢什么饮料。",
+      "group": "known_memory",
+      "expected_key": 6,
+      "gate_score": 0.8076328635215759,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9630763530731201,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "给小林写一句鼓励的话。",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.37553831934928894,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.976072371006012,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果小林向你打招呼，你会怎么回应？",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.14524872601032257,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9887984991073608,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅阿宁现在的饮品偏好。",
+      "group": "known_memory",
+      "expected_key": 22,
+      "gate_score": 0.9419571757316589,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9923779964447021,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的阿宁喜欢什么饮料。",
+      "group": "known_memory",
+      "expected_key": 22,
+      "gate_score": 0.7872126698493958,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9883186221122742,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "给阿宁写一句鼓励的话。",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.48052161931991577,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9913549423217773,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果阿宁向你打招呼，你会怎么回应？",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.14298969507217407,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9703464508056641,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅小雨现在的饮品偏好。",
+      "group": "known_memory",
+      "expected_key": 35,
+      "gate_score": 0.9470546841621399,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9806147217750549,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的小雨喜欢什么饮料。",
+      "group": "known_memory",
+      "expected_key": 35,
+      "gate_score": 0.8062000274658203,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9573557376861572,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "给小雨写一句鼓励的话。",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.45969358086586,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9830498099327087,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果小雨向你打招呼，你会怎么回应？",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.14982320368289948,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9854252338409424,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅阿哲现在的饮品偏好。",
+      "group": "known_memory",
+      "expected_key": 51,
+      "gate_score": 0.9330804944038391,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9768303036689758,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的阿哲喜欢什么饮料。",
+      "group": "known_memory",
+      "expected_key": 51,
+      "gate_score": 0.7901732325553894,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9855157732963562,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "给阿哲写一句鼓励的话。",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.38523992896080017,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9942557215690613,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果阿哲向你打招呼，你会怎么回应？",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.14406704902648926,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9899001121520996,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅小梅现在的饮品偏好。",
+      "group": "known_memory",
+      "expected_key": 16,
+      "gate_score": 0.9326421618461609,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9754751920700073,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的小梅喜欢什么饮料。",
+      "group": "known_memory",
+      "expected_key": 16,
+      "gate_score": 0.7736294269561768,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9572209119796753,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "给小梅写一句鼓励的话。",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.3674033582210541,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9911431074142456,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果小梅向你打招呼，你会怎么回应？",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.1457248330116272,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9679260849952698,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅阿远现在的饮品偏好。",
+      "group": "known_memory",
+      "expected_key": 27,
+      "gate_score": 0.9235761761665344,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9903795719146729,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的阿远喜欢什么饮料。",
+      "group": "known_memory",
+      "expected_key": 27,
+      "gate_score": 0.7709416151046753,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9926979541778564,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "给阿远写一句鼓励的话。",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.5052397847175598,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.992917537689209,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果阿远向你打招呼，你会怎么回应？",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.2025844156742096,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9852173328399658,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅小岚现在的饮品偏好。",
+      "group": "known_memory",
+      "expected_key": 42,
+      "gate_score": 0.9142243266105652,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9951110482215881,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的小岚喜欢什么饮料。",
+      "group": "known_memory",
+      "expected_key": 42,
+      "gate_score": 0.7974141836166382,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9510127902030945,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "给小岚写一句鼓励的话。",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.40261054039001465,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9919512271881104,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果小岚向你打招呼，你会怎么回应？",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.1504194736480713,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9923161864280701,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅阿明现在的饮品偏好。",
+      "group": "known_memory",
+      "expected_key": 10,
+      "gate_score": 0.9467191696166992,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9785068035125732,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的阿明喜欢什么饮料。",
+      "group": "known_memory",
+      "expected_key": 10,
+      "gate_score": 0.768299400806427,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9861592650413513,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "给阿明写一句鼓励的话。",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.4232286512851715,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9761949777603149,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果阿明向你打招呼，你会怎么回应？",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.14805889129638672,
+      "single_span": true,
+      "indices": [
+        10,
+        10
+      ],
+      "address_score": 0.9870958924293518,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅阿松现在的饮品偏好。",
+      "group": "known_memory",
+      "expected_key": 0,
+      "gate_score": 0.9576103091239929,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.96979820728302,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的阿松喜欢什么饮料。",
+      "group": "known_memory",
+      "expected_key": 0,
+      "gate_score": 0.8326482176780701,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.9768301248550415,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "给阿松写一句鼓励的话。",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.5586261749267578,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.9819970726966858,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "如果阿松向你打招呼，你会怎么回应？",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.20038966834545135,
+      "single_span": true,
+      "indices": [
+        0,
+        0
+      ],
+      "address_score": 0.973528265953064,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅小雪现在的饮品偏好。",
+      "group": "known_memory",
+      "expected_key": 1,
+      "gate_score": 0.958996057510376,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.981893002986908,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "说说更早记录的小雪喜欢什么饮料。",
+      "group": "known_memory",
+      "expected_key": 1,
+      "gate_score": 0.8339856266975403,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.9303142428398132,
+      "accepted": true,
+      "correct_address": true
+    },
+    {
+      "question": "给小雪写一句鼓励的话。",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.5952253341674805,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.9758840799331665,
+      "accepted": true,
+      "correct_address": false
+    },
+    {
+      "question": "如果小雪向你打招呼，你会怎么回应？",
+      "group": "known_non_memory",
+      "expected_key": null,
+      "gate_score": 0.2058141529560089,
+      "single_span": true,
+      "indices": [
+        1,
+        1
+      ],
+      "address_score": 0.9709445834159851,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅林默现在的饮品偏好。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.6718237400054932,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的林默喜欢什么饮料。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.5972567796707153,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅桐雨现在的饮品偏好。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.6058192253112793,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.6956359148025513,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的桐雨喜欢什么饮料。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.5370898842811584,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.5828955173492432,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅星河现在的饮品偏好。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.5486333966255188,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的星河喜欢什么饮料。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.4807966351509094,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅柳鸣现在的饮品偏好。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.8158220648765564,
+      "single_span": true,
+      "indices": [
+        35,
+        42
+      ],
+      "address_score": 0.5379809141159058,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的柳鸣喜欢什么饮料。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.6893917322158813,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.5368441343307495,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅若竹现在的饮品偏好。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.46185725927352905,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的若竹喜欢什么饮料。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.501464307308197,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "我想查阅柯岚现在的饮品偏好。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.8812453746795654,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.8173636198043823,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "说说更早记录的柯岚喜欢什么饮料。",
+      "group": "unbound_memory",
+      "expected_key": null,
+      "gate_score": 0.7927330136299133,
+      "single_span": true,
+      "indices": [
+        42,
+        42
+      ],
+      "address_score": 0.9018484354019165,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说小林爱喝什么，再说阿宁爱喝什么。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.4204426109790802,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询小林与阿宁的饮品偏好。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.017253171652555466,
+      "single_span": true,
+      "indices": [
+        6,
+        6
+      ],
+      "address_score": 0.9965564608573914,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说阿宁爱喝什么，再说小雨爱喝什么。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.43268439173698425,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询阿宁与小雨的饮品偏好。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.021333565935492516,
+      "single_span": true,
+      "indices": [
+        22,
+        22
+      ],
+      "address_score": 0.9910735487937927,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说小雨爱喝什么，再说阿哲爱喝什么。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.47596949338912964,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询小雨与阿哲的饮品偏好。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.01888217031955719,
+      "single_span": true,
+      "indices": [
+        35,
+        35
+      ],
+      "address_score": 0.9924221038818359,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说阿哲爱喝什么，再说小梅爱喝什么。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.44905346632003784,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询阿哲与小梅的饮品偏好。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.017140738666057587,
+      "single_span": true,
+      "indices": [
+        51,
+        51
+      ],
+      "address_score": 0.9941479563713074,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说小梅爱喝什么，再说阿远爱喝什么。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.37445592880249023,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询小梅与阿远的饮品偏好。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.017688287422060966,
+      "single_span": true,
+      "indices": [
+        16,
+        16
+      ],
+      "address_score": 0.9875110983848572,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "先说阿远爱喝什么，再说小岚爱喝什么。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.38885602355003357,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "请分别查询阿远与小岚的饮品偏好。",
+      "group": "multiple_names",
+      "expected_key": null,
+      "gate_score": 0.024300312623381615,
+      "single_span": true,
+      "indices": [
+        27,
+        27
+      ],
+      "address_score": 0.9911602735519409,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "你能不能讲一件有趣的小事？",
+      "group": "no_name",
+      "expected_key": null,
+      "gate_score": 0.035356100648641586,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "告诉我今天的计划。",
+      "group": "no_name",
+      "expected_key": null,
+      "gate_score": 0.00246069417335093,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "之前我们聊过哪些话题？",
+      "group": "no_name",
+      "expected_key": null,
+      "gate_score": 0.009352178312838078,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "现在记录的内容是什么？",
+      "group": "no_name",
+      "expected_key": null,
+      "gate_score": 0.08384506404399872,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "给我一些睡前放松的方法。",
+      "group": "no_name",
+      "expected_key": null,
+      "gate_score": 0.01855020970106125,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    },
+    {
+      "question": "解释一下如何记忆。",
+      "group": "no_name",
+      "expected_key": null,
+      "gate_score": 0.0043999208137393,
+      "single_span": false,
+      "indices": null,
+      "address_score": null,
+      "accepted": false,
+      "correct_address": false
+    }
+  ],
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "router_sha256": "750d7402c71d690d1aaeba8241b04d218a3047f74752ba90e5159d6b1cc4dc4b",
+  "gate_sha256": "0b93a9ef31f45e2dd4dd7c3a99863bb90301196567988096dcdb5e33727c6751",
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "elapsed_seconds": 87.21030379994772,
+  "peak_allocated_bytes": 3860258304,
+  "limitations": [
+    "Synthetic fresh wording, known names and model weights already used during development.",
+    "Known-name non-memory requests are out of the single-entity gate objective.",
+    "No temporal classifier, native memory, generation or write path in this probe.",
+    "No claims about open-world entities, identity or security."
+  ]
+}
