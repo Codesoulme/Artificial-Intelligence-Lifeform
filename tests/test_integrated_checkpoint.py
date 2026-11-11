@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import torch
 
@@ -107,6 +108,21 @@ class IntegratedCheckpointTests(unittest.TestCase):
         expected = adapter(evidence)
         actual = restored.output_adapter(evidence)
         self.assertTrue(torch.equal(actual, expected))
+
+    def test_runtime_rejects_invalid_or_unknown_output_evidence(self):
+        self.state = attach(self.organism, self.state, WriteControl())
+        native = NativeSPORAMemoryReader(3, 64, 0.5)
+        decoder = IntegratedOpenBase(self.base(), native, (0, 2),
+                                     output_adapter=MemoryOutputAdapter(17, 9, rank=4))
+        runtime = IntegratedSPORARuntime(decoder, self.organism, self.state, self.root)
+        for mode, event in ((1, 0), (0, 1), (2, 0), (True, 0)):
+            with self.subTest(mode=mode, event=event), self.assertRaises(ValueError):
+                runtime.generate(memory_key=3, memory_mode=mode, memory_time=event, memory_output=True)
+        unknown = torch.zeros(1, 17)
+        unknown[0, self.organism.config.unknown] = 10
+        with patch('spora.growing.query', return_value=unknown):
+            with self.assertRaisesRegex(ValueError, 'unknown memory'):
+                runtime.generate(memory_key=3, memory_output=True)
 
     def test_v1_checkpoint_still_loads_as_legacy_reader(self):
         self.save()

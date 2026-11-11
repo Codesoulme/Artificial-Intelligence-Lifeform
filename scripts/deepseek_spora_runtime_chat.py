@@ -28,7 +28,6 @@ from scripts.deepseek_semantic_value_pilot import WORDS
 from scripts.deepseek_spora_composed_router_answer_eval import _memory_args
 from scripts.deepseek_spora_memory_answer_distill import SOURCE_CHECKPOINT
 from scripts.deepseek_spora_recalibrate_name_router import OUTPUT as ROUTER
-from scripts.deepseek_spora_single_entity_gate import OUTPUT as ENTITY
 from scripts.deepseek_spora_gate_fresh_intent_audit import KNOWN
 from scripts.deepseek_named_binding_migrate import OUTPUT as NAMED
 from scripts.deepseek_local_baseline import MODEL, WEIGHT_SHA, sha
@@ -37,7 +36,8 @@ from scripts.spora_event_scan_selector import select_event
 from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.current_memory_status import current_memory_status
 from spora.growing import load
-from spora.integrated_checkpoint import load_integrated
+from spora.integrated_checkpoint import load_integrated, replacement_feature_variant_sha256
+from spora.named_address import address_basis_sha256, feature_files_sha256
 from spora.internal_memory import observe_sourced
 from spora.memory_output import MemoryOutputAdapter
 from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
@@ -46,6 +46,7 @@ CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/indi
 TEMPORAL = ROOT/'runs/deepseek-spora-temporal-gate-train-20261111/temporal.pt'
 READ_INTENT_RECOVERY_FLOOR = 2.0
 INTENT = ROOT/'runs/deepseek-spora-read-intent-gate-v4-20261111'
+ENTITY = ROOT/'runs/deepseek-spora-single-entity-gate-v2-20261111'
 MEMORY_DOMAIN_ANCHORS = ('饮品', '饮料', '喝', '偏好', '饮用')
 
 
@@ -152,21 +153,13 @@ class SporaChat:
         time_tensor = torch.zeros_like(key_tensor) if event_time is None else torch.tensor([event_time], device=device)
         memory_logits = __import__('spora.growing', fromlist=['query']).query(
             self.organism, self.state, key_tensor, mode_tensor, time_tensor)
-        expected_first = int(self.decoder.output_adapter(memory_logits).argmax(-1)[0])
         prefix = closed_think_inputs(self.tokenizer, question, 'cuda')
         ids = self.decoder.generate(**prefix, **args, memory_output_logits=memory_logits,
                                     max_new_tokens=32, do_sample=False,
                                     pad_token_id=self.tokenizer.pad_token_id,
                                     eos_token_id=self.tokenizer.eos_token_id)
         tail = ids[0, prefix['input_ids'].shape[1]:]
-        retried = bool(tail.numel() and int(tail[0]) != expected_first)
-        if retried:
-            ids = self.decoder.generate(**prefix, **args, memory_output_logits=memory_logits,
-                                        memory_output_gain=2.0, max_new_tokens=32, do_sample=False,
-                                        pad_token_id=self.tokenizer.pad_token_id,
-                                        eos_token_id=self.tokenizer.eos_token_id)
-            tail = ids[0, prefix['input_ids'].shape[1]:]
-        result['accepted'], result['reason'], result['output_retry'] = True, 'routed', retried
+        result['accepted'], result['reason'], result['output_retry'] = True, 'routed', False
         result['answer'] = self.tokenizer.decode(tail, skip_special_tokens=True).strip()
         result['key'] = key
         return result
@@ -183,22 +176,46 @@ def load_chat():
     router_report = json.loads((ROUTER/'result.json').read_text(encoding='utf-8'))
     entity_report = json.loads((ENTITY/'result.json').read_text(encoding='utf-8'))
     intent_report = json.loads((INTENT/'result.json').read_text(encoding='utf-8'))
-    router = torch.load(ROUTER/'router.pt', map_location='cpu', weights_only=True)
-    entity_data = torch.load(ENTITY/'gate.pt', map_location='cpu', weights_only=True)
-    intent_data = torch.load(INTENT/'intent.pt', map_location='cpu', weights_only=True)
     for path, expected in ((ROUTER/'router.pt', router_report['router_sha256']),
                            (ENTITY/'gate.pt', entity_report['gate_sha256']),
                            (INTENT/'intent.pt', intent_report['intent_sha256'])):
         if sha(path) != expected:
             raise ValueError('Router artifact digest mismatch')
+    router = torch.load(ROUTER/'router.pt', map_location='cpu', weights_only=True)
+    entity_data = torch.load(ENTITY/'gate.pt', map_location='cpu', weights_only=True)
+    intent_data = torch.load(INTENT/'intent.pt', map_location='cpu', weights_only=True)
     temporal_report = json.loads((TEMPORAL.parent/'result.json').read_text(encoding='utf-8'))
     if sha(TEMPORAL) != temporal_report['temporal_sha256']:
         raise ValueError('Temporal artifact digest mismatch')
     temporal_data = torch.load(TEMPORAL, map_location='cpu', weights_only=True)
+    replacements = {i: layer for i, layer in enumerate(base.model.layers)
+                    if isinstance(layer, SPORALayerReplacement)}
+    variant = replacement_feature_variant_sha256(MODEL, replacements)
+    router_sha, entity_sha = sha(ROUTER/'router.pt'), sha(ENTITY/'gate.pt')
+    provenance_errors = []
+    if router.get('format') != 'spora-recalibrated-name-router-v1': provenance_errors.append('router_format')
+    if router.get('base_sha256') != WEIGHT_SHA: provenance_errors.append('router_base')
+    if router.get('feature_config_sha256') != feature_files_sha256(MODEL): provenance_errors.append('router_config')
+    if router.get('feature_variant_sha256') != variant: provenance_errors.append('router_variant')
+    if router.get('basis_sha256') != address_basis_sha256(organism): provenance_errors.append('router_basis')
+    if router.get('feature_layers') != [6, 18]: provenance_errors.append('router_layers')
+    if entity_data.get('format') != 'spora-single-entity-gate-v1': provenance_errors.append('entity_format')
+    if entity_data.get('router_sha256') != router_sha: provenance_errors.append('entity_router')
+    if entity_data.get('feature_variant_sha256') != variant: provenance_errors.append('entity_variant')
+    if intent_data.get('format') != 'spora-finite-read-intent-v1': provenance_errors.append('intent_format')
+    if intent_data.get('base_sha256') != WEIGHT_SHA: provenance_errors.append('intent_base')
+    if intent_data.get('router_sha256') != router_sha: provenance_errors.append('intent_router')
+    if intent_data.get('entity_gate_sha256') != entity_sha: provenance_errors.append('intent_entity')
+    if intent_data.get('feature_variant_sha256') != variant: provenance_errors.append('intent_variant')
+    if temporal_data.get('format') != 'spora-bounded-temporal-gate-v1': provenance_errors.append('temporal_format')
+    if temporal_data.get('base_sha256') != WEIGHT_SHA: provenance_errors.append('temporal_base')
+    if temporal_data.get('feature_variant_sha256') != variant: provenance_errors.append('temporal_variant')
+    if temporal_data.get('classes') != ['current', 'past', 'later', 'abstain']: provenance_errors.append('temporal_classes')
+    if provenance_errors:
+        raise ValueError('Runtime router and individual provenance mismatch: ' + ','.join(provenance_errors))
     temporal_width = temporal_data['state']['weight'].shape[1]
     temporal = nn.Linear(temporal_width, 4).eval()
     temporal.load_state_dict(temporal_data['state'], strict=True)
-    state = fresh_controlled_state(organism) if state.cursor == 0 else state
     return SporaChat(base, tokenizer, decoder, organism, state,
                      (router, entity_data, intent_data, temporal, temporal_data))
 

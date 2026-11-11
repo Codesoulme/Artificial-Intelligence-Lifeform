@@ -53,14 +53,18 @@ class IntegratedSPORARuntime:
                 raise ValueError('Runtime has no memory output adapter')
             if type(memory_key) is not int or not 0 <= memory_key < self.organism.config.key_count:
                 raise ValueError('A valid memory key is required for output conditioning')
-            if type(memory_mode) is not int or type(memory_time) is not int:
-                raise ValueError('Memory mode and time must be integers')
+            if type(memory_mode) is not int or memory_mode not in (0, 1) or type(memory_time) is not int:
+                raise ValueError('Memory mode and time must be valid integers')
+            if (memory_mode == 0 and memory_time != 0) or (memory_mode == 1 and not 0 <= memory_time < self.state.cursor):
+                raise ValueError('Memory time is outside the observed history')
             from .growing import query
             device = next(self.organism.parameters()).device
             key = torch.tensor([memory_key], dtype=torch.long, device=device)
             mode = torch.tensor([memory_mode], dtype=torch.long, device=device)
             time = torch.tensor([memory_time], dtype=torch.long, device=device)
             memory_output_logits = query(self.organism, self.state, key, mode, time)
+            if int(memory_output_logits.argmax(-1)[0]) == self.organism.config.unknown:
+                raise ValueError('Cannot condition output on unknown memory')
         else:
             memory_output_logits = None
         return self.decoder.generate(*args, memory_state=self.state,
