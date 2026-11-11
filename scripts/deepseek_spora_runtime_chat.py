@@ -41,6 +41,7 @@ from spora.growing import load
 from spora.integrated_checkpoint import load_integrated
 from spora.internal_memory import observe_sourced
 from spora.memory_output import MemoryOutputAdapter
+from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 TEMPORAL = ROOT/'runs/deepseek-spora-temporal-gate-train-20261111/temporal.pt'
@@ -54,6 +55,25 @@ class SporaChat:
         self.router, self.entity_data, self.intent_data, self.temporal, self.temporal_data = gates
         self.bases = torch.stack([F.normalize(site.current_basis.detach().cpu().float(), dim=-1)
                                   for site in organism.memories])
+
+    def _replacements(self):
+        layers = self.decoder.base.model.layers
+        if any(isinstance(layer, SPORALayerBlend) for layer in layers):
+            raise ValueError('Blended structural layers cannot be persisted')
+        return {index: layer for index, layer in enumerate(layers)
+                if isinstance(layer, SPORALayerReplacement)}
+
+    @torch.no_grad()
+    def observe_sourced(self, key, value, source='direct', quality=1.0, valid_at=None):
+        """Write one guarded fact and atomically publish the same individual."""
+        from spora.integrated_checkpoint import save_integrated
+        candidate, decision = observe_sourced(self.organism, self.state, key, value,
+                                              source, quality, valid_at)
+        save_integrated(CHECKPOINT, self.organism, candidate, self.decoder.reader,
+                        MODEL, self.decoder.layer_indices, replacements=self._replacements(),
+                        output_adapter=self.decoder.output_adapter)
+        self.state = candidate
+        return decision
 
     @torch.no_grad()
     def answer(self, question):
@@ -174,8 +194,15 @@ def load_chat():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--question')
+    parser.add_argument('--observe', nargs=2, type=int, metavar=('KEY', 'VALUE'))
+    parser.add_argument('--source', default='direct', choices=('direct', 'report', 'inference', 'simulation'))
+    parser.add_argument('--quality', type=float, default=1.0)
     args = parser.parse_args()
     chat = load_chat()
+    if args.observe is not None:
+        key, value = args.observe
+        print(json.dumps(chat.observe_sourced(key, value, args.source, args.quality), ensure_ascii=False))
+        return
     if args.question:
         print(json.dumps(chat.answer(args.question), ensure_ascii=False))
         return
