@@ -31,6 +31,39 @@ class WriteControl(nn.Module):
         return self.network(features)
 
 
+class NoveltyWriteControl(nn.Module):
+    """Versioned write controller with one additional novelty feature."""
+    kind = 'novelty'
+
+    def __init__(self, hidden=64, confidence=.8):
+        super().__init__()
+        if type(hidden) is not int or not 8 <= hidden <= 256 or not .5 <= confidence <= 1:
+            raise ValueError('Invalid novelty controller configuration')
+        self.hidden, self.confidence = hidden, confidence
+        self.network = nn.Sequential(nn.Linear(11, hidden), nn.Tanh(), nn.Linear(hidden, hidden), nn.Tanh(), nn.Linear(hidden, 5))
+
+    @classmethod
+    def from_legacy(cls, legacy):
+        if not isinstance(legacy, WriteControl):
+            raise ValueError('A legacy WriteControl is required')
+        candidate = cls(legacy.hidden, legacy.confidence)
+        with torch.no_grad():
+            candidate.network[0].weight[:, :10].copy_(legacy.network[0].weight)
+            candidate.network[0].weight[:, 10].zero_()
+            candidate.network[0].bias.copy_(legacy.network[0].bias)
+            candidate.network[2].load_state_dict(legacy.network[2].state_dict())
+            candidate.network[4].load_state_dict(legacy.network[4].state_dict())
+        return candidate
+
+    def config_dict(self):
+        return {'kind': self.kind, 'hidden': self.hidden, 'confidence': self.confidence}
+
+    def forward(self, features):
+        if features.ndim != 2 or features.shape[-1] != 11 or not bool(torch.isfinite(features).all()):
+            raise ValueError('Finite batch of novelty write features required')
+        return self.network(features)
+
+
 @dataclass
 class InternalState:
     evidence: torch.Tensor
@@ -129,7 +162,9 @@ def observe_sourced(model, state, key, value, source, quality, valid_at=None):
     surprise = observation_surprise(known=old_value != model.config.unknown, old_value=old_value,
                                     new_value=value, old_quality=old_quality, new_quality=quality,
                                     old_time=old_time, new_time=valid_at)
-    logits = model.write_control(features)
+    control_features = (torch.cat([features, features.new_tensor([[surprise['score']]])], dim=1)
+                        if isinstance(model.write_control, NoveltyWriteControl) else features)
+    logits = model.write_control(control_features)
     if logits.shape != (1, len(ACTIONS)) or not bool(torch.isfinite(logits).all()):
         raise ValueError('Write controller must return finite action logits')
     probabilities = logits.softmax(-1)[0]

@@ -115,8 +115,10 @@ def restore(schema, tensors, device='cpu'):
     if ('write_control' in schema) != ('internal' in schema):
         raise ValueError('Incomplete internal extension')
     if 'write_control' in schema:
-        from .internal_memory import WriteControl
-        model.write_control=WriteControl(**schema['write_control']).to(device)
+        from .internal_memory import NoveltyWriteControl, WriteControl
+        config = dict(schema['write_control'])
+        controller = NoveltyWriteControl if config.pop('kind', None) == 'novelty' else WriteControl
+        model.write_control=controller(**config).to(device)
     model.load_state_dict({k[6:]: v for k, v in tensors.items() if k.startswith('model/')})
     model.eval()
     current = [tensors[f'current/{site}'].to(device) for site in range(len(model.memories))]
