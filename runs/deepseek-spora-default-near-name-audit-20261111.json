@@ -1,0 +1,239 @@
+{
+  "status": "isolated_default_runtime_near_name_audit",
+  "summary": {
+    "known_total": 2,
+    "known_correct_key": 2,
+    "unknown_total": 8,
+    "unknown_false_accept": 8
+  },
+  "rows": [
+    {
+      "group": "known",
+      "question": "小林现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 2.765702962875366,
+      "entity_score": 0.994081437587738,
+      "intent_recovered": true,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "known",
+      "question": "小林目前最喜欢哪种饮料？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 6.565840244293213,
+      "entity_score": 0.9617359042167664,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "unknown",
+      "question": "小林林现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 3.2004783153533936,
+      "entity_score": 0.989856481552124,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9954701662063599,
+        0.9901794791221619
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "unknown",
+      "question": "林小林现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 3.467832565307617,
+      "entity_score": 0.9918035268783569,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9908002614974976,
+        0.9753937125205994
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "unknown",
+      "question": "小林子现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 3.2557260990142822,
+      "entity_score": 0.991203784942627,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "unknown",
+      "question": "小林娜现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 2.850989580154419,
+      "entity_score": 0.9923600554466248,
+      "intent_recovered": true,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9883066415786743,
+        0.9719160795211792
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "unknown",
+      "question": "小林林目前最喜欢哪种饮料？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 6.471787929534912,
+      "entity_score": 0.950988233089447,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9954701662063599,
+        0.9901794791221619
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "unknown",
+      "question": "林小林目前最喜欢哪种饮料？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 6.8703179359436035,
+      "entity_score": 0.9612674713134766,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9908002614974976,
+        0.9753937125205994
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "unknown",
+      "question": "小林子目前最喜欢哪种饮料？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 6.759594440460205,
+      "entity_score": 0.9566411375999451,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "group": "unknown",
+      "question": "小林娜目前最喜欢哪种饮料？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 6.344710826873779,
+      "entity_score": 0.9626832604408264,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9883066415786743,
+        0.9719160795211792
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    }
+  ],
+  "source_checkpoint_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "elapsed_seconds": 42.4194224999992,
+  "limitations": [
+    "Ten authored queries and one known memory; not a population estimate.",
+    "Near names are treated as separate entities by the experiment.",
+    "No live user state changed and no language parsing write was performed.",
+    "The source checkpoint and default gate combination are used without modification."
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "status": "read_only_default_locator_span_probe",
+  "rows": [
+    {
+      "group": "known",
+      "question": "小林现在喜欢喝什么？",
+      "selected_text": "小林",
+      "single": true,
+      "selected_token_indices": [
+        3,
+        4
+      ]
+    },
+    {
+      "group": "known",
+      "question": "小林目前最喜欢哪种饮料？",
+      "selected_text": "小林",
+      "single": true,
+      "selected_token_indices": [
+        3,
+        4
+      ]
+    },
+    {
+      "group": "unknown",
+      "question": "小林林现在喜欢喝什么？",
+      "selected_text": "小林林",
+      "single": true,
+      "selected_token_indices": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "group": "unknown",
+      "question": "林小林现在喜欢喝什么？",
+      "selected_text": "林小林",
+      "single": true,
+      "selected_token_indices": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "group": "unknown",
+      "question": "小林子现在喜欢喝什么？",
+      "selected_text": "小林",
+      "single": true,
+      "selected_token_indices": [
+        2,
+        3
+      ]
+    },
+    {
+      "group": "unknown",
+      "question": "小林娜现在喜欢喝什么？",
+      "selected_text": "小林娜",
+      "single": true,
+      "selected_token_indices": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "group": "unknown",
+      "question": "小林林目前最喜欢哪种饮料？",
+      "selected_text": "小林林",
+      "single": true,
+      "selected_token_indices": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "group": "unknown",
+      "question": "林小林目前最喜欢哪种饮料？",
+      "selected_text": "林小林",
+      "single": true,
+      "selected_token_indices": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "group": "unknown",
+      "question": "小林子目前最喜欢哪种饮料？",
+      "selected_text": "小林",
+      "single": true,
+      "selected_token_indices": [
+        2,
+        3
+      ]
+    },
+    {
+      "group": "unknown",
+      "question": "小林娜目前最喜欢哪种饮料？",
+      "selected_text": "小林娜",
+      "single": true,
+      "selected_token_indices": [
+        2,
+        3,
+        4
+      ]
+    }
+  ],
+  "source_checkpoint_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "limitations": [
+    "Ten authored cases; token offset reconstruction may include boundary merges.",
+    "No projection ablation, persistent memory write, or user-state modification."
+  ]
+}
