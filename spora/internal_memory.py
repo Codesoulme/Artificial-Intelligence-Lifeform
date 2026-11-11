@@ -74,6 +74,7 @@ class InternalState:
     router_factors: object = None
     router_cursor: int = -1
     encoding: int = 2
+    event_keys: object = None
 
     def metadata(self):
         return {k: getattr(self, k) for k in ('start_cursor', 'informative', 'corrections', 'router_cursor', 'encoding')}
@@ -91,6 +92,16 @@ class InternalState:
         tensors = [self.evidence] + self.provenance
         if any(p.shape != (11 if self.encoding==1 else PROVENANCE_WIDTH, width) for p in self.provenance):
             raise ValueError('Invalid provenance extent')
+        if self.event_keys is not None:
+            if (type(state.cursor) is not int or not 0 <= state.cursor <= len(state.pages) * model.config.time_count
+                    or not isinstance(self.event_keys, list) or len(self.event_keys) != len(state.pages)
+                    or any(not isinstance(page, torch.Tensor) or page.shape != (model.config.time_count,)
+                           or page.dtype != torch.int64 or page.device != self.evidence.device for page in self.event_keys)):
+                raise ValueError('Invalid event-key index extent')
+            keys = torch.cat(self.event_keys)
+            if (bool(((keys[:state.cursor] < 0) | (keys[:state.cursor] >= model.config.key_count)).any())
+                    or bool((keys[state.cursor:] != -1).any())):
+                raise ValueError('Incomplete or invalid event-key index')
         if self.router_factors is None:
             if self.router_cursor != -1:
                 raise ValueError('Missing router factors')
@@ -121,6 +132,20 @@ def attach(model, state, controller):
                              [torch.zeros(PROVENANCE_WIDTH, model.config.memory_width, device=device) for _ in state.pages], state.cursor)
     model.write_control = controller.to(device).eval()
     return replace(state, internal=internal)
+
+
+def enable_event_key_index(model, state):
+    """Opt into exact event-key metadata on a fresh controlled individual.
+
+    This is an auxiliary index, not learned neural memory. Existing histories
+    cannot be backfilled safely, and callers must persist state transactionally.
+    """
+    if state.internal is None or state.cursor != 0 or state.internal.event_keys is not None:
+        raise ValueError('Fresh controlled state without an event-key index required')
+    state.internal.validate(model, state)
+    pages = [torch.full((model.config.time_count,), -1, dtype=torch.int64, device=state.internal.evidence.device)
+             for _ in state.pages]
+    return replace(state, internal=state.internal.invalidate_router(event_keys=pages))
 
 
 @torch.no_grad()
@@ -202,7 +227,12 @@ def observe_sourced(model, state, key, value, source, quality, valid_at=None):
         evidence_target = q.new_tensor([1., max(quality, old_quality) if action == 2 else quality, valid_at/1024])
         evidence = (evidence+(evidence_target-evidence@address)[:, None]*address[None]).detach()
     updated = _observe_base(model, state, key, value, int(action in (0, 1)))
-    updated.internal = internal.invalidate_router(evidence=evidence, provenance=provenance,
+    event_keys = internal.event_keys
+    if event_keys is not None:
+        event_keys = list(event_keys)
+        event_keys[page] = event_keys[page].clone()
+        event_keys[page][local] = key
+    updated.internal = internal.invalidate_router(evidence=evidence, provenance=provenance, event_keys=event_keys,
                           informative=internal.informative+int(action in (0, 1, 2)),
                           corrections=internal.corrections+int(action == 1))
     return updated, {'action': ACTIONS[action], 'confidence': confidence, 'reason': reason,

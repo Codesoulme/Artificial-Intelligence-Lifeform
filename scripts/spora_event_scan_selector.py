@@ -29,10 +29,22 @@ def select_event(model, state, key, order, as_of=None, max_scan=4096, batch_size
         if not isinstance(resolutions, HistoricalResolutions):
             raise ValueError('Invalid historical resolutions')
         resolutions.validate(model, state)
-    rows = read_provenance_batch(model, state, [(key, event) for event in range(state.cursor)], batch_size)
+    # Optional exact tensor metadata narrows the scan; the neural history still
+    # supplies values/provenance and can remain uncertain. Legacy states scan
+    # all events and are never silently backfilled with guessed keys.
+    event_keys = getattr(state.internal, 'event_keys', None)
+    if event_keys is None:
+        events = list(range(state.cursor))
+    else:
+        state.internal.validate(model, state)
+        indexed = __import__('torch').cat(event_keys)[:state.cursor]
+        events = (indexed == key).nonzero(as_tuple=True)[0].tolist()
+    rows = read_provenance_batch(model, state, [(key, event) for event in events], batch_size)
+    if len(rows) != len(events):
+        raise ValueError('Provenance batch did not cover all selected events')
     candidates = []
     effective_candidates = {}
-    for event, row in enumerate(rows):
+    for event, row in zip(events, rows):
         if row.get('reason') == 'unknown_event':
             continue
         if 'reason' in row:
@@ -67,7 +79,7 @@ def select_event(model, state, key, order, as_of=None, max_scan=4096, batch_size
         effective_time = times[index]
         return {'status': 'experimental_candidate', 'event_time': effective_candidates[effective_time],
                 'effective_time': effective_time, 'candidate_count': len(times),
-                'checked_events': state.cursor,
+                'checked_events': len(events), 'history_events': state.cursor,
                 'warning': 'neural_unknown_may_hide_events;effective_time_decoded_from_provenance'}
     index = {'first': 0, 'latest': -1, 'previous': -2}[order]
     if len(candidates) < (2 if order == 'previous' else 1):

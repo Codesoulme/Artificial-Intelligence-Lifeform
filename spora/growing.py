@@ -37,7 +37,9 @@ def grow(model,state,pages=1,max_pages=16):
         f,_=model.initial_state(1);added.append([s[1:] for s in f])
     internal=state.internal
     if internal is not None:
-        internal=internal.invalidate_router(provenance=internal.provenance+[torch.zeros_like(internal.provenance[0]) for _ in added])
+        keys = (None if internal.event_keys is None else internal.event_keys +
+                [torch.full_like(internal.event_keys[0], -1) for _ in added])
+        internal=internal.invalidate_router(provenance=internal.provenance+[torch.zeros_like(internal.provenance[0]) for _ in added], event_keys=keys)
     return GrowingState(state.current,state.pages+added,state.cursor,state.runtime,internal)
 
 
@@ -81,6 +83,7 @@ def scalars(state):
     internal=0
     if state.internal is not None:
         internal=state.internal.evidence.numel()+sum(p.numel() for p in state.internal.provenance)
+        if state.internal.event_keys is not None:internal+=sum(p.numel() for p in state.internal.event_keys)
         if state.internal.router_factors is not None:
             internal+=sum(t.numel() for site in state.internal.router_factors for pair in site for t in pair)
     return {'current':current,'history_including_optimizer_evidence':history,'internal_controls':internal,'total':current+history+internal}

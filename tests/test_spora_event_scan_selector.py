@@ -21,20 +21,24 @@ class EventScanTests(unittest.TestCase):
                 self.assertIn('neural_unknown', result['warning'])
 
     def test_uncertainty_incomplete_history_and_budget_abstain(self):
+        self.state.cursor = 2
         with patch('scripts.spora_event_scan_selector.read_provenance_batch',
                    return_value=[{'action': 'new'}, {'reason': 'uncertain_numeric_provenance'}]):
             self.assertEqual(select_event(self.model, self.state, 1, 'latest')['reason'], 'uncertain_provenance')
+        self.state.cursor = 6
         self.assertEqual(select_event(self.model, self.state, 1, 'latest', max_scan=5)['reason'], 'scan_budget_exceeded')
         self.state.internal.start_cursor = 1
         self.assertEqual(select_event(self.model, self.state, 1, 'latest')['reason'], 'incomplete_provenance_history')
 
     def test_single_candidate_has_no_previous(self):
+        self.state.cursor = 1
         with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=[{'action': 'new'}]):
             self.assertEqual(select_event(self.model, self.state, 1, 'previous')['reason'], 'insufficient_observed_candidates')
 
     def test_effective_time_uses_latest_observation_at_each_effective_time(self):
         rows = [{'action': 'new', 'valid_at': 0}, {'action': 'correct', 'valid_at': 2},
                 {'action': 'repeat', 'valid_at': 2}, {'action': 'correct', 'valid_at': 5}]
+        self.state.cursor = len(rows)
         with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=rows):
             self.assertEqual(select_event(self.model, self.state, 1, 'effective_first', as_of=5)['event_time'], 0)
             self.assertEqual(select_event(self.model, self.state, 1, 'effective_latest', as_of=3)['event_time'], 1)
@@ -42,6 +46,7 @@ class EventScanTests(unittest.TestCase):
             self.assertEqual(select_event(self.model, self.state, 1, 'effective_latest', as_of=1)['effective_time'], 0)
 
     def test_effective_selection_abstains_when_time_is_missing(self):
+        self.state.cursor = 1
         with patch('scripts.spora_event_scan_selector.read_provenance_batch',
                    return_value=[{'action': 'new', 'valid_at': None}]):
             self.assertEqual(select_event(self.model, self.state, 1, 'effective_latest', as_of=5)['reason'],
@@ -51,6 +56,7 @@ class EventScanTests(unittest.TestCase):
         rows = [{'action': 'new', 'source': 'direct', 'valid_at': 0},
                 {'action': 'correct', 'source': 'direct', 'valid_at': 4},
                 {'action': 'defer', 'source': 'direct', 'valid_at': 2}]
+        self.state.cursor = len(rows)
         with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=rows):
             for order in ('effective_first', 'effective_latest', 'effective_previous'):
                 result = select_event(self.model, self.state, 1, order, as_of=5)
@@ -63,8 +69,14 @@ class EventScanTests(unittest.TestCase):
         rows = [{'action': 'new', 'source': 'direct', 'valid_at': 0},
                 {'action': 'correct', 'source': 'direct', 'valid_at': 4},
                 {'action': 'defer', 'source': 'inference', 'valid_at': 2}]
+        self.state.cursor = len(rows)
         with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=rows):
             self.assertEqual(select_event(self.model, self.state, 1, 'effective_previous', as_of=5)['event_time'], 0)
+
+    def test_incomplete_provenance_batch_is_rejected(self):
+        with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=[{'action': 'new'}]):
+            with self.assertRaisesRegex(ValueError, 'did not cover'):
+                select_event(self.model, self.state, 1, 'latest')
 
 
 if __name__ == '__main__':

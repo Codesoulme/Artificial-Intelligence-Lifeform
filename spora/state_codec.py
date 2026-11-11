@@ -89,6 +89,10 @@ def flatten(model, state):
         state.internal.validate(model,state)
         schema['write_control']=model.write_control.config_dict()
         schema['internal']=state.internal.metadata()
+        if state.internal.event_keys is not None:
+            schema['internal']['event_key_index'] = True
+            for p, tensor in enumerate(state.internal.event_keys):
+                tensors[f'internal/event_keys/{p}'] = tensor
         tensors['internal/evidence']=state.internal.evidence
         for p,tensor in enumerate(state.internal.provenance):
             tensors[f'internal/provenance/{p}']=tensor
@@ -162,9 +166,15 @@ def restore(schema, tensors, device='cpu'):
         if schema['internal']['router_cursor'] >= 0:
             factors=[[[tensors[f'internal/router/{site}/{page}/{i}'].to(device) for i in range(2)]
                        for page in range(len(pages)+1)] for site in range(len(model.memories))]
+        internal_metadata = dict({'encoding': 1}, **schema['internal'])
+        has_event_keys = internal_metadata.pop('event_key_index', False)
+        if type(has_event_keys) is not bool:
+            raise ValueError('Invalid event-key index metadata')
+        event_keys = ([tensors[f'internal/event_keys/{p}'].to(device) for p in range(len(pages))]
+                      if has_event_keys else None)
         state.internal=InternalState(evidence=tensors['internal/evidence'].to(device),
             provenance=[tensors[f'internal/provenance/{p}'].to(device) for p in range(len(pages))],
-            router_factors=factors,**dict({'encoding':1},**schema['internal']))
+            router_factors=factors,event_keys=event_keys,**internal_metadata)
     check, expected = flatten(model, state)
     if set(tensors) != set(expected):
         raise ValueError('Missing or unexpected tensors')
