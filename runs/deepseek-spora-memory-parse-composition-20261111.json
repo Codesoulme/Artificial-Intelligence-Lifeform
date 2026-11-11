@@ -1,0 +1,1670 @@
+{
+  "status": "development_only_no_writes",
+  "summary": {
+    "examples": 182,
+    "positive_composed_accept": 52,
+    "positive_total": 52,
+    "negative_composed_accept": 2,
+    "negative_total": 130,
+    "value_only_negative_accept": 24,
+    "subject_rejected_value_accept": 22
+  },
+  "source_hashes": {
+    "D:\\SPORA\\runs\\open-base-deepseek-r1-1.5b-ad9f0ae\\model.safetensors": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "D:\\SPORA\\runs\\deepseek-spora-output-v2-checkpoint-20261111\\individual-with-output-v2.pt": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f",
+    "D:\\SPORA\\runs\\deepseek-spora-cluener-locator-retrained-20261111\\locator.pt": "13bf8102f687c4ceb0b9729d8455426eabdf36fae7fab409c932587a7f2dd459",
+    "D:\\SPORA\\runs\\deepseek-spora-value-span-probe-v3-20261111\\span-head.pt": "6f98cea9f4f28156e5de08735c71067f087f65f728f61f17e4544fa9381f1c3c"
+  },
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "replacement_layers": [
+    6,
+    12
+  ],
+  "rows": [
+    {
+      "text": "据我所知，小梅最喜欢的饮品是茶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "茶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是茶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "茶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝茶。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了茶。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢茶。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "茶",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢茶就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢茶了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是咖啡。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "咖啡",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是咖啡。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "咖啡",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝咖啡。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了咖啡。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢咖啡。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "咖啡",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢咖啡就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢咖啡了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是牛奶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "牛奶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是牛奶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "牛奶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝牛奶。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "牛奶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了牛奶。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢牛奶。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "牛奶",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢牛奶就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢牛奶了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是果汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "果汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是果汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "果汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝果汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了果汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢果汁。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "果汁",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢果汁就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢果汁了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是豆浆。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "豆浆",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是豆浆。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "豆浆",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝豆浆。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了豆浆。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢豆浆。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "豆浆",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢豆浆就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢豆浆了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是可乐。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "可乐",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是可乐。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "可乐",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝可乐。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了可乐。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢可乐。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢可乐就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢可乐了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢水。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "水",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢水就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢水了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是酸奶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "酸奶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是酸奶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "酸奶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝酸奶。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "酸奶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了酸奶。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢酸奶。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "酸奶",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢酸奶就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢酸奶了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是柠檬水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "所知，小梅最喜欢的饮品是柠檬水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是柠檬水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "柠檬水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝柠檬水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了柠檬水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢柠檬水。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "阿明喜欢柠檬水",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢柠檬水就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢柠檬水了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是苹果汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "苹果汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是苹果汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "苹果汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝苹果汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了苹果汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢苹果汁。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "苹果汁",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢苹果汁就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢苹果汁了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是白开水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "白开水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是白开水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "白开水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝白开水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了白开水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢白开水。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "白开水",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢白开水就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢白开水了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是汽水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "汽水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是汽水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "汽水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝汽水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了汽水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢汽水。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "汽水",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢汽水就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢汽水了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是橙汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "橙汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9965994954109192
+    },
+    {
+      "text": "小梅偏爱的饮料是橙汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "橙汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅从来不喝橙汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅给客人准备了橙汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "小梅说阿明喜欢橙汁。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "橙汁",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9995693564414978
+    },
+    {
+      "text": "如果小梅喜欢橙汁就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9978402853012085
+    },
+    {
+      "text": "小梅不再喜欢橙汁了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9979962706565857
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是茶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "茶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是茶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "茶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝茶。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了茶。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢茶。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "茶",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢茶就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢茶了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是咖啡。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "咖啡",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是咖啡。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "咖啡",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝咖啡。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了咖啡。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢咖啡。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢咖啡就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢咖啡了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是牛奶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "牛奶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是牛奶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "牛奶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝牛奶。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了牛奶。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢牛奶。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "牛奶",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢牛奶就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢牛奶了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是果汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "果汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是果汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "果汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝果汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了果汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢果汁。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "果汁",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢果汁就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢果汁了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是豆浆。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "豆浆",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是豆浆。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "豆浆",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝豆浆。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了豆浆。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢豆浆。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢豆浆就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢豆浆了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是可乐。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "可乐",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是可乐。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "可乐",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝可乐。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了可乐。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢可乐。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢可乐就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢可乐了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢水。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "水",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢水就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢水了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是酸奶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "酸奶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是酸奶。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "酸奶",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝酸奶。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了酸奶。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢酸奶。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "酸奶",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢酸奶就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢酸奶了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是柠檬水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "所知，阿远最喜欢的饮品是柠檬水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是柠檬水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "柠檬水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝柠檬水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了柠檬水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢柠檬水。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "阿明喜欢柠檬水",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢柠檬水就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢柠檬水了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是苹果汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "苹果汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是苹果汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "苹果汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝苹果汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了苹果汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢苹果汁。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "苹果汁",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢苹果汁就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢苹果汁了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是白开水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "白开水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是白开水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "白开水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝白开水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了白开水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢白开水。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "白开水",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢白开水就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢白开水了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是汽水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "汽水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是汽水。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "汽水",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝汽水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了汽水。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢汽水。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "汽水",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢汽水就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢汽水了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是橙汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "橙汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9999003410339355
+    },
+    {
+      "text": "阿远偏爱的饮料是橙汁。",
+      "positive": true,
+      "value_accepted": true,
+      "value": "橙汁",
+      "subject_single": true,
+      "composed_accept": true,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远从来不喝橙汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远给客人准备了橙汁。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "阿远说阿明喜欢橙汁。",
+      "positive": false,
+      "value_accepted": true,
+      "value": "橙汁",
+      "subject_single": false,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    },
+    {
+      "text": "如果阿远喜欢橙汁就好了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9999052286148071
+    },
+    {
+      "text": "阿远不再喜欢橙汁了。",
+      "positive": false,
+      "value_accepted": false,
+      "value": null,
+      "subject_single": true,
+      "composed_accept": false,
+      "subject_score": 0.9993427395820618
+    }
+  ],
+  "seconds": 45.05788140000004,
+  "limitations": [
+    "Held synthetic split only; no independent dialogue.",
+    "Subject locator and value span model use different training corpora.",
+    "No source, polarity, temporal semantics, address binding or write authorization.",
+    "Composition acceptance is not evidence that the extracted fact is true."
+  ]
+}
