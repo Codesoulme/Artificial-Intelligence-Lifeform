@@ -184,11 +184,15 @@ def read_provenance(model, state, key, event_time):
     _, bound = model.representation(k, m, t % model.config.time_count)
     q = model.memory_address(model.memories[-1], bound, k, m)[0]
     result = state.internal.provenance[event_time//model.config.time_count] @ q
+    return _decode_provenance(result, event_time, state.internal.encoding)
+
+
+def _decode_provenance(result, event_time, encoding):
     src, act = result[:4], result[4:9]
     if float(src.max()) < .7 or float(act.max()) < .7:
         return {'source': None, 'reason': 'uncertain_provenance'}
     labels={'source': SOURCES[int(src.argmax())], 'action': ACTIONS[int(act.argmax())]}
-    if state.internal.encoding==1:
+    if encoding==1:
         return dict(labels,quality_estimate=float(result[9].clamp(0,1)),valid_at_estimate=float(result[10])*1024,
                     note='Legacy continuous regression; not exact timestamps')
     bits=result[9:]/src.sum().clamp_min(.1)
@@ -200,6 +204,46 @@ def read_provenance(model, state, key, event_time):
     if valid_at>event_time:
         return dict(labels,quality=None,valid_at=None,reason='invalid_numeric_provenance')
     return dict(labels,quality=quality_code/255,valid_at=valid_at,quality_resolution=1/255)
+
+
+@torch.no_grad()
+def read_provenance_batch(model, state, pairs, batch_size=16):
+    """Read bounded batches of (key, event time); results retain input order.
+
+    This evaluates the same neural evidence as read_provenance. It neither
+    certifies absence nor resolves event-time or natural-language semantics.
+    """
+    from .growing import query
+    if state.internal is None or not isinstance(pairs, (list, tuple)) or type(batch_size) is not int or not 1 <= batch_size <= 64:
+        raise ValueError('Internal state, query pairs and bounded batch size required')
+    for pair in pairs:
+        if (not isinstance(pair, (list, tuple)) or len(pair) != 2 or type(pair[0]) is not int
+                or not 0 <= pair[0] < model.config.key_count or type(pair[1]) is not int or pair[1] < 0):
+            raise ValueError('Valid integer key and event time required')
+    results = [None] * len(pairs)
+    recorded = []
+    for index, (key, event_time) in enumerate(pairs):
+        if event_time < state.internal.start_cursor or event_time >= state.cursor:
+            results[index] = {'source': None, 'reason': 'unrecorded_provenance'}
+        else:
+            recorded.append((index, key, event_time))
+    device = next(model.parameters()).device
+    for start in range(0, len(recorded), batch_size):
+        chunk = recorded[start:start+batch_size]
+        keys = torch.tensor([x[1] for x in chunk], dtype=torch.long, device=device)
+        times = torch.tensor([x[2] for x in chunk], dtype=torch.long, device=device)
+        modes = torch.ones_like(keys)
+        known = query(model, state, keys, modes, times).argmax(-1) != model.config.unknown
+        _, bound = model.representation(keys, modes, times % model.config.time_count)
+        addresses = model.memory_address(model.memories[-1], bound, keys, modes)
+        matrices = torch.stack([state.internal.provenance[x[2]//model.config.time_count] for x in chunk])
+        decoded = torch.bmm(matrices, addresses.unsqueeze(-1)).squeeze(-1)
+        for i, (index, _, event_time) in enumerate(chunk):
+            if not bool(known[i]):
+                results[index] = {'source': None, 'reason': 'unknown_event'}
+            else:
+                results[index] = _decode_provenance(decoded[i], event_time, state.internal.encoding)
+    return results
 
 
 def consolidation_request(model, state, min_information=16, max_pages=1):

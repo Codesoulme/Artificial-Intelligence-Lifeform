@@ -1,0 +1,991 @@
+{
+  "status": "bounded_batch_equivalence_development_only",
+  "seed": 8303,
+  "individual_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "writes": [
+    {
+      "key": 6,
+      "value": 5,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 0,
+      "current_write": true
+    },
+    {
+      "key": 14,
+      "value": 2,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 1,
+      "current_write": true
+    },
+    {
+      "key": 2,
+      "value": 12,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 2,
+      "current_write": true
+    },
+    {
+      "key": 6,
+      "value": 8,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 3,
+      "current_write": true
+    },
+    {
+      "key": 10,
+      "value": 12,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 4,
+      "current_write": true
+    },
+    {
+      "key": 10,
+      "value": 1,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 5,
+      "current_write": true
+    },
+    {
+      "key": 12,
+      "value": 6,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 6,
+      "current_write": true
+    },
+    {
+      "key": 11,
+      "value": 9,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 7,
+      "current_write": true
+    },
+    {
+      "key": 6,
+      "value": 11,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 8,
+      "current_write": true
+    },
+    {
+      "key": 14,
+      "value": 11,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 9,
+      "current_write": true
+    },
+    {
+      "key": 13,
+      "value": 2,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 10,
+      "current_write": true
+    },
+    {
+      "key": 0,
+      "value": 3,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 11,
+      "current_write": true
+    },
+    {
+      "key": 10,
+      "value": 5,
+      "source": "inference",
+      "action": "defer",
+      "confidence": 0.9999995231628418,
+      "reason": "nonfactual_source_guard",
+      "history_time": 12,
+      "current_write": false
+    },
+    {
+      "key": 15,
+      "value": 10,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 13,
+      "current_write": true
+    },
+    {
+      "key": 5,
+      "value": 15,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 14,
+      "current_write": true
+    },
+    {
+      "key": 7,
+      "value": 10,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 15,
+      "current_write": true
+    },
+    {
+      "key": 8,
+      "value": 1,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 16,
+      "current_write": true
+    },
+    {
+      "key": 7,
+      "value": 10,
+      "source": "inference",
+      "action": "defer",
+      "confidence": 0.9999980926513672,
+      "reason": "nonfactual_source_guard",
+      "history_time": 17,
+      "current_write": false
+    },
+    {
+      "key": 14,
+      "value": 9,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 18,
+      "current_write": true
+    },
+    {
+      "key": 11,
+      "value": 4,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 19,
+      "current_write": true
+    },
+    {
+      "key": 5,
+      "value": 15,
+      "source": "direct",
+      "action": "repeat",
+      "confidence": 0.9999779462814331,
+      "reason": "learned_decision",
+      "history_time": 20,
+      "current_write": false
+    },
+    {
+      "key": 8,
+      "value": 0,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 21,
+      "current_write": true
+    },
+    {
+      "key": 3,
+      "value": 7,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 22,
+      "current_write": true
+    },
+    {
+      "key": 3,
+      "value": 2,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 23,
+      "current_write": true
+    },
+    {
+      "key": 14,
+      "value": 15,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 24,
+      "current_write": true
+    },
+    {
+      "key": 1,
+      "value": 10,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 25,
+      "current_write": true
+    },
+    {
+      "key": 12,
+      "value": 8,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 26,
+      "current_write": true
+    },
+    {
+      "key": 12,
+      "value": 2,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 27,
+      "current_write": true
+    },
+    {
+      "key": 10,
+      "value": 10,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 28,
+      "current_write": true
+    },
+    {
+      "key": 7,
+      "value": 13,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 29,
+      "current_write": true
+    },
+    {
+      "key": 5,
+      "value": 8,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 30,
+      "current_write": true
+    },
+    {
+      "key": 10,
+      "value": 8,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 31,
+      "current_write": true
+    },
+    {
+      "key": 12,
+      "value": 6,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 32,
+      "current_write": true
+    },
+    {
+      "key": 0,
+      "value": 1,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 33,
+      "current_write": true
+    },
+    {
+      "key": 12,
+      "value": 8,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 34,
+      "current_write": true
+    },
+    {
+      "key": 10,
+      "value": 14,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 35,
+      "current_write": true
+    },
+    {
+      "key": 4,
+      "value": 2,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 36,
+      "current_write": true
+    },
+    {
+      "key": 3,
+      "value": 13,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 37,
+      "current_write": true
+    },
+    {
+      "key": 3,
+      "value": 15,
+      "source": "inference",
+      "action": "defer",
+      "confidence": 0.9999995231628418,
+      "reason": "nonfactual_source_guard",
+      "history_time": 38,
+      "current_write": false
+    },
+    {
+      "key": 7,
+      "value": 9,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 39,
+      "current_write": true
+    },
+    {
+      "key": 2,
+      "value": 14,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 40,
+      "current_write": true
+    },
+    {
+      "key": 4,
+      "value": 5,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 41,
+      "current_write": true
+    },
+    {
+      "key": 4,
+      "value": 6,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 42,
+      "current_write": true
+    },
+    {
+      "key": 6,
+      "value": 8,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 43,
+      "current_write": true
+    },
+    {
+      "key": 4,
+      "value": 4,
+      "source": "inference",
+      "action": "defer",
+      "confidence": 0.9999995231628418,
+      "reason": "nonfactual_source_guard",
+      "history_time": 44,
+      "current_write": false
+    },
+    {
+      "key": 14,
+      "value": 7,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 45,
+      "current_write": true
+    },
+    {
+      "key": 4,
+      "value": 8,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 46,
+      "current_write": true
+    },
+    {
+      "key": 12,
+      "value": 11,
+      "source": "inference",
+      "action": "defer",
+      "confidence": 0.9999995231628418,
+      "reason": "nonfactual_source_guard",
+      "history_time": 47,
+      "current_write": false
+    },
+    {
+      "key": 3,
+      "value": 11,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 48,
+      "current_write": true
+    },
+    {
+      "key": 7,
+      "value": 1,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 49,
+      "current_write": true
+    },
+    {
+      "key": 14,
+      "value": 7,
+      "source": "direct",
+      "action": "repeat",
+      "confidence": 0.9999779462814331,
+      "reason": "learned_decision",
+      "history_time": 50,
+      "current_write": false
+    },
+    {
+      "key": 2,
+      "value": 10,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 51,
+      "current_write": true
+    },
+    {
+      "key": 8,
+      "value": 5,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 52,
+      "current_write": true
+    },
+    {
+      "key": 11,
+      "value": 12,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 53,
+      "current_write": true
+    },
+    {
+      "key": 4,
+      "value": 4,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 54,
+      "current_write": true
+    },
+    {
+      "key": 5,
+      "value": 3,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 55,
+      "current_write": true
+    },
+    {
+      "key": 4,
+      "value": 7,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 56,
+      "current_write": true
+    },
+    {
+      "key": 1,
+      "value": 6,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 57,
+      "current_write": true
+    },
+    {
+      "key": 14,
+      "value": 10,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 58,
+      "current_write": true
+    },
+    {
+      "key": 14,
+      "value": 10,
+      "source": "inference",
+      "action": "defer",
+      "confidence": 0.9999980926513672,
+      "reason": "nonfactual_source_guard",
+      "history_time": 59,
+      "current_write": false
+    },
+    {
+      "key": 2,
+      "value": 4,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 60,
+      "current_write": true
+    },
+    {
+      "key": 14,
+      "value": 11,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 61,
+      "current_write": true
+    },
+    {
+      "key": 8,
+      "value": 2,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 62,
+      "current_write": true
+    },
+    {
+      "key": 13,
+      "value": 12,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 63,
+      "current_write": true
+    },
+    {
+      "key": 9,
+      "value": 6,
+      "source": "inference",
+      "action": "defer",
+      "confidence": 1.0,
+      "reason": "nonfactual_source_guard",
+      "history_time": 64,
+      "current_write": false
+    },
+    {
+      "key": 14,
+      "value": 3,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 65,
+      "current_write": true
+    },
+    {
+      "key": 13,
+      "value": 12,
+      "source": "inference",
+      "action": "defer",
+      "confidence": 0.9999980926513672,
+      "reason": "nonfactual_source_guard",
+      "history_time": 66,
+      "current_write": false
+    },
+    {
+      "key": 2,
+      "value": 4,
+      "source": "direct",
+      "action": "repeat",
+      "confidence": 0.9999779462814331,
+      "reason": "learned_decision",
+      "history_time": 67,
+      "current_write": false
+    },
+    {
+      "key": 5,
+      "value": 8,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 68,
+      "current_write": true
+    },
+    {
+      "key": 6,
+      "value": 12,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 69,
+      "current_write": true
+    },
+    {
+      "key": 5,
+      "value": 11,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 70,
+      "current_write": true
+    },
+    {
+      "key": 7,
+      "value": 13,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 71,
+      "current_write": true
+    },
+    {
+      "key": 10,
+      "value": 11,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 72,
+      "current_write": true
+    },
+    {
+      "key": 2,
+      "value": 9,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 73,
+      "current_write": true
+    },
+    {
+      "key": 3,
+      "value": 4,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 74,
+      "current_write": true
+    },
+    {
+      "key": 4,
+      "value": 0,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 75,
+      "current_write": true
+    },
+    {
+      "key": 5,
+      "value": 14,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 76,
+      "current_write": true
+    },
+    {
+      "key": 15,
+      "value": 12,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 77,
+      "current_write": true
+    },
+    {
+      "key": 8,
+      "value": 2,
+      "source": "direct",
+      "action": "repeat",
+      "confidence": 0.9999779462814331,
+      "reason": "learned_decision",
+      "history_time": 78,
+      "current_write": false
+    },
+    {
+      "key": 15,
+      "value": 8,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 79,
+      "current_write": true
+    },
+    {
+      "key": 10,
+      "value": 13,
+      "source": "inference",
+      "action": "defer",
+      "confidence": 0.9999995231628418,
+      "reason": "nonfactual_source_guard",
+      "history_time": 80,
+      "current_write": false
+    },
+    {
+      "key": 0,
+      "value": 6,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 81,
+      "current_write": true
+    },
+    {
+      "key": 13,
+      "value": 7,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 82,
+      "current_write": true
+    },
+    {
+      "key": 9,
+      "value": 11,
+      "source": "direct",
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 83,
+      "current_write": true
+    },
+    {
+      "key": 6,
+      "value": 6,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 84,
+      "current_write": true
+    },
+    {
+      "key": 1,
+      "value": 12,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 85,
+      "current_write": true
+    },
+    {
+      "key": 12,
+      "value": 6,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 86,
+      "current_write": true
+    },
+    {
+      "key": 1,
+      "value": 4,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 87,
+      "current_write": true
+    },
+    {
+      "key": 5,
+      "value": 0,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 88,
+      "current_write": true
+    },
+    {
+      "key": 3,
+      "value": 10,
+      "source": "inference",
+      "action": "defer",
+      "confidence": 0.9999995231628418,
+      "reason": "nonfactual_source_guard",
+      "history_time": 89,
+      "current_write": false
+    },
+    {
+      "key": 13,
+      "value": 6,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 90,
+      "current_write": true
+    },
+    {
+      "key": 13,
+      "value": 6,
+      "source": "report",
+      "action": "repeat",
+      "confidence": 0.9999715089797974,
+      "reason": "learned_decision",
+      "history_time": 91,
+      "current_write": false
+    },
+    {
+      "key": 13,
+      "value": 10,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 92,
+      "current_write": true
+    },
+    {
+      "key": 12,
+      "value": 0,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 93,
+      "current_write": true
+    },
+    {
+      "key": 2,
+      "value": 7,
+      "source": "report",
+      "action": "correct",
+      "confidence": 0.9999831914901733,
+      "reason": "learned_decision",
+      "history_time": 94,
+      "current_write": true
+    },
+    {
+      "key": 7,
+      "value": 15,
+      "source": "direct",
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 95,
+      "current_write": true
+    }
+  ],
+  "query_count": 1730,
+  "scalar_seconds": 8.504187899874523,
+  "batch_seconds": {
+    "1": 9.479862799867988,
+    "8": 1.4561427000444382,
+    "16": 0.8349212999455631,
+    "32": 0.5521810001228005
+  },
+  "mismatch_indices_vs_scalar": {
+    "1": [],
+    "8": [],
+    "16": [],
+    "32": []
+  },
+  "reload_mismatch_indices": [],
+  "independent_process_mismatch_indices": [],
+  "reload_digest_equal": true,
+  "limitations": [
+    "CPU, one individual and one synthetic trajectory.",
+    "Timing excludes state loading and generation; no GPU benchmark.",
+    "Equivalence does not establish semantic correctness or openness.",
+    "Independent-process reload is not an abrupt termination test.",
+    "Numerical threshold boundaries may differ by hardware and batch size."
+  ]
+}
