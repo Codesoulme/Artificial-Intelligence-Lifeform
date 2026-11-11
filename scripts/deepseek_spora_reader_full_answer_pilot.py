@@ -15,7 +15,7 @@ SEED = 98117
 STEPS = 12
 
 
-def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, replay_weight=0.0):
+def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, replay_weight=0.0, dataset='small'):
     output = Path(output).resolve()
     if not output.is_relative_to((p.ROOT / 'runs').resolve()) or output == (p.ROOT / 'runs').resolve():
         raise ValueError('Output must be a new directory under runs')
@@ -27,6 +27,8 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
         raise ValueError('Invalid step count')
     if not math.isfinite(replay_weight) or not 0 <= replay_weight <= 10 or (replay_weight and objective != 'mixed'):
         raise ValueError('Replay requires mixed objective and weight in [0, 10]')
+    if dataset not in ('small', 'diverse') or (dataset == 'diverse' and replay_weight):
+        raise ValueError('Invalid dataset or overlapping replay split')
     if output.exists():
         raise FileExistsError(output)
     source_sha = p.sha(p.runtime.CHECKPOINT)
@@ -51,41 +53,49 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
         optimizer = p.torch.optim.AdamW(parameters, lr=learning_rate, weight_decay=0.0, foreach=False)
         device = next(organism.parameters()).device
         cases = []
-        for group, indices in (('train', (0, 1)), ('held', (6,))):
-            for index in indices:
-                key, name = KEYS[index], NAMES[index]
-                for value in (3, 4):
-                    state = p.fresh_controlled_state(organism)
-                    for fact in (1, value):
-                        state, decision = p.observe_sourced(organism, state, key, fact, 'direct', 1.0)
-                        if not decision['current_write']:
-                            raise ValueError('Controlled write rejected')
-                    keys = p.torch.tensor([key], dtype=p.torch.long, device=device)
-                    with p.torch.no_grad():
-                        logits = p.query(organism, state, keys, p.torch.zeros_like(keys), p.torch.zeros_like(keys))
-                    if int(logits.argmax(-1)[0]) != value:
-                        raise ValueError('Native evidence mismatch')
-                    template = ('请说出{name}现在爱喝的饮品。' if group == 'train' else
-                                '提到饮料时，{name}如今会选什么？')
-                    question = template.format(name=name)
-                    answer = f'{name}现在喜欢喝{p.WORDS[value]}。'
-                    prompt = p.closed_think_inputs(tokenizer, question, 'cuda')
-                    target = tokenizer(answer, add_special_tokens=False, return_tensors='pt').input_ids.to('cuda')
-                    target = p.torch.cat((target, p.torch.tensor([[tokenizer.eos_token_id]], device=device)), dim=1)
-                    value_ids = tokenizer(p.WORDS[value], add_special_tokens=False).input_ids
-                    competitor_ids = [tokenizer(p.WORDS[v], add_special_tokens=False).input_ids for v in (1, 3, 4) if v != value]
-                    if len(value_ids) != 1 or any(len(ids) != 1 for ids in competitor_ids):
-                        raise ValueError('Pilot requires single-token value classes')
-                    positions = (target[0] == value_ids[0]).nonzero(as_tuple=True)[0]
-                    if positions.numel() != 1:
-                        raise ValueError('Target value must occur at exactly one answer position')
-                    ids = p.torch.cat((prompt['input_ids'], target), dim=1)
-                    spec = p._memory_args(organism, state, {'key': key, 'intent': 'current', 'event_time': 0})
-                    cases.append({'group': group, 'key': key, 'name': name, 'value': value, 'state': state,
-                                  'state_digest': p.frozen_digest(organism, state), 'question': question,
-                                  'answer': answer, 'prompt': prompt, 'ids': ids, 'spec': spec,
-                                  'value_position': int(positions[0]), 'value_token': value_ids[0],
-                                  'competitor_tokens': [ids[0] for ids in competitor_ids]})
+        if dataset == 'small':
+            schedule = [('train', i, v, '请说出{name}现在爱喝的饮品。') for i in (0, 1) for v in (3, 4)]
+            schedule += [('held', 6, v, '提到饮料时，{name}如今会选什么？') for v in (3, 4)]
+        else:
+            schedule = [('train', i, v, q) for i in (0, 1, 2, 3) for v in (0, 1, 2, 3, 4, 6, 7)
+                        for q in ('请说出{name}现在爱喝的饮品。', '记录中{name}当前最想喝什么？')]
+            schedule += [('held', i, v, '如果点饮料，{name}如今会选什么？') for i in (6, 7) for v in (1, 3, 4, 7)]
+        for group, index, value, template in schedule:
+            key, name = KEYS[index], NAMES[index]
+            state = p.fresh_controlled_state(organism)
+            old_value = 1 if value != 1 else 6
+            for fact in (old_value, value):
+                state, decision = p.observe_sourced(organism, state, key, fact, 'direct', 1.0)
+                if not decision['current_write']:
+                    raise ValueError('Controlled write rejected')
+            keys = p.torch.tensor([key], dtype=p.torch.long, device=device)
+            with p.torch.no_grad():
+                logits = p.query(organism, state, keys, p.torch.zeros_like(keys), p.torch.zeros_like(keys))
+            if int(logits.argmax(-1)[0]) != value:
+                raise ValueError('Native evidence mismatch')
+            question = template.format(name=name)
+            answer = (f'{name}现在喜欢喝{p.WORDS[value]}。' if dataset == 'small' else
+                      f'{name}现在喜欢的饮料是{p.WORDS[value]}。')
+            prompt = p.closed_think_inputs(tokenizer, question, 'cuda')
+            target = tokenizer(answer, add_special_tokens=False, return_tensors='pt').input_ids.to('cuda')
+            target = p.torch.cat((target, p.torch.tensor([[tokenizer.eos_token_id]], device=device)), dim=1)
+            value_ids = tokenizer(p.WORDS[value], add_special_tokens=False).input_ids
+            competitor_ids = [tokenizer(p.WORDS[v], add_special_tokens=False).input_ids for v in (1, 3, 4) if v != value]
+            if len(value_ids) != 1 or any(len(ids) != 1 for ids in competitor_ids):
+                raise ValueError('Pilot requires single-token value classes')
+            positions = (target[0] == value_ids[0]).nonzero(as_tuple=True)[0]
+            if positions.numel() != 1:
+                raise ValueError('Target value must occur at exactly one answer position')
+            ids = p.torch.cat((prompt['input_ids'], target), dim=1)
+            spec = p._memory_args(organism, state, {'key': key, 'intent': 'current', 'event_time': 0})
+            selected_dev = (dataset == 'small' or group == 'held' or
+                            (index in (0, 1) and value in (3, 4) and template == '请说出{name}现在爱喝的饮品。'))
+            cases.append({'group': group, 'key': key, 'name': name, 'value': value, 'state': state,
+                          'evaluate': selected_dev,
+                          'state_digest': p.frozen_digest(organism, state), 'question': question,
+                          'answer': answer, 'prompt': prompt, 'ids': ids, 'spec': spec,
+                          'value_position': int(positions[0]), 'value_token': value_ids[0],
+                          'competitor_tokens': [ids[0] for ids in competitor_ids]})
 
         replays = []
         if replay_weight:
@@ -110,6 +120,8 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
         def evaluate():
             rows = []
             for item in cases:
+                if not item['evaluate']:
+                    continue
                 prefix = item['prompt']['input_ids'].shape[1]
                 with p.torch.inference_mode():
                     forced = decoder(input_ids=item['ids'], attention_mask=p.torch.ones_like(item['ids']),
@@ -216,16 +228,20 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
     output.mkdir(parents=False, exist_ok=False)
     p.torch.save({'state': reader_state, 'source_checkpoint_sha256': source_sha,
                   'base_sha256': p.WEIGHT_SHA, 'steps': steps, 'seed': SEED,
-                  'learning_rate': learning_rate, 'objective': objective, 'replay_weight': replay_weight}, output / 'reader.pt')
+                  'learning_rate': learning_rate, 'objective': objective, 'replay_weight': replay_weight,
+                  'dataset': dataset}, output / 'reader.pt')
     report = {'before': before, 'after': after, 'trace': trace, 'source_checkpoint_sha256': source_sha,
               'ordinary_before': ordinary_before, 'ordinary_after': ordinary_after,
               'ordinary_tokens_match': [a['token_ids'] == b['token_ids'] for a, b in zip(ordinary_before, ordinary_after)],
-              'learning_rate': learning_rate, 'objective': objective, 'replay_weight': replay_weight,
+              'learning_rate': learning_rate, 'objective': objective, 'replay_weight': replay_weight, 'dataset': dataset,
+              'training_examples': sum(item['group'] == 'train' for item in cases),
+              'evaluated_train_examples': sum(item['group'] == 'train' and item['evaluate'] for item in cases),
+              'evaluated_held_examples': sum(item['group'] == 'held' and item['evaluate'] for item in cases),
               'replay_examples': [{'question': r['question'], 'key': r['key'], 'value': r['value']} for r in replays],
               'base_sha256': p.WEIGHT_SHA,
               'candidate_sha256': p.sha(output / 'reader.pt'),
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': p.torch.cuda.max_memory_allocated(),
-              'limitations': ['Four training examples, two held examples; two seen values and artificial facts.',
+              'limitations': ['Small authored finite-value examples and synthetic facts; inspect split and counts.',
                               'Teacher forcing with no output bias; not normal chat training.',
                               'Address and fact supplied numerically; no routing or unknown-memory evaluation.',
                               'Only two ordinary prompts tested without any memory; no evaluation with unrelated memory.',
@@ -245,5 +261,6 @@ if __name__ == '__main__':
     parser.add_argument('--objective', choices=('full', 'value_contrastive', 'mixed'), default='full')
     parser.add_argument('--steps', type=int, default=STEPS)
     parser.add_argument('--replay-weight', type=float, default=0.0)
+    parser.add_argument('--dataset', choices=('small', 'diverse'), default='small')
     options = parser.parse_args()
-    main(options.output, options.learning_rate, options.objective, options.steps, options.replay_weight)
+    main(options.output, options.learning_rate, options.objective, options.steps, options.replay_weight, options.dataset)
