@@ -1,0 +1,1298 @@
+{
+  "status": "development_only_no_writes",
+  "dataset": "xusenlin/clue-ner",
+  "source_sha256": "b374c9749c6f755aaebe7a8d7c24c5c3307183fa4d8e9aa3413b4ebdd052c03c",
+  "source_population": {
+    "single": 259,
+    "multiple": 87,
+    "none": 983
+  },
+  "locator_sha256": "7f2d90453fa5f3768ba30925afc54a814b55ef9262b89bf13285960d1e84f15a",
+  "checkpoint_sha256": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f",
+  "replacement_layers": [
+    6,
+    12
+  ],
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "base": {
+    "summary": {
+      "single": {
+        "examples": 20,
+        "exact": 1,
+        "single_contiguous": 2,
+        "character_precision": 0.3141025641025641,
+        "character_recall": 0.9245283018867925
+      },
+      "multiple": {
+        "examples": 10,
+        "exact": 0,
+        "single_contiguous": 0,
+        "character_precision": 0.6691176470588235,
+        "character_recall": 0.9479166666666666
+      },
+      "none": {
+        "examples": 10,
+        "exact": 0,
+        "single_contiguous": 2,
+        "character_precision": 0.0,
+        "character_recall": null
+      }
+    },
+    "rows": [
+      {
+        "group": "single",
+        "text": "图为润泽地产常务副总封屹",
+        "spans": [
+          [
+            10,
+            12
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 6,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": true
+      },
+      {
+        "group": "single",
+        "text": "主角米勒在游戏开始被日军俘虏，并且亲眼看着队友被残忍地杀害，就当厄运即将降临之时，",
+        "spans": [
+          [
+            2,
+            4
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 3,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "台湾的银行业者对于银联卡的商机评估较乐观。台新银行信用卡处资深副总经理邱丰凯认为，开放银联卡后，",
+        "spans": [
+          [
+            35,
+            38
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 11,
+        "gold_characters": 3,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "新浪乐居北京公司执行总经理陈克逸先生",
+        "spans": [
+          [
+            13,
+            16
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 5,
+        "gold_characters": 3,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "新浪房产讯（编辑张丽）大西洋新城聆湖苑位于朝阳区望京南湖南路10号，93-110平两居和130-",
+        "spans": [
+          [
+            8,
+            10
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 18,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "姜山：切尔西在周中做客意大利时1比3惨败给近况糟糕的罗马，",
+        "spans": [
+          [
+            0,
+            2
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 8,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "新华财经副总裁陈松兴接受本报记者采访时表示。",
+        "spans": [
+          [
+            7,
+            10
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 5,
+        "gold_characters": 3,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "台儿庄大捷纪录片人陈钦原创2018/10/2022:24:40为了徐州会战的整个全局，",
+        "spans": [
+          [
+            9,
+            11
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 10,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "影片上映后大获成功，斯图尔特塑造的慈祥刚毅的老年女性形象征服了观众，获得奥斯卡最佳女配角奖提名，",
+        "spans": [
+          [
+            10,
+            14
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 18,
+        "gold_characters": 4,
+        "true_positive_characters": 4,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "他们在1991/92赛季客场1比1战平本菲卡，而温格做为主帅也从未有过在葡萄牙赢球的记录。",
+        "spans": [
+          [
+            24,
+            26
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 5,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "姜山：你是看好曼城反弹？我记得你对曼城本赛季的防守非常不以为然的。",
+        "spans": [
+          [
+            0,
+            2
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 3,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "首先恭喜《色，戒》突破重围，跃上龙门，李安“奥斯卡最佳导演”的桂冠果然没白戴。同时提名最佳导演的《",
+        "spans": [
+          [
+            19,
+            21
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 12,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "仲跻伟估计，国内的发卡量目前已达到1亿张，未来还有7倍的扩张量。虽然招行信用卡在北京、上海、",
+        "spans": [
+          [
+            0,
+            3
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 5,
+        "gold_characters": 3,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "Ace），描述德军虎式战车部队的王牌车长“卫特曼”成功阻止英军推进的精彩战役。",
+        "spans": [
+          [
+            20,
+            25
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 10,
+        "gold_characters": 5,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "ac米兰近期6胜2平走上正规，巨资引进的小罗也确实起到了作用，目前成为球队主要得分手。",
+        "spans": [
+          [
+            20,
+            22
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 6,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "9.贫民窟里的百万富翁福克斯1383838电影",
+        "spans": [
+          [
+            11,
+            14
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 10,
+        "gold_characters": 3,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "在一家外贸公司工作的于澄则更加郁闷。不久前她在广州一家银行申请住房贷款时，",
+        "spans": [
+          [
+            10,
+            12
+          ]
+        ],
+        "exact": true,
+        "predicted_characters": 2,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": true
+      },
+      {
+        "group": "single",
+        "text": "尽管上个月亚历山大向参议院军事委员会保证，网络司令部不会促使网络空间军事化，但该委员会的主席、",
+        "spans": [
+          [
+            5,
+            9
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 5,
+        "gold_characters": 4,
+        "true_positive_characters": 4,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "scofcom.gov.cn）查询第一批中标单位的具体名单和联系方式。市商务委副主任张新生表示，",
+        "spans": [
+          [
+            42,
+            45
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 7,
+        "gold_characters": 3,
+        "true_positive_characters": 1,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "省收藏文化研究会常务理事周野介绍，目前红木家具市场价位从几万至上百万上千万不等，主要是看原料和工艺。",
+        "spans": [
+          [
+            12,
+            14
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 7,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "由徐克导演、吴奇隆与杨采妮这对“金童玉女”主演的《梁祝》在影迷心中享有极高的地位，被誉为影视版《",
+        "spans": [
+          [
+            1,
+            3
+          ],
+          [
+            6,
+            9
+          ],
+          [
+            10,
+            13
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 18,
+        "gold_characters": 8,
+        "true_positive_characters": 8,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "徐悲鸿夫人廖静文、南师大副校长陈凌孚、江苏省文联党组书记王慧芬等出席大会。",
+        "spans": [
+          [
+            0,
+            3
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            15,
+            18
+          ],
+          [
+            28,
+            31
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 15,
+        "gold_characters": 12,
+        "true_positive_characters": 11,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "而Moon在星际争霸2中发挥不是很理想，对此Infi感觉Moon是哪里出了问题呢？",
+        "spans": [
+          [
+            1,
+            5
+          ],
+          [
+            22,
+            26
+          ],
+          [
+            28,
+            32
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 10,
+        "gold_characters": 12,
+        "true_positive_characters": 10,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "不朽的园丁》的费尔南多·梅里尔斯，但明显比《引渡疑云》的加文·胡德高出数段，",
+        "spans": [
+          [
+            7,
+            16
+          ],
+          [
+            28,
+            34
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 20,
+        "gold_characters": 15,
+        "true_positive_characters": 14,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "近日，曾被称为“青春残酷”一代艺术家代表人物之一的尹朝阳，在上海美术馆举办了由朱朱为其策划的个展《",
+        "spans": [
+          [
+            25,
+            28
+          ],
+          [
+            39,
+            41
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 7,
+        "gold_characters": 5,
+        "true_positive_characters": 5,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "斯蒂芬金的《黑暗之塔》小说共有七卷本，这个系列是斯蒂芬金最负盛名的小说，",
+        "spans": [
+          [
+            0,
+            4
+          ],
+          [
+            24,
+            28
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 15,
+        "gold_characters": 8,
+        "true_positive_characters": 8,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "但价格居高不下，已毫无空间。“黄龙玉明年应该能回归理性”，广州乾朗珠宝有限公司执行董事刘忠维认为，",
+        "spans": [
+          [
+            15,
+            18
+          ],
+          [
+            43,
+            46
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 10,
+        "gold_characters": 6,
+        "true_positive_characters": 6,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "东方早报记者刘秀浩（刘秀浩博客）",
+        "spans": [
+          [
+            6,
+            9
+          ],
+          [
+            10,
+            13
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 9,
+        "gold_characters": 6,
+        "true_positive_characters": 6,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "↑《坚强的心》的安吉丽娜·茱莉在哈莉·贝丽、瑞斯·维瑟斯彭等一干劲敌毁誉参半的情况下呼声回升，",
+        "spans": [
+          [
+            8,
+            15
+          ],
+          [
+            16,
+            21
+          ],
+          [
+            22,
+            29
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 23,
+        "gold_characters": 19,
+        "true_positive_characters": 19,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "前来采访的记者们意外地发现在该基地的一处摄影棚里正拍摄着由何平执导、范冰冰主演的古装新片《麦田》，",
+        "spans": [
+          [
+            29,
+            31
+          ],
+          [
+            34,
+            37
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 9,
+        "gold_characters": 5,
+        "true_positive_characters": 4,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "一面是以2726万张的发卡量（不包括招行金葵花等普通借记卡约4900万张）坐拥“亚军”宝座（",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 14,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "“去年银监会下发《关于信用卡套现活跃风险提示的通知》要求：严格禁止将pos机发放在个人名下，",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 9,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "周边交通：地铁2号线人民广场或南京东路站。公交123、123区、14、167、20、",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 16,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "多数人又称这座岛叫“洛克岛”。",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 2,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": true
+      },
+      {
+        "group": "none",
+        "text": "成为了WCG历史上最好的魔兽争霸选手，并且仍然是目前唯一一位获得WCG冠军的兽族选手。",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 4,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "《死亡空间：浩劫余生》的时空背景设定在2509年，地球不只与USG石村号(USG",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 10,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "除中信银行开卡时需要10元工本费外，其余几家均不收取这笔费用。其中兴业银行客服人员还表示，",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 6,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "大众软件：新手玩家《云之遥》全攻略(4)",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 8,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "两队本周都是双赛，热那亚意大利杯取胜，那不勒联盟杯落败出局。不过在联赛里那不勒斯客场一直保持不败，",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 20,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "行业协会→发展太快鱼目混珠",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 2,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": true
+      }
+    ]
+  },
+  "replaced": {
+    "summary": {
+      "single": {
+        "examples": 20,
+        "exact": 0,
+        "single_contiguous": 0,
+        "character_precision": 0.2823529411764706,
+        "character_recall": 0.9056603773584906
+      },
+      "multiple": {
+        "examples": 10,
+        "exact": 0,
+        "single_contiguous": 0,
+        "character_precision": 0.6330935251798561,
+        "character_recall": 0.9166666666666666
+      },
+      "none": {
+        "examples": 10,
+        "exact": 0,
+        "single_contiguous": 2,
+        "character_precision": 0.0,
+        "character_recall": null
+      }
+    },
+    "rows": [
+      {
+        "group": "single",
+        "text": "图为润泽地产常务副总封屹",
+        "spans": [
+          [
+            10,
+            12
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 7,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "主角米勒在游戏开始被日军俘虏，并且亲眼看着队友被残忍地杀害，就当厄运即将降临之时，",
+        "spans": [
+          [
+            2,
+            4
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 3,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "台湾的银行业者对于银联卡的商机评估较乐观。台新银行信用卡处资深副总经理邱丰凯认为，开放银联卡后，",
+        "spans": [
+          [
+            35,
+            38
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 11,
+        "gold_characters": 3,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "新浪乐居北京公司执行总经理陈克逸先生",
+        "spans": [
+          [
+            13,
+            16
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 5,
+        "gold_characters": 3,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "新浪房产讯（编辑张丽）大西洋新城聆湖苑位于朝阳区望京南湖南路10号，93-110平两居和130-",
+        "spans": [
+          [
+            8,
+            10
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 19,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "姜山：切尔西在周中做客意大利时1比3惨败给近况糟糕的罗马，",
+        "spans": [
+          [
+            0,
+            2
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 12,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "新华财经副总裁陈松兴接受本报记者采访时表示。",
+        "spans": [
+          [
+            7,
+            10
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 7,
+        "gold_characters": 3,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "台儿庄大捷纪录片人陈钦原创2018/10/2022:24:40为了徐州会战的整个全局，",
+        "spans": [
+          [
+            9,
+            11
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 7,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "影片上映后大获成功，斯图尔特塑造的慈祥刚毅的老年女性形象征服了观众，获得奥斯卡最佳女配角奖提名，",
+        "spans": [
+          [
+            10,
+            14
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 18,
+        "gold_characters": 4,
+        "true_positive_characters": 4,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "他们在1991/92赛季客场1比1战平本菲卡，而温格做为主帅也从未有过在葡萄牙赢球的记录。",
+        "spans": [
+          [
+            24,
+            26
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 6,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "姜山：你是看好曼城反弹？我记得你对曼城本赛季的防守非常不以为然的。",
+        "spans": [
+          [
+            0,
+            2
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 3,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "首先恭喜《色，戒》突破重围，跃上龙门，李安“奥斯卡最佳导演”的桂冠果然没白戴。同时提名最佳导演的《",
+        "spans": [
+          [
+            19,
+            21
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 14,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "仲跻伟估计，国内的发卡量目前已达到1亿张，未来还有7倍的扩张量。虽然招行信用卡在北京、上海、",
+        "spans": [
+          [
+            0,
+            3
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 5,
+        "gold_characters": 3,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "Ace），描述德军虎式战车部队的王牌车长“卫特曼”成功阻止英军推进的精彩战役。",
+        "spans": [
+          [
+            20,
+            25
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 10,
+        "gold_characters": 5,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "ac米兰近期6胜2平走上正规，巨资引进的小罗也确实起到了作用，目前成为球队主要得分手。",
+        "spans": [
+          [
+            20,
+            22
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 7,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "9.贫民窟里的百万富翁福克斯1383838电影",
+        "spans": [
+          [
+            11,
+            14
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 11,
+        "gold_characters": 3,
+        "true_positive_characters": 3,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "在一家外贸公司工作的于澄则更加郁闷。不久前她在广州一家银行申请住房贷款时，",
+        "spans": [
+          [
+            10,
+            12
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 3,
+        "gold_characters": 2,
+        "true_positive_characters": 1,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "尽管上个月亚历山大向参议院军事委员会保证，网络司令部不会促使网络空间军事化，但该委员会的主席、",
+        "spans": [
+          [
+            5,
+            9
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 7,
+        "gold_characters": 4,
+        "true_positive_characters": 4,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "scofcom.gov.cn）查询第一批中标单位的具体名单和联系方式。市商务委副主任张新生表示，",
+        "spans": [
+          [
+            42,
+            45
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 7,
+        "gold_characters": 3,
+        "true_positive_characters": 1,
+        "single_contiguous": false
+      },
+      {
+        "group": "single",
+        "text": "省收藏文化研究会常务理事周野介绍，目前红木家具市场价位从几万至上百万上千万不等，主要是看原料和工艺。",
+        "spans": [
+          [
+            12,
+            14
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 8,
+        "gold_characters": 2,
+        "true_positive_characters": 2,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "由徐克导演、吴奇隆与杨采妮这对“金童玉女”主演的《梁祝》在影迷心中享有极高的地位，被誉为影视版《",
+        "spans": [
+          [
+            1,
+            3
+          ],
+          [
+            6,
+            9
+          ],
+          [
+            10,
+            13
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 17,
+        "gold_characters": 8,
+        "true_positive_characters": 8,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "徐悲鸿夫人廖静文、南师大副校长陈凌孚、江苏省文联党组书记王慧芬等出席大会。",
+        "spans": [
+          [
+            0,
+            3
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            15,
+            18
+          ],
+          [
+            28,
+            31
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 20,
+        "gold_characters": 12,
+        "true_positive_characters": 11,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "而Moon在星际争霸2中发挥不是很理想，对此Infi感觉Moon是哪里出了问题呢？",
+        "spans": [
+          [
+            1,
+            5
+          ],
+          [
+            22,
+            26
+          ],
+          [
+            28,
+            32
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 10,
+        "gold_characters": 12,
+        "true_positive_characters": 10,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "不朽的园丁》的费尔南多·梅里尔斯，但明显比《引渡疑云》的加文·胡德高出数段，",
+        "spans": [
+          [
+            7,
+            16
+          ],
+          [
+            28,
+            34
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 21,
+        "gold_characters": 15,
+        "true_positive_characters": 14,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "近日，曾被称为“青春残酷”一代艺术家代表人物之一的尹朝阳，在上海美术馆举办了由朱朱为其策划的个展《",
+        "spans": [
+          [
+            25,
+            28
+          ],
+          [
+            39,
+            41
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 8,
+        "gold_characters": 5,
+        "true_positive_characters": 5,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "斯蒂芬金的《黑暗之塔》小说共有七卷本，这个系列是斯蒂芬金最负盛名的小说，",
+        "spans": [
+          [
+            0,
+            4
+          ],
+          [
+            24,
+            28
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 15,
+        "gold_characters": 8,
+        "true_positive_characters": 8,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "但价格居高不下，已毫无空间。“黄龙玉明年应该能回归理性”，广州乾朗珠宝有限公司执行董事刘忠维认为，",
+        "spans": [
+          [
+            15,
+            18
+          ],
+          [
+            43,
+            46
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 10,
+        "gold_characters": 6,
+        "true_positive_characters": 6,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "东方早报记者刘秀浩（刘秀浩博客）",
+        "spans": [
+          [
+            6,
+            9
+          ],
+          [
+            10,
+            13
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 9,
+        "gold_characters": 6,
+        "true_positive_characters": 6,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "↑《坚强的心》的安吉丽娜·茱莉在哈莉·贝丽、瑞斯·维瑟斯彭等一干劲敌毁誉参半的情况下呼声回升，",
+        "spans": [
+          [
+            8,
+            15
+          ],
+          [
+            16,
+            21
+          ],
+          [
+            22,
+            29
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 21,
+        "gold_characters": 19,
+        "true_positive_characters": 19,
+        "single_contiguous": false
+      },
+      {
+        "group": "multiple",
+        "text": "前来采访的记者们意外地发现在该基地的一处摄影棚里正拍摄着由何平执导、范冰冰主演的古装新片《麦田》，",
+        "spans": [
+          [
+            29,
+            31
+          ],
+          [
+            34,
+            37
+          ]
+        ],
+        "exact": false,
+        "predicted_characters": 8,
+        "gold_characters": 5,
+        "true_positive_characters": 1,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "一面是以2726万张的发卡量（不包括招行金葵花等普通借记卡约4900万张）坐拥“亚军”宝座（",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 15,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "“去年银监会下发《关于信用卡套现活跃风险提示的通知》要求：严格禁止将pos机发放在个人名下，",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 11,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "周边交通：地铁2号线人民广场或南京东路站。公交123、123区、14、167、20、",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 14,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "多数人又称这座岛叫“洛克岛”。",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 2,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": true
+      },
+      {
+        "group": "none",
+        "text": "成为了WCG历史上最好的魔兽争霸选手，并且仍然是目前唯一一位获得WCG冠军的兽族选手。",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 2,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "《死亡空间：浩劫余生》的时空背景设定在2509年，地球不只与USG石村号(USG",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 11,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "除中信银行开卡时需要10元工本费外，其余几家均不收取这笔费用。其中兴业银行客服人员还表示，",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 8,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "大众软件：新手玩家《云之遥》全攻略(4)",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 7,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "两队本周都是双赛，热那亚意大利杯取胜，那不勒联盟杯落败出局。不过在联赛里那不勒斯客场一直保持不败，",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 20,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": false
+      },
+      {
+        "group": "none",
+        "text": "行业协会→发展太快鱼目混珠",
+        "spans": [],
+        "exact": false,
+        "predicted_characters": 1,
+        "gold_characters": 0,
+        "true_positive_characters": 0,
+        "single_contiguous": true
+      }
+    ]
+  },
+  "seconds": 45.07485099999758,
+  "limitations": [
+    "Forty selected news examples; CLUENER is not a memory-chat benchmark.",
+    "The locator was trained on original DeepSeek features and was not adapted here.",
+    "Public text may overlap base pretraining; no writing or memory reading was performed.",
+    "Entity routing, source trust, polarity and temporal meaning remain untested."
+  ]
+}

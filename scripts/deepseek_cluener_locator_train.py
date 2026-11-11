@@ -31,6 +31,7 @@ TRAIN = ROOT / 'runs/cluener-train-41aef965.parquet'
 TRAIN_SHA = '29fa263e67cf4a27fa4a9e378cdba9bb5189a3e6d9002829cdc72e2976cfe1cd'
 AUDIT = ROOT / 'runs/deepseek-cluener-span-audit-20261110.json'
 OUTPUT = ROOT / 'runs/deepseek-cluener-locator-20261110'
+REQUIRE_BASELINE_REPRODUCTION = True
 
 
 def remove_validation_texts(training, validation):
@@ -182,13 +183,14 @@ def run():
                     _, single = single_span_mask(scores[i], masks[train_count + i])
                     synthetic[group]['single_contiguous'] += int(single)
             results[label] = {'news': news, 'synthetic': synthetic}
-    for group in ('single', 'multiple', 'none'):
-        if results['old']['news']['groups'][group] != prior_audit['summary'][group]:
-            # Prior uses a different key for representability; compare the shared metrics below.
-            before = results['old']['news']['groups'][group]
-            previous = prior_audit['summary'][group]
-            if any(before[k] != previous[k] for k in ('examples', 'exact', 'single_contiguous', 'character_precision', 'character_recall')):
-                raise ValueError('Baseline did not reproduce previous audit')
+    if REQUIRE_BASELINE_REPRODUCTION:
+        for group in ('single', 'multiple', 'none'):
+            if results['old']['news']['groups'][group] != prior_audit['summary'][group]:
+                # Prior uses a different key for representability; compare the shared metrics below.
+                before = results['old']['news']['groups'][group]
+                previous = prior_audit['summary'][group]
+                if any(before[k] != previous[k] for k in ('examples', 'exact', 'single_contiguous', 'character_precision', 'character_recall')):
+                    raise ValueError('Baseline did not reproduce previous audit')
     if feature_files_sha256(MODEL) != config_sha or any(sha(p) != d for p, d in protected.items()):
         raise ValueError('Protected input changed')
     OUTPUT.mkdir(parents=False, exist_ok=False)
