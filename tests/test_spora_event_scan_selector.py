@@ -32,6 +32,21 @@ class EventScanTests(unittest.TestCase):
         with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=[{'action': 'new'}]):
             self.assertEqual(select_event(self.model, self.state, 1, 'previous')['reason'], 'insufficient_observed_candidates')
 
+    def test_effective_time_uses_latest_observation_at_each_effective_time(self):
+        rows = [{'action': 'new', 'valid_at': 0}, {'action': 'correct', 'valid_at': 2},
+                {'action': 'repeat', 'valid_at': 2}, {'action': 'correct', 'valid_at': 5}]
+        with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=rows):
+            self.assertEqual(select_event(self.model, self.state, 1, 'effective_first', as_of=5)['event_time'], 0)
+            self.assertEqual(select_event(self.model, self.state, 1, 'effective_latest', as_of=3)['event_time'], 1)
+            self.assertEqual(select_event(self.model, self.state, 1, 'effective_previous', as_of=5)['event_time'], 1)
+            self.assertEqual(select_event(self.model, self.state, 1, 'effective_latest', as_of=1)['effective_time'], 0)
+
+    def test_effective_selection_abstains_when_time_is_missing(self):
+        with patch('scripts.spora_event_scan_selector.read_provenance_batch',
+                   return_value=[{'action': 'new', 'valid_at': None}]):
+            self.assertEqual(select_event(self.model, self.state, 1, 'effective_latest', as_of=5)['reason'],
+                             'missing_effective_time')
+
 
 if __name__ == '__main__':
     unittest.main()

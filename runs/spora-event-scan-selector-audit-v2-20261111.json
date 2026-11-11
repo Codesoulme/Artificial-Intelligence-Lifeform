@@ -1,0 +1,1193 @@
+{
+  "status": "experimental_finite_symbol_event_scan",
+  "individual_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "cursor": 68,
+  "page_count": 2,
+  "writes": [
+    {
+      "key": 1,
+      "value": 1,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 0,
+      "current_write": true
+    },
+    {
+      "key": 2,
+      "value": 2,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 1,
+      "current_write": true
+    },
+    {
+      "key": 1,
+      "value": 6,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 2,
+      "current_write": true
+    },
+    {
+      "key": 1,
+      "value": 6,
+      "source": "direct",
+      "valid_at": null,
+      "action": "repeat",
+      "confidence": 0.9999779462814331,
+      "reason": "learned_decision",
+      "history_time": 3,
+      "current_write": false
+    },
+    {
+      "key": 2,
+      "value": 3,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 4,
+      "current_write": true
+    },
+    {
+      "key": 15,
+      "value": 5,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 5,
+      "current_write": true
+    },
+    {
+      "key": 16,
+      "value": 6,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 6,
+      "current_write": true
+    },
+    {
+      "key": 17,
+      "value": 7,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 7,
+      "current_write": true
+    },
+    {
+      "key": 18,
+      "value": 8,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 8,
+      "current_write": true
+    },
+    {
+      "key": 19,
+      "value": 9,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 9,
+      "current_write": true
+    },
+    {
+      "key": 20,
+      "value": 10,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 10,
+      "current_write": true
+    },
+    {
+      "key": 21,
+      "value": 11,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 11,
+      "current_write": true
+    },
+    {
+      "key": 22,
+      "value": 12,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 12,
+      "current_write": true
+    },
+    {
+      "key": 23,
+      "value": 13,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 13,
+      "current_write": true
+    },
+    {
+      "key": 24,
+      "value": 14,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 14,
+      "current_write": true
+    },
+    {
+      "key": 25,
+      "value": 15,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 15,
+      "current_write": true
+    },
+    {
+      "key": 26,
+      "value": 0,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 16,
+      "current_write": true
+    },
+    {
+      "key": 27,
+      "value": 1,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 17,
+      "current_write": true
+    },
+    {
+      "key": 28,
+      "value": 2,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 18,
+      "current_write": true
+    },
+    {
+      "key": 29,
+      "value": 3,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 19,
+      "current_write": true
+    },
+    {
+      "key": 30,
+      "value": 4,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 20,
+      "current_write": true
+    },
+    {
+      "key": 31,
+      "value": 5,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 21,
+      "current_write": true
+    },
+    {
+      "key": 32,
+      "value": 6,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 22,
+      "current_write": true
+    },
+    {
+      "key": 33,
+      "value": 7,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 23,
+      "current_write": true
+    },
+    {
+      "key": 34,
+      "value": 8,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 24,
+      "current_write": true
+    },
+    {
+      "key": 35,
+      "value": 9,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 25,
+      "current_write": true
+    },
+    {
+      "key": 36,
+      "value": 10,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 26,
+      "current_write": true
+    },
+    {
+      "key": 37,
+      "value": 11,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 27,
+      "current_write": true
+    },
+    {
+      "key": 38,
+      "value": 12,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 28,
+      "current_write": true
+    },
+    {
+      "key": 39,
+      "value": 13,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 29,
+      "current_write": true
+    },
+    {
+      "key": 10,
+      "value": 14,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 30,
+      "current_write": true
+    },
+    {
+      "key": 11,
+      "value": 15,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 31,
+      "current_write": true
+    },
+    {
+      "key": 12,
+      "value": 0,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 32,
+      "current_write": true
+    },
+    {
+      "key": 13,
+      "value": 1,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 33,
+      "current_write": true
+    },
+    {
+      "key": 14,
+      "value": 2,
+      "source": "direct",
+      "valid_at": null,
+      "action": "new",
+      "confidence": 0.9999020099639893,
+      "reason": "learned_decision",
+      "history_time": 34,
+      "current_write": true
+    },
+    {
+      "key": 15,
+      "value": 3,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 35,
+      "current_write": true
+    },
+    {
+      "key": 16,
+      "value": 4,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 36,
+      "current_write": true
+    },
+    {
+      "key": 17,
+      "value": 5,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 37,
+      "current_write": true
+    },
+    {
+      "key": 18,
+      "value": 6,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 38,
+      "current_write": true
+    },
+    {
+      "key": 19,
+      "value": 7,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 39,
+      "current_write": true
+    },
+    {
+      "key": 20,
+      "value": 8,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 40,
+      "current_write": true
+    },
+    {
+      "key": 21,
+      "value": 9,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 41,
+      "current_write": true
+    },
+    {
+      "key": 22,
+      "value": 10,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 42,
+      "current_write": true
+    },
+    {
+      "key": 23,
+      "value": 11,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 43,
+      "current_write": true
+    },
+    {
+      "key": 24,
+      "value": 12,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 44,
+      "current_write": true
+    },
+    {
+      "key": 25,
+      "value": 13,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 45,
+      "current_write": true
+    },
+    {
+      "key": 26,
+      "value": 14,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 46,
+      "current_write": true
+    },
+    {
+      "key": 27,
+      "value": 15,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 47,
+      "current_write": true
+    },
+    {
+      "key": 28,
+      "value": 0,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 48,
+      "current_write": true
+    },
+    {
+      "key": 29,
+      "value": 1,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 49,
+      "current_write": true
+    },
+    {
+      "key": 30,
+      "value": 2,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 50,
+      "current_write": true
+    },
+    {
+      "key": 31,
+      "value": 3,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 51,
+      "current_write": true
+    },
+    {
+      "key": 32,
+      "value": 4,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 52,
+      "current_write": true
+    },
+    {
+      "key": 33,
+      "value": 5,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 53,
+      "current_write": true
+    },
+    {
+      "key": 34,
+      "value": 6,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 54,
+      "current_write": true
+    },
+    {
+      "key": 35,
+      "value": 7,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 55,
+      "current_write": true
+    },
+    {
+      "key": 36,
+      "value": 8,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 56,
+      "current_write": true
+    },
+    {
+      "key": 37,
+      "value": 9,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 57,
+      "current_write": true
+    },
+    {
+      "key": 38,
+      "value": 10,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 58,
+      "current_write": true
+    },
+    {
+      "key": 39,
+      "value": 11,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 59,
+      "current_write": true
+    },
+    {
+      "key": 10,
+      "value": 12,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 60,
+      "current_write": true
+    },
+    {
+      "key": 11,
+      "value": 13,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 61,
+      "current_write": true
+    },
+    {
+      "key": 12,
+      "value": 14,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 62,
+      "current_write": true
+    },
+    {
+      "key": 13,
+      "value": 15,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 63,
+      "current_write": true
+    },
+    {
+      "key": 2,
+      "value": 4,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 64,
+      "current_write": true
+    },
+    {
+      "key": 1,
+      "value": 5,
+      "source": "direct",
+      "valid_at": null,
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "history_time": 65,
+      "current_write": true
+    },
+    {
+      "key": 1,
+      "value": 7,
+      "source": "direct",
+      "valid_at": 0,
+      "action": "defer",
+      "confidence": 0.9899795055389404,
+      "reason": "learned_decision",
+      "history_time": 66,
+      "current_write": false
+    },
+    {
+      "key": 1,
+      "value": 8,
+      "source": "inference",
+      "valid_at": null,
+      "action": "defer",
+      "confidence": 0.9999995231628418,
+      "reason": "nonfactual_source_guard",
+      "history_time": 67,
+      "current_write": false
+    }
+  ],
+  "rows": [
+    {
+      "key": 1,
+      "order": "first",
+      "expected_event": 0,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 0,
+        "candidate_count": 3,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 1,
+      "event_correct": true,
+      "value_correct": true
+    },
+    {
+      "key": 1,
+      "order": "previous",
+      "expected_event": 2,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 2,
+        "candidate_count": 3,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 6,
+      "event_correct": true,
+      "value_correct": true
+    },
+    {
+      "key": 1,
+      "order": "latest",
+      "expected_event": 65,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 65,
+        "candidate_count": 3,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 5,
+      "event_correct": true,
+      "value_correct": true
+    },
+    {
+      "key": 2,
+      "order": "first",
+      "expected_event": 1,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 1,
+        "candidate_count": 3,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 2,
+      "event_correct": true,
+      "value_correct": true
+    },
+    {
+      "key": 2,
+      "order": "previous",
+      "expected_event": 4,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 4,
+        "candidate_count": 3,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 3,
+      "event_correct": true,
+      "value_correct": true
+    },
+    {
+      "key": 2,
+      "order": "latest",
+      "expected_event": 64,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 64,
+        "candidate_count": 3,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 4,
+      "event_correct": true,
+      "value_correct": true
+    },
+    {
+      "key": 3,
+      "order": "first",
+      "expected_event": null,
+      "result": {
+        "status": "abstain",
+        "reason": "insufficient_observed_candidates"
+      },
+      "native_value": null,
+      "event_correct": true,
+      "value_correct": null
+    },
+    {
+      "key": 3,
+      "order": "previous",
+      "expected_event": null,
+      "result": {
+        "status": "abstain",
+        "reason": "insufficient_observed_candidates"
+      },
+      "native_value": null,
+      "event_correct": true,
+      "value_correct": null
+    },
+    {
+      "key": 3,
+      "order": "latest",
+      "expected_event": null,
+      "result": {
+        "status": "abstain",
+        "reason": "insufficient_observed_candidates"
+      },
+      "native_value": null,
+      "event_correct": true,
+      "value_correct": null
+    },
+    {
+      "key": 10,
+      "order": "first",
+      "expected_event": 30,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 30,
+        "candidate_count": 2,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 14,
+      "event_correct": true,
+      "value_correct": true
+    },
+    {
+      "key": 10,
+      "order": "previous",
+      "expected_event": 30,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 30,
+        "candidate_count": 2,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 14,
+      "event_correct": true,
+      "value_correct": true
+    },
+    {
+      "key": 10,
+      "order": "latest",
+      "expected_event": 60,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 60,
+        "candidate_count": 2,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 12,
+      "event_correct": true,
+      "value_correct": true
+    },
+    {
+      "key": 39,
+      "order": "first",
+      "expected_event": 29,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 29,
+        "candidate_count": 2,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 13,
+      "event_correct": true,
+      "value_correct": true
+    },
+    {
+      "key": 39,
+      "order": "previous",
+      "expected_event": 29,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 29,
+        "candidate_count": 2,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 13,
+      "event_correct": true,
+      "value_correct": true
+    },
+    {
+      "key": 39,
+      "order": "latest",
+      "expected_event": 59,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 59,
+        "candidate_count": 2,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;observation_order_only"
+      },
+      "native_value": 11,
+      "event_correct": true,
+      "value_correct": true
+    }
+  ],
+  "effective_rows": [
+    {
+      "key": 1,
+      "as_of": 2,
+      "order": "effective_latest",
+      "expected_event": 2,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 2,
+        "effective_time": 2,
+        "candidate_count": 2,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 1,
+      "as_of": 67,
+      "order": "effective_latest",
+      "expected_event": 65,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 65,
+        "effective_time": 65,
+        "candidate_count": 3,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 1,
+      "as_of": 67,
+      "order": "effective_previous",
+      "expected_event": 2,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 2,
+        "effective_time": 2,
+        "candidate_count": 3,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 2,
+      "as_of": 2,
+      "order": "effective_latest",
+      "expected_event": 1,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 1,
+        "effective_time": 1,
+        "candidate_count": 1,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 2,
+      "as_of": 67,
+      "order": "effective_latest",
+      "expected_event": 64,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 64,
+        "effective_time": 64,
+        "candidate_count": 3,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 2,
+      "as_of": 67,
+      "order": "effective_previous",
+      "expected_event": 4,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 4,
+        "effective_time": 4,
+        "candidate_count": 3,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 3,
+      "as_of": 2,
+      "order": "effective_latest",
+      "expected_event": null,
+      "result": {
+        "status": "abstain",
+        "reason": "insufficient_effective_candidates"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 3,
+      "as_of": 67,
+      "order": "effective_latest",
+      "expected_event": null,
+      "result": {
+        "status": "abstain",
+        "reason": "insufficient_effective_candidates"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 3,
+      "as_of": 67,
+      "order": "effective_previous",
+      "expected_event": null,
+      "result": {
+        "status": "abstain",
+        "reason": "insufficient_effective_candidates"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 10,
+      "as_of": 2,
+      "order": "effective_latest",
+      "expected_event": null,
+      "result": {
+        "status": "abstain",
+        "reason": "insufficient_effective_candidates"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 10,
+      "as_of": 67,
+      "order": "effective_latest",
+      "expected_event": 60,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 60,
+        "effective_time": 60,
+        "candidate_count": 2,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 10,
+      "as_of": 67,
+      "order": "effective_previous",
+      "expected_event": 30,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 30,
+        "effective_time": 30,
+        "candidate_count": 2,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 39,
+      "as_of": 2,
+      "order": "effective_latest",
+      "expected_event": null,
+      "result": {
+        "status": "abstain",
+        "reason": "insufficient_effective_candidates"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 39,
+      "as_of": 67,
+      "order": "effective_latest",
+      "expected_event": 59,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 59,
+        "effective_time": 59,
+        "candidate_count": 2,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "event_correct": true
+    },
+    {
+      "key": 39,
+      "as_of": 67,
+      "order": "effective_previous",
+      "expected_event": 29,
+      "result": {
+        "status": "experimental_candidate",
+        "event_time": 29,
+        "effective_time": 29,
+        "candidate_count": 2,
+        "checked_events": 68,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "event_correct": true
+    }
+  ],
+  "correct_event_count": 15,
+  "correct_value_count": 12,
+  "value_cases": 12,
+  "effective_correct_count": 15,
+  "effective_cases": 15,
+  "reload_mismatch_indices": [],
+  "limitations": [
+    "Oracle uses controller actions, not independent factual truth.",
+    "Observation order only; valid_at is not used to rank or select.",
+    "Unknown neural reads may conceal events; selection cannot certify completeness.",
+    "Finite symbols, one trajectory, same-process reload; no language model involved."
+  ]
+}

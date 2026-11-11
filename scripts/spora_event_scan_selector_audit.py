@@ -15,7 +15,7 @@ from spora.growing import capacity, grow, load, query, save
 from spora.internal_memory import observe_sourced
 from spora.language_training import frozen_digest
 
-OUTPUT = ROOT/'runs/spora-event-scan-selector-audit-20261111.json'
+OUTPUT = ROOT/'runs/spora-event-scan-selector-audit-v2-20261111.json'
 
 
 def run():
@@ -60,6 +60,23 @@ def run():
                          'result': result, 'native_value': value,
                          'event_correct': actual == expected,
                          'value_correct': None if expected is None else value == writes[expected]['value']})
+    effective_rows = []
+    for key in (1, 2, 3, 10, 39):
+        accepted = [w for w in writes if w['key'] == key and w['action'] in ('new', 'correct')]
+        groups = {}
+        for index, write in enumerate(writes):
+            if write['key'] == key and write['action'] in ('new', 'correct'):
+                valid_at = write['history_time'] if write['valid_at'] is None else write['valid_at']
+                groups[valid_at] = max(index, groups.get(valid_at, -1))
+        for as_of, order in ((2, 'effective_latest'), (67, 'effective_latest'),
+                             (67, 'effective_previous')):
+            result = select_event(model, state, key, order, as_of=as_of)
+            eligible = sorted(t for t in groups if t <= as_of)
+            index = {'effective_latest': -1, 'effective_previous': -2}[order]
+            expected = groups[eligible[index]] if len(eligible) >= (2 if index == -2 else 1) else None
+            effective_rows.append({'key': key, 'as_of': as_of, 'order': order,
+                                   'expected_event': expected, 'result': result,
+                                   'event_correct': result.get('event_time') == expected})
     with tempfile.TemporaryDirectory() as temp:
         path = Path(temp)/'individual.pt'
         save(path, model, state)
@@ -70,9 +87,12 @@ def run():
         raise ValueError('Protected individual changed')
     report = {'status': 'experimental_finite_symbol_event_scan', 'individual_sha256': INDIVIDUAL_SHA,
               'cursor': state.cursor, 'page_count': len(state.pages), 'writes': writes, 'rows': rows,
+              'effective_rows': effective_rows,
               'correct_event_count': sum(r['event_correct'] for r in rows),
               'correct_value_count': sum(r['value_correct'] is True for r in rows),
               'value_cases': sum(r['value_correct'] is not None for r in rows),
+              'effective_correct_count': sum(r['event_correct'] for r in effective_rows),
+              'effective_cases': len(effective_rows),
               'reload_mismatch_indices': reload_mismatches,
               'limitations': ['Oracle uses controller actions, not independent factual truth.',
                               'Observation order only; valid_at is not used to rank or select.',

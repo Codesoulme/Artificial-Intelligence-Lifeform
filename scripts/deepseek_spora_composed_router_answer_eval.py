@@ -28,6 +28,7 @@ from spora.current_memory_status import current_memory_status
 from spora.growing import load
 from spora.integrated_checkpoint import load_integrated, replacement_feature_variant_sha256
 from spora.internal_memory import observe_sourced
+from scripts.spora_event_scan_selector import select_event
 from spora.named_address import address_basis_sha256, feature_files_sha256
 from spora.temporal_routing import CURRENT, PAST, LATER, route_spec
 
@@ -35,6 +36,7 @@ ENTITY = ROOT/'runs/deepseek-spora-single-entity-gate-v2-20261111'
 INTENT = ROOT/'runs/deepseek-spora-read-intent-gate-v2-20261111'
 OUTPUT = ROOT/'runs/deepseek-spora-composed-router-answer-eval-20261111.json'
 TEMPORAL_CHECKPOINT = None
+DYNAMIC_EVENT_SELECTION = False
 NEGATIVE = ('不要告诉我小林现在喜欢什么饮料。', '把小林的饮料改成牛奶。', '给小林写一句鼓励的话。',
             '小林和阿宁分别爱喝什么？', '小青以前喜欢喝什么？', '你会说中文吗？')
 
@@ -163,9 +165,20 @@ def run():
                     if current_memory_status(organism, state, key)['status'] != 'known':
                         row['reason'] = 'unknown_memory'
                     else:
-                        row['accepted'], row['reason'], row['predicted_key'] = True, 'routed', key
                         _, event = route_spec(predicted_times[i])
                         mode = 'current' if event is None else 'past' if predicted_times[i] == PAST else 'later'
+                        if DYNAMIC_EVENT_SELECTION and event is not None:
+                            order = 'effective_previous' if predicted_times[i] == PAST else 'effective_latest'
+                            selection = select_event(organism, state, key, order, as_of=state.cursor-1)
+                            row['memory_event_selection'] = selection
+                            if selection['status'] != 'experimental_candidate':
+                                row['reason'] = 'memory_event_abstain'
+                                row['route_correct'] = False
+                                row['answer_correct'] = False
+                                results.append(row)
+                                continue
+                            event = selection['event_time']
+                        row['accepted'], row['reason'], row['predicted_key'] = True, 'routed', key
                         args = _memory_args(organism, state, {'key': key, 'intent': mode,
                                                                'event_time': 0 if event is None else event})
                         prefix = closed_think_inputs(tokenizer, question, 'cuda')

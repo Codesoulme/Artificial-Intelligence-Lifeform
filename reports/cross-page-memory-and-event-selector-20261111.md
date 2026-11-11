@@ -30,3 +30,12 @@ does not prove that no hidden event exists. The oracle scores the write
 controller's actions, which are not independent evidence that the facts were
 true. Natural language, multiple independently trained individuals, abrupt
 crash recovery, and open-world behavior remain untested.
+
+The follow-up selector adds `effective_first`, `effective_latest`, and
+`effective_previous`. It decodes the exact numeric `valid_at` field and, for
+duplicate effective times, keeps the latest observation at that time. In the
+same 68-event experiment, 15/15 effective-time selections matched the audit
+oracle, including an intentionally supplied correction with `valid_at=0` that
+the controller deferred. This result is still finite-symbol development
+evidence; it does not establish that a natural-language date was understood or
+that every hidden event was found.
