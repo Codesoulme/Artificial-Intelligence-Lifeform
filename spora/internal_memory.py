@@ -106,7 +106,7 @@ def write_features(model, state, key, value, source, quality, valid_at):
     freshness = (valid_at > old_time)-(valid_at < old_time)
     feature = F.one_hot(torch.tensor(source, device=device), 4).float().tolist()
     feature += [quality, float(known), float(known and old_value == value), old_quality, float(freshness), float(has_evidence)]
-    return torch.tensor([feature], dtype=torch.float32, device=device), address, old_value, old_quality
+    return torch.tensor([feature], dtype=torch.float32, device=device), address, old_value, old_quality, old_time
 
 
 @torch.no_grad()
@@ -124,7 +124,11 @@ def observe_sourced(model, state, key, value, source, quality, valid_at=None):
     if type(valid_at) is not int or not 0 <= valid_at <= state.cursor or state.cursor >= capacity(model, state):
         raise ValueError('Invalid effective time or explicit growth required')
     si = SOURCES.index(source)
-    features, address, old_value, old_quality = write_features(model, state, key, value, si, quality, valid_at)
+    features, address, old_value, old_quality, old_time = write_features(model, state, key, value, si, quality, valid_at)
+    from .observation_surprise import observation_surprise
+    surprise = observation_surprise(known=old_value != model.config.unknown, old_value=old_value,
+                                    new_value=value, old_quality=old_quality, new_quality=quality,
+                                    old_time=old_time, new_time=valid_at)
     logits = model.write_control(features)
     if logits.shape != (1, len(ACTIONS)) or not bool(torch.isfinite(logits).all()):
         raise ValueError('Write controller must return finite action logits')
@@ -167,7 +171,8 @@ def observe_sourced(model, state, key, value, source, quality, valid_at=None):
                           informative=internal.informative+int(action in (0, 1, 2)),
                           corrections=internal.corrections+int(action == 1))
     return updated, {'action': ACTIONS[action], 'confidence': confidence, 'reason': reason,
-                     'source': source, 'history_time': state.cursor, 'current_write': action in (0, 1)}
+                     'source': source, 'history_time': state.cursor, 'current_write': action in (0, 1),
+                     'novelty': surprise['score'], 'novelty_components': surprise['components']}
 
 
 @torch.no_grad()
