@@ -1,0 +1,78 @@
+{
+  "status": "research_only_no_writes",
+  "summary": {
+    "known_total": 2,
+    "known_accepted": 1,
+    "unknown_total": 8,
+    "unknown_accepted": 0
+  },
+  "rows": [
+    {
+      "group": "known",
+      "question": "小林现在喜欢喝什么？",
+      "score": 0.9125122427940369,
+      "accepted": true
+    },
+    {
+      "group": "known",
+      "question": "小林目前最喜欢哪种饮料？",
+      "score": 0.6602284908294678,
+      "accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "小林林现在喜欢喝什么？",
+      "score": 0.49833589792251587,
+      "accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "林小林现在喜欢喝什么？",
+      "score": 0.3431425988674164,
+      "accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "小林子现在喜欢喝什么？",
+      "score": 0.2273251712322235,
+      "accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "小林娜现在喜欢喝什么？",
+      "score": 0.5181493163108826,
+      "accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "小林林目前最喜欢哪种饮料？",
+      "score": 0.23177847266197205,
+      "accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "林小林目前最喜欢哪种饮料？",
+      "score": 0.1513073891401291,
+      "accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "小林子目前最喜欢哪种饮料？",
+      "score": 0.09523744136095047,
+      "accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "小林娜目前最喜欢哪种饮料？",
+      "score": 0.231088325381279,
+      "accepted": false
+    }
+  ],
+  "gate_sha256": "79dda51df02da1855bf4bdd8058f02355e38a0786e2932885e612155ba107c52",
+  "source_checkpoint_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "limitations": [
+    "Ten development queries reused from the original failure discovery.",
+    "Gate assessed alone; no live router integration or user state changed.",
+    "Calibration included related name suffixes; this is not independent evaluation."
+  ]
+}

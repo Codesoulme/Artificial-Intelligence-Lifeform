@@ -1,0 +1,1216 @@
+{
+  "status": "research_only_no_writes",
+  "threshold": 0.7262625098228455,
+  "checkpoint_sha256": "79dda51df02da1855bf4bdd8058f02355e38a0786e2932885e612155ba107c52",
+  "source_checkpoint_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "results": {
+    "train": {
+      "known_total": 16,
+      "known_accepted": 16,
+      "unknown_total": 64,
+      "unknown_accepted": 0,
+      "rows": [
+        {
+          "text": "小林现在喜欢喝什么？",
+          "label": 1,
+          "name": "小林",
+          "score": 0.9314483404159546,
+          "accepted": true
+        },
+        {
+          "text": "小林哥现在喜欢喝什么？",
+          "label": 0,
+          "name": "小林哥",
+          "score": 0.009312700480222702,
+          "accepted": false
+        },
+        {
+          "text": "小林姐现在喜欢喝什么？",
+          "label": 0,
+          "name": "小林姐",
+          "score": 0.010890496894717216,
+          "accepted": false
+        },
+        {
+          "text": "小林仔现在喜欢喝什么？",
+          "label": 0,
+          "name": "小林仔",
+          "score": 0.02429570071399212,
+          "accepted": false
+        },
+        {
+          "text": "小林叔现在喜欢喝什么？",
+          "label": 0,
+          "name": "小林叔",
+          "score": 0.010829200968146324,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小林记录的饮料。",
+          "label": 1,
+          "name": "小林",
+          "score": 0.9027358889579773,
+          "accepted": true
+        },
+        {
+          "text": "请查一下小林哥记录的饮料。",
+          "label": 0,
+          "name": "小林哥",
+          "score": 0.020722705870866776,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小林姐记录的饮料。",
+          "label": 0,
+          "name": "小林姐",
+          "score": 0.019767679274082184,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小林仔记录的饮料。",
+          "label": 0,
+          "name": "小林仔",
+          "score": 0.03522400185465813,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小林叔记录的饮料。",
+          "label": 0,
+          "name": "小林叔",
+          "score": 0.019691918045282364,
+          "accepted": false
+        },
+        {
+          "text": "阿宁现在喜欢喝什么？",
+          "label": 1,
+          "name": "阿宁",
+          "score": 0.913514256477356,
+          "accepted": true
+        },
+        {
+          "text": "阿宁哥现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿宁哥",
+          "score": 0.047167569398880005,
+          "accepted": false
+        },
+        {
+          "text": "阿宁姐现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿宁姐",
+          "score": 0.013536210171878338,
+          "accepted": false
+        },
+        {
+          "text": "阿宁仔现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿宁仔",
+          "score": 0.014984390698373318,
+          "accepted": false
+        },
+        {
+          "text": "阿宁叔现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿宁叔",
+          "score": 0.010262119583785534,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿宁记录的饮料。",
+          "label": 1,
+          "name": "阿宁",
+          "score": 0.8683298230171204,
+          "accepted": true
+        },
+        {
+          "text": "请查一下阿宁哥记录的饮料。",
+          "label": 0,
+          "name": "阿宁哥",
+          "score": 0.05323006585240364,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿宁姐记录的饮料。",
+          "label": 0,
+          "name": "阿宁姐",
+          "score": 0.025492118671536446,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿宁仔记录的饮料。",
+          "label": 0,
+          "name": "阿宁仔",
+          "score": 0.027326449751853943,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿宁叔记录的饮料。",
+          "label": 0,
+          "name": "阿宁叔",
+          "score": 0.02905639447271824,
+          "accepted": false
+        },
+        {
+          "text": "小雨现在喜欢喝什么？",
+          "label": 1,
+          "name": "小雨",
+          "score": 0.9412935972213745,
+          "accepted": true
+        },
+        {
+          "text": "小雨哥现在喜欢喝什么？",
+          "label": 0,
+          "name": "小雨哥",
+          "score": 0.010787268169224262,
+          "accepted": false
+        },
+        {
+          "text": "小雨姐现在喜欢喝什么？",
+          "label": 0,
+          "name": "小雨姐",
+          "score": 0.012589518912136555,
+          "accepted": false
+        },
+        {
+          "text": "小雨仔现在喜欢喝什么？",
+          "label": 0,
+          "name": "小雨仔",
+          "score": 0.03693719580769539,
+          "accepted": false
+        },
+        {
+          "text": "小雨叔现在喜欢喝什么？",
+          "label": 0,
+          "name": "小雨叔",
+          "score": 0.00802744459360838,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小雨记录的饮料。",
+          "label": 1,
+          "name": "小雨",
+          "score": 0.9078852534294128,
+          "accepted": true
+        },
+        {
+          "text": "请查一下小雨哥记录的饮料。",
+          "label": 0,
+          "name": "小雨哥",
+          "score": 0.02790219895541668,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小雨姐记录的饮料。",
+          "label": 0,
+          "name": "小雨姐",
+          "score": 0.026865141466259956,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小雨仔记录的饮料。",
+          "label": 0,
+          "name": "小雨仔",
+          "score": 0.059861790388822556,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小雨叔记录的饮料。",
+          "label": 0,
+          "name": "小雨叔",
+          "score": 0.017427045851945877,
+          "accepted": false
+        },
+        {
+          "text": "阿哲现在喜欢喝什么？",
+          "label": 1,
+          "name": "阿哲",
+          "score": 0.8918848037719727,
+          "accepted": true
+        },
+        {
+          "text": "阿哲哥现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿哲哥",
+          "score": 0.02790779247879982,
+          "accepted": false
+        },
+        {
+          "text": "阿哲姐现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿哲姐",
+          "score": 0.00746003957465291,
+          "accepted": false
+        },
+        {
+          "text": "阿哲仔现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿哲仔",
+          "score": 0.02178754098713398,
+          "accepted": false
+        },
+        {
+          "text": "阿哲叔现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿哲叔",
+          "score": 0.0073591419495642185,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿哲记录的饮料。",
+          "label": 1,
+          "name": "阿哲",
+          "score": 0.8528187870979309,
+          "accepted": true
+        },
+        {
+          "text": "请查一下阿哲哥记录的饮料。",
+          "label": 0,
+          "name": "阿哲哥",
+          "score": 0.04383658245205879,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿哲姐记录的饮料。",
+          "label": 0,
+          "name": "阿哲姐",
+          "score": 0.01809350587427616,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿哲仔记录的饮料。",
+          "label": 0,
+          "name": "阿哲仔",
+          "score": 0.0351489782333374,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿哲叔记录的饮料。",
+          "label": 0,
+          "name": "阿哲叔",
+          "score": 0.01992146484553814,
+          "accepted": false
+        },
+        {
+          "text": "小梅现在喜欢喝什么？",
+          "label": 1,
+          "name": "小梅",
+          "score": 0.9291020631790161,
+          "accepted": true
+        },
+        {
+          "text": "小梅哥现在喜欢喝什么？",
+          "label": 0,
+          "name": "小梅哥",
+          "score": 0.05109940469264984,
+          "accepted": false
+        },
+        {
+          "text": "小梅姐现在喜欢喝什么？",
+          "label": 0,
+          "name": "小梅姐",
+          "score": 0.010576575063169003,
+          "accepted": false
+        },
+        {
+          "text": "小梅仔现在喜欢喝什么？",
+          "label": 0,
+          "name": "小梅仔",
+          "score": 0.021807683631777763,
+          "accepted": false
+        },
+        {
+          "text": "小梅叔现在喜欢喝什么？",
+          "label": 0,
+          "name": "小梅叔",
+          "score": 0.008165623992681503,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小梅记录的饮料。",
+          "label": 1,
+          "name": "小梅",
+          "score": 0.8688061237335205,
+          "accepted": true
+        },
+        {
+          "text": "请查一下小梅哥记录的饮料。",
+          "label": 0,
+          "name": "小梅哥",
+          "score": 0.04043491929769516,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小梅姐记录的饮料。",
+          "label": 0,
+          "name": "小梅姐",
+          "score": 0.017642421647906303,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小梅仔记录的饮料。",
+          "label": 0,
+          "name": "小梅仔",
+          "score": 0.028210841119289398,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小梅叔记录的饮料。",
+          "label": 0,
+          "name": "小梅叔",
+          "score": 0.015500868670642376,
+          "accepted": false
+        },
+        {
+          "text": "阿远现在喜欢喝什么？",
+          "label": 1,
+          "name": "阿远",
+          "score": 0.9275546669960022,
+          "accepted": true
+        },
+        {
+          "text": "阿远哥现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿远哥",
+          "score": 0.032820604741573334,
+          "accepted": false
+        },
+        {
+          "text": "阿远姐现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿远姐",
+          "score": 0.010603450238704681,
+          "accepted": false
+        },
+        {
+          "text": "阿远仔现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿远仔",
+          "score": 0.022062083706259727,
+          "accepted": false
+        },
+        {
+          "text": "阿远叔现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿远叔",
+          "score": 0.016317594796419144,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿远记录的饮料。",
+          "label": 1,
+          "name": "阿远",
+          "score": 0.8634037375450134,
+          "accepted": true
+        },
+        {
+          "text": "请查一下阿远哥记录的饮料。",
+          "label": 0,
+          "name": "阿远哥",
+          "score": 0.0399530865252018,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿远姐记录的饮料。",
+          "label": 0,
+          "name": "阿远姐",
+          "score": 0.01989089511334896,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿远仔记录的饮料。",
+          "label": 0,
+          "name": "阿远仔",
+          "score": 0.02820684015750885,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿远叔记录的饮料。",
+          "label": 0,
+          "name": "阿远叔",
+          "score": 0.03380255401134491,
+          "accepted": false
+        },
+        {
+          "text": "小岚现在喜欢喝什么？",
+          "label": 1,
+          "name": "小岚",
+          "score": 0.943771243095398,
+          "accepted": true
+        },
+        {
+          "text": "小岚哥现在喜欢喝什么？",
+          "label": 0,
+          "name": "小岚哥",
+          "score": 0.015741823241114616,
+          "accepted": false
+        },
+        {
+          "text": "小岚姐现在喜欢喝什么？",
+          "label": 0,
+          "name": "小岚姐",
+          "score": 0.011510715819895267,
+          "accepted": false
+        },
+        {
+          "text": "小岚仔现在喜欢喝什么？",
+          "label": 0,
+          "name": "小岚仔",
+          "score": 0.026799360290169716,
+          "accepted": false
+        },
+        {
+          "text": "小岚叔现在喜欢喝什么？",
+          "label": 0,
+          "name": "小岚叔",
+          "score": 0.008805401623249054,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小岚记录的饮料。",
+          "label": 1,
+          "name": "小岚",
+          "score": 0.8794816732406616,
+          "accepted": true
+        },
+        {
+          "text": "请查一下小岚哥记录的饮料。",
+          "label": 0,
+          "name": "小岚哥",
+          "score": 0.030247900635004044,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小岚姐记录的饮料。",
+          "label": 0,
+          "name": "小岚姐",
+          "score": 0.019326861947774887,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小岚仔记录的饮料。",
+          "label": 0,
+          "name": "小岚仔",
+          "score": 0.04783928394317627,
+          "accepted": false
+        },
+        {
+          "text": "请查一下小岚叔记录的饮料。",
+          "label": 0,
+          "name": "小岚叔",
+          "score": 0.01711224392056465,
+          "accepted": false
+        },
+        {
+          "text": "阿明现在喜欢喝什么？",
+          "label": 1,
+          "name": "阿明",
+          "score": 0.943952202796936,
+          "accepted": true
+        },
+        {
+          "text": "阿明哥现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿明哥",
+          "score": 0.03167472779750824,
+          "accepted": false
+        },
+        {
+          "text": "阿明姐现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿明姐",
+          "score": 0.01405095774680376,
+          "accepted": false
+        },
+        {
+          "text": "阿明仔现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿明仔",
+          "score": 0.02286320924758911,
+          "accepted": false
+        },
+        {
+          "text": "阿明叔现在喜欢喝什么？",
+          "label": 0,
+          "name": "阿明叔",
+          "score": 0.01335036102682352,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿明记录的饮料。",
+          "label": 1,
+          "name": "阿明",
+          "score": 0.9097094535827637,
+          "accepted": true
+        },
+        {
+          "text": "请查一下阿明哥记录的饮料。",
+          "label": 0,
+          "name": "阿明哥",
+          "score": 0.04758907109498978,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿明姐记录的饮料。",
+          "label": 0,
+          "name": "阿明姐",
+          "score": 0.022898929193615913,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿明仔记录的饮料。",
+          "label": 0,
+          "name": "阿明仔",
+          "score": 0.03817473724484444,
+          "accepted": false
+        },
+        {
+          "text": "请查一下阿明叔记录的饮料。",
+          "label": 0,
+          "name": "阿明叔",
+          "score": 0.029513614252209663,
+          "accepted": false
+        }
+      ]
+    },
+    "calibration": {
+      "known_total": 8,
+      "known_accepted": 8,
+      "unknown_total": 16,
+      "unknown_accepted": 0,
+      "rows": [
+        {
+          "text": "小林目前的饮品偏好是什么？",
+          "label": 1,
+          "name": "小林",
+          "score": 0.7827980518341064,
+          "accepted": true
+        },
+        {
+          "text": "小林子目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "小林子",
+          "score": 0.17462368309497833,
+          "accepted": false
+        },
+        {
+          "text": "小林娜目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "小林娜",
+          "score": 0.38636255264282227,
+          "accepted": false
+        },
+        {
+          "text": "阿宁目前的饮品偏好是什么？",
+          "label": 1,
+          "name": "阿宁",
+          "score": 0.7719077467918396,
+          "accepted": true
+        },
+        {
+          "text": "阿宁子目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "阿宁子",
+          "score": 0.2055908888578415,
+          "accepted": false
+        },
+        {
+          "text": "阿宁娜目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "阿宁娜",
+          "score": 0.4302924871444702,
+          "accepted": false
+        },
+        {
+          "text": "小雨目前的饮品偏好是什么？",
+          "label": 1,
+          "name": "小雨",
+          "score": 0.8011330366134644,
+          "accepted": true
+        },
+        {
+          "text": "小雨子目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "小雨子",
+          "score": 0.19252949953079224,
+          "accepted": false
+        },
+        {
+          "text": "小雨娜目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "小雨娜",
+          "score": 0.34780293703079224,
+          "accepted": false
+        },
+        {
+          "text": "阿哲目前的饮品偏好是什么？",
+          "label": 1,
+          "name": "阿哲",
+          "score": 0.7262625098228455,
+          "accepted": true
+        },
+        {
+          "text": "阿哲子目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "阿哲子",
+          "score": 0.1776961088180542,
+          "accepted": false
+        },
+        {
+          "text": "阿哲娜目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "阿哲娜",
+          "score": 0.318147748708725,
+          "accepted": false
+        },
+        {
+          "text": "小梅目前的饮品偏好是什么？",
+          "label": 1,
+          "name": "小梅",
+          "score": 0.768852174282074,
+          "accepted": true
+        },
+        {
+          "text": "小梅子目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "小梅子",
+          "score": 0.15375667810440063,
+          "accepted": false
+        },
+        {
+          "text": "小梅娜目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "小梅娜",
+          "score": 0.39440274238586426,
+          "accepted": false
+        },
+        {
+          "text": "阿远目前的饮品偏好是什么？",
+          "label": 1,
+          "name": "阿远",
+          "score": 0.7755230069160461,
+          "accepted": true
+        },
+        {
+          "text": "阿远子目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "阿远子",
+          "score": 0.2156171202659607,
+          "accepted": false
+        },
+        {
+          "text": "阿远娜目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "阿远娜",
+          "score": 0.32337188720703125,
+          "accepted": false
+        },
+        {
+          "text": "小岚目前的饮品偏好是什么？",
+          "label": 1,
+          "name": "小岚",
+          "score": 0.8286156058311462,
+          "accepted": true
+        },
+        {
+          "text": "小岚子目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "小岚子",
+          "score": 0.21105030179023743,
+          "accepted": false
+        },
+        {
+          "text": "小岚娜目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "小岚娜",
+          "score": 0.3952658176422119,
+          "accepted": false
+        },
+        {
+          "text": "阿明目前的饮品偏好是什么？",
+          "label": 1,
+          "name": "阿明",
+          "score": 0.8705344796180725,
+          "accepted": true
+        },
+        {
+          "text": "阿明子目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "阿明子",
+          "score": 0.22661954164505005,
+          "accepted": false
+        },
+        {
+          "text": "阿明娜目前的饮品偏好是什么？",
+          "label": 0,
+          "name": "阿明娜",
+          "score": 0.3958050310611725,
+          "accepted": false
+        }
+      ]
+    },
+    "held": {
+      "known_total": 16,
+      "known_accepted": 15,
+      "unknown_total": 48,
+      "unknown_accepted": 2,
+      "rows": [
+        {
+          "text": "小林现在最爱喝什么饮料？",
+          "label": 1,
+          "name": "小林",
+          "score": 0.8504154086112976,
+          "accepted": true
+        },
+        {
+          "text": "小林林现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小林林",
+          "score": 0.4200112223625183,
+          "accepted": false
+        },
+        {
+          "text": "小林宁现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小林宁",
+          "score": 0.520821750164032,
+          "accepted": false
+        },
+        {
+          "text": "小林明现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小林明",
+          "score": 0.4718664586544037,
+          "accepted": false
+        },
+        {
+          "text": "说说小林喜欢的饮品。",
+          "label": 1,
+          "name": "小林",
+          "score": 0.7418431043624878,
+          "accepted": true
+        },
+        {
+          "text": "说说小林林喜欢的饮品。",
+          "label": 0,
+          "name": "小林林",
+          "score": 0.29772335290908813,
+          "accepted": false
+        },
+        {
+          "text": "说说小林宁喜欢的饮品。",
+          "label": 0,
+          "name": "小林宁",
+          "score": 0.39433982968330383,
+          "accepted": false
+        },
+        {
+          "text": "说说小林明喜欢的饮品。",
+          "label": 0,
+          "name": "小林明",
+          "score": 0.44939494132995605,
+          "accepted": false
+        },
+        {
+          "text": "阿宁现在最爱喝什么饮料？",
+          "label": 1,
+          "name": "阿宁",
+          "score": 0.8029778003692627,
+          "accepted": true
+        },
+        {
+          "text": "阿宁林现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿宁林",
+          "score": 0.4977234899997711,
+          "accepted": false
+        },
+        {
+          "text": "阿宁宁现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿宁宁",
+          "score": 0.37165507674217224,
+          "accepted": false
+        },
+        {
+          "text": "阿宁明现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿宁明",
+          "score": 0.3872050642967224,
+          "accepted": false
+        },
+        {
+          "text": "说说阿宁喜欢的饮品。",
+          "label": 1,
+          "name": "阿宁",
+          "score": 0.7908961176872253,
+          "accepted": true
+        },
+        {
+          "text": "说说阿宁林喜欢的饮品。",
+          "label": 0,
+          "name": "阿宁林",
+          "score": 0.40387654304504395,
+          "accepted": false
+        },
+        {
+          "text": "说说阿宁宁喜欢的饮品。",
+          "label": 0,
+          "name": "阿宁宁",
+          "score": 0.3487030863761902,
+          "accepted": false
+        },
+        {
+          "text": "说说阿宁明喜欢的饮品。",
+          "label": 0,
+          "name": "阿宁明",
+          "score": 0.4432285726070404,
+          "accepted": false
+        },
+        {
+          "text": "小雨现在最爱喝什么饮料？",
+          "label": 1,
+          "name": "小雨",
+          "score": 0.8655195832252502,
+          "accepted": true
+        },
+        {
+          "text": "小雨林现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小雨林",
+          "score": 0.6503585577011108,
+          "accepted": false
+        },
+        {
+          "text": "小雨宁现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小雨宁",
+          "score": 0.5165551900863647,
+          "accepted": false
+        },
+        {
+          "text": "小雨明现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小雨明",
+          "score": 0.4933135211467743,
+          "accepted": false
+        },
+        {
+          "text": "说说小雨喜欢的饮品。",
+          "label": 1,
+          "name": "小雨",
+          "score": 0.7699626684188843,
+          "accepted": true
+        },
+        {
+          "text": "说说小雨林喜欢的饮品。",
+          "label": 0,
+          "name": "小雨林",
+          "score": 0.5550512075424194,
+          "accepted": false
+        },
+        {
+          "text": "说说小雨宁喜欢的饮品。",
+          "label": 0,
+          "name": "小雨宁",
+          "score": 0.39730703830718994,
+          "accepted": false
+        },
+        {
+          "text": "说说小雨明喜欢的饮品。",
+          "label": 0,
+          "name": "小雨明",
+          "score": 0.4755438566207886,
+          "accepted": false
+        },
+        {
+          "text": "阿哲现在最爱喝什么饮料？",
+          "label": 1,
+          "name": "阿哲",
+          "score": 0.7695983648300171,
+          "accepted": true
+        },
+        {
+          "text": "阿哲林现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿哲林",
+          "score": 0.4000905752182007,
+          "accepted": false
+        },
+        {
+          "text": "阿哲宁现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿哲宁",
+          "score": 0.4332416355609894,
+          "accepted": false
+        },
+        {
+          "text": "阿哲明现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿哲明",
+          "score": 0.4195549190044403,
+          "accepted": false
+        },
+        {
+          "text": "说说阿哲喜欢的饮品。",
+          "label": 1,
+          "name": "阿哲",
+          "score": 0.7308812737464905,
+          "accepted": true
+        },
+        {
+          "text": "说说阿哲林喜欢的饮品。",
+          "label": 0,
+          "name": "阿哲林",
+          "score": 0.37782540917396545,
+          "accepted": false
+        },
+        {
+          "text": "说说阿哲宁喜欢的饮品。",
+          "label": 0,
+          "name": "阿哲宁",
+          "score": 0.43874743580818176,
+          "accepted": false
+        },
+        {
+          "text": "说说阿哲明喜欢的饮品。",
+          "label": 0,
+          "name": "阿哲明",
+          "score": 0.40986621379852295,
+          "accepted": false
+        },
+        {
+          "text": "小梅现在最爱喝什么饮料？",
+          "label": 1,
+          "name": "小梅",
+          "score": 0.8482041358947754,
+          "accepted": true
+        },
+        {
+          "text": "小梅林现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小梅林",
+          "score": 0.5720643997192383,
+          "accepted": false
+        },
+        {
+          "text": "小梅宁现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小梅宁",
+          "score": 0.4358883202075958,
+          "accepted": false
+        },
+        {
+          "text": "小梅明现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小梅明",
+          "score": 0.44387155771255493,
+          "accepted": false
+        },
+        {
+          "text": "说说小梅喜欢的饮品。",
+          "label": 1,
+          "name": "小梅",
+          "score": 0.6931957602500916,
+          "accepted": false
+        },
+        {
+          "text": "说说小梅林喜欢的饮品。",
+          "label": 0,
+          "name": "小梅林",
+          "score": 0.393550306558609,
+          "accepted": false
+        },
+        {
+          "text": "说说小梅宁喜欢的饮品。",
+          "label": 0,
+          "name": "小梅宁",
+          "score": 0.2488311231136322,
+          "accepted": false
+        },
+        {
+          "text": "说说小梅明喜欢的饮品。",
+          "label": 0,
+          "name": "小梅明",
+          "score": 0.3649443984031677,
+          "accepted": false
+        },
+        {
+          "text": "阿远现在最爱喝什么饮料？",
+          "label": 1,
+          "name": "阿远",
+          "score": 0.807810366153717,
+          "accepted": true
+        },
+        {
+          "text": "阿远林现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿远林",
+          "score": 0.40339532494544983,
+          "accepted": false
+        },
+        {
+          "text": "阿远宁现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿远宁",
+          "score": 0.4097084403038025,
+          "accepted": false
+        },
+        {
+          "text": "阿远明现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿远明",
+          "score": 0.4181964695453644,
+          "accepted": false
+        },
+        {
+          "text": "说说阿远喜欢的饮品。",
+          "label": 1,
+          "name": "阿远",
+          "score": 0.7446075677871704,
+          "accepted": true
+        },
+        {
+          "text": "说说阿远林喜欢的饮品。",
+          "label": 0,
+          "name": "阿远林",
+          "score": 0.3894445598125458,
+          "accepted": false
+        },
+        {
+          "text": "说说阿远宁喜欢的饮品。",
+          "label": 0,
+          "name": "阿远宁",
+          "score": 0.36518436670303345,
+          "accepted": false
+        },
+        {
+          "text": "说说阿远明喜欢的饮品。",
+          "label": 0,
+          "name": "阿远明",
+          "score": 0.39282822608947754,
+          "accepted": false
+        },
+        {
+          "text": "小岚现在最爱喝什么饮料？",
+          "label": 1,
+          "name": "小岚",
+          "score": 0.8726217746734619,
+          "accepted": true
+        },
+        {
+          "text": "小岚林现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小岚林",
+          "score": 0.5682448744773865,
+          "accepted": false
+        },
+        {
+          "text": "小岚宁现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小岚宁",
+          "score": 0.4357413649559021,
+          "accepted": false
+        },
+        {
+          "text": "小岚明现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "小岚明",
+          "score": 0.5153493881225586,
+          "accepted": false
+        },
+        {
+          "text": "说说小岚喜欢的饮品。",
+          "label": 1,
+          "name": "小岚",
+          "score": 0.8065822124481201,
+          "accepted": true
+        },
+        {
+          "text": "说说小岚林喜欢的饮品。",
+          "label": 0,
+          "name": "小岚林",
+          "score": 0.4068034291267395,
+          "accepted": false
+        },
+        {
+          "text": "说说小岚宁喜欢的饮品。",
+          "label": 0,
+          "name": "小岚宁",
+          "score": 0.3775506615638733,
+          "accepted": false
+        },
+        {
+          "text": "说说小岚明喜欢的饮品。",
+          "label": 0,
+          "name": "小岚明",
+          "score": 0.47977879643440247,
+          "accepted": false
+        },
+        {
+          "text": "阿明现在最爱喝什么饮料？",
+          "label": 1,
+          "name": "阿明",
+          "score": 0.8740851879119873,
+          "accepted": true
+        },
+        {
+          "text": "阿明林现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿明林",
+          "score": 0.5331118106842041,
+          "accepted": false
+        },
+        {
+          "text": "阿明宁现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿明宁",
+          "score": 0.4975584149360657,
+          "accepted": false
+        },
+        {
+          "text": "阿明明现在最爱喝什么饮料？",
+          "label": 0,
+          "name": "阿明明",
+          "score": 0.8111550807952881,
+          "accepted": true
+        },
+        {
+          "text": "说说阿明喜欢的饮品。",
+          "label": 1,
+          "name": "阿明",
+          "score": 0.8523744940757751,
+          "accepted": true
+        },
+        {
+          "text": "说说阿明林喜欢的饮品。",
+          "label": 0,
+          "name": "阿明林",
+          "score": 0.5271977782249451,
+          "accepted": false
+        },
+        {
+          "text": "说说阿明宁喜欢的饮品。",
+          "label": 0,
+          "name": "阿明宁",
+          "score": 0.5393590331077576,
+          "accepted": false
+        },
+        {
+          "text": "说说阿明明喜欢的饮品。",
+          "label": 0,
+          "name": "阿明明",
+          "score": 0.7933120727539062,
+          "accepted": true
+        }
+      ]
+    }
+  },
+  "seconds": 49.04223450000063,
+  "limitations": [
+    "Synthetic names, suffixes, and templates; not an open-world identity verifier.",
+    "Same known identities appear in all partitions; no new-identity enrollment.",
+    "Threshold chosen on small calibration negatives; zero errors is not a safety guarantee.",
+    "Uses whole utterance with causal hidden features; cannot resolve homonyms.",
+    "Not integrated into default routing; no memory writes."
+  ]
+}
