@@ -6,9 +6,31 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from scripts import deepseek_spora_runtime_chat as chat_module
+from spora.observation_candidate import ObservationCandidate
 
 
 class RuntimeChatPersistenceTests(unittest.TestCase):
+    def test_unresolved_candidate_defers_without_calling_persistence(self):
+        chat = object.__new__(chat_module.SporaChat)
+        chat.organism = SimpleNamespace(config=SimpleNamespace(key_count=8, value_count=8))
+        chat.state = SimpleNamespace(cursor=4)
+        candidate = ObservationCandidate(1, '汽水', None, 'affirmative', 'direct', 1.0, 4, .99, '小林喜欢汽水')
+        with patch.object(chat, 'observe_sourced') as observe:
+            result = chat.observe_candidate(candidate)
+        observe.assert_not_called()
+        self.assertEqual(result['action'], 'defer')
+        self.assertIn('finite_value_unresolved', result['reasons'])
+
+    def test_resolved_candidate_delegates_to_guarded_persistence(self):
+        chat = object.__new__(chat_module.SporaChat)
+        chat.organism = SimpleNamespace(config=SimpleNamespace(key_count=8, value_count=8))
+        chat.state = SimpleNamespace(cursor=4)
+        candidate = ObservationCandidate(1, '水', 6, 'affirmative', 'direct', 1.0, 4, .99, '小林喜欢水')
+        with patch.object(chat, 'observe_sourced', return_value={'action': 'new'}) as observe:
+            result = chat.observe_candidate(candidate)
+        observe.assert_called_once_with(1, 6, 'direct', 1.0, 4)
+        self.assertEqual(result, {'action': 'new'})
+
     def test_observation_preserves_bootstrap_and_publishes_after_save(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

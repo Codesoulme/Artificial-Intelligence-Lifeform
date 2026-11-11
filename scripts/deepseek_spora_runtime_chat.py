@@ -39,6 +39,7 @@ from spora.growing import load
 from spora.integrated_checkpoint import load_integrated, replacement_feature_variant_sha256
 from spora.named_address import address_basis_sha256, feature_files_sha256
 from spora.internal_memory import observe_sourced
+from spora.observation_candidate import ObservationCandidate, write_guard
 from spora.memory_output import MemoryOutputAdapter
 from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
 from spora.working_checkpoint_lock import lock_working_checkpoint
@@ -95,6 +96,19 @@ class SporaChat:
             self.state = candidate
             self._working_sha256 = sha(WORKING_CHECKPOINT)
         return decision
+
+    @torch.no_grad()
+    def observe_candidate(self, candidate):
+        """Persist only a fully resolved candidate; rejected candidates are side-effect free."""
+        if not isinstance(candidate, ObservationCandidate):
+            raise TypeError('An ObservationCandidate is required')
+        decision = write_guard(candidate, key_count=self.organism.config.key_count,
+                               value_count=self.organism.config.value_count,
+                               current_cursor=self.state.cursor)
+        if not decision['write']:
+            return {'action': 'defer', 'reason': 'candidate_guard', 'reasons': decision['reasons']}
+        return self.observe_sourced(candidate.subject_key, candidate.value_index,
+                                    candidate.source, candidate.quality, candidate.valid_at)
 
     @torch.no_grad()
     def answer(self, question):
