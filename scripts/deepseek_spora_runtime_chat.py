@@ -98,6 +98,39 @@ class SporaChat:
         return decision
 
     @torch.no_grad()
+    def resolve_historical(self, key, event, *, value, valid_at, decision):
+        """Persist an explicit adjudication via a private copy and revision lock.
+
+        This experimental API does not infer truth or verify caller identity.
+        Only already-deferred direct/reported events can be adjudicated.
+        """
+        from spora.historical_resolutions import HistoricalResolutions
+        from spora.integrated_checkpoint import save_integrated
+        from spora.state_codec import flatten, restore
+
+        with lock_working_checkpoint(WORKING_CHECKPOINT):
+            current_sha = sha(WORKING_CHECKPOINT) if WORKING_CHECKPOINT.exists() else None
+            if current_sha != self._working_sha256:
+                raise RevisionConflict('Working checkpoint changed; reload before resolving')
+            schema, tensors = flatten(self.organism, self.state)
+            # restore() may otherwise reuse same-device tensors for state pages.
+            private = {name: tensor.detach().clone() for name, tensor in tensors.items()}
+            device = next(self.organism.parameters()).device
+            with torch.random.fork_rng(devices=[]):
+                candidate, candidate_state = restore(schema, private, device)
+            if not hasattr(candidate, 'historical_resolutions'):
+                candidate.historical_resolutions = HistoricalResolutions(candidate.config.key_count).to(device)
+            candidate.historical_resolutions.record(candidate, candidate_state, key, event,
+                                                    value=value, valid_at=valid_at, decision=decision)
+            save_integrated(WORKING_CHECKPOINT, candidate, candidate_state, self.decoder.reader,
+                            MODEL, self.decoder.layer_indices, replacements=self._replacements(),
+                            output_adapter=self.decoder.output_adapter)
+            # Publish immediately after the atomic save, before hashing.
+            self.organism, self.state = candidate, candidate_state
+            self._working_sha256 = sha(WORKING_CHECKPOINT)
+        return {'action': 'historical_resolution_recorded', 'key': key, 'event': event, 'decision': decision}
+
+    @torch.no_grad()
     def observe_candidate(self, candidate):
         """Persist only a fully resolved candidate; rejected candidates are side-effect free."""
         if not isinstance(candidate, ObservationCandidate):

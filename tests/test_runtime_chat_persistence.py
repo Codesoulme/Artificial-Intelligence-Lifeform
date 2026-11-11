@@ -7,9 +7,84 @@ from unittest.mock import patch
 
 from scripts import deepseek_spora_runtime_chat as chat_module
 from spora.observation_candidate import ObservationCandidate
+from spora.growing import new_state
+from spora.language_training import frozen_digest
+from spora.temporal import TemporalConfig, TemporalSPORA
 
 
 class RuntimeChatPersistenceTests(unittest.TestCase):
+    def make_resolution_chat(self):
+        chat = object.__new__(chat_module.SporaChat)
+        chat.organism = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=64,
+                                                    expert_rank=4, memory_layers=(0, 1),
+                                                    history_writer='rls', current_address='orthogonal'))
+        chat.state = new_state(chat.organism)
+        chat.state.cursor = 3
+        chat._working_sha256 = None
+        chat.decoder = SimpleNamespace(reader=object(), layer_indices=(0, 1), output_adapter=None)
+        chat._replacements = lambda: {}
+        return chat
+
+    @staticmethod
+    def fake_resolution(module, model, state, key, event, *, value, valid_at, decision):
+        module.records[0] = torch.tensor([key, event, valid_at, value, 0, 1])
+        module.occupied[0] = True
+
+    def test_resolution_save_failure_keeps_original_private(self):
+        with tempfile.TemporaryDirectory() as directory:
+            chat = self.make_resolution_chat()
+            original_model, original_state = chat.organism, chat.state
+            digest = frozen_digest(original_model, original_state)
+            with patch.object(chat_module, 'WORKING_CHECKPOINT', Path(directory) / 'next.pt'), \
+                 patch('spora.historical_resolutions.HistoricalResolutions.record', autospec=True,
+                       side_effect=self.fake_resolution), \
+                 patch('spora.integrated_checkpoint.save_integrated', side_effect=OSError('disk failure')):
+                with self.assertRaises(OSError):
+                    chat.resolve_historical(1, 2, value=3, valid_at=1, decision='confirm')
+            self.assertIs(chat.organism, original_model)
+            self.assertIs(chat.state, original_state)
+            self.assertFalse(hasattr(chat.organism, 'historical_resolutions'))
+            self.assertEqual(frozen_digest(chat.organism, chat.state), digest)
+
+    def test_resolution_publishes_only_after_save(self):
+        with tempfile.TemporaryDirectory() as directory:
+            chat = self.make_resolution_chat()
+            original_model, original_state = chat.organism, chat.state
+            original_digest = frozen_digest(original_model, original_state)
+            destination = Path(directory) / 'next.pt'
+
+            def save(path, candidate, candidate_state, *args, **kwargs):
+                self.assertIs(chat.organism, original_model)
+                self.assertIs(chat.state, original_state)
+                self.assertIsNot(candidate, original_model)
+                self.assertIsNot(candidate_state, original_state)
+                self.assertNotEqual(candidate_state.current[0].data_ptr(), original_state.current[0].data_ptr())
+                self.assertEqual(candidate.historical_resolutions.lookup(1, 2)['decision'], 'confirm')
+                Path(path).write_bytes(b'committed')
+
+            with patch.object(chat_module, 'WORKING_CHECKPOINT', destination), \
+                 patch('spora.historical_resolutions.HistoricalResolutions.record', autospec=True,
+                       side_effect=self.fake_resolution), \
+                 patch('spora.integrated_checkpoint.save_integrated', side_effect=save):
+                result = chat.resolve_historical(1, 2, value=3, valid_at=1, decision='confirm')
+            self.assertEqual(result['action'], 'historical_resolution_recorded')
+            self.assertEqual(chat.organism.historical_resolutions.lookup(1, 2)['value'], 3)
+            self.assertEqual(frozen_digest(original_model, original_state), original_digest)
+            self.assertEqual(chat._working_sha256, chat_module.sha(destination))
+
+    def test_resolution_stale_checkpoint_rejected_before_copy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            chat = self.make_resolution_chat()
+            destination = Path(directory) / 'next.pt'
+            destination.write_bytes(b'newer')
+            with patch.object(chat_module, 'WORKING_CHECKPOINT', destination), \
+                 patch('spora.historical_resolutions.HistoricalResolutions.record') as record:
+                with self.assertRaises(chat_module.RevisionConflict):
+                    chat.resolve_historical(1, 2, value=3, valid_at=1, decision='confirm')
+                record.assert_not_called()
+            self.assertFalse(hasattr(chat.organism, 'historical_resolutions'))
+            self.assertEqual(destination.read_bytes(), b'newer')
+
     def test_candidate_text_must_match_its_finite_value_before_persisting(self):
         chat = object.__new__(chat_module.SporaChat)
         chat.organism = SimpleNamespace(config=SimpleNamespace(key_count=8, value_count=17))
