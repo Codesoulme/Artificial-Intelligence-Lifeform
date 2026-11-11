@@ -31,7 +31,7 @@ TEMPLATES = {
 }
 
 
-def run():
+def run(*, include_original_base=True):
     if OUTPUT.exists():
         raise FileExistsError(OUTPUT)
     if sha(MODEL / 'model.safetensors') != WEIGHT_SHA:
@@ -69,7 +69,7 @@ def run():
     original = {i: base.model.layers[i] for i in (6, 12, 18)}
     pair = {i: _load_candidate(PAIR / f'layer-{i}.pt', i, base).eval() for i in (6, 12)}
     layer18 = _load_candidate(LAYER18, 18, base).eval()
-    modes = ('integrated_base', 'pair', 'pair_plus_0.1', 'pair_plus_1.0')
+    modes = (('integrated_base',) if include_original_base else ()) + ('pair', 'pair_plus_0.1', 'pair_plus_1.0')
     results = {}
     with torch.inference_mode():
         for mode in modes:
@@ -78,6 +78,8 @@ def run():
             base.model.layers[18] = (SPORALayerBlend(original[18], layer18,
                                       0.1 if mode == 'pair_plus_0.1' else 1.0).to('cuda').eval()
                                      if mode.startswith('pair_plus_') else original[18])
+            if any(p.is_meta for p in base.parameters()) or any(b.is_meta for b in base.buffers()):
+                raise ValueError('Unmaterialized layer before inference')
             out = []
             for row in rows:
                 prompt = row['prefix']
