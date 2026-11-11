@@ -1,5 +1,7 @@
 """Train only the existing neural memory reader on full answers in isolation."""
 import json
+import argparse
+import math
 import random
 import tempfile
 import time
@@ -13,9 +15,14 @@ SEED = 98117
 STEPS = 12
 
 
-def main():
-    if OUTPUT.exists():
-        raise FileExistsError(OUTPUT)
+def main(output=OUTPUT, learning_rate=1e-4):
+    output = Path(output).resolve()
+    if not output.is_relative_to((p.ROOT / 'runs').resolve()) or output == (p.ROOT / 'runs').resolve():
+        raise ValueError('Output must be a new directory under runs')
+    if not math.isfinite(learning_rate) or not 0 < learning_rate <= 1e-3:
+        raise ValueError('Invalid learning rate')
+    if output.exists():
+        raise FileExistsError(output)
     source_sha = p.sha(p.runtime.CHECKPOINT)
     p.torch.manual_seed(SEED)
     rng = random.Random(SEED)
@@ -35,7 +42,7 @@ def main():
         parameters = [x for x in decoder.reader.parameters() if x.requires_grad]
         if not parameters:
             raise ValueError('No trainable reader parameters')
-        optimizer = p.torch.optim.AdamW(parameters, lr=1e-4, weight_decay=0.0, foreach=False)
+        optimizer = p.torch.optim.AdamW(parameters, lr=learning_rate, weight_decay=0.0, foreach=False)
         device = next(organism.parameters()).device
         cases = []
         for group, indices in (('train', (0, 1)), ('held', (6,))):
@@ -70,6 +77,12 @@ def main():
             for item in cases:
                 prefix = item['prompt']['input_ids'].shape[1]
                 with p.torch.inference_mode():
+                    forced = decoder(input_ids=item['ids'], attention_mask=p.torch.ones_like(item['ids']),
+                                     **item['spec'])
+                    target = item['ids'][:, prefix:]
+                    scores = forced.logits[:, prefix - 1:prefix - 1 + target.shape[1]].float()
+                    forced_loss = p.torch.nn.functional.cross_entropy(
+                        scores.reshape(-1, scores.shape[-1]), target.reshape(-1))
                     ids = decoder.generate(**item['prompt'], **{**item['spec'], 'use_cache': True},
                         max_new_tokens=24, do_sample=False, pad_token_id=tokenizer.pad_token_id,
                         eos_token_id=tokenizer.eos_token_id)
@@ -77,10 +90,24 @@ def main():
                 text = tokenizer.decode(tail, skip_special_tokens=True).strip()
                 rows.append({'group': item['group'], 'name': item['name'], 'question': item['question'],
                              'expected_value': p.WORDS[item['value']], 'target_sentence': item['answer'],
-                             'answer': text, 'token_ids': tail, 'ended_eos': tokenizer.eos_token_id in tail})
+                             'answer': text, 'token_ids': tail, 'ended_eos': tokenizer.eos_token_id in tail,
+                             'teacher_forced_loss': float(forced_loss)})
+            return rows
+
+        def ordinary_answers():
+            rows = []
+            for question in ('你好，请简单介绍自己。', '请写一句鼓励学习的话。'):
+                inputs = p.closed_think_inputs(tokenizer, question, 'cuda')
+                with p.torch.inference_mode():
+                    ids = decoder.generate(**inputs, use_cache=True, max_new_tokens=24, do_sample=False,
+                        pad_token_id=tokenizer.pad_token_id, eos_token_id=tokenizer.eos_token_id)
+                tail = ids[0, inputs['input_ids'].shape[1]:].tolist()
+                rows.append({'question': question, 'token_ids': tail,
+                             'answer': tokenizer.decode(tail, skip_special_tokens=True).strip()})
             return rows
 
         before = evaluate()
+        ordinary_before = ordinary_answers()
         order = [item for item in cases if item['group'] == 'train']
         trace = []
         for step in range(STEPS):
@@ -105,6 +132,7 @@ def main():
             trace.append({'step': step + 1, 'loss': float(loss.detach()), 'gradient_norm': float(grad)})
             print(json.dumps(trace[-1]), flush=True)
         after = evaluate()
+        ordinary_after = ordinary_answers()
         if p.frozen_digest(organism, chat.state) != original_digest:
             raise ValueError('Original state changed')
         if any(p.frozen_digest(organism, item['state']) != item['state_digest'] for item in cases):
@@ -112,18 +140,23 @@ def main():
         reader_state = {key: value.detach().cpu().clone() for key, value in decoder.reader.state_dict().items()}
     if p.sha(p.runtime.CHECKPOINT) != source_sha or p.sha(p.MODEL / 'model.safetensors') != p.WEIGHT_SHA:
         raise ValueError('Protected source changed')
-    OUTPUT.mkdir(parents=False, exist_ok=False)
+    output.mkdir(parents=False, exist_ok=False)
     p.torch.save({'state': reader_state, 'source_checkpoint_sha256': source_sha,
-                  'base_sha256': p.WEIGHT_SHA, 'steps': STEPS, 'seed': SEED}, OUTPUT / 'reader.pt')
+                  'base_sha256': p.WEIGHT_SHA, 'steps': STEPS, 'seed': SEED,
+                  'learning_rate': learning_rate}, output / 'reader.pt')
     report = {'before': before, 'after': after, 'trace': trace, 'source_checkpoint_sha256': source_sha,
-              'base_sha256': p.WEIGHT_SHA, 'candidate_sha256': p.sha(OUTPUT / 'reader.pt'),
+              'ordinary_before': ordinary_before, 'ordinary_after': ordinary_after,
+              'ordinary_tokens_match': [a['token_ids'] == b['token_ids'] for a, b in zip(ordinary_before, ordinary_after)],
+              'learning_rate': learning_rate, 'base_sha256': p.WEIGHT_SHA,
+              'candidate_sha256': p.sha(output / 'reader.pt'),
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': p.torch.cuda.max_memory_allocated(),
               'limitations': ['Four training examples, two held examples; two seen values and artificial facts.',
                               'Full-answer teacher forcing with no output bias; not normal chat training.',
-                              'Address and fact supplied numerically; no routing, unknown-memory or ordinary-chat evaluation.',
+                              'Address and fact supplied numerically; no routing or unknown-memory evaluation.',
+                              'Only two ordinary prompts tested without any memory; no evaluation with unrelated memory.',
                               'Candidate is isolated and is not adopted by default.',
                               'This pilot tests feasibility, not independent generalization.']}
-    with (OUTPUT / 'result.json').open('x', encoding='utf-8', newline='\n') as stream:
+    with (output / 'result.json').open('x', encoding='utf-8', newline='\n') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
     print(json.dumps({'steps': len(trace), 'seconds': report['seconds'],
@@ -131,4 +164,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output', type=Path, default=OUTPUT)
+    parser.add_argument('--learning-rate', type=float, default=1e-4)
+    options = parser.parse_args()
+    main(options.output, options.learning_rate)
