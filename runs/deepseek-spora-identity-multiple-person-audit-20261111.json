@@ -1,0 +1,304 @@
+{
+  "status": "development_only_no_user_state",
+  "baseline": {
+    "known_total": 4,
+    "known_correct_key": 4,
+    "known_wrong_key": 0,
+    "known_rejected": 0,
+    "unknown_total": 8,
+    "unknown_false_accept": 0
+  },
+  "combined": {
+    "known_total": 4,
+    "known_correct_key": 3,
+    "known_wrong_key": 0,
+    "known_rejected": 1,
+    "unknown_total": 8,
+    "unknown_false_accept": 0
+  },
+  "rows": [
+    {
+      "group": "known",
+      "expected_key": 6,
+      "question": "小林现在喜欢喝什么？",
+      "runtime": {
+        "question": "小林现在喜欢喝什么？",
+        "accepted": true,
+        "answer": "水",
+        "temporal_intent": 0,
+        "intent_logit": 2.765702962875366,
+        "entity_score": 0.994081437587738,
+        "intent_recovered": true,
+        "indices": [
+          6,
+          6
+        ],
+        "similarities": [
+          0.9985180497169495,
+          0.9965364336967468
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 6
+      },
+      "gate_score": 0.9048824906349182,
+      "gate_accepted": true,
+      "baseline_accepted": true,
+      "combined_accepted": true
+    },
+    {
+      "group": "known",
+      "expected_key": 22,
+      "question": "阿宁目前喜欢喝什么？",
+      "runtime": {
+        "question": "阿宁目前喜欢喝什么？",
+        "accepted": true,
+        "answer": "咖啡",
+        "temporal_intent": 0,
+        "intent_logit": 4.200499057769775,
+        "entity_score": 0.9978919625282288,
+        "intent_recovered": false,
+        "indices": [
+          22,
+          22
+        ],
+        "similarities": [
+          0.9994678497314453,
+          0.9983007311820984
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 22
+      },
+      "gate_score": 0.8002496957778931,
+      "gate_accepted": true,
+      "baseline_accepted": true,
+      "combined_accepted": true
+    },
+    {
+      "group": "known",
+      "expected_key": 35,
+      "question": "小雨现在喜欢喝什么？",
+      "runtime": {
+        "question": "小雨现在喜欢喝什么？",
+        "accepted": true,
+        "answer": "牛奶",
+        "temporal_intent": 0,
+        "intent_logit": 2.696794271469116,
+        "entity_score": 0.9937585592269897,
+        "intent_recovered": true,
+        "indices": [
+          35,
+          35
+        ],
+        "similarities": [
+          0.9985212087631226,
+          0.9961802959442139
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 35
+      },
+      "gate_score": 0.9165093302726746,
+      "gate_accepted": true,
+      "baseline_accepted": true,
+      "combined_accepted": true
+    },
+    {
+      "group": "known",
+      "expected_key": 51,
+      "question": "阿哲目前喜欢喝什么？",
+      "runtime": {
+        "question": "阿哲目前喜欢喝什么？",
+        "accepted": true,
+        "answer": "果汁",
+        "temporal_intent": 0,
+        "intent_logit": 3.858729600906372,
+        "entity_score": 0.9958211183547974,
+        "intent_recovered": false,
+        "indices": [
+          51,
+          51
+        ],
+        "similarities": [
+          0.9995739459991455,
+          0.998460054397583
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 51
+      },
+      "gate_score": 0.6887082457542419,
+      "gate_accepted": false,
+      "baseline_accepted": true,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "小林的朋友小林林现在喜欢喝什么？",
+      "runtime": {
+        "question": "小林的朋友小林林现在喜欢喝什么？",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 0,
+        "intent_logit": 2.8932478427886963,
+        "entity_score": 0.9796098470687866,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.021958211436867714,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "小林和小林林分别喜欢喝什么？",
+      "runtime": {
+        "question": "小林和小林林分别喜欢喝什么？",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 3,
+        "intent_logit": -4.306000232696533,
+        "entity_score": 0.016868898645043373,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.08684483915567398,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "阿宁的朋友阿宁宁目前喜欢喝什么？",
+      "runtime": {
+        "question": "阿宁的朋友阿宁宁目前喜欢喝什么？",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 0,
+        "intent_logit": 3.286254644393921,
+        "entity_score": 0.9899847507476807,
+        "intent_recovered": false,
+        "reason": "no_single_name_span"
+      },
+      "gate_score": 0.02420719340443611,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "阿宁和阿宁宁各喜欢喝什么？",
+      "runtime": {
+        "question": "阿宁和阿宁宁各喜欢喝什么？",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 3,
+        "intent_logit": -3.544731378555298,
+        "entity_score": 0.057584248483181,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.135720357298851,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "小雨的朋友小雨晴现在喜欢喝什么？",
+      "runtime": {
+        "question": "小雨的朋友小雨晴现在喜欢喝什么？",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 0,
+        "intent_logit": 2.9830422401428223,
+        "entity_score": 0.9834529757499695,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.07021865993738174,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "小雨和小雨晴分别喜欢喝什么？",
+      "runtime": {
+        "question": "小雨和小雨晴分别喜欢喝什么？",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 3,
+        "intent_logit": -4.241358280181885,
+        "entity_score": 0.021732904016971588,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.18237298727035522,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "阿哲的朋友阿哲轩目前喜欢喝什么？",
+      "runtime": {
+        "question": "阿哲的朋友阿哲轩目前喜欢喝什么？",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 0,
+        "intent_logit": 2.8355534076690674,
+        "entity_score": 0.9765720963478088,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.02410905249416828,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    },
+    {
+      "group": "unknown",
+      "expected_key": null,
+      "question": "阿哲和阿哲轩各喜欢喝什么？",
+      "runtime": {
+        "question": "阿哲和阿哲轩各喜欢喝什么？",
+        "accepted": false,
+        "answer": null,
+        "temporal_intent": 3,
+        "intent_logit": -2.893859624862671,
+        "entity_score": 0.06635221838951111,
+        "reason": "not_confident_read_intent",
+        "intent_recovered": false
+      },
+      "gate_score": 0.09511394053697586,
+      "gate_accepted": false,
+      "baseline_accepted": false,
+      "combined_accepted": false
+    }
+  ],
+  "source_checkpoint_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "gate_sha256": "79dda51df02da1855bf4bdd8058f02355e38a0786e2932885e612155ba107c52",
+  "threshold": 0.7262625098228455,
+  "seconds": 50.63833440000235,
+  "limitations": [
+    "Twelve manually authored questions; prior experiments informed their construction.",
+    "Four known people with supervised pre-existing address bindings.",
+    "Only key correctness is scored; answer content is included but not evaluated.",
+    "Gate is an offline additional veto, not integrated into the runtime.",
+    "No real user state was opened or modified; no language-derived writes."
+  ]
+}
