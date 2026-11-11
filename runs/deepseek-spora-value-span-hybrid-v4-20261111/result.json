@@ -1,0 +1,5700 @@
+{
+  "status": "research_only_no_writes",
+  "threshold": 0.2904564142227173,
+  "checkpoint_sha256": "27910a03dc2b9cd0ba42c877940e95d6e6b00ff1a22f62630a99d69c3d00c102",
+  "source_hashes": {
+    "D:\\SPORA\\runs\\open-base-deepseek-r1-1.5b-ad9f0ae\\model.safetensors": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "D:\\SPORA\\runs\\deepseek-spora-output-v2-checkpoint-20261111\\individual-with-output-v2.pt": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f"
+  },
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "replacement_layers": [
+    6,
+    12
+  ],
+  "steps": 700,
+  "seconds": 96.45786759999828,
+  "results": {
+    "train": {
+      "positive_correct": 87,
+      "positive_total": 99,
+      "negative_accept": 0,
+      "negative_total": 297,
+      "rows": [
+        {
+          "text": "小林喜欢喝茶。",
+          "start": 5,
+          "end": 6,
+          "positive": true,
+          "accepted": true,
+          "value": "喝茶",
+          "accept_logit": 2.0150489807128906
+        },
+        {
+          "text": "小林最喜欢的饮料是茶。",
+          "start": 9,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "茶",
+          "accept_logit": 4.11226224899292
+        },
+        {
+          "text": "我知道小林爱喝茶。",
+          "start": 7,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "喝茶",
+          "accept_logit": 3.141779899597168
+        },
+        {
+          "text": "小林不喜欢喝茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.610994338989258
+        },
+        {
+          "text": "小林给朋友买了茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.679093837738037
+        },
+        {
+          "text": "小林说朋友喜欢茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.9269394874572754
+        },
+        {
+          "text": "小林觉得茶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.727209091186523
+        },
+        {
+          "text": "我猜小林可能喜欢茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.191271781921387
+        },
+        {
+          "text": "小林从来不喝茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.8611679077148438
+        },
+        {
+          "text": "假如小林喜欢茶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.849493980407715
+        },
+        {
+          "text": "小林以后不再喜欢茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.521557331085205
+        },
+        {
+          "text": "小林为客人准备了茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.278162956237793
+        },
+        {
+          "text": "小林喜欢喝咖啡。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "咖啡",
+          "accept_logit": 2.9275927543640137
+        },
+        {
+          "text": "小林最喜欢的饮料是咖啡。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "咖啡",
+          "accept_logit": 3.8240952491760254
+        },
+        {
+          "text": "我知道小林爱喝咖啡。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "咖啡",
+          "accept_logit": 3.966818332672119
+        },
+        {
+          "text": "小林不喜欢喝咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.587317943572998
+        },
+        {
+          "text": "小林给朋友买了咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.834485054016113
+        },
+        {
+          "text": "小林说朋友喜欢咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.08488130569458
+        },
+        {
+          "text": "小林觉得咖啡难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.1084818840026855
+        },
+        {
+          "text": "我猜小林可能喜欢咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.348890781402588
+        },
+        {
+          "text": "小林从来不喝咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.035201549530029
+        },
+        {
+          "text": "假如小林喜欢咖啡就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.083274841308594
+        },
+        {
+          "text": "小林以后不再喜欢咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.757637977600098
+        },
+        {
+          "text": "小林为客人准备了咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.552219390869141
+        },
+        {
+          "text": "小林喜欢喝牛奶。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "牛奶",
+          "accept_logit": 2.919722080230713
+        },
+        {
+          "text": "小林最喜欢的饮料是牛奶。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "牛奶",
+          "accept_logit": 3.8362598419189453
+        },
+        {
+          "text": "我知道小林爱喝牛奶。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "牛奶",
+          "accept_logit": 4.127227306365967
+        },
+        {
+          "text": "小林不喜欢喝牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.4671897888183594
+        },
+        {
+          "text": "小林给朋友买了牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.559109210968018
+        },
+        {
+          "text": "小林说朋友喜欢牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.104336261749268
+        },
+        {
+          "text": "小林觉得牛奶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.759641647338867
+        },
+        {
+          "text": "我猜小林可能喜欢牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.406935691833496
+        },
+        {
+          "text": "小林从来不喝牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.7520904541015625
+        },
+        {
+          "text": "假如小林喜欢牛奶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.033430576324463
+        },
+        {
+          "text": "小林以后不再喜欢牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.764948844909668
+        },
+        {
+          "text": "小林为客人准备了牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.33189058303833
+        },
+        {
+          "text": "小林喜欢喝果汁。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "果汁",
+          "accept_logit": 2.629851818084717
+        },
+        {
+          "text": "小林最喜欢的饮料是果汁。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "果汁",
+          "accept_logit": 3.176421642303467
+        },
+        {
+          "text": "我知道小林爱喝果汁。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "果汁",
+          "accept_logit": 3.860708713531494
+        },
+        {
+          "text": "小林不喜欢喝果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.5704832077026367
+        },
+        {
+          "text": "小林给朋友买了果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.772622585296631
+        },
+        {
+          "text": "小林说朋友喜欢果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.155350208282471
+        },
+        {
+          "text": "小林觉得果汁难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.306522846221924
+        },
+        {
+          "text": "我猜小林可能喜欢果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.581976890563965
+        },
+        {
+          "text": "小林从来不喝果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.996494770050049
+        },
+        {
+          "text": "假如小林喜欢果汁就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.273890018463135
+        },
+        {
+          "text": "小林以后不再喜欢果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.701578617095947
+        },
+        {
+          "text": "小林为客人准备了果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.6851959228515625
+        },
+        {
+          "text": "小林喜欢喝豆浆。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "豆浆",
+          "accept_logit": 2.301403522491455
+        },
+        {
+          "text": "小林最喜欢的饮料是豆浆。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "豆浆",
+          "accept_logit": 3.781400203704834
+        },
+        {
+          "text": "我知道小林爱喝豆浆。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "豆浆",
+          "accept_logit": 3.625178337097168
+        },
+        {
+          "text": "小林不喜欢喝豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.9174418449401855
+        },
+        {
+          "text": "小林给朋友买了豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.012709140777588
+        },
+        {
+          "text": "小林说朋友喜欢豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.364027500152588
+        },
+        {
+          "text": "小林觉得豆浆难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.352409839630127
+        },
+        {
+          "text": "我猜小林可能喜欢豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.656674861907959
+        },
+        {
+          "text": "小林从来不喝豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.338782787322998
+        },
+        {
+          "text": "假如小林喜欢豆浆就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.127674579620361
+        },
+        {
+          "text": "小林以后不再喜欢豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.903665542602539
+        },
+        {
+          "text": "小林为客人准备了豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.607077121734619
+        },
+        {
+          "text": "小林喜欢喝可乐。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "可乐",
+          "accept_logit": 2.4979052543640137
+        },
+        {
+          "text": "小林最喜欢的饮料是可乐。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "可乐",
+          "accept_logit": 3.3214540481567383
+        },
+        {
+          "text": "我知道小林爱喝可乐。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "可乐",
+          "accept_logit": 3.927555561065674
+        },
+        {
+          "text": "小林不喜欢喝可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.4504332542419434
+        },
+        {
+          "text": "小林给朋友买了可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.323049545288086
+        },
+        {
+          "text": "小林说朋友喜欢可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.999781608581543
+        },
+        {
+          "text": "小林觉得可乐难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.947385311126709
+        },
+        {
+          "text": "我猜小林可能喜欢可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.362593650817871
+        },
+        {
+          "text": "小林从来不喝可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.020965099334717
+        },
+        {
+          "text": "假如小林喜欢可乐就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.760430335998535
+        },
+        {
+          "text": "小林以后不再喜欢可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.781996726989746
+        },
+        {
+          "text": "小林为客人准备了可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.328907012939453
+        },
+        {
+          "text": "小林喜欢喝水。",
+          "start": 5,
+          "end": 6,
+          "positive": true,
+          "accepted": true,
+          "value": "喝水",
+          "accept_logit": 2.008622169494629
+        },
+        {
+          "text": "小林最喜欢的饮料是水。",
+          "start": 9,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "水",
+          "accept_logit": 3.649028778076172
+        },
+        {
+          "text": "我知道小林爱喝水。",
+          "start": 7,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "喝水",
+          "accept_logit": 3.574476718902588
+        },
+        {
+          "text": "小林不喜欢喝水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.9510202407836914
+        },
+        {
+          "text": "小林给朋友买了水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.703649044036865
+        },
+        {
+          "text": "小林说朋友喜欢水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.332784175872803
+        },
+        {
+          "text": "小林觉得水难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.47746467590332
+        },
+        {
+          "text": "我猜小林可能喜欢水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.769405841827393
+        },
+        {
+          "text": "小林从来不喝水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.869262218475342
+        },
+        {
+          "text": "假如小林喜欢水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.4040985107421875
+        },
+        {
+          "text": "小林以后不再喜欢水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.8590545654296875
+        },
+        {
+          "text": "小林为客人准备了水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.691057205200195
+        },
+        {
+          "text": "小林喜欢喝酸奶。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "酸奶",
+          "accept_logit": 2.288099765777588
+        },
+        {
+          "text": "小林最喜欢的饮料是酸奶。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "酸奶",
+          "accept_logit": 3.5238304138183594
+        },
+        {
+          "text": "我知道小林爱喝酸奶。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "酸奶",
+          "accept_logit": 4.120054721832275
+        },
+        {
+          "text": "小林不喜欢喝酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.913036346435547
+        },
+        {
+          "text": "小林给朋友买了酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.355689525604248
+        },
+        {
+          "text": "小林说朋友喜欢酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.282676696777344
+        },
+        {
+          "text": "小林觉得酸奶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.275249481201172
+        },
+        {
+          "text": "我猜小林可能喜欢酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.518877983093262
+        },
+        {
+          "text": "小林从来不喝酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.1267523765563965
+        },
+        {
+          "text": "假如小林喜欢酸奶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.345921993255615
+        },
+        {
+          "text": "小林以后不再喜欢酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.757857799530029
+        },
+        {
+          "text": "小林为客人准备了酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.294790744781494
+        },
+        {
+          "text": "小林喜欢喝茉莉花茶。",
+          "start": 5,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "茉莉花茶",
+          "accept_logit": 1.9078044891357422
+        },
+        {
+          "text": "小林最喜欢的饮料是茉莉花茶。",
+          "start": 9,
+          "end": 13,
+          "positive": true,
+          "accepted": true,
+          "value": "茉莉花茶",
+          "accept_logit": 2.9035115242004395
+        },
+        {
+          "text": "我知道小林爱喝茉莉花茶。",
+          "start": 7,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "茉莉花茶",
+          "accept_logit": 3.0030999183654785
+        },
+        {
+          "text": "小林不喜欢喝茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.8229174613952637
+        },
+        {
+          "text": "小林给朋友买了茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.683943271636963
+        },
+        {
+          "text": "小林说朋友喜欢茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.906628131866455
+        },
+        {
+          "text": "小林觉得茉莉花茶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.748216152191162
+        },
+        {
+          "text": "我猜小林可能喜欢茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.312685966491699
+        },
+        {
+          "text": "小林从来不喝茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.051454067230225
+        },
+        {
+          "text": "假如小林喜欢茉莉花茶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.501640796661377
+        },
+        {
+          "text": "小林以后不再喜欢茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.496583461761475
+        },
+        {
+          "text": "小林为客人准备了茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.824415683746338
+        },
+        {
+          "text": "小林喜欢喝苏打水。",
+          "start": 5,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "苏打水",
+          "accept_logit": 1.5094380378723145
+        },
+        {
+          "text": "小林最喜欢的饮料是苏打水。",
+          "start": 9,
+          "end": 12,
+          "positive": true,
+          "accepted": true,
+          "value": "苏打水",
+          "accept_logit": 2.876044750213623
+        },
+        {
+          "text": "我知道小林爱喝苏打水。",
+          "start": 7,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "苏打水",
+          "accept_logit": 2.4759130477905273
+        },
+        {
+          "text": "小林不喜欢喝苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.1240272521972656
+        },
+        {
+          "text": "小林给朋友买了苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.044751167297363
+        },
+        {
+          "text": "小林说朋友喜欢苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.76235818862915
+        },
+        {
+          "text": "小林觉得苏打水难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.266223907470703
+        },
+        {
+          "text": "我猜小林可能喜欢苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.949899196624756
+        },
+        {
+          "text": "小林从来不喝苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.391438961029053
+        },
+        {
+          "text": "假如小林喜欢苏打水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.586154937744141
+        },
+        {
+          "text": "小林以后不再喜欢苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.1314287185668945
+        },
+        {
+          "text": "小林为客人准备了苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.78718376159668
+        },
+        {
+          "text": "小林喜欢喝绿豆汤。",
+          "start": 5,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "绿豆汤",
+          "accept_logit": 2.0121631622314453
+        },
+        {
+          "text": "小林最喜欢的饮料是绿豆汤。",
+          "start": 9,
+          "end": 12,
+          "positive": true,
+          "accepted": true,
+          "value": "绿豆汤",
+          "accept_logit": 3.2824831008911133
+        },
+        {
+          "text": "我知道小林爱喝绿豆汤。",
+          "start": 7,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "绿豆汤",
+          "accept_logit": 3.527557849884033
+        },
+        {
+          "text": "小林不喜欢喝绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.8073978424072266
+        },
+        {
+          "text": "小林给朋友买了绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.787403106689453
+        },
+        {
+          "text": "小林说朋友喜欢绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.251241207122803
+        },
+        {
+          "text": "小林觉得绿豆汤难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.288984298706055
+        },
+        {
+          "text": "我猜小林可能喜欢绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.365463733673096
+        },
+        {
+          "text": "小林从来不喝绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.9498391151428223
+        },
+        {
+          "text": "假如小林喜欢绿豆汤就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.8760433197021484
+        },
+        {
+          "text": "小林以后不再喜欢绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.028418064117432
+        },
+        {
+          "text": "小林为客人准备了绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.599637508392334
+        },
+        {
+          "text": "阿宁喜欢喝茶。",
+          "start": 5,
+          "end": 6,
+          "positive": true,
+          "accepted": true,
+          "value": "喝茶",
+          "accept_logit": 1.8452425003051758
+        },
+        {
+          "text": "阿宁最喜欢的饮料是茶。",
+          "start": 9,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "茶",
+          "accept_logit": 3.7996373176574707
+        },
+        {
+          "text": "我知道阿宁爱喝茶。",
+          "start": 7,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "喝茶",
+          "accept_logit": 2.987338066101074
+        },
+        {
+          "text": "阿宁不喜欢喝茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.4018402099609375
+        },
+        {
+          "text": "阿宁给朋友买了茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.21762228012085
+        },
+        {
+          "text": "阿宁说朋友喜欢茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.439695358276367
+        },
+        {
+          "text": "阿宁觉得茶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.067183494567871
+        },
+        {
+          "text": "我猜阿宁可能喜欢茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.378724575042725
+        },
+        {
+          "text": "阿宁从来不喝茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.696558952331543
+        },
+        {
+          "text": "假如阿宁喜欢茶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.274930953979492
+        },
+        {
+          "text": "阿宁以后不再喜欢茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.287919521331787
+        },
+        {
+          "text": "阿宁为客人准备了茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.101080894470215
+        },
+        {
+          "text": "阿宁喜欢喝咖啡。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "咖啡",
+          "accept_logit": 2.71274471282959
+        },
+        {
+          "text": "阿宁最喜欢的饮料是咖啡。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "咖啡",
+          "accept_logit": 3.645510196685791
+        },
+        {
+          "text": "我知道阿宁爱喝咖啡。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "咖啡",
+          "accept_logit": 3.524026393890381
+        },
+        {
+          "text": "阿宁不喜欢喝咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.39430570602417
+        },
+        {
+          "text": "阿宁给朋友买了咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.524789810180664
+        },
+        {
+          "text": "阿宁说朋友喜欢咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.7794432640075684
+        },
+        {
+          "text": "阿宁觉得咖啡难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.692241191864014
+        },
+        {
+          "text": "我猜阿宁可能喜欢咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.519242763519287
+        },
+        {
+          "text": "阿宁从来不喝咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.126041889190674
+        },
+        {
+          "text": "假如阿宁喜欢咖啡就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.620668411254883
+        },
+        {
+          "text": "阿宁以后不再喜欢咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.769096851348877
+        },
+        {
+          "text": "阿宁为客人准备了咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.325605392456055
+        },
+        {
+          "text": "阿宁喜欢喝牛奶。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "牛奶",
+          "accept_logit": 2.739102840423584
+        },
+        {
+          "text": "阿宁最喜欢的饮料是牛奶。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "牛奶",
+          "accept_logit": 3.540907382965088
+        },
+        {
+          "text": "我知道阿宁爱喝牛奶。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "牛奶",
+          "accept_logit": 3.8137693405151367
+        },
+        {
+          "text": "阿宁不喜欢喝牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.3954691886901855
+        },
+        {
+          "text": "阿宁给朋友买了牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.416748046875
+        },
+        {
+          "text": "阿宁说朋友喜欢牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.7503662109375
+        },
+        {
+          "text": "阿宁觉得牛奶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.328486442565918
+        },
+        {
+          "text": "我猜阿宁可能喜欢牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.693474292755127
+        },
+        {
+          "text": "阿宁从来不喝牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.8685145378112793
+        },
+        {
+          "text": "假如阿宁喜欢牛奶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.5710716247558594
+        },
+        {
+          "text": "阿宁以后不再喜欢牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.582085132598877
+        },
+        {
+          "text": "阿宁为客人准备了牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.379340648651123
+        },
+        {
+          "text": "阿宁喜欢喝果汁。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "果汁",
+          "accept_logit": 2.5817008018493652
+        },
+        {
+          "text": "阿宁最喜欢的饮料是果汁。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "果汁",
+          "accept_logit": 3.073545455932617
+        },
+        {
+          "text": "我知道阿宁爱喝果汁。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "果汁",
+          "accept_logit": 3.5295186042785645
+        },
+        {
+          "text": "阿宁不喜欢喝果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.3868203163146973
+        },
+        {
+          "text": "阿宁给朋友买了果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.5530314445495605
+        },
+        {
+          "text": "阿宁说朋友喜欢果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.7636470794677734
+        },
+        {
+          "text": "阿宁觉得果汁难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.735296249389648
+        },
+        {
+          "text": "我猜阿宁可能喜欢果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.9599480628967285
+        },
+        {
+          "text": "阿宁从来不喝果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.154393672943115
+        },
+        {
+          "text": "假如阿宁喜欢果汁就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.8772950172424316
+        },
+        {
+          "text": "阿宁以后不再喜欢果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.687774181365967
+        },
+        {
+          "text": "阿宁为客人准备了果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.602206707000732
+        },
+        {
+          "text": "阿宁喜欢喝豆浆。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "豆浆",
+          "accept_logit": 2.315701484680176
+        },
+        {
+          "text": "阿宁最喜欢的饮料是豆浆。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "豆浆",
+          "accept_logit": 3.5941996574401855
+        },
+        {
+          "text": "我知道阿宁爱喝豆浆。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "豆浆",
+          "accept_logit": 3.3248143196105957
+        },
+        {
+          "text": "阿宁不喜欢喝豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.6944632530212402
+        },
+        {
+          "text": "阿宁给朋友买了豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.712625980377197
+        },
+        {
+          "text": "阿宁说朋友喜欢豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.989311695098877
+        },
+        {
+          "text": "阿宁觉得豆浆难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.084301948547363
+        },
+        {
+          "text": "我猜阿宁可能喜欢豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.881023406982422
+        },
+        {
+          "text": "阿宁从来不喝豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.392003059387207
+        },
+        {
+          "text": "假如阿宁喜欢豆浆就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.743309497833252
+        },
+        {
+          "text": "阿宁以后不再喜欢豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.906828880310059
+        },
+        {
+          "text": "阿宁为客人准备了豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.427133560180664
+        },
+        {
+          "text": "阿宁喜欢喝可乐。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "可乐",
+          "accept_logit": 2.5471129417419434
+        },
+        {
+          "text": "阿宁最喜欢的饮料是可乐。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "可乐",
+          "accept_logit": 3.033097267150879
+        },
+        {
+          "text": "我知道阿宁爱喝可乐。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "可乐",
+          "accept_logit": 3.5149636268615723
+        },
+        {
+          "text": "阿宁不喜欢喝可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.291159152984619
+        },
+        {
+          "text": "阿宁给朋友买了可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.9438982009887695
+        },
+        {
+          "text": "阿宁说朋友喜欢可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.427267551422119
+        },
+        {
+          "text": "阿宁觉得可乐难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.2628021240234375
+        },
+        {
+          "text": "我猜阿宁可能喜欢可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.4404730796813965
+        },
+        {
+          "text": "阿宁从来不喝可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.035426616668701
+        },
+        {
+          "text": "假如阿宁喜欢可乐就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.1051688194274902
+        },
+        {
+          "text": "阿宁以后不再喜欢可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.451066493988037
+        },
+        {
+          "text": "阿宁为客人准备了可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.003030300140381
+        },
+        {
+          "text": "阿宁喜欢喝水。",
+          "start": 5,
+          "end": 6,
+          "positive": true,
+          "accepted": true,
+          "value": "喝水",
+          "accept_logit": 1.848259449005127
+        },
+        {
+          "text": "阿宁最喜欢的饮料是水。",
+          "start": 9,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "水",
+          "accept_logit": 3.466545581817627
+        },
+        {
+          "text": "我知道阿宁爱喝水。",
+          "start": 7,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "喝水",
+          "accept_logit": 3.3465070724487305
+        },
+        {
+          "text": "阿宁不喜欢喝水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.8921642303466797
+        },
+        {
+          "text": "阿宁给朋友买了水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.445469379425049
+        },
+        {
+          "text": "阿宁说朋友喜欢水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.884305000305176
+        },
+        {
+          "text": "阿宁觉得水难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.872259616851807
+        },
+        {
+          "text": "我猜阿宁可能喜欢水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.015894412994385
+        },
+        {
+          "text": "阿宁从来不喝水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.974954128265381
+        },
+        {
+          "text": "假如阿宁喜欢水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.738351821899414
+        },
+        {
+          "text": "阿宁以后不再喜欢水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.528106689453125
+        },
+        {
+          "text": "阿宁为客人准备了水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.545811176300049
+        },
+        {
+          "text": "阿宁喜欢喝酸奶。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "酸奶",
+          "accept_logit": 2.1151585578918457
+        },
+        {
+          "text": "阿宁最喜欢的饮料是酸奶。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "酸奶",
+          "accept_logit": 3.2777819633483887
+        },
+        {
+          "text": "我知道阿宁爱喝酸奶。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "酸奶",
+          "accept_logit": 3.65537166595459
+        },
+        {
+          "text": "阿宁不喜欢喝酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.646327495574951
+        },
+        {
+          "text": "阿宁给朋友买了酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.218747138977051
+        },
+        {
+          "text": "阿宁说朋友喜欢酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.938267707824707
+        },
+        {
+          "text": "阿宁觉得酸奶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.667718887329102
+        },
+        {
+          "text": "我猜阿宁可能喜欢酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.781440734863281
+        },
+        {
+          "text": "阿宁从来不喝酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.335720062255859
+        },
+        {
+          "text": "假如阿宁喜欢酸奶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.103288650512695
+        },
+        {
+          "text": "阿宁以后不再喜欢酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.765812397003174
+        },
+        {
+          "text": "阿宁为客人准备了酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.404362678527832
+        },
+        {
+          "text": "阿宁喜欢喝茉莉花茶。",
+          "start": 5,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "茉莉花茶",
+          "accept_logit": 1.862349510192871
+        },
+        {
+          "text": "阿宁最喜欢的饮料是茉莉花茶。",
+          "start": 9,
+          "end": 13,
+          "positive": true,
+          "accepted": true,
+          "value": "茉莉花茶",
+          "accept_logit": 2.7967023849487305
+        },
+        {
+          "text": "我知道阿宁爱喝茉莉花茶。",
+          "start": 7,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "茉莉花茶",
+          "accept_logit": 2.6324543952941895
+        },
+        {
+          "text": "阿宁不喜欢喝茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.5842761993408203
+        },
+        {
+          "text": "阿宁给朋友买了茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.035783767700195
+        },
+        {
+          "text": "阿宁说朋友喜欢茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.419404983520508
+        },
+        {
+          "text": "阿宁觉得茉莉花茶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.4776177406311035
+        },
+        {
+          "text": "我猜阿宁可能喜欢茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.387196063995361
+        },
+        {
+          "text": "阿宁从来不喝茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.200601577758789
+        },
+        {
+          "text": "假如阿宁喜欢茉莉花茶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.23203706741333
+        },
+        {
+          "text": "阿宁以后不再喜欢茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.554165363311768
+        },
+        {
+          "text": "阿宁为客人准备了茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.269577503204346
+        },
+        {
+          "text": "阿宁喜欢喝苏打水。",
+          "start": 5,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "苏打水",
+          "accept_logit": 1.7230830192565918
+        },
+        {
+          "text": "阿宁最喜欢的饮料是苏打水。",
+          "start": 9,
+          "end": 12,
+          "positive": true,
+          "accepted": true,
+          "value": "苏打水",
+          "accept_logit": 2.683147430419922
+        },
+        {
+          "text": "我知道阿宁爱喝苏打水。",
+          "start": 7,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "苏打水",
+          "accept_logit": 2.4622926712036133
+        },
+        {
+          "text": "阿宁不喜欢喝苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.804701328277588
+        },
+        {
+          "text": "阿宁给朋友买了苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.37528133392334
+        },
+        {
+          "text": "阿宁说朋友喜欢苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.400771617889404
+        },
+        {
+          "text": "阿宁觉得苏打水难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.8626933097839355
+        },
+        {
+          "text": "我猜阿宁可能喜欢苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.238984107971191
+        },
+        {
+          "text": "阿宁从来不喝苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.22721529006958
+        },
+        {
+          "text": "假如阿宁喜欢苏打水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.8969197273254395
+        },
+        {
+          "text": "阿宁以后不再喜欢苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.84614372253418
+        },
+        {
+          "text": "阿宁为客人准备了苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.128749370574951
+        },
+        {
+          "text": "阿宁喜欢喝绿豆汤。",
+          "start": 5,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "绿豆汤",
+          "accept_logit": 2.012531280517578
+        },
+        {
+          "text": "阿宁最喜欢的饮料是绿豆汤。",
+          "start": 9,
+          "end": 12,
+          "positive": true,
+          "accepted": true,
+          "value": "绿豆汤",
+          "accept_logit": 3.1395034790039062
+        },
+        {
+          "text": "我知道阿宁爱喝绿豆汤。",
+          "start": 7,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "绿豆汤",
+          "accept_logit": 3.4108567237854004
+        },
+        {
+          "text": "阿宁不喜欢喝绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.4778618812561035
+        },
+        {
+          "text": "阿宁给朋友买了绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.361459732055664
+        },
+        {
+          "text": "阿宁说朋友喜欢绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.8682732582092285
+        },
+        {
+          "text": "阿宁觉得绿豆汤难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.61052131652832
+        },
+        {
+          "text": "我猜阿宁可能喜欢绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.659891605377197
+        },
+        {
+          "text": "阿宁从来不喝绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.8910536766052246
+        },
+        {
+          "text": "假如阿宁喜欢绿豆汤就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.4745779037475586
+        },
+        {
+          "text": "阿宁以后不再喜欢绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.8095173835754395
+        },
+        {
+          "text": "阿宁为客人准备了绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.289137840270996
+        },
+        {
+          "text": "小雨喜欢喝茶。",
+          "start": 5,
+          "end": 6,
+          "positive": true,
+          "accepted": true,
+          "value": "喝茶",
+          "accept_logit": 2.174743175506592
+        },
+        {
+          "text": "小雨最喜欢的饮料是茶。",
+          "start": 9,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "茶",
+          "accept_logit": 4.51300573348999
+        },
+        {
+          "text": "我知道小雨爱喝茶。",
+          "start": 7,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "喝茶",
+          "accept_logit": 3.204833507537842
+        },
+        {
+          "text": "小雨不喜欢喝茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.514652729034424
+        },
+        {
+          "text": "小雨给朋友买了茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.063958168029785
+        },
+        {
+          "text": "小雨说朋友喜欢茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.9668807983398438
+        },
+        {
+          "text": "小雨觉得茶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.4945387840271
+        },
+        {
+          "text": "我猜小雨可能喜欢茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.12354040145874
+        },
+        {
+          "text": "小雨从来不喝茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.8987765312194824
+        },
+        {
+          "text": "假如小雨喜欢茶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.394960403442383
+        },
+        {
+          "text": "小雨以后不再喜欢茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.354404926300049
+        },
+        {
+          "text": "小雨为客人准备了茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.226783275604248
+        },
+        {
+          "text": "小雨喜欢喝咖啡。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "咖啡",
+          "accept_logit": 2.965402126312256
+        },
+        {
+          "text": "小雨最喜欢的饮料是咖啡。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "咖啡",
+          "accept_logit": 4.217305660247803
+        },
+        {
+          "text": "我知道小雨爱喝咖啡。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "咖啡",
+          "accept_logit": 4.0747270584106445
+        },
+        {
+          "text": "小雨不喜欢喝咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.426645278930664
+        },
+        {
+          "text": "小雨给朋友买了咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.397913932800293
+        },
+        {
+          "text": "小雨说朋友喜欢咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.169801712036133
+        },
+        {
+          "text": "小雨觉得咖啡难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.976923942565918
+        },
+        {
+          "text": "我猜小雨可能喜欢咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.295664310455322
+        },
+        {
+          "text": "小雨从来不喝咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.187919616699219
+        },
+        {
+          "text": "假如小雨喜欢咖啡就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.9650731086730957
+        },
+        {
+          "text": "小雨以后不再喜欢咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.684023380279541
+        },
+        {
+          "text": "小雨为客人准备了咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.418417453765869
+        },
+        {
+          "text": "小雨喜欢喝牛奶。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "牛奶",
+          "accept_logit": 2.885059356689453
+        },
+        {
+          "text": "小雨最喜欢的饮料是牛奶。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "牛奶",
+          "accept_logit": 4.2614288330078125
+        },
+        {
+          "text": "我知道小雨爱喝牛奶。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "牛奶",
+          "accept_logit": 4.170464515686035
+        },
+        {
+          "text": "小雨不喜欢喝牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.4780192375183105
+        },
+        {
+          "text": "小雨给朋友买了牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.188726902008057
+        },
+        {
+          "text": "小雨说朋友喜欢牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.1463823318481445
+        },
+        {
+          "text": "小雨觉得牛奶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.785501956939697
+        },
+        {
+          "text": "我猜小雨可能喜欢牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.393142223358154
+        },
+        {
+          "text": "小雨从来不喝牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.107089519500732
+        },
+        {
+          "text": "假如小雨喜欢牛奶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.7470273971557617
+        },
+        {
+          "text": "小雨以后不再喜欢牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.680694580078125
+        },
+        {
+          "text": "小雨为客人准备了牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.268112659454346
+        },
+        {
+          "text": "小雨喜欢喝果汁。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "果汁",
+          "accept_logit": 2.7129898071289062
+        },
+        {
+          "text": "小雨最喜欢的饮料是果汁。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "果汁",
+          "accept_logit": 3.5116825103759766
+        },
+        {
+          "text": "我知道小雨爱喝果汁。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "果汁",
+          "accept_logit": 3.7498397827148438
+        },
+        {
+          "text": "小雨不喜欢喝果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.543140411376953
+        },
+        {
+          "text": "小雨给朋友买了果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.471034049987793
+        },
+        {
+          "text": "小雨说朋友喜欢果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.0498833656311035
+        },
+        {
+          "text": "小雨觉得果汁难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.259411334991455
+        },
+        {
+          "text": "我猜小雨可能喜欢果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.643342971801758
+        },
+        {
+          "text": "小雨从来不喝果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.308491230010986
+        },
+        {
+          "text": "假如小雨喜欢果汁就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.022385597229004
+        },
+        {
+          "text": "小雨以后不再喜欢果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.730432987213135
+        },
+        {
+          "text": "小雨为客人准备了果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.663478374481201
+        },
+        {
+          "text": "小雨喜欢喝豆浆。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "豆浆",
+          "accept_logit": 2.5218753814697266
+        },
+        {
+          "text": "小雨最喜欢的饮料是豆浆。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "豆浆",
+          "accept_logit": 4.2614264488220215
+        },
+        {
+          "text": "我知道小雨爱喝豆浆。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "豆浆",
+          "accept_logit": 3.806950569152832
+        },
+        {
+          "text": "小雨不喜欢喝豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.790740966796875
+        },
+        {
+          "text": "小雨给朋友买了豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.429635047912598
+        },
+        {
+          "text": "小雨说朋友喜欢豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.458462715148926
+        },
+        {
+          "text": "小雨觉得豆浆难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.275763511657715
+        },
+        {
+          "text": "我猜小雨可能喜欢豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.562112808227539
+        },
+        {
+          "text": "小雨从来不喝豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.40308141708374
+        },
+        {
+          "text": "假如小雨喜欢豆浆就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.793485164642334
+        },
+        {
+          "text": "小雨以后不再喜欢豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.846996784210205
+        },
+        {
+          "text": "小雨为客人准备了豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.2428083419799805
+        },
+        {
+          "text": "小雨喜欢喝可乐。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "可乐",
+          "accept_logit": 2.4836931228637695
+        },
+        {
+          "text": "小雨最喜欢的饮料是可乐。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "可乐",
+          "accept_logit": 3.490368366241455
+        },
+        {
+          "text": "我知道小雨爱喝可乐。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "可乐",
+          "accept_logit": 3.7649083137512207
+        },
+        {
+          "text": "小雨不喜欢喝可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.6469969749450684
+        },
+        {
+          "text": "小雨给朋友买了可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.0551371574401855
+        },
+        {
+          "text": "小雨说朋友喜欢可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.118294715881348
+        },
+        {
+          "text": "小雨觉得可乐难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.112127780914307
+        },
+        {
+          "text": "我猜小雨可能喜欢可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.37608528137207
+        },
+        {
+          "text": "小雨从来不喝可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.405129432678223
+        },
+        {
+          "text": "假如小雨喜欢可乐就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.457792282104492
+        },
+        {
+          "text": "小雨以后不再喜欢可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.897137641906738
+        },
+        {
+          "text": "小雨为客人准备了可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.24536657333374
+        },
+        {
+          "text": "小雨喜欢喝水。",
+          "start": 5,
+          "end": 6,
+          "positive": true,
+          "accepted": true,
+          "value": "喝水",
+          "accept_logit": 2.0868024826049805
+        },
+        {
+          "text": "小雨最喜欢的饮料是水。",
+          "start": 9,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "水",
+          "accept_logit": 4.0617265701293945
+        },
+        {
+          "text": "我知道小雨爱喝水。",
+          "start": 7,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "喝水",
+          "accept_logit": 3.578782558441162
+        },
+        {
+          "text": "小雨不喜欢喝水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.047224521636963
+        },
+        {
+          "text": "小雨给朋友买了水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.2457098960876465
+        },
+        {
+          "text": "小雨说朋友喜欢水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.397103309631348
+        },
+        {
+          "text": "小雨觉得水难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.235256195068359
+        },
+        {
+          "text": "我猜小雨可能喜欢水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.81154203414917
+        },
+        {
+          "text": "小雨从来不喝水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.994572162628174
+        },
+        {
+          "text": "假如小雨喜欢水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.390965461730957
+        },
+        {
+          "text": "小雨以后不再喜欢水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.878716468811035
+        },
+        {
+          "text": "小雨为客人准备了水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.644014358520508
+        },
+        {
+          "text": "小雨喜欢喝酸奶。",
+          "start": 5,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "酸奶",
+          "accept_logit": 2.447409152984619
+        },
+        {
+          "text": "小雨最喜欢的饮料是酸奶。",
+          "start": 9,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "酸奶",
+          "accept_logit": 3.9745821952819824
+        },
+        {
+          "text": "我知道小雨爱喝酸奶。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "酸奶",
+          "accept_logit": 4.0544819831848145
+        },
+        {
+          "text": "小雨不喜欢喝酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.8275914192199707
+        },
+        {
+          "text": "小雨给朋友买了酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.9343175888061523
+        },
+        {
+          "text": "小雨说朋友喜欢酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.391427516937256
+        },
+        {
+          "text": "小雨觉得酸奶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.074944019317627
+        },
+        {
+          "text": "我猜小雨可能喜欢酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.539804458618164
+        },
+        {
+          "text": "小雨从来不喝酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.3587327003479
+        },
+        {
+          "text": "假如小雨喜欢酸奶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.172712802886963
+        },
+        {
+          "text": "小雨以后不再喜欢酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.730565547943115
+        },
+        {
+          "text": "小雨为客人准备了酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.211973667144775
+        },
+        {
+          "text": "小雨喜欢喝茉莉花茶。",
+          "start": 5,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "茉莉花茶",
+          "accept_logit": 1.8546028137207031
+        },
+        {
+          "text": "小雨最喜欢的饮料是茉莉花茶。",
+          "start": 9,
+          "end": 13,
+          "positive": true,
+          "accepted": true,
+          "value": "茉莉花茶",
+          "accept_logit": 3.063486099243164
+        },
+        {
+          "text": "我知道小雨爱喝茉莉花茶。",
+          "start": 7,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "茉莉花茶",
+          "accept_logit": 2.9633593559265137
+        },
+        {
+          "text": "小雨不喜欢喝茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.824331283569336
+        },
+        {
+          "text": "小雨给朋友买了茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.151123523712158
+        },
+        {
+          "text": "小雨说朋友喜欢茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.9758377075195312
+        },
+        {
+          "text": "小雨觉得茉莉花茶难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.929388523101807
+        },
+        {
+          "text": "我猜小雨可能喜欢茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.315715312957764
+        },
+        {
+          "text": "小雨从来不喝茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.140239715576172
+        },
+        {
+          "text": "假如小雨喜欢茉莉花茶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.526442527770996
+        },
+        {
+          "text": "小雨以后不再喜欢茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.5833892822265625
+        },
+        {
+          "text": "小雨为客人准备了茉莉花茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.72568416595459
+        },
+        {
+          "text": "小雨喜欢喝苏打水。",
+          "start": 5,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "苏打水",
+          "accept_logit": 1.9198331832885742
+        },
+        {
+          "text": "小雨最喜欢的饮料是苏打水。",
+          "start": 9,
+          "end": 12,
+          "positive": true,
+          "accepted": true,
+          "value": "苏打水",
+          "accept_logit": 3.2510223388671875
+        },
+        {
+          "text": "我知道小雨爱喝苏打水。",
+          "start": 7,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "苏打水",
+          "accept_logit": 2.997509479522705
+        },
+        {
+          "text": "小雨不喜欢喝苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.94972562789917
+        },
+        {
+          "text": "小雨给朋友买了苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.556781768798828
+        },
+        {
+          "text": "小雨说朋友喜欢苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.510550022125244
+        },
+        {
+          "text": "小雨觉得苏打水难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.170164585113525
+        },
+        {
+          "text": "我猜小雨可能喜欢苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.8440680503845215
+        },
+        {
+          "text": "小雨从来不喝苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.205316066741943
+        },
+        {
+          "text": "假如小雨喜欢苏打水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.090324401855469
+        },
+        {
+          "text": "小雨以后不再喜欢苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.01519775390625
+        },
+        {
+          "text": "小雨为客人准备了苏打水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.420109748840332
+        },
+        {
+          "text": "小雨喜欢喝绿豆汤。",
+          "start": 5,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "绿豆汤",
+          "accept_logit": 2.07900333404541
+        },
+        {
+          "text": "小雨最喜欢的饮料是绿豆汤。",
+          "start": 9,
+          "end": 12,
+          "positive": true,
+          "accepted": true,
+          "value": "绿豆汤",
+          "accept_logit": 3.626955509185791
+        },
+        {
+          "text": "我知道小雨爱喝绿豆汤。",
+          "start": 7,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "绿豆汤",
+          "accept_logit": 3.5556325912475586
+        },
+        {
+          "text": "小雨不喜欢喝绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.6374497413635254
+        },
+        {
+          "text": "小雨给朋友买了绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.432430744171143
+        },
+        {
+          "text": "小雨说朋友喜欢绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.198390007019043
+        },
+        {
+          "text": "小雨觉得绿豆汤难喝。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.399139404296875
+        },
+        {
+          "text": "我猜小雨可能喜欢绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.394282817840576
+        },
+        {
+          "text": "小雨从来不喝绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.039409160614014
+        },
+        {
+          "text": "假如小雨喜欢绿豆汤就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.6281614303588867
+        },
+        {
+          "text": "小雨以后不再喜欢绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.014218807220459
+        },
+        {
+          "text": "小雨为客人准备了绿豆汤。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.434045791625977
+        }
+      ]
+    },
+    "calibration": {
+      "positive_correct": 12,
+      "positive_total": 20,
+      "negative_accept": 0,
+      "negative_total": 30,
+      "rows": [
+        {
+          "text": "阿哲最中意喝茶。",
+          "start": 6,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "喝茶",
+          "accept_logit": -0.8931684494018555
+        },
+        {
+          "text": "阿哲平时最爱喝茶。",
+          "start": 7,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "喝茶",
+          "accept_logit": 0.09317684173583984
+        },
+        {
+          "text": "阿哲是否爱喝茶？",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.523444652557373
+        },
+        {
+          "text": "阿哲替同事带了茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.0187201499938965
+        },
+        {
+          "text": "阿哲以前喝茶，现在不清楚。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.9668259620666504
+        },
+        {
+          "text": "阿哲最中意喝咖啡。",
+          "start": 6,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "咖啡",
+          "accept_logit": -0.4899287223815918
+        },
+        {
+          "text": "阿哲平时最爱喝咖啡。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "咖啡",
+          "accept_logit": 0.33849096298217773
+        },
+        {
+          "text": "阿哲是否爱喝咖啡？",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.3082427978515625
+        },
+        {
+          "text": "阿哲替同事带了咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.1780009269714355
+        },
+        {
+          "text": "阿哲以前喝咖啡，现在不清楚。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.9955101013183594
+        },
+        {
+          "text": "阿哲最中意喝牛奶。",
+          "start": 6,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "牛奶",
+          "accept_logit": -0.3663301467895508
+        },
+        {
+          "text": "阿哲平时最爱喝牛奶。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "牛奶",
+          "accept_logit": 0.5303950309753418
+        },
+        {
+          "text": "阿哲是否爱喝牛奶？",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.0630197525024414
+        },
+        {
+          "text": "阿哲替同事带了牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.155313968658447
+        },
+        {
+          "text": "阿哲以前喝牛奶，现在不清楚。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.7992467880249023
+        },
+        {
+          "text": "阿哲最中意喝果汁。",
+          "start": 6,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "果汁",
+          "accept_logit": -0.7502036094665527
+        },
+        {
+          "text": "阿哲平时最爱喝果汁。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "果汁",
+          "accept_logit": 0.25031280517578125
+        },
+        {
+          "text": "阿哲是否爱喝果汁？",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.3047008514404297
+        },
+        {
+          "text": "阿哲替同事带了果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.41058874130249
+        },
+        {
+          "text": "阿哲以前喝果汁，现在不清楚。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.9756927490234375
+        },
+        {
+          "text": "阿哲最中意喝豆浆。",
+          "start": 6,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "豆浆",
+          "accept_logit": -0.48919677734375
+        },
+        {
+          "text": "阿哲平时最爱喝豆浆。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "豆浆",
+          "accept_logit": 0.20336437225341797
+        },
+        {
+          "text": "阿哲是否爱喝豆浆？",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.361475944519043
+        },
+        {
+          "text": "阿哲替同事带了豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.357494831085205
+        },
+        {
+          "text": "阿哲以前喝豆浆，现在不清楚。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.047384738922119
+        },
+        {
+          "text": "阿哲最中意喝可乐。",
+          "start": 6,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "可乐",
+          "accept_logit": -0.6218781471252441
+        },
+        {
+          "text": "阿哲平时最爱喝可乐。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "可乐",
+          "accept_logit": 0.06233548745512962
+        },
+        {
+          "text": "阿哲是否爱喝可乐？",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.4893255233764648
+        },
+        {
+          "text": "阿哲替同事带了可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.062796592712402
+        },
+        {
+          "text": "阿哲以前喝可乐，现在不清楚。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.965559482574463
+        },
+        {
+          "text": "阿哲最中意喝水。",
+          "start": 6,
+          "end": 7,
+          "positive": true,
+          "accepted": true,
+          "value": "中意喝水",
+          "accept_logit": -0.7727699279785156
+        },
+        {
+          "text": "阿哲平时最爱喝水。",
+          "start": 7,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "喝水",
+          "accept_logit": -0.23744583129882812
+        },
+        {
+          "text": "阿哲是否爱喝水？",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.2319989204406738
+        },
+        {
+          "text": "阿哲替同事带了水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.436052322387695
+        },
+        {
+          "text": "阿哲以前喝水，现在不清楚。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.6803741455078125
+        },
+        {
+          "text": "阿哲最中意喝酸奶。",
+          "start": 6,
+          "end": 8,
+          "positive": true,
+          "accepted": true,
+          "value": "酸奶",
+          "accept_logit": -0.5153131484985352
+        },
+        {
+          "text": "阿哲平时最爱喝酸奶。",
+          "start": 7,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "酸奶",
+          "accept_logit": 0.093536376953125
+        },
+        {
+          "text": "阿哲是否爱喝酸奶？",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.4205036163330078
+        },
+        {
+          "text": "阿哲替同事带了酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.27196741104126
+        },
+        {
+          "text": "阿哲以前喝酸奶，现在不清楚。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.160606861114502
+        },
+        {
+          "text": "阿哲最中意喝热巧克力。",
+          "start": 6,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.1804990768432617
+        },
+        {
+          "text": "阿哲平时最爱喝热巧克力。",
+          "start": 7,
+          "end": 11,
+          "positive": true,
+          "accepted": true,
+          "value": "巧克力",
+          "accept_logit": -0.0011873282492160797
+        },
+        {
+          "text": "阿哲是否爱喝热巧克力？",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.007017135620117
+        },
+        {
+          "text": "阿哲替同事带了热巧克力。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.29442834854126
+        },
+        {
+          "text": "阿哲以前喝热巧克力，现在不清楚。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.3692283630371094
+        },
+        {
+          "text": "阿哲最中意喝冰红茶。",
+          "start": 6,
+          "end": 9,
+          "positive": true,
+          "accepted": true,
+          "value": "冰",
+          "accept_logit": -0.7811384201049805
+        },
+        {
+          "text": "阿哲平时最爱喝冰红茶。",
+          "start": 7,
+          "end": 10,
+          "positive": true,
+          "accepted": true,
+          "value": "冰",
+          "accept_logit": 0.23430681228637695
+        },
+        {
+          "text": "阿哲是否爱喝冰红茶？",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.380143165588379
+        },
+        {
+          "text": "阿哲替同事带了冰红茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.669532299041748
+        },
+        {
+          "text": "阿哲以前喝冰红茶，现在不清楚。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.2012882232666016
+        }
+      ]
+    },
+    "held": {
+      "positive_correct": 0,
+      "positive_total": 52,
+      "negative_accept": 0,
+      "negative_total": 130,
+      "rows": [
+        {
+          "text": "据我所知，小梅最喜欢的饮品是茶。",
+          "start": 14,
+          "end": 15,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.241631507873535
+        },
+        {
+          "text": "小梅偏爱的饮料是茶。",
+          "start": 8,
+          "end": 9,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.3556580543518066
+        },
+        {
+          "text": "小梅从来不喝茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.693051815032959
+        },
+        {
+          "text": "小梅给客人准备了茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.322780609130859
+        },
+        {
+          "text": "小梅说阿明喜欢茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.1415114402770996
+        },
+        {
+          "text": "如果小梅喜欢茶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.6575794219970703
+        },
+        {
+          "text": "小梅不再喜欢茶了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.864398002624512
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是咖啡。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.3507418632507324
+        },
+        {
+          "text": "小梅偏爱的饮料是咖啡。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.349989891052246
+        },
+        {
+          "text": "小梅从来不喝咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.09398078918457
+        },
+        {
+          "text": "小梅给客人准备了咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.615731239318848
+        },
+        {
+          "text": "小梅说阿明喜欢咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.232041835784912
+        },
+        {
+          "text": "如果小梅喜欢咖啡就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.0586323738098145
+        },
+        {
+          "text": "小梅不再喜欢咖啡了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.279690265655518
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是牛奶。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.266266345977783
+        },
+        {
+          "text": "小梅偏爱的饮料是牛奶。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.4486641883850098
+        },
+        {
+          "text": "小梅从来不喝牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.938994884490967
+        },
+        {
+          "text": "小梅给客人准备了牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.4677958488464355
+        },
+        {
+          "text": "小梅说阿明喜欢牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.281808376312256
+        },
+        {
+          "text": "如果小梅喜欢牛奶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.236085891723633
+        },
+        {
+          "text": "小梅不再喜欢牛奶了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.251394271850586
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是果汁。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.8856425285339355
+        },
+        {
+          "text": "小梅偏爱的饮料是果汁。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.348191261291504
+        },
+        {
+          "text": "小梅从来不喝果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.112372875213623
+        },
+        {
+          "text": "小梅给客人准备了果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.904842376708984
+        },
+        {
+          "text": "小梅说阿明喜欢果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.4055728912353516
+        },
+        {
+          "text": "如果小梅喜欢果汁就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.394811630249023
+        },
+        {
+          "text": "小梅不再喜欢果汁了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.291727066040039
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是豆浆。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.454453945159912
+        },
+        {
+          "text": "小梅偏爱的饮料是豆浆。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.5525298118591309
+        },
+        {
+          "text": "小梅从来不喝豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.187351226806641
+        },
+        {
+          "text": "小梅给客人准备了豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.588790416717529
+        },
+        {
+          "text": "小梅说阿明喜欢豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.4460129737854004
+        },
+        {
+          "text": "如果小梅喜欢豆浆就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.044792175292969
+        },
+        {
+          "text": "小梅不再喜欢豆浆了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.3548431396484375
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是可乐。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.490684986114502
+        },
+        {
+          "text": "小梅偏爱的饮料是可乐。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.5088891983032227
+        },
+        {
+          "text": "小梅从来不喝可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.150940418243408
+        },
+        {
+          "text": "小梅给客人准备了可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.4087629318237305
+        },
+        {
+          "text": "小梅说阿明喜欢可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.46169376373291
+        },
+        {
+          "text": "如果小梅喜欢可乐就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.086045742034912
+        },
+        {
+          "text": "小梅不再喜欢可乐了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.954263210296631
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是水。",
+          "start": 14,
+          "end": 15,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.7519192695617676
+        },
+        {
+          "text": "小梅偏爱的饮料是水。",
+          "start": 8,
+          "end": 9,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.4606003761291504
+        },
+        {
+          "text": "小梅从来不喝水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.943904399871826
+        },
+        {
+          "text": "小梅给客人准备了水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.768986225128174
+        },
+        {
+          "text": "小梅说阿明喜欢水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.5376205444335938
+        },
+        {
+          "text": "如果小梅喜欢水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.645391464233398
+        },
+        {
+          "text": "小梅不再喜欢水了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.247310638427734
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是酸奶。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.558865547180176
+        },
+        {
+          "text": "小梅偏爱的饮料是酸奶。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.4740257263183594
+        },
+        {
+          "text": "小梅从来不喝酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.142968654632568
+        },
+        {
+          "text": "小梅给客人准备了酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.580044746398926
+        },
+        {
+          "text": "小梅说阿明喜欢酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.4719157218933105
+        },
+        {
+          "text": "如果小梅喜欢酸奶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.379063606262207
+        },
+        {
+          "text": "小梅不再喜欢酸奶了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.192976474761963
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是柠檬水。",
+          "start": 14,
+          "end": 17,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.365971565246582
+        },
+        {
+          "text": "小梅偏爱的饮料是柠檬水。",
+          "start": 8,
+          "end": 11,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.167574405670166
+        },
+        {
+          "text": "小梅从来不喝柠檬水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.9843363761901855
+        },
+        {
+          "text": "小梅给客人准备了柠檬水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.016354084014893
+        },
+        {
+          "text": "小梅说阿明喜欢柠檬水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.2987589836120605
+        },
+        {
+          "text": "如果小梅喜欢柠檬水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.99513578414917
+        },
+        {
+          "text": "小梅不再喜欢柠檬水了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.1546807289123535
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是苹果汁。",
+          "start": 14,
+          "end": 17,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.3681182861328125
+        },
+        {
+          "text": "小梅偏爱的饮料是苹果汁。",
+          "start": 8,
+          "end": 11,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.5267090797424316
+        },
+        {
+          "text": "小梅从来不喝苹果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.901010513305664
+        },
+        {
+          "text": "小梅给客人准备了苹果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.1917314529418945
+        },
+        {
+          "text": "小梅说阿明喜欢苹果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.210800647735596
+        },
+        {
+          "text": "如果小梅喜欢苹果汁就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.610520839691162
+        },
+        {
+          "text": "小梅不再喜欢苹果汁了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.312032222747803
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是白开水。",
+          "start": 14,
+          "end": 17,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.4753665924072266
+        },
+        {
+          "text": "小梅偏爱的饮料是白开水。",
+          "start": 8,
+          "end": 11,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.6016640663146973
+        },
+        {
+          "text": "小梅从来不喝白开水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.407663345336914
+        },
+        {
+          "text": "小梅给客人准备了白开水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.6569647789001465
+        },
+        {
+          "text": "小梅说阿明喜欢白开水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.4626688957214355
+        },
+        {
+          "text": "如果小梅喜欢白开水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.195036888122559
+        },
+        {
+          "text": "小梅不再喜欢白开水了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.707108497619629
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是汽水。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.898386001586914
+        },
+        {
+          "text": "小梅偏爱的饮料是汽水。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.7391576766967773
+        },
+        {
+          "text": "小梅从来不喝汽水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.341903209686279
+        },
+        {
+          "text": "小梅给客人准备了汽水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.875291347503662
+        },
+        {
+          "text": "小梅说阿明喜欢汽水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.5407180786132812
+        },
+        {
+          "text": "如果小梅喜欢汽水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.262225151062012
+        },
+        {
+          "text": "小梅不再喜欢汽水了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.646917819976807
+        },
+        {
+          "text": "据我所知，小梅最喜欢的饮品是橙汁。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.6465749740600586
+        },
+        {
+          "text": "小梅偏爱的饮料是橙汁。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.6863350868225098
+        },
+        {
+          "text": "小梅从来不喝橙汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.474945545196533
+        },
+        {
+          "text": "小梅给客人准备了橙汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.6433186531066895
+        },
+        {
+          "text": "小梅说阿明喜欢橙汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.563399314880371
+        },
+        {
+          "text": "如果小梅喜欢橙汁就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.285068035125732
+        },
+        {
+          "text": "小梅不再喜欢橙汁了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.003381729125977
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是茶。",
+          "start": 14,
+          "end": 15,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.1974129676818848
+        },
+        {
+          "text": "阿远偏爱的饮料是茶。",
+          "start": 8,
+          "end": 9,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.1903786659240723
+        },
+        {
+          "text": "阿远从来不喝茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.461596965789795
+        },
+        {
+          "text": "阿远给客人准备了茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.882657051086426
+        },
+        {
+          "text": "阿远说阿明喜欢茶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.7939062118530273
+        },
+        {
+          "text": "如果阿远喜欢茶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.3405327796936035
+        },
+        {
+          "text": "阿远不再喜欢茶了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.08935022354126
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是咖啡。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.2531018257141113
+        },
+        {
+          "text": "阿远偏爱的饮料是咖啡。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.2859020233154297
+        },
+        {
+          "text": "阿远从来不喝咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.876849174499512
+        },
+        {
+          "text": "阿远给客人准备了咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.210579872131348
+        },
+        {
+          "text": "阿远说阿明喜欢咖啡。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.0426955223083496
+        },
+        {
+          "text": "如果阿远喜欢咖啡就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.723198413848877
+        },
+        {
+          "text": "阿远不再喜欢咖啡了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.757343769073486
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是牛奶。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.2082180976867676
+        },
+        {
+          "text": "阿远偏爱的饮料是牛奶。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.3383965492248535
+        },
+        {
+          "text": "阿远从来不喝牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.5731072425842285
+        },
+        {
+          "text": "阿远给客人准备了牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.955941677093506
+        },
+        {
+          "text": "阿远说阿明喜欢牛奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.9211950302124023
+        },
+        {
+          "text": "如果阿远喜欢牛奶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.545192241668701
+        },
+        {
+          "text": "阿远不再喜欢牛奶了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.393242835998535
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是果汁。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.5784549713134766
+        },
+        {
+          "text": "阿远偏爱的饮料是果汁。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.4783473014831543
+        },
+        {
+          "text": "阿远从来不喝果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.819737911224365
+        },
+        {
+          "text": "阿远给客人准备了果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.188653469085693
+        },
+        {
+          "text": "阿远说阿明喜欢果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.017489433288574
+        },
+        {
+          "text": "如果阿远喜欢果汁就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.808950901031494
+        },
+        {
+          "text": "阿远不再喜欢果汁了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.745513439178467
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是豆浆。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.191080093383789
+        },
+        {
+          "text": "阿远偏爱的饮料是豆浆。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.3586254119873047
+        },
+        {
+          "text": "阿远从来不喝豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.974824905395508
+        },
+        {
+          "text": "阿远给客人准备了豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.193845748901367
+        },
+        {
+          "text": "阿远说阿明喜欢豆浆。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.225283145904541
+        },
+        {
+          "text": "如果阿远喜欢豆浆就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.595938205718994
+        },
+        {
+          "text": "阿远不再喜欢豆浆了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.7482590675354
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是可乐。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.177138328552246
+        },
+        {
+          "text": "阿远偏爱的饮料是可乐。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.2721915245056152
+        },
+        {
+          "text": "阿远从来不喝可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.831201076507568
+        },
+        {
+          "text": "阿远给客人准备了可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.830151557922363
+        },
+        {
+          "text": "阿远说阿明喜欢可乐。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.0568275451660156
+        },
+        {
+          "text": "如果阿远喜欢可乐就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.071634292602539
+        },
+        {
+          "text": "阿远不再喜欢可乐了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.433152675628662
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是水。",
+          "start": 14,
+          "end": 15,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.3936758041381836
+        },
+        {
+          "text": "阿远偏爱的饮料是水。",
+          "start": 8,
+          "end": 9,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.5873899459838867
+        },
+        {
+          "text": "阿远从来不喝水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.625632286071777
+        },
+        {
+          "text": "阿远给客人准备了水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.34700345993042
+        },
+        {
+          "text": "阿远说阿明喜欢水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.3258867263793945
+        },
+        {
+          "text": "如果阿远喜欢水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.8414459228515625
+        },
+        {
+          "text": "阿远不再喜欢水了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.383434295654297
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是酸奶。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.381743907928467
+        },
+        {
+          "text": "阿远偏爱的饮料是酸奶。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.2905759811401367
+        },
+        {
+          "text": "阿远从来不喝酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.890465259552002
+        },
+        {
+          "text": "阿远给客人准备了酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.25454568862915
+        },
+        {
+          "text": "阿远说阿明喜欢酸奶。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.295032501220703
+        },
+        {
+          "text": "如果阿远喜欢酸奶就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.978692054748535
+        },
+        {
+          "text": "阿远不再喜欢酸奶了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.715203285217285
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是柠檬水。",
+          "start": 14,
+          "end": 17,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.123770236968994
+        },
+        {
+          "text": "阿远偏爱的饮料是柠檬水。",
+          "start": 8,
+          "end": 11,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.1358575820922852
+        },
+        {
+          "text": "阿远从来不喝柠檬水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.7071757316589355
+        },
+        {
+          "text": "阿远给客人准备了柠檬水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.652137756347656
+        },
+        {
+          "text": "阿远说阿明喜欢柠檬水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.9442758560180664
+        },
+        {
+          "text": "如果阿远喜欢柠檬水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.058086395263672
+        },
+        {
+          "text": "阿远不再喜欢柠檬水了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.26353645324707
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是苹果汁。",
+          "start": 14,
+          "end": 17,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.129971981048584
+        },
+        {
+          "text": "阿远偏爱的饮料是苹果汁。",
+          "start": 8,
+          "end": 11,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.4792113304138184
+        },
+        {
+          "text": "阿远从来不喝苹果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.4446516036987305
+        },
+        {
+          "text": "阿远给客人准备了苹果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.489825248718262
+        },
+        {
+          "text": "阿远说阿明喜欢苹果汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.931584358215332
+        },
+        {
+          "text": "如果阿远喜欢苹果汁就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.0174174308776855
+        },
+        {
+          "text": "阿远不再喜欢苹果汁了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.314764976501465
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是白开水。",
+          "start": 14,
+          "end": 17,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.46914005279541
+        },
+        {
+          "text": "阿远偏爱的饮料是白开水。",
+          "start": 8,
+          "end": 11,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.5303082466125488
+        },
+        {
+          "text": "阿远从来不喝白开水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.938113212585449
+        },
+        {
+          "text": "阿远给客人准备了白开水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.01425838470459
+        },
+        {
+          "text": "阿远说阿明喜欢白开水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.916452407836914
+        },
+        {
+          "text": "如果阿远喜欢白开水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.430873870849609
+        },
+        {
+          "text": "阿远不再喜欢白开水了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.631444931030273
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是汽水。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.5312395095825195
+        },
+        {
+          "text": "阿远偏爱的饮料是汽水。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.3973779678344727
+        },
+        {
+          "text": "阿远从来不喝汽水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.900191307067871
+        },
+        {
+          "text": "阿远给客人准备了汽水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.294613838195801
+        },
+        {
+          "text": "阿远说阿明喜欢汽水。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.2948694229125977
+        },
+        {
+          "text": "如果阿远喜欢汽水就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.392198085784912
+        },
+        {
+          "text": "阿远不再喜欢汽水了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -5.6555094718933105
+        },
+        {
+          "text": "据我所知，阿远最喜欢的饮品是橙汁。",
+          "start": 14,
+          "end": 16,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -2.399472236633301
+        },
+        {
+          "text": "阿远偏爱的饮料是橙汁。",
+          "start": 8,
+          "end": 10,
+          "positive": true,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -1.4777603149414062
+        },
+        {
+          "text": "阿远从来不喝橙汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.960405349731445
+        },
+        {
+          "text": "阿远给客人准备了橙汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.091792106628418
+        },
+        {
+          "text": "阿远说阿明喜欢橙汁。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -3.1773681640625
+        },
+        {
+          "text": "如果阿远喜欢橙汁就好了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -4.515509128570557
+        },
+        {
+          "text": "阿远不再喜欢橙汁了。",
+          "start": null,
+          "end": null,
+          "positive": false,
+          "accepted": false,
+          "value": null,
+          "accept_logit": -6.049106597900391
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "Synthetic templates and finite names; no independent dialogue.",
+    "No subject, source, temporal, authorization or correction modeling.",
+    "Threshold selected on finite calibration data; no general guarantee.",
+    "No persistent memory writes."
+  ]
+}
