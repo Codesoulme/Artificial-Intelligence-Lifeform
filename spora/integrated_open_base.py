@@ -13,6 +13,7 @@ import torch
 from torch import nn
 
 from .model import DeltaMemorySite, ModelConfig
+from .memory_output import MemoryOutputAdapter, MemoryOutputLogitsProcessor
 from .open_base_memory import OpenBaseMemory
 from .sleep_memory import history_site
 
@@ -194,7 +195,7 @@ class IntegratedOpenBase(nn.Module):
     is a caller-supplied temporal address, not inferred from natural language.
     """
 
-    def __init__(self, base, reader, layer_indices):
+    def __init__(self, base, reader, layer_indices, output_adapter=None):
         super().__init__()
         if not isinstance(base, nn.Module) or not isinstance(reader, OpenBaseMemory):
             raise ValueError('Expected a base module and an OpenBaseMemory reader')
@@ -210,6 +211,9 @@ class IntegratedOpenBase(nn.Module):
             raise ValueError('Layers must be unwrapped tensor-output decoder layers')
         self.base = base
         self.reader = reader
+        if output_adapter is not None and not isinstance(output_adapter, MemoryOutputAdapter):
+            raise ValueError('Expected a memory output adapter')
+        self.output_adapter = output_adapter
         self.layer_indices = tuple(layer_indices)
         self._memory_context = ContextVar('spora_integrated_memory', default=None)
         for site, index in enumerate(self.layer_indices):
@@ -260,10 +264,16 @@ class IntegratedOpenBase(nn.Module):
             return self.base(*args, **kwargs)
 
     def generate(self, *args, memory_state=None, memory_addresses=None, memory_read_mask=None, memory_slots=None,
-                 current_only=False, **kwargs):
+                 current_only=False, memory_output_logits=None, **kwargs):
         if memory_state is not None and len(args) > 1:
             raise ValueError('Memory calls accept at most one positional base argument')
         if memory_state is not None and kwargs.get('past_key_values') is not None:
             raise ValueError('External key-value caches are not supported with memory state')
+        if memory_output_logits is not None:
+            if self.output_adapter is None:
+                raise ValueError('Memory output adapter is not attached')
+            processor = MemoryOutputLogitsProcessor(self.output_adapter, memory_output_logits)
+            existing = kwargs.get('logits_processor')
+            kwargs['logits_processor'] = ([processor] if existing is None else [processor] + list(existing))
         with self._snapshot(memory_state, memory_addresses, current_only, memory_read_mask, memory_slots):
             return self.base.generate(*args, **kwargs)

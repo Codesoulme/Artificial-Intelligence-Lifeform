@@ -1,0 +1,28 @@
+{
+  "status": "persisted_output_adapter_runtime_probe",
+  "checkpoint_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "adapter_sha256": "5d1b96bf877e28dc11f296266df7ed7f0f9a268e1fc2aaa98b1b67b89c9ebe63",
+  "rows": [
+    {
+      "value": 1,
+      "expected": "咖啡",
+      "native_value": 1,
+      "answer": "咖啡",
+      "contains_expected": true
+    },
+    {
+      "value": 6,
+      "expected": "水",
+      "native_value": 6,
+      "answer": "水",
+      "contains_expected": true
+    }
+  ],
+  "elapsed_seconds": 119.37026350013912,
+  "peak_allocated_bytes": 3821645312,
+  "limitations": [
+    "Two controlled finite values and one question.",
+    "The memory key is supplied by the caller; routing is not tested here.",
+    "This verifies persistence and invocation, not open-domain dialogue."
+  ]
+}

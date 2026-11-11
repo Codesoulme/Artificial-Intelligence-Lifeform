@@ -11,6 +11,7 @@ from spora.integrated_checkpoint import (_digest, IntegratedSPORARuntime, load_i
                                          load_integrated_runtime, save_integrated, replacement_feature_variant_sha256)
 from spora.integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
 from spora.internal_memory import WriteControl, attach, read_provenance
+from spora.memory_output import MemoryOutputAdapter
 from spora.language_training import frozen_digest
 from spora.named_address import NamedAddressBinding, address_basis_sha256, feature_files_sha256
 from spora.temporal import TemporalConfig, TemporalSPORA
@@ -23,7 +24,7 @@ class IntegratedCheckpointTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         (self.root / 'model.safetensors').write_bytes(b'base weights')
-        (self.root / 'config.json').write_text('{"hidden_size":3,"num_hidden_layers":3,"num_attention_heads":1}', encoding='utf-8')
+        (self.root / 'config.json').write_text('{"hidden_size":3,"num_hidden_layers":3,"num_attention_heads":1,"vocab_size":9}', encoding='utf-8')
         for name in ('tokenizer.json', 'tokenizer_config.json'):
             (self.root / name).write_text('{}', encoding='utf-8')
         self.base_sha = hashlib.sha256(b'base weights').hexdigest()
@@ -82,6 +83,29 @@ class IntegratedCheckpointTests(unittest.TestCase):
         self.assertIsInstance(model.reader, NativeSPORAMemoryReader)
         self.assertEqual(frozen_digest(organism, state), frozen_digest(self.organism, self.state))
         actual = model(x, memory_state=state, memory_addresses=addresses, current_only=True)
+        self.assertTrue(torch.equal(actual, expected))
+
+    def test_output_adapter_roundtrip_is_persisted_and_attached(self):
+        adapter = MemoryOutputAdapter(17, 9, rank=4, max_scale=2.)
+        with torch.no_grad():
+            adapter.value_to_rank.weight[0, 0] = 0.25
+            adapter.rank_to_vocab.weight[0, 0] = 0.5
+        self.organism.named_address_binding.feature_variant_sha256 = None
+        self.save_adapter = lambda: save_integrated(
+            self.path, self.organism, self.state, self.reader, self.root, (0, 2),
+            output_adapter=adapter)
+        self.save_adapter()
+        payload = torch.load(self.path, weights_only=True)
+        self.assertEqual(payload['metadata']['format'], 'spora-integrated-open-base-v4')
+        restored, _, _ = load_integrated(self.path, self.base(), self.root)
+        self.assertIsInstance(restored.output_adapter, MemoryOutputAdapter)
+        self.assertEqual(restored.output_adapter.config_dict(), adapter.config_dict())
+        for name, tensor in adapter.state_dict().items():
+            self.assertTrue(torch.equal(restored.output_adapter.state_dict()[name], tensor), name)
+        evidence = torch.zeros(1, 17)
+        evidence[0, 3] = 4
+        expected = adapter(evidence)
+        actual = restored.output_adapter(evidence)
         self.assertTrue(torch.equal(actual, expected))
 
     def test_v1_checkpoint_still_loads_as_legacy_reader(self):

@@ -1,0 +1,23 @@
+{
+  "status": "integrated_output_adapter_checkpoint",
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_checkpoint_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "candidate_source": "D:\\SPORA\\runs\\deepseek-spora-diverse-memory-replay-20261111",
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "adapter_sha256": "5d1b96bf877e28dc11f296266df7ed7f0f9a268e1fc2aaa98b1b67b89c9ebe63",
+  "checkpoint_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "checkpoint": "D:\\SPORA\\runs\\deepseek-spora-memory-output-integrated-v5-20261111\\individual-with-output-adapter.pt",
+  "adapter_config": {
+    "value_count": 17,
+    "vocab_size": 151936,
+    "rank": 32,
+    "max_scale": 8.0
+  },
+  "elapsed_seconds": 225.10964059992693,
+  "limitations": [
+    "Checkpoint persists the finite memory output adapter and candidate layers.",
+    "Runtime still needs a routed memory key to supply output evidence.",
+    "This artifact does not establish open-domain Chinese dialogue.",
+    "Base weights remain external and are checked by digest."
+  ]
+}

@@ -12,7 +12,9 @@ from pathlib import Path
 
 import torch
 
-from .integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
+from .integrated_open_base import (IntegratedOpenBase, NativeSPORAMemoryReader,
+                                   ScaledOpenBaseMemory)
+from .memory_output import MemoryOutputAdapter
 from .language_training import atomic_save
 from .named_address import feature_files_sha256, structural_feature_sha256
 from .structure_transfer import SPORALayerReplacement, SPORALayerBlend
@@ -22,6 +24,7 @@ from .internal_memory import observe_sourced as observe_spora_sourced
 FORMAT = 'spora-integrated-open-base-v2'
 LEGACY_FORMAT = 'spora-integrated-open-base-v1'
 STRUCTURAL_FORMAT = 'spora-integrated-open-base-v3'
+OUTPUT_ADAPTER_FORMAT = 'spora-integrated-open-base-v4'
 
 
 class IntegratedSPORARuntime:
@@ -39,10 +42,29 @@ class IntegratedSPORARuntime:
         self.model_dir = Path(model_dir)
         self.checkpoint_path = None if checkpoint_path is None else Path(checkpoint_path)
 
-    def generate(self, *args, **kwargs):
-        if 'memory_state' in kwargs:
-            raise ValueError('Runtime owns the memory state')
-        return self.decoder.generate(*args, memory_state=self.state, **kwargs)
+    def generate(self, *args, memory_key=None, memory_mode=0, memory_time=0,
+                 memory_output=False, **kwargs):
+        if 'memory_state' in kwargs or 'memory_output_logits' in kwargs:
+            raise ValueError('Runtime owns memory state and output evidence')
+        if type(memory_output) is not bool:
+            raise ValueError('memory_output must be a boolean')
+        if memory_output:
+            if self.decoder.output_adapter is None:
+                raise ValueError('Runtime has no memory output adapter')
+            if type(memory_key) is not int or not 0 <= memory_key < self.organism.config.key_count:
+                raise ValueError('A valid memory key is required for output conditioning')
+            if type(memory_mode) is not int or type(memory_time) is not int:
+                raise ValueError('Memory mode and time must be integers')
+            from .growing import query
+            device = next(self.organism.parameters()).device
+            key = torch.tensor([memory_key], dtype=torch.long, device=device)
+            mode = torch.tensor([memory_mode], dtype=torch.long, device=device)
+            time = torch.tensor([memory_time], dtype=torch.long, device=device)
+            memory_output_logits = query(self.organism, self.state, key, mode, time)
+        else:
+            memory_output_logits = None
+        return self.decoder.generate(*args, memory_state=self.state,
+                                     memory_output_logits=memory_output_logits, **kwargs)
 
     def observe_sourced(self, key, value, source, quality, valid_at=None, *, checkpoint_path=None):
         """Apply one guarded SPORA write; publish the new state only after save."""
@@ -51,7 +73,8 @@ class IntegratedSPORARuntime:
         destination = self.checkpoint_path if checkpoint_path is None else Path(checkpoint_path)
         if destination is not None:
             save_integrated(destination, self.organism, candidate, self.decoder.reader,
-                            self.model_dir, self.decoder.layer_indices, replacements=self._replacements())
+                            self.model_dir, self.decoder.layer_indices, replacements=self._replacements(),
+                            output_adapter=self.decoder.output_adapter)
         self.state = candidate
         return decision
 
@@ -60,7 +83,8 @@ class IntegratedSPORARuntime:
         if destination is None:
             raise ValueError('A checkpoint destination is required')
         save_integrated(destination, self.organism, self.state, self.decoder.reader,
-                        self.model_dir, self.decoder.layer_indices, replacements=self._replacements())
+                        self.model_dir, self.decoder.layer_indices, replacements=self._replacements(),
+                        output_adapter=self.decoder.output_adapter)
         self.checkpoint_path = destination
         return destination
 
@@ -133,6 +157,20 @@ def _replacement_bundle(replacements):
     return specs, tensors
 
 
+def _output_adapter_bundle(adapter, expected_vocab_size):
+    if adapter is None:
+        return None, {}
+    if not isinstance(adapter, MemoryOutputAdapter):
+        raise ValueError('Expected a supported memory output adapter')
+    config = adapter.config_dict()
+    if config['vocab_size'] != expected_vocab_size:
+        raise ValueError('Memory output vocabulary does not match base configuration')
+    state = adapter.state_dict()
+    if not state or any(not bool(t.isfinite().all()) for t in state.values()):
+        raise ValueError('Nonfinite memory output adapter')
+    return config, {'output/' + name: tensor.detach().cpu().clone() for name, tensor in state.items()}
+
+
 def replacement_feature_variant_sha256(model_dir, replacements):
     """Fingerprint supplied replacement tensors; caller owns the loaded base's provenance."""
     if not replacements:
@@ -155,7 +193,8 @@ def _validate_base_config(directory, hidden_width, layers):
         raise ValueError('Reader does not match base configuration')
 
 
-def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, replacements=None):
+def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, replacements=None,
+                    output_adapter=None):
     if type(reader) not in (ScaledOpenBaseMemory, NativeSPORAMemoryReader):
         raise ValueError('Expected a supported scaled SPORA memory reader')
     if (not isinstance(layer_indices, (tuple, list)) or len(layer_indices) != 2
@@ -182,6 +221,7 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
     variant = (structural_feature_sha256(base_sha, config_sha, {x['index']: x['sha256'] for x in specs},
                                          {x['index']: x['max_length'] for x in specs}) if specs else None)
     _validate_binding(organism, base_sha, config_sha, variant)
+    output_config, output_tensors = _output_adapter_bundle(output_adapter, base_config.get('vocab_size'))
     schema, individual = flatten(organism, state)
     reader_tensors = reader.state_dict()
     with torch.random.fork_rng(devices=[]):
@@ -192,14 +232,19 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
                    for k, v in reference.items())):
         raise ValueError('Invalid reader tensor set, shape or dtype')
     tensors = {**{'individual/' + k: v.detach().cpu().clone() for k, v in individual.items()},
-               **{'reader/' + k: v.detach().cpu().clone() for k, v in reader_tensors.items()}, **replacement_tensors}
-    metadata = {'format': STRUCTURAL_FORMAT if specs else FORMAT, 'base_sha256': base_sha, 'feature_config_sha256': config_sha,
+               **{'reader/' + k: v.detach().cpu().clone() for k, v in reader_tensors.items()},
+               **replacement_tensors, **output_tensors}
+    metadata = {'format': (OUTPUT_ADAPTER_FORMAT if output_config is not None
+                           else STRUCTURAL_FORMAT if specs else FORMAT),
+                'base_sha256': base_sha, 'feature_config_sha256': config_sha,
                 'individual_schema': schema, 'reader': {'hidden_width': reader.hidden_width,
                 'memory_width': reader.memory_width, 'strength': reader.strength, 'layers': list(layer_indices),
                 'kind': 'native-spora-delta-site' if type(reader) is NativeSPORAMemoryReader else 'scaled-open-base'}}
     if specs:
         metadata['replacements'] = specs
         metadata['feature_variant_sha256'] = variant
+    if output_config is not None:
+        metadata['output_adapter'] = output_config
     integrity = _digest(metadata, tensors)
     atomic_save({'metadata': metadata, 'tensors': tensors, 'integrity_sha256': integrity}, path)
 
@@ -209,13 +254,16 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     if not isinstance(payload, dict) or set(payload) != {'metadata', 'tensors', 'integrity_sha256'}:
         raise ValueError('Invalid integrated checkpoint')
     metadata, tensors = payload['metadata'], payload['tensors']
-    if (not isinstance(metadata, dict) or metadata.get('format') not in (FORMAT, LEGACY_FORMAT, STRUCTURAL_FORMAT)
+    if (not isinstance(metadata, dict) or metadata.get('format') not in
+            (FORMAT, LEGACY_FORMAT, STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT)
             or not isinstance(tensors, dict)):
         raise ValueError('Unsupported integrated checkpoint')
     if _digest(metadata, tensors) != payload['integrity_sha256']:
         raise ValueError('Integrated checkpoint integrity mismatch')
     directory = Path(model_dir)
     base_sha, config_sha = _file_sha256(directory / 'model.safetensors'), feature_files_sha256(directory)
+    with (directory/'config.json').open(encoding='utf-8') as stream:
+        base_config = json.load(stream)
     if metadata.get('base_sha256') != base_sha or metadata.get('feature_config_sha256') != config_sha:
         raise ValueError('Base weight or feature configuration mismatch')
     config = metadata.get('reader')
@@ -229,14 +277,15 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     individual_tensors = {k[len('individual/'):]: v for k, v in tensors.items() if k.startswith('individual/')}
     reader_tensors = {k[len('reader/'):]: v for k, v in tensors.items() if k.startswith('reader/')}
     replacement_tensors = {k: v for k, v in tensors.items() if k.startswith('replacement/')}
-    if len(individual_tensors) + len(reader_tensors) + len(replacement_tensors) != len(tensors):
+    output_tensors = {k[len('output/'):]: v for k, v in tensors.items() if k.startswith('output/')}
+    if len(individual_tensors) + len(reader_tensors) + len(replacement_tensors) + len(output_tensors) != len(tensors):
         raise ValueError('Unexpected integrated checkpoint tensor')
     format_name = metadata['format']
     layers = getattr(getattr(base, 'model', None), 'layers', None)
     if not isinstance(layers, torch.nn.ModuleList):
         raise ValueError('Expected base.model.layers as a ModuleList')
     loaded_replacements, hashes, lengths, consumed = {}, {}, {}, set()
-    if format_name == STRUCTURAL_FORMAT:
+    if 'replacements' in metadata:
         specs = metadata.get('replacements')
         if not isinstance(specs, list) or not specs:
             raise ValueError('Invalid structural replacement metadata')
@@ -270,9 +319,26 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         if metadata.get('feature_variant_sha256') != variant:
             raise ValueError('Structural replacement variant mismatch')
     else:
-        if replacement_tensors or 'replacements' in metadata or 'feature_variant_sha256' in metadata:
+        if replacement_tensors or 'feature_variant_sha256' in metadata:
             raise ValueError('Structural replacements require a structural checkpoint')
         variant = None
+    output_config = metadata.get('output_adapter')
+    if output_config is None:
+        if output_tensors:
+            raise ValueError('Output adapter tensors require output adapter metadata')
+        output_adapter = None
+    else:
+        if (not isinstance(output_config, dict)
+                or set(output_config) != {'value_count', 'vocab_size', 'rank', 'max_scale'}
+                or output_config.get('vocab_size') != base_config.get('vocab_size')):
+            raise ValueError('Invalid memory output adapter configuration')
+        output_adapter = MemoryOutputAdapter(**output_config)
+        expected_output = output_adapter.state_dict()
+        if (set(expected_output) != set(output_tensors)
+                or any(output_tensors[k].shape != v.shape or output_tensors[k].dtype != v.dtype
+                       for k, v in expected_output.items())):
+            raise ValueError('Invalid memory output adapter tensors')
+        output_adapter.load_state_dict(output_tensors, strict=True)
     organism, state = restore(metadata['individual_schema'], individual_tensors, individual_device)
     if organism.config.memory_width != config['memory_width']:
         raise ValueError('Reader and individual memory widths differ')
@@ -280,7 +346,7 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     kind = config.get('kind', 'scaled-open-base')
     if kind == 'scaled-open-base':
         reader_type = ScaledOpenBaseMemory
-    elif kind == 'native-spora-delta-site' and metadata['format'] in (FORMAT, STRUCTURAL_FORMAT):
+    elif kind == 'native-spora-delta-site' and metadata['format'] in (FORMAT, STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT):
         reader_type = NativeSPORAMemoryReader
     else:
         raise ValueError('Unsupported integrated reader kind')
@@ -301,7 +367,9 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     try:
         for index, block in loaded_replacements.items():
             layers[index] = block
-        integrated = IntegratedOpenBase(base, reader, config['layers'])
+        if output_adapter is not None:
+            output_adapter.to(device).eval()
+        integrated = IntegratedOpenBase(base, reader, config['layers'], output_adapter=output_adapter)
     except Exception:
         for index, layer in previous.items():
             layers[index] = layer
