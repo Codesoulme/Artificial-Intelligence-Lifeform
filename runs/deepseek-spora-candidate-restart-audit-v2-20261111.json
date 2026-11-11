@@ -1,0 +1,84 @@
+{
+  "status": "controlled_two_process_working_checkpoint_audit",
+  "source_sha256": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f",
+  "write": {
+    "initial_cursor": 2,
+    "cursor": 3,
+    "previous_native_value": 6,
+    "decision": {
+      "action": "correct",
+      "confidence": 0.9999923706054688,
+      "reason": "learned_decision",
+      "source": "direct",
+      "history_time": 2,
+      "current_write": true
+    },
+    "individual_digest": "6918c43233dc4a6d9e8e6e104890a45979f1a7c54827d7b3316ef284f02c03b0",
+    "working_sha256": "d5dd63675ce6511a3681682a1683e11581e98b0c7ab43a417e4dce9aef442b7a"
+  },
+  "read": {
+    "cursor": 3,
+    "individual_digest": "6918c43233dc4a6d9e8e6e104890a45979f1a7c54827d7b3316ef284f02c03b0",
+    "working_sha256": "d5dd63675ce6511a3681682a1683e11581e98b0c7ab43a417e4dce9aef442b7a",
+    "question_result": {
+      "question": "小林现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "酸奶",
+      "temporal_intent": 0,
+      "intent_logit": 2.765702962875366,
+      "entity_score": 0.994081437587738,
+      "intent_recovered": true,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    "previous_question_result": {
+      "question": "小林改口以前喜欢什么饮料？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 1,
+      "intent_logit": 5.889869213104248,
+      "entity_score": 0.9941278696060181,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 1,
+        "effective_time": 1,
+        "candidate_count": 3,
+        "checked_events": 3,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    }
+  },
+  "cursor_preserved": true,
+  "state_digest_preserved": true,
+  "working_file_preserved": true,
+  "answer_exact": true,
+  "previous_exact": true,
+  "limitations": [
+    "Two controlled processes; neither is forcibly terminated.",
+    "One manually addressed finite write and one authored question.",
+    "Temporary full checkpoint; no incremental storage or real user state.",
+    "The default runtime is not changed to the candidate."
+  ]
+}
