@@ -285,6 +285,14 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     if len(individual_tensors) + len(reader_tensors) + len(replacement_tensors) + len(output_tensors) != len(tensors):
         raise ValueError('Unexpected integrated checkpoint tensor')
     format_name = metadata['format']
+    if format_name in (LEGACY_FORMAT, FORMAT):
+        if 'replacements' in metadata or 'output_adapter' in metadata:
+            raise ValueError('Legacy checkpoint contains newer-format components')
+    elif format_name == STRUCTURAL_FORMAT:
+        if 'replacements' not in metadata or 'output_adapter' in metadata:
+            raise ValueError('Structural checkpoint requires replacements and no output adapter')
+    elif format_name == OUTPUT_ADAPTER_FORMAT and 'output_adapter' not in metadata:
+        raise ValueError('Output-adapter checkpoint requires an output adapter')
     layers = getattr(getattr(base, 'model', None), 'layers', None)
     if not isinstance(layers, torch.nn.ModuleList):
         raise ValueError('Expected base.model.layers as a ModuleList')
@@ -346,6 +354,8 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     organism, state = restore(metadata['individual_schema'], individual_tensors, individual_device)
     if organism.config.memory_width != config['memory_width']:
         raise ValueError('Reader and individual memory widths differ')
+    if output_adapter is not None and output_adapter.value_count != organism.config.value_count:
+        raise ValueError('Memory output value count does not match individual')
     _validate_binding(organism, base_sha, config_sha, variant)
     kind = config.get('kind', 'scaled-open-base')
     if kind == 'scaled-open-base':

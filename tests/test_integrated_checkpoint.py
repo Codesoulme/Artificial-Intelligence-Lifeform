@@ -124,6 +124,18 @@ class IntegratedCheckpointTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'unknown memory'):
                 runtime.generate(memory_key=3, memory_output=True)
 
+    def test_v4_rejects_missing_adapter_even_when_integrity_is_recomputed(self):
+        adapter = MemoryOutputAdapter(17, 9, rank=4)
+        save_integrated(self.path, self.organism, self.state, self.reader, self.root,
+                        (0, 2), output_adapter=adapter)
+        payload = torch.load(self.path, weights_only=True)
+        payload['metadata'].pop('output_adapter')
+        payload['tensors'] = {k: v for k, v in payload['tensors'].items() if not k.startswith('output/')}
+        payload['integrity_sha256'] = _digest(payload['metadata'], payload['tensors'])
+        torch.save(payload, self.path)
+        with self.assertRaisesRegex(ValueError, 'requires an output adapter'):
+            load_integrated(self.path, self.base(), self.root)
+
     def test_v1_checkpoint_still_loads_as_legacy_reader(self):
         self.save()
         payload = torch.load(self.path, weights_only=True)

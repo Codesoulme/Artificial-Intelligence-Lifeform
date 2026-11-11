@@ -1,0 +1,302 @@
+{
+  "candidate_sha256": "37b245d863145e8ae90d9594539971a8b48e053a0ddc059de7570bf3bdb096b3",
+  "rows": [
+    {
+      "name": "小岚",
+      "value": 0,
+      "adapter": "old",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "咖啡",
+      "exact": false
+    },
+    {
+      "name": "小岚",
+      "value": 0,
+      "adapter": "candidate",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "茶",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 1,
+      "adapter": "old",
+      "expected": "咖啡",
+      "native_value": 1,
+      "answer": "咖啡",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 1,
+      "adapter": "candidate",
+      "expected": "咖啡",
+      "native_value": 1,
+      "answer": "咖啡",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 2,
+      "adapter": "old",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 2,
+      "adapter": "candidate",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 3,
+      "adapter": "old",
+      "expected": "果汁",
+      "native_value": 3,
+      "answer": "水",
+      "exact": false
+    },
+    {
+      "name": "小岚",
+      "value": 3,
+      "adapter": "candidate",
+      "expected": "果汁",
+      "native_value": 3,
+      "answer": "果汁",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 4,
+      "adapter": "old",
+      "expected": "豆浆",
+      "native_value": 4,
+      "answer": "水",
+      "exact": false
+    },
+    {
+      "name": "小岚",
+      "value": 4,
+      "adapter": "candidate",
+      "expected": "豆浆",
+      "native_value": 4,
+      "answer": "豆浆",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 5,
+      "adapter": "old",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 5,
+      "adapter": "candidate",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 6,
+      "adapter": "old",
+      "expected": "水",
+      "native_value": 6,
+      "answer": "水",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 6,
+      "adapter": "candidate",
+      "expected": "水",
+      "native_value": 6,
+      "answer": "水",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 7,
+      "adapter": "old",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "酸奶",
+      "exact": true
+    },
+    {
+      "name": "小岚",
+      "value": 7,
+      "adapter": "candidate",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "酸奶",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 0,
+      "adapter": "old",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "咖啡",
+      "exact": false
+    },
+    {
+      "name": "阿明",
+      "value": 0,
+      "adapter": "candidate",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "茶",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 1,
+      "adapter": "old",
+      "expected": "咖啡",
+      "native_value": 1,
+      "answer": "咖啡",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 1,
+      "adapter": "candidate",
+      "expected": "咖啡",
+      "native_value": 1,
+      "answer": "咖啡",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 2,
+      "adapter": "old",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 2,
+      "adapter": "candidate",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 3,
+      "adapter": "old",
+      "expected": "果汁",
+      "native_value": 3,
+      "answer": "水",
+      "exact": false
+    },
+    {
+      "name": "阿明",
+      "value": 3,
+      "adapter": "candidate",
+      "expected": "果汁",
+      "native_value": 3,
+      "answer": "果汁",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 4,
+      "adapter": "old",
+      "expected": "豆浆",
+      "native_value": 4,
+      "answer": "4",
+      "exact": false
+    },
+    {
+      "name": "阿明",
+      "value": 4,
+      "adapter": "candidate",
+      "expected": "豆浆",
+      "native_value": 4,
+      "answer": "豆浆",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 5,
+      "adapter": "old",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 5,
+      "adapter": "candidate",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 6,
+      "adapter": "old",
+      "expected": "水",
+      "native_value": 6,
+      "answer": "水",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 6,
+      "adapter": "candidate",
+      "expected": "水",
+      "native_value": 6,
+      "answer": "水",
+      "exact": true
+    },
+    {
+      "name": "阿明",
+      "value": 7,
+      "adapter": "old",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "水",
+      "exact": false
+    },
+    {
+      "name": "阿明",
+      "value": 7,
+      "adapter": "candidate",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "酸奶",
+      "exact": true
+    }
+  ],
+  "old_exact": 9,
+  "candidate_exact": 16,
+  "cases_per_adapter": 16,
+  "limitations": [
+    "Two held-out names and one authored question template.",
+    "All eight finite values trained by candidate, not held-out value classes.",
+    "No natural-language routing or chat quality evaluation.",
+    "Controlled individual states are not persisted."
+  ]
+}

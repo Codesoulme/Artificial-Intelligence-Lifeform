@@ -1,0 +1,767 @@
+{
+  "status": "memory_output_adapter_development_only",
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "individual_sha256": "6269d7749148c95ed4653928f61642c8d93098defed649baab3f807c71494db9",
+  "candidate_source": "D:\\SPORA\\runs\\deepseek-spora-diverse-memory-replay-20261111",
+  "candidate_sha256": {
+    "6": "602922906bc63709ccaf2e06d51900683920cfa90c53fe174ac56b3b2bf70255",
+    "12": "32c0235c693db0f1b52338cb28306648e31152290f7a18bc72e552c7383863c5"
+  },
+  "steps": 256,
+  "seed": 93012,
+  "train_values": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "loss_trace": [
+    {
+      "step": 1,
+      "loss": 0.3587758243083954
+    },
+    {
+      "step": 10,
+      "loss": 0.8902459740638733
+    },
+    {
+      "step": 40,
+      "loss": 0.6736252307891846
+    },
+    {
+      "step": 80,
+      "loss": 0.07092943042516708
+    },
+    {
+      "step": 160,
+      "loss": 0.0005281009944155812
+    },
+    {
+      "step": 256,
+      "loss": 0.0009048382635228336
+    }
+  ],
+  "evaluation": [
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 0,
+      "expected": "茶",
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "baseline": "茶",
+      "adapted": "茶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 0,
+      "expected": "茶",
+      "question": "请直接回答小林当前最喜欢的饮料。",
+      "baseline": "茶",
+      "adapted": "茶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 0,
+      "expected": "茶",
+      "question": "记录显示小林现在偏爱哪种饮品？",
+      "baseline": "茶",
+      "adapted": "茶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 0,
+      "expected": "茶",
+      "question": "只需说出小林眼下爱喝的东西。",
+      "baseline": "茶",
+      "adapted": "茶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 1,
+      "expected": "咖啡",
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "baseline": "咖啡",
+      "adapted": "咖啡",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 1,
+      "expected": "咖啡",
+      "question": "请直接回答小林当前最喜欢的饮料。",
+      "baseline": "咖啡",
+      "adapted": "咖啡",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 1,
+      "expected": "咖啡",
+      "question": "记录显示小林现在偏爱哪种饮品？",
+      "baseline": "咖啡",
+      "adapted": "咖啡",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 1,
+      "expected": "咖啡",
+      "question": "只需说出小林眼下爱喝的东西。",
+      "baseline": "小林爱喝的是一种咖啡，它不仅满足他的咖啡消费欲望，",
+      "adapted": "咖啡",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 2,
+      "expected": "牛奶",
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "baseline": "很抱歉，我无法回答这个问题。",
+      "adapted": "牛奶",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 2,
+      "expected": "牛奶",
+      "question": "请直接回答小林当前最喜欢的饮料。",
+      "baseline": "牛奶",
+      "adapted": "牛奶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 2,
+      "expected": "牛奶",
+      "question": "记录显示小林现在偏爱哪种饮品？",
+      "baseline": "牛奶",
+      "adapted": "牛奶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 2,
+      "expected": "牛奶",
+      "question": "只需说出小林眼下爱喝的东西。",
+      "baseline": "小林目前爱喝的饮料是咖啡。",
+      "adapted": "牛奶",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 3,
+      "expected": "果汁",
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "baseline": "我无法回答这个问题。",
+      "adapted": "果汁",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 3,
+      "expected": "果汁",
+      "question": "请直接回答小林当前最喜欢的饮料。",
+      "baseline": "您是小林的最新选择，我会喜欢您的 this.",
+      "adapted": "果汁",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 3,
+      "expected": "果汁",
+      "question": "记录显示小林现在偏爱哪种饮品？",
+      "baseline": "果汁",
+      "adapted": "果汁",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 3,
+      "expected": "果汁",
+      "question": "只需说出小林眼下爱喝的东西。",
+      "baseline": "### 问题\n“请将回答我”的问题",
+      "adapted": "果汁",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 4,
+      "expected": "豆浆",
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "baseline": "豆浆",
+      "adapted": "豆浆",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 4,
+      "expected": "豆浆",
+      "question": "请直接回答小林当前最喜欢的饮料。",
+      "baseline": "4",
+      "adapted": "豆浆",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 4,
+      "expected": "豆浆",
+      "question": "记录显示小林现在偏爱哪种饮品？",
+      "baseline": "豆浆",
+      "adapted": "豆浆",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 4,
+      "expected": "豆浆",
+      "question": "只需说出小林眼下爱喝的东西。",
+      "baseline": "小林 currently drinks coffee.",
+      "adapted": "豆浆",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 5,
+      "expected": "可乐",
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "baseline": "可乐",
+      "adapted": "可乐",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 5,
+      "expected": "可乐",
+      "question": "请直接回答小林当前最喜欢的饮料。",
+      "baseline": "当前，我选择喝咖啡。",
+      "adapted": "可乐",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 5,
+      "expected": "可乐",
+      "question": "记录显示小林现在偏爱哪种饮品？",
+      "baseline": "可乐",
+      "adapted": "可乐",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 5,
+      "expected": "可乐",
+      "question": "只需说出小林眼下爱喝的东西。",
+      "baseline": "只需说出小林眼下爱喝的东西。",
+      "adapted": "可乐",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 6,
+      "expected": "水",
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "baseline": "水",
+      "adapted": "水",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 6,
+      "expected": "水",
+      "question": "请直接回答小林当前最喜欢的饮料。",
+      "baseline": "小林当前最喜欢的饮料是果汁。",
+      "adapted": "水",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 6,
+      "expected": "水",
+      "question": "记录显示小林现在偏爱哪种饮品？",
+      "baseline": "水",
+      "adapted": "水",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 6,
+      "expected": "水",
+      "question": "只需说出小林眼下爱喝的东西。",
+      "baseline": "小林 currently enjoys drinking coffee.",
+      "adapted": "水",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 7,
+      "expected": "酸奶",
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "baseline": "酸奶",
+      "adapted": "酸奶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 7,
+      "expected": "酸奶",
+      "question": "请直接回答小林当前最喜欢的饮料。",
+      "baseline": "### 7\n</think>\n\n请直接回答。",
+      "adapted": "酸奶",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 7,
+      "expected": "酸奶",
+      "question": "记录显示小林现在偏爱哪种饮品？",
+      "baseline": "酸奶",
+      "adapted": "酸奶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "value": 7,
+      "expected": "酸奶",
+      "question": "只需说出小林眼下爱喝的东西。",
+      "baseline": "```",
+      "adapted": "酸奶",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 0,
+      "expected": "茶",
+      "question": "根据保存的偏好，阿宁此刻愿意喝什么？",
+      "baseline": "茶",
+      "adapted": "茶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 0,
+      "expected": "茶",
+      "question": "请直接回答阿宁当前最喜欢的饮料。",
+      "baseline": "茶",
+      "adapted": "茶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 0,
+      "expected": "茶",
+      "question": "记录显示阿宁现在偏爱哪种饮品？",
+      "baseline": "茶",
+      "adapted": "茶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 0,
+      "expected": "茶",
+      "question": "只需说出阿宁眼下爱喝的东西。",
+      "baseline": "茶",
+      "adapted": "茶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 1,
+      "expected": "咖啡",
+      "question": "根据保存的偏好，阿宁此刻愿意喝什么？",
+      "baseline": "咖啡",
+      "adapted": "咖啡",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 1,
+      "expected": "咖啡",
+      "question": "请直接回答阿宁当前最喜欢的饮料。",
+      "baseline": "咖啡",
+      "adapted": "咖啡",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 1,
+      "expected": "咖啡",
+      "question": "记录显示阿宁现在偏爱哪种饮品？",
+      "baseline": "咖啡",
+      "adapted": "咖啡",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 1,
+      "expected": "咖啡",
+      "question": "只需说出阿宁眼下爱喝的东西。",
+      "baseline": "阿宁现在正在喝咖啡。",
+      "adapted": "咖啡",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 2,
+      "expected": "牛奶",
+      "question": "根据保存的偏好，阿宁此刻愿意喝什么？",
+      "baseline": "牛奶",
+      "adapted": "牛奶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 2,
+      "expected": "牛奶",
+      "question": "请直接回答阿宁当前最喜欢的饮料。",
+      "baseline": "牛奶",
+      "adapted": "牛奶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 2,
+      "expected": "牛奶",
+      "question": "记录显示阿宁现在偏爱哪种饮品？",
+      "baseline": "牛奶",
+      "adapted": "牛奶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 2,
+      "expected": "牛奶",
+      "question": "只需说出阿宁眼下爱喝的东西。",
+      "baseline": "我爱喝咖啡。",
+      "adapted": "牛奶",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 3,
+      "expected": "果汁",
+      "question": "根据保存的偏好，阿宁此刻愿意喝什么？",
+      "baseline": "I am sorry, but I don't know your preferences.",
+      "adapted": "果汁",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 3,
+      "expected": "果汁",
+      "question": "请直接回答阿宁当前最喜欢的饮料。",
+      "baseline": "Alcohol",
+      "adapted": "果汁",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 3,
+      "expected": "果汁",
+      "question": "记录显示阿宁现在偏爱哪种饮品？",
+      "baseline": "果汁",
+      "adapted": "果汁",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 3,
+      "expected": "果汁",
+      "question": "只需说出阿宁眼下爱喝的东西。",
+      "baseline": "Apologies for the questions.",
+      "adapted": "果汁",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 4,
+      "expected": "豆浆",
+      "question": "根据保存的偏好，阿宁此刻愿意喝什么？",
+      "baseline": "豆浆",
+      "adapted": "豆浆",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 4,
+      "expected": "豆浆",
+      "question": "请直接回答阿宁当前最喜欢的饮料。",
+      "baseline": "</think>\n\n要回答这个问题，我需要先了解您当前最喜欢的饮料是什么。",
+      "adapted": "豆浆",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 4,
+      "expected": "豆浆",
+      "question": "记录显示阿宁现在偏爱哪种饮品？",
+      "baseline": "豆浆",
+      "adapted": "豆浆",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 4,
+      "expected": "豆浆",
+      "question": "只需说出阿宁眼下爱喝的东西。",
+      "baseline": "SQLAlchemy",
+      "adapted": "豆浆",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 5,
+      "expected": "可乐",
+      "question": "根据保存的偏好，阿宁此刻愿意喝什么？",
+      "baseline": "可乐",
+      "adapted": "可乐",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 5,
+      "expected": "可乐",
+      "question": "请直接回答阿宁当前最喜欢的饮料。",
+      "baseline": "喝",
+      "adapted": "可乐",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 5,
+      "expected": "可乐",
+      "question": "记录显示阿宁现在偏爱哪种饮品？",
+      "baseline": "可乐",
+      "adapted": "可乐",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 5,
+      "expected": "可乐",
+      "question": "只需说出阿宁眼下爱喝的东西。",
+      "baseline": "只需说出阿宁眼下爱喝的东西。",
+      "adapted": "可乐",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 6,
+      "expected": "水",
+      "question": "根据保存的偏好，阿宁此刻愿意喝什么？",
+      "baseline": "水",
+      "adapted": "水",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 6,
+      "expected": "水",
+      "question": "请直接回答阿宁当前最喜欢的饮料。",
+      "baseline": "阿宁当前最喜欢的饮料是五花ths。",
+      "adapted": "水",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 6,
+      "expected": "水",
+      "question": "记录显示阿宁现在偏爱哪种饮品？",
+      "baseline": "水",
+      "adapted": "水",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 6,
+      "expected": "水",
+      "question": "只需说出阿宁眼下爱喝的东西。",
+      "baseline": "阿宁 currently consumes a cup of coffee.",
+      "adapted": "水",
+      "baseline_contains": false,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 7,
+      "expected": "酸奶",
+      "question": "根据保存的偏好，阿宁此刻愿意喝什么？",
+      "baseline": "酸奶",
+      "adapted": "酸奶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 7,
+      "expected": "酸奶",
+      "question": "请直接回答阿宁当前最喜欢的饮料。",
+      "baseline": "酸奶",
+      "adapted": "酸奶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 7,
+      "expected": "酸奶",
+      "question": "记录显示阿宁现在偏爱哪种饮品？",
+      "baseline": "酸奶",
+      "adapted": "酸奶",
+      "baseline_contains": true,
+      "adapted_contains": true
+    },
+    {
+      "name": "阿宁",
+      "key": 22,
+      "value": 7,
+      "expected": "酸奶",
+      "question": "只需说出阿宁眼下爱喝的东西。",
+      "baseline": "```",
+      "adapted": "酸奶",
+      "baseline_contains": false,
+      "adapted_contains": true
+    }
+  ],
+  "baseline_contains": 40,
+  "adapted_contains": 64,
+  "total": 64,
+  "adapter_sha256": "37b245d863145e8ae90d9594539971a8b48e053a0ddc059de7570bf3bdb096b3",
+  "elapsed_seconds": 125.82321500000035,
+  "peak_allocated_bytes": 4012956672,
+  "limitations": [
+    "Finite values and two bound entities; no open-world facts.",
+    "The adapter is trained on the same prompt family as this narrow probe.",
+    "It biases every generation step and is not yet integrated into durable runtime checkpoints.",
+    "String containment is not a semantic answer judge.",
+    "Address selection is supplied by the controlled experiment."
+  ]
+}

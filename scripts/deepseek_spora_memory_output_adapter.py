@@ -30,6 +30,7 @@ from spora.memory_output import MemoryOutputAdapter, MemoryOutputLogitsProcessor
 OUTPUT = ROOT/'runs/deepseek-spora-memory-output-adapter-20261111'
 STEPS = 160
 SEED = 93011
+TRAIN_VALUES = (1, 6)
 
 PROMPTS = (
     '根据保存的偏好，{name}此刻愿意喝什么？',
@@ -90,7 +91,7 @@ def run():
     adapter.train()
     optimizer = torch.optim.AdamW(adapter.parameters(), lr=0.01, weight_decay=0.0001)
     rows = [(name, KEYS[i], value, question.format(name=name))
-            for i, name in enumerate(NAMES[:2]) for value in (1, 6)
+            for i, name in enumerate(NAMES[:2]) for value in TRAIN_VALUES
             for question in PROMPTS]
     losses = []
     for step in range(STEPS):
@@ -112,13 +113,13 @@ def run():
         loss.backward()
         torch.nn.utils.clip_grad_norm_(adapter.parameters(), 5., error_if_nonfinite=True)
         optimizer.step()
-        if step in (0, 9, 39, 79, 159):
+        if step in (0, 9, 39, 79, 159, STEPS-1):
             losses.append({'step': step+1, 'loss': float(loss.detach())})
     adapter.eval()
     evaluation = []
     for i, name in enumerate(NAMES[:2]):
         key = KEYS[i]
-        for value in (1, 6):
+        for value in TRAIN_VALUES:
             state = _make_state(organism, key, value)
             for prompt in PROMPTS:
                 question = prompt.format(name=name)
@@ -139,7 +140,7 @@ def run():
     report = {'status': 'memory_output_adapter_development_only', 'base_sha256': WEIGHT_SHA,
               'individual_sha256': INDIVIDUAL_SHA, 'candidate_source': str(SOURCE),
               'candidate_sha256': {str(i): sha(SOURCE/f'layer-{i}.pt') for i in (6, 12)},
-              'steps': STEPS, 'seed': SEED, 'loss_trace': losses, 'evaluation': evaluation,
+              'steps': STEPS, 'seed': SEED, 'train_values': list(TRAIN_VALUES), 'loss_trace': losses, 'evaluation': evaluation,
               'baseline_contains': sum(r['baseline_contains'] for r in evaluation),
               'adapted_contains': sum(r['adapted_contains'] for r in evaluation),
               'total': len(evaluation), 'adapter_sha256': sha(checkpoint),

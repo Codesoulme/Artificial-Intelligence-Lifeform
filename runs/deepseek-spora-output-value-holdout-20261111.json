@@ -1,0 +1,77 @@
+{
+  "rows": [
+    {
+      "value": 0,
+      "trained_value": false,
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "茶",
+      "exact": true
+    },
+    {
+      "value": 1,
+      "trained_value": true,
+      "expected": "咖啡",
+      "native_value": 1,
+      "answer": "咖啡",
+      "exact": true
+    },
+    {
+      "value": 2,
+      "trained_value": false,
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "value": 3,
+      "trained_value": false,
+      "expected": "果汁",
+      "native_value": 3,
+      "answer": "果汁",
+      "exact": true
+    },
+    {
+      "value": 4,
+      "trained_value": false,
+      "expected": "豆浆",
+      "native_value": 4,
+      "answer": "豆浆",
+      "exact": true
+    },
+    {
+      "value": 5,
+      "trained_value": false,
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "value": 6,
+      "trained_value": true,
+      "expected": "水",
+      "native_value": 6,
+      "answer": "水",
+      "exact": true
+    },
+    {
+      "value": 7,
+      "trained_value": false,
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "水",
+      "exact": false
+    }
+  ],
+  "trained_total": 2,
+  "heldout_total": 6,
+  "trained_exact": 2,
+  "heldout_exact": 5,
+  "limitations": [
+    "One question and one supplied entity address.",
+    "Synthetic controlled writes; native prediction checked independently.",
+    "No natural-language routing, open chat or persistence tested."
+  ]
+}
