@@ -43,11 +43,12 @@ from spora.memory_output import MemoryOutputAdapter
 from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
+WORKING_CHECKPOINT = ROOT/'runs/spora-runtime-individual/individual.pt'
 TEMPORAL = ROOT/'runs/deepseek-spora-temporal-gate-train-20261111/temporal.pt'
 READ_INTENT_RECOVERY_FLOOR = 2.0
 INTENT = ROOT/'runs/deepseek-spora-read-intent-gate-v4-20261111'
 ENTITY = ROOT/'runs/deepseek-spora-single-entity-gate-v2-20261111'
-MEMORY_DOMAIN_ANCHORS = ('饮品', '饮料', '喝', '偏好', '饮用')
+MEMORY_DOMAIN_ANCHORS = ('饮品', '饮料', '喝', '饮用')
 
 
 class SporaChat:
@@ -71,7 +72,8 @@ class SporaChat:
         from spora.integrated_checkpoint import save_integrated
         candidate, decision = observe_sourced(self.organism, self.state, key, value,
                                               source, quality, valid_at)
-        save_integrated(CHECKPOINT, self.organism, candidate, self.decoder.reader,
+        WORKING_CHECKPOINT.parent.mkdir(parents=True, exist_ok=True)
+        save_integrated(WORKING_CHECKPOINT, self.organism, candidate, self.decoder.reader,
                         MODEL, self.decoder.layer_indices, replacements=self._replacements(),
                         output_adapter=self.decoder.output_adapter)
         self.state = candidate
@@ -168,11 +170,12 @@ class SporaChat:
 def load_chat():
     if sha(MODEL/'model.safetensors') != WEIGHT_SHA or not CHECKPOINT.exists():
         raise ValueError('Protected model or integrated checkpoint unavailable')
+    checkpoint = WORKING_CHECKPOINT if WORKING_CHECKPOINT.exists() else CHECKPOINT
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     base = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False,
                                                 torch_dtype=torch.float16, attn_implementation='sdpa').to('cuda').eval()
     base.requires_grad_(False)
-    decoder, organism, state = load_integrated(CHECKPOINT, base, MODEL, individual_device='cuda')
+    decoder, organism, state = load_integrated(checkpoint, base, MODEL, individual_device='cuda')
     router_report = json.loads((ROUTER/'result.json').read_text(encoding='utf-8'))
     entity_report = json.loads((ENTITY/'result.json').read_text(encoding='utf-8'))
     intent_report = json.loads((INTENT/'result.json').read_text(encoding='utf-8'))
