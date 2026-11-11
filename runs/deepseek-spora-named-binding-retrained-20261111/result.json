@@ -1,0 +1,390 @@
+{
+  "status": "development_only_no_writes",
+  "summary": {
+    "train_examples": 32,
+    "train_correct_both": 32,
+    "held_examples": 16,
+    "held_address_correct": 8,
+    "unknown_examples": 8,
+    "unknown_false_accept": 0
+  },
+  "binding_sha256": "5ce6bb74e595eddc22e1cae6a7a936198a6ab818204bdf85e116a2ab8252ae2d",
+  "source_hashes": {
+    "D:\\SPORA\\runs\\open-base-deepseek-r1-1.5b-ad9f0ae\\model.safetensors": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "D:\\SPORA\\runs\\deepseek-spora-output-v2-checkpoint-20261111\\individual-with-output-v2.pt": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f"
+  },
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "replacement_layers": [
+    6,
+    12
+  ],
+  "rows": [
+    {
+      "name": "小林",
+      "question": "小林眼下记着什么数？",
+      "expected_key": 6,
+      "predicted": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.926423966884613,
+        0.7013440132141113
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "小林",
+      "question": "我想知道小林的最新数字。",
+      "expected_key": 6,
+      "predicted": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9762012362480164,
+        0.7562053799629211
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "阿宁",
+      "question": "阿宁眼下记着什么数？",
+      "expected_key": 22,
+      "predicted": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9586068391799927,
+        0.9122377634048462
+      ],
+      "accepted": true,
+      "address_correct": true
+    },
+    {
+      "name": "阿宁",
+      "question": "我想知道阿宁的最新数字。",
+      "expected_key": 22,
+      "predicted": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.9650405645370483,
+        0.739875316619873
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "小雨",
+      "question": "小雨眼下记着什么数？",
+      "expected_key": 35,
+      "predicted": [
+        35,
+        35
+      ],
+      "similarities": [
+        0.9391674995422363,
+        0.76859050989151
+      ],
+      "accepted": true,
+      "address_correct": true
+    },
+    {
+      "name": "小雨",
+      "question": "我想知道小雨的最新数字。",
+      "expected_key": 35,
+      "predicted": [
+        35,
+        35
+      ],
+      "similarities": [
+        0.9289493560791016,
+        0.770218014717102
+      ],
+      "accepted": true,
+      "address_correct": true
+    },
+    {
+      "name": "阿哲",
+      "question": "阿哲眼下记着什么数？",
+      "expected_key": 51,
+      "predicted": [
+        51,
+        51
+      ],
+      "similarities": [
+        0.9119355082511902,
+        0.7181344628334045
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "阿哲",
+      "question": "我想知道阿哲的最新数字。",
+      "expected_key": 51,
+      "predicted": [
+        51,
+        51
+      ],
+      "similarities": [
+        0.9553542137145996,
+        0.7957490682601929
+      ],
+      "accepted": true,
+      "address_correct": true
+    },
+    {
+      "name": "小梅",
+      "question": "小梅眼下记着什么数？",
+      "expected_key": 16,
+      "predicted": [
+        16,
+        16
+      ],
+      "similarities": [
+        0.9227700233459473,
+        0.7243760824203491
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "小梅",
+      "question": "我想知道小梅的最新数字。",
+      "expected_key": 16,
+      "predicted": [
+        16,
+        16
+      ],
+      "similarities": [
+        0.9399303793907166,
+        0.7440715432167053
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "阿远",
+      "question": "阿远眼下记着什么数？",
+      "expected_key": 27,
+      "predicted": [
+        27,
+        27
+      ],
+      "similarities": [
+        0.946294903755188,
+        0.7986675500869751
+      ],
+      "accepted": true,
+      "address_correct": true
+    },
+    {
+      "name": "阿远",
+      "question": "我想知道阿远的最新数字。",
+      "expected_key": 27,
+      "predicted": [
+        27,
+        27
+      ],
+      "similarities": [
+        0.9696463346481323,
+        0.892939567565918
+      ],
+      "accepted": true,
+      "address_correct": true
+    },
+    {
+      "name": "小岚",
+      "question": "小岚眼下记着什么数？",
+      "expected_key": 42,
+      "predicted": [
+        42,
+        42
+      ],
+      "similarities": [
+        0.9625813961029053,
+        0.9321321845054626
+      ],
+      "accepted": true,
+      "address_correct": true
+    },
+    {
+      "name": "小岚",
+      "question": "我想知道小岚的最新数字。",
+      "expected_key": 42,
+      "predicted": [
+        42,
+        42
+      ],
+      "similarities": [
+        0.9053563475608826,
+        0.8232170939445496
+      ],
+      "accepted": true,
+      "address_correct": true
+    },
+    {
+      "name": "阿明",
+      "question": "阿明眼下记着什么数？",
+      "expected_key": 10,
+      "predicted": [
+        10,
+        10
+      ],
+      "similarities": [
+        0.9528053402900696,
+        0.7583634853363037
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "阿明",
+      "question": "我想知道阿明的最新数字。",
+      "expected_key": 10,
+      "predicted": [
+        10,
+        10
+      ],
+      "similarities": [
+        0.9201479554176331,
+        0.6648575663566589
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "阿松",
+      "question": "阿松眼下记着什么数？",
+      "expected_key": null,
+      "predicted": [
+        10,
+        22
+      ],
+      "similarities": [
+        0.6896616220474243,
+        0.6922144889831543
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "阿松",
+      "question": "我想知道阿松的最新数字。",
+      "expected_key": null,
+      "predicted": [
+        22,
+        27
+      ],
+      "similarities": [
+        0.4929286241531372,
+        0.6097492575645447
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "小雪",
+      "question": "小雪眼下记着什么数？",
+      "expected_key": null,
+      "predicted": [
+        35,
+        42
+      ],
+      "similarities": [
+        0.6345525979995728,
+        0.5382747650146484
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "小雪",
+      "question": "我想知道小雪的最新数字。",
+      "expected_key": null,
+      "predicted": [
+        35,
+        35
+      ],
+      "similarities": [
+        0.6589404344558716,
+        0.5835994482040405
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "阿禾",
+      "question": "阿禾眼下记着什么数？",
+      "expected_key": null,
+      "predicted": [
+        22,
+        22
+      ],
+      "similarities": [
+        0.6825714707374573,
+        0.6784693598747253
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "阿禾",
+      "question": "我想知道阿禾的最新数字。",
+      "expected_key": null,
+      "predicted": [
+        22,
+        27
+      ],
+      "similarities": [
+        0.6349186897277832,
+        0.6671513319015503
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "小青",
+      "question": "小青眼下记着什么数？",
+      "expected_key": null,
+      "predicted": [
+        6,
+        35
+      ],
+      "similarities": [
+        0.6413273215293884,
+        0.5007834434509277
+      ],
+      "accepted": false,
+      "address_correct": false
+    },
+    {
+      "name": "小青",
+      "question": "我想知道小青的最新数字。",
+      "expected_key": null,
+      "predicted": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.7944957613945007,
+        0.5760812759399414
+      ],
+      "accepted": false,
+      "address_correct": false
+    }
+  ],
+  "seconds": 44.6970266999997,
+  "limitations": [
+    "Eight supervised names, four unknown names and two held templates per name.",
+    "Address projection is finite and does not create new memory keys.",
+    "Questions are synthetic; no ordinary dialogue or source semantics.",
+    "Threshold is estimated from training examples and no persistent write occurred."
+  ]
+}

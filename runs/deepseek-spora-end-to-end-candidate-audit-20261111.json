@@ -1,0 +1,4135 @@
+{
+  "status": "development_only_no_writes",
+  "summary": {
+    "examples": 182,
+    "known_positive_write_allowed": 0,
+    "known_positive_total": 32,
+    "unknown_positive_deferred": 20,
+    "negative_write_allowed": 0,
+    "negative_total": 130,
+    "positive_address_correct": 52
+  },
+  "source_hashes": {
+    "D:\\SPORA\\runs\\open-base-deepseek-r1-1.5b-ad9f0ae\\model.safetensors": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "D:\\SPORA\\runs\\deepseek-spora-output-v2-checkpoint-20261111\\individual-with-output-v2.pt": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f",
+    "D:\\SPORA\\runs\\deepseek-spora-cluener-locator-retrained-20261111\\locator.pt": "13bf8102f687c4ceb0b9729d8455426eabdf36fae7fab409c932587a7f2dd459",
+    "D:\\SPORA\\runs\\deepseek-spora-named-binding-retrained-20261111\\binding.pt": "5ce6bb74e595eddc22e1cae6a7a936198a6ab818204bdf85e116a2ab8252ae2d",
+    "D:\\SPORA\\runs\\deepseek-spora-polarity-gate-20261111\\gate.pt": "2c47f638d460f651bf0808831d8ff69e7a8b3d5c25eed69a6660e20510971456",
+    "D:\\SPORA\\runs\\deepseek-spora-value-span-probe-v3-20261111\\span-head.pt": "6f98cea9f4f28156e5de08735c71067f087f65f728f61f17e4544fa9381f1c3c"
+  },
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "replacement_layers": [
+    6,
+    12
+  ],
+  "rows": [
+    {
+      "text": "据我所知，小梅最喜欢的饮品是茶。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "茶",
+      "value_index": 0,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是茶。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "茶",
+      "value_index": 0,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝茶。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了茶。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢茶。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "茶",
+      "value_index": 0,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢茶就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢茶了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是咖啡。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "咖啡",
+      "value_index": 1,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是咖啡。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "咖啡",
+      "value_index": 1,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝咖啡。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了咖啡。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢咖啡。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "咖啡",
+      "value_index": 1,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢咖啡就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢咖啡了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是牛奶。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "牛奶",
+      "value_index": 2,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是牛奶。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "牛奶",
+      "value_index": 2,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝牛奶。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": "牛奶",
+      "value_index": 2,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了牛奶。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢牛奶。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "牛奶",
+      "value_index": 2,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢牛奶就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢牛奶了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是果汁。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "果汁",
+      "value_index": 3,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是果汁。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "果汁",
+      "value_index": 3,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝果汁。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了果汁。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢果汁。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "果汁",
+      "value_index": 3,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢果汁就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢果汁了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是豆浆。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "豆浆",
+      "value_index": 4,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是豆浆。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "豆浆",
+      "value_index": 4,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝豆浆。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了豆浆。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢豆浆。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "豆浆",
+      "value_index": 4,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢豆浆就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢豆浆了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是可乐。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "可乐",
+      "value_index": 5,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是可乐。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "可乐",
+      "value_index": 5,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝可乐。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了可乐。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢可乐。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢可乐就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢可乐了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是水。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "水",
+      "value_index": 6,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是水。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "水",
+      "value_index": 6,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "水",
+      "value_index": 6,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢水就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢水了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是酸奶。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "酸奶",
+      "value_index": 7,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是酸奶。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "酸奶",
+      "value_index": 7,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝酸奶。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": "酸奶",
+      "value_index": 7,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了酸奶。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢酸奶。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "酸奶",
+      "value_index": 7,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢酸奶就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢酸奶了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是柠檬水。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "所知，小梅最喜欢的饮品是柠檬水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是柠檬水。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "柠檬水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝柠檬水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了柠檬水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢柠檬水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "阿明喜欢柠檬水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢柠檬水就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢柠檬水了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是苹果汁。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "苹果汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是苹果汁。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "苹果汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝苹果汁。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了苹果汁。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢苹果汁。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "苹果汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢苹果汁就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢苹果汁了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是白开水。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "白开水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是白开水。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "白开水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝白开水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了白开水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢白开水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "白开水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢白开水就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢白开水了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是汽水。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "汽水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是汽水。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "汽水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝汽水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了汽水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢汽水。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "汽水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢汽水就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢汽水了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，小梅最喜欢的饮品是橙汁。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "橙汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅偏爱的饮料是橙汁。",
+      "positive": true,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "橙汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅从来不喝橙汁。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅给客人准备了橙汁。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅说阿明喜欢橙汁。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "third_party",
+      "polarity_ok": false,
+      "value": "橙汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果小梅喜欢橙汁就好了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "小梅不再喜欢橙汁了。",
+      "positive": false,
+      "name": "小梅",
+      "predicted_address": [
+        16,
+        16
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是茶。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "茶",
+      "value_index": 0,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是茶。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "茶",
+      "value_index": 0,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝茶。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了茶。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢茶。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": "茶",
+      "value_index": 0,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢茶就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢茶了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是咖啡。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "咖啡",
+      "value_index": 1,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是咖啡。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "咖啡",
+      "value_index": 1,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝咖啡。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了咖啡。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢咖啡。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢咖啡就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢咖啡了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是牛奶。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "牛奶",
+      "value_index": 2,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是牛奶。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "牛奶",
+      "value_index": 2,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝牛奶。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了牛奶。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢牛奶。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": "牛奶",
+      "value_index": 2,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢牛奶就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢牛奶了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是果汁。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "果汁",
+      "value_index": 3,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是果汁。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "果汁",
+      "value_index": 3,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝果汁。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了果汁。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢果汁。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": "果汁",
+      "value_index": 3,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢果汁就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢果汁了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是豆浆。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "豆浆",
+      "value_index": 4,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是豆浆。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "豆浆",
+      "value_index": 4,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝豆浆。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了豆浆。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢豆浆。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢豆浆就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢豆浆了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是可乐。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "可乐",
+      "value_index": 5,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是可乐。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "可乐",
+      "value_index": 5,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝可乐。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了可乐。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢可乐。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢可乐就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢可乐了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是水。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "水",
+      "value_index": 6,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是水。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "水",
+      "value_index": 6,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": "水",
+      "value_index": 6,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢水就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢水了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是酸奶。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "酸奶",
+      "value_index": 7,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是酸奶。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "酸奶",
+      "value_index": 7,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝酸奶。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了酸奶。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢酸奶。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": "酸奶",
+      "value_index": 7,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢酸奶就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢酸奶了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是柠檬水。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "所知，阿远最喜欢的饮品是柠檬水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是柠檬水。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "柠檬水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝柠檬水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了柠檬水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢柠檬水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": "阿明喜欢柠檬水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢柠檬水就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢柠檬水了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是苹果汁。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "苹果汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是苹果汁。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "苹果汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝苹果汁。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了苹果汁。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢苹果汁。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": "苹果汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢苹果汁就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢苹果汁了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是白开水。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "白开水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是白开水。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "白开水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝白开水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了白开水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢白开水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": "白开水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢白开水就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢白开水了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是汽水。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "汽水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是汽水。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "汽水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝汽水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了汽水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢汽水。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": "汽水",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢汽水就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢汽水了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "据我所知，阿远最喜欢的饮品是橙汁。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "橙汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远偏爱的饮料是橙汁。",
+      "positive": true,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "affirmative",
+      "polarity_ok": true,
+      "value": "橙汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远从来不喝橙汁。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远给客人准备了橙汁。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "action",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远说阿明喜欢橙汁。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        0,
+        0
+      ],
+      "address_ok": false,
+      "polarity": "affirmative",
+      "polarity_ok": false,
+      "value": "橙汁",
+      "value_index": null,
+      "value_accepted": true,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "subject_unresolved",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "如果阿远喜欢橙汁就好了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "hypothesis",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    },
+    {
+      "text": "阿远不再喜欢橙汁了。",
+      "positive": false,
+      "name": "阿远",
+      "predicted_address": [
+        27,
+        27
+      ],
+      "address_ok": true,
+      "polarity": "negation",
+      "polarity_ok": false,
+      "value": null,
+      "value_index": null,
+      "value_accepted": false,
+      "write_guard": {
+        "write": false,
+        "reasons": [
+          "claim_is_not_affirmative",
+          "finite_value_unresolved",
+          "confidence_below_write_floor"
+        ]
+      }
+    }
+  ],
+  "seconds": 40.40682290000041,
+  "limitations": [
+    "Held synthetic split; no independent memory dialogue.",
+    "The direct source and current time are supplied by the audit, not inferred by the parser.",
+    "Unknown open-vocabulary values are intentionally deferred by the finite write guard.",
+    "No state mutation, checkpoint write, or response generation occurred."
+  ]
+}
