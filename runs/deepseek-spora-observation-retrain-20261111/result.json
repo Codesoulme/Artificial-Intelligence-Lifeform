@@ -1,0 +1,6912 @@
+{
+  "status": "research_only_no_writes",
+  "threshold": -6.845834255218506,
+  "calibration_selection": "zero observed false writes, maximize correct positives",
+  "checkpoint_sha256": "abf369dedf2e13616ac9327980fb513b4e1126d9ee015802d1ab1803022472ba",
+  "source_hashes": {
+    "D:\\SPORA\\runs\\open-base-deepseek-r1-1.5b-ad9f0ae\\model.safetensors": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+    "D:\\SPORA\\runs\\deepseek-spora-output-v2-checkpoint-20261111\\individual-with-output-v2.pt": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f",
+    "D:\\SPORA\\runs\\deepseek-observation-factorized-20261110\\classifier.pt": "4f8b125ae59f59c42a2748051791493324c81f1ef45e1f5aeaaaf5807bfefed2"
+  },
+  "feature_variant_sha256": "c7f50b77563a4c95660944784c8d3b5ccb4b8b80f1bdf57ddf86699eb29043c1",
+  "replacement_layers": [
+    6,
+    12
+  ],
+  "steps": 400,
+  "seconds": 61.05677579999974,
+  "results": {
+    "train": {
+      "previous": {
+        "positive_correct": 72,
+        "positive_total": 72,
+        "negative_false_write": 48,
+        "negative_total": 192,
+        "rows": [
+          {
+            "text": "小林喜欢喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 2.5826609134674072
+          },
+          {
+            "text": "小林最喜欢的饮料是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 5.428679943084717
+          },
+          {
+            "text": "我知道小林爱喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 4.395694255828857
+          },
+          {
+            "text": "小林不喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.670210599899292
+          },
+          {
+            "text": "小林喜欢喝茶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.2020463943481445
+          },
+          {
+            "text": "假如小林爱喝茶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.0682384967803955
+          },
+          {
+            "text": "小林过去喜欢茶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.8903591632843018
+          },
+          {
+            "text": "小林给小周买了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 1.6258000135421753
+          },
+          {
+            "text": "小林说小周喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 0.9169245958328247
+          },
+          {
+            "text": "小林觉得茶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.387529581785202
+          },
+          {
+            "text": "我猜小林可能喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.3516693115234375
+          },
+          {
+            "text": "小林喜欢喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 2.742732524871826
+          },
+          {
+            "text": "小林最喜欢的饮料是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 5.15793514251709
+          },
+          {
+            "text": "我知道小林爱喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 5.046482563018799
+          },
+          {
+            "text": "小林不喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.3325746059417725
+          },
+          {
+            "text": "小林喜欢喝咖啡吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9896013736724854
+          },
+          {
+            "text": "假如小林爱喝咖啡就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.187192678451538
+          },
+          {
+            "text": "小林过去喜欢咖啡，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.065011739730835
+          },
+          {
+            "text": "小林给小周买了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 1.4760431051254272
+          },
+          {
+            "text": "小林说小周喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 1.035994052886963
+          },
+          {
+            "text": "小林觉得咖啡难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.121267557144165
+          },
+          {
+            "text": "我猜小林可能喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.439948081970215
+          },
+          {
+            "text": "小林喜欢喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 2.983734369277954
+          },
+          {
+            "text": "小林最喜欢的饮料是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 5.152251243591309
+          },
+          {
+            "text": "我知道小林爱喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 5.333456516265869
+          },
+          {
+            "text": "小林不喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.236349582672119
+          },
+          {
+            "text": "小林喜欢喝牛奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0117082595825195
+          },
+          {
+            "text": "假如小林爱喝牛奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.9666001796722412
+          },
+          {
+            "text": "小林过去喜欢牛奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.042546033859253
+          },
+          {
+            "text": "小林给小周买了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 1.3607373237609863
+          },
+          {
+            "text": "小林说小周喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 1.2431361675262451
+          },
+          {
+            "text": "小林觉得牛奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.266481637954712
+          },
+          {
+            "text": "我猜小林可能喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.407189846038818
+          },
+          {
+            "text": "小林喜欢喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 2.93224835395813
+          },
+          {
+            "text": "小林最喜欢的饮料是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 5.264338493347168
+          },
+          {
+            "text": "我知道小林爱喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 5.244436264038086
+          },
+          {
+            "text": "小林不喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.1529572010040283
+          },
+          {
+            "text": "小林喜欢喝果汁吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9899773597717285
+          },
+          {
+            "text": "假如小林爱喝果汁就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.1838172674179077
+          },
+          {
+            "text": "小林过去喜欢果汁，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9560694694519043
+          },
+          {
+            "text": "小林给小周买了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 1.3350441455841064
+          },
+          {
+            "text": "小林说小周喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 1.2811580896377563
+          },
+          {
+            "text": "小林觉得果汁难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.6759333610534668
+          },
+          {
+            "text": "我猜小林可能喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.350453853607178
+          },
+          {
+            "text": "小林喜欢喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 2.58640718460083
+          },
+          {
+            "text": "小林最喜欢的饮料是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 4.894400596618652
+          },
+          {
+            "text": "我知道小林爱喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 4.924304962158203
+          },
+          {
+            "text": "小林不喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.369882345199585
+          },
+          {
+            "text": "小林喜欢喝豆浆吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0259721279144287
+          },
+          {
+            "text": "假如小林爱喝豆浆就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.9046302437782288
+          },
+          {
+            "text": "小林过去喜欢豆浆，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.039870500564575
+          },
+          {
+            "text": "小林给小周买了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 1.3223963975906372
+          },
+          {
+            "text": "小林说小周喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 1.046003818511963
+          },
+          {
+            "text": "小林觉得豆浆难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.9275251030921936
+          },
+          {
+            "text": "我猜小林可能喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.321902275085449
+          },
+          {
+            "text": "小林喜欢喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 2.887927293777466
+          },
+          {
+            "text": "小林最喜欢的饮料是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 4.831732749938965
+          },
+          {
+            "text": "我知道小林爱喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 4.955813407897949
+          },
+          {
+            "text": "小林不喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.761073350906372
+          },
+          {
+            "text": "小林喜欢喝可乐吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.328540563583374
+          },
+          {
+            "text": "假如小林爱喝可乐就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.5522713661193848
+          },
+          {
+            "text": "小林过去喜欢可乐，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0617265701293945
+          },
+          {
+            "text": "小林给小周买了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 1.125436782836914
+          },
+          {
+            "text": "小林说小周喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 1.348026156425476
+          },
+          {
+            "text": "小林觉得可乐难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.3257161378860474
+          },
+          {
+            "text": "我猜小林可能喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.221214771270752
+          },
+          {
+            "text": "小林喜欢喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 2.4684505462646484
+          },
+          {
+            "text": "小林最喜欢的饮料是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 5.678877830505371
+          },
+          {
+            "text": "我知道小林爱喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 4.433366775512695
+          },
+          {
+            "text": "小林不喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.941315174102783
+          },
+          {
+            "text": "小林喜欢喝水吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.1391730308532715
+          },
+          {
+            "text": "假如小林爱喝水就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.0540199279785156
+          },
+          {
+            "text": "小林过去喜欢水，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.7359530925750732
+          },
+          {
+            "text": "小林给小周买了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 2.196383237838745
+          },
+          {
+            "text": "小林说小周喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 0.8332963585853577
+          },
+          {
+            "text": "小林觉得水难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.2953186333179474
+          },
+          {
+            "text": "我猜小林可能喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.115291595458984
+          },
+          {
+            "text": "小林喜欢喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 2.6173784732818604
+          },
+          {
+            "text": "小林最喜欢的饮料是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 4.785839557647705
+          },
+          {
+            "text": "我知道小林爱喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 5.142608165740967
+          },
+          {
+            "text": "小林不喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.4308903217315674
+          },
+          {
+            "text": "小林喜欢喝酸奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.2230241298675537
+          },
+          {
+            "text": "假如小林爱喝酸奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.2006012201309204
+          },
+          {
+            "text": "小林过去喜欢酸奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.1931841373443604
+          },
+          {
+            "text": "小林给小周买了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 1.3691761493682861
+          },
+          {
+            "text": "小林说小周喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 1.125914454460144
+          },
+          {
+            "text": "小林觉得酸奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.24565589427948
+          },
+          {
+            "text": "我猜小林可能喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.597621917724609
+          },
+          {
+            "text": "阿宁喜欢喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 2.2426841259002686
+          },
+          {
+            "text": "阿宁最喜欢的饮料是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 5.593862056732178
+          },
+          {
+            "text": "我知道阿宁爱喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 3.9700257778167725
+          },
+          {
+            "text": "阿宁不喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.8341541290283203
+          },
+          {
+            "text": "阿宁喜欢喝茶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.282413482666016
+          },
+          {
+            "text": "假如阿宁爱喝茶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.8784842491149902
+          },
+          {
+            "text": "阿宁过去喜欢茶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.673097848892212
+          },
+          {
+            "text": "阿宁给小周买了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 1.7225180864334106
+          },
+          {
+            "text": "阿宁说小周喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 1.3480571508407593
+          },
+          {
+            "text": "阿宁觉得茶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.5897651314735413
+          },
+          {
+            "text": "我猜阿宁可能喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.9056360721588135
+          },
+          {
+            "text": "阿宁喜欢喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 2.6059415340423584
+          },
+          {
+            "text": "阿宁最喜欢的饮料是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 5.265669822692871
+          },
+          {
+            "text": "我知道阿宁爱喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 4.865928649902344
+          },
+          {
+            "text": "阿宁不喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.217313051223755
+          },
+          {
+            "text": "阿宁喜欢喝咖啡吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9666666984558105
+          },
+          {
+            "text": "假如阿宁爱喝咖啡就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.8610519766807556
+          },
+          {
+            "text": "阿宁过去喜欢咖啡，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9077579975128174
+          },
+          {
+            "text": "阿宁给小周买了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 1.6007791757583618
+          },
+          {
+            "text": "阿宁说小周喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 1.5355050563812256
+          },
+          {
+            "text": "阿宁觉得咖啡难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.2222518920898438
+          },
+          {
+            "text": "我猜阿宁可能喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.045387268066406
+          },
+          {
+            "text": "阿宁喜欢喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 2.966317892074585
+          },
+          {
+            "text": "阿宁最喜欢的饮料是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 5.26817512512207
+          },
+          {
+            "text": "我知道阿宁爱喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 5.246993064880371
+          },
+          {
+            "text": "阿宁不喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0908796787261963
+          },
+          {
+            "text": "阿宁喜欢喝牛奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.8362953662872314
+          },
+          {
+            "text": "假如阿宁爱喝牛奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.5276672840118408
+          },
+          {
+            "text": "阿宁过去喜欢牛奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.8450887203216553
+          },
+          {
+            "text": "阿宁给小周买了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 1.529205322265625
+          },
+          {
+            "text": "阿宁说小周喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 1.7908244132995605
+          },
+          {
+            "text": "阿宁觉得牛奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.5575628280639648
+          },
+          {
+            "text": "我猜阿宁可能喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.049472332000732
+          },
+          {
+            "text": "阿宁喜欢喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 2.8228652477264404
+          },
+          {
+            "text": "阿宁最喜欢的饮料是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 5.361132621765137
+          },
+          {
+            "text": "我知道阿宁爱喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 5.044405937194824
+          },
+          {
+            "text": "阿宁不喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0131876468658447
+          },
+          {
+            "text": "阿宁喜欢喝果汁吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.995962381362915
+          },
+          {
+            "text": "假如阿宁爱喝果汁就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.7419393658638
+          },
+          {
+            "text": "阿宁过去喜欢果汁，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.923007011413574
+          },
+          {
+            "text": "阿宁给小周买了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 1.453774094581604
+          },
+          {
+            "text": "阿宁说小周喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 1.7927480936050415
+          },
+          {
+            "text": "阿宁觉得果汁难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.8459012508392334
+          },
+          {
+            "text": "我猜阿宁可能喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.9885189533233643
+          },
+          {
+            "text": "阿宁喜欢喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 2.559417247772217
+          },
+          {
+            "text": "阿宁最喜欢的饮料是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 5.024056434631348
+          },
+          {
+            "text": "我知道阿宁爱喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 4.7107954025268555
+          },
+          {
+            "text": "阿宁不喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.2318358421325684
+          },
+          {
+            "text": "阿宁喜欢喝豆浆吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.021500587463379
+          },
+          {
+            "text": "假如阿宁爱喝豆浆就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.6777986884117126
+          },
+          {
+            "text": "阿宁过去喜欢豆浆，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.8461201190948486
+          },
+          {
+            "text": "阿宁给小周买了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 1.4375669956207275
+          },
+          {
+            "text": "阿宁说小周喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 1.4962091445922852
+          },
+          {
+            "text": "阿宁觉得豆浆难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.2542338371276855
+          },
+          {
+            "text": "我猜阿宁可能喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.9539029598236084
+          },
+          {
+            "text": "阿宁喜欢喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 2.720505475997925
+          },
+          {
+            "text": "阿宁最喜欢的饮料是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 4.849822044372559
+          },
+          {
+            "text": "我知道阿宁爱喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 4.7405195236206055
+          },
+          {
+            "text": "阿宁不喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.6730422973632812
+          },
+          {
+            "text": "阿宁喜欢喝可乐吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.3414671421051025
+          },
+          {
+            "text": "假如阿宁爱喝可乐就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.2515731155872345
+          },
+          {
+            "text": "阿宁过去喜欢可乐，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9321861267089844
+          },
+          {
+            "text": "阿宁给小周买了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 1.2905625104904175
+          },
+          {
+            "text": "阿宁说小周喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 1.8139524459838867
+          },
+          {
+            "text": "阿宁觉得可乐难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.3707072734832764
+          },
+          {
+            "text": "我猜阿宁可能喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.737722158432007
+          },
+          {
+            "text": "阿宁喜欢喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 2.284921646118164
+          },
+          {
+            "text": "阿宁最喜欢的饮料是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 5.802938461303711
+          },
+          {
+            "text": "我知道阿宁爱喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 4.2143144607543945
+          },
+          {
+            "text": "阿宁不喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.022113084793091
+          },
+          {
+            "text": "阿宁喜欢喝水吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.171325206756592
+          },
+          {
+            "text": "假如阿宁爱喝水就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.7609970569610596
+          },
+          {
+            "text": "阿宁过去喜欢水，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.6296908855438232
+          },
+          {
+            "text": "阿宁给小周买了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 2.2630016803741455
+          },
+          {
+            "text": "阿宁说小周喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 1.1795214414596558
+          },
+          {
+            "text": "阿宁觉得水难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.390095978975296
+          },
+          {
+            "text": "我猜阿宁可能喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.7877037525177
+          },
+          {
+            "text": "阿宁喜欢喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 2.5051493644714355
+          },
+          {
+            "text": "阿宁最喜欢的饮料是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 4.919450759887695
+          },
+          {
+            "text": "我知道阿宁爱喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 4.912810325622559
+          },
+          {
+            "text": "阿宁不喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.3032779693603516
+          },
+          {
+            "text": "阿宁喜欢喝酸奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.2117021083831787
+          },
+          {
+            "text": "假如阿宁爱喝酸奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.8009954690933228
+          },
+          {
+            "text": "阿宁过去喜欢酸奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0008318424224854
+          },
+          {
+            "text": "阿宁给小周买了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 1.483746886253357
+          },
+          {
+            "text": "阿宁说小周喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 1.554076910018921
+          },
+          {
+            "text": "阿宁觉得酸奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.538945198059082
+          },
+          {
+            "text": "我猜阿宁可能喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.257397174835205
+          },
+          {
+            "text": "小雨喜欢喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 2.517895460128784
+          },
+          {
+            "text": "小雨最喜欢的饮料是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 5.3489179611206055
+          },
+          {
+            "text": "我知道小雨爱喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 4.345951557159424
+          },
+          {
+            "text": "小雨不喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.8106603622436523
+          },
+          {
+            "text": "小雨喜欢喝茶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.133323669433594
+          },
+          {
+            "text": "假如小雨爱喝茶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.316739320755005
+          },
+          {
+            "text": "小雨过去喜欢茶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.914564371109009
+          },
+          {
+            "text": "小雨给小周买了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 1.922797679901123
+          },
+          {
+            "text": "小雨说小周喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 1.250223159790039
+          },
+          {
+            "text": "小雨觉得茶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.5213447213172913
+          },
+          {
+            "text": "我猜小雨可能喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.486064910888672
+          },
+          {
+            "text": "小雨喜欢喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 2.6722333431243896
+          },
+          {
+            "text": "小雨最喜欢的饮料是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 5.094435214996338
+          },
+          {
+            "text": "我知道小雨爱喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 5.034336090087891
+          },
+          {
+            "text": "小雨不喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.374799966812134
+          },
+          {
+            "text": "小雨喜欢喝咖啡吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9432575702667236
+          },
+          {
+            "text": "假如小雨爱喝咖啡就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.3158020973205566
+          },
+          {
+            "text": "小雨过去喜欢咖啡，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.091275930404663
+          },
+          {
+            "text": "小雨给小周买了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 1.7826687097549438
+          },
+          {
+            "text": "小雨说小周喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 1.355708122253418
+          },
+          {
+            "text": "小雨觉得咖啡难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.2829267978668213
+          },
+          {
+            "text": "我猜小雨可能喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.595909118652344
+          },
+          {
+            "text": "小雨喜欢喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 2.9335391521453857
+          },
+          {
+            "text": "小雨最喜欢的饮料是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 5.0789899826049805
+          },
+          {
+            "text": "我知道小雨爱喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 5.299960136413574
+          },
+          {
+            "text": "小雨不喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.2921924591064453
+          },
+          {
+            "text": "小雨喜欢喝牛奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.8941121101379395
+          },
+          {
+            "text": "假如小雨爱喝牛奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.9770781397819519
+          },
+          {
+            "text": "小雨过去喜欢牛奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.1054844856262207
+          },
+          {
+            "text": "小雨给小周买了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 1.7026417255401611
+          },
+          {
+            "text": "小雨说小周喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 1.5559332370758057
+          },
+          {
+            "text": "小雨觉得牛奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.520002841949463
+          },
+          {
+            "text": "我猜小雨可能喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.522870063781738
+          },
+          {
+            "text": "小雨喜欢喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 2.850966691970825
+          },
+          {
+            "text": "小雨最喜欢的饮料是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 5.20562744140625
+          },
+          {
+            "text": "我知道小雨爱喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 5.137804985046387
+          },
+          {
+            "text": "小雨不喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.2039382457733154
+          },
+          {
+            "text": "小雨喜欢喝果汁吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.933264970779419
+          },
+          {
+            "text": "假如小雨爱喝果汁就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.3308563232421875
+          },
+          {
+            "text": "小雨过去喜欢果汁，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0261058807373047
+          },
+          {
+            "text": "小雨给小周买了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 1.6134153604507446
+          },
+          {
+            "text": "小雨说小周喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 1.5830761194229126
+          },
+          {
+            "text": "小雨觉得果汁难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.8926200866699219
+          },
+          {
+            "text": "我猜小雨可能喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.539122581481934
+          },
+          {
+            "text": "小雨喜欢喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 2.5250742435455322
+          },
+          {
+            "text": "小雨最喜欢的饮料是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 4.826857566833496
+          },
+          {
+            "text": "我知道小雨爱喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 4.847029685974121
+          },
+          {
+            "text": "小雨不喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.4836275577545166
+          },
+          {
+            "text": "小雨喜欢喝豆浆吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9584033489227295
+          },
+          {
+            "text": "假如小雨爱喝豆浆就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.1515586376190186
+          },
+          {
+            "text": "小雨过去喜欢豆浆，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0962185859680176
+          },
+          {
+            "text": "小雨给小周买了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 1.6204428672790527
+          },
+          {
+            "text": "小雨说小周喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 1.3068701028823853
+          },
+          {
+            "text": "小雨觉得豆浆难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.2109168767929077
+          },
+          {
+            "text": "我猜小雨可能喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.483311653137207
+          },
+          {
+            "text": "小雨喜欢喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 2.7907352447509766
+          },
+          {
+            "text": "小雨最喜欢的饮料是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 4.7323222160339355
+          },
+          {
+            "text": "我知道小雨爱喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 4.875397205352783
+          },
+          {
+            "text": "小雨不喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.879972457885742
+          },
+          {
+            "text": "小雨喜欢喝可乐吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.3111112117767334
+          },
+          {
+            "text": "假如小雨爱喝可乐就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.6812599301338196
+          },
+          {
+            "text": "小雨过去喜欢可乐，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.307826280593872
+          },
+          {
+            "text": "小雨给小周买了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 1.3778232336044312
+          },
+          {
+            "text": "小雨说小周喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 1.6463872194290161
+          },
+          {
+            "text": "小雨觉得可乐难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.468294620513916
+          },
+          {
+            "text": "我猜小雨可能喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.435320854187012
+          },
+          {
+            "text": "小雨喜欢喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 2.297037363052368
+          },
+          {
+            "text": "小雨最喜欢的饮料是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 5.603833198547363
+          },
+          {
+            "text": "我知道小雨爱喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 4.373981475830078
+          },
+          {
+            "text": "小雨不喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.084516763687134
+          },
+          {
+            "text": "小雨喜欢喝水吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.180524826049805
+          },
+          {
+            "text": "假如小雨爱喝水就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.24365234375
+          },
+          {
+            "text": "小雨过去喜欢水，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.932154417037964
+          },
+          {
+            "text": "小雨给小周买了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 2.4720821380615234
+          },
+          {
+            "text": "小雨说小周喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 1.0937728881835938
+          },
+          {
+            "text": "小雨觉得水难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.5157544612884521
+          },
+          {
+            "text": "我猜小雨可能喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.34957218170166
+          },
+          {
+            "text": "小雨喜欢喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 2.5577759742736816
+          },
+          {
+            "text": "小雨最喜欢的饮料是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 4.762520790100098
+          },
+          {
+            "text": "我知道小雨爱喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 5.011727333068848
+          },
+          {
+            "text": "小雨不喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.451090097427368
+          },
+          {
+            "text": "小雨喜欢喝酸奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.151867151260376
+          },
+          {
+            "text": "假如小雨爱喝酸奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.3088432550430298
+          },
+          {
+            "text": "小雨过去喜欢酸奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.1719658374786377
+          },
+          {
+            "text": "小雨给小周买了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 1.6830744743347168
+          },
+          {
+            "text": "小雨说小周喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 1.412246584892273
+          },
+          {
+            "text": "小雨觉得酸奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.5158534049987793
+          },
+          {
+            "text": "我猜小雨可能喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.745104789733887
+          }
+        ]
+      },
+      "candidate": {
+        "positive_correct": 72,
+        "positive_total": 72,
+        "negative_false_write": 0,
+        "negative_total": 192,
+        "rows": [
+          {
+            "text": "小林喜欢喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 3.24216365814209
+          },
+          {
+            "text": "小林最喜欢的饮料是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 4.651309967041016
+          },
+          {
+            "text": "我知道小林爱喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 4.206970691680908
+          },
+          {
+            "text": "小林不喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.315715789794922
+          },
+          {
+            "text": "小林喜欢喝茶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.9808173179626465
+          },
+          {
+            "text": "假如小林爱喝茶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.3473219871521
+          },
+          {
+            "text": "小林过去喜欢茶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.151121139526367
+          },
+          {
+            "text": "小林给小周买了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.680482387542725
+          },
+          {
+            "text": "小林说小周喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.381556510925293
+          },
+          {
+            "text": "小林觉得茶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.627491474151611
+          },
+          {
+            "text": "我猜小林可能喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.652116298675537
+          },
+          {
+            "text": "小林喜欢喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 3.075284481048584
+          },
+          {
+            "text": "小林最喜欢的饮料是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 4.397012233734131
+          },
+          {
+            "text": "我知道小林爱喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 4.212348461151123
+          },
+          {
+            "text": "小林不喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.3524065017700195
+          },
+          {
+            "text": "小林喜欢喝咖啡吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.099425792694092
+          },
+          {
+            "text": "假如小林爱喝咖啡就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.8503031730651855
+          },
+          {
+            "text": "小林过去喜欢咖啡，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.61466121673584
+          },
+          {
+            "text": "小林给小周买了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.846869945526123
+          },
+          {
+            "text": "小林说小周喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.132449150085449
+          },
+          {
+            "text": "小林觉得咖啡难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.360067367553711
+          },
+          {
+            "text": "我猜小林可能喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.855187892913818
+          },
+          {
+            "text": "小林喜欢喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 3.3770620822906494
+          },
+          {
+            "text": "小林最喜欢的饮料是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 4.447232723236084
+          },
+          {
+            "text": "我知道小林爱喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 4.572443962097168
+          },
+          {
+            "text": "小林不喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.138329982757568
+          },
+          {
+            "text": "小林喜欢喝牛奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.9534804821014404
+          },
+          {
+            "text": "假如小林爱喝牛奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.5592942237854
+          },
+          {
+            "text": "小林过去喜欢牛奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.477273464202881
+          },
+          {
+            "text": "小林给小周买了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.825694561004639
+          },
+          {
+            "text": "小林说小周喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.89638090133667
+          },
+          {
+            "text": "小林觉得牛奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.041023254394531
+          },
+          {
+            "text": "我猜小林可能喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.575072765350342
+          },
+          {
+            "text": "小林喜欢喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 3.5199875831604004
+          },
+          {
+            "text": "小林最喜欢的饮料是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 4.885300159454346
+          },
+          {
+            "text": "我知道小林爱喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 4.443427562713623
+          },
+          {
+            "text": "小林不喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.923264741897583
+          },
+          {
+            "text": "小林喜欢喝果汁吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.8288519382476807
+          },
+          {
+            "text": "假如小林爱喝果汁就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.858616352081299
+          },
+          {
+            "text": "小林过去喜欢果汁，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.76066780090332
+          },
+          {
+            "text": "小林给小周买了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.374963283538818
+          },
+          {
+            "text": "小林说小周喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.718827247619629
+          },
+          {
+            "text": "小林觉得果汁难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.9151082038879395
+          },
+          {
+            "text": "我猜小林可能喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.281121730804443
+          },
+          {
+            "text": "小林喜欢喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 2.978560209274292
+          },
+          {
+            "text": "小林最喜欢的饮料是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 4.442005157470703
+          },
+          {
+            "text": "我知道小林爱喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 4.097047328948975
+          },
+          {
+            "text": "小林不喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.258448123931885
+          },
+          {
+            "text": "小林喜欢喝豆浆吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.990204095840454
+          },
+          {
+            "text": "假如小林爱喝豆浆就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.600603103637695
+          },
+          {
+            "text": "小林过去喜欢豆浆，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.220345497131348
+          },
+          {
+            "text": "小林给小周买了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.48296594619751
+          },
+          {
+            "text": "小林说小周喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.008330821990967
+          },
+          {
+            "text": "小林觉得豆浆难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.4743218421936035
+          },
+          {
+            "text": "我猜小林可能喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.50663423538208
+          },
+          {
+            "text": "小林喜欢喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 3.0041613578796387
+          },
+          {
+            "text": "小林最喜欢的饮料是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 4.320046901702881
+          },
+          {
+            "text": "我知道小林爱喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 3.8613440990448
+          },
+          {
+            "text": "小林不喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.01217794418335
+          },
+          {
+            "text": "小林喜欢喝可乐吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.4030234813690186
+          },
+          {
+            "text": "假如小林爱喝可乐就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.309552192687988
+          },
+          {
+            "text": "小林过去喜欢可乐，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.643171310424805
+          },
+          {
+            "text": "小林给小周买了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.386804580688477
+          },
+          {
+            "text": "小林说小周喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.634558200836182
+          },
+          {
+            "text": "小林觉得可乐难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.062277317047119
+          },
+          {
+            "text": "我猜小林可能喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.6319756507873535
+          },
+          {
+            "text": "小林喜欢喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 2.8499228954315186
+          },
+          {
+            "text": "小林最喜欢的饮料是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 4.606368541717529
+          },
+          {
+            "text": "我知道小林爱喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 4.289768695831299
+          },
+          {
+            "text": "小林不喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.744438409805298
+          },
+          {
+            "text": "小林喜欢喝水吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.3599982261657715
+          },
+          {
+            "text": "假如小林爱喝水就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.393261909484863
+          },
+          {
+            "text": "小林过去喜欢水，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.9882307052612305
+          },
+          {
+            "text": "小林给小周买了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.453757286071777
+          },
+          {
+            "text": "小林说小周喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.5773138999938965
+          },
+          {
+            "text": "小林觉得水难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.7989983558654785
+          },
+          {
+            "text": "我猜小林可能喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.369783878326416
+          },
+          {
+            "text": "小林喜欢喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 2.902306079864502
+          },
+          {
+            "text": "小林最喜欢的饮料是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 4.327822208404541
+          },
+          {
+            "text": "我知道小林爱喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 4.270008563995361
+          },
+          {
+            "text": "小林不喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.402742862701416
+          },
+          {
+            "text": "小林喜欢喝酸奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.280305862426758
+          },
+          {
+            "text": "假如小林爱喝酸奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.913160800933838
+          },
+          {
+            "text": "小林过去喜欢酸奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.365878582000732
+          },
+          {
+            "text": "小林给小周买了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.5465989112854
+          },
+          {
+            "text": "小林说小周喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.03502082824707
+          },
+          {
+            "text": "小林觉得酸奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.041248798370361
+          },
+          {
+            "text": "我猜小林可能喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.738501071929932
+          },
+          {
+            "text": "阿宁喜欢喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 2.9451348781585693
+          },
+          {
+            "text": "阿宁最喜欢的饮料是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 4.690399646759033
+          },
+          {
+            "text": "我知道阿宁爱喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 3.694342613220215
+          },
+          {
+            "text": "阿宁不喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.28852915763855
+          },
+          {
+            "text": "阿宁喜欢喝茶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.912477970123291
+          },
+          {
+            "text": "假如阿宁爱喝茶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.953038692474365
+          },
+          {
+            "text": "阿宁过去喜欢茶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.050482273101807
+          },
+          {
+            "text": "阿宁给小周买了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.651025295257568
+          },
+          {
+            "text": "阿宁说小周喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.860602378845215
+          },
+          {
+            "text": "阿宁觉得茶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.413143634796143
+          },
+          {
+            "text": "我猜阿宁可能喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.062462329864502
+          },
+          {
+            "text": "阿宁喜欢喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 2.9939186573028564
+          },
+          {
+            "text": "阿宁最喜欢的饮料是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 4.341626167297363
+          },
+          {
+            "text": "我知道阿宁爱喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 3.9695284366607666
+          },
+          {
+            "text": "阿宁不喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.019310474395752
+          },
+          {
+            "text": "阿宁喜欢喝咖啡吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.928325891494751
+          },
+          {
+            "text": "假如阿宁爱喝咖啡就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.21722936630249
+          },
+          {
+            "text": "阿宁过去喜欢咖啡，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.531709671020508
+          },
+          {
+            "text": "阿宁给小周买了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.882313251495361
+          },
+          {
+            "text": "阿宁说小周喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.441807270050049
+          },
+          {
+            "text": "阿宁觉得咖啡难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.088209629058838
+          },
+          {
+            "text": "我猜阿宁可能喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.386171817779541
+          },
+          {
+            "text": "阿宁喜欢喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 3.3600969314575195
+          },
+          {
+            "text": "阿宁最喜欢的饮料是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 4.409765243530273
+          },
+          {
+            "text": "我知道阿宁爱喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 4.368692874908447
+          },
+          {
+            "text": "阿宁不喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.8012397289276123
+          },
+          {
+            "text": "阿宁喜欢喝牛奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.685011863708496
+          },
+          {
+            "text": "假如阿宁爱喝牛奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.7834253311157227
+          },
+          {
+            "text": "阿宁过去喜欢牛奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.473114490509033
+          },
+          {
+            "text": "阿宁给小周买了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.797199249267578
+          },
+          {
+            "text": "阿宁说小周喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.185680866241455
+          },
+          {
+            "text": "阿宁觉得牛奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.0737738609313965
+          },
+          {
+            "text": "我猜阿宁可能喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.053236484527588
+          },
+          {
+            "text": "阿宁喜欢喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 3.464522361755371
+          },
+          {
+            "text": "阿宁最喜欢的饮料是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 4.805179119110107
+          },
+          {
+            "text": "我知道阿宁爱喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 4.166497707366943
+          },
+          {
+            "text": "阿宁不喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.5312507152557373
+          },
+          {
+            "text": "阿宁喜欢喝果汁吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.717402696609497
+          },
+          {
+            "text": "假如阿宁爱喝果汁就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.04901123046875
+          },
+          {
+            "text": "阿宁过去喜欢果汁，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.9495849609375
+          },
+          {
+            "text": "阿宁给小周买了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.390494346618652
+          },
+          {
+            "text": "阿宁说小周喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.0271687507629395
+          },
+          {
+            "text": "阿宁觉得果汁难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.738894939422607
+          },
+          {
+            "text": "我猜阿宁可能喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.810374736785889
+          },
+          {
+            "text": "阿宁喜欢喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 3.000516414642334
+          },
+          {
+            "text": "阿宁最喜欢的饮料是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 4.433060169219971
+          },
+          {
+            "text": "我知道阿宁爱喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 3.8264949321746826
+          },
+          {
+            "text": "阿宁不喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.9312336444854736
+          },
+          {
+            "text": "阿宁喜欢喝豆浆吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.882957935333252
+          },
+          {
+            "text": "假如阿宁爱喝豆浆就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.006894588470459
+          },
+          {
+            "text": "阿宁过去喜欢豆浆，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.141932964324951
+          },
+          {
+            "text": "阿宁给小周买了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.522663593292236
+          },
+          {
+            "text": "阿宁说小周喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.438718318939209
+          },
+          {
+            "text": "阿宁觉得豆浆难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.508199214935303
+          },
+          {
+            "text": "我猜阿宁可能喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.051458835601807
+          },
+          {
+            "text": "阿宁喜欢喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 2.822293281555176
+          },
+          {
+            "text": "阿宁最喜欢的饮料是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 4.107701301574707
+          },
+          {
+            "text": "我知道阿宁爱喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 3.449077844619751
+          },
+          {
+            "text": "阿宁不喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.7586703300476074
+          },
+          {
+            "text": "阿宁喜欢喝可乐吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.3429465293884277
+          },
+          {
+            "text": "假如阿宁爱喝可乐就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.832632064819336
+          },
+          {
+            "text": "阿宁过去喜欢可乐，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.646962642669678
+          },
+          {
+            "text": "阿宁给小周买了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.262722492218018
+          },
+          {
+            "text": "阿宁说小周喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.9950761795043945
+          },
+          {
+            "text": "阿宁觉得可乐难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.640658378601074
+          },
+          {
+            "text": "我猜阿宁可能喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.024655342102051
+          },
+          {
+            "text": "阿宁喜欢喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 2.7175204753875732
+          },
+          {
+            "text": "阿宁最喜欢的饮料是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 4.589606285095215
+          },
+          {
+            "text": "我知道阿宁爱喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 3.9401609897613525
+          },
+          {
+            "text": "阿宁不喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.602600336074829
+          },
+          {
+            "text": "阿宁喜欢喝水吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.227413654327393
+          },
+          {
+            "text": "假如阿宁爱喝水就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.801462650299072
+          },
+          {
+            "text": "阿宁过去喜欢水，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.876830577850342
+          },
+          {
+            "text": "阿宁给小周买了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.5152587890625
+          },
+          {
+            "text": "阿宁说小周喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.141123294830322
+          },
+          {
+            "text": "阿宁觉得水难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.414361953735352
+          },
+          {
+            "text": "我猜阿宁可能喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.954843044281006
+          },
+          {
+            "text": "阿宁喜欢喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 2.731252908706665
+          },
+          {
+            "text": "阿宁最喜欢的饮料是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 4.329977989196777
+          },
+          {
+            "text": "我知道阿宁爱喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 3.952411651611328
+          },
+          {
+            "text": "阿宁不喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.083632946014404
+          },
+          {
+            "text": "阿宁喜欢喝酸奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.276892185211182
+          },
+          {
+            "text": "假如阿宁爱喝酸奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.119548320770264
+          },
+          {
+            "text": "阿宁过去喜欢酸奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.2641682624816895
+          },
+          {
+            "text": "阿宁给小周买了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.562655925750732
+          },
+          {
+            "text": "阿宁说小周喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.460143566131592
+          },
+          {
+            "text": "阿宁觉得酸奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.9619221687316895
+          },
+          {
+            "text": "我猜阿宁可能喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.265995502471924
+          },
+          {
+            "text": "小雨喜欢喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 3.2220535278320312
+          },
+          {
+            "text": "小雨最喜欢的饮料是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 4.782973766326904
+          },
+          {
+            "text": "我知道小雨爱喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 4.0599365234375
+          },
+          {
+            "text": "小雨不喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.2160627841949463
+          },
+          {
+            "text": "小雨喜欢喝茶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.792464733123779
+          },
+          {
+            "text": "假如小雨爱喝茶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.502377986907959
+          },
+          {
+            "text": "小雨过去喜欢茶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.199014186859131
+          },
+          {
+            "text": "小雨给小周买了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.446158409118652
+          },
+          {
+            "text": "小雨说小周喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.969452381134033
+          },
+          {
+            "text": "小雨觉得茶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.486428737640381
+          },
+          {
+            "text": "我猜小雨可能喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.7454328536987305
+          },
+          {
+            "text": "小雨喜欢喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 3.084047555923462
+          },
+          {
+            "text": "小雨最喜欢的饮料是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 4.521138668060303
+          },
+          {
+            "text": "我知道小雨爱喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 4.191866397857666
+          },
+          {
+            "text": "小雨不喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.1402716636657715
+          },
+          {
+            "text": "小雨喜欢喝咖啡吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.9566853046417236
+          },
+          {
+            "text": "假如小雨爱喝咖啡就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.838805675506592
+          },
+          {
+            "text": "小雨过去喜欢咖啡，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.558679580688477
+          },
+          {
+            "text": "小雨给小周买了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.631408214569092
+          },
+          {
+            "text": "小雨说小周喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.788432598114014
+          },
+          {
+            "text": "小雨觉得咖啡难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.17222785949707
+          },
+          {
+            "text": "我猜小雨可能喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.997486114501953
+          },
+          {
+            "text": "小雨喜欢喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 3.291274309158325
+          },
+          {
+            "text": "小雨最喜欢的饮料是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 4.530402660369873
+          },
+          {
+            "text": "我知道小雨爱喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 4.398330211639404
+          },
+          {
+            "text": "小雨不喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.018519401550293
+          },
+          {
+            "text": "小雨喜欢喝牛奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.8309249877929688
+          },
+          {
+            "text": "假如小雨爱喝牛奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.49936056137085
+          },
+          {
+            "text": "小雨过去喜欢牛奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.481456756591797
+          },
+          {
+            "text": "小雨给小周买了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.539065361022949
+          },
+          {
+            "text": "小雨说小周喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.592706203460693
+          },
+          {
+            "text": "小雨觉得牛奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.883352756500244
+          },
+          {
+            "text": "我猜小雨可能喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.6640729904174805
+          },
+          {
+            "text": "小雨喜欢喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 3.4677376747131348
+          },
+          {
+            "text": "小雨最喜欢的饮料是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 5.000085830688477
+          },
+          {
+            "text": "我知道小雨爱喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 4.2884745597839355
+          },
+          {
+            "text": "小雨不喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.748109817504883
+          },
+          {
+            "text": "小雨喜欢喝果汁吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.6933505535125732
+          },
+          {
+            "text": "假如小雨爱喝果汁就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.862063884735107
+          },
+          {
+            "text": "小雨过去喜欢果汁，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.8578362464904785
+          },
+          {
+            "text": "小雨给小周买了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.200501441955566
+          },
+          {
+            "text": "小雨说小周喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.415236949920654
+          },
+          {
+            "text": "小雨觉得果汁难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.804455280303955
+          },
+          {
+            "text": "我猜小雨可能喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.476403713226318
+          },
+          {
+            "text": "小雨喜欢喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 2.996539354324341
+          },
+          {
+            "text": "小雨最喜欢的饮料是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 4.536337375640869
+          },
+          {
+            "text": "我知道小雨爱喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 3.980768918991089
+          },
+          {
+            "text": "小雨不喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.129326343536377
+          },
+          {
+            "text": "小雨喜欢喝豆浆吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.8041257858276367
+          },
+          {
+            "text": "假如小雨爱喝豆浆就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.732325077056885
+          },
+          {
+            "text": "小雨过去喜欢豆浆，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.260322093963623
+          },
+          {
+            "text": "小雨给小周买了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.227231502532959
+          },
+          {
+            "text": "小雨说小周喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.718346118927002
+          },
+          {
+            "text": "小雨觉得豆浆难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.362792015075684
+          },
+          {
+            "text": "我猜小雨可能喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.629469394683838
+          },
+          {
+            "text": "小雨喜欢喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 2.803457498550415
+          },
+          {
+            "text": "小雨最喜欢的饮料是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 4.365624904632568
+          },
+          {
+            "text": "我知道小雨爱喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 3.631493091583252
+          },
+          {
+            "text": "小雨不喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.031246662139893
+          },
+          {
+            "text": "小雨喜欢喝可乐吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.3995187282562256
+          },
+          {
+            "text": "假如小雨爱喝可乐就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.4643874168396
+          },
+          {
+            "text": "小雨过去喜欢可乐，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.95391321182251
+          },
+          {
+            "text": "小雨给小周买了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.269302845001221
+          },
+          {
+            "text": "小雨说小周喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.399596691131592
+          },
+          {
+            "text": "小雨觉得可乐难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.111601829528809
+          },
+          {
+            "text": "我猜小雨可能喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.871601104736328
+          },
+          {
+            "text": "小雨喜欢喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 2.7350358963012695
+          },
+          {
+            "text": "小雨最喜欢的饮料是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 4.747462749481201
+          },
+          {
+            "text": "我知道小雨爱喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 4.107471942901611
+          },
+          {
+            "text": "小雨不喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.699209451675415
+          },
+          {
+            "text": "小雨喜欢喝水吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.2700419425964355
+          },
+          {
+            "text": "假如小雨爱喝水就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.473046779632568
+          },
+          {
+            "text": "小雨过去喜欢水，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.149106502532959
+          },
+          {
+            "text": "小雨给小周买了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.232391834259033
+          },
+          {
+            "text": "小雨说小周喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.2708516120910645
+          },
+          {
+            "text": "小雨觉得水难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.565659999847412
+          },
+          {
+            "text": "我猜小雨可能喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.49977970123291
+          },
+          {
+            "text": "小雨喜欢喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 2.842503786087036
+          },
+          {
+            "text": "小雨最喜欢的饮料是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 4.4976043701171875
+          },
+          {
+            "text": "我知道小雨爱喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 4.074639797210693
+          },
+          {
+            "text": "小雨不喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.2095818519592285
+          },
+          {
+            "text": "小雨喜欢喝酸奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.18917179107666
+          },
+          {
+            "text": "假如小雨爱喝酸奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.90570592880249
+          },
+          {
+            "text": "小雨过去喜欢酸奶，现在不知道。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.291662693023682
+          },
+          {
+            "text": "小雨给小周买了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.27501916885376
+          },
+          {
+            "text": "小雨说小周喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.738276958465576
+          },
+          {
+            "text": "小雨觉得酸奶难喝。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.874561786651611
+          },
+          {
+            "text": "我猜小雨可能喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.845048427581787
+          }
+        ]
+      }
+    },
+    "calibration": {
+      "previous": {
+        "positive_correct": 16,
+        "positive_total": 16,
+        "negative_false_write": 16,
+        "negative_total": 48,
+        "rows": [
+          {
+            "text": "阿哲最中意喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 5.926276206970215
+          },
+          {
+            "text": "阿哲平时最爱喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 3.721541166305542
+          },
+          {
+            "text": "阿哲是否爱喝茶？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.234437942504883
+          },
+          {
+            "text": "阿哲从来不喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.0245614051818848
+          },
+          {
+            "text": "阿哲以前爱喝茶，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.9269886016845703
+          },
+          {
+            "text": "阿哲替朋友购买了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 2.3586108684539795
+          },
+          {
+            "text": "听说阿哲可能喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.8991427421569824
+          },
+          {
+            "text": "阿哲说小周爱喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 3.119554281234741
+          },
+          {
+            "text": "阿哲最中意喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 6.172070503234863
+          },
+          {
+            "text": "阿哲平时最爱喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 4.083172798156738
+          },
+          {
+            "text": "阿哲是否爱喝咖啡？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.5480377674102783
+          },
+          {
+            "text": "阿哲从来不喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.3292906284332275
+          },
+          {
+            "text": "阿哲以前爱喝咖啡，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.9795510172843933
+          },
+          {
+            "text": "阿哲替朋友购买了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 2.185161828994751
+          },
+          {
+            "text": "听说阿哲可能喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9772448539733887
+          },
+          {
+            "text": "阿哲说小周爱喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 3.41703200340271
+          },
+          {
+            "text": "阿哲最中意喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 6.404599666595459
+          },
+          {
+            "text": "阿哲平时最爱喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 4.282078742980957
+          },
+          {
+            "text": "阿哲是否爱喝牛奶？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.2928783893585205
+          },
+          {
+            "text": "阿哲从来不喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.020798444747925
+          },
+          {
+            "text": "阿哲以前爱喝牛奶，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.8255931735038757
+          },
+          {
+            "text": "阿哲替朋友购买了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 2.1037466526031494
+          },
+          {
+            "text": "听说阿哲可能喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.953411817550659
+          },
+          {
+            "text": "阿哲说小周爱喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 3.598550319671631
+          },
+          {
+            "text": "阿哲最中意喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 6.294967174530029
+          },
+          {
+            "text": "阿哲平时最爱喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 4.214269161224365
+          },
+          {
+            "text": "阿哲是否爱喝果汁？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.428711175918579
+          },
+          {
+            "text": "阿哲从来不喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.118285894393921
+          },
+          {
+            "text": "阿哲以前爱喝果汁，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.8481450080871582
+          },
+          {
+            "text": "阿哲替朋友购买了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 2.043617010116577
+          },
+          {
+            "text": "听说阿哲可能喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9741714000701904
+          },
+          {
+            "text": "阿哲说小周爱喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 3.6669247150421143
+          },
+          {
+            "text": "阿哲最中意喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 6.108625888824463
+          },
+          {
+            "text": "阿哲平时最爱喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 3.9203805923461914
+          },
+          {
+            "text": "阿哲是否爱喝豆浆？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.550771951675415
+          },
+          {
+            "text": "阿哲从来不喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.403803586959839
+          },
+          {
+            "text": "阿哲以前爱喝豆浆，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.042606234550476
+          },
+          {
+            "text": "阿哲替朋友购买了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 1.9101893901824951
+          },
+          {
+            "text": "听说阿哲可能喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.875932455062866
+          },
+          {
+            "text": "阿哲说小周爱喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 3.450233221054077
+          },
+          {
+            "text": "阿哲最中意喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 5.720058917999268
+          },
+          {
+            "text": "阿哲平时最爱喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 4.037505626678467
+          },
+          {
+            "text": "阿哲是否爱喝可乐？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.0496666431427
+          },
+          {
+            "text": "阿哲从来不喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.957348346710205
+          },
+          {
+            "text": "阿哲以前爱喝可乐，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.6205340623855591
+          },
+          {
+            "text": "阿哲替朋友购买了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 1.7411385774612427
+          },
+          {
+            "text": "听说阿哲可能喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9568166732788086
+          },
+          {
+            "text": "阿哲说小周爱喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 3.5826163291931152
+          },
+          {
+            "text": "阿哲最中意喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 6.024308204650879
+          },
+          {
+            "text": "阿哲平时最爱喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 3.4356956481933594
+          },
+          {
+            "text": "阿哲是否爱喝水？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.29152512550354
+          },
+          {
+            "text": "阿哲从来不喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.0957915782928467
+          },
+          {
+            "text": "阿哲以前爱喝水，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.9444912672042847
+          },
+          {
+            "text": "阿哲替朋友购买了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 2.8532907962799072
+          },
+          {
+            "text": "听说阿哲可能喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.6197404861450195
+          },
+          {
+            "text": "阿哲说小周爱喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 3.006009817123413
+          },
+          {
+            "text": "阿哲最中意喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 6.126729965209961
+          },
+          {
+            "text": "阿哲平时最爱喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 3.983657121658325
+          },
+          {
+            "text": "阿哲是否爱喝酸奶？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.465045928955078
+          },
+          {
+            "text": "阿哲从来不喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.3126368522644043
+          },
+          {
+            "text": "阿哲以前爱喝酸奶，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.955568253993988
+          },
+          {
+            "text": "阿哲替朋友购买了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 1.9420771598815918
+          },
+          {
+            "text": "听说阿哲可能喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.1700336933135986
+          },
+          {
+            "text": "阿哲说小周爱喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 3.5212819576263428
+          }
+        ]
+      },
+      "candidate": {
+        "positive_correct": 3,
+        "positive_total": 16,
+        "negative_false_write": 0,
+        "negative_total": 48,
+        "rows": [
+          {
+            "text": "阿哲最中意喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 8,
+            "fact_logit": -0.8483082056045532
+          },
+          {
+            "text": "阿哲平时最爱喝茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 8,
+            "fact_logit": -0.07835707813501358
+          },
+          {
+            "text": "阿哲是否爱喝茶？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.845834255218506
+          },
+          {
+            "text": "阿哲从来不喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.114216327667236
+          },
+          {
+            "text": "阿哲以前爱喝茶，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.113647937774658
+          },
+          {
+            "text": "阿哲替朋友购买了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.87316632270813
+          },
+          {
+            "text": "听说阿哲可能喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.271992206573486
+          },
+          {
+            "text": "阿哲说小周爱喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.845191478729248
+          },
+          {
+            "text": "阿哲最中意喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 8,
+            "fact_logit": -0.7296688556671143
+          },
+          {
+            "text": "阿哲平时最爱喝咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 0.011168740689754486
+          },
+          {
+            "text": "阿哲是否爱喝咖啡？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.39807653427124
+          },
+          {
+            "text": "阿哲从来不喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.888421535491943
+          },
+          {
+            "text": "阿哲以前爱喝咖啡，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.4359421730041504
+          },
+          {
+            "text": "阿哲替朋友购买了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0113799571990967
+          },
+          {
+            "text": "听说阿哲可能喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.5577263832092285
+          },
+          {
+            "text": "阿哲说小周爱喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.5059123039245605
+          },
+          {
+            "text": "阿哲最中意喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 8,
+            "fact_logit": -0.6544002294540405
+          },
+          {
+            "text": "阿哲平时最爱喝牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 0.2867431342601776
+          },
+          {
+            "text": "阿哲是否爱喝牛奶？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.271780490875244
+          },
+          {
+            "text": "阿哲从来不喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.560168743133545
+          },
+          {
+            "text": "阿哲以前爱喝牛奶，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.3592774868011475
+          },
+          {
+            "text": "阿哲替朋友购买了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.970499277114868
+          },
+          {
+            "text": "听说阿哲可能喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.247467041015625
+          },
+          {
+            "text": "阿哲说小周爱喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.413552761077881
+          },
+          {
+            "text": "阿哲最中意喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 8,
+            "fact_logit": -0.5509517192840576
+          },
+          {
+            "text": "阿哲平时最爱喝果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 8,
+            "fact_logit": 0.3809380829334259
+          },
+          {
+            "text": "阿哲是否爱喝果汁？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.3824944496154785
+          },
+          {
+            "text": "阿哲从来不喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.375013828277588
+          },
+          {
+            "text": "阿哲以前爱喝果汁，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.342667818069458
+          },
+          {
+            "text": "阿哲替朋友购买了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.639369487762451
+          },
+          {
+            "text": "听说阿哲可能喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.1142988204956055
+          },
+          {
+            "text": "阿哲说小周爱喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.371243476867676
+          },
+          {
+            "text": "阿哲最中意喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 8,
+            "fact_logit": -0.762993574142456
+          },
+          {
+            "text": "阿哲平时最爱喝豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": -0.01734403520822525
+          },
+          {
+            "text": "阿哲是否爱喝豆浆？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.412046909332275
+          },
+          {
+            "text": "阿哲从来不喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.649453639984131
+          },
+          {
+            "text": "阿哲以前爱喝豆浆，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.502126693725586
+          },
+          {
+            "text": "阿哲替朋友购买了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.967374563217163
+          },
+          {
+            "text": "听说阿哲可能喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.220006465911865
+          },
+          {
+            "text": "阿哲说小周爱喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.445164203643799
+          },
+          {
+            "text": "阿哲最中意喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 8,
+            "fact_logit": -0.930291473865509
+          },
+          {
+            "text": "阿哲平时最爱喝可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 8,
+            "fact_logit": -0.12306628376245499
+          },
+          {
+            "text": "阿哲是否爱喝可乐？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.159521579742432
+          },
+          {
+            "text": "阿哲从来不喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.5998663902282715
+          },
+          {
+            "text": "阿哲以前爱喝可乐，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.531292200088501
+          },
+          {
+            "text": "阿哲替朋友购买了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.974525213241577
+          },
+          {
+            "text": "听说阿哲可能喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.649972915649414
+          },
+          {
+            "text": "阿哲说小周爱喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.1561760902404785
+          },
+          {
+            "text": "阿哲最中意喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 8,
+            "fact_logit": -0.8867403268814087
+          },
+          {
+            "text": "阿哲平时最爱喝水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 8,
+            "fact_logit": -0.2610876262187958
+          },
+          {
+            "text": "阿哲是否爱喝水？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.704929828643799
+          },
+          {
+            "text": "阿哲从来不喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.847253322601318
+          },
+          {
+            "text": "阿哲以前爱喝水，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.0103864669799805
+          },
+          {
+            "text": "阿哲替朋友购买了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.618602752685547
+          },
+          {
+            "text": "听说阿哲可能喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.061600208282471
+          },
+          {
+            "text": "阿哲说小周爱喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.869422912597656
+          },
+          {
+            "text": "阿哲最中意喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 8,
+            "fact_logit": -0.7778228521347046
+          },
+          {
+            "text": "阿哲平时最爱喝酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 8,
+            "fact_logit": -0.11829618364572525
+          },
+          {
+            "text": "阿哲是否爱喝酸奶？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.505387783050537
+          },
+          {
+            "text": "阿哲从来不喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.598412036895752
+          },
+          {
+            "text": "阿哲以前爱喝酸奶，现状不明。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.4438016414642334
+          },
+          {
+            "text": "阿哲替朋友购买了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.862632989883423
+          },
+          {
+            "text": "听说阿哲可能喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.355138301849365
+          },
+          {
+            "text": "阿哲说小周爱喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.487947463989258
+          }
+        ]
+      }
+    },
+    "held": {
+      "previous": {
+        "positive_correct": 32,
+        "positive_total": 32,
+        "negative_false_write": 32,
+        "negative_total": 128,
+        "rows": [
+          {
+            "text": "据我所知，小梅最喜欢的饮品是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 2.036372423171997
+          },
+          {
+            "text": "小梅偏爱的饮料是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 2.490957736968994
+          },
+          {
+            "text": "小梅压根不爱喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.6116346716880798
+          },
+          {
+            "text": "你知道小梅喜欢喝茶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.05845832824707
+          },
+          {
+            "text": "如果小梅喜欢喝茶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9360175132751465
+          },
+          {
+            "text": "小梅曾经喜欢茶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.823942184448242
+          },
+          {
+            "text": "小梅为同事准备了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 2.7414214611053467
+          },
+          {
+            "text": "小梅猜自己也许喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.78342866897583
+          },
+          {
+            "text": "小梅说阿明最喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 2.0699236392974854
+          },
+          {
+            "text": "小梅不再喜欢喝茶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.125628471374512
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 1.8874056339263916
+          },
+          {
+            "text": "小梅偏爱的饮料是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 2.4003491401672363
+          },
+          {
+            "text": "小梅压根不爱喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.5794407725334167
+          },
+          {
+            "text": "你知道小梅喜欢喝咖啡吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.1452808380126953
+          },
+          {
+            "text": "如果小梅喜欢喝咖啡就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.4846746921539307
+          },
+          {
+            "text": "小梅曾经喜欢咖啡，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.928401947021484
+          },
+          {
+            "text": "小梅为同事准备了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 2.496751308441162
+          },
+          {
+            "text": "小梅猜自己也许喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.8700175285339355
+          },
+          {
+            "text": "小梅说阿明最喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 2.7555971145629883
+          },
+          {
+            "text": "小梅不再喜欢喝咖啡了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.433499336242676
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 1.9086921215057373
+          },
+          {
+            "text": "小梅偏爱的饮料是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 2.3820343017578125
+          },
+          {
+            "text": "小梅压根不爱喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.3830151855945587
+          },
+          {
+            "text": "你知道小梅喜欢喝牛奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.904021739959717
+          },
+          {
+            "text": "如果小梅喜欢喝牛奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.0276196002960205
+          },
+          {
+            "text": "小梅曾经喜欢牛奶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.957334518432617
+          },
+          {
+            "text": "小梅为同事准备了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 2.544405460357666
+          },
+          {
+            "text": "小梅猜自己也许喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.7474875450134277
+          },
+          {
+            "text": "小梅说阿明最喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 3.035320520401001
+          },
+          {
+            "text": "小梅不再喜欢喝牛奶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.329853057861328
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 1.9253125190734863
+          },
+          {
+            "text": "小梅偏爱的饮料是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 2.4099032878875732
+          },
+          {
+            "text": "小梅压根不爱喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.43787911534309387
+          },
+          {
+            "text": "你知道小梅喜欢喝果汁吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.006239891052246
+          },
+          {
+            "text": "如果小梅喜欢喝果汁就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.327207326889038
+          },
+          {
+            "text": "小梅曾经喜欢果汁，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.897824764251709
+          },
+          {
+            "text": "小梅为同事准备了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 2.5112082958221436
+          },
+          {
+            "text": "小梅猜自己也许喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.8696281909942627
+          },
+          {
+            "text": "小梅说阿明最喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 2.9319050312042236
+          },
+          {
+            "text": "小梅不再喜欢喝果汁了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.067682266235352
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 1.7392663955688477
+          },
+          {
+            "text": "小梅偏爱的饮料是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 2.0682780742645264
+          },
+          {
+            "text": "小梅压根不爱喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.5891266465187073
+          },
+          {
+            "text": "你知道小梅喜欢喝豆浆吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0593149662017822
+          },
+          {
+            "text": "如果小梅喜欢喝豆浆就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.184786081314087
+          },
+          {
+            "text": "小梅曾经喜欢豆浆，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.740217208862305
+          },
+          {
+            "text": "小梅为同事准备了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 2.4432384967803955
+          },
+          {
+            "text": "小梅猜自己也许喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.836040735244751
+          },
+          {
+            "text": "小梅说阿明最喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 2.7125725746154785
+          },
+          {
+            "text": "小梅不再喜欢喝豆浆了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.155694961547852
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 1.761137843132019
+          },
+          {
+            "text": "小梅偏爱的饮料是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 2.105860710144043
+          },
+          {
+            "text": "小梅压根不爱喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.37047919631004333
+          },
+          {
+            "text": "你知道小梅喜欢喝可乐吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.6612637042999268
+          },
+          {
+            "text": "如果小梅喜欢喝可乐就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.8008944988250732
+          },
+          {
+            "text": "小梅曾经喜欢可乐，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.905691623687744
+          },
+          {
+            "text": "小梅为同事准备了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 2.1244304180145264
+          },
+          {
+            "text": "小梅猜自己也许喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.7832367420196533
+          },
+          {
+            "text": "小梅说阿明最喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 2.9823193550109863
+          },
+          {
+            "text": "小梅不再喜欢喝可乐了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.6051547527313232
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 2.1221086978912354
+          },
+          {
+            "text": "小梅偏爱的饮料是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 2.621005058288574
+          },
+          {
+            "text": "小梅压根不爱喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.753440797328949
+          },
+          {
+            "text": "你知道小梅喜欢喝水吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.128451347351074
+          },
+          {
+            "text": "如果小梅喜欢喝水就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0523197650909424
+          },
+          {
+            "text": "小梅曾经喜欢水，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.67059326171875
+          },
+          {
+            "text": "小梅为同事准备了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 3.080737352371216
+          },
+          {
+            "text": "小梅猜自己也许喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.5819251537323
+          },
+          {
+            "text": "小梅说阿明最喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 2.217865467071533
+          },
+          {
+            "text": "小梅不再喜欢喝水了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.558660507202148
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 1.7089598178863525
+          },
+          {
+            "text": "小梅偏爱的饮料是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 2.1184051036834717
+          },
+          {
+            "text": "小梅压根不爱喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -0.4343854486942291
+          },
+          {
+            "text": "你知道小梅喜欢喝酸奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.223954200744629
+          },
+          {
+            "text": "如果小梅喜欢喝酸奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.4507293701171875
+          },
+          {
+            "text": "小梅曾经喜欢酸奶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.177209377288818
+          },
+          {
+            "text": "小梅为同事准备了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 2.4806504249572754
+          },
+          {
+            "text": "小梅猜自己也许喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.9363930225372314
+          },
+          {
+            "text": "小梅说阿明最喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 2.7448415756225586
+          },
+          {
+            "text": "小梅不再喜欢喝酸奶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.301257610321045
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 2.335042715072632
+          },
+          {
+            "text": "阿远偏爱的饮料是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 0,
+            "fact_logit": 2.304516553878784
+          },
+          {
+            "text": "阿远压根不爱喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.9405287504196167
+          },
+          {
+            "text": "你知道阿远喜欢喝茶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.800308704376221
+          },
+          {
+            "text": "如果阿远喜欢喝茶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.9562666416168213
+          },
+          {
+            "text": "阿远曾经喜欢茶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.877108573913574
+          },
+          {
+            "text": "阿远为同事准备了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 1.6534614562988281
+          },
+          {
+            "text": "阿远猜自己也许喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.509880781173706
+          },
+          {
+            "text": "阿远说阿明最喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 0,
+            "fact_logit": 1.5975990295410156
+          },
+          {
+            "text": "阿远不再喜欢喝茶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.893527507781982
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 2.1566109657287598
+          },
+          {
+            "text": "阿远偏爱的饮料是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 2.1431007385253906
+          },
+          {
+            "text": "阿远压根不爱喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.8058620691299438
+          },
+          {
+            "text": "你知道阿远喜欢喝咖啡吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.589080333709717
+          },
+          {
+            "text": "如果阿远喜欢喝咖啡就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.270141363143921
+          },
+          {
+            "text": "阿远曾经喜欢咖啡，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.14255428314209
+          },
+          {
+            "text": "阿远为同事准备了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 1.4688080549240112
+          },
+          {
+            "text": "阿远猜自己也许喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.6391818523406982
+          },
+          {
+            "text": "阿远说阿明最喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 1,
+            "fact_logit": 2.4000165462493896
+          },
+          {
+            "text": "阿远不再喜欢喝咖啡了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.919116973876953
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 2.1252248287200928
+          },
+          {
+            "text": "阿远偏爱的饮料是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 2.122366428375244
+          },
+          {
+            "text": "阿远压根不爱喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.6667957305908203
+          },
+          {
+            "text": "你知道阿远喜欢喝牛奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.383025884628296
+          },
+          {
+            "text": "如果阿远喜欢喝牛奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.8983142375946045
+          },
+          {
+            "text": "阿远曾经喜欢牛奶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.0790205001831055
+          },
+          {
+            "text": "阿远为同事准备了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 1.520713448524475
+          },
+          {
+            "text": "阿远猜自己也许喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.500725030899048
+          },
+          {
+            "text": "阿远说阿明最喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 2,
+            "fact_logit": 2.6747658252716064
+          },
+          {
+            "text": "阿远不再喜欢喝牛奶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.806048393249512
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 2.1529324054718018
+          },
+          {
+            "text": "阿远偏爱的饮料是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 2.1680407524108887
+          },
+          {
+            "text": "阿远压根不爱喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.7193421125411987
+          },
+          {
+            "text": "你知道阿远喜欢喝果汁吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.4410464763641357
+          },
+          {
+            "text": "如果阿远喜欢喝果汁就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.036897897720337
+          },
+          {
+            "text": "阿远曾经喜欢果汁，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.172839164733887
+          },
+          {
+            "text": "阿远为同事准备了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 1.449540376663208
+          },
+          {
+            "text": "阿远猜自己也许喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.6804325580596924
+          },
+          {
+            "text": "阿远说阿明最喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 3,
+            "fact_logit": 2.596543550491333
+          },
+          {
+            "text": "阿远不再喜欢喝果汁了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.649703502655029
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 1.9711577892303467
+          },
+          {
+            "text": "阿远偏爱的饮料是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 4,
+            "fact_logit": 1.7978765964508057
+          },
+          {
+            "text": "阿远压根不爱喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.8335750102996826
+          },
+          {
+            "text": "你知道阿远喜欢喝豆浆吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.5602927207946777
+          },
+          {
+            "text": "如果阿远喜欢喝豆浆就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9066898822784424
+          },
+          {
+            "text": "阿远曾经喜欢豆浆，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.0613203048706055
+          },
+          {
+            "text": "阿远为同事准备了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 1.3773075342178345
+          },
+          {
+            "text": "阿远猜自己也许喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.6576600074768066
+          },
+          {
+            "text": "阿远说阿明最喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 4,
+            "fact_logit": 2.32822585105896
+          },
+          {
+            "text": "阿远不再喜欢喝豆浆了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.714624404907227
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 1.9265906810760498
+          },
+          {
+            "text": "阿远偏爱的饮料是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 1.8667693138122559
+          },
+          {
+            "text": "阿远压根不爱喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.5151326656341553
+          },
+          {
+            "text": "你知道阿远喜欢喝可乐吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.14365553855896
+          },
+          {
+            "text": "如果阿远喜欢喝可乐就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.508395195007324
+          },
+          {
+            "text": "阿远曾经喜欢可乐，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.107834815979004
+          },
+          {
+            "text": "阿远为同事准备了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 1.0605545043945312
+          },
+          {
+            "text": "阿远猜自己也许喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.5138509273529053
+          },
+          {
+            "text": "阿远说阿明最喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 5,
+            "fact_logit": 2.5703389644622803
+          },
+          {
+            "text": "阿远不再喜欢喝可乐了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.8326311111450195
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 2.345123529434204
+          },
+          {
+            "text": "阿远偏爱的饮料是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 6,
+            "fact_logit": 2.2375428676605225
+          },
+          {
+            "text": "阿远压根不爱喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.1557533740997314
+          },
+          {
+            "text": "你知道阿远喜欢喝水吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.647143363952637
+          },
+          {
+            "text": "如果阿远喜欢喝水就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.843083381652832
+          },
+          {
+            "text": "阿远曾经喜欢水，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.907251358032227
+          },
+          {
+            "text": "阿远为同事准备了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 1.9527837038040161
+          },
+          {
+            "text": "阿远猜自己也许喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.3508455753326416
+          },
+          {
+            "text": "阿远说阿明最喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 6,
+            "fact_logit": 1.6894735097885132
+          },
+          {
+            "text": "阿远不再喜欢喝水了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.2457780838012695
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 1.9280558824539185
+          },
+          {
+            "text": "阿远偏爱的饮料是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 1.866736650466919
+          },
+          {
+            "text": "阿远压根不爱喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.7159620523452759
+          },
+          {
+            "text": "你知道阿远喜欢喝酸奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.625765085220337
+          },
+          {
+            "text": "如果阿远喜欢喝酸奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.2567832469940186
+          },
+          {
+            "text": "阿远曾经喜欢酸奶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.291743755340576
+          },
+          {
+            "text": "阿远为同事准备了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 1.4127881526947021
+          },
+          {
+            "text": "阿远猜自己也许喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.7180118560791016
+          },
+          {
+            "text": "阿远说阿明最喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 7,
+            "fact_logit": 2.3868792057037354
+          },
+          {
+            "text": "阿远不再喜欢喝酸奶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.8733015060424805
+          }
+        ]
+      },
+      "candidate": {
+        "positive_correct": 8,
+        "positive_total": 32,
+        "negative_false_write": 0,
+        "negative_total": 128,
+        "rows": [
+          {
+            "text": "据我所知，小梅最喜欢的饮品是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 8,
+            "fact_logit": 0.20427414774894714
+          },
+          {
+            "text": "小梅偏爱的饮料是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 8,
+            "fact_logit": 0.14263096451759338
+          },
+          {
+            "text": "小梅压根不爱喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.088867664337158
+          },
+          {
+            "text": "你知道小梅喜欢喝茶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.4623236656188965
+          },
+          {
+            "text": "如果小梅喜欢喝茶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.630240440368652
+          },
+          {
+            "text": "小梅曾经喜欢茶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.897510051727295
+          },
+          {
+            "text": "小梅为同事准备了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.1658918857574463
+          },
+          {
+            "text": "小梅猜自己也许喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.996042251586914
+          },
+          {
+            "text": "小梅说阿明最喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.015451908111572
+          },
+          {
+            "text": "小梅不再喜欢喝茶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.537413120269775
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 8,
+            "fact_logit": 0.009334824979305267
+          },
+          {
+            "text": "小梅偏爱的饮料是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 8,
+            "fact_logit": 0.10977592319250107
+          },
+          {
+            "text": "小梅压根不爱喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.26520299911499
+          },
+          {
+            "text": "你知道小梅喜欢喝咖啡吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.9086995124816895
+          },
+          {
+            "text": "如果小梅喜欢喝咖啡就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.179256916046143
+          },
+          {
+            "text": "小梅曾经喜欢咖啡，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.016930103302002
+          },
+          {
+            "text": "小梅为同事准备了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.386915683746338
+          },
+          {
+            "text": "小梅猜自己也许喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.105828285217285
+          },
+          {
+            "text": "小梅说阿明最喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.3973886966705322
+          },
+          {
+            "text": "小梅不再喜欢喝咖啡了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.571950435638428
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 8,
+            "fact_logit": 0.1622011363506317
+          },
+          {
+            "text": "小梅偏爱的饮料是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 8,
+            "fact_logit": 0.2245507538318634
+          },
+          {
+            "text": "小梅压根不爱喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.942796230316162
+          },
+          {
+            "text": "你知道小梅喜欢喝牛奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.567178726196289
+          },
+          {
+            "text": "如果小梅喜欢喝牛奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.689795970916748
+          },
+          {
+            "text": "小梅曾经喜欢牛奶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.905020236968994
+          },
+          {
+            "text": "小梅为同事准备了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.2828245162963867
+          },
+          {
+            "text": "小梅猜自己也许喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.836745738983154
+          },
+          {
+            "text": "小梅说阿明最喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.080238103866577
+          },
+          {
+            "text": "小梅不再喜欢喝牛奶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.394155502319336
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 8,
+            "fact_logit": 0.3025154173374176
+          },
+          {
+            "text": "小梅偏爱的饮料是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 3,
+            "fact_logit": 0.5333895683288574
+          },
+          {
+            "text": "小梅压根不爱喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.888110637664795
+          },
+          {
+            "text": "你知道小梅喜欢喝果汁吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.5618696212768555
+          },
+          {
+            "text": "如果小梅喜欢喝果汁就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.85610818862915
+          },
+          {
+            "text": "小梅曾经喜欢果汁，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.540814399719238
+          },
+          {
+            "text": "小梅为同事准备了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -1.9478957653045654
+          },
+          {
+            "text": "小梅猜自己也许喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.757687091827393
+          },
+          {
+            "text": "小梅说阿明最喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.0726382732391357
+          },
+          {
+            "text": "小梅不再喜欢喝果汁了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.14756441116333
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 8,
+            "fact_logit": 0.04076638072729111
+          },
+          {
+            "text": "小梅偏爱的饮料是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 8,
+            "fact_logit": 0.06304313987493515
+          },
+          {
+            "text": "小梅压根不爱喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.0794901847839355
+          },
+          {
+            "text": "你知道小梅喜欢喝豆浆吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.7451887130737305
+          },
+          {
+            "text": "如果小梅喜欢喝豆浆就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.950929641723633
+          },
+          {
+            "text": "小梅曾经喜欢豆浆，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.707833766937256
+          },
+          {
+            "text": "小梅为同事准备了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.167430877685547
+          },
+          {
+            "text": "小梅猜自己也许喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.993913173675537
+          },
+          {
+            "text": "小梅说阿明最喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.3182289600372314
+          },
+          {
+            "text": "小梅不再喜欢喝豆浆了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.335076808929443
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 8,
+            "fact_logit": 0.12793698906898499
+          },
+          {
+            "text": "小梅偏爱的饮料是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 0.11163177341222763
+          },
+          {
+            "text": "小梅压根不爱喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.03488826751709
+          },
+          {
+            "text": "你知道小梅喜欢喝可乐吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.616007328033447
+          },
+          {
+            "text": "如果小梅喜欢喝可乐就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.694079875946045
+          },
+          {
+            "text": "小梅曾经喜欢可乐，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.165343761444092
+          },
+          {
+            "text": "小梅为同事准备了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.1957592964172363
+          },
+          {
+            "text": "小梅猜自己也许喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.083774566650391
+          },
+          {
+            "text": "小梅说阿明最喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9020562171936035
+          },
+          {
+            "text": "小梅不再喜欢喝可乐了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.174060344696045
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 8,
+            "fact_logit": 0.1748013198375702
+          },
+          {
+            "text": "小梅偏爱的饮料是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 8,
+            "fact_logit": 0.31542274355888367
+          },
+          {
+            "text": "小梅压根不爱喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.8661417961120605
+          },
+          {
+            "text": "你知道小梅喜欢喝水吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.805241107940674
+          },
+          {
+            "text": "如果小梅喜欢喝水就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.064631938934326
+          },
+          {
+            "text": "小梅曾经喜欢水，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.612761497497559
+          },
+          {
+            "text": "小梅为同事准备了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.2042832374572754
+          },
+          {
+            "text": "小梅猜自己也许喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.761368274688721
+          },
+          {
+            "text": "小梅说阿明最喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.0085039138793945
+          },
+          {
+            "text": "小梅不再喜欢喝水了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.924561500549316
+          },
+          {
+            "text": "据我所知，小梅最喜欢的饮品是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 8,
+            "fact_logit": 0.027936093509197235
+          },
+          {
+            "text": "小梅偏爱的饮料是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 0.1345095932483673
+          },
+          {
+            "text": "小梅压根不爱喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.02077054977417
+          },
+          {
+            "text": "你知道小梅喜欢喝酸奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.95876932144165
+          },
+          {
+            "text": "如果小梅喜欢喝酸奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.184701442718506
+          },
+          {
+            "text": "小梅曾经喜欢酸奶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.0371551513671875
+          },
+          {
+            "text": "小梅为同事准备了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.134258508682251
+          },
+          {
+            "text": "小梅猜自己也许喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.936053276062012
+          },
+          {
+            "text": "小梅说阿明最喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.397390604019165
+          },
+          {
+            "text": "小梅不再喜欢喝酸奶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.380383491516113
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 8,
+            "fact_logit": 0.8123056888580322
+          },
+          {
+            "text": "阿远偏爱的饮料是茶。",
+            "group": "positive",
+            "label": 0,
+            "prediction": 8,
+            "fact_logit": 0.37924209237098694
+          },
+          {
+            "text": "阿远压根不爱喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.467374324798584
+          },
+          {
+            "text": "你知道阿远喜欢喝茶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.567596912384033
+          },
+          {
+            "text": "如果阿远喜欢喝茶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.764098644256592
+          },
+          {
+            "text": "阿远曾经喜欢茶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.466235637664795
+          },
+          {
+            "text": "阿远为同事准备了茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.751918077468872
+          },
+          {
+            "text": "阿远猜自己也许喜欢茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.56599760055542
+          },
+          {
+            "text": "阿远说阿明最喜欢喝茶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.5323214530944824
+          },
+          {
+            "text": "阿远不再喜欢喝茶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -7.674070358276367
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 1,
+            "fact_logit": 0.6078416705131531
+          },
+          {
+            "text": "阿远偏爱的饮料是咖啡。",
+            "group": "positive",
+            "label": 1,
+            "prediction": 8,
+            "fact_logit": 0.23744550347328186
+          },
+          {
+            "text": "阿远压根不爱喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.593039035797119
+          },
+          {
+            "text": "你知道阿远喜欢喝咖啡吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.761475086212158
+          },
+          {
+            "text": "如果阿远喜欢喝咖啡就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.116230010986328
+          },
+          {
+            "text": "阿远曾经喜欢咖啡，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.856815814971924
+          },
+          {
+            "text": "阿远为同事准备了咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.9597902297973633
+          },
+          {
+            "text": "阿远猜自己也许喜欢咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.803107738494873
+          },
+          {
+            "text": "阿远说阿明最喜欢喝咖啡。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.8167355060577393
+          },
+          {
+            "text": "阿远不再喜欢喝咖啡了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -7.503915309906006
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 8,
+            "fact_logit": 0.7037997841835022
+          },
+          {
+            "text": "阿远偏爱的饮料是牛奶。",
+            "group": "positive",
+            "label": 2,
+            "prediction": 2,
+            "fact_logit": 0.4052441418170929
+          },
+          {
+            "text": "阿远压根不爱喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.352008819580078
+          },
+          {
+            "text": "你知道阿远喜欢喝牛奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.4474992752075195
+          },
+          {
+            "text": "如果阿远喜欢喝牛奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.687699794769287
+          },
+          {
+            "text": "阿远曾经喜欢牛奶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.524328708648682
+          },
+          {
+            "text": "阿远为同事准备了牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.817403793334961
+          },
+          {
+            "text": "阿远猜自己也许喜欢牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.407782077789307
+          },
+          {
+            "text": "阿远说阿明最喜欢喝牛奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.500734567642212
+          },
+          {
+            "text": "阿远不再喜欢喝牛奶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -7.361155033111572
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 8,
+            "fact_logit": 0.8741462230682373
+          },
+          {
+            "text": "阿远偏爱的饮料是果汁。",
+            "group": "positive",
+            "label": 3,
+            "prediction": 8,
+            "fact_logit": 0.7447991371154785
+          },
+          {
+            "text": "阿远压根不爱喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.3482584953308105
+          },
+          {
+            "text": "你知道阿远喜欢喝果汁吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.433060646057129
+          },
+          {
+            "text": "如果阿远喜欢喝果汁就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.774378299713135
+          },
+          {
+            "text": "阿远曾经喜欢果汁，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.372764587402344
+          },
+          {
+            "text": "阿远为同事准备了果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.4938600063323975
+          },
+          {
+            "text": "阿远猜自己也许喜欢果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.412797927856445
+          },
+          {
+            "text": "阿远说阿明最喜欢喝果汁。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.506230592727661
+          },
+          {
+            "text": "阿远不再喜欢喝果汁了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -7.297278881072998
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 8,
+            "fact_logit": 0.6120093464851379
+          },
+          {
+            "text": "阿远偏爱的饮料是豆浆。",
+            "group": "positive",
+            "label": 4,
+            "prediction": 8,
+            "fact_logit": 0.26909032464027405
+          },
+          {
+            "text": "阿远压根不爱喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.47934103012085
+          },
+          {
+            "text": "你知道阿远喜欢喝豆浆吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.653769016265869
+          },
+          {
+            "text": "如果阿远喜欢喝豆浆就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.811610698699951
+          },
+          {
+            "text": "阿远曾经喜欢豆浆，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.5423808097839355
+          },
+          {
+            "text": "阿远为同事准备了豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.7180347442626953
+          },
+          {
+            "text": "阿远猜自己也许喜欢豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.667381286621094
+          },
+          {
+            "text": "阿远说阿明最喜欢喝豆浆。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.836207389831543
+          },
+          {
+            "text": "阿远不再喜欢喝豆浆了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -7.414289951324463
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 0.6067219972610474
+          },
+          {
+            "text": "阿远偏爱的饮料是可乐。",
+            "group": "positive",
+            "label": 5,
+            "prediction": 5,
+            "fact_logit": 0.2368326485157013
+          },
+          {
+            "text": "阿远压根不爱喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.401418209075928
+          },
+          {
+            "text": "你知道阿远喜欢喝可乐吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.613807678222656
+          },
+          {
+            "text": "如果阿远喜欢喝可乐就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.763747215270996
+          },
+          {
+            "text": "阿远曾经喜欢可乐，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -6.117469787597656
+          },
+          {
+            "text": "阿远为同事准备了可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.758880376815796
+          },
+          {
+            "text": "阿远猜自己也许喜欢可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.778831958770752
+          },
+          {
+            "text": "阿远说阿明最喜欢喝可乐。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.523191452026367
+          },
+          {
+            "text": "阿远不再喜欢喝可乐了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -7.134359836578369
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 8,
+            "fact_logit": 0.7020310163497925
+          },
+          {
+            "text": "阿远偏爱的饮料是水。",
+            "group": "positive",
+            "label": 6,
+            "prediction": 8,
+            "fact_logit": 0.23730996251106262
+          },
+          {
+            "text": "阿远压根不爱喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.2831292152404785
+          },
+          {
+            "text": "你知道阿远喜欢喝水吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.647650718688965
+          },
+          {
+            "text": "如果阿远喜欢喝水就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.856741905212402
+          },
+          {
+            "text": "阿远曾经喜欢水，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.269057750701904
+          },
+          {
+            "text": "阿远为同事准备了水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.857245445251465
+          },
+          {
+            "text": "阿远猜自己也许喜欢水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.2771124839782715
+          },
+          {
+            "text": "阿远说阿明最喜欢喝水。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -3.5821969509124756
+          },
+          {
+            "text": "阿远不再喜欢喝水了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -7.917247295379639
+          },
+          {
+            "text": "据我所知，阿远最喜欢的饮品是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 8,
+            "fact_logit": 0.5901525020599365
+          },
+          {
+            "text": "阿远偏爱的饮料是酸奶。",
+            "group": "positive",
+            "label": 7,
+            "prediction": 7,
+            "fact_logit": 0.29837766289711
+          },
+          {
+            "text": "阿远压根不爱喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.430294513702393
+          },
+          {
+            "text": "你知道阿远喜欢喝酸奶吗？",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.796995639801025
+          },
+          {
+            "text": "如果阿远喜欢喝酸奶就好了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.157938480377197
+          },
+          {
+            "text": "阿远曾经喜欢酸奶，后来怎样不清楚。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -5.63803243637085
+          },
+          {
+            "text": "阿远为同事准备了酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.6176881790161133
+          },
+          {
+            "text": "阿远猜自己也许喜欢酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -4.51179313659668
+          },
+          {
+            "text": "阿远说阿明最喜欢喝酸奶。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -2.8698039054870605
+          },
+          {
+            "text": "阿远不再喜欢喝酸奶了。",
+            "group": "negative",
+            "label": 8,
+            "prediction": 8,
+            "fact_logit": -7.401280879974365
+          }
+        ]
+      }
+    }
+  },
+  "limitations": [
+    "Synthetic small-scale templates, not independent real dialogue.",
+    "Threshold is selected on finite calibration data, not a false-write guarantee.",
+    "Only eight values; no entity, attribution, source trust, or actual writes.",
+    "No unsupported vocabulary coverage in this run."
+  ]
+}
