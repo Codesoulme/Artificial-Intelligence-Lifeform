@@ -1,0 +1,421 @@
+{
+  "status": "development_only_no_user_state",
+  "summary": {
+    "known_total": 4,
+    "baseline_known_correct_key": 4,
+    "gated_known_correct_key": 4,
+    "candidate_gated_known_correct_key": 4,
+    "unknown_total": 8,
+    "baseline_unknown_accepted": 8,
+    "gated_unknown_accepted": 3,
+    "candidate_gated_unknown_accepted": 1
+  },
+  "rows": [
+    {
+      "group": "known",
+      "question": "小林眼下喜欢喝哪种饮料？",
+      "expected_key": 6,
+      "selected_text": "小林",
+      "fingerprint_key": 6,
+      "runtime": {
+        "question": "小林眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "水",
+        "temporal_intent": 0,
+        "intent_logit": 3.788104772567749,
+        "entity_score": 0.9463045001029968,
+        "intent_recovered": false,
+        "indices": [
+          6,
+          6
+        ],
+        "similarities": [
+          0.9985180497169495,
+          0.9965364336967468
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 6
+      },
+      "candidate_selected_text": "小林",
+      "candidate_fingerprint_key": 6,
+      "baseline_accepted": true,
+      "gated_accepted": true,
+      "candidate_gated_accepted": true
+    },
+    {
+      "group": "known",
+      "question": "阿宁眼下喜欢喝哪种饮料？",
+      "expected_key": 22,
+      "selected_text": "阿宁",
+      "fingerprint_key": 22,
+      "runtime": {
+        "question": "阿宁眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "咖啡",
+        "temporal_intent": 0,
+        "intent_logit": 3.9859249591827393,
+        "entity_score": 0.9646088480949402,
+        "intent_recovered": false,
+        "indices": [
+          22,
+          22
+        ],
+        "similarities": [
+          0.9994678497314453,
+          0.9983007311820984
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 22
+      },
+      "candidate_selected_text": "阿宁",
+      "candidate_fingerprint_key": 22,
+      "baseline_accepted": true,
+      "gated_accepted": true,
+      "candidate_gated_accepted": true
+    },
+    {
+      "group": "known",
+      "question": "小雨眼下喜欢喝哪种饮料？",
+      "expected_key": 35,
+      "selected_text": "小雨",
+      "fingerprint_key": 35,
+      "runtime": {
+        "question": "小雨眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "牛奶",
+        "temporal_intent": 0,
+        "intent_logit": 3.2750561237335205,
+        "entity_score": 0.9356611371040344,
+        "intent_recovered": false,
+        "indices": [
+          35,
+          35
+        ],
+        "similarities": [
+          0.9985212087631226,
+          0.9961802959442139
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 35
+      },
+      "candidate_selected_text": "小雨",
+      "candidate_fingerprint_key": 35,
+      "baseline_accepted": true,
+      "gated_accepted": true,
+      "candidate_gated_accepted": true
+    },
+    {
+      "group": "known",
+      "question": "阿哲眼下喜欢喝哪种饮料？",
+      "expected_key": 51,
+      "selected_text": "阿哲",
+      "fingerprint_key": 51,
+      "runtime": {
+        "question": "阿哲眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "果汁",
+        "temporal_intent": 0,
+        "intent_logit": 3.9921300411224365,
+        "entity_score": 0.9562579989433289,
+        "intent_recovered": false,
+        "indices": [
+          51,
+          51
+        ],
+        "similarities": [
+          0.9995739459991455,
+          0.998460054397583
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 51
+      },
+      "candidate_selected_text": "阿哲",
+      "candidate_fingerprint_key": 51,
+      "baseline_accepted": true,
+      "gated_accepted": true,
+      "candidate_gated_accepted": true
+    },
+    {
+      "group": "unknown",
+      "question": "小林华眼下喜欢喝哪种饮料？",
+      "expected_key": null,
+      "selected_text": "小林",
+      "fingerprint_key": 6,
+      "runtime": {
+        "question": "小林华眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "水",
+        "temporal_intent": 0,
+        "intent_logit": 4.360546588897705,
+        "entity_score": 0.9606387615203857,
+        "intent_recovered": false,
+        "indices": [
+          6,
+          6
+        ],
+        "similarities": [
+          0.9985180497169495,
+          0.9965364336967468
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 6
+      },
+      "candidate_selected_text": "小林华",
+      "candidate_fingerprint_key": null,
+      "baseline_accepted": true,
+      "gated_accepted": true,
+      "candidate_gated_accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "林小林眼下喜欢喝哪种饮料？",
+      "expected_key": null,
+      "selected_text": "林小林",
+      "fingerprint_key": null,
+      "runtime": {
+        "question": "林小林眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "水",
+        "temporal_intent": 0,
+        "intent_logit": 4.336267948150635,
+        "entity_score": 0.9453392624855042,
+        "intent_recovered": false,
+        "indices": [
+          6,
+          6
+        ],
+        "similarities": [
+          0.9908002614974976,
+          0.9753937125205994
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 6
+      },
+      "candidate_selected_text": "林小林",
+      "candidate_fingerprint_key": null,
+      "baseline_accepted": true,
+      "gated_accepted": false,
+      "candidate_gated_accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "阿宁悦眼下喜欢喝哪种饮料？",
+      "expected_key": null,
+      "selected_text": "阿宁",
+      "fingerprint_key": 22,
+      "runtime": {
+        "question": "阿宁悦眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "咖啡",
+        "temporal_intent": 0,
+        "intent_logit": 2.766611337661743,
+        "entity_score": 0.9087710380554199,
+        "intent_recovered": true,
+        "indices": [
+          22,
+          22
+        ],
+        "similarities": [
+          0.9994678497314453,
+          0.9983007311820984
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 22
+      },
+      "candidate_selected_text": "阿宁悦",
+      "candidate_fingerprint_key": null,
+      "baseline_accepted": true,
+      "gated_accepted": true,
+      "candidate_gated_accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "宁阿宁眼下喜欢喝哪种饮料？",
+      "expected_key": null,
+      "selected_text": "宁阿宁",
+      "fingerprint_key": null,
+      "runtime": {
+        "question": "宁阿宁眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "咖啡",
+        "temporal_intent": 0,
+        "intent_logit": 2.7743165493011475,
+        "entity_score": 0.8955938220024109,
+        "intent_recovered": true,
+        "indices": [
+          22,
+          22
+        ],
+        "similarities": [
+          0.9676638841629028,
+          0.9350475668907166
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 22
+      },
+      "candidate_selected_text": "宁阿宁",
+      "candidate_fingerprint_key": null,
+      "baseline_accepted": true,
+      "gated_accepted": false,
+      "candidate_gated_accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "小雨晴眼下喜欢喝哪种饮料？",
+      "expected_key": null,
+      "selected_text": "小雨晴",
+      "fingerprint_key": null,
+      "runtime": {
+        "question": "小雨晴眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "牛奶",
+        "temporal_intent": 0,
+        "intent_logit": 3.3399577140808105,
+        "entity_score": 0.9185309410095215,
+        "intent_recovered": false,
+        "indices": [
+          35,
+          35
+        ],
+        "similarities": [
+          0.9863812923431396,
+          0.9630435705184937
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 35
+      },
+      "candidate_selected_text": "小雨",
+      "candidate_fingerprint_key": 35,
+      "baseline_accepted": true,
+      "gated_accepted": false,
+      "candidate_gated_accepted": true
+    },
+    {
+      "group": "unknown",
+      "question": "小小雨眼下喜欢喝哪种饮料？",
+      "expected_key": null,
+      "selected_text": "小小雨",
+      "fingerprint_key": null,
+      "runtime": {
+        "question": "小小雨眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "牛奶",
+        "temporal_intent": 0,
+        "intent_logit": 2.8065450191497803,
+        "entity_score": 0.8736984729766846,
+        "intent_recovered": true,
+        "indices": [
+          35,
+          35
+        ],
+        "similarities": [
+          0.9819392561912537,
+          0.9660711288452148
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 35
+      },
+      "candidate_selected_text": "小小雨",
+      "candidate_fingerprint_key": null,
+      "baseline_accepted": true,
+      "gated_accepted": false,
+      "candidate_gated_accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "阿哲轩眼下喜欢喝哪种饮料？",
+      "expected_key": null,
+      "selected_text": "阿哲",
+      "fingerprint_key": 51,
+      "runtime": {
+        "question": "阿哲轩眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "水",
+        "temporal_intent": 0,
+        "intent_logit": 4.571531772613525,
+        "entity_score": 0.9586424827575684,
+        "intent_recovered": false,
+        "indices": [
+          51,
+          51
+        ],
+        "similarities": [
+          0.9995739459991455,
+          0.998460054397583
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 51
+      },
+      "candidate_selected_text": "阿哲轩",
+      "candidate_fingerprint_key": null,
+      "baseline_accepted": true,
+      "gated_accepted": true,
+      "candidate_gated_accepted": false
+    },
+    {
+      "group": "unknown",
+      "question": "哲阿哲眼下喜欢喝哪种饮料？",
+      "expected_key": null,
+      "selected_text": "哲阿哲",
+      "fingerprint_key": null,
+      "runtime": {
+        "question": "哲阿哲眼下喜欢喝哪种饮料？",
+        "accepted": true,
+        "answer": "水",
+        "temporal_intent": 0,
+        "intent_logit": 3.9678292274475098,
+        "entity_score": 0.9128521084785461,
+        "intent_recovered": false,
+        "indices": [
+          51,
+          51
+        ],
+        "similarities": [
+          0.9747723340988159,
+          0.9521849155426025
+        ],
+        "memory_event_selection": null,
+        "reason": "routed",
+        "output_retry": false,
+        "key": 51
+      },
+      "candidate_selected_text": "哲阿哲",
+      "candidate_fingerprint_key": null,
+      "baseline_accepted": true,
+      "gated_accepted": false,
+      "candidate_gated_accepted": false
+    }
+  ],
+  "source_checkpoint_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "candidate_locator_sha256": "13bf8102f687c4ceb0b9729d8455426eabdf36fae7fab409c932587a7f2dd459",
+  "seconds": 102.15863639999952,
+  "limitations": [
+    "Authored development questions; a diagnostic, not an independent population test.",
+    "Names and keys are manually enrolled into an in-memory temporary individual.",
+    "Token offsets reconstruct predicted spans; truncation can match the wrong enrolled name.",
+    "The veto runs after generation for measurement and is not integrated into runtime.",
+    "No real user state was opened or modified; no automatic enrollment or write."
+  ]
+}

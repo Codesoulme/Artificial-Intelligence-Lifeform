@@ -1,0 +1,32 @@
+{
+  "status": "retrospective_development_analysis",
+  "results": [
+    {
+      "source": "deepseek-spora-fingerprint-route-audit-v2-20261111.json",
+      "source_sha256": "c7ec4725091898a2408f8fad951a28fac6902e5a2535225b24d51ad69625d9a1",
+      "summary": {
+        "known_total": 2,
+        "known_accepted": 2,
+        "unknown_total": 8,
+        "unknown_accepted": 0
+      }
+    },
+    {
+      "source": "deepseek-spora-fingerprint-fresh-audit-20261111.json",
+      "source_sha256": "d89f692d8f584646b2617a1b8bfefdc188b102b74aadc95e9492c402bb099732",
+      "summary": {
+        "known_total": 4,
+        "known_accepted": 4,
+        "unknown_total": 8,
+        "unknown_accepted": 0
+      }
+    }
+  ],
+  "limitations": [
+    "Conjunction was chosen after seeing both component results.",
+    "Both locators share a model and can make correlated errors.",
+    "Tiny authored samples are not independent safety evaluations.",
+    "This analysis does not evaluate factual answer correctness or perform inference.",
+    "The proposed conjunction is not integrated into runtime."
+  ]
+}
