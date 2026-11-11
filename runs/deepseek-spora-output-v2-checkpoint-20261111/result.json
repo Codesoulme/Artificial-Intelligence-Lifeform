@@ -1,0 +1,23 @@
+{
+  "status": "isolated_candidate_checkpoint",
+  "source_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "candidate_checkpoint_sha256": "4f2f5d9d875fec9e7a9f26fdf956db2ec164171e673d57c31763e4f080d8932f",
+  "candidate_adapter_sha256": "37b245d863145e8ae90d9594539971a8b48e053a0ddc059de7570bf3bdb096b3",
+  "individual_digest": "43f18da84cde510f0dee6e9bf00c9f2c9cfd3640ec090bfaef2d121dcda6efb3",
+  "independent_restore": {
+    "individual_digest": "43f18da84cde510f0dee6e9bf00c9f2c9cfd3640ec090bfaef2d121dcda6efb3",
+    "cursor": 2,
+    "adapter_config": {
+      "value_count": 17,
+      "vocab_size": 151936,
+      "rank": 32,
+      "max_scale": 8.0
+    },
+    "adapter_equal": true
+  },
+  "limitations": [
+    "Checkpoint still requires the external DeepSeek base.",
+    "Separate candidate; interactive runtime was not switched.",
+    "Parameter/state restore is not an end-to-end dialogue evaluation."
+  ]
+}

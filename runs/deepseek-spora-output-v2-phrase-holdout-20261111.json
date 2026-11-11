@@ -1,0 +1,447 @@
+{
+  "candidate_sha256": "37b245d863145e8ae90d9594539971a8b48e053a0ddc059de7570bf3bdb096b3",
+  "rows": [
+    {
+      "question": "从先前保存的资料来看，小岚当下想喝哪种饮料？",
+      "value": 0,
+      "adapter": "old",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "咖啡",
+      "exact": false
+    },
+    {
+      "question": "从先前保存的资料来看，小岚当下想喝哪种饮料？",
+      "value": 0,
+      "adapter": "candidate",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "茶",
+      "exact": true
+    },
+    {
+      "question": "从先前保存的资料来看，小岚当下想喝哪种饮料？",
+      "value": 2,
+      "adapter": "old",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "question": "从先前保存的资料来看，小岚当下想喝哪种饮料？",
+      "value": 2,
+      "adapter": "candidate",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "question": "从先前保存的资料来看，小岚当下想喝哪种饮料？",
+      "value": 5,
+      "adapter": "old",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "question": "从先前保存的资料来看，小岚当下想喝哪种饮料？",
+      "value": 5,
+      "adapter": "candidate",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "question": "从先前保存的资料来看，小岚当下想喝哪种饮料？",
+      "value": 7,
+      "adapter": "old",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "### 7",
+      "exact": false
+    },
+    {
+      "question": "从先前保存的资料来看，小岚当下想喝哪种饮料？",
+      "value": 7,
+      "adapter": "candidate",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "酸奶",
+      "exact": true
+    },
+    {
+      "question": "能否说出小岚目前所选择的饮品名称？",
+      "value": 0,
+      "adapter": "old",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "咖啡",
+      "exact": false
+    },
+    {
+      "question": "能否说出小岚目前所选择的饮品名称？",
+      "value": 0,
+      "adapter": "candidate",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "茶",
+      "exact": true
+    },
+    {
+      "question": "能否说出小岚目前所选择的饮品名称？",
+      "value": 2,
+      "adapter": "old",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "question": "能否说出小岚目前所选择的饮品名称？",
+      "value": 2,
+      "adapter": "candidate",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "question": "能否说出小岚目前所选择的饮品名称？",
+      "value": 5,
+      "adapter": "old",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "question": "能否说出小岚目前所选择的饮品名称？",
+      "value": 5,
+      "adapter": "candidate",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "question": "能否说出小岚目前所选择的饮品名称？",
+      "value": 7,
+      "adapter": "old",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "水",
+      "exact": false
+    },
+    {
+      "question": "能否说出小岚目前所选择的饮品名称？",
+      "value": 7,
+      "adapter": "candidate",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "酸奶",
+      "exact": true
+    },
+    {
+      "question": "有关小岚的饮料选择，记录的是哪一种？",
+      "value": 0,
+      "adapter": "old",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "茶",
+      "exact": true
+    },
+    {
+      "question": "有关小岚的饮料选择，记录的是哪一种？",
+      "value": 0,
+      "adapter": "candidate",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "茶",
+      "exact": true
+    },
+    {
+      "question": "有关小岚的饮料选择，记录的是哪一种？",
+      "value": 2,
+      "adapter": "old",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "question": "有关小岚的饮料选择，记录的是哪一种？",
+      "value": 2,
+      "adapter": "candidate",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "question": "有关小岚的饮料选择，记录的是哪一种？",
+      "value": 5,
+      "adapter": "old",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "5",
+      "exact": false
+    },
+    {
+      "question": "有关小岚的饮料选择，记录的是哪一种？",
+      "value": 5,
+      "adapter": "candidate",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "question": "有关小岚的饮料选择，记录的是哪一种？",
+      "value": 7,
+      "adapter": "old",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "酸奶",
+      "exact": true
+    },
+    {
+      "question": "有关小岚的饮料选择，记录的是哪一种？",
+      "value": 7,
+      "adapter": "candidate",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "酸奶",
+      "exact": true
+    },
+    {
+      "question": "从先前保存的资料来看，阿明当下想喝哪种饮料？",
+      "value": 0,
+      "adapter": "old",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "咖啡",
+      "exact": false
+    },
+    {
+      "question": "从先前保存的资料来看，阿明当下想喝哪种饮料？",
+      "value": 0,
+      "adapter": "candidate",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "茶",
+      "exact": true
+    },
+    {
+      "question": "从先前保存的资料来看，阿明当下想喝哪种饮料？",
+      "value": 2,
+      "adapter": "old",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "question": "从先前保存的资料来看，阿明当下想喝哪种饮料？",
+      "value": 2,
+      "adapter": "candidate",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "question": "从先前保存的资料来看，阿明当下想喝哪种饮料？",
+      "value": 5,
+      "adapter": "old",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "question": "从先前保存的资料来看，阿明当下想喝哪种饮料？",
+      "value": 5,
+      "adapter": "candidate",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "question": "从先前保存的资料来看，阿明当下想喝哪种饮料？",
+      "value": 7,
+      "adapter": "old",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "### 7",
+      "exact": false
+    },
+    {
+      "question": "从先前保存的资料来看，阿明当下想喝哪种饮料？",
+      "value": 7,
+      "adapter": "candidate",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "酸奶",
+      "exact": true
+    },
+    {
+      "question": "能否说出阿明目前所选择的饮品名称？",
+      "value": 0,
+      "adapter": "old",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "是的，我目前所选择的饮品名称是咖啡",
+      "exact": false
+    },
+    {
+      "question": "能否说出阿明目前所选择的饮品名称？",
+      "value": 0,
+      "adapter": "candidate",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "茶",
+      "exact": true
+    },
+    {
+      "question": "能否说出阿明目前所选择的饮品名称？",
+      "value": 2,
+      "adapter": "old",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "我只能记住当前正在思考的问题，无法回答这个问题。",
+      "exact": false
+    },
+    {
+      "question": "能否说出阿明目前所选择的饮品名称？",
+      "value": 2,
+      "adapter": "candidate",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "question": "能否说出阿明目前所选择的饮品名称？",
+      "value": 5,
+      "adapter": "old",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "question": "能否说出阿明目前所选择的饮品名称？",
+      "value": 5,
+      "adapter": "candidate",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "question": "能否说出阿明目前所选择的饮品名称？",
+      "value": 7,
+      "adapter": "old",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "水",
+      "exact": false
+    },
+    {
+      "question": "能否说出阿明目前所选择的饮品名称？",
+      "value": 7,
+      "adapter": "candidate",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "酸奶",
+      "exact": true
+    },
+    {
+      "question": "有关阿明的饮料选择，记录的是哪一种？",
+      "value": 0,
+      "adapter": "old",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "水",
+      "exact": false
+    },
+    {
+      "question": "有关阿明的饮料选择，记录的是哪一种？",
+      "value": 0,
+      "adapter": "candidate",
+      "expected": "茶",
+      "native_value": 0,
+      "answer": "茶",
+      "exact": true
+    },
+    {
+      "question": "有关阿明的饮料选择，记录的是哪一种？",
+      "value": 2,
+      "adapter": "old",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "question": "有关阿明的饮料选择，记录的是哪一种？",
+      "value": 2,
+      "adapter": "candidate",
+      "expected": "牛奶",
+      "native_value": 2,
+      "answer": "牛奶",
+      "exact": true
+    },
+    {
+      "question": "有关阿明的饮料选择，记录的是哪一种？",
+      "value": 5,
+      "adapter": "old",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "5",
+      "exact": false
+    },
+    {
+      "question": "有关阿明的饮料选择，记录的是哪一种？",
+      "value": 5,
+      "adapter": "candidate",
+      "expected": "可乐",
+      "native_value": 5,
+      "answer": "可乐",
+      "exact": true
+    },
+    {
+      "question": "有关阿明的饮料选择，记录的是哪一种？",
+      "value": 7,
+      "adapter": "old",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "水",
+      "exact": false
+    },
+    {
+      "question": "有关阿明的饮料选择，记录的是哪一种？",
+      "value": 7,
+      "adapter": "candidate",
+      "expected": "酸奶",
+      "native_value": 7,
+      "answer": "酸奶",
+      "exact": true
+    }
+  ],
+  "old_exact": 11,
+  "candidate_exact": 24,
+  "cases_per_adapter": 24,
+  "native_correct": 24,
+  "limitations": [
+    "Two names excluded from output-head training but known to the base and router.",
+    "Three authored templates and four finite value classes; candidate saw all value classes in training.",
+    "Addresses supplied directly; no full language routing or unknown memory tested.",
+    "Exact match can penalize correct longer or differently formatted answers."
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "status": "unified_route_entry_controlled_probe",
+  "rows": [
+    {
+      "question": "小林现在喜欢喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 2.765702962875366,
+      "entity_score": 0.994081437587738,
+      "intent_recovered": true,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "question": "小林改口以前喜欢什么饮料？",
+      "accepted": true,
+      "answer": "咖啡",
+      "temporal_intent": 1,
+      "intent_logit": 5.889869213104248,
+      "entity_score": 0.9941278696060181,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 2,
+        "effective_time": 2,
+        "candidate_count": 4,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "question": "小林后来喜欢喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 2,
+      "intent_logit": 3.7358553409576416,
+      "entity_score": 0.9908215999603271,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 3,
+        "effective_time": 3,
+        "candidate_count": 4,
+        "checked_events": 4,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "output_retry": false,
+      "key": 6
+    },
+    {
+      "question": "请给小林写一句鼓励的话。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -7.309793472290039,
+      "entity_score": 0.20956158638000488,
+      "reason": "unsupported_memory_predicate"
+    }
+  ],
+  "accepted": 3,
+  "rejected": 1,
+  "limitations": [
+    "One controlled entity and two finite values.",
+    "The key/value writes are supplied by the probe.",
+    "This is not an open-world or independent language evaluation."
+  ]
+}
