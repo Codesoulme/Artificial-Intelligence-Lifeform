@@ -58,6 +58,12 @@ def flatten(model, state):
             raise ValueError('Invalid identity fingerprint module')
         model.identity_fingerprints.validate(model)
         schema['identity_fingerprints'] = model.identity_fingerprints.config_dict()
+    if hasattr(model, 'historical_resolutions'):
+        from .historical_resolutions import HistoricalResolutions
+        if not isinstance(model.historical_resolutions, HistoricalResolutions):
+            raise ValueError('Invalid historical resolution module')
+        model.historical_resolutions.validate(model, state)
+        schema['historical_resolutions'] = model.historical_resolutions.config_dict()
     if hasattr(model, 'awake_core'):
         model.awake_core.validate()
         schema['awake_core'] = model.awake_core.config_dict()
@@ -107,6 +113,9 @@ def restore(schema, tensors, device='cpu'):
     if 'identity_fingerprints' in schema:
         from .identity_fingerprints import IdentityFingerprints
         model.identity_fingerprints = IdentityFingerprints(**schema['identity_fingerprints']).to(device)
+    if 'historical_resolutions' in schema:
+        from .historical_resolutions import HistoricalResolutions
+        model.historical_resolutions = HistoricalResolutions(**schema['historical_resolutions']).to(device)
     if 'awake_core' in schema:
         from .awake import AwakeCore, AwakeConfig
         model.awake_core = AwakeCore(AwakeConfig(**schema['awake_core'])).to(device)

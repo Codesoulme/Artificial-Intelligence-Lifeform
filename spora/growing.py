@@ -87,7 +87,7 @@ def scalars(state):
 
 
 def save(path,model,state,metadata=None):
-    if any(hasattr(model, name) for name in ('semantic_memory', 'skill_policy', 'write_control', 'time_world', 'awake_core', 'chinese_query', 'named_address_binding', 'identity_fingerprints')) or state.internal is not None or state.runtime is not None or any(isinstance(page,SealedPage) for page in state.pages):
+    if any(hasattr(model, name) for name in ('semantic_memory', 'skill_policy', 'write_control', 'time_world', 'awake_core', 'chinese_query', 'named_address_binding', 'identity_fingerprints', 'historical_resolutions')) or state.internal is not None or state.runtime is not None or any(isinstance(page,SealedPage) for page in state.pages):
         from .state_codec import flatten
         schema,tensors=flatten(model,state)
         if not all(bool(torch.isfinite(x).all()) for x in tensors.values()):raise ValueError('Nonfinite state; preserve old file')

@@ -23,6 +23,12 @@ def select_event(model, state, key, order, as_of=None, max_scan=4096, batch_size
         return {'status': 'abstain', 'reason': 'incomplete_provenance_history'}
     if state.cursor > max_scan:
         return {'status': 'abstain', 'reason': 'scan_budget_exceeded'}
+    resolutions = getattr(model, 'historical_resolutions', None)
+    if resolutions is not None:
+        from spora.historical_resolutions import HistoricalResolutions
+        if not isinstance(resolutions, HistoricalResolutions):
+            raise ValueError('Invalid historical resolutions')
+        resolutions.validate(model, state)
     rows = read_provenance_batch(model, state, [(key, event) for event in range(state.cursor)], batch_size)
     candidates = []
     effective_candidates = {}
@@ -39,7 +45,12 @@ def select_event(model, state, key, order, as_of=None, max_scan=4096, batch_size
         if effective and row.get('action') == 'defer' and row.get('source') in ('direct', 'report'):
             valid_at = row.get('valid_at')
             if type(valid_at) is not int or valid_at < 0 or valid_at <= as_of:
-                return {'status': 'abstain', 'reason': 'unresolved_factual_observation', 'event_time': event}
+                entry = None if resolutions is None else resolutions.verify(model, state, key, event, row)
+                if entry is None:
+                    return {'status': 'abstain', 'reason': 'unresolved_factual_observation', 'event_time': event}
+                if entry['decision'] == 'confirm':
+                    effective_candidates[valid_at] = max(event, effective_candidates.get(valid_at, -1))
+                continue
         if row.get('action') in ('new', 'correct'):
             candidates.append(event)
             if effective:

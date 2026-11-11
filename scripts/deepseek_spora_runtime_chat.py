@@ -214,14 +214,18 @@ class SporaChat:
         return result
 
 
-def load_chat():
+def load_chat(*, base_loader=None):
     if sha(MODEL/'model.safetensors') != WEIGHT_SHA or not CHECKPOINT.exists():
         raise ValueError('Protected model or integrated checkpoint unavailable')
     checkpoint = WORKING_CHECKPOINT if WORKING_CHECKPOINT.exists() else CHECKPOINT
     working_sha = sha(checkpoint) if checkpoint == WORKING_CHECKPOINT else None
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
-    base = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False,
-                                                torch_dtype=torch.float16, attn_implementation='sdpa').to('cuda').eval()
+    if base_loader is None:
+        base = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False,
+                                                    torch_dtype=torch.float16, attn_implementation='sdpa').to('cuda').eval()
+    else:
+        # Research seam: the caller owns in-memory base-weight provenance.
+        base = base_loader().eval()
     base.requires_grad_(False)
     decoder, organism, state = load_integrated(checkpoint, base, MODEL, individual_device='cuda')
     router_report = json.loads((ROUTER/'result.json').read_text(encoding='utf-8'))

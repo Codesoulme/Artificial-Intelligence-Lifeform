@@ -13,6 +13,7 @@ from spora.integrated_checkpoint import (_digest, IntegratedSPORARuntime, load_i
 from spora.integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
 from spora.internal_memory import WriteControl, attach, read_provenance
 from spora.identity_fingerprints import IdentityFingerprints
+from spora.historical_resolutions import HistoricalResolutions
 from spora.memory_output import MemoryOutputAdapter
 from spora.language_training import frozen_digest
 from spora.named_address import NamedAddressBinding, address_basis_sha256, feature_files_sha256
@@ -75,6 +76,21 @@ class IntegratedCheckpointTests(unittest.TestCase):
         _, organism, _ = load_integrated(self.path, self.base(), self.root)
         self.assertEqual(organism.identity_fingerprints.lookup('小林'), 6)
         self.assertIsNone(organism.identity_fingerprints.lookup('小林子'))
+
+    def test_historical_resolution_survives_integrated_checkpoint(self):
+        self.state.cursor = 3
+        self.organism.historical_resolutions = HistoricalResolutions(self.organism.config.key_count, 4)
+        logits = torch.zeros(1, self.organism.config.value_count)
+        logits[0, 3] = 1
+        provenance = {'action': 'defer', 'source': 'direct', 'valid_at': 1}
+        with patch('spora.historical_resolutions.read_provenance', return_value=provenance), \
+             patch('spora.historical_resolutions.query', return_value=logits):
+            self.organism.historical_resolutions.record(self.organism, self.state, 1, 2,
+                                                       value=3, valid_at=1, decision='confirm')
+        self.save()
+        _, organism, state = load_integrated(self.path, self.base(), self.root)
+        self.assertEqual(organism.historical_resolutions.lookup(1, 2)['decision'], 'confirm')
+        self.assertEqual(frozen_digest(organism, state), frozen_digest(self.organism, self.state))
 
     def test_native_spora_reader_roundtrip_preserves_outputs(self):
         legacy = self.reader
