@@ -1,0 +1,2729 @@
+{
+  "results": {
+    "prior_router": {
+      "threshold": 0.9130351676216125,
+      "groups": {
+        "fresh_beverage": {
+          "total": 30,
+          "representable": 30,
+          "exact_span": 30,
+          "accepted": 26,
+          "correct_address": 26
+        },
+        "multiple_names": {
+          "total": 6,
+          "representable": 0,
+          "exact_span": 0,
+          "accepted": 0,
+          "correct_address": 0
+        },
+        "no_name": {
+          "total": 6,
+          "representable": 0,
+          "exact_span": 0,
+          "accepted": 0,
+          "correct_address": 0
+        },
+        "numeric_known": {
+          "total": 20,
+          "representable": 20,
+          "exact_span": 20,
+          "accepted": 17,
+          "correct_address": 17
+        },
+        "temporal_development": {
+          "total": 9,
+          "representable": 7,
+          "exact_span": 4,
+          "accepted": 6,
+          "correct_address": 6
+        },
+        "unbound": {
+          "total": 6,
+          "representable": 6,
+          "exact_span": 6,
+          "accepted": 0,
+          "correct_address": 0
+        }
+      },
+      "rows": [
+        {
+          "question": "小林眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9942903518676758,
+            0.9792507886886597
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小林的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9952441453933716,
+            0.9619696736335754
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，小林目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9936226010322571,
+            0.9620022177696228
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，小林最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9978090524673462,
+            0.972038984298706
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，小林更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9935399293899536,
+            0.9673155546188354
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿宁眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 22,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9971571564674377,
+            0.9798222780227661
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿宁的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 22,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9969176650047302,
+            0.9685207605361938
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，阿宁目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 22,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.995802640914917,
+            0.9570118188858032
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，阿宁最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 22,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9945660829544067,
+            0.9781352877616882
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，阿宁更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 22,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.996065080165863,
+            0.9742878079414368
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小雨眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 35,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.9944369792938232,
+            0.9758824110031128
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小雨的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 35,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.9972214698791504,
+            0.9782751798629761
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，小雨目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 35,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.99272620677948,
+            0.9694222807884216
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，小雨最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 35,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.9949316382408142,
+            0.9658797979354858
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，小雨更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 35,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.9933283925056458,
+            0.9659090638160706
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿哲眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 51,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9979521036148071,
+            0.9807370901107788
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿哲的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 51,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9928218126296997,
+            0.9706714749336243
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，阿哲目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 51,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9926384091377258,
+            0.9717962145805359
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，阿哲最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 51,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9929311275482178,
+            0.9721953868865967
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，阿哲更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 51,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9915401935577393,
+            0.9727040529251099
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小梅眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 16,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9964110851287842,
+            0.9520878195762634
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小梅的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 16,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9970372915267944,
+            0.9548240303993225
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，小梅目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 16,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9933415651321411,
+            0.9130879640579224
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，小梅最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 16,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9941402673721313,
+            0.9342537522315979
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，小梅更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 16,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9900342226028442,
+            0.9327138662338257
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿远眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 27,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9974738955497742,
+            0.9787214994430542
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿远的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 27,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.994543731212616,
+            0.9669329524040222
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，阿远目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 27,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9940048456192017,
+            0.9450860619544983
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，阿远最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 27,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.995058536529541,
+            0.9660413265228271
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，阿远更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 27,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9934265613555908,
+            0.9607564806938171
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小岚眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 42,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9967604875564575,
+            0.9926152229309082
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小岚的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 42,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9940065741539001,
+            0.990784227848053
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，小岚目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 42,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9940789937973022,
+            0.9802662134170532
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，小岚最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 42,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9946504831314087,
+            0.9863585233688354
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，小岚更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 42,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.991539478302002,
+            0.987678050994873
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿明眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 10,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9964123368263245,
+            0.9617570638656616
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿明的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 10,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.987727701663971,
+            0.9357174038887024
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，阿明目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 10,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9893386363983154,
+            0.9532853364944458
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，阿明最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 10,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.985876202583313,
+            0.9469224214553833
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，阿明更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 10,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9843172430992126,
+            0.9536004066467285
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿松眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 0,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9916162490844727,
+            0.9326769113540649
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿松的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 0,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9881474375724792,
+            0.9016271829605103
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "在保存的信息中，阿松目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 0,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9875186681747437,
+            0.9248630404472351
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，阿松最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 0,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9813513159751892,
+            0.9131483435630798
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，阿松更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 0,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9803632497787476,
+            0.9077743291854858
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小雪眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 1,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9807652235031128,
+            0.9049488306045532
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "我想知道小雪的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 1,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.986147403717041,
+            0.8734900951385498
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "在保存的信息中，小雪目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 1,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9787625074386597,
+            0.8536136746406555
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改记录以前，小雪最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 1,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9844368696212769,
+            0.8839846253395081
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改之后，小雪更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 1,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9791907072067261,
+            0.8750858306884766
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小林现阶段爱喝哪种饮料？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": false,
+          "span_representable": true,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "截至目前，小林的饮品偏好是什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9942004680633545,
+            0.9747800827026367
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "现在记录的小林最爱喝什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": null,
+          "span_representable": false,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9943703413009644,
+            0.9542539119720459
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小林原先爱喝哪种饮料？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": false,
+          "span_representable": true,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "变更以前，小林的饮品偏好是什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9943897724151611,
+            0.9661713242530823
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "之前记录的小林最爱喝什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": null,
+          "span_representable": false,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9973849058151245,
+            0.9399799108505249
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小林变更以后爱喝哪种饮料？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": false,
+          "span_representable": true,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "后续记录中，小林的饮品偏好是什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9942508339881897,
+            0.9764667749404907
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改完成后，小林最爱喝什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9950577020645142,
+            0.9662326574325562
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，阿禾目前爱喝哪种饮料？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.6119565367698669,
+            0.6879766583442688
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改记录以前，阿禾最喜欢哪种饮品？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.5757054090499878,
+            0.7222527265548706
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改之后，阿禾更喜欢喝什么？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.6370429992675781,
+            0.7282584309577942
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "在保存的信息中，小青目前爱喝哪种饮料？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.6857722401618958,
+            0.6205159425735474
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改记录以前，小青最喜欢哪种饮品？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.7346680760383606,
+            0.6417893171310425
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改之后，小青更喜欢喝什么？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.6958650350570679,
+            0.6316672563552856
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "现在是什么数字？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "刚才记住的内容有哪些？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "给我一个放松建议。",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "你可以帮我写诗吗？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "目前保存了多少？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "我想知道最新消息。",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小林和阿宁各记了什么数？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.7290306091308594,
+            0.7372899055480957
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小雨与阿哲的数字相同吗？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "比较小梅和阿远的值。",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小岚与阿明各是多少？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "阿松和小雪现在记录的数字？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.8296265006065369,
+            0.7073838710784912
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小青和阿禾的数值是什么？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            35
+          ],
+          "similarities": [
+            0.47758734226226807,
+            0.5812294483184814
+          ],
+          "correct_address": false
+        }
+      ]
+    },
+    "recalibrated_router": {
+      "threshold": 0.9895191921463012,
+      "groups": {
+        "fresh_beverage": {
+          "total": 30,
+          "representable": 30,
+          "exact_span": 30,
+          "accepted": 16,
+          "correct_address": 16
+        },
+        "multiple_names": {
+          "total": 6,
+          "representable": 0,
+          "exact_span": 0,
+          "accepted": 0,
+          "correct_address": 0
+        },
+        "no_name": {
+          "total": 6,
+          "representable": 0,
+          "exact_span": 0,
+          "accepted": 0,
+          "correct_address": 0
+        },
+        "numeric_known": {
+          "total": 20,
+          "representable": 20,
+          "exact_span": 20,
+          "accepted": 17,
+          "correct_address": 17
+        },
+        "temporal_development": {
+          "total": 9,
+          "representable": 7,
+          "exact_span": 7,
+          "accepted": 6,
+          "correct_address": 6
+        },
+        "unbound": {
+          "total": 6,
+          "representable": 6,
+          "exact_span": 6,
+          "accepted": 0,
+          "correct_address": 0
+        }
+      },
+      "rows": [
+        {
+          "question": "小林眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9985266923904419,
+            0.9962584972381592
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小林的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.997957706451416,
+            0.9901052117347717
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，小林目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9980993270874023,
+            0.9916960597038269
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，小林最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9987332224845886,
+            0.992855429649353
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，小林更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.998890221118927,
+            0.9904323816299438
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿宁眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 22,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9994622468948364,
+            0.9980887770652771
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿宁的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 22,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.997870922088623,
+            0.9923805594444275
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，阿宁目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 22,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9988207817077637,
+            0.9845118522644043
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改记录以前，阿宁最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 22,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9973046183586121,
+            0.9888625741004944
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改之后，阿宁更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 22,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.9981057047843933,
+            0.9871065616607666
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小雨眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 35,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.9985216856002808,
+            0.9961650967597961
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小雨的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 35,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.9985437989234924,
+            0.9929889440536499
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，小雨目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 35,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.9975910186767578,
+            0.9907896518707275
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，小雨最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 35,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.9979976415634155,
+            0.9880680441856384
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改之后，小雨更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 35,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            35,
+            35
+          ],
+          "similarities": [
+            0.998849093914032,
+            0.9887267351150513
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "阿哲眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 51,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9995774626731873,
+            0.9982501268386841
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿哲的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 51,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9955110549926758,
+            0.9903656840324402
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，阿哲目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 51,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9977591633796692,
+            0.9922163486480713
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，阿哲最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 51,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9967150688171387,
+            0.9904370307922363
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，阿哲更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 51,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            51,
+            51
+          ],
+          "similarities": [
+            0.9967976808547974,
+            0.9911636114120483
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小梅眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 16,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9990917444229126,
+            0.9966191053390503
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小梅的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 16,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9981442093849182,
+            0.9923675060272217
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，小梅目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 16,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9984394311904907,
+            0.984643816947937
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改记录以前，小梅最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 16,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9978183507919312,
+            0.9857149124145508
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改之后，小梅更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 16,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            16,
+            16
+          ],
+          "similarities": [
+            0.9984344244003296,
+            0.9834498167037964
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "阿远眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 27,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9995118975639343,
+            0.9988628625869751
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿远的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 27,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9959028363227844,
+            0.9887589812278748
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "在保存的信息中，阿远目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 27,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9986666440963745,
+            0.9875762462615967
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改记录以前，阿远最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 27,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9988664388656616,
+            0.9933399558067322
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，阿远更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 27,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            27,
+            27
+          ],
+          "similarities": [
+            0.9983887672424316,
+            0.99222731590271
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "小岚眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 42,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9992214441299438,
+            0.9994701147079468
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小岚的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 42,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9973376393318176,
+            0.9943593740463257
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，小岚目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 42,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9988746047019958,
+            0.9950767755508423
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，小岚最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 42,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9979346990585327,
+            0.9922267198562622
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，小岚更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 42,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            42,
+            42
+          ],
+          "similarities": [
+            0.9981314539909363,
+            0.9942704439163208
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿明眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 10,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9993442296981812,
+            0.9971882104873657
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿明的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 10,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9920247793197632,
+            0.9909753799438477
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "在保存的信息中，阿明目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 10,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9982236623764038,
+            0.9943591356277466
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，阿明最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 10,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9971387982368469,
+            0.9914060831069946
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改之后，阿明更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 10,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            10,
+            10
+          ],
+          "similarities": [
+            0.9955523014068604,
+            0.9950631260871887
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "阿松眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 0,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9994702339172363,
+            0.9965817928314209
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道阿松的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 0,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9962095022201538,
+            0.98118656873703
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "在保存的信息中，阿松目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 0,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9981183409690857,
+            0.9898911714553833
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改记录以前，阿松最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 0,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9962500929832458,
+            0.9856237173080444
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改之后，阿松更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 0,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            0,
+            0
+          ],
+          "similarities": [
+            0.9967886209487915,
+            0.9876095652580261
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小雪眼下记着什么数？",
+          "group": "numeric_known",
+          "expected_key": 1,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9983810782432556,
+            0.9951648712158203
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "我想知道小雪的最新数字。",
+          "group": "numeric_known",
+          "expected_key": 1,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9976609945297241,
+            0.9844343066215515
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "在保存的信息中，小雪目前爱喝哪种饮料？",
+          "group": "fresh_beverage",
+          "expected_key": 1,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9973707795143127,
+            0.9799175262451172
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改记录以前，小雪最喜欢哪种饮品？",
+          "group": "fresh_beverage",
+          "expected_key": 1,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.99802166223526,
+            0.9839688539505005
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改之后，小雪更喜欢喝什么？",
+          "group": "fresh_beverage",
+          "expected_key": 1,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            1,
+            1
+          ],
+          "similarities": [
+            0.9984325170516968,
+            0.9814308881759644
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小林现阶段爱喝哪种饮料？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9985266923904419,
+            0.9962584972381592
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "截至目前，小林的饮品偏好是什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9985262751579285,
+            0.9941210746765137
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "现在记录的小林最爱喝什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": null,
+          "span_representable": false,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9650539755821228,
+            0.964337944984436
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小林原先爱喝哪种饮料？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9985266923904419,
+            0.9962584972381592
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "变更以前，小林的饮品偏好是什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9981896877288818,
+            0.9920143485069275
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "之前记录的小林最爱喝什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": null,
+          "span_representable": false,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9679322242736816,
+            0.9658104181289673
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "小林变更以后爱喝哪种饮料？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9985266923904419,
+            0.9962584972381592
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "后续记录中，小林的饮品偏好是什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": true,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9979920387268066,
+            0.9956009387969971
+          ],
+          "correct_address": true
+        },
+        {
+          "question": "修改完成后，小林最爱喝什么？",
+          "group": "temporal_development",
+          "expected_key": 6,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.9994893670082092,
+            0.9854215383529663
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "在保存的信息中，阿禾目前爱喝哪种饮料？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.5578806400299072,
+            0.6852818727493286
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改记录以前，阿禾最喜欢哪种饮品？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            51,
+            22
+          ],
+          "similarities": [
+            0.5813926458358765,
+            0.6836545467376709
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改之后，阿禾更喜欢喝什么？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            22,
+            22
+          ],
+          "similarities": [
+            0.5840075016021729,
+            0.7152807712554932
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "在保存的信息中，小青目前爱喝哪种饮料？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.6858500838279724,
+            0.6785348653793335
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改记录以前，小青最喜欢哪种饮品？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.7210480570793152,
+            0.6900859475135803
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "修改之后，小青更喜欢喝什么？",
+          "group": "unbound",
+          "expected_key": null,
+          "span_exact": true,
+          "span_representable": true,
+          "single_span": true,
+          "accepted": false,
+          "indices": [
+            6,
+            6
+          ],
+          "similarities": [
+            0.6834369897842407,
+            0.6821134090423584
+          ],
+          "correct_address": false
+        },
+        {
+          "question": "现在是什么数字？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "刚才记住的内容有哪些？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "给我一个放松建议。",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "你可以帮我写诗吗？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "目前保存了多少？",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "我想知道最新消息。",
+          "group": "no_name",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小林和阿宁各记了什么数？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小雨与阿哲的数字相同吗？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "比较小梅和阿远的值。",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小岚与阿明各是多少？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "阿松和小雪现在记录的数字？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        },
+        {
+          "question": "小青和阿禾的数值是什么？",
+          "group": "multiple_names",
+          "expected_key": null,
+          "span_exact": null,
+          "span_representable": null,
+          "single_span": false,
+          "accepted": false,
+          "correct_address": false
+        }
+      ]
+    }
+  },
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "feature_config_sha256": "6e8dfbb504fa35aead3329dfe76649dc29c9419aee7b146a094d5483a17ec351",
+  "feature_variant_sha256": "d0a77996e751d5649ceb5ee2d41138553e01d174a73aeba63fe45cb514cf1291",
+  "basis_sha256": "f56882d3ae18db4e3e55cf07a1780f2b8e9d2ecc99691070d2e4601b404798ea",
+  "candidate_sha256": {
+    "6": "895309c6fbf29a97c39b89373898afc3eadb30bab8bc43b2c3ca80ac445e14b9",
+    "12": "8b28b5430af1a3e15613497dd0ab7cc6320a239195d93430599539cea048ed43"
+  },
+  "old_locator_sha256": "7f2d90453fa5f3768ba30925afc54a814b55ef9262b89bf13285960d1e84f15a",
+  "old_projection_sha256": "b782388e60a6bb132c893475e00d4f3b3e00e43eef606eceda080b71719de519",
+  "router_sha256": "f5793f4f2fcd7e5724528a300a1e4ecf01ca0491b3c149eaf851530905d306e4",
+  "train_positive": 96,
+  "train_negative": 16,
+  "dropped_unrepresentable_training": [],
+  "unrepresentable_held": [
+    "现在记录的小林最爱喝什么？",
+    "之前记录的小林最爱喝什么？"
+  ],
+  "held": 77,
+  "trace": [
+    {
+      "step": 1,
+      "loss": 0.33303096890449524
+    },
+    {
+      "step": 100,
+      "loss": 0.01529410295188427
+    },
+    {
+      "step": 200,
+      "loss": 0.006176722701638937
+    },
+    {
+      "step": 400,
+      "loss": 0.0023216125555336475
+    }
+  ],
+  "elapsed_seconds": 122.51045259996317,
+  "peak_allocated_bytes": 3852393984,
+  "limitations": [
+    "All ten bound names and their addresses were supervised during training.",
+    "Most names and some held templates were used in prior development.",
+    "Fresh beverage templates are synthetic and only one fact domain is tested.",
+    "Multiple-name and unbound samples are few; not a safe open-world router.",
+    "No generation, event-time selection, autonomous writing or conversation evaluated.",
+    "Threshold selected on training similarities, not calibrated uncertainty."
+  ]
+}

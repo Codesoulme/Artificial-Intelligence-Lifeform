@@ -38,6 +38,7 @@ from spora.named_address import address_basis_sha256, feature_files_sha256
 OUTPUT = ROOT/'runs/deepseek-spora-independent-route-audit-20261111.json'
 TEMPORAL_CHECKPOINT = ROOT/'runs/deepseek-spora-temporal-gate-train-20261111/temporal.pt'
 INTENT_CHECKPOINT_DIR = INTENT
+CANDIDATE_SOURCE = SOURCE
 
 # None labels are intentional negative controls. These formulations were not
 # used in the existing gate-training files.
@@ -135,7 +136,7 @@ def run():
             or temporal_data.get('classes') != ['current', 'past', 'later', 'abstain']):
         raise ValueError('Temporal gate provenance mismatch')
     temporal.load_state_dict(temporal_data['state'], strict=True)
-    blocks = {i: _load_candidate(SOURCE/f'layer-{i}.pt', i, base).eval() for i in (6, 12)}
+    blocks = {i: _load_candidate(CANDIDATE_SOURCE/f'layer-{i}.pt', i, base).eval() for i in (6, 12)}
     if replacement_feature_variant_sha256(MODEL, blocks) != router_data['feature_variant_sha256']:
         raise ValueError('Structural variant mismatch')
     for i, block in blocks.items():
@@ -215,6 +216,8 @@ def run():
             print(json.dumps({'index': i, 'accepted': row['accepted'], 'route_correct': row['route_correct']}, ensure_ascii=False), flush=True)
     report = {'status': 'independent_authored_chinese_route_audit', 'base_sha256': WEIGHT_SHA,
               'intent_sha256': sha(INTENT_CHECKPOINT_DIR/'intent.pt'),
+              'candidate_source': str(CANDIDATE_SOURCE),
+              'candidate_sha256': {str(i): sha(CANDIDATE_SOURCE/f'layer-{i}.pt') for i in (6, 12)},
               'temporal_sha256': sha(TEMPORAL_CHECKPOINT),
               'individual_sha256': INDIVIDUAL_SHA, 'case_count': len(CASES),
               'positive_total': sum(c['label'] is not None for c in CASES),

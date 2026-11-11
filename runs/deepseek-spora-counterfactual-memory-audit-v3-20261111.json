@@ -1,0 +1,332 @@
+{
+  "status": "controlled_counterfactual_development_audit",
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "source_sha256": "bf5f036bbadac54bb03314d66400bab6ce02caccf5559fe36b19d6f66454a4db",
+  "candidate_source": "D:\\SPORA\\runs\\deepseek-spora-memory-answer-distill-v4-20261111",
+  "candidate_sha256": {
+    "6": "895309c6fbf29a97c39b89373898afc3eadb30bab8bc43b2c3ca80ac445e14b9",
+    "12": "8b28b5430af1a3e15613497dd0ab7cc6320a239195d93430599539cea048ed43"
+  },
+  "rows": [
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "请用一句话说明小林当前最喜欢的饮料。",
+      "condition": "original_base_no_memory",
+      "expected_word": null,
+      "native_value": null,
+      "answer": "小林最喜欢的饮料是咖啡。",
+      "tokens": 8,
+      "contains_expected": null,
+      "contains_other": null
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "请用一句话说明小林当前最喜欢的饮料。",
+      "condition": "candidate_no_memory",
+      "expected_word": null,
+      "native_value": null,
+      "answer": "小林最喜欢的饮料是咖啡。",
+      "tokens": 8,
+      "contains_expected": null,
+      "contains_other": null
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "请用一句话说明小林当前最喜欢的饮料。",
+      "condition": "original_reader_value_1",
+      "expected_word": "咖啡",
+      "native_value": 1,
+      "answer": "小林最喜欢的饮料是他的最爱，每天都会尝试不同的口味。",
+      "tokens": 15,
+      "contains_expected": false,
+      "contains_other": false
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "请用一句话说明小林当前最喜欢的饮料。",
+      "condition": "original_reader_value_6",
+      "expected_word": "水",
+      "native_value": 6,
+      "answer": "小林当前最喜欢的饮料是某一种。",
+      "tokens": 10,
+      "contains_expected": false,
+      "contains_other": false
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "请用一句话说明小林当前最喜欢的饮料。",
+      "condition": "candidate_value_1",
+      "expected_word": "咖啡",
+      "native_value": 1,
+      "answer": "咖啡",
+      "tokens": 2,
+      "contains_expected": true,
+      "contains_other": false
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "请用一句话说明小林当前最喜欢的饮料。",
+      "condition": "candidate_value_6",
+      "expected_word": "水",
+      "native_value": 6,
+      "answer": "小林当前最喜欢的饮料是啤酒。",
+      "tokens": 9,
+      "contains_expected": false,
+      "contains_other": false
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "condition": "original_base_no_memory",
+      "expected_word": null,
+      "native_value": null,
+      "answer": "您好，建议您联网获取时效性较强的信息；如果还有其他问题需要帮助，请随时告诉我！",
+      "tokens": 22,
+      "contains_expected": null,
+      "contains_other": null
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "condition": "candidate_no_memory",
+      "expected_word": null,
+      "native_value": null,
+      "answer": "您好！我是由中国的深度求索公司开发的智能助手。有关您的问题我会尽我所能为您提供帮助。",
+      "tokens": 25,
+      "contains_expected": null,
+      "contains_other": null
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "condition": "original_reader_value_1",
+      "expected_word": "咖啡",
+      "native_value": 1,
+      "answer": "在我们这个情况下，我无法回答这个问题。",
+      "tokens": 11,
+      "contains_expected": false,
+      "contains_other": false
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "condition": "original_reader_value_6",
+      "expected_word": "水",
+      "native_value": 6,
+      "answer": "水",
+      "tokens": 2,
+      "contains_expected": true,
+      "contains_other": false
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "condition": "candidate_value_1",
+      "expected_word": "咖啡",
+      "native_value": 1,
+      "answer": "咖啡",
+      "tokens": 2,
+      "contains_expected": true,
+      "contains_other": false
+    },
+    {
+      "name": "小林",
+      "key": 6,
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "condition": "candidate_value_6",
+      "expected_word": "水",
+      "native_value": 6,
+      "answer": "水",
+      "tokens": 2,
+      "contains_expected": true,
+      "contains_other": false
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "请用一句话说明小岚当前最喜欢的饮料。",
+      "condition": "original_base_no_memory",
+      "expected_word": null,
+      "native_value": null,
+      "answer": "小岚最喜欢的饮料是她最喜欢的口味，她喜欢尝试不同的饮料，所以她会根据自己的口味选择自己喜欢的饮料。",
+      "tokens": 27,
+      "contains_expected": null,
+      "contains_other": null
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "请用一句话说明小岚当前最喜欢的饮料。",
+      "condition": "candidate_no_memory",
+      "expected_word": null,
+      "native_value": null,
+      "answer": "小岚最喜欢的饮料是可乐。",
+      "tokens": 9,
+      "contains_expected": null,
+      "contains_other": null
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "请用一句话说明小岚当前最喜欢的饮料。",
+      "condition": "original_reader_value_1",
+      "expected_word": "咖啡",
+      "native_value": 1,
+      "answer": "小岚的最喜欢的饮料是她最喜欢的，因为它充满了她的快乐和满足。",
+      "tokens": 17,
+      "contains_expected": false,
+      "contains_other": false
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "请用一句话说明小岚当前最喜欢的饮料。",
+      "condition": "original_reader_value_6",
+      "expected_word": "水",
+      "native_value": 6,
+      "answer": "小岚当前最喜欢的饮料是某一种特定的饮料。",
+      "tokens": 13,
+      "contains_expected": false,
+      "contains_other": false
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "请用一句话说明小岚当前最喜欢的饮料。",
+      "condition": "candidate_value_1",
+      "expected_word": "咖啡",
+      "native_value": 1,
+      "answer": "咖啡",
+      "tokens": 2,
+      "contains_expected": true,
+      "contains_other": false
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "请用一句话说明小岚当前最喜欢的饮料。",
+      "condition": "candidate_value_6",
+      "expected_word": "水",
+      "native_value": 6,
+      "answer": "小岚喜欢喝果汁",
+      "tokens": 6,
+      "contains_expected": false,
+      "contains_other": false
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "根据保存的偏好，小岚此刻愿意喝什么？",
+      "condition": "original_base_no_memory",
+      "expected_word": null,
+      "native_value": null,
+      "answer": "您好，建议您联网获取时效性较强的信息；如果还有其他问题需要帮助，请随时告诉我！",
+      "tokens": 22,
+      "contains_expected": null,
+      "contains_other": null
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "根据保存的偏好，小岚此刻愿意喝什么？",
+      "condition": "candidate_no_memory",
+      "expected_word": null,
+      "native_value": null,
+      "answer": "您好！我是由中国的深度求索公司开发的智能助手。有关您的问题我会尽我所能为您提供帮助。",
+      "tokens": 25,
+      "contains_expected": null,
+      "contains_other": null
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "根据保存的偏好，小岚此刻愿意喝什么？",
+      "condition": "original_reader_value_1",
+      "expected_word": "咖啡",
+      "native_value": 1,
+      "answer": "在我们这个情况下，我无法提供具体建议，因为我的知识截止日期是2023年7月。",
+      "tokens": 26,
+      "contains_expected": false,
+      "contains_other": false
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "根据保存的偏好，小岚此刻愿意喝什么？",
+      "condition": "original_reader_value_6",
+      "expected_word": "水",
+      "native_value": 6,
+      "answer": "水",
+      "tokens": 2,
+      "contains_expected": true,
+      "contains_other": false
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "根据保存的偏好，小岚此刻愿意喝什么？",
+      "condition": "candidate_value_1",
+      "expected_word": "咖啡",
+      "native_value": 1,
+      "answer": "咖啡",
+      "tokens": 2,
+      "contains_expected": true,
+      "contains_other": false
+    },
+    {
+      "name": "小岚",
+      "key": 42,
+      "question": "根据保存的偏好，小岚此刻愿意喝什么？",
+      "condition": "candidate_value_6",
+      "expected_word": "水",
+      "native_value": 6,
+      "answer": "水",
+      "tokens": 2,
+      "contains_expected": true,
+      "contains_other": false
+    }
+  ],
+  "pairs": [
+    {
+      "question": "请用一句话说明小林当前最喜欢的饮料。",
+      "outputs_differ": true,
+      "both_contain_correct_only": false
+    },
+    {
+      "question": "根据保存的偏好，小林此刻愿意喝什么？",
+      "outputs_differ": true,
+      "both_contain_correct_only": true
+    },
+    {
+      "question": "请用一句话说明小岚当前最喜欢的饮料。",
+      "outputs_differ": true,
+      "both_contain_correct_only": false
+    },
+    {
+      "question": "根据保存的偏好，小岚此刻愿意喝什么？",
+      "outputs_differ": true,
+      "both_contain_correct_only": true
+    }
+  ],
+  "elapsed_seconds": 140.03735009999946,
+  "peak_allocated_bytes": 3809660416,
+  "limitations": [
+    "Addresses supplied by experiment; no natural-language router is tested.",
+    "Two names and two finite values; no unrestricted facts or multi-turn chat.",
+    "String containment is not a semantic judge, especially for negation.",
+    "32-token capped, closed-thinking greedy generation; not unlimited natural conversation.",
+    "Original and candidate layers are compared with and without memory, but checkpoints were trained differently.",
+    "Swapped states use the same initial individual and differ by one controlled direct write."
+  ]
+}

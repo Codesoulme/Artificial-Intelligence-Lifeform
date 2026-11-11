@@ -44,8 +44,15 @@ def run():
         raise ValueError('Protected base model mismatch')
     prior = json.loads((SOURCE/'result.json').read_text(encoding='utf-8'))
     for i in (6, 12):
-        info = prior['layers'][str(i)]
-        if sha(SOURCE/f'layer-{i}.pt') != info['candidate_sha256'] or sha(PAIR/f'layer-{i}.pt') != info['root_sha256']:
+        if isinstance(prior.get('layers'), dict):
+            info = prior['layers'][str(i)]
+            valid = sha(SOURCE/f'layer-{i}.pt') == info['candidate_sha256'] and sha(PAIR/f'layer-{i}.pt') == info['root_sha256']
+        elif 'candidate_checkpoints' in prior:
+            info = prior['candidate_checkpoints'][str(i)]
+            valid = sha(SOURCE/f'layer-{i}.pt') == info['sha256']
+        else:
+            raise ValueError('Unsupported candidate provenance report')
+        if not valid:
             raise ValueError('Candidate provenance mismatch')
     loc_info = json.loads((LOCATOR/'result.json').read_text(encoding='utf-8'))
     proj_info = json.loads((PROJECTION/'result.json').read_text(encoding='utf-8'))
