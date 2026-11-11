@@ -1,0 +1,687 @@
+{
+  "status": "unified_persisted_runtime_fresh_wording_audit",
+  "positive_total": 18,
+  "positive_routes_correct": 14,
+  "positive_answers_contains_expected": 14,
+  "negative_total": 11,
+  "negative_rejected": 11,
+  "rows": [
+    {
+      "question": "小林眼下偏好的饮品是哪一种？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 5.886632919311523,
+      "entity_score": 0.9808506965637207,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "key": 6,
+      "index": 0,
+      "expected_intent": 0,
+      "expected_value": 6,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "现在小林通常喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 2.7531604766845703,
+      "entity_score": 0.9113503098487854,
+      "intent_recovered": true,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.996307909488678,
+        0.9889438152313232
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "key": 6,
+      "index": 1,
+      "expected_intent": 0,
+      "expected_value": 6,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "我想查一下小林目前的饮料偏好。",
+      "accepted": true,
+      "answer": "水母是植物中的一种水生植物，常见于水生环境。",
+      "temporal_intent": 0,
+      "intent_logit": 5.942867755889893,
+      "entity_score": 0.7464123964309692,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9982960820198059,
+        0.9871817231178284
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "key": 6,
+      "index": 2,
+      "expected_intent": 0,
+      "expected_value": 6,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "小林此时最爱喝的东西是什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 5.431542873382568,
+      "entity_score": 0.9963424801826477,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "key": 6,
+      "index": 3,
+      "expected_intent": 0,
+      "expected_value": 6,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "请告诉我小林当下记录的饮品。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": 1.7765823602676392,
+      "entity_score": 0.08618218451738358,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "index": 4,
+      "expected_intent": 0,
+      "expected_value": 6,
+      "answer_contains_expected": false,
+      "route_correct": false
+    },
+    {
+      "question": "小林最新留下的饮料是哪种？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 0,
+      "intent_logit": 5.995767593383789,
+      "entity_score": 0.914740264415741,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": null,
+      "reason": "routed",
+      "key": 6,
+      "index": 5,
+      "expected_intent": 0,
+      "expected_value": 6,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "小林在改口之前偏爱什么饮料？",
+      "accepted": true,
+      "answer": "咖啡",
+      "temporal_intent": 1,
+      "intent_logit": 7.041014671325684,
+      "entity_score": 0.9797572493553162,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985167980194092,
+        0.9965548515319824
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 0,
+        "effective_time": 0,
+        "candidate_count": 2,
+        "checked_events": 2,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6,
+      "index": 6,
+      "expected_intent": 1,
+      "expected_value": 1,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "较早的时候，小林爱喝哪一类饮品？",
+      "accepted": true,
+      "answer": "咖啡",
+      "temporal_intent": 1,
+      "intent_logit": 5.370819568634033,
+      "entity_score": 0.8049265742301941,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9992626905441284,
+        0.9898571968078613
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 0,
+        "effective_time": 0,
+        "candidate_count": 2,
+        "checked_events": 2,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6,
+      "index": 7,
+      "expected_intent": 1,
+      "expected_value": 1,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "小林最初记录的饮料偏好是什么？",
+      "accepted": true,
+      "answer": "咖啡",
+      "temporal_intent": 1,
+      "intent_logit": 8.618863105773926,
+      "entity_score": 0.9782123565673828,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 0,
+        "effective_time": 0,
+        "candidate_count": 2,
+        "checked_events": 2,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6,
+      "index": 8,
+      "expected_intent": 1,
+      "expected_value": 1,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "请翻出小林变更前的饮品信息。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 1,
+      "intent_logit": 0.26073381304740906,
+      "entity_score": 0.09536071121692657,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "index": 9,
+      "expected_intent": 1,
+      "expected_value": 1,
+      "answer_contains_expected": false,
+      "route_correct": false
+    },
+    {
+      "question": "小林早先常喝的是哪种？",
+      "accepted": true,
+      "answer": "咖啡",
+      "temporal_intent": 1,
+      "intent_logit": 7.03737211227417,
+      "entity_score": 0.936863362789154,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 0,
+        "effective_time": 0,
+        "candidate_count": 2,
+        "checked_events": 2,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6,
+      "index": 10,
+      "expected_intent": 1,
+      "expected_value": 1,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "在更新以前，小林喜欢什么饮料？",
+      "accepted": true,
+      "answer": "咖啡",
+      "temporal_intent": 1,
+      "intent_logit": 2.7158186435699463,
+      "entity_score": 0.9422283172607422,
+      "intent_recovered": true,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9984451532363892,
+        0.989924967288971
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 0,
+        "effective_time": 0,
+        "candidate_count": 2,
+        "checked_events": 2,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6,
+      "index": 11,
+      "expected_intent": 1,
+      "expected_value": 1,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "小林改了偏好以后选择了什么饮料？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 2,
+      "intent_logit": 5.32177209854126,
+      "entity_score": 0.9792298674583435,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 1,
+        "effective_time": 1,
+        "candidate_count": 2,
+        "checked_events": 2,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6,
+      "index": 12,
+      "expected_intent": 2,
+      "expected_value": 6,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "后来的记录里小林爱喝什么？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 2,
+      "intent_logit": 3.281778335571289,
+      "entity_score": 0.5268679857254028,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9965333342552185,
+        0.9908109903335571
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 1,
+        "effective_time": 1,
+        "candidate_count": 2,
+        "checked_events": 2,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6,
+      "index": 13,
+      "expected_intent": 2,
+      "expected_value": 6,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "小林在那次更正之后偏爱哪种饮品？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 2,
+      "intent_logit": 9.63952350616455,
+      "entity_score": 0.9789239764213562,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985130429267883,
+        0.9965519309043884
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 1,
+        "effective_time": 1,
+        "candidate_count": 2,
+        "checked_events": 2,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6,
+      "index": 14,
+      "expected_intent": 2,
+      "expected_value": 6,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "更新完成后，小林的饮料选择是什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 2,
+      "intent_logit": 1.8902525901794434,
+      "entity_score": 0.8276368975639343,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "index": 15,
+      "expected_intent": 2,
+      "expected_value": 6,
+      "answer_contains_expected": false,
+      "route_correct": false
+    },
+    {
+      "question": "小林后来改成喜欢喝什么了？",
+      "accepted": true,
+      "answer": "水",
+      "temporal_intent": 2,
+      "intent_logit": 2.0598666667938232,
+      "entity_score": 0.9814811944961548,
+      "intent_recovered": true,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.9985180497169495,
+        0.9965364336967468
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 1,
+        "effective_time": 1,
+        "candidate_count": 2,
+        "checked_events": 2,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6,
+      "index": 16,
+      "expected_intent": 2,
+      "expected_value": 6,
+      "answer_contains_expected": true,
+      "route_correct": true
+    },
+    {
+      "question": "再往后的记录中，小林最爱哪种饮料？",
+      "accepted": true,
+      "answer": "咖啡",
+      "temporal_intent": 1,
+      "intent_logit": 4.383395671844482,
+      "entity_score": 0.5034937858581543,
+      "intent_recovered": false,
+      "indices": [
+        6,
+        6
+      ],
+      "similarities": [
+        0.999011754989624,
+        0.9955018162727356
+      ],
+      "memory_event_selection": {
+        "status": "experimental_candidate",
+        "event_time": 0,
+        "effective_time": 0,
+        "candidate_count": 2,
+        "checked_events": 2,
+        "warning": "neural_unknown_may_hide_events;effective_time_decoded_from_provenance"
+      },
+      "reason": "routed",
+      "key": 6,
+      "index": 17,
+      "expected_intent": 2,
+      "expected_value": 6,
+      "answer_contains_expected": false,
+      "route_correct": false
+    },
+    {
+      "question": "请给小林写一句鼓励的话。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -7.309793472290039,
+      "entity_score": 0.024313274770975113,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "index": 18,
+      "expected_intent": null,
+      "expected_value": null,
+      "answer_contains_expected": false,
+      "route_correct": true
+    },
+    {
+      "question": "不要查询小林的饮料记录。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -4.189802646636963,
+      "entity_score": 0.044408734887838364,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "index": 19,
+      "expected_intent": null,
+      "expected_value": null,
+      "answer_contains_expected": false,
+      "route_correct": true
+    },
+    {
+      "question": "把小林喜欢的饮料改成牛奶。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -3.8595845699310303,
+      "entity_score": 0.8065751791000366,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "index": 20,
+      "expected_intent": null,
+      "expected_value": null,
+      "answer_contains_expected": false,
+      "route_correct": true
+    },
+    {
+      "question": "小林和阿宁分别喜欢喝什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -4.410300254821777,
+      "entity_score": 0.03548054397106171,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "index": 21,
+      "expected_intent": null,
+      "expected_value": null,
+      "answer_contains_expected": false,
+      "route_correct": true
+    },
+    {
+      "question": "小雪以前喜欢喝什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 1,
+      "intent_logit": 3.743911027908325,
+      "entity_score": 0.9979358911514282,
+      "intent_recovered": false,
+      "indices": [
+        1,
+        1
+      ],
+      "similarities": [
+        0.9983751773834229,
+        0.9953144788742065
+      ],
+      "reason": "unknown_memory",
+      "index": 22,
+      "expected_intent": null,
+      "expected_value": null,
+      "answer_contains_expected": false,
+      "route_correct": true
+    },
+    {
+      "question": "你能解释一下社会主义核心价值观吗？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -5.239261150360107,
+      "entity_score": 0.004707034211605787,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "index": 23,
+      "expected_intent": null,
+      "expected_value": null,
+      "answer_contains_expected": false,
+      "route_correct": true
+    },
+    {
+      "question": "小梅后来喝什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 2,
+      "intent_logit": 3.880866765975952,
+      "entity_score": 0.948650062084198,
+      "intent_recovered": false,
+      "indices": [
+        16,
+        16
+      ],
+      "similarities": [
+        0.9990879893302917,
+        0.997057318687439
+      ],
+      "reason": "unknown_memory",
+      "index": 24,
+      "expected_intent": null,
+      "expected_value": null,
+      "answer_contains_expected": false,
+      "route_correct": true
+    },
+    {
+      "question": "小林的饮品记录是谁写下的？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -0.49355417490005493,
+      "entity_score": 0.6450309157371521,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "index": 25,
+      "expected_intent": null,
+      "expected_value": null,
+      "answer_contains_expected": false,
+      "route_correct": true
+    },
+    {
+      "question": "帮我设计一个饮料广告。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -8.068017959594727,
+      "entity_score": 0.009551790542900562,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "index": 26,
+      "expected_intent": null,
+      "expected_value": null,
+      "answer_contains_expected": false,
+      "route_correct": true
+    },
+    {
+      "question": "小林现在喜欢什么以及阿宁过去喜欢什么？",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 0,
+      "intent_logit": 4.547722339630127,
+      "entity_score": 0.9388195276260376,
+      "intent_recovered": false,
+      "reason": "no_single_name_span",
+      "index": 27,
+      "expected_intent": null,
+      "expected_value": null,
+      "answer_contains_expected": false,
+      "route_correct": true
+    },
+    {
+      "question": "请把小林和小雨的偏好都查出来。",
+      "accepted": false,
+      "answer": null,
+      "temporal_intent": 3,
+      "intent_logit": -6.443013668060303,
+      "entity_score": 0.0012108830269426107,
+      "reason": "not_confident_read_intent",
+      "intent_recovered": false,
+      "index": 28,
+      "expected_intent": null,
+      "expected_value": null,
+      "answer_contains_expected": false,
+      "route_correct": true
+    }
+  ],
+  "limitations": [
+    "Fresh authored questions share the narrow beverage domain.",
+    "One controlled entity and two finite facts; writes are supplied by the audit.",
+    "Word containment is a coarse answer metric.",
+    "This does not establish open-domain Chinese conversation."
+  ]
+}
