@@ -1,0 +1,167 @@
+"""Structured identity/fact lanes for experimental continuous text memory.
+
+The lane lengths are explicit metadata owned by the memory record. They are
+not inferred from a question or silently recovered from a language model.
+This module is a serialization primitive; it does not route natural language
+or decide whether a fact is true.
+"""
+import math
+
+import torch
+from torch import nn
+from torch.nn import functional as F
+
+
+class StructuredTextMemoryCodec(nn.Module):
+    """Pack identity and fact token sequences into separate fixed slot lanes."""
+
+    def __init__(self, embedding, *, memory_width=None, identity_slots=3,
+                 fact_slots=5, identity_slot_width=None, fact_slot_width=None,
+                 seed=29071, eos_token_id=None):
+        super().__init__()
+        if (not isinstance(embedding, torch.Tensor) or embedding.ndim != 2
+                or not embedding.is_floating_point() or min(embedding.shape) < 2):
+            raise ValueError('A floating vocabulary embedding matrix is required')
+        if (type(identity_slots) is not int or type(fact_slots) is not int
+                or identity_slots < 1 or fact_slots < 1):
+            raise ValueError('Lane slot counts must be positive integers')
+        target_width = embedding.shape[1] if memory_width is None else memory_width
+        if type(target_width) is not int or target_width < 2:
+            raise ValueError('Memory width must be a positive integer')
+        if identity_slot_width is None and fact_slot_width is None:
+            if target_width % (identity_slots + fact_slots) != 0:
+                raise ValueError('Memory width must divide into usable lane slots')
+            identity_slot_width = fact_slot_width = target_width // (identity_slots + fact_slots)
+        elif (type(identity_slot_width) is not int or type(fact_slot_width) is not int
+              or identity_slot_width < 2 or fact_slot_width < 2
+              or identity_slots * identity_slot_width + fact_slots * fact_slot_width != target_width):
+            raise ValueError('Lane widths must exactly cover memory width')
+        if type(seed) is not int:
+            raise ValueError('Seed must be an integer')
+        if (eos_token_id is not None
+                and (type(eos_token_id) is not int or not 0 <= eos_token_id < embedding.shape[0])):
+            raise ValueError('EOS token id is outside the vocabulary')
+        self.vocab_size, self.embedding_width = embedding.shape
+        self.memory_width = target_width
+        self.identity_slots = identity_slots
+        self.fact_slots = fact_slots
+        self.total_slots = identity_slots + fact_slots
+        self.identity_slot_width = identity_slot_width
+        self.fact_slot_width = fact_slot_width
+        self.slot_width = identity_slot_width if identity_slot_width == fact_slot_width else None
+        self.eos_token_id = eos_token_id
+        generator = torch.Generator(device='cpu').manual_seed(seed)
+        identity_projection = torch.randn((embedding.shape[1], identity_slot_width),
+                                          generator=generator, dtype=torch.float32,
+                                          device='cpu').to(embedding.device)
+        fact_projection = torch.randn((embedding.shape[1], fact_slot_width),
+                                      generator=generator, dtype=torch.float32,
+                                      device='cpu').to(embedding.device)
+        self.register_buffer('identity_projection', identity_projection)
+        self.register_buffer('fact_projection', fact_projection)
+        with torch.no_grad():
+            identity_codebook = F.normalize(embedding.float() @ identity_projection, dim=-1)
+            fact_codebook = F.normalize(embedding.float() @ fact_projection, dim=-1)
+        if not bool(torch.isfinite(identity_codebook).all() and torch.isfinite(fact_codebook).all()):
+            raise ValueError('Projected vocabulary contains non-finite values')
+        self.register_buffer('identity_codebook', identity_codebook)
+        self.register_buffer('fact_codebook', fact_codebook)
+
+    def _ids(self, ids, lane, *, allow_empty=False):
+        if isinstance(ids, torch.Tensor):
+            if ids.ndim != 1 or ids.dtype != torch.long:
+                raise ValueError(f'{lane} token ids must be a one-dimensional long tensor')
+            values = ids.detach().cpu().tolist()
+        elif isinstance(ids, (list, tuple)):
+            values = list(ids)
+        else:
+            raise ValueError(f'{lane} token ids must be a sequence')
+        if not values and not allow_empty:
+            raise ValueError(f'{lane} token ids must not be empty')
+        if any(type(value) is not int or value < 0 or value >= self.vocab_size for value in values):
+            raise ValueError(f'{lane} token id is outside the vocabulary')
+        if self.eos_token_id is not None and self.eos_token_id in values:
+            raise ValueError(f'{lane} input must not contain the EOS token')
+        return values
+
+    def _pack_lane(self, ids, slots, slot_width, codebook, lane):
+        values = self._ids(ids, lane)
+        sequence = values if self.eos_token_id is None else values + [self.eos_token_id]
+        if len(sequence) > slots:
+            raise ValueError(f'{lane} token sequence exceeds its lane capacity')
+        lane_code = codebook.new_zeros((slots, slot_width))
+        lane_code[:len(sequence)] = codebook.index_select(
+            0, torch.tensor(sequence, dtype=torch.long, device=codebook.device))
+        return lane_code.reshape(-1), len(values)
+
+    def encode(self, identity_ids, fact_ids):
+        """Return a full memory vector and its boundary metadata."""
+        identity, identity_length = self._pack_lane(
+            identity_ids, self.identity_slots, self.identity_slot_width,
+            self.identity_codebook, 'Identity')
+        fact, fact_length = self._pack_lane(
+            fact_ids, self.fact_slots, self.fact_slot_width,
+            self.fact_codebook, 'Fact')
+        return torch.cat((identity, fact)), {
+            'identity_length': identity_length,
+            'fact_length': fact_length,
+        }
+
+    def _metadata(self, metadata):
+        if not isinstance(metadata, dict):
+            raise ValueError('Lane boundary metadata is required')
+        values = {}
+        for name, capacity in (('identity_length', self.identity_slots),
+                               ('fact_length', self.fact_slots)):
+            value = metadata.get(name)
+            if type(value) is not int or not 1 <= value <= capacity:
+                raise ValueError(f'Invalid {name}')
+            values[name] = value
+        return values
+
+    @torch.no_grad()
+    def decode(self, code, metadata):
+        """Decode both lanes using persisted boundary metadata."""
+        if (not isinstance(code, torch.Tensor) or code.ndim != 1
+                or code.numel() != self.memory_width or not code.is_floating_point()
+                or not bool(torch.isfinite(code).all())):
+            raise ValueError('Code has the wrong finite floating shape')
+        bounds = self._metadata(metadata)
+        vector = code.to(self.identity_codebook.device)
+        results = {}
+        start = 0
+        for name, slots, slot_width, codebook, length in (
+                ('identity', self.identity_slots, self.identity_slot_width,
+                 self.identity_codebook, bounds['identity_length']),
+                ('fact', self.fact_slots, self.fact_slot_width,
+                 self.fact_codebook, bounds['fact_length'])):
+            expected_slots = length + (1 if self.eos_token_id is not None else 0)
+            tokens, margins = [], []
+            lane_start = start
+            for slot in range(expected_slots):
+                lane_vector = vector[lane_start + slot * slot_width:
+                                     lane_start + (slot + 1) * slot_width]
+                scores = codebook @ F.normalize(lane_vector, dim=0)
+                top = scores.topk(2)
+                tokens.append(int(top.indices[0]))
+                margins.append(float(top.values[0] - top.values[1]))
+            if self.eos_token_id is not None and tokens[-1] != self.eos_token_id:
+                raise ValueError(f'{name} lane did not terminate at EOS')
+            results[name] = {'token_ids': tokens[:-1] if self.eos_token_id is not None else tokens,
+                             'margins': margins}
+            start += slots * slot_width
+        return {**results, 'metadata': bounds}
+
+    def config_dict(self):
+        return {
+            'vocab_size': self.vocab_size,
+            'embedding_width': self.embedding_width,
+            'memory_width': self.memory_width,
+            'identity_slots': self.identity_slots,
+            'fact_slots': self.fact_slots,
+            'total_slots': self.total_slots,
+            'slot_width': self.slot_width,
+            'identity_slot_width': self.identity_slot_width,
+            'fact_slot_width': self.fact_slot_width,
+            'eos_token_id': self.eos_token_id,
+        }
