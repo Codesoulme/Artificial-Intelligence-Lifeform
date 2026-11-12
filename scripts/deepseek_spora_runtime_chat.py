@@ -89,6 +89,8 @@ class SporaChat:
         self.organism, self.state = organism, state
         self._working_sha256 = working_sha256
         self.router, self.entity_data, self.intent_data, self.temporal, self.temporal_data = gates
+        # Research-only per-instance override; the default remains the module policy.
+        self.read_intent_recovery_floor = float(READ_INTENT_RECOVERY_FLOOR)
         self.bases = torch.stack([F.normalize(site.current_basis.detach().cpu().float(), dim=-1)
                                   for site in organism.memories])
 
@@ -201,7 +203,7 @@ class SporaChat:
             result['reason'] = 'unsupported_memory_predicate'
             return result
         intent_confident = intent_logit >= self.intent_data['threshold']
-        intent_recovered = (intent_logit >= READ_INTENT_RECOVERY_FLOOR
+        intent_recovered = (intent_logit >= getattr(self, 'read_intent_recovery_floor', READ_INTENT_RECOVERY_FLOOR)
                             and entity_score >= self.entity_data['gate_threshold'] and single)
         if not intent_confident and not intent_recovered:
             result['reason'] = 'not_confident_read_intent'
