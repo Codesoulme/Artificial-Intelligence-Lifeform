@@ -6,10 +6,109 @@ This module is a serialization primitive; it does not route natural language
 or decide whether a fact is true.
 """
 import math
+from dataclasses import dataclass
 
 import torch
 from torch import nn
 from torch.nn import functional as F
+
+
+@dataclass
+class StructuredTextRecord:
+    packet: torch.Tensor
+    metadata: dict
+    revision: int
+
+
+class StructuredTextMemoryState:
+    """Persisted structured records accompanying a GrowingState snapshot."""
+
+    FORMAT = 'spora-structured-text-state-v1'
+
+    def __init__(self, codec_config, records=None, revision=0):
+        self.codec_config = dict(codec_config)
+        self.records = {} if records is None else dict(records)
+        self.revision = revision
+
+    @staticmethod
+    def tensor_name(key):
+        return f'structured_text/{key}'
+
+    def validate(self, memory_width, key_count=None):
+        if not isinstance(self.codec_config, dict) or self.codec_config.get('memory_width') != memory_width:
+            raise ValueError('Structured text codec width does not match the individual')
+        identity_slots = self.codec_config.get('identity_slots')
+        fact_slots = self.codec_config.get('fact_slots')
+        if (type(identity_slots) is not int or type(fact_slots) is not int
+                or identity_slots < 1 or fact_slots < 1):
+            raise ValueError('Invalid structured text lane configuration')
+        if type(self.revision) is not int or self.revision < 0:
+            raise ValueError('Invalid structured text revision')
+        if not isinstance(self.records, dict):
+            raise ValueError('Structured text records must be a mapping')
+        for key, record in self.records.items():
+            if type(key) is not int or key < 0 or (key_count is not None and key >= key_count):
+                raise ValueError('Invalid structured text record key')
+            if (not isinstance(record, StructuredTextRecord)
+                    or type(record.revision) is not int or record.revision < 1
+                    or not isinstance(record.metadata, dict)
+                    or set(record.metadata) != {'identity_length', 'fact_length'}
+                    or type(record.metadata['identity_length']) is not int
+                    or type(record.metadata['fact_length']) is not int
+                    or not 1 <= record.metadata['identity_length'] <= identity_slots
+                    or not 1 <= record.metadata['fact_length'] <= fact_slots):
+                raise ValueError('Invalid structured text record metadata')
+            if (not isinstance(record.packet, torch.Tensor) or record.packet.shape != (memory_width,)
+                    or record.packet.dtype != torch.float32 or not bool(torch.isfinite(record.packet).all())):
+                raise ValueError('Invalid structured text record packet')
+            if record.revision > self.revision:
+                raise ValueError('Structured text record revision is ahead of state')
+
+    def put(self, key, packet, metadata, memory_width, key_count=None):
+        if type(key) is not int or key < 0 or (key_count is not None and key >= key_count):
+            raise ValueError('Invalid structured text record key')
+        if not isinstance(packet, torch.Tensor) or packet.shape != (memory_width,):
+            raise ValueError('Structured text packet has the wrong shape')
+        records = {index: StructuredTextRecord(value.packet.detach().clone(),
+                                                dict(value.metadata), value.revision)
+                   for index, value in self.records.items()}
+        next_revision = self.revision + 1
+        records[key] = StructuredTextRecord(packet.detach().clone().float(), dict(metadata), next_revision)
+        result = StructuredTextMemoryState(self.codec_config, records, next_revision)
+        result.validate(memory_width, key_count)
+        return result
+
+    def schema(self):
+        self.validate(self.codec_config['memory_width'])
+        return {
+            'format': self.FORMAT,
+            'codec': dict(self.codec_config),
+            'revision': self.revision,
+            'records': [
+                {'key': key, 'metadata': dict(record.metadata), 'revision': record.revision}
+                for key, record in sorted(self.records.items())
+            ],
+        }
+
+    @classmethod
+    def from_schema(cls, schema, tensors, device='cpu'):
+        if (not isinstance(schema, dict) or schema.get('format') != cls.FORMAT
+                or not isinstance(schema.get('codec'), dict)
+                or not isinstance(schema.get('records'), list)):
+            raise ValueError('Invalid structured text state schema')
+        records = {}
+        for row in schema['records']:
+            if (not isinstance(row, dict) or set(row) != {'key', 'metadata', 'revision'}
+                    or type(row['key']) is not int or row['key'] in records):
+                raise ValueError('Invalid structured text record schema')
+            name = cls.tensor_name(row['key'])
+            if name not in tensors:
+                raise ValueError('Missing structured text record tensor')
+            records[row['key']] = StructuredTextRecord(
+                tensors[name].to(device), dict(row['metadata']), row['revision'])
+        result = cls(schema['codec'], records, schema.get('revision'))
+        result.validate(schema['codec'].get('memory_width'))
+        return result
 
 
 class StructuredTextMemoryCodec(nn.Module):

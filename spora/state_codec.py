@@ -105,6 +105,14 @@ def flatten(model, state):
                 for page,pair in enumerate(pages):
                     for i,tensor in enumerate(pair):
                         tensors[f'internal/router/{site}/{page}/{i}']=tensor
+    if state.structured_text is not None:
+        from .structured_text_memory import StructuredTextMemoryState
+        if not isinstance(state.structured_text, StructuredTextMemoryState):
+            raise ValueError('Invalid structured text state')
+        state.structured_text.validate(model.config.memory_width, model.config.key_count)
+        schema['structured_text'] = state.structured_text.schema()
+        for key, record in state.structured_text.records.items():
+            tensors[StructuredTextMemoryState.tensor_name(key)] = record.packet
     return schema, tensors
 
 
@@ -160,7 +168,11 @@ def restore(schema, tensors, device='cpu'):
             pages.append(sites)
         else:
             raise ValueError('Unknown stored page kind')
-    state = GrowingState(current, pages, schema['cursor'])
+    structured_text = None
+    if 'structured_text' in schema:
+        from .structured_text_memory import StructuredTextMemoryState
+        structured_text = StructuredTextMemoryState.from_schema(schema['structured_text'], tensors, device)
+    state = GrowingState(current, pages, schema['cursor'], structured_text=structured_text)
     if 'runtime' in schema:
         from .online_time import OnlineState
         state.runtime = OnlineState(**schema['runtime'], tensors={k[8:]: v.to(device) for k, v in tensors.items() if k.startswith('runtime/')})

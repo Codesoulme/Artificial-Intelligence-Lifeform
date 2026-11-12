@@ -1,8 +1,15 @@
 import unittest
+import copy
+import tempfile
+from pathlib import Path
 
 import torch
 
-from spora.structured_text_memory import StructuredTextMemoryCodec
+from spora.growing import new_state
+from spora.durable import TensorStore
+from spora.state_codec import flatten, restore
+from spora.structured_text_memory import StructuredTextMemoryCodec, StructuredTextMemoryState
+from spora.temporal import TemporalConfig, TemporalSPORA
 
 
 class StructuredTextMemoryTests(unittest.TestCase):
@@ -46,6 +53,84 @@ class StructuredTextMemoryTests(unittest.TestCase):
         decoded = codec.decode(code, metadata)
         self.assertEqual(decoded['identity']['token_ids'], [2])
         self.assertEqual(decoded['fact']['token_ids'], [7])
+
+    def test_structured_records_round_trip_through_state_codec(self):
+        model = TemporalSPORA(TemporalConfig(width=16, layers=2, heads=2,
+                                             memory_width=16, expert_rank=4,
+                                             memory_layers=(0, 1), history_writer='rls'))
+        state = new_state(model)
+        config = {'memory_width': 16, 'identity_slots': 1, 'fact_slots': 1}
+        structured = StructuredTextMemoryState(config)
+        packet = torch.arange(16, dtype=torch.float32)
+        state.structured_text = structured.put(
+            2, packet, {'identity_length': 1, 'fact_length': 1}, 16,
+            model.config.key_count)
+        schema, tensors = flatten(model, state)
+        self.assertIn('structured_text', schema)
+        self.assertIn('structured_text/2', tensors)
+        restored_model, restored_state = restore(schema, tensors)
+        self.assertEqual(restored_state.structured_text.revision, 1)
+        self.assertTrue(torch.equal(restored_state.structured_text.records[2].packet, packet))
+        self.assertEqual(restored_state.structured_text.records[2].metadata,
+                         {'identity_length': 1, 'fact_length': 1})
+        self.assertEqual(restored_model.config.memory_width, 16)
+
+    def test_tampered_structured_metadata_is_rejected(self):
+        model = TemporalSPORA(TemporalConfig(width=16, layers=2, heads=2,
+                                             memory_width=16, expert_rank=4,
+                                             memory_layers=(0, 1), history_writer='rls'))
+        state = new_state(model)
+        state.structured_text = StructuredTextMemoryState(
+            {'memory_width': 16, 'identity_slots': 1, 'fact_slots': 1}).put(
+                2, torch.zeros(16), {'identity_length': 1, 'fact_length': 1}, 16,
+                model.config.key_count)
+        schema, tensors = flatten(model, state)
+        tampered = copy.deepcopy(schema)
+        tampered['structured_text']['records'][0]['metadata']['fact_length'] = 0
+        with self.assertRaises(ValueError):
+            restore(tampered, tensors)
+
+    def test_structured_records_use_incremental_durable_transactions(self):
+        model = TemporalSPORA(TemporalConfig(width=16, layers=2, heads=2,
+                                             memory_width=16, expert_rank=4,
+                                             memory_layers=(0, 1), history_writer='rls'))
+        state = new_state(model)
+        config = {'memory_width': 16, 'identity_slots': 1, 'fact_slots': 1}
+        state.structured_text = StructuredTextMemoryState(config).put(
+            2, torch.ones(16), {'identity_length': 1, 'fact_length': 1}, 16,
+            model.config.key_count)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'structured.sqlite'
+            with TensorStore.create(path, model, new_state(model)) as store:
+                first = store.commit(model, state, 0)
+                self.assertGreaterEqual(first['changed_tensors'], 1)
+                loaded_model, loaded_state, _, revision = store.read()
+                self.assertEqual(revision, 1)
+                self.assertTrue(torch.equal(loaded_state.structured_text.records[2].packet,
+                                            torch.ones(16)))
+                second_state = loaded_state
+                second_state.structured_text = second_state.structured_text.put(
+                    3, torch.full((16,), 2.), {'identity_length': 1, 'fact_length': 1},
+                    16, loaded_model.config.key_count)
+                store.commit(loaded_model, second_state, revision)
+                _, latest, _, latest_revision = store.read()
+                self.assertEqual(latest_revision, 2)
+                self.assertIn(2, latest.structured_text.records)
+                self.assertIn(3, latest.structured_text.records)
+                failed_state = latest
+                failed_state.structured_text = failed_state.structured_text.put(
+                    4, torch.full((16,), 3.), {'identity_length': 1, 'fact_length': 1},
+                    16, loaded_model.config.key_count)
+
+                def interrupt(stage):
+                    if stage == 'after_first_tensor':
+                        raise RuntimeError('interrupted')
+
+                with self.assertRaisesRegex(RuntimeError, 'interrupted'):
+                    store.commit(loaded_model, failed_state, latest_revision, hook=interrupt)
+                _, recovered, _, recovered_revision = store.read()
+                self.assertEqual(recovered_revision, latest_revision)
+                self.assertNotIn(4, recovered.structured_text.records)
 
 
 if __name__ == '__main__':

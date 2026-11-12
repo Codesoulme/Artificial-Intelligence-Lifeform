@@ -128,7 +128,8 @@ def propose(model, state, page_index, **training):
     student, report = train_page(model, state.pages[page_index], **training)
     pages = list(state.pages); pages[page_index] = student
     internal=state.internal.invalidate_router() if state.internal is not None else None
-    return GrowingState(state.current, pages, state.cursor, state.runtime,internal), report
+    return GrowingState(state.current, pages, state.cursor, state.runtime, internal,
+                        state.structured_text), report
 
 
 @torch.no_grad()

@@ -18,6 +18,7 @@ class GrowingState:
     cursor:int=0
     runtime:object=None
     internal:object=None
+    structured_text:object=None
 
 
 def new_state(model):
@@ -43,7 +44,7 @@ def grow(model,state,pages=1,max_pages=16):
                      [torch.eye(model.config.memory_width, dtype=torch.float32, device=internal.evidence.device)
                       / internal.provenance_ridge for _ in added])
         internal=internal.invalidate_router(provenance=internal.provenance+[torch.zeros_like(internal.provenance[0]) for _ in added], event_keys=keys, provenance_precision=precision)
-    return GrowingState(state.current,state.pages+added,state.cursor,state.runtime,internal)
+    return GrowingState(state.current,state.pages+added,state.cursor,state.runtime,internal,state.structured_text)
 
 
 def observe(model,state,key,value,trusted,time=None):
@@ -64,7 +65,8 @@ def _observe_base(model,state,key,value,trusted,time=None):
     fast,_=model.write_temporal(fast,velocity,torch.tensor([key],device=device),torch.tensor([value],device=device),
                               torch.tensor([local],device=device),torch.tensor([trusted],dtype=torch.float32,device=device))
     pages=list(state.pages);pages[page]=[s[1:] for s in fast]
-    return GrowingState([s[0] for s in fast],pages,state.cursor+1,state.runtime,state.internal)
+    return GrowingState([s[0] for s in fast],pages,state.cursor+1,state.runtime,state.internal,
+                        state.structured_text)
 
 
 def query(model,state,keys,modes,times):
@@ -90,11 +92,17 @@ def scalars(state):
         if state.internal.provenance_precision is not None:internal+=sum(p.numel() for p in state.internal.provenance_precision)
         if state.internal.router_factors is not None:
             internal+=sum(t.numel() for site in state.internal.router_factors for pair in site for t in pair)
-    return {'current':current,'history_including_optimizer_evidence':history,'internal_controls':internal,'total':current+history+internal}
+    structured = (0 if state.structured_text is None
+                  else sum(record.packet.numel() for record in state.structured_text.records.values()))
+    return {'current':current,'history_including_optimizer_evidence':history,
+            'internal_controls':internal,'structured_text':structured,
+            'total':current+history+internal+structured}
 
 
 def save(path,model,state,metadata=None):
-    if any(hasattr(model, name) for name in ('semantic_memory', 'skill_policy', 'write_control', 'time_world', 'awake_core', 'chinese_query', 'named_address_binding', 'identity_fingerprints', 'historical_resolutions')) or state.internal is not None or state.runtime is not None or any(isinstance(page,SealedPage) for page in state.pages):
+    if (any(hasattr(model, name) for name in ('semantic_memory', 'skill_policy', 'write_control', 'time_world', 'awake_core', 'chinese_query', 'named_address_binding', 'identity_fingerprints', 'historical_resolutions'))
+            or state.internal is not None or state.runtime is not None or state.structured_text is not None
+            or any(isinstance(page,SealedPage) for page in state.pages)):
         from .state_codec import flatten
         schema,tensors=flatten(model,state)
         if not all(bool(torch.isfinite(x).all()) for x in tensors.values()):raise ValueError('Nonfinite state; preserve old file')
