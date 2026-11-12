@@ -45,6 +45,7 @@ DIRECT_RESIDUAL_LAYER = 20
 STRICT_SWAP_EVAL = False
 START_CANDIDATE = None
 LANGUAGE_LR = 1e-4
+QUERY_INTENT_GATE = False
 WORDS = ('苹果', '香蕉', '西瓜', '葡萄', '草莓', '橘子', '桃子', '芒果',
          '梨子', '柠檬', '菠萝', '樱桃', '柚子', '荔枝', '榴莲', '蓝莓',
          '火龙果', '木瓜')
@@ -174,6 +175,11 @@ class MemoryResidualOutput(p.torch.nn.Module):
                                            dtype=p.torch.float32)
         p.torch.nn.init.zeros_(self.to_hidden.weight)
         self.gate = p.torch.nn.Parameter(p.torch.tensor(-1.0, device=base.weight.device))
+        if QUERY_INTENT_GATE:
+            self.query_gate = p.torch.nn.Linear(base.in_features, 1, bias=True,
+                                                device=base.weight.device, dtype=p.torch.float32)
+            p.torch.nn.init.zeros_(self.query_gate.weight)
+            p.torch.nn.init.constant_(self.query_gate.bias, 2.0)
 
     def _decoded(self, x, active):
         matrices, addresses, mask, slots = active
@@ -207,7 +213,11 @@ class MemoryResidualOutput(p.torch.nn.Module):
         if decoded is None:
             return output
         residual = self.to_hidden(decoded).unsqueeze(1)
-        return output + p.torch.sigmoid(self.gate) * residual.to(output.dtype)
+        strength = p.torch.sigmoid(self.gate)
+        if hasattr(self, 'query_gate'):
+            query = x[:, -1].float()
+            strength = strength * p.torch.sigmoid(self.query_gate(query)).reshape(-1, 1, 1)
+        return output + strength.to(output.dtype) * residual.to(output.dtype)
 
 
 def torch_empty(rows, cols, device):
@@ -320,6 +330,8 @@ def main():
                 with torch.no_grad():
                     adapter.to_hidden.load_state_dict(old['to_hidden'], strict=True)
                     adapter.gate.copy_(old['gate'])
+                    if hasattr(adapter, 'query_gate') and 'query_gate' in old:
+                        adapter.query_gate.load_state_dict(old['query_gate'], strict=True)
 
         def state_for_assignments(assignments):
             state = p.fresh_controlled_state(model)
@@ -505,6 +517,9 @@ def main():
         params += [param for _, _, adapter in adapters for param in (adapter.a, adapter.b, adapter.condition)]
         params += [param for _, _, adapter in direct_adapters
                    for param in list(adapter.to_hidden.parameters()) + [adapter.gate]]
+        params += [param for _, _, adapter in direct_adapters
+                   for param in (list(adapter.query_gate.parameters())
+                                 if hasattr(adapter, 'query_gate') else [])]
         optimizer = torch.optim.AdamW(params, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
         trace = []
         for step in range(LANGUAGE_STEPS):
@@ -558,7 +573,10 @@ def main():
         direct_state = [{'layer': index, 'projection': name,
                          'to_hidden': {key: value.detach().cpu().clone()
                                        for key, value in adapter.to_hidden.state_dict().items()},
-                         'gate': adapter.gate.detach().cpu().clone()}
+                         'gate': adapter.gate.detach().cpu().clone(),
+                         **({'query_gate': {key: value.detach().cpu().clone()
+                                            for key, value in adapter.query_gate.state_dict().items()}}
+                            if hasattr(adapter, 'query_gate') else {})}
                         for index, name, adapter in direct_adapters]
         bridge_state = {k: v.detach().cpu().clone() for k, v in bridge.state_dict().items()}
         codec_state = {k: v.detach().cpu().clone() for k, v in codec.state_dict().items()}
@@ -575,6 +593,7 @@ def main():
                          'train_correction_sequences': TRAIN_CORRECTION_SEQUENCES,
                          'start_candidate': str(START_CANDIDATE) if START_CANDIDATE is not None else None,
                          'language_lr': LANGUAGE_LR,
+                         'query_intent_gate': QUERY_INTENT_GATE,
                          'focus_extra_questions': FOCUS_EXTRA_QUESTIONS,
                          'direct_residual': DIRECT_RESIDUAL, 'direct_residual_layer': DIRECT_RESIDUAL_LAYER,
                          'slow_signal_disabled': True, 'words': list(WORDS),
