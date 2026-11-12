@@ -206,6 +206,29 @@ class SporaChat:
                                     candidate.source, candidate.quality, candidate.valid_at)
 
     @torch.no_grad()
+    def observe_text(self, text, *, policy_id='spora-polarity-calibration-20261111-v1',
+                     source='direct', quality=1.0):
+        """Parse and transactionally observe one Chinese statement.
+
+        This is opt-in because the parser and heads are still research
+        artifacts. It shares the normal candidate guard and persistence path.
+        """
+        if self.natural_write_heads is None:
+            raise ValueError('Natural write heads are not enabled for this runtime')
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError('A nonempty observation text is required')
+        from dataclasses import replace
+        from scripts.deepseek_spora_natural_observation_transaction_pilot import (
+            build_components, parse_candidate)
+        parsed = parse_candidate(self, text, build_components(self))
+        candidate = replace(parsed.pop('candidate'), source=source, quality=quality)
+        gate = parsed.pop('gate')
+        gate['policy_id'] = policy_id
+        result = self.observe_candidate(candidate, calibrated_gate=gate, policy_id=policy_id)
+        return {**parsed, 'action': result.get('action', 'written') if isinstance(result, dict) else 'written',
+                'result': result}
+
+    @torch.no_grad()
     def answer(self, question, *, identity_guard=None):
         if not isinstance(question, str) or not question.strip():
             raise ValueError('A nonempty Chinese question is required')

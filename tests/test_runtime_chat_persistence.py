@@ -152,6 +152,31 @@ class RuntimeChatPersistenceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             chat.observe_candidate(candidate, policy_id='p1')
 
+    def test_text_observation_requires_explicit_natural_write_heads(self):
+        chat = object.__new__(chat_module.SporaChat)
+        chat.natural_write_heads = None
+        with self.assertRaisesRegex(ValueError, 'Natural write heads'):
+            chat.observe_text('小林喜欢水。')
+
+    def test_text_observation_delegates_parser_result_to_transaction(self):
+        chat = object.__new__(chat_module.SporaChat)
+        chat.natural_write_heads = object()
+        chat.organism = SimpleNamespace(config=SimpleNamespace(key_count=8, value_count=8))
+        chat.state = SimpleNamespace(cursor=4)
+        candidate = ObservationCandidate(1, '水', 6, 'affirmative', 'direct', 1.0, 4, .99,
+                                         '小林喜欢水')
+        parsed = {'text': '小林喜欢水。', 'candidate': candidate,
+                  'gate': {'policy_id': 'p1', 'authorized': True, 'confidence': .99},
+                  'value': '水'}
+        with patch('scripts.deepseek_spora_natural_observation_transaction_pilot.build_components',
+                   return_value=object()), \
+             patch('scripts.deepseek_spora_natural_observation_transaction_pilot.parse_candidate',
+                   return_value=parsed), \
+             patch.object(chat, 'observe_candidate', return_value={'action': 'new'}) as observe:
+            result = chat.observe_text('小林喜欢水。', policy_id='p1')
+        observe.assert_called_once()
+        self.assertEqual(result['action'], 'new')
+
     def test_observation_preserves_bootstrap_and_publishes_after_save(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
