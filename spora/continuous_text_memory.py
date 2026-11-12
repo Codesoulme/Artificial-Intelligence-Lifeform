@@ -12,26 +12,28 @@ from torch.nn import functional as F
 class ContinuousTextCodec(nn.Module):
     """Pack short token sequences into fixed-width continuous memory slots."""
 
-    def __init__(self, embedding, *, slot_count=4, seed=29071, eos_token_id=None):
+    def __init__(self, embedding, *, memory_width=None, slot_count=4, seed=29071, eos_token_id=None):
         super().__init__()
         if (not isinstance(embedding, torch.Tensor) or embedding.ndim != 2
                 or not embedding.is_floating_point() or min(embedding.shape) < 2):
             raise ValueError('A floating vocabulary embedding matrix is required')
         if type(slot_count) is not int or not 1 <= slot_count <= 32:
             raise ValueError('Slot count must be an integer in [1, 32]')
-        if embedding.shape[1] // slot_count < 2:
+        target_width = embedding.shape[1] if memory_width is None else memory_width
+        if type(target_width) is not int or target_width < 2 or target_width // slot_count < 2:
             raise ValueError('Embedding width cannot be divided into usable slots')
         if type(seed) is not int:
             raise ValueError('Seed must be an integer')
         if eos_token_id is not None and (type(eos_token_id) is not int or not 0 <= eos_token_id < embedding.shape[0]):
             raise ValueError('EOS token id is outside the vocabulary')
         self.vocab_size, self.embedding_width = embedding.shape
+        self.memory_width = target_width
         self.slot_count = slot_count
-        self.slot_width = embedding.shape[1] // slot_count
+        self.slot_width = target_width // slot_count
         self.eos_token_id = eos_token_id
         generator = torch.Generator(device='cpu').manual_seed(seed)
         projection = torch.randn((embedding.shape[1], self.slot_width), generator=generator,
-                                 dtype=torch.float32, device=embedding.device)
+                                 dtype=torch.float32, device='cpu').to(embedding.device)
         self.register_buffer('projection', projection)
         with torch.no_grad():
             codebook = F.normalize(embedding.float() @ projection, dim=-1)
@@ -79,5 +81,6 @@ class ContinuousTextCodec(nn.Module):
 
     def config_dict(self):
         return {'vocab_size': self.vocab_size, 'embedding_width': self.embedding_width,
+                'memory_width': self.memory_width,
                 'slot_count': self.slot_count, 'slot_width': self.slot_width,
                 'eos_token_id': self.eos_token_id}

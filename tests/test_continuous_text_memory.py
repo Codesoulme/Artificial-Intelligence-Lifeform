@@ -28,6 +28,12 @@ class ContinuousTextMemoryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.codec.encode(torch.tensor([1, 99], dtype=torch.long))
 
+    def test_can_target_a_narrower_memory_width(self):
+        codec = ContinuousTextCodec(torch.randn(16, 8), memory_width=4, slot_count=2,
+                                    seed=23, eos_token_id=15)
+        self.assertEqual(codec.slot_width, 2)
+        self.assertEqual(codec.encode(torch.tensor([2], dtype=torch.long)).numel(), 4)
+
 
 if __name__ == '__main__':
     unittest.main()
