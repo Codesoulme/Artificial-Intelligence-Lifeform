@@ -1,0 +1,755 @@
+{
+  "status": "question_focus_semantic_rescore",
+  "candidate_sha256": "b5f8f9d9f5fd8b432ed1ff10163c56e29f5859182dbcf62285278d6b82595976",
+  "groups": {
+    "请只说出小赵喜欢的水果名称。": {
+      "correct": 18,
+      "total": 18,
+      "wrong": []
+    },
+    "记录里小赵喜欢哪种水果？只写名称。": {
+      "correct": 17,
+      "total": 18,
+      "wrong": [
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是梨。"
+        }
+      ]
+    },
+    "小赵当前最喜欢的水果是什么？": {
+      "correct": 18,
+      "total": 18,
+      "wrong": []
+    },
+    "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。": {
+      "correct": 13,
+      "total": 18,
+      "wrong": [
+        {
+          "expected": "葡萄",
+          "answer": "小赵爱吃的水果是苹果。"
+        },
+        {
+          "expected": "芒果",
+          "answer": "小赵爱吃的水果是柠檬。"
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是梨。"
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵爱吃的水果是苹果。"
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵爱吃的水果是赵。"
+        }
+      ]
+    },
+    "关于小赵爱吃的水果，请回答名称。": {
+      "correct": 16,
+      "total": 18,
+      "wrong": [
+        {
+          "expected": "苹果",
+          "answer": "小赵爱吃的水果是葡萄。"
+        },
+        {
+          "expected": "樱桃",
+          "answer": "小赵爱吃的水果是葡萄。"
+        }
+      ]
+    },
+    "记忆里的小赵水果偏好是什么？只写名称。": {
+      "correct": 11,
+      "total": 18,
+      "wrong": [
+        {
+          "expected": "苹果",
+          "answer": "小赵水果偏好是葡萄。"
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是梨。"
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵水果偏好是葡萄。"
+        },
+        {
+          "expected": "榴莲",
+          "answer": "小赵水果的偏好是无糖。"
+        },
+        {
+          "expected": "蓝莓",
+          "answer": "小赵水果偏好是无籽西瓜。"
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵水果的偏好是甜。"
+        },
+        {
+          "expected": "木瓜",
+          "answer": "小赵水果的偏好是青红见仁。"
+        }
+      ]
+    }
+  },
+  "rows": [
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "苹果",
+      "answer": "小赵喜欢的水果是苹果。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "苹果",
+      "answer": "小赵喜欢的水果是苹果。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "苹果",
+      "answer": "小赵喜欢的水果是苹果。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "苹果",
+      "answer": "小赵爱吃的水果是苹果。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "苹果",
+      "answer": "小赵爱吃的水果是葡萄。",
+      "correct": false
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "苹果",
+      "answer": "小赵水果偏好是葡萄。",
+      "correct": false
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "香蕉",
+      "answer": "小赵喜欢的水果是香蕉。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "香蕉",
+      "answer": "小赵喜欢的水果是香蕉。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "香蕉",
+      "answer": "小赵喜欢的水果是香蕉。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "香蕉",
+      "answer": "小赵爱吃的水果是香蕉。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "香蕉",
+      "answer": "小赵爱吃的水果是香蕉。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "香蕉",
+      "answer": "小赵喜欢的水果是香蕉。",
+      "correct": true
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "西瓜",
+      "answer": "小赵喜欢的水果是西瓜。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "西瓜",
+      "answer": "小赵喜欢的水果是西瓜。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "西瓜",
+      "answer": "小赵喜欢的水果是西瓜。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "西瓜",
+      "answer": "小赵爱吃的水果是西瓜。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "西瓜",
+      "answer": "小赵爱吃的水果是西瓜。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "西瓜",
+      "answer": "小赵喜欢的水果是西瓜。",
+      "correct": true
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "葡萄",
+      "answer": "小赵喜欢的水果是葡萄。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "葡萄",
+      "answer": "小赵喜欢的水果是葡萄。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "葡萄",
+      "answer": "小赵喜欢的水果是葡萄。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "葡萄",
+      "answer": "小赵爱吃的水果是苹果。",
+      "correct": false
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "葡萄",
+      "answer": "小赵爱吃的水果是葡萄。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "葡萄",
+      "answer": "小赵喜欢的水果是葡萄。",
+      "correct": true
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "草莓",
+      "answer": "小赵喜欢的水果是草莓。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "草莓",
+      "answer": "小赵喜欢的水果是草莓。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "草莓",
+      "answer": "小赵喜欢的水果是草莓。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "草莓",
+      "answer": "小赵爱吃的水果是草莓。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "草莓",
+      "answer": "小赵爱吃的水果是草莓。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "草莓",
+      "answer": "小赵喜欢的水果是草莓。",
+      "correct": true
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "橘子",
+      "answer": "小赵喜欢的水果是橘子。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "橘子",
+      "answer": "小赵喜欢的水果是橘子。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "橘子",
+      "answer": "小赵喜欢的水果是橘子。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "橘子",
+      "answer": "小赵爱吃的水果是橘子。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "橘子",
+      "answer": "小赵爱吃的水果是橘子。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "橘子",
+      "answer": "小赵水果的偏好是橘子。",
+      "correct": true
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "桃子",
+      "answer": "小赵喜欢的水果是桃子。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "桃子",
+      "answer": "小赵喜欢的水果是桃子。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "桃子",
+      "answer": "小赵喜欢的水果是桃子。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "桃子",
+      "answer": "小赵爱吃的水果是桃子。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "桃子",
+      "answer": "小赵爱吃的水果是桃子。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "桃子",
+      "answer": "小赵喜欢的水果是桃子。",
+      "correct": true
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "芒果",
+      "answer": "小赵喜欢的水果是芒果。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "芒果",
+      "answer": "小赵喜欢的水果是芒果。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "芒果",
+      "answer": "小赵喜欢的水果是芒果。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "芒果",
+      "answer": "小赵爱吃的水果是柠檬。",
+      "correct": false
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "芒果",
+      "answer": "小赵爱吃的水果是芒果。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "芒果",
+      "answer": "小赵喜欢的水果是芒果。",
+      "correct": true
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "梨子",
+      "answer": "小赵喜欢的水果是梨子。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "梨子",
+      "answer": "小赵喜欢的水果是梨。",
+      "correct": false
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "梨子",
+      "answer": "小赵喜欢的水果是梨子。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "梨子",
+      "answer": "小赵喜欢的水果是梨。",
+      "correct": false
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "梨子",
+      "answer": "小赵喜欢的水果是梨子。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "梨子",
+      "answer": "小赵喜欢的水果是梨。",
+      "correct": false
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "柠檬",
+      "answer": "小赵喜欢的水果是柠檬。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "柠檬",
+      "answer": "小赵喜欢的水果是柠檬。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "柠檬",
+      "answer": "小赵喜欢的水果是柠檬。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "柠檬",
+      "answer": "小赵爱吃的水果是柠檬。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "柠檬",
+      "answer": "小赵爱吃的水果是柠檬。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "柠檬",
+      "answer": "小赵水果偏好是柠檬。",
+      "correct": true
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "菠萝",
+      "answer": "小赵喜欢的水果是菠萝。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "菠萝",
+      "answer": "小赵喜欢的水果是菠萝。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "菠萝",
+      "answer": "小赵喜欢的水果是菠萝。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "菠萝",
+      "answer": "小赵喜欢吃的水果是菠萝。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "菠萝",
+      "answer": "小赵喜欢的水果是菠萝。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "菠萝",
+      "answer": "小赵喜欢的水果是菠萝。",
+      "correct": true
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "樱桃",
+      "answer": "小赵喜欢的水果是樱桃。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "樱桃",
+      "answer": "小赵喜欢的水果是樱桃。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "樱桃",
+      "answer": "小赵喜欢的水果是樱桃。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "樱桃",
+      "answer": "小赵喜欢的水果是樱桃。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "樱桃",
+      "answer": "小赵爱吃的水果是葡萄。",
+      "correct": false
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "樱桃",
+      "answer": "小赵喜欢的水果是樱桃。",
+      "correct": true
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "柚子",
+      "answer": "小赵喜欢的水果是柚子。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "柚子",
+      "answer": "小赵喜欢的水果是柚子。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "柚子",
+      "answer": "小赵喜欢的水果是柚子。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "柚子",
+      "answer": "小赵喜欢的水果是柚子。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "柚子",
+      "answer": "小赵爱吃的水果是柚子。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "柚子",
+      "answer": "小赵喜欢的水果是柚子。",
+      "correct": true
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "荔枝",
+      "answer": "小赵喜欢的水果是荔枝。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "荔枝",
+      "answer": "小赵喜欢的水果是荔枝。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "荔枝",
+      "answer": "小赵喜欢的水果是荔枝。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "荔枝",
+      "answer": "小赵爱吃的水果是苹果。",
+      "correct": false
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "荔枝",
+      "answer": "小赵爱吃的水果是荔枝。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "荔枝",
+      "answer": "小赵水果偏好是葡萄。",
+      "correct": false
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "榴莲",
+      "answer": "小赵喜欢的水果是榴莲。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "榴莲",
+      "answer": "小赵喜欢的水果是榴莲。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "榴莲",
+      "answer": "小赵喜欢的水果是榴莲。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "榴莲",
+      "answer": "小赵喜欢的水果是榴莲。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "榴莲",
+      "answer": "小赵喜欢的水果是榴莲。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "榴莲",
+      "answer": "小赵水果的偏好是无糖。",
+      "correct": false
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "蓝莓",
+      "answer": "小赵喜欢的水果是蓝莓。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "蓝莓",
+      "answer": "小赵喜欢的水果是蓝莓。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "蓝莓",
+      "answer": "小赵喜欢的水果是蓝莓。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "蓝莓",
+      "answer": "小赵喜欢吃的水果是蓝莓。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "蓝莓",
+      "answer": "小赵喜欢的水果是蓝莓。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "蓝莓",
+      "answer": "小赵水果偏好是无籽西瓜。",
+      "correct": false
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "火龙果",
+      "answer": "小赵喜欢的水果是火龙果。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "火龙果",
+      "answer": "小赵喜欢的水果是火龙果。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "火龙果",
+      "answer": "小赵喜欢的水果是火龙果。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "火龙果",
+      "answer": "小赵爱吃的水果是赵。",
+      "correct": false
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "火龙果",
+      "answer": "小赵爱吃的水果是火龙果。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "火龙果",
+      "answer": "小赵水果的偏好是甜。",
+      "correct": false
+    },
+    {
+      "question": "请只说出小赵喜欢的水果名称。",
+      "expected": "木瓜",
+      "answer": "小赵喜欢的水果是木瓜。",
+      "correct": true
+    },
+    {
+      "question": "记录里小赵喜欢哪种水果？只写名称。",
+      "expected": "木瓜",
+      "answer": "小赵喜欢的水果是木瓜。",
+      "correct": true
+    },
+    {
+      "question": "小赵当前最喜欢的水果是什么？",
+      "expected": "木瓜",
+      "answer": "小赵喜欢的水果是木瓜。",
+      "correct": true
+    },
+    {
+      "question": "请查阅记忆后告诉我小赵爱吃什么水果，只回答水果名称。",
+      "expected": "木瓜",
+      "answer": "小赵爱吃的水果是木瓜。",
+      "correct": true
+    },
+    {
+      "question": "关于小赵爱吃的水果，请回答名称。",
+      "expected": "木瓜",
+      "answer": "小赵爱吃的水果是木瓜。",
+      "correct": true
+    },
+    {
+      "question": "记忆里的小赵水果偏好是什么？只写名称。",
+      "expected": "木瓜",
+      "answer": "小赵水果的偏好是青红见仁。",
+      "correct": false
+    }
+  ],
+  "limitations": [
+    "Semantic rules are conservative heuristics.",
+    "This rescoring does not add new model behavior.",
+    "Lists, negations and conflicting facts remain failures."
+  ]
+}

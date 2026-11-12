@@ -7,6 +7,10 @@ class GenerationMetricsTests(unittest.TestCase):
     def test_lists_are_not_correct_assertions(self):
         self.assertFalse(asserted_fact('小赵喜欢的水果包括苹果、香蕉。', '小赵', '苹果'))
 
+    def test_natural_fact_rephrasings_are_correct(self):
+        self.assertTrue(asserted_fact('小赵爱吃的水果是苹果。', '小赵', '苹果'))
+        self.assertTrue(asserted_fact('小赵水果偏好是苹果。', '小赵', '苹果'))
+
     def test_denial_and_wrong_subject_do_not_pass(self):
         self.assertFalse(asserted_fact('小赵不喜欢苹果。', '小赵', '苹果'))
         self.assertFalse(asserted_fact('小林喜欢的水果是苹果。', '小赵', '苹果'))

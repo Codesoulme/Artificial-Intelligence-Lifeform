@@ -31,10 +31,20 @@ STORE_IDENTITY = True
 BRIDGE_CONDITION_SLOTS = 2
 TRAIN_VALUE_COUNT = 16
 TRAIN_CORRECTION_SEQUENCES = False
+TRAIN_MULTI_ENTITY_STATES = False
+TRAIN_EXTRA_QUESTIONS = False
+FOCUS_EXTRA_QUESTIONS = False
+EXTRA_QUESTION_TEMPLATES = (
+    '从水果偏好记忆看，{name}爱吃什么水果？只回答水果名。',
+    '关于{name}爱吃的水果，请回答名称。',
+    '记忆里的{name}水果偏好是什么？只写名称。',
+)
 CODEC_FACTORY = ContinuousTextCodec
 DIRECT_RESIDUAL = False
 DIRECT_RESIDUAL_LAYER = 20
 STRICT_SWAP_EVAL = False
+START_CANDIDATE = None
+LANGUAGE_LR = 1e-4
 WORDS = ('苹果', '香蕉', '西瓜', '葡萄', '草莓', '橘子', '桃子', '芒果',
          '梨子', '柠檬', '菠萝', '樱桃', '柚子', '荔枝', '榴莲', '蓝莓',
          '火龙果', '木瓜')
@@ -247,7 +257,17 @@ def main():
                               eos_token_id=tok.eos_token_id if CODEC_ADD_EOS else None).to(device)
         bridge = make_token_decoder(codec, embedding)
         bridge.slot_count = CODEC_SLOT_COUNT
-        bridge_trace = fit_token_decoder(bridge, codec, embedding)
+        start_payload = None
+        if START_CANDIDATE is None:
+            bridge_trace = fit_token_decoder(bridge, codec, embedding)
+        else:
+            start_payload = torch.load(START_CANDIDATE, map_location='cpu', weights_only=True)
+            if (start_payload.get('format') != 'spora-semantic-bridge-research-v2'
+                    or start_payload.get('base_sha256') != p.WEIGHT_SHA
+                    or start_payload.get('source_sha256') != source_sha):
+                raise ValueError('Starting candidate lineage mismatch')
+            bridge.load_state_dict(start_payload['bridge'], strict=True)
+            bridge_trace = [{'step': 0, 'cosine_loss': 0.0, 'reused_start_bridge': True}]
         codec.requires_grad_(False)
         bridge.requires_grad_(False)
         decoder.requires_grad_(False)
@@ -277,10 +297,10 @@ def main():
                 site.read_out.bias.zero_()
             site.read_out.bias.requires_grad_(False)
             slow_patches.append(patcher)
-        candidate = torch.load(TEACHER_CANDIDATE, map_location='cpu', weights_only=True)
-        teacher_sha = p.sha(TEACHER_CANDIDATE)
-        if (candidate['source_sha256'] != source_sha or candidate['base_sha256'] != p.WEIGHT_SHA
-                or not candidate.get('adapter_requires_addressed_current_memory')):
+        candidate_path = START_CANDIDATE or TEACHER_CANDIDATE
+        candidate = start_payload or torch.load(candidate_path, map_location='cpu', weights_only=True)
+        teacher_sha = p.sha(candidate_path)
+        if (candidate['source_sha256'] != source_sha or candidate['base_sha256'] != p.WEIGHT_SHA):
             raise ValueError('Teacher candidate source mismatch')
         decoder.reader.load_state_dict(candidate['reader'], strict=True)
         with torch.no_grad():
@@ -289,16 +309,24 @@ def main():
                     raise ValueError('Previous adapter position mismatch')
                 adapter.a.copy_(old['a'])
                 adapter.b.copy_(old['b'])
+                if 'condition' in old:
+                    adapter.condition.copy_(old['condition'])
+        if start_payload is not None:
+            if len(candidate.get('direct_adapters', ())) != len(direct_adapters):
+                raise ValueError('Starting direct residual count mismatch')
+            for (index, name, adapter), old in zip(direct_adapters, candidate['direct_adapters']):
+                if old['layer'] != index or old['projection'] != name:
+                    raise ValueError('Starting direct residual position mismatch')
+                with torch.no_grad():
+                    adapter.to_hidden.load_state_dict(old['to_hidden'], strict=True)
+                    adapter.gate.copy_(old['gate'])
 
-        def state_for_values(values, key):
+        def state_for_assignments(assignments):
             state = p.fresh_controlled_state(model)
             fast, velocity = model.initial_state(1)
             for site in fast:
                 site[0] = torch.zeros_like(site[0])
-            if values is not None:
-                if not values:
-                    raise ValueError('At least one value is required')
-                for value in values:
+            for key, value in assignments:
                     target = torch.zeros((1, model.config.memory_width), device=device)
                     fact_ids = word_ids[value] if STORE_FULL_FACT else [word_ids[value][0]]
                     stored_ids = ([identity_ids[key]] if STORE_IDENTITY else []) + fact_ids
@@ -319,18 +347,29 @@ def main():
             state.current = [x[0].detach() for x in fast]
             return state
 
+        def state_for_values(values, key):
+            if values is None:
+                return state_for_assignments(())
+            if not values:
+                raise ValueError('At least one value is required')
+            return state_for_assignments(tuple((key, value) for value in values))
+
         def state_for(value, key):
             return state_for_values(None if value is None else (value,), key)
 
         questions = ('请只说出{name}喜欢的水果名称。',
                      '记录里{name}喜欢哪种水果？只写名称。',
                      '{name}当前最喜欢的水果是什么？')
+        if TRAIN_EXTRA_QUESTIONS:
+            questions += tuple(EXTRA_QUESTION_TEMPLATES)
         cases = []
         states = {}
         schedule = [('train', key, value, question)
                     for key in (0, 1, 2) for value in range(TRAIN_VALUE_COUNT)
                     for question in questions]
-        schedule += [('held_name', 3, value, questions[0]) for value in range(18)]
+        held_questions = questions if TRAIN_EXTRA_QUESTIONS else (questions[0],)
+        schedule += [('held_name', 3, value, question)
+                     for value in range(18) for question in held_questions]
         for group, key, value, question_template in schedule:
             if (key, value) not in states:
                 states[key, value] = state_for(value, key)
@@ -366,21 +405,63 @@ def main():
                                   'question': question, 'state': state, 'prompt': prompt, 'ids': ids,
                                   'spec': spec, 'value_position': value_position,
                                   'digest': p.frozen_digest(model, state)})
+        held_multi_states = {}
+        if TRAIN_MULTI_ENTITY_STATES:
+            for target_key in (0, 1, 2):
+                name = ('小林', '小周', '小王')[target_key]
+                for value in range(TRAIN_VALUE_COUNT):
+                    assignments = tuple((key, (value + key) % TRAIN_VALUE_COUNT) for key in (0, 1, 2))
+                    state = state_for_assignments(assignments)
+                    for question_template in questions:
+                        question = question_template.format(name=name)
+                        answer = f'{name}喜欢的水果是{WORDS[value]}。'
+                        prompt = p.closed_think_inputs(tok, question, 'cuda')
+                        answer_tokens = tok.encode(answer, add_special_tokens=False)
+                        value_position = unique_token_span(answer_tokens, word_ids[value])
+                        target = torch.tensor([answer_tokens + [tok.eos_token_id]], device=device)
+                        ids = torch.cat((prompt['input_ids'], target), dim=1)
+                        spec = p._memory_args(model, state, {'key': target_key, 'intent': 'current', 'event_time': 0})
+                        cases.append({'group': 'train_multi', 'key': target_key, 'value': value, 'name': name,
+                                      'question': question, 'state': state, 'prompt': prompt, 'ids': ids,
+                                      'spec': spec, 'value_position': value_position,
+                                      'digest': p.frozen_digest(model, state)})
+            held_name = '小赵'
+            for value in range(len(WORDS)):
+                assignments = tuple([(0, value % TRAIN_VALUE_COUNT),
+                                     (1, (value + 1) % TRAIN_VALUE_COUNT),
+                                     (2, (value + 2) % TRAIN_VALUE_COUNT), (3, value)])
+                held_multi_states[value] = state_for_assignments(assignments)
+                for question_template in questions:
+                    question = question_template.format(name=held_name)
+                    answer = f'{held_name}喜欢的水果是{WORDS[value]}。'
+                    prompt = p.closed_think_inputs(tok, question, 'cuda')
+                    answer_tokens = tok.encode(answer, add_special_tokens=False)
+                    value_position = unique_token_span(answer_tokens, word_ids[value])
+                    target = torch.tensor([answer_tokens + [tok.eos_token_id]], device=device)
+                    ids = torch.cat((prompt['input_ids'], target), dim=1)
+                    spec = p._memory_args(model, held_multi_states[value],
+                                           {'key': 3, 'intent': 'current', 'event_time': 0})
+                    cases.append({'group': 'held_name_multi', 'key': 3, 'value': value, 'name': held_name,
+                                  'question': question, 'state': held_multi_states[value], 'prompt': prompt,
+                                  'ids': ids, 'spec': spec, 'value_position': value_position,
+                                  'digest': p.frozen_digest(model, held_multi_states[value])})
         empty = state_for(None, 0)
         empty_digest = p.frozen_digest(model, empty)
 
         def evaluate():
             rows = []
-            selected = [x for x in cases if x['group'] == 'held_name' or
+            selected = [x for x in cases if x['group'] in ('held_name', 'held_name_multi') or
                         (x['group'] == 'train' and x['value'] < 4 and x['question'] == questions[0].format(name=x['name']))]
             for item in selected:
                 conditions = [('memory', item['spec'])]
                 if (item['group'], item['value']) in (('train', 0), ('held_name', 16)):
                     conditions += [('empty', p._memory_args(model, empty,
                         {'key': item['key'], 'intent': 'current', 'event_time': 0})), ('off', None)]
-                if STRICT_SWAP_EVAL and item['group'] == 'held_name':
+                if STRICT_SWAP_EVAL and item['group'] in ('held_name', 'held_name_multi'):
                     swapped = (item['value'] + 1) % len(WORDS)
-                    conditions.append(('swapped', p._memory_args(model, states[item['key'], swapped],
+                    swap_state = (states[item['key'], swapped] if item['group'] == 'held_name'
+                                  else held_multi_states[swapped])
+                    conditions.append(('swapped', p._memory_args(model, swap_state,
                         {'key': item['key'], 'intent': 'current', 'event_time': 0})))
                 for condition, spec in conditions:
                     with torch.inference_mode():
@@ -390,7 +471,7 @@ def main():
                         scores = forced[0, prefix - 1:prefix - 1 + item['ids'].shape[1] - prefix]
                         fact_scores = scores[item['value_position']]
                         correct_id = word_ids[item['value']][0]
-                        competitor = word_ids[(item['value'] + 1) % 16][0]
+                        competitor = word_ids[(item['value'] + 1) % len(WORDS)][0]
                         output = decoder.generate(**item['prompt'], **({**spec, 'use_cache': True} if spec else {}),
                             max_new_tokens=24, do_sample=False, pad_token_id=tok.pad_token_id,
                             eos_token_id=tok.eos_token_id)
@@ -410,11 +491,21 @@ def main():
 
         before = evaluate()
         train = [x for x in cases if x['group'].startswith('train')]
+        if FOCUS_EXTRA_QUESTIONS:
+            focus_questions = {question.format(name=name) for name in ('小林', '小周', '小王')
+                               for question in questions[3:]}
+            focused = [x for x in train if x['question'] in focus_questions]
+            replay = [x for x in train if x['group'] == 'train'
+                      and x['question'] == questions[0].format(name=x['name'])
+                      and x['value'] < 4]
+            if not focused or not replay:
+                raise ValueError('Focused question schedule is empty')
+            train = focused + replay * 2
         params = [x for x in decoder.reader.parameters() if x.requires_grad]
         params += [param for _, _, adapter in adapters for param in (adapter.a, adapter.b, adapter.condition)]
         params += [param for _, _, adapter in direct_adapters
                    for param in list(adapter.to_hidden.parameters()) + [adapter.gate]]
-        optimizer = torch.optim.AdamW(params, lr=1e-4, weight_decay=0, foreach=False)
+        optimizer = torch.optim.AdamW(params, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
         trace = []
         for step in range(LANGUAGE_STEPS):
             if step % len(train) == 0:
@@ -482,6 +573,9 @@ def main():
                          'store_identity': STORE_IDENTITY, 'condition_slots': BRIDGE_CONDITION_SLOTS,
                          'train_value_count': TRAIN_VALUE_COUNT, 'strict_swap_eval': STRICT_SWAP_EVAL,
                          'train_correction_sequences': TRAIN_CORRECTION_SEQUENCES,
+                         'start_candidate': str(START_CANDIDATE) if START_CANDIDATE is not None else None,
+                         'language_lr': LANGUAGE_LR,
+                         'focus_extra_questions': FOCUS_EXTRA_QUESTIONS,
                          'direct_residual': DIRECT_RESIDUAL, 'direct_residual_layer': DIRECT_RESIDUAL_LAYER,
                          'slow_signal_disabled': True, 'words': list(WORDS),
                          'reader_layer_indices': list(decoder.layer_indices)}
