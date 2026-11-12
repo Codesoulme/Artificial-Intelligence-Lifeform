@@ -12,11 +12,27 @@ from scripts.deepseek_named_binding_probe import KEYS
 from spora.identity_fingerprints import IdentityFingerprints
 from spora.identity_read_guard import IdentityReadGuard
 
-OUTPUT = p.ROOT / 'runs/deepseek-spora-pre-read-guard-audit-20261112.json'
+OUTPUT = p.ROOT / 'runs/deepseek-spora-pre-read-guard-span-audit-20261112.json'
 NAMES = ('小林', '阿宁', '小雨', '阿哲')
 CASES = [(f'{name}现在想喝哪种饮料？', i) for i, name in enumerate(NAMES)] + [
     (f'{name}{suffix}现在想喝哪种饮料？', None)
     for name, suffix in zip(NAMES, ('华', '悦', '晴', '轩'))]
+
+
+class RecordingGuard(IdentityReadGuard):
+    def authorize(self, question, selected, key):
+        text = self.tokenizer.apply_chat_template([{'role': 'user', 'content': question}],
+            tokenize=False, add_generation_prompt=True)
+        offsets = self.tokenizer([text], return_tensors='pt', padding=True, add_special_tokens=False,
+                                 return_offsets_mapping=True)['offset_mapping'][0]
+        start = text.find(question)
+        indices = selected.nonzero(as_tuple=True)[0].tolist()
+        pieces = [(int(offsets[i, 0]) - start, int(offsets[i, 1]) - start) for i in indices]
+        chars = sorted({j for lo, hi in pieces for j in range(max(0, lo), min(len(question), hi))})
+        self.last = {'selected_text': ''.join(question[i] for i in chars), 'character_positions': chars,
+                     'key': key}
+        self.last['authorized'] = super().authorize(question, selected, key)
+        return self.last['authorized']
 
 
 def main():
@@ -44,14 +60,16 @@ def main():
                 raise ValueError('Controlled observation rejected')
         chat.state = state
         controlled = p.frozen_digest(chat.organism, state)
-        guard = IdentityReadGuard(fingerprints, chat.tokenizer)
+        guard = RecordingGuard(fingerprints, chat.tokenizer)
         for question, expected_index in CASES:
             results = {}
             for label, identity_guard in (('baseline', None), ('guarded', guard)):
+                guard.last = None
                 with patch.object(p.runtime, 'current_memory_status', wraps=p.runtime.current_memory_status) as status, \
                      patch.object(chat.decoder, 'generate', wraps=chat.decoder.generate) as generate:
                     result = chat.answer(question, identity_guard=identity_guard)
-                results[label] = {'result': result, 'status_calls': status.call_count,
+                results[label] = {'result': result, 'guard_span': guard.last if identity_guard is not None else None,
+                                  'status_calls': status.call_count,
                                   'generate_calls': generate.call_count}
                 if result['reason'] == 'identity_guard_rejected' and (status.call_count or generate.call_count):
                     raise ValueError('Guard rejected after memory access')
