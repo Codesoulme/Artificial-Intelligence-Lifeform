@@ -21,6 +21,7 @@ SEED = 88731
 BRIDGE_STEPS = 400
 DECODER_STEPS = 1200
 HIDDEN = 384
+BRIDGE_KIND = 'linear'
 WORDS = ('苹果', '香蕉', '西瓜', '葡萄', '草莓', '橘子', '桃子', '芒果',
          '梨子', '柠檬', '菠萝', '樱桃', '柚子', '荔枝', '榴莲', '蓝莓',
          '火龙果', '木瓜')
@@ -79,6 +80,40 @@ class MemoryTextReconstructor(p.torch.nn.Module):
         return p.torch.stack(tokens, dim=1)
 
 
+class MLPTokenCodeDecoder(p.torch.nn.Module):
+    def __init__(self, slot_width, embedding_width):
+        super().__init__()
+        self.net = p.torch.nn.Sequential(
+            p.torch.nn.Linear(slot_width, 512), p.torch.nn.GELU(),
+            p.torch.nn.Linear(512, embedding_width))
+        p.torch.nn.init.xavier_uniform_(self.net[0].weight)
+        p.torch.nn.init.xavier_uniform_(self.net[2].weight)
+
+    def forward(self, codes):
+        return p.torch.nn.functional.normalize(self.net(codes.float()), dim=-1)
+
+
+def fit_mlp_bridge(decoder, codec, embedding, steps):
+    torch = p.torch
+    generator = torch.Generator(device=embedding.device).manual_seed(SEED + 31)
+    optimizer = torch.optim.AdamW(decoder.parameters(), lr=2e-3,
+                                  weight_decay=1e-4, foreach=False)
+    trace = []
+    for step in range(steps):
+        ids = torch.randint(codec.vocab_size, (8192,), generator=generator, device=embedding.device)
+        codes = codec.codebook.index_select(0, ids)
+        targets = torch.nn.functional.normalize(embedding.index_select(0, ids).float(), dim=-1)
+        loss = 1.0 - (decoder(codes) * targets).sum(-1).mean()
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        norm = torch.nn.utils.clip_grad_norm_(decoder.parameters(), 1.0, error_if_nonfinite=True)
+        optimizer.step()
+        if step in (0, 49, 199, steps - 1):
+            trace.append({'step': step + 1, 'cosine_loss': float(loss.detach()),
+                          'grad_norm': float(norm)})
+    return trace
+
+
 def make_state(model, codec, tokenizer, device, key, value):
     fast, velocity = model.initial_state(1)
     for site in fast:
@@ -122,8 +157,11 @@ def main():
         codec = ContinuousTextCodec(embedding.cpu(), memory_width=model.config.memory_width,
                                     slot_count=5, seed=29071,
                                     eos_token_id=tokenizer.eos_token_id).to(device)
-        bridge = TokenCodeDecoder(codec.slot_width, embedding.shape[1]).to(device)
-        bridge_trace = fit_token_decoder(bridge, codec, embedding, steps=BRIDGE_STEPS)
+        bridge_class = MLPTokenCodeDecoder if BRIDGE_KIND == 'mlp' else TokenCodeDecoder
+        bridge = bridge_class(codec.slot_width, embedding.shape[1]).to(device)
+        bridge_trace = (fit_mlp_bridge(bridge, codec, embedding, BRIDGE_STEPS)
+                        if BRIDGE_KIND == 'mlp' else
+                        fit_token_decoder(bridge, codec, embedding, steps=BRIDGE_STEPS))
         bridge.eval().requires_grad_(False)
         reconstructor = MemoryTextReconstructor(embedding, model.config.memory_width, 5, bridge).to(device)
         cases = []
