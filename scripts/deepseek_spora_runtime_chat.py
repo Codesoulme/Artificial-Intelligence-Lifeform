@@ -6,6 +6,7 @@ an external answer table.
 """
 import argparse
 import json
+import math
 import sys
 import time
 from pathlib import Path
@@ -334,8 +335,14 @@ def main():
     parser.add_argument('--observe', nargs=2, type=int, metavar=('KEY', 'VALUE'))
     parser.add_argument('--source', default='direct', choices=('direct', 'report', 'inference', 'simulation'))
     parser.add_argument('--quality', type=float, default=1.0)
+    parser.add_argument('--read-intent-floor', type=float, default=None,
+                        help='Research-only per-instance read recovery floor override')
     args = parser.parse_args()
     chat = load_chat()
+    if args.read_intent_floor is not None:
+        if not math.isfinite(args.read_intent_floor):
+            parser.error('--read-intent-floor must be finite')
+        chat.read_intent_recovery_floor = args.read_intent_floor
     if args.observe is not None:
         key, value = args.observe
         print(json.dumps(chat.observe_sourced(key, value, args.source, args.quality), ensure_ascii=False))
