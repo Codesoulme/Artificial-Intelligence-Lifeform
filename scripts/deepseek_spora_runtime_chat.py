@@ -394,12 +394,17 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--question')
     parser.add_argument('--observe', nargs=2, type=int, metavar=('KEY', 'VALUE'))
+    parser.add_argument('--observe-text', help='Opt-in natural-language observation; requires --natural-write-heads')
+    parser.add_argument('--natural-write-heads', type=Path,
+                        help='Research-only natural write head bundle')
     parser.add_argument('--source', default='direct', choices=('direct', 'report', 'inference', 'simulation'))
     parser.add_argument('--quality', type=float, default=1.0)
     parser.add_argument('--read-intent-floor', type=float, default=None,
                         help='Research-only per-instance read recovery floor override')
     args = parser.parse_args()
-    chat = load_chat()
+    if args.observe_text and args.natural_write_heads is None:
+        parser.error('--observe-text requires --natural-write-heads')
+    chat = load_chat(natural_write_heads_path=args.natural_write_heads)
     if args.read_intent_floor is not None:
         if not math.isfinite(args.read_intent_floor):
             parser.error('--read-intent-floor must be finite')
@@ -407,6 +412,10 @@ def main():
     if args.observe is not None:
         key, value = args.observe
         print(json.dumps(chat.observe_sourced(key, value, args.source, args.quality), ensure_ascii=False))
+        return
+    if args.observe_text:
+        print(json.dumps(chat.observe_text(args.observe_text, source=args.source,
+                                           quality=args.quality), ensure_ascii=False))
         return
     if args.question:
         print(json.dumps(chat.answer(args.question), ensure_ascii=False))

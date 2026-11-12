@@ -177,6 +177,14 @@ class RuntimeChatPersistenceTests(unittest.TestCase):
         observe.assert_called_once()
         self.assertEqual(result['action'], 'new')
 
+    def test_text_observation_cli_requires_explicit_bundle(self):
+        # The CLI gate is intentionally represented by the same API contract:
+        # no bundle means no natural-language write path.
+        chat = object.__new__(chat_module.SporaChat)
+        chat.natural_write_heads = None
+        with self.assertRaises(ValueError):
+            chat.observe_text('小林喜欢水。')
+
     def test_observation_preserves_bootstrap_and_publishes_after_save(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
