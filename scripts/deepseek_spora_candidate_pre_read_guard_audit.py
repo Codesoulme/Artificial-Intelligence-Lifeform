@@ -9,7 +9,7 @@ from scripts import deepseek_spora_runtime_chat as runtime
 from scripts.deepseek_spora_boundary_train_pilot import OUTPUT as CANDIDATE
 
 
-def main():
+def main(output=None):
     path = CANDIDATE / 'locator.pt'
     candidate_sha = runtime.sha(path)
     report = json.loads((CANDIDATE / 'result.json').read_text(encoding='utf-8'))
@@ -27,7 +27,7 @@ def main():
         chat.router['locator_threshold'] = candidate['threshold']
         return chat
 
-    audit.OUTPUT = Path(audit.p.ROOT / 'runs/deepseek-spora-candidate-pre-read-guard-audit-20261112.json')
+    audit.OUTPUT = Path(output) if output is not None else Path(audit.p.ROOT / 'runs/deepseek-spora-candidate-pre-read-guard-audit-20261112.json')
     try:
         runtime.load_chat = load_with_candidate
         audit.main()
