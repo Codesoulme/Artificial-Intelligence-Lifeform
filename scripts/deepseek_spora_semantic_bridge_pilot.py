@@ -49,6 +49,7 @@ QUERY_INTENT_GATE = False
 QUERY_SCALAR_GATE = False
 QUERY_INTENT_COUNT = 4
 INTENT_LOSS_WEIGHT = 0.5
+FINAL_RESIDUAL = False
 WORDS = ('苹果', '香蕉', '西瓜', '葡萄', '草莓', '橘子', '桃子', '芒果',
          '梨子', '柠檬', '菠萝', '樱桃', '柚子', '荔枝', '榴莲', '蓝莓',
          '火龙果', '木瓜')
@@ -239,6 +240,56 @@ class MemoryResidualOutput(p.torch.nn.Module):
         return output + strength.to(output.dtype) * residual.to(output.dtype)
 
 
+class MemoryFinalHiddenResidual(p.torch.nn.Module):
+    """Research-only semantic memory injection immediately before lm_head."""
+
+    def __init__(self, base, memory_context, memory_width, bridge, embedding_width,
+                 condition_slots):
+        super().__init__()
+        self.base = base
+        self.memory_context = memory_context
+        self.memory_width = memory_width
+        self.slot_count = getattr(bridge, 'slot_count', CODEC_SLOT_COUNT)
+        self.slot_width = memory_width // self.slot_count
+        self.condition_slots = condition_slots
+        self.bridge = bridge
+        self.bridge.requires_grad_(False)
+        hidden_width = int(base.weight.shape[0])
+        self.to_hidden = p.torch.nn.Linear(condition_slots * embedding_width,
+                                           hidden_width, bias=False,
+                                           device=next(base.parameters()).device,
+                                           dtype=p.torch.float32)
+        p.torch.nn.init.zeros_(self.to_hidden.weight)
+        self.gate = p.torch.nn.Parameter(p.torch.tensor(-1.0,
+                                                        device=next(base.parameters()).device))
+
+    def forward(self, x):
+        output = self.base(x)
+        active = self.memory_context.get()
+        if active is None:
+            return output
+        matrices, addresses, mask, slots = active
+        if mask is not None and not bool(mask[0]):
+            return output
+        if (addresses is None or len(addresses) != 2 or len(matrices) != 2
+                or slots is None or slots.numel() != 1 or int(slots[0]) != 0):
+            raise ValueError('Final residual requires two fixed current addresses')
+        reads = []
+        for site in range(2):
+            address, matrix = addresses[site], matrices[site][0]
+            query = p.torch.nn.functional.normalize(
+                address.to(device=x.device, dtype=p.torch.float32), dim=-1)
+            raw = p.torch.bmm(matrix.to(device=x.device, dtype=p.torch.float32),
+                              query.unsqueeze(-1)).squeeze(-1)
+            reads.append(raw)
+        packed = ((reads[0] + reads[1]) * 0.5)[:, :self.slot_count * self.slot_width]
+        memory = packed.reshape(1, self.slot_count, self.slot_width)
+        selected = p.torch.nn.functional.normalize(memory[:, :self.condition_slots], dim=-1)
+        decoded = self.bridge(selected).reshape(1, -1)
+        residual = self.to_hidden(decoded).unsqueeze(1)
+        return output + p.torch.sigmoid(self.gate).to(output.dtype) * residual.to(output.dtype)
+
+
 def torch_empty(rows, cols, device):
     return p.torch.empty(rows, cols, device=device, dtype=p.torch.float32)
 
@@ -318,6 +369,13 @@ def main():
                 bridge, embedding.shape[1], BRIDGE_CONDITION_SLOTS)
             attention.o_proj = direct
             direct_adapters.append((DIRECT_RESIDUAL_LAYER, 'o_proj', direct))
+        final_adapters = []
+        if FINAL_RESIDUAL:
+            final = MemoryFinalHiddenResidual(
+                decoder.base.model.norm, decoder._memory_context, model.config.memory_width,
+                bridge, embedding.shape[1], BRIDGE_CONDITION_SLOTS)
+            decoder.base.model.norm = final
+            final_adapters.append(('final_norm', 'output', final))
         slow_patches = []
         for site in decoder.reader.native_sites:
             patcher = patch.object(site, 'slow_signal', side_effect=lambda x, query: torch.zeros_like(query))
@@ -354,6 +412,15 @@ def main():
                     if hasattr(adapter, 'query_intent') and 'query_intent' in old:
                         adapter.query_intent.load_state_dict(old['query_intent'], strict=True)
                         adapter.query_intent_scales.copy_(old['query_intent_scales'])
+            saved_final = candidate.get('final_adapters', ())
+            if saved_final and len(saved_final) != len(final_adapters):
+                raise ValueError('Starting final residual count mismatch')
+            for (location, name, adapter), old in zip(final_adapters, saved_final):
+                if old['location'] != location or old['name'] != name:
+                    raise ValueError('Starting final residual position mismatch')
+                with torch.no_grad():
+                    adapter.to_hidden.load_state_dict(old['to_hidden'], strict=True)
+                    adapter.gate.copy_(old['gate'])
 
         def state_for_assignments(assignments):
             state = p.fresh_controlled_state(model)
@@ -553,6 +620,8 @@ def main():
         params += [param for _, _, adapter in direct_adapters
                    for param in ((list(adapter.query_intent.parameters()) + [adapter.query_intent_scales])
                                  if hasattr(adapter, 'query_intent') else [])]
+        params += [param for _, _, adapter in final_adapters
+                   for param in list(adapter.to_hidden.parameters()) + [adapter.gate]]
         optimizer = torch.optim.AdamW(params, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
         trace = []
         for step in range(LANGUAGE_STEPS):
@@ -624,6 +693,11 @@ def main():
                              'query_intent_scales': adapter.query_intent_scales.detach().cpu().clone()}
                             if hasattr(adapter, 'query_intent') else {})}
                         for index, name, adapter in direct_adapters]
+        final_state = [{'location': location, 'name': name,
+                        'to_hidden': {key: value.detach().cpu().clone()
+                                      for key, value in adapter.to_hidden.state_dict().items()},
+                        'gate': adapter.gate.detach().cpu().clone()}
+                       for location, name, adapter in final_adapters]
         bridge_state = {k: v.detach().cpu().clone() for k, v in bridge.state_dict().items()}
         codec_state = {k: v.detach().cpu().clone() for k, v in codec.state_dict().items()}
         bridge.eval()
@@ -644,12 +718,14 @@ def main():
                          'intent_loss_weight': INTENT_LOSS_WEIGHT,
                          'focus_extra_questions': FOCUS_EXTRA_QUESTIONS,
                          'direct_residual': DIRECT_RESIDUAL, 'direct_residual_layer': DIRECT_RESIDUAL_LAYER,
+                         'final_residual': FINAL_RESIDUAL,
                          'slow_signal_disabled': True, 'words': list(WORDS),
                          'reader_layer_indices': list(decoder.layer_indices)}
     torch.save({'reader': reader_state, 'bridge': bridge_state, 'adapters': adapter_state,
                 'format': 'spora-semantic-bridge-research-v2', 'codec_state': codec_state,
                 'experiment_config': experiment_config,
                 'direct_adapters': direct_state,
+                'final_adapters': final_state,
                 'source_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA, 'research_only': True,
                 'memory_conditioning': 'embedding_reconstructed_identity_fact_slots',
                 'bridge_steps': BRIDGE_STEPS, 'language_steps': LANGUAGE_STEPS}, OUT / 'candidate.pt')

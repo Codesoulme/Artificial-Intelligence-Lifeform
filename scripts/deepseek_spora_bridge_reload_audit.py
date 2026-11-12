@@ -95,6 +95,18 @@ def main():
         with torch.no_grad():
             adapter.gate.copy_(old['gate'])
         attention.o_proj = adapter
+        final_payload = payload.get('final_adapters', ())
+        if final_payload:
+            if len(final_payload) != 1:
+                raise ValueError('Unexpected final residual layout')
+            old_final = final_payload[0]
+            final = s.MemoryFinalHiddenResidual(
+                decoder.base.model.norm, decoder._memory_context, model.config.memory_width,
+                bridge, embedding.shape[1], 4)
+            final.to_hidden.load_state_dict(old_final['to_hidden'], strict=True)
+            with torch.no_grad():
+                final.gate.copy_(old_final['gate'])
+            decoder.base.model.norm = final
         decoder.requires_grad_(False)
         bridge.requires_grad_(False)
 
@@ -137,7 +149,8 @@ def main():
             return row
 
         saved = {row['expected']: row for row in original['after']
-                 if row['group'] == 'held_name' and row['condition'] == 'memory'}
+                 if row['group'] == 'held_name' and row['condition'] == 'memory'
+                 and row['question'] == QUESTION.format(name=NAMES[3])}
         for value, word in enumerate(s.WORDS):
             row = probe('reload_parity', 3, value, state_for([(3, value)]))
             if row['token_ids'] != saved[word]['token_ids']:
