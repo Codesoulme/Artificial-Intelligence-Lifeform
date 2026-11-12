@@ -4,6 +4,8 @@ This module only defines the shared codebook contract. It does not decide
 which entity an utterance names, persist a memory page, or provide a refusal
 threshold for unknown addresses.
 """
+import math
+
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -65,17 +67,25 @@ class ContinuousTextCodec(nn.Module):
         return result.reshape(-1)
 
     @torch.no_grad()
-    def decode(self, code):
-        """Nearest-neighbor decode a code and return tokens, margins, and norm."""
+    def decode(self, code, *, min_slot_norm=0.0):
+        """Decode slots, optionally stopping at a caller-calibrated minimum norm.
+
+        The threshold only suppresses small numeric residuals. It cannot prove
+        that a memory exists, identify an entity, or establish content accuracy.
+        The default keeps the original exact-zero behavior.
+        """
         if (not isinstance(code, torch.Tensor) or code.ndim != 1
                 or code.numel() != self.slot_count * self.slot_width
                 or not code.is_floating_point() or not bool(torch.isfinite(code).all())):
             raise ValueError('Code has the wrong finite floating shape')
+        if (isinstance(min_slot_norm, bool) or not isinstance(min_slot_norm, (int, float))
+                or not math.isfinite(min_slot_norm) or min_slot_norm < 0):
+            raise ValueError('Minimum slot norm must be finite and nonnegative')
         slots = code.to(self.codebook.device).reshape(self.slot_count, self.slot_width)
         norms = slots.norm(dim=-1)
         tokens, margins = [], []
         for slot, vector in enumerate(slots):
-            if float(norms[slot]) == 0.0:
+            if float(norms[slot]) <= min_slot_norm:
                 break
             scores = self.codebook @ F.normalize(vector, dim=0)
             top = scores.topk(2)
