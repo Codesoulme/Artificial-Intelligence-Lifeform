@@ -1,0 +1,1571 @@
+{
+  "status": "isolated_memory_to_text_reconstruction",
+  "train": [
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "苹果",
+      "target": "小林喜欢的水果是苹果。",
+      "answer": "小林喜欢的水果是苹果。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        104167,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "香蕉",
+      "target": "小林喜欢的水果是香蕉。",
+      "answer": "小林喜欢的水果是香蕉。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        112622,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "西瓜",
+      "target": "小林喜欢的水果是西瓜。",
+      "answer": "小林喜欢的水果是西瓜。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        110029,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "葡萄",
+      "target": "小林喜欢的水果是葡萄。",
+      "answer": "小林喜欢的水果是葡萄。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        101580,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "草莓",
+      "target": "小林喜欢的水果是草莓。",
+      "answer": "小林喜欢的水果是草莓。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        112292,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "橘子",
+      "target": "小林喜欢的水果是橘子。",
+      "answer": "小林喜欢的水果是橘子。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        114088,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "桃子",
+      "target": "小林喜欢的水果是桃子。",
+      "answer": "小林喜欢的水果是桃子。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        100529,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "芒果",
+      "target": "小林喜欢的水果是芒果。",
+      "answer": "小林喜欢的水果是芒果。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        113792,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "梨子",
+      "target": "小林喜欢的水果是梨子。",
+      "answer": "小林喜欢的水果是梨子。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        105914,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "柠檬",
+      "target": "小林喜欢的水果是柠檬。",
+      "answer": "小林喜欢的水果是柠檬。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        112530,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "菠萝",
+      "target": "小林喜欢的水果是菠萝。",
+      "answer": "小林喜欢的水果是菠萝。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        119402,
+        101799,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "樱桃",
+      "target": "小林喜欢的水果是樱桃。",
+      "answer": "小林喜欢的水果是樱桃。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        114558,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "柚子",
+      "target": "小林喜欢的水果是柚子。",
+      "answer": "小林喜欢的水果是柚子。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        112721,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "荔枝",
+      "target": "小林喜欢的水果是荔枝。",
+      "answer": "小林喜欢的水果是荔枝。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        116220,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "榴莲",
+      "target": "小林喜欢的水果是榴莲。",
+      "answer": "小林喜欢的水果是榴莲。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        103809,
+        102341,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "蓝莓",
+      "target": "小林喜欢的水果是蓝莓。",
+      "answer": "小林喜欢的水果是蓝莓。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        100400,
+        103551,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "火龙果",
+      "target": "小林喜欢的水果是火龙果。",
+      "answer": "小林喜欢的水果是火龙果。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        79599,
+        99465,
+        27773,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小林",
+      "expected": "木瓜",
+      "target": "小林喜欢的水果是木瓜。",
+      "answer": "小林喜欢的水果是木瓜。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        75405,
+        100857,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "苹果",
+      "target": "小周喜欢的水果是苹果。",
+      "answer": "小周喜欢的水果是苹果。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        104167,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "香蕉",
+      "target": "小周喜欢的水果是香蕉。",
+      "answer": "小周喜欢的水果是香蕉。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        112622,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "西瓜",
+      "target": "小周喜欢的水果是西瓜。",
+      "answer": "小周喜欢的水果是西瓜。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        110029,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "葡萄",
+      "target": "小周喜欢的水果是葡萄。",
+      "answer": "小周喜欢的水果是葡萄。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        101580,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "草莓",
+      "target": "小周喜欢的水果是草莓。",
+      "answer": "小周喜欢的水果是草莓。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        112292,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "橘子",
+      "target": "小周喜欢的水果是橘子。",
+      "answer": "小周喜欢的水果是橘子。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        114088,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "桃子",
+      "target": "小周喜欢的水果是桃子。",
+      "answer": "小周喜欢的水果是桃子。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        100529,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "芒果",
+      "target": "小周喜欢的水果是芒果。",
+      "answer": "小周喜欢的水果是芒果。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        113792,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "梨子",
+      "target": "小周喜欢的水果是梨子。",
+      "answer": "小周喜欢的水果是梨子。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        105914,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "柠檬",
+      "target": "小周喜欢的水果是柠檬。",
+      "answer": "小周喜欢的水果是柠檬。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        112530,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "菠萝",
+      "target": "小周喜欢的水果是菠萝。",
+      "answer": "小周喜欢的水果是菠萝。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        119402,
+        101799,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "樱桃",
+      "target": "小周喜欢的水果是樱桃。",
+      "answer": "小周喜欢的水果是樱桃。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        114558,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "柚子",
+      "target": "小周喜欢的水果是柚子。",
+      "answer": "小周喜欢的水果是柚子。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        112721,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "荔枝",
+      "target": "小周喜欢的水果是荔枝。",
+      "answer": "小周喜欢的水果是荔枝。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        116220,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "榴莲",
+      "target": "小周喜欢的水果是榴莲。",
+      "answer": "小周喜欢的水果是榴莲。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        103809,
+        102341,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "蓝莓",
+      "target": "小周喜欢的水果是蓝莓。",
+      "answer": "小周喜欢的水果是蓝莓。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        100400,
+        103551,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "火龙果",
+      "target": "小周喜欢的水果是火龙果。",
+      "answer": "小周喜欢的水果是火龙果。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        79599,
+        99465,
+        27773,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小周",
+      "expected": "木瓜",
+      "target": "小周喜欢的水果是木瓜。",
+      "answer": "小周喜欢的水果是木瓜。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        75405,
+        100857,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "苹果",
+      "target": "小王喜欢的水果是苹果。",
+      "answer": "小王喜欢的水果是苹果。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        104167,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "香蕉",
+      "target": "小王喜欢的水果是香蕉。",
+      "answer": "小王喜欢的水果是香蕉。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        112622,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "西瓜",
+      "target": "小王喜欢的水果是西瓜。",
+      "answer": "小王喜欢的水果是西瓜。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        110029,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "葡萄",
+      "target": "小王喜欢的水果是葡萄。",
+      "answer": "小王喜欢的水果是葡萄。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        101580,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "草莓",
+      "target": "小王喜欢的水果是草莓。",
+      "answer": "小王喜欢的水果是草莓。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        112292,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "橘子",
+      "target": "小王喜欢的水果是橘子。",
+      "answer": "小王喜欢的水果是橘子。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        114088,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "桃子",
+      "target": "小王喜欢的水果是桃子。",
+      "answer": "小王喜欢的水果是桃子。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        100529,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "芒果",
+      "target": "小王喜欢的水果是芒果。",
+      "answer": "小王喜欢的水果是芒果。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        113792,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "梨子",
+      "target": "小王喜欢的水果是梨子。",
+      "answer": "小王喜欢的水果是梨子。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        105914,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "柠檬",
+      "target": "小王喜欢的水果是柠檬。",
+      "answer": "小王喜欢的水果是柠檬。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        112530,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "菠萝",
+      "target": "小王喜欢的水果是菠萝。",
+      "answer": "小王喜欢的水果是菠萝。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        119402,
+        101799,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "樱桃",
+      "target": "小王喜欢的水果是樱桃。",
+      "answer": "小王喜欢的水果是樱桃。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        114558,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "柚子",
+      "target": "小王喜欢的水果是柚子。",
+      "answer": "小王喜欢的水果是柚子。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        112721,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "荔枝",
+      "target": "小王喜欢的水果是荔枝。",
+      "answer": "小王喜欢的水果是荔枝。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        116220,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "榴莲",
+      "target": "小王喜欢的水果是榴莲。",
+      "answer": "小王喜欢的水果是榴莲。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        103809,
+        102341,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "蓝莓",
+      "target": "小王喜欢的水果是蓝莓。",
+      "answer": "小王喜欢的水果是蓝莓。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        100400,
+        103551,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "火龙果",
+      "target": "小王喜欢的水果是火龙果。",
+      "answer": "小王喜欢的水果是火龙果。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        79599,
+        99465,
+        27773,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    },
+    {
+      "group": "train",
+      "name": "小王",
+      "expected": "木瓜",
+      "target": "小王喜欢的水果是木瓜。",
+      "answer": "小王喜欢的水果是木瓜。",
+      "token_ids": [
+        30709,
+        99445,
+        99729,
+        9370,
+        104618,
+        20412,
+        75405,
+        100857,
+        1773,
+        151643
+      ],
+      "exact": true,
+      "contains_expected": true
+    }
+  ],
+  "held": [
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "苹果",
+      "target": "小赵喜欢的水果是苹果。",
+      "answer": "小林喜欢的水果是苹果。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        104167,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "香蕉",
+      "target": "小赵喜欢的水果是香蕉。",
+      "answer": "小林喜欢的水果是香蕉。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        112622,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "西瓜",
+      "target": "小赵喜欢的水果是西瓜。",
+      "answer": "小周喜欢的水果是西瓜。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        110029,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "葡萄",
+      "target": "小赵喜欢的水果是葡萄。",
+      "answer": "小林喜欢的水果是葡萄。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        101580,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "草莓",
+      "target": "小赵喜欢的水果是草莓。",
+      "answer": "小林喜欢的水果是草莓。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        112292,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "橘子",
+      "target": "小赵喜欢的水果是橘子。",
+      "answer": "小林喜欢的水果是橘子。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        114088,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "桃子",
+      "target": "小赵喜欢的水果是桃子。",
+      "answer": "小周喜欢的水果是桃子。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        100529,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "芒果",
+      "target": "小赵喜欢的水果是芒果。",
+      "answer": "小周喜欢的水果是芒果。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        113792,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "梨子",
+      "target": "小赵喜欢的水果是梨子。",
+      "answer": "小林喜欢的水果是梨子。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        105914,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "柠檬",
+      "target": "小赵喜欢的水果是柠檬。",
+      "answer": "小周喜欢的水果是柠檬。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        112530,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "菠萝",
+      "target": "小赵喜欢的水果是菠萝。",
+      "answer": "小林喜欢的水果是菠萝。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        119402,
+        101799,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "樱桃",
+      "target": "小赵喜欢的水果是樱桃。",
+      "answer": "小林喜欢的水果是樱桃。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        114558,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "柚子",
+      "target": "小赵喜欢的水果是柚子。",
+      "answer": "小周喜欢的水果是柚子。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        112721,
+        44729,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "荔枝",
+      "target": "小赵喜欢的水果是荔枝。",
+      "answer": "小林喜欢的水果是荔枝。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        116220,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "榴莲",
+      "target": "小赵喜欢的水果是榴莲。",
+      "answer": "小林喜欢的水果是榴莲。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        103809,
+        102341,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "蓝莓",
+      "target": "小赵喜欢的水果是蓝莓。",
+      "answer": "小林喜欢的水果是蓝莓。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        100400,
+        103551,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "火龙果",
+      "target": "小赵喜欢的水果是火龙果。",
+      "answer": "小林喜欢的水果是火龙果。",
+      "token_ids": [
+        30709,
+        99463,
+        99729,
+        9370,
+        104618,
+        20412,
+        79599,
+        99465,
+        27773,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    },
+    {
+      "group": "held_name",
+      "name": "小赵",
+      "expected": "木瓜",
+      "target": "小赵喜欢的水果是木瓜。",
+      "answer": "小周喜欢的水果是木瓜。",
+      "token_ids": [
+        30709,
+        40542,
+        99729,
+        9370,
+        104618,
+        20412,
+        75405,
+        100857,
+        1773,
+        151643
+      ],
+      "exact": false,
+      "contains_expected": true
+    }
+  ],
+  "train_contains": 54,
+  "held_contains": 18,
+  "train_exact": 54,
+  "held_exact": 0,
+  "bridge_trace": [
+    {
+      "step": 1,
+      "cosine_loss": 1.0013198852539062
+    },
+    {
+      "step": 10,
+      "cosine_loss": 0.7680558562278748
+    },
+    {
+      "step": 50,
+      "cosine_loss": 0.5520301461219788
+    },
+    {
+      "step": 100,
+      "cosine_loss": 0.4907154440879822
+    },
+    {
+      "step": 200,
+      "cosine_loss": 0.48350632190704346
+    },
+    {
+      "step": 400,
+      "cosine_loss": 0.4832272529602051
+    }
+  ],
+  "decoder_trace": [
+    {
+      "step": 1,
+      "loss": 11.943870544433594,
+      "grad_norm": 0.6192358136177063
+    },
+    {
+      "step": 10,
+      "loss": 5.3203043937683105,
+      "grad_norm": 4.126481533050537
+    },
+    {
+      "step": 50,
+      "loss": 0.9215195775032043,
+      "grad_norm": 1.2012879848480225
+    },
+    {
+      "step": 100,
+      "loss": 0.5230337381362915,
+      "grad_norm": 0.5675644874572754
+    },
+    {
+      "step": 200,
+      "loss": 0.3652557134628296,
+      "grad_norm": 0.48188480734825134
+    },
+    {
+      "step": 400,
+      "loss": 0.07314490526914597,
+      "grad_norm": 0.3101404011249542
+    },
+    {
+      "step": 800,
+      "loss": 0.0010249285260215402,
+      "grad_norm": 0.005340167321264744
+    },
+    {
+      "step": 1200,
+      "loss": 0.0005012332694604993,
+      "grad_norm": 0.003070446662604809
+    }
+  ],
+  "source_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "base_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "candidate_sha256": "7152a50e2a009df72c2f32a7c5d4f3828e3e8f97b37fbe66a2b1be2effb8ef57",
+  "seconds": 258.78649289999885,
+  "peak_allocated_bytes": 4707486720,
+  "limitations": [
+    "Direct numeric addresses and controlled writes.",
+    "Canonical authored fact sentences, no question conditioning.",
+    "Small GRU reconstructor is separate from the Qwen conversational decoder.",
+    "Held identity shares the finite fruit vocabulary and is not open-domain.",
+    "Candidate is not adopted by the individual."
+  ]
+}
