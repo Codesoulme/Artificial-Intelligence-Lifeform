@@ -1,0 +1,446 @@
+{
+  "status": "continuous_memory_correction_without_language_audit",
+  "source_sha256": "b2bd6b4e92e07f5c18140702246c4db628a4415f6ce875a842f770fd385b2716",
+  "codec": {
+    "vocab_size": 151936,
+    "embedding_width": 1536,
+    "memory_width": 90,
+    "slot_count": 4,
+    "slot_width": 22,
+    "eos_token_id": 151643
+  },
+  "key": 3,
+  "identity": "小赵",
+  "sequences": [
+    {
+      "sequence": "old_only",
+      "values": [
+        "苹果"
+      ],
+      "expected_final_tokens": [
+        103959,
+        104167,
+        151643
+      ],
+      "decoded_tokens": [
+        [
+          103959,
+          104167,
+          151643
+        ],
+        [
+          103959,
+          104167,
+          151643
+        ]
+      ],
+      "decoded_matches_final": true,
+      "sites": [
+        {
+          "cosine_to_target": 1.0,
+          "read_norm": 1.5597490072250366,
+          "target_norm": 1.732050895690918,
+          "mse": 0.00033736290060915053,
+          "cosine_to_old": 1.0,
+          "cosine_to_new": 1.0
+        },
+        {
+          "cosine_to_target": 1.0,
+          "read_norm": 1.55936861038208,
+          "target_norm": 1.732050895690918,
+          "mse": 0.000338853889843449,
+          "cosine_to_old": 1.0,
+          "cosine_to_new": 1.0
+        }
+      ]
+    },
+    {
+      "sequence": "new_only",
+      "values": [
+        "香蕉"
+      ],
+      "expected_final_tokens": [
+        103959,
+        112622,
+        151643
+      ],
+      "decoded_tokens": [
+        [
+          103959,
+          112622,
+          151643
+        ],
+        [
+          103959,
+          112622,
+          151643
+        ]
+      ],
+      "decoded_matches_final": true,
+      "sites": [
+        {
+          "cosine_to_target": 1.0,
+          "read_norm": 1.5597490072250366,
+          "target_norm": 1.732050895690918,
+          "mse": 0.00033736287150532007,
+          "cosine_to_old": 1.0,
+          "cosine_to_new": 1.0
+        },
+        {
+          "cosine_to_target": 1.0,
+          "read_norm": 1.55936861038208,
+          "target_norm": 1.732050895690918,
+          "mse": 0.00033885391894727945,
+          "cosine_to_old": 1.0,
+          "cosine_to_new": 1.0
+        }
+      ]
+    },
+    {
+      "sequence": "old_then_new",
+      "values": [
+        "苹果",
+        "香蕉"
+      ],
+      "expected_final_tokens": [
+        103959,
+        112622,
+        151643
+      ],
+      "decoded_tokens": [
+        [
+          103959,
+          112622,
+          151643
+        ],
+        [
+          103959,
+          112622,
+          151643
+        ]
+      ],
+      "decoded_matches_final": true,
+      "sites": [
+        {
+          "cosine_to_target": 0.99815833568573,
+          "read_norm": 1.6798499822616577,
+          "target_norm": 1.732050895690918,
+          "mse": 0.0001527489221189171,
+          "cosine_to_old": 0.7925513982772827,
+          "cosine_to_new": 0.99815833568573
+        },
+        {
+          "cosine_to_target": 0.9981508255004883,
+          "read_norm": 1.6797116994857788,
+          "target_norm": 1.732050895690918,
+          "mse": 0.00015340230311267078,
+          "cosine_to_old": 0.792627215385437,
+          "cosine_to_new": 0.9981508255004883
+        }
+      ]
+    },
+    {
+      "sequence": "new_then_old",
+      "values": [
+        "香蕉",
+        "苹果"
+      ],
+      "expected_final_tokens": [
+        103959,
+        104167,
+        151643
+      ],
+      "decoded_tokens": [
+        [
+          103959,
+          104167,
+          151643
+        ],
+        [
+          103959,
+          104167,
+          151643
+        ]
+      ],
+      "decoded_matches_final": true,
+      "sites": [
+        {
+          "cosine_to_target": 0.9981582760810852,
+          "read_norm": 1.6798499822616577,
+          "target_norm": 1.732050895690918,
+          "mse": 0.00015274898032657802,
+          "cosine_to_old": 0.7925513386726379,
+          "cosine_to_new": 0.9981582760810852
+        },
+        {
+          "cosine_to_target": 0.9981507062911987,
+          "read_norm": 1.6797118186950684,
+          "target_norm": 1.732050895690918,
+          "mse": 0.000153402317664586,
+          "cosine_to_old": 0.7926270961761475,
+          "cosine_to_new": 0.9981507062911987
+        }
+      ]
+    },
+    {
+      "sequence": "old_new_old_new",
+      "values": [
+        "苹果",
+        "香蕉",
+        "苹果",
+        "香蕉"
+      ],
+      "expected_final_tokens": [
+        103959,
+        112622,
+        151643
+      ],
+      "decoded_tokens": [
+        [
+          103959,
+          112622,
+          151643
+        ],
+        [
+          103959,
+          112622,
+          151643
+        ]
+      ],
+      "decoded_matches_final": true,
+      "sites": [
+        {
+          "cosine_to_target": 0.99815833568573,
+          "read_norm": 1.6964737176895142,
+          "target_norm": 1.732050895690918,
+          "mse": 0.00013737221888732165,
+          "cosine_to_old": 0.7925513982772827,
+          "cosine_to_new": 0.99815833568573
+        },
+        {
+          "cosine_to_target": 0.9981507658958435,
+          "read_norm": 1.6964075565338135,
+          "target_norm": 1.732050895690918,
+          "mse": 0.00013792520621791482,
+          "cosine_to_old": 0.792627215385437,
+          "cosine_to_new": 0.9981507658958435
+        }
+      ]
+    }
+  ],
+  "multi_entity": [
+    {
+      "key": 0,
+      "value": "苹果",
+      "sites": [
+        {
+          "decoded": [
+            99463,
+            104167,
+            151643
+          ],
+          "expected": [
+            99463,
+            104167,
+            151643
+          ],
+          "exact": true
+        },
+        {
+          "decoded": [
+            99463,
+            104167,
+            151643
+          ],
+          "expected": [
+            99463,
+            104167,
+            151643
+          ],
+          "exact": true
+        }
+      ]
+    },
+    {
+      "key": 1,
+      "value": "香蕉",
+      "sites": [
+        {
+          "decoded": [
+            40542,
+            112622,
+            151643
+          ],
+          "expected": [
+            40542,
+            112622,
+            151643
+          ],
+          "exact": true
+        },
+        {
+          "decoded": [
+            40542,
+            112622,
+            151643
+          ],
+          "expected": [
+            40542,
+            112622,
+            151643
+          ],
+          "exact": true
+        }
+      ]
+    },
+    {
+      "key": 2,
+      "value": "葡萄",
+      "sites": [
+        {
+          "decoded": [
+            99445,
+            101580,
+            151643
+          ],
+          "expected": [
+            99445,
+            101580,
+            151643
+          ],
+          "exact": true
+        },
+        {
+          "decoded": [
+            99445,
+            101580,
+            151643
+          ],
+          "expected": [
+            99445,
+            101580,
+            151643
+          ],
+          "exact": true
+        }
+      ]
+    },
+    {
+      "key": 3,
+      "value": "柠檬",
+      "sites": [
+        {
+          "decoded": [
+            103959,
+            112530,
+            151643
+          ],
+          "expected": [
+            103959,
+            112530,
+            151643
+          ],
+          "exact": true
+        },
+        {
+          "decoded": [
+            103959,
+            112530,
+            151643
+          ],
+          "expected": [
+            103959,
+            112530,
+            151643
+          ],
+          "exact": true
+        }
+      ]
+    },
+    {
+      "key": 4,
+      "value": "火龙果",
+      "sites": [
+        {
+          "decoded": [
+            103948,
+            79599,
+            99465,
+            27773,
+            151643
+          ],
+          "expected": [
+            103948,
+            79599,
+            99465,
+            27773,
+            151643
+          ],
+          "exact": true
+        },
+        {
+          "decoded": [
+            103948,
+            79599,
+            99465,
+            27773,
+            151643
+          ],
+          "expected": [
+            103948,
+            79599,
+            99465,
+            27773,
+            151643
+          ],
+          "exact": true
+        }
+      ]
+    },
+    {
+      "key": 5,
+      "value": "木瓜",
+      "sites": [
+        {
+          "decoded": [
+            100778,
+            75405,
+            100857,
+            151643
+          ],
+          "expected": [
+            100778,
+            75405,
+            100857,
+            151643
+          ],
+          "exact": true
+        },
+        {
+          "decoded": [
+            100778,
+            75405,
+            100857,
+            151643
+          ],
+          "expected": [
+            100778,
+            75405,
+            100857,
+            151643
+          ],
+          "exact": true
+        }
+      ]
+    }
+  ],
+  "width": 88,
+  "seconds": 116.70198689999233,
+  "peak_allocated_bytes": 3700514304,
+  "limitations": [
+    "Direct numeric address and controlled writes.",
+    "No language adapter or natural-language correction route.",
+    "Continuous code decoding is a diagnostic, not open memory semantics.",
+    "A high read cosine does not prove causal generation use."
+  ]
+}

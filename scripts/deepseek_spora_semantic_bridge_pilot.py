@@ -30,6 +30,7 @@ STORE_FULL_FACT = False
 STORE_IDENTITY = True
 BRIDGE_CONDITION_SLOTS = 2
 TRAIN_VALUE_COUNT = 16
+TRAIN_CORRECTION_SEQUENCES = False
 CODEC_FACTORY = ContinuousTextCodec
 DIRECT_RESIDUAL = False
 DIRECT_RESIDUAL_LAYER = 20
@@ -289,31 +290,37 @@ def main():
                 adapter.a.copy_(old['a'])
                 adapter.b.copy_(old['b'])
 
-        def state_for(value, key):
+        def state_for_values(values, key):
             state = p.fresh_controlled_state(model)
             fast, velocity = model.initial_state(1)
             for site in fast:
                 site[0] = torch.zeros_like(site[0])
-            if value is not None:
-                target = torch.zeros((1, model.config.memory_width), device=device)
-                fact_ids = word_ids[value] if STORE_FULL_FACT else [word_ids[value][0]]
-                stored_ids = ([identity_ids[key]] if STORE_IDENTITY else []) + fact_ids
-                encoded = codec.encode(torch.tensor(stored_ids, device=device))
-                target[0, :encoded.numel()] = encoded
-                with torch.no_grad():
-                    for i, site in enumerate(model.memories):
-                        fast[i], velocity[i] = site.write_temporal(
-                            fast[i], velocity[i], site.current_basis[key:key + 1].to(device),
-                            target, torch.ones(1, device=device), torch.zeros(1, dtype=torch.long, device=device), False)
-                        read = site.retrieve([fast[i][0]], site.current_basis[key:key + 1].to(device))
-                        decoded = codec.decode(read[0, :encoded.numel()])['token_ids']
-                        expected = stored_ids[:]
-                        if CODEC_ADD_EOS:
-                            expected.append(tok.eos_token_id)
-                        if decoded != expected:
-                            raise ValueError('Controlled code reconstruction failed')
+            if values is not None:
+                if not values:
+                    raise ValueError('At least one value is required')
+                for value in values:
+                    target = torch.zeros((1, model.config.memory_width), device=device)
+                    fact_ids = word_ids[value] if STORE_FULL_FACT else [word_ids[value][0]]
+                    stored_ids = ([identity_ids[key]] if STORE_IDENTITY else []) + fact_ids
+                    encoded = codec.encode(torch.tensor(stored_ids, device=device))
+                    target[0, :encoded.numel()] = encoded
+                    with torch.no_grad():
+                        for i, site in enumerate(model.memories):
+                            fast[i], velocity[i] = site.write_temporal(
+                                fast[i], velocity[i], site.current_basis[key:key + 1].to(device),
+                                target, torch.ones(1, device=device), torch.zeros(1, dtype=torch.long, device=device), False)
+                            read = site.retrieve([fast[i][0]], site.current_basis[key:key + 1].to(device))
+                            decoded = codec.decode(read[0, :encoded.numel()])['token_ids']
+                            expected = stored_ids[:]
+                            if CODEC_ADD_EOS:
+                                expected.append(tok.eos_token_id)
+                            if decoded != expected:
+                                raise ValueError('Controlled code reconstruction failed')
             state.current = [x[0].detach() for x in fast]
             return state
+
+        def state_for(value, key):
+            return state_for_values(None if value is None else (value,), key)
 
         questions = ('请只说出{name}喜欢的水果名称。',
                      '记录里{name}喜欢哪种水果？只写名称。',
@@ -341,6 +348,24 @@ def main():
                           'question': question, 'state': state, 'prompt': prompt, 'ids': ids,
                           'spec': spec, 'value_position': value_position,
                           'digest': p.frozen_digest(model, state)})
+        if TRAIN_CORRECTION_SEQUENCES:
+            for key in (0, 1, 2):
+                name = ('小林', '小周', '小王')[key]
+                for value in range(TRAIN_VALUE_COUNT):
+                    old_value = (value + 1) % TRAIN_VALUE_COUNT
+                    question = questions[0].format(name=name)
+                    state = state_for_values((old_value, value), key)
+                    answer = f'{name}喜欢的水果是{WORDS[value]}。'
+                    prompt = p.closed_think_inputs(tok, question, 'cuda')
+                    answer_tokens = tok.encode(answer, add_special_tokens=False)
+                    value_position = unique_token_span(answer_tokens, word_ids[value])
+                    target = torch.tensor([answer_tokens + [tok.eos_token_id]], device=device)
+                    ids = torch.cat((prompt['input_ids'], target), dim=1)
+                    spec = p._memory_args(model, state, {'key': key, 'intent': 'current', 'event_time': 0})
+                    cases.append({'group': 'train_correction', 'key': key, 'value': value, 'name': name,
+                                  'question': question, 'state': state, 'prompt': prompt, 'ids': ids,
+                                  'spec': spec, 'value_position': value_position,
+                                  'digest': p.frozen_digest(model, state)})
         empty = state_for(None, 0)
         empty_digest = p.frozen_digest(model, empty)
 
@@ -384,7 +409,7 @@ def main():
             return rows
 
         before = evaluate()
-        train = [x for x in cases if x['group'] == 'train']
+        train = [x for x in cases if x['group'].startswith('train')]
         params = [x for x in decoder.reader.parameters() if x.requires_grad]
         params += [param for _, _, adapter in adapters for param in (adapter.a, adapter.b, adapter.condition)]
         params += [param for _, _, adapter in direct_adapters
@@ -456,6 +481,7 @@ def main():
                          'bridge_class': type(bridge).__name__, 'store_full_fact': STORE_FULL_FACT,
                          'store_identity': STORE_IDENTITY, 'condition_slots': BRIDGE_CONDITION_SLOTS,
                          'train_value_count': TRAIN_VALUE_COUNT, 'strict_swap_eval': STRICT_SWAP_EVAL,
+                         'train_correction_sequences': TRAIN_CORRECTION_SEQUENCES,
                          'direct_residual': DIRECT_RESIDUAL, 'direct_residual_layer': DIRECT_RESIDUAL_LAYER,
                          'slow_signal_disabled': True, 'words': list(WORDS),
                          'reader_layer_indices': list(decoder.layer_indices)}
