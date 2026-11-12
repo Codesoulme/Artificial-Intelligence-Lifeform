@@ -27,6 +27,21 @@ class ContinuousTextMemoryTests(unittest.TestCase):
             self.codec.encode(torch.tensor([1, 2, 3, 4], dtype=torch.long))
         with self.assertRaises(ValueError):
             self.codec.encode(torch.tensor([1, 99], dtype=torch.long))
+        with self.assertRaises(ValueError):
+            self.codec.encode(torch.tensor([1, 15, 2], dtype=torch.long))
+
+    def test_zero_embedding_cannot_be_encoded_as_an_empty_slot(self):
+        embedding = torch.randn(16, 8)
+        embedding[3].zero_()
+        codec = ContinuousTextCodec(embedding, slot_count=4, eos_token_id=15)
+        with self.assertRaises(ValueError):
+            codec.encode(torch.tensor([3], dtype=torch.long))
+
+    def test_nonfinite_embedding_is_rejected(self):
+        embedding = torch.randn(16, 8)
+        embedding[1, 0] = float('nan')
+        with self.assertRaises(ValueError):
+            ContinuousTextCodec(embedding, slot_count=4)
 
     def test_can_target_a_narrower_memory_width(self):
         codec = ContinuousTextCodec(torch.randn(16, 8), memory_width=4, slot_count=2,

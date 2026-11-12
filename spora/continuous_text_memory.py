@@ -37,6 +37,8 @@ class ContinuousTextCodec(nn.Module):
         self.register_buffer('projection', projection)
         with torch.no_grad():
             codebook = F.normalize(embedding.float() @ projection, dim=-1)
+        if not bool(torch.isfinite(codebook).all()):
+            raise ValueError('Projected vocabulary contains non-finite values')
         self.register_buffer('codebook', codebook)
 
     @torch.no_grad()
@@ -49,12 +51,17 @@ class ContinuousTextCodec(nn.Module):
         if self.eos_token_id is None:
             sequence = token_ids
         else:
+            if bool((token_ids == self.eos_token_id).any()):
+                raise ValueError('Input must not contain the codec EOS token')
             sequence = torch.cat((token_ids, token_ids.new_tensor([self.eos_token_id])))
         if sequence.numel() > self.slot_count:
             raise ValueError('Token sequence exceeds codec slot capacity')
         result = torch.zeros((self.slot_count, self.slot_width), device=self.codebook.device,
                              dtype=self.codebook.dtype)
-        result[:sequence.numel()] = self.codebook.index_select(0, sequence.to(self.codebook.device))
+        codes = self.codebook.index_select(0, sequence.to(self.codebook.device))
+        if bool((codes.norm(dim=-1) == 0).any()):
+            raise ValueError('A selected token has no usable codebook vector')
+        result[:sequence.numel()] = codes
         return result.reshape(-1)
 
     @torch.no_grad()
