@@ -70,6 +70,23 @@ class IntegratedDurableTests(unittest.TestCase):
             self.assertEqual(frozen_digest(restored.organism, restored.state), digest)
             self.assertIsInstance(restored.decoder.base.model.layers[1], SPORALayerReplacement)
 
+    def test_structured_text_records_use_the_open_base_transaction(self):
+        config = {'memory_width': 64, 'identity_slots': 1, 'fact_slots': 1}
+        packet = torch.arange(64, dtype=torch.float32)
+        metadata = {'identity_length': 1, 'fact_length': 1}
+        with self.create() as runtime:
+            registered = runtime.register_structured_text(config)
+            self.assertTrue(registered['registered'])
+            written = runtime.write_structured_text(4, packet, metadata)
+            self.assertEqual(written['state_revision'], 1)
+            record = runtime.read_structured_text(4)
+            self.assertTrue(torch.equal(record['packet'], packet))
+        with self.open() as restored:
+            record = restored.read_structured_text(4)
+            self.assertTrue(torch.equal(record['packet'], packet))
+            self.assertEqual(record['metadata'], metadata)
+            self.assertEqual(record['revision'], 1)
+
     def test_v4_adapter_survives_incremental_write_and_rejects_mutation(self):
         from spora.integrated_checkpoint import load_integrated
         decoder, organism, state = load_integrated(self.bootstrap, self.base(), self.root)

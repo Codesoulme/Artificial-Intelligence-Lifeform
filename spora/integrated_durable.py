@@ -7,6 +7,7 @@ are verified on open; a cheap file-stat guard and tensor version counters detect
 ordinary in-session changes but are not an authentication or tamper boundary.
 """
 from pathlib import Path
+from dataclasses import replace
 
 import torch
 
@@ -16,6 +17,7 @@ from .integrated_checkpoint import (STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT, _f
 from .integrated_open_base import NativeSPORAMemoryReader
 from .internal_memory import observe_sourced
 from .named_address import address_basis_sha256
+from .structured_text_memory import StructuredTextMemoryState
 
 STORE_FORMAT = 'spora-integrated-durable-v1'
 
@@ -85,6 +87,20 @@ class IntegratedDurableRuntime:
         if _decoder_signature(self.decoder) != self._signature:
             raise ValueError('Decoder changed since durable state was bound')
 
+    def _commit_state(self, candidate, *, hook=None):
+        previous = self.store.revision
+        try:
+            stats = self.store.commit(self.organism, candidate,
+                                      expected_revision=previous, hook=hook)
+        except BaseException:
+            # A hook can run after COMMIT. Keep the in-process snapshot aligned
+            # with the durable revision before propagating the injected error.
+            if self.store.revision == previous + 1:
+                self.state = candidate
+            raise
+        self.state = candidate
+        return stats
+
     def generate(self, *args, **kwargs):
         if 'memory_state' in kwargs:
             raise ValueError('Runtime owns the memory state')
@@ -94,17 +110,52 @@ class IntegratedDurableRuntime:
     def observe_sourced(self, key, value, source, quality, valid_at=None, *, hook=None):
         self._check()
         candidate, decision = observe_sourced(self.organism, self.state, key, value, source, quality, valid_at)
-        previous = self.store.revision
-        try:
-            stats = self.store.commit(self.organism, candidate, expected_revision=previous, hook=hook)
-        except BaseException:
-            # A hook or caller interruption after COMMIT must not leave memory
-            # behind the already-published database revision.
-            if self.store.revision == previous + 1:
-                self.state = candidate
-            raise
-        self.state = candidate
+        stats = self._commit_state(candidate, hook=hook)
         return decision, stats
+
+    def register_structured_text(self, codec_config, *, hook=None):
+        """Persist an empty structured-memory schema for this open-base runtime."""
+        self._check()
+        config = dict(codec_config) if isinstance(codec_config, dict) else None
+        if config is None:
+            raise ValueError('Structured text codec configuration must be a mapping')
+        current = self.state.structured_text
+        if current is not None:
+            if current.codec_config != config:
+                raise ValueError('Structured text codec configuration mismatch')
+            return {'registered': False, 'revision': current.revision}
+        structured = StructuredTextMemoryState(config)
+        structured.validate(self.organism.config.memory_width, self.organism.config.key_count)
+        candidate = replace(self.state, structured_text=structured)
+        stats = self._commit_state(candidate, hook=hook)
+        return {'registered': True, 'revision': structured.revision, 'stats': stats}
+
+    def write_structured_text(self, key, packet, metadata, *, codec_config=None, hook=None):
+        """Atomically append or replace one validated identity/fact record."""
+        self._check()
+        current = self.state.structured_text
+        if current is None:
+            if not isinstance(codec_config, dict):
+                raise ValueError('Codec configuration is required for first structured write')
+            current = StructuredTextMemoryState(codec_config)
+        elif codec_config is not None and current.codec_config != dict(codec_config):
+            raise ValueError('Structured text codec configuration mismatch')
+        updated = current.put(key, packet, metadata, self.organism.config.memory_width,
+                              self.organism.config.key_count)
+        candidate = replace(self.state, structured_text=updated)
+        stats = self._commit_state(candidate, hook=hook)
+        return {'key': key, 'record_revision': updated.records[key].revision,
+                'state_revision': updated.revision, 'stats': stats}
+
+    def read_structured_text(self, key):
+        """Read one durable structured record without exposing a mutable tensor."""
+        self._check()
+        structured = self.state.structured_text
+        if structured is None or key not in structured.records:
+            return None
+        record = structured.records[key]
+        return {'packet': record.packet.detach().clone(),
+                'metadata': dict(record.metadata), 'revision': record.revision}
 
 
 def create_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu'):
