@@ -24,6 +24,7 @@ OUTPUT = ROOT / 'runs/deepseek-spora-natural-observation-transaction-pilot-v2-20
 WORKING = OUTPUT / 'working-individual.pt'
 POLICY_ID = 'spora-polarity-calibration-20261111-v1'
 CHECKPOINT = route.CHECKPOINT
+NATURAL_HEADS = None
 
 CASES = [
     {'kind': 'positive', 'text': '小梅偏爱的饮料是茶。', 'expected': '茶'},
@@ -43,12 +44,18 @@ def build_components(chat):
     value_data = torch.load(route.VALUE, map_location='cpu', weights_only=True)
     locator = nn.Linear(locator_data['state']['weight'].shape[1], 1).eval()
     locator.load_state_dict(locator_data['state'], strict=True)
-    polarity = nn.Linear(base.config.hidden_size * 2, len(route.CLASSES)).eval()
-    polarity.load_state_dict(polarity_data['state'], strict=True)
-    value = route.SpanHead(base.config.hidden_size).eval()
-    value.load_state_dict(value_data['state'], strict=True)
     bases = torch.stack([F.normalize(site.current_basis.detach().float().cpu(), dim=-1)
                          for site in organism.memories])
+    if chat.natural_write_heads is not None:
+        polarity = chat.natural_write_heads.polarity
+        polarity_data = {'threshold': chat.natural_write_heads.polarity_threshold}
+        value = chat.natural_write_heads.value
+        value_data = dict(value_data, threshold=chat.natural_write_heads.value_threshold)
+    else:
+        polarity = nn.Linear(base.config.hidden_size * 2, len(route.CLASSES)).eval()
+        polarity.load_state_dict(polarity_data['state'], strict=True)
+        value = route.SpanHead(base.config.hidden_size).eval()
+        value.load_state_dict(value_data['state'], strict=True)
     return tokenizer, locator, binding_data, polarity, polarity_data, value, value_data, bases
 
 
@@ -94,7 +101,7 @@ def parse_candidate(chat, text, components):
 def verify(path, key):
     chat_runtime.CHECKPOINT = CHECKPOINT
     chat_runtime.WORKING_CHECKPOINT = Path(path)
-    chat = chat_runtime.load_chat()
+    chat = chat_runtime.load_chat(natural_write_heads_path=NATURAL_HEADS)
     device = next(chat.organism.parameters()).device
     if chat.state.cursor == 0:
         raise ValueError('Expected persisted observations after independent reload')
@@ -113,7 +120,7 @@ def run():
     started = time.perf_counter()
     chat_runtime.CHECKPOINT = CHECKPOINT
     chat_runtime.WORKING_CHECKPOINT = WORKING
-    chat = chat_runtime.load_chat()
+    chat = chat_runtime.load_chat(natural_write_heads_path=NATURAL_HEADS)
     components = build_components(chat)
     rows = []
     for case in CASES:

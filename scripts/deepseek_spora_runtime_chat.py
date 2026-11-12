@@ -46,6 +46,7 @@ from spora.memory_output import MemoryOutputAdapter
 from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
 from spora.working_checkpoint_lock import lock_working_checkpoint
 from spora.durable import RevisionConflict
+from spora.natural_write_heads import load_natural_write_heads
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 WORKING_CHECKPOINT = ROOT/'runs/spora-runtime-individual/individual.pt'
@@ -105,10 +106,12 @@ def _prepare_memory_read(organism, state, key, mode, event_time):
 
 
 class SporaChat:
-    def __init__(self, base, tokenizer, decoder, organism, state, gates, working_sha256=None):
+    def __init__(self, base, tokenizer, decoder, organism, state, gates, working_sha256=None,
+                 natural_write_heads=None):
         self.base, self.tokenizer, self.decoder = base, tokenizer, decoder
         self.organism, self.state = organism, state
         self._working_sha256 = working_sha256
+        self.natural_write_heads = natural_write_heads
         self.router, self.entity_data, self.intent_data, self.temporal, self.temporal_data = gates
         # Research-only per-instance override; the default remains the module policy.
         self.read_intent_recovery_floor = float(READ_INTENT_RECOVERY_FLOOR)
@@ -294,7 +297,7 @@ class SporaChat:
         return result
 
 
-def load_chat(*, base_loader=None):
+def load_chat(*, base_loader=None, natural_write_heads_path=None):
     if sha(MODEL/'model.safetensors') != WEIGHT_SHA or not CHECKPOINT.exists():
         raise ValueError('Protected model or integrated checkpoint unavailable')
     checkpoint = WORKING_CHECKPOINT if WORKING_CHECKPOINT.exists() else CHECKPOINT
@@ -354,8 +357,14 @@ def load_chat(*, base_loader=None):
     if ((checkpoint == WORKING_CHECKPOINT and sha(WORKING_CHECKPOINT) != working_sha)
             or (checkpoint == CHECKPOINT and WORKING_CHECKPOINT.exists())):
         raise RevisionConflict('Working checkpoint changed during load; retry')
+    natural_write_heads = None
+    if natural_write_heads_path is not None:
+        natural_write_heads = load_natural_write_heads(
+            natural_write_heads_path, base, MODEL, CHECKPOINT,
+            device=torch.device('cpu'))
     return SporaChat(base, tokenizer, decoder, organism, state,
-                     (router, entity_data, intent_data, temporal, temporal_data), working_sha256=working_sha)
+                     (router, entity_data, intent_data, temporal, temporal_data),
+                     working_sha256=working_sha, natural_write_heads=natural_write_heads)
 
 
 def main():

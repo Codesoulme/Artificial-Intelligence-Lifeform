@@ -15,6 +15,7 @@ from scripts import deepseek_spora_runtime_chat as runtime
 
 
 OUTPUT = ROOT / 'runs/deepseek-spora-natural-route-stress-audit-20261113.json'
+NATURAL_HEADS = None
 
 CASES = [
     ('positive_held', '据我所知，小梅最喜欢的饮品是茶。', True, '小梅', '茶'),
@@ -45,7 +46,7 @@ def main():
     torch.set_num_threads(2)
     runtime.CHECKPOINT = pilot.CHECKPOINT
     runtime.WORKING_CHECKPOINT = ROOT / 'runs/deepseek-spora-output-v2-checkpoint-20261111/unused-stress.pt'
-    chat = runtime.load_chat()
+    chat = runtime.load_chat(natural_write_heads_path=NATURAL_HEADS)
     components = pilot.build_components(chat)
     rows = []
     for group, text, expected_positive, expected_name, expected_value in CASES:
