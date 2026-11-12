@@ -13,6 +13,12 @@ from spora.temporal import TemporalConfig, TemporalSPORA
 
 
 class RuntimeChatPersistenceTests(unittest.TestCase):
+    def test_temporal_constraint_requires_explicit_history_or_later_evidence(self):
+        self.assertEqual(chat_module.constrain_temporal_intent('小梅偏爱的饮料是什么？', 1), 0)
+        self.assertEqual(chat_module.constrain_temporal_intent('小梅以前喜欢什么饮料？', 0), 1)
+        self.assertEqual(chat_module.constrain_temporal_intent('小梅更新后喜欢什么饮料？', 0), 2)
+        self.assertEqual(chat_module.constrain_temporal_intent('小梅以前喜欢，后来改成什么？', 0), 3)
+
     def make_resolution_chat(self):
         chat = object.__new__(chat_module.SporaChat)
         chat.organism = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=64,

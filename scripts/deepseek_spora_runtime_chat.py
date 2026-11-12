@@ -54,6 +54,25 @@ READ_INTENT_RECOVERY_FLOOR = 2.0
 INTENT = ROOT/'runs/deepseek-spora-read-intent-gate-v4-20261111'
 ENTITY = ROOT/'runs/deepseek-spora-single-entity-gate-v2-20261111'
 MEMORY_DOMAIN_ANCHORS = ('饮品', '饮料', '喝', '饮用')
+PAST_TIME_MARKERS = ('以前', '过去', '原来', '原先', '之前', '曾经', '历史', '变更以前', '更正之前', '先前')
+LATER_TIME_MARKERS = ('后来', '之后', '以后', '更新后', '变更以后', '后续', '修改完成后', '将来')
+
+
+def constrain_temporal_intent(question, predicted):
+    """Require explicit temporal evidence before selecting a historical page."""
+    if not isinstance(question, str) or predicted not in (0, 1, 2, 3):
+        raise ValueError('Temporal constraint inputs are invalid')
+    has_past = any(marker in question for marker in PAST_TIME_MARKERS)
+    has_later = any(marker in question for marker in LATER_TIME_MARKERS)
+    if has_past and has_later:
+        return 3
+    if has_past:
+        return 1
+    if has_later:
+        return 2
+    if predicted in (1, 2):
+        return 0
+    return predicted
 
 
 def _supported_beverage_evidence(logits, value_count):
@@ -202,6 +221,7 @@ class SporaChat:
         winner = int(probabilities.argmax())
         temporal_intent = (winner if winner != 3 and
                            float(probabilities[:3].max()) >= self.temporal_data['threshold'] else 3)
+        temporal_intent = constrain_temporal_intent(question, temporal_intent)
         selected, single = single_span_mask(
             locator(token_vec).squeeze(-1).sigmoid()[0], masks[0], self.router['locator_threshold'])
         intent_logit = float(intent(qvec).squeeze(-1)[0])
