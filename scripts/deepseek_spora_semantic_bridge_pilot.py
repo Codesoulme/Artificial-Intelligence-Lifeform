@@ -50,6 +50,7 @@ QUERY_SCALAR_GATE = False
 QUERY_INTENT_COUNT = 4
 INTENT_LOSS_WEIGHT = 0.5
 FINAL_RESIDUAL = False
+LOGIT_RESIDUAL = False
 WORDS = ('苹果', '香蕉', '西瓜', '葡萄', '草莓', '橘子', '桃子', '芒果',
          '梨子', '柠檬', '菠萝', '樱桃', '柚子', '荔枝', '榴莲', '蓝莓',
          '火龙果', '木瓜')
@@ -290,6 +291,59 @@ class MemoryFinalHiddenResidual(p.torch.nn.Module):
         return output + p.torch.sigmoid(self.gate).to(output.dtype) * residual.to(output.dtype)
 
 
+class MemorySemanticLogitResidual(p.torch.nn.Module):
+    """Research-only semantic-memory residual directly before the vocabulary head."""
+
+    def __init__(self, base, memory_context, memory_width, bridge, embedding,
+                 condition_slots, rank=8):
+        super().__init__()
+        self.base = base
+        self.memory_context = memory_context
+        self.memory_width = memory_width
+        self.slot_count = getattr(bridge, 'slot_count', CODEC_SLOT_COUNT)
+        self.slot_width = memory_width // self.slot_count
+        self.condition_slots = condition_slots
+        self.bridge = bridge
+        self.bridge.requires_grad_(False)
+        self.register_buffer('embedding', embedding.detach().float().clone())
+        self.condition = p.torch.nn.Parameter(p.torch.zeros(condition_slots * embedding.shape[1]))
+        self.scale = p.torch.nn.Parameter(p.torch.tensor(-1.0))
+        self.rank = rank
+        self.proj = p.torch.nn.Linear(condition_slots * embedding.shape[1], rank,
+                                      bias=False, device=embedding.device, dtype=p.torch.float32)
+        self.out = p.torch.nn.Linear(rank, embedding.shape[0], bias=False,
+                                     device=embedding.device, dtype=p.torch.float32)
+        p.torch.nn.init.zeros_(self.proj.weight)
+        p.torch.nn.init.zeros_(self.out.weight)
+
+    def forward(self, hidden):
+        logits = self.base(hidden)
+        active = self.memory_context.get()
+        if active is None:
+            return logits
+        matrices, addresses, mask, slots = active
+        if mask is not None and not bool(mask[0]):
+            return logits
+        if (addresses is None or len(addresses) != 2 or len(matrices) != 2
+                or slots is None or slots.numel() != 1 or int(slots[0]) != 0):
+            raise ValueError('Logit residual requires two fixed current addresses')
+        reads = []
+        for site in range(2):
+            address, matrix = addresses[site], matrices[site][0]
+            query = p.torch.nn.functional.normalize(address.to(device=hidden.device, dtype=p.torch.float32), dim=-1)
+            reads.append(p.torch.bmm(matrix.to(device=hidden.device, dtype=p.torch.float32),
+                                     query.unsqueeze(-1)).squeeze(-1))
+        packed = ((reads[0] + reads[1]) * 0.5)[:, :self.slot_count * self.slot_width]
+        memory = packed.reshape(1, self.slot_count, self.slot_width)
+        selected = p.torch.nn.functional.normalize(memory[:, :self.condition_slots], dim=-1)
+        decoded = self.bridge(selected).reshape(1, -1)
+        semantic = decoded.reshape(1, self.condition_slots, -1).mean(1)
+        semantic_logits = semantic @ self.embedding.to(device=hidden.device).T
+        learned = self.out(self.proj(decoded))
+        bias = p.torch.tanh(self.scale) * semantic_logits + learned
+        return logits + bias.to(logits.dtype).unsqueeze(1)
+
+
 def torch_empty(rows, cols, device):
     return p.torch.empty(rows, cols, device=device, dtype=p.torch.float32)
 
@@ -376,6 +430,13 @@ def main():
                 bridge, embedding.shape[1], BRIDGE_CONDITION_SLOTS)
             decoder.base.model.norm = final
             final_adapters.append(('final_norm', 'output', final))
+        logit_adapters = []
+        if LOGIT_RESIDUAL:
+            logit = MemorySemanticLogitResidual(
+                decoder.base.lm_head, decoder._memory_context, model.config.memory_width,
+                bridge, embedding, BRIDGE_CONDITION_SLOTS)
+            decoder.base.lm_head = logit
+            logit_adapters.append(('lm_head', 'output', logit))
         slow_patches = []
         for site in decoder.reader.native_sites:
             patcher = patch.object(site, 'slow_signal', side_effect=lambda x, query: torch.zeros_like(query))
@@ -421,6 +482,17 @@ def main():
                 with torch.no_grad():
                     adapter.to_hidden.load_state_dict(old['to_hidden'], strict=True)
                     adapter.gate.copy_(old['gate'])
+            saved_logits = candidate.get('logit_adapters', ())
+            if saved_logits and len(saved_logits) != len(logit_adapters):
+                raise ValueError('Starting logit residual count mismatch')
+            for (location, name, adapter), old in zip(logit_adapters, saved_logits):
+                if old['location'] != location or old['name'] != name:
+                    raise ValueError('Starting logit residual position mismatch')
+                with torch.no_grad():
+                    adapter.condition.copy_(old['condition'])
+                    adapter.scale.copy_(old['scale'])
+                    adapter.proj.load_state_dict(old['proj'], strict=True)
+                    adapter.out.load_state_dict(old['out'], strict=True)
 
         def state_for_assignments(assignments):
             state = p.fresh_controlled_state(model)
@@ -622,6 +694,9 @@ def main():
                                  if hasattr(adapter, 'query_intent') else [])]
         params += [param for _, _, adapter in final_adapters
                    for param in list(adapter.to_hidden.parameters()) + [adapter.gate]]
+        params += [param for _, _, adapter in logit_adapters
+                   for param in (list(adapter.proj.parameters()) + list(adapter.out.parameters())
+                                 + [adapter.condition, adapter.scale])]
         optimizer = torch.optim.AdamW(params, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
         trace = []
         for step in range(LANGUAGE_STEPS):
@@ -698,6 +773,14 @@ def main():
                                       for key, value in adapter.to_hidden.state_dict().items()},
                         'gate': adapter.gate.detach().cpu().clone()}
                        for location, name, adapter in final_adapters]
+        logit_state = [{'location': location, 'name': name,
+                        'condition': adapter.condition.detach().cpu().clone(),
+                        'scale': adapter.scale.detach().cpu().clone(),
+                        'proj': {key: value.detach().cpu().clone()
+                                 for key, value in adapter.proj.state_dict().items()},
+                        'out': {key: value.detach().cpu().clone()
+                                for key, value in adapter.out.state_dict().items()}}
+                       for location, name, adapter in logit_adapters]
         bridge_state = {k: v.detach().cpu().clone() for k, v in bridge.state_dict().items()}
         codec_state = {k: v.detach().cpu().clone() for k, v in codec.state_dict().items()}
         bridge.eval()
@@ -719,6 +802,7 @@ def main():
                          'focus_extra_questions': FOCUS_EXTRA_QUESTIONS,
                          'direct_residual': DIRECT_RESIDUAL, 'direct_residual_layer': DIRECT_RESIDUAL_LAYER,
                          'final_residual': FINAL_RESIDUAL,
+                         'logit_residual': LOGIT_RESIDUAL,
                          'slow_signal_disabled': True, 'words': list(WORDS),
                          'reader_layer_indices': list(decoder.layer_indices)}
     torch.save({'reader': reader_state, 'bridge': bridge_state, 'adapters': adapter_state,
@@ -726,6 +810,7 @@ def main():
                 'experiment_config': experiment_config,
                 'direct_adapters': direct_state,
                 'final_adapters': final_state,
+                'logit_adapters': logit_state,
                 'source_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA, 'research_only': True,
                 'memory_conditioning': 'embedding_reconstructed_identity_fact_slots',
                 'bridge_steps': BRIDGE_STEPS, 'language_steps': LANGUAGE_STEPS}, OUT / 'candidate.pt')
