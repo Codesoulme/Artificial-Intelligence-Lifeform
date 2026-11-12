@@ -123,6 +123,29 @@ class RuntimeChatPersistenceTests(unittest.TestCase):
         observe.assert_called_once_with(1, 6, 'direct', 1.0, 4)
         self.assertEqual(result, {'action': 'new'})
 
+    def test_resolved_candidate_can_use_explicit_calibrated_gate(self):
+        chat = object.__new__(chat_module.SporaChat)
+        chat.organism = SimpleNamespace(config=SimpleNamespace(key_count=8, value_count=8))
+        chat.state = SimpleNamespace(cursor=4)
+        candidate = ObservationCandidate(1, '水', 6, 'affirmative', 'direct', .31, 4, .99,
+                                         '小林喜欢水')
+        with patch.object(chat, 'observe_sourced', return_value={'action': 'new'}) as observe:
+            result = chat.observe_candidate(
+                candidate,
+                calibrated_gate={'policy_id': 'p1', 'authorized': True, 'confidence': .97},
+                policy_id='p1')
+        observe.assert_called_once_with(1, 6, 'direct', .31, 4)
+        self.assertEqual(result, {'action': 'new'})
+
+    def test_calibrated_gate_arguments_must_be_complete(self):
+        chat = object.__new__(chat_module.SporaChat)
+        chat.organism = SimpleNamespace(config=SimpleNamespace(key_count=8, value_count=8))
+        chat.state = SimpleNamespace(cursor=4)
+        candidate = ObservationCandidate(1, '水', 6, 'affirmative', 'direct', 1.0, 4, .99,
+                                         '小林喜欢水')
+        with self.assertRaises(ValueError):
+            chat.observe_candidate(candidate, policy_id='p1')
+
     def test_observation_preserves_bootstrap_and_publishes_after_save(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -73,3 +73,44 @@ def write_guard(candidate, *, key_count, value_count, current_cursor, minimum_co
     if candidate.confidence < minimum_confidence:
         reasons.append('confidence_below_write_floor')
     return {'write': not reasons, 'reasons': reasons}
+
+
+def calibrated_write_guard(candidate, gate, *, key_count, value_count, current_cursor,
+                           policy_id, minimum_gate_confidence=0.9):
+    """Authorize a candidate only after an explicit calibrated gate passes.
+
+    The parser's raw confidence and the authorization confidence are separate.
+    The normal ``write_guard`` remains unchanged; this function is for a
+    caller that has a versioned, independently calibrated gate report.
+    """
+    if not isinstance(policy_id, str) or not policy_id.strip():
+        raise ValueError('A nonempty calibration policy id is required')
+    if (isinstance(minimum_gate_confidence, bool)
+            or not isinstance(minimum_gate_confidence, (int, float))
+            or not math.isfinite(minimum_gate_confidence)
+            or not 0 <= minimum_gate_confidence <= 1):
+        raise ValueError('Minimum gate confidence must be finite and in [0, 1]')
+    if not isinstance(gate, dict):
+        raise ValueError('Calibrated gate evidence must be a mapping')
+    decision = write_guard(candidate, key_count=key_count, value_count=value_count,
+                           current_cursor=current_cursor, minimum_confidence=0.0)
+    reasons = list(decision['reasons'])
+    if gate.get('policy_id') != policy_id:
+        reasons.append('calibration_policy_mismatch')
+    if gate.get('authorized') is not True:
+        reasons.append('calibrated_gate_rejected')
+    score = gate.get('confidence')
+    if (isinstance(score, bool) or not isinstance(score, (int, float))
+            or not math.isfinite(score) or not 0 <= score <= 1):
+        reasons.append('calibrated_gate_confidence_invalid')
+    elif score < minimum_gate_confidence:
+        reasons.append('calibrated_gate_confidence_below_floor')
+    result = {'write': not reasons, 'reasons': reasons,
+              'policy_id': policy_id, 'gate_confidence': score}
+    if result['write']:
+        result['authorization'] = {
+            'format': 'spora-calibrated-write-v1',
+            'policy_id': policy_id,
+            'confidence': float(score),
+        }
+    return result

@@ -40,7 +40,8 @@ from spora.growing import load, query
 from spora.integrated_checkpoint import load_integrated, replacement_feature_variant_sha256
 from spora.named_address import address_basis_sha256, feature_files_sha256
 from spora.internal_memory import observe_sourced
-from spora.observation_candidate import ObservationCandidate, write_guard
+from spora.observation_candidate import (ObservationCandidate, calibrated_write_guard,
+                                          write_guard)
 from spora.memory_output import MemoryOutputAdapter
 from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
 from spora.working_checkpoint_lock import lock_working_checkpoint
@@ -155,13 +156,21 @@ class SporaChat:
         return {'action': 'historical_resolution_recorded', 'key': key, 'event': event, 'decision': decision}
 
     @torch.no_grad()
-    def observe_candidate(self, candidate):
+    def observe_candidate(self, candidate, *, calibrated_gate=None, policy_id=None):
         """Persist only a fully resolved candidate; rejected candidates are side-effect free."""
         if not isinstance(candidate, ObservationCandidate):
             raise TypeError('An ObservationCandidate is required')
-        decision = write_guard(candidate, key_count=self.organism.config.key_count,
-                               value_count=self.organism.config.value_count,
-                               current_cursor=self.state.cursor)
+        if (calibrated_gate is None) != (policy_id is None):
+            raise ValueError('Calibrated gate and policy id must be supplied together')
+        if calibrated_gate is None:
+            decision = write_guard(candidate, key_count=self.organism.config.key_count,
+                                   value_count=self.organism.config.value_count,
+                                   current_cursor=self.state.cursor)
+        else:
+            decision = calibrated_write_guard(
+                candidate, calibrated_gate, key_count=self.organism.config.key_count,
+                value_count=self.organism.config.value_count, current_cursor=self.state.cursor,
+                policy_id=policy_id)
         # This runtime's output adapter has exactly the beverage vocabulary in
         # WORDS. Never silently coerce a parsed surface value to another symbol.
         if candidate.value_index is not None and (
