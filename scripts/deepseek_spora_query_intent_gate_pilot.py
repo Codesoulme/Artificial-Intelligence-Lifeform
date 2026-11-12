@@ -2,7 +2,7 @@
 from scripts import deepseek_spora_semantic_bridge_pilot as pilot
 
 
-pilot.OUT = pilot.p.ROOT / 'runs/continuous-reader-query-intent-gate-pilot-20261113'
+pilot.OUT = pilot.p.ROOT / 'runs/continuous-reader-query-intent-supervised-pilot-20261113'
 pilot.CODEC_SLOT_COUNT = 5
 pilot.CODEC_ADD_EOS = True
 pilot.STORE_FULL_FACT = True

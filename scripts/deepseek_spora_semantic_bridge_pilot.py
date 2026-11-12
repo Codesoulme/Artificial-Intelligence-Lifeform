@@ -46,6 +46,9 @@ STRICT_SWAP_EVAL = False
 START_CANDIDATE = None
 LANGUAGE_LR = 1e-4
 QUERY_INTENT_GATE = False
+QUERY_SCALAR_GATE = False
+QUERY_INTENT_COUNT = 4
+INTENT_LOSS_WEIGHT = 0.5
 WORDS = ('苹果', '香蕉', '西瓜', '葡萄', '草莓', '橘子', '桃子', '芒果',
          '梨子', '柠檬', '菠萝', '樱桃', '柚子', '荔枝', '榴莲', '蓝莓',
          '火龙果', '木瓜')
@@ -175,11 +178,19 @@ class MemoryResidualOutput(p.torch.nn.Module):
                                            dtype=p.torch.float32)
         p.torch.nn.init.zeros_(self.to_hidden.weight)
         self.gate = p.torch.nn.Parameter(p.torch.tensor(-1.0, device=base.weight.device))
-        if QUERY_INTENT_GATE:
+        if QUERY_INTENT_GATE and QUERY_SCALAR_GATE:
             self.query_gate = p.torch.nn.Linear(base.in_features, 1, bias=True,
                                                 device=base.weight.device, dtype=p.torch.float32)
             p.torch.nn.init.zeros_(self.query_gate.weight)
             p.torch.nn.init.constant_(self.query_gate.bias, 2.0)
+        if QUERY_INTENT_GATE:
+            self.query_intent = p.torch.nn.Linear(base.in_features, QUERY_INTENT_COUNT,
+                                                  device=base.weight.device, dtype=p.torch.float32)
+            p.torch.nn.init.zeros_(self.query_intent.weight)
+            p.torch.nn.init.zeros_(self.query_intent.bias)
+            self.query_intent_scales = p.torch.nn.Parameter(
+                p.torch.full((QUERY_INTENT_COUNT,), 0.54132485, device=base.weight.device))
+            self.last_intent_logits = None
 
     def _decoded(self, x, active):
         matrices, addresses, mask, slots = active
@@ -217,6 +228,14 @@ class MemoryResidualOutput(p.torch.nn.Module):
         if hasattr(self, 'query_gate'):
             query = x[:, -1].float()
             strength = strength * p.torch.sigmoid(self.query_gate(query)).reshape(-1, 1, 1)
+        if hasattr(self, 'query_intent'):
+            query = x[:, -1].float()
+            intent_logits = self.query_intent(query)
+            self.last_intent_logits = intent_logits
+            intent_probs = intent_logits.softmax(-1)
+            intent_scale = (intent_probs * p.torch.nn.functional.softplus(
+                self.query_intent_scales)).sum(-1)
+            strength = strength * intent_scale.reshape(-1, 1, 1)
         return output + strength.to(output.dtype) * residual.to(output.dtype)
 
 
@@ -332,6 +351,9 @@ def main():
                     adapter.gate.copy_(old['gate'])
                     if hasattr(adapter, 'query_gate') and 'query_gate' in old:
                         adapter.query_gate.load_state_dict(old['query_gate'], strict=True)
+                    if hasattr(adapter, 'query_intent') and 'query_intent' in old:
+                        adapter.query_intent.load_state_dict(old['query_intent'], strict=True)
+                        adapter.query_intent_scales.copy_(old['query_intent_scales'])
 
         def state_for_assignments(assignments):
             state = p.fresh_controlled_state(model)
@@ -372,17 +394,21 @@ def main():
         questions = ('请只说出{name}喜欢的水果名称。',
                      '记录里{name}喜欢哪种水果？只写名称。',
                      '{name}当前最喜欢的水果是什么？')
+        question_intents = (0, 0, 1)
         if TRAIN_EXTRA_QUESTIONS:
             questions += tuple(EXTRA_QUESTION_TEMPLATES)
+            question_intents += (2, 2, 3)
         cases = []
         states = {}
         schedule = [('train', key, value, question)
                     for key in (0, 1, 2) for value in range(TRAIN_VALUE_COUNT)
-                    for question in questions]
+                    for question in range(len(questions))]
         held_questions = questions if TRAIN_EXTRA_QUESTIONS else (questions[0],)
         schedule += [('held_name', 3, value, question)
-                     for value in range(18) for question in held_questions]
-        for group, key, value, question_template in schedule:
+                     for value in range(18) for question in range(len(held_questions))]
+        for group, key, value, question_index in schedule:
+            question_template = questions[question_index]
+            intent_label = question_intents[question_index]
             if (key, value) not in states:
                 states[key, value] = state_for(value, key)
             state = states[key, value]
@@ -398,6 +424,7 @@ def main():
             cases.append({'group': group, 'key': key, 'value': value, 'name': name,
                           'question': question, 'state': state, 'prompt': prompt, 'ids': ids,
                           'spec': spec, 'value_position': value_position,
+                          'intent_label': intent_label,
                           'digest': p.frozen_digest(model, state)})
         if TRAIN_CORRECTION_SEQUENCES:
             for key in (0, 1, 2):
@@ -416,6 +443,7 @@ def main():
                     cases.append({'group': 'train_correction', 'key': key, 'value': value, 'name': name,
                                   'question': question, 'state': state, 'prompt': prompt, 'ids': ids,
                                   'spec': spec, 'value_position': value_position,
+                                  'intent_label': question_intents[0],
                                   'digest': p.frozen_digest(model, state)})
         held_multi_states = {}
         if TRAIN_MULTI_ENTITY_STATES:
@@ -424,7 +452,7 @@ def main():
                 for value in range(TRAIN_VALUE_COUNT):
                     assignments = tuple((key, (value + key) % TRAIN_VALUE_COUNT) for key in (0, 1, 2))
                     state = state_for_assignments(assignments)
-                    for question_template in questions:
+                    for question_index, question_template in enumerate(questions):
                         question = question_template.format(name=name)
                         answer = f'{name}喜欢的水果是{WORDS[value]}。'
                         prompt = p.closed_think_inputs(tok, question, 'cuda')
@@ -436,6 +464,7 @@ def main():
                         cases.append({'group': 'train_multi', 'key': target_key, 'value': value, 'name': name,
                                       'question': question, 'state': state, 'prompt': prompt, 'ids': ids,
                                       'spec': spec, 'value_position': value_position,
+                                      'intent_label': question_intents[question_index],
                                       'digest': p.frozen_digest(model, state)})
             held_name = '小赵'
             for value in range(len(WORDS)):
@@ -443,7 +472,7 @@ def main():
                                      (1, (value + 1) % TRAIN_VALUE_COUNT),
                                      (2, (value + 2) % TRAIN_VALUE_COUNT), (3, value)])
                 held_multi_states[value] = state_for_assignments(assignments)
-                for question_template in questions:
+                for question_index, question_template in enumerate(questions):
                     question = question_template.format(name=held_name)
                     answer = f'{held_name}喜欢的水果是{WORDS[value]}。'
                     prompt = p.closed_think_inputs(tok, question, 'cuda')
@@ -456,6 +485,7 @@ def main():
                     cases.append({'group': 'held_name_multi', 'key': 3, 'value': value, 'name': held_name,
                                   'question': question, 'state': held_multi_states[value], 'prompt': prompt,
                                   'ids': ids, 'spec': spec, 'value_position': value_position,
+                                  'intent_label': question_intents[question_index],
                                   'digest': p.frozen_digest(model, held_multi_states[value])})
         empty = state_for(None, 0)
         empty_digest = p.frozen_digest(model, empty)
@@ -520,6 +550,9 @@ def main():
         params += [param for _, _, adapter in direct_adapters
                    for param in (list(adapter.query_gate.parameters())
                                  if hasattr(adapter, 'query_gate') else [])]
+        params += [param for _, _, adapter in direct_adapters
+                   for param in ((list(adapter.query_intent.parameters()) + [adapter.query_intent_scales])
+                                 if hasattr(adapter, 'query_intent') else [])]
         optimizer = torch.optim.AdamW(params, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
         trace = []
         for step in range(LANGUAGE_STEPS):
@@ -529,6 +562,9 @@ def main():
             prefix = item['prompt']['input_ids'].shape[1]
             optimizer.zero_grad(set_to_none=True)
             logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']), **item['spec']).logits.float()
+            intent_logits = (direct_adapters[0][2].last_intent_logits
+                             if direct_adapters and hasattr(direct_adapters[0][2], 'last_intent_logits')
+                             else None)
             target = item['ids'][:, prefix:]
             scores = logits[:, prefix - 1:prefix - 1 + target.shape[1]]
             full_loss = torch.nn.functional.cross_entropy(scores.reshape(-1, scores.shape[-1]), target.reshape(-1))
@@ -549,6 +585,11 @@ def main():
             fact_ce = torch.nn.functional.cross_entropy(own, torch.tensor([correct_id], device=device))
             swapped_ce = torch.nn.functional.cross_entropy(other_logits, torch.tensor([wrong_id], device=device))
             loss = 4.0 * full_loss + 0.5 * (fact_ce + swapped_ce) + contrast
+            intent_ce = torch.zeros((), device=device)
+            if intent_logits is not None:
+                intent_target = torch.tensor([item['intent_label']], dtype=torch.long, device=device)
+                intent_ce = torch.nn.functional.cross_entropy(intent_logits, intent_target)
+                loss = loss + INTENT_LOSS_WEIGHT * intent_ce
             if not bool(torch.isfinite(loss)):
                 raise ValueError('Nonfinite language loss')
             loss.backward()
@@ -557,6 +598,7 @@ def main():
             if step in (0, 9, 49, 99, 199, 399, LANGUAGE_STEPS - 1):
                 trace.append({'step': step + 1, 'loss': float(loss.detach()),
                               'full_loss': float(full_loss.detach()), 'contrast': float(contrast.detach()),
+                              'intent_ce': float(intent_ce.detach()),
                               'grad_norm': float(norm)})
             if step % 64 == 0:
                 print(json.dumps(trace[-1] if trace and trace[-1]['step'] == step + 1 else {'step': step + 1,
@@ -576,7 +618,11 @@ def main():
                          'gate': adapter.gate.detach().cpu().clone(),
                          **({'query_gate': {key: value.detach().cpu().clone()
                                             for key, value in adapter.query_gate.state_dict().items()}}
-                            if hasattr(adapter, 'query_gate') else {})}
+                            if hasattr(adapter, 'query_gate') else {}),
+                         **({'query_intent': {key: value.detach().cpu().clone()
+                                              for key, value in adapter.query_intent.state_dict().items()},
+                             'query_intent_scales': adapter.query_intent_scales.detach().cpu().clone()}
+                            if hasattr(adapter, 'query_intent') else {})}
                         for index, name, adapter in direct_adapters]
         bridge_state = {k: v.detach().cpu().clone() for k, v in bridge.state_dict().items()}
         codec_state = {k: v.detach().cpu().clone() for k, v in codec.state_dict().items()}
@@ -594,6 +640,8 @@ def main():
                          'start_candidate': str(START_CANDIDATE) if START_CANDIDATE is not None else None,
                          'language_lr': LANGUAGE_LR,
                          'query_intent_gate': QUERY_INTENT_GATE,
+                         'query_intent_count': QUERY_INTENT_COUNT,
+                         'intent_loss_weight': INTENT_LOSS_WEIGHT,
                          'focus_extra_questions': FOCUS_EXTRA_QUESTIONS,
                          'direct_residual': DIRECT_RESIDUAL, 'direct_residual_layer': DIRECT_RESIDUAL_LAYER,
                          'slow_signal_disabled': True, 'words': list(WORDS),
