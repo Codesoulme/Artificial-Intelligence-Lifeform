@@ -15,16 +15,13 @@ class NearestTokenDecoder(pilot.p.torch.nn.Module):
         self.register_buffer('codebook', codec.codebook.detach().to(dtype=pilot.p.torch.float16).clone())
         self.register_buffer('embedding', pilot.p.torch.nn.functional.normalize(
             embedding.detach().to(dtype=pilot.p.torch.float16), dim=-1))
-        self._cache_key = None
+        self._last_codes = None
         self._cache_value = None
 
-    def set_cache_key(self, key):
-        if key != self._cache_key:
-            self._cache_value = None
-        self._cache_key = key
-
     def forward(self, codes):
-        if self._cache_key is not None and self._cache_value is not None:
+        # Snapshot objects can be freed and their Python identities reused.
+        # Reuse only when the actual slot contents agree, including zero slots.
+        if self._last_codes is not None and pilot.p.torch.equal(codes, self._last_codes):
             return self._cache_value.to(device=codes.device)
         flat = pilot.p.torch.nn.functional.normalize(codes.float().reshape(-1, codes.shape[-1]), dim=-1).to(
             dtype=self.codebook.dtype)
@@ -35,6 +32,8 @@ class NearestTokenDecoder(pilot.p.torch.nn.Module):
         decoded = (weights.unsqueeze(-1) * self.embedding[indices]).sum(-2).float()
         decoded = pilot.p.torch.nn.functional.normalize(decoded, dim=-1).reshape_as(
             codes.new_empty(codes.shape[0], codes.shape[1], self.embedding.shape[1]))
+        decoded = decoded * (codes.norm(dim=-1, keepdim=True) > 0)
+        self._last_codes = codes.detach().clone()
         self._cache_value = decoded.detach()
         return decoded.to(device=codes.device)
 

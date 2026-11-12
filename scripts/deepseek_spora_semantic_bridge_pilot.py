@@ -16,6 +16,7 @@ from unittest.mock import patch
 from scripts import deepseek_spora_long_memory_generate_parity as p
 from scripts.deepseek_spora_reader_full_answer_pilot import unique_token_span
 from spora.continuous_text_memory import ContinuousTextCodec
+from scripts.spora_memory_generation_metrics import asserted_fact
 
 
 OUT = p.ROOT / 'runs/continuous-reader-semantic-bridge-pilot-20261112'
@@ -26,8 +27,13 @@ LANGUAGE_STEPS = 768
 CODEC_SLOT_COUNT = 4
 CODEC_ADD_EOS = True
 STORE_FULL_FACT = False
+STORE_IDENTITY = True
 BRIDGE_CONDITION_SLOTS = 2
+TRAIN_VALUE_COUNT = 16
 CODEC_FACTORY = ContinuousTextCodec
+DIRECT_RESIDUAL = False
+DIRECT_RESIDUAL_LAYER = 20
+STRICT_SWAP_EVAL = False
 WORDS = ('苹果', '香蕉', '西瓜', '葡萄', '草莓', '橘子', '桃子', '芒果',
          '梨子', '柠檬', '菠萝', '樱桃', '柚子', '荔枝', '榴莲', '蓝莓',
          '火龙果', '木瓜')
@@ -45,9 +51,10 @@ class TokenCodeDecoder(p.torch.nn.Module):
         return p.torch.nn.functional.normalize(self.linear(codes.float()), dim=-1)
 
 
-def fit_token_decoder(decoder, codec, embedding, *, steps=BRIDGE_STEPS, seed=SEED):
+def fit_token_decoder(decoder, codec, embedding, *, steps=None, seed=SEED):
     """Train only an embedding reconstruction bridge, never the language base."""
     torch = p.torch
+    steps = BRIDGE_STEPS if steps is None else steps
     generator = torch.Generator(device=embedding.device).manual_seed(seed + 17)
     optimizer = torch.optim.AdamW(decoder.parameters(), lr=2e-3, weight_decay=1e-4, foreach=False)
     trace = []
@@ -126,14 +133,70 @@ class MemorySemanticGatedLowRankLinear(p.torch.nn.Module):
         packed = torch_mean(reads[0], reads[1])[:, :self.slot_count * self.slot_width]
         memory = packed.reshape(1, self.slot_count, self.slot_width)
         slots = p.torch.nn.functional.normalize(memory[:, :self.condition_slots], dim=-1)
-        if hasattr(self.bridge, 'set_cache_key'):
-            self.bridge.set_cache_key(tuple(id(matrices[i][0]) for i in range(2))
-                                      + tuple(id(addresses[i]) for i in range(2)))
         decoded = self.bridge(slots).reshape(1, -1)
         gate = p.torch.tanh(p.torch.nn.functional.linear(decoded, self.condition))
         hidden = p.torch.nn.functional.linear(x.float(), self.a) * gate.unsqueeze(1)
         delta = p.torch.nn.functional.linear(hidden, self.b)
         return base_output + delta.to(x.dtype)
+
+
+class MemoryResidualOutput(p.torch.nn.Module):
+    """Research-only direct semantic residual at a late attention output."""
+
+    def __init__(self, base, memory_context, memory_width, bridge, embedding_width,
+                 condition_slots):
+        super().__init__()
+        if not isinstance(base, p.torch.nn.Linear):
+            raise ValueError('Expected a linear projection')
+        self.base = base
+        self.base.requires_grad_(False)
+        self.memory_context = memory_context
+        self.memory_width = memory_width
+        self.slot_count = getattr(bridge, 'slot_count', CODEC_SLOT_COUNT)
+        self.slot_width = memory_width // self.slot_count
+        self.condition_slots = condition_slots
+        self.bridge = bridge
+        self.bridge.requires_grad_(False)
+        self.to_hidden = p.torch.nn.Linear(condition_slots * embedding_width,
+                                           base.out_features, bias=False,
+                                           device=base.weight.device,
+                                           dtype=p.torch.float32)
+        p.torch.nn.init.zeros_(self.to_hidden.weight)
+        self.gate = p.torch.nn.Parameter(p.torch.tensor(-1.0, device=base.weight.device))
+
+    def _decoded(self, x, active):
+        matrices, addresses, mask, slots = active
+        if mask is not None:
+            if mask.numel() != 1:
+                raise ValueError('Research gating supports a single read mask')
+            if not bool(mask[0]):
+                return None
+        if (addresses is None or len(addresses) != 2 or len(matrices) != 2
+                or slots is None or slots.numel() != 1 or int(slots[0]) != 0):
+            raise ValueError('Semantic residual requires two fixed current addresses')
+        reads = []
+        for site in range(2):
+            address, matrix = addresses[site], matrices[site][0]
+            query = p.torch.nn.functional.normalize(
+                address.to(device=x.device, dtype=p.torch.float32), dim=-1)
+            raw = p.torch.bmm(matrix.to(device=x.device, dtype=p.torch.float32),
+                              query.unsqueeze(-1)).squeeze(-1)
+            reads.append(raw)
+        packed = torch_mean(reads[0], reads[1])[:, :self.slot_count * self.slot_width]
+        memory = packed.reshape(1, self.slot_count, self.slot_width)
+        slots = p.torch.nn.functional.normalize(memory[:, :self.condition_slots], dim=-1)
+        return self.bridge(slots).reshape(1, -1)
+
+    def forward(self, x):
+        output = self.base(x)
+        active = self.memory_context.get()
+        if active is None:
+            return output
+        decoded = self._decoded(x, active)
+        if decoded is None:
+            return output
+        residual = self.to_hidden(decoded).unsqueeze(1)
+        return output + p.torch.sigmoid(self.gate) * residual.to(output.dtype)
 
 
 def torch_empty(rows, cols, device):
@@ -184,6 +247,7 @@ def main():
         bridge = make_token_decoder(codec, embedding)
         bridge.slot_count = CODEC_SLOT_COUNT
         bridge_trace = fit_token_decoder(bridge, codec, embedding)
+        codec.requires_grad_(False)
         bridge.requires_grad_(False)
         decoder.requires_grad_(False)
         decoder.reader.requires_grad_(True)
@@ -196,6 +260,14 @@ def main():
                     bridge, embedding.shape[1], BRIDGE_CONDITION_SLOTS)
                 setattr(attention, name, adapter)
                 adapters.append((index, name, adapter))
+        direct_adapters = []
+        if DIRECT_RESIDUAL:
+            attention = decoder.base.model.layers[DIRECT_RESIDUAL_LAYER].self_attn
+            direct = MemoryResidualOutput(
+                attention.o_proj, decoder._memory_context, model.config.memory_width,
+                bridge, embedding.shape[1], BRIDGE_CONDITION_SLOTS)
+            attention.o_proj = direct
+            direct_adapters.append((DIRECT_RESIDUAL_LAYER, 'o_proj', direct))
         slow_patches = []
         for site in decoder.reader.native_sites:
             patcher = patch.object(site, 'slow_signal', side_effect=lambda x, query: torch.zeros_like(query))
@@ -225,7 +297,8 @@ def main():
             if value is not None:
                 target = torch.zeros((1, model.config.memory_width), device=device)
                 fact_ids = word_ids[value] if STORE_FULL_FACT else [word_ids[value][0]]
-                encoded = codec.encode(torch.tensor([identity_ids[key], *fact_ids], device=device))
+                stored_ids = ([identity_ids[key]] if STORE_IDENTITY else []) + fact_ids
+                encoded = codec.encode(torch.tensor(stored_ids, device=device))
                 target[0, :encoded.numel()] = encoded
                 with torch.no_grad():
                     for i, site in enumerate(model.memories):
@@ -234,7 +307,7 @@ def main():
                             target, torch.ones(1, device=device), torch.zeros(1, dtype=torch.long, device=device), False)
                         read = site.retrieve([fast[i][0]], site.current_basis[key:key + 1].to(device))
                         decoded = codec.decode(read[0, :encoded.numel()])['token_ids']
-                        expected = [identity_ids[key], *fact_ids]
+                        expected = stored_ids[:]
                         if CODEC_ADD_EOS:
                             expected.append(tok.eos_token_id)
                         if decoded != expected:
@@ -248,10 +321,12 @@ def main():
         cases = []
         states = {}
         schedule = [('train', key, value, question)
-                    for key in (0, 1, 2) for value in range(16) for question in questions]
+                    for key in (0, 1, 2) for value in range(TRAIN_VALUE_COUNT)
+                    for question in questions]
         schedule += [('held_name', 3, value, questions[0]) for value in range(18)]
         for group, key, value, question_template in schedule:
-            states.setdefault((key, value), state_for(value, key))
+            if (key, value) not in states:
+                states[key, value] = state_for(value, key)
             state = states[key, value]
             name = ('小林', '小周', '小王', '小赵')[key]
             question = question_template.format(name=name)
@@ -278,6 +353,10 @@ def main():
                 if (item['group'], item['value']) in (('train', 0), ('held_name', 16)):
                     conditions += [('empty', p._memory_args(model, empty,
                         {'key': item['key'], 'intent': 'current', 'event_time': 0})), ('off', None)]
+                if STRICT_SWAP_EVAL and item['group'] == 'held_name':
+                    swapped = (item['value'] + 1) % len(WORDS)
+                    conditions.append(('swapped', p._memory_args(model, states[item['key'], swapped],
+                        {'key': item['key'], 'intent': 'current', 'event_time': 0})))
                 for condition, spec in conditions:
                     with torch.inference_mode():
                         kwargs = {} if spec is None else spec
@@ -292,10 +371,14 @@ def main():
                             eos_token_id=tok.eos_token_id)
                     tail = output[0, prefix:].tolist()
                     answer = tok.decode(tail, skip_special_tokens=True).strip()
+                    stored_value = (item['value'] + 1) % len(WORDS) if condition == 'swapped' else item['value']
                     rows.append({'group': item['group'], 'name': item['name'], 'condition': condition,
                                  'question': item['question'], 'expected': WORDS[item['value']],
                                  'answer': answer, 'token_ids': tail, 'exact': answer == WORDS[item['value']],
                                  'contains_expected': WORDS[item['value']] in answer,
+                                 'stored_expected': WORDS[stored_value] if condition in ('memory', 'swapped') else None,
+                                 'stored_fact_correct': (asserted_fact(answer, item['name'], WORDS[stored_value])
+                                                         if condition in ('memory', 'swapped') else None),
                                  'forced_fact_rank': int((fact_scores > fact_scores[correct_id]).sum()) + 1,
                                  'forced_pair_margin': float(fact_scores[correct_id] - fact_scores[competitor])})
             return rows
@@ -304,6 +387,8 @@ def main():
         train = [x for x in cases if x['group'] == 'train']
         params = [x for x in decoder.reader.parameters() if x.requires_grad]
         params += [param for _, _, adapter in adapters for param in (adapter.a, adapter.b, adapter.condition)]
+        params += [param for _, _, adapter in direct_adapters
+                   for param in list(adapter.to_hidden.parameters()) + [adapter.gate]]
         optimizer = torch.optim.AdamW(params, lr=1e-4, weight_decay=0, foreach=False)
         trace = []
         for step in range(LANGUAGE_STEPS):
@@ -316,7 +401,10 @@ def main():
             target = item['ids'][:, prefix:]
             scores = logits[:, prefix - 1:prefix - 1 + target.shape[1]]
             full_loss = torch.nn.functional.cross_entropy(scores.reshape(-1, scores.shape[-1]), target.reshape(-1))
-            other_value = (item['value'] + 1 + rng.randrange(15)) % 16
+            if TRAIN_VALUE_COUNT < len(WORDS):
+                other_value = (item['value'] + 1 + rng.randrange(TRAIN_VALUE_COUNT - 1)) % TRAIN_VALUE_COUNT
+            else:
+                other_value = (item['value'] + 1 + rng.randrange(len(WORDS) - 1)) % len(WORDS)
             other_spec = p._memory_args(model, states[item['key'], other_value],
                                         {'key': item['key'], 'intent': 'current', 'event_time': 0})
             other_logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
@@ -335,7 +423,7 @@ def main():
             loss.backward()
             norm = torch.nn.utils.clip_grad_norm_(params, 1.0, error_if_nonfinite=True)
             optimizer.step()
-            if step in (0, 9, 49, 99, 199, 399, 767):
+            if step in (0, 9, 49, 99, 199, 399, LANGUAGE_STEPS - 1):
                 trace.append({'step': step + 1, 'loss': float(loss.detach()),
                               'full_loss': float(full_loss.detach()), 'contrast': float(contrast.detach()),
                               'grad_norm': float(norm)})
@@ -351,27 +439,47 @@ def main():
         adapter_state = [{'layer': index, 'projection': name, 'a': adapter.a.detach().cpu().clone(),
                           'b': adapter.b.detach().cpu().clone(), 'condition': adapter.condition.detach().cpu().clone()}
                          for index, name, adapter in adapters]
+        direct_state = [{'layer': index, 'projection': name,
+                         'to_hidden': {key: value.detach().cpu().clone()
+                                       for key, value in adapter.to_hidden.state_dict().items()},
+                         'gate': adapter.gate.detach().cpu().clone()}
+                        for index, name, adapter in direct_adapters]
         bridge_state = {k: v.detach().cpu().clone() for k, v in bridge.state_dict().items()}
+        codec_state = {k: v.detach().cpu().clone() for k, v in codec.state_dict().items()}
         bridge.eval()
         for patcher in slow_patches:
             patcher.stop()
     if p.sha(p.runtime.CHECKPOINT) != source_sha or p.sha(p.MODEL / 'model.safetensors') != p.WEIGHT_SHA:
         raise ValueError('Protected source changed')
     OUT.mkdir(parents=False, exist_ok=False)
+    experiment_config = {'codec': codec.config_dict(), 'codec_class': type(codec).__name__,
+                         'bridge_class': type(bridge).__name__, 'store_full_fact': STORE_FULL_FACT,
+                         'store_identity': STORE_IDENTITY, 'condition_slots': BRIDGE_CONDITION_SLOTS,
+                         'train_value_count': TRAIN_VALUE_COUNT, 'strict_swap_eval': STRICT_SWAP_EVAL,
+                         'direct_residual': DIRECT_RESIDUAL, 'direct_residual_layer': DIRECT_RESIDUAL_LAYER,
+                         'slow_signal_disabled': True, 'words': list(WORDS),
+                         'reader_layer_indices': list(decoder.layer_indices)}
     torch.save({'reader': reader_state, 'bridge': bridge_state, 'adapters': adapter_state,
+                'format': 'spora-semantic-bridge-research-v2', 'codec_state': codec_state,
+                'experiment_config': experiment_config,
+                'direct_adapters': direct_state,
                 'source_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA, 'research_only': True,
                 'memory_conditioning': 'embedding_reconstructed_identity_fact_slots',
                 'bridge_steps': BRIDGE_STEPS, 'language_steps': LANGUAGE_STEPS}, OUT / 'candidate.pt')
     report = {'status': 'semantic_memory_bridge_isolated_pilot', 'before': before, 'after': after,
+              'experiment_config': experiment_config,
               'bridge_trace': bridge_trace, 'language_trace': trace, 'seed': SEED,
               'bridge_steps': BRIDGE_STEPS, 'language_steps': LANGUAGE_STEPS,
               'source_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA,
               'teacher_candidate_sha256': teacher_sha, 'candidate_sha256': p.sha(OUT / 'candidate.pt'),
               'seconds': time.perf_counter() - started,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
+              'direct_residual_layers': [item[0] for item in direct_adapters],
               'limitations': ['Numeric addresses and direct writes bypass natural-language routing.',
                               'The bridge is trained from frozen token embeddings, not language data.',
-                              'Only identity and first fruit tokens are stored in two of four slots.',
+                              'The stored token layout and supervised value range are explicit in experiment_config.',
+                              'EOS follows the last input token and may occur within conditioned slots.',
+                              'Embedding reconstruction can expose held word types; language-held is a separate split.',
                               'The bridge and language adapter are experimental and not adopted by the individual.',
                               'The finite authored split is not an open-memory or open-chat evaluation.']}
     with (OUT / 'result.json').open('x', encoding='utf-8', newline='\n') as stream:

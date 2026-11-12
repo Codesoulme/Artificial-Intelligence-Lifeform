@@ -1,0 +1,1826 @@
+{
+  "status": "retrospective_development_rescoring",
+  "runs": [
+    {
+      "run": "semantic-bridge-pilot",
+      "input_sha256": "accf20da540e260d8c83dc403b17a076d11a7a8391b606fe771c9df7cdac6cb9",
+      "candidate_sha256": "5ccabf3b255d06b1c4d21aac09fb8250b5a4557a1be3eb33015289a9eb1777a0",
+      "summary": {
+        "seen_value_new_name": {
+          "correct": 13,
+          "total": 16
+        },
+        "new_value_new_name": {
+          "correct": 0,
+          "total": 2
+        }
+      },
+      "pairs_correct": 0,
+      "pairs_total": 0,
+      "swapped_correct": 0,
+      "off_probe_count": 4,
+      "off_tokens_unchanged": true,
+      "seconds": 546.5557154999988,
+      "rows": [
+        {
+          "expected": "苹果",
+          "answer": "小赵喜欢的水果是苹果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "香蕉",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "西瓜",
+          "answer": "小赵喜欢的水果是西瓜。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "葡萄",
+          "answer": "小赵喜欢的水果是葡萄。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "草莓",
+          "answer": "小赵喜欢的水果是草莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "橘子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "桃子",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "芒果",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "柠檬",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "菠萝",
+          "answer": "小赵喜欢的水果是菠萝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "樱桃",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "柚子",
+          "answer": "小赵喜欢的水果是柚子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "榴莲",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "蓝莓",
+          "answer": "小赵喜欢的水果是蓝莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "木瓜",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "run": "semantic-mlp-bridge-pilot",
+      "input_sha256": "87565686b546935b01c8ae9dadca5e0c199f9e9f670c53fe56c399f4bbcbdf49",
+      "candidate_sha256": "65db70a9a8d5f4ab42bb6a6cde625ed0669ddaf1404b8b3fe0ba9168f2c6be51",
+      "summary": {
+        "seen_value_new_name": {
+          "correct": 11,
+          "total": 16
+        },
+        "new_value_new_name": {
+          "correct": 0,
+          "total": 2
+        }
+      },
+      "pairs_correct": 0,
+      "pairs_total": 0,
+      "swapped_correct": 0,
+      "off_probe_count": 4,
+      "off_tokens_unchanged": true,
+      "seconds": 718.485170999993,
+      "rows": [
+        {
+          "expected": "苹果",
+          "answer": "小赵喜欢的水果是苹果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "香蕉",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "西瓜",
+          "answer": "小赵喜欢的水果是西瓜。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "葡萄",
+          "answer": "小赵喜欢的水果是葡萄。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "草莓",
+          "answer": "小赵喜欢的水果是草莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "橘子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "桃子",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "芒果",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "柠檬",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "菠萝",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "樱桃",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "柚子",
+          "answer": "小赵喜欢的水果是柚子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "榴莲",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "蓝莓",
+          "answer": "小赵喜欢的水果是蓝莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "木瓜",
+          "answer": "小赵喜欢的水果是草莓。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "run": "codebook-upper-bound-pilot",
+      "input_sha256": "0da42414160fb9771fd0acc7f6c3324ec3dab3591b42c89c77503be94415486e",
+      "candidate_sha256": "179a51487e6057cc02d208cb684357876fffb2527034e7badeaf9edff92948f2",
+      "summary": {
+        "seen_value_new_name": {
+          "correct": 16,
+          "total": 16
+        },
+        "new_value_new_name": {
+          "correct": 0,
+          "total": 2
+        }
+      },
+      "pairs_correct": 0,
+      "pairs_total": 0,
+      "swapped_correct": 0,
+      "off_probe_count": 4,
+      "off_tokens_unchanged": true,
+      "seconds": 540.2815073999955,
+      "rows": [
+        {
+          "expected": "苹果",
+          "answer": "小赵喜欢的水果是苹果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "香蕉",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "西瓜",
+          "answer": "小赵喜欢的水果是西瓜。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "葡萄",
+          "answer": "小赵喜欢的水果是葡萄。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "草莓",
+          "answer": "小赵喜欢的水果是草莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "橘子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "桃子",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "芒果",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是梨子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "柠檬",
+          "answer": "小赵喜欢的水果是柠檬。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "菠萝",
+          "answer": "小赵喜欢的水果是菠萝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "樱桃",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "柚子",
+          "answer": "小赵喜欢的水果是柚子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "榴莲",
+          "answer": "小赵喜欢的水果是榴莲。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "蓝莓",
+          "answer": "小赵喜欢的水果是蓝莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵喜欢的水果名称是草莓、芒果和荔枝。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "木瓜",
+          "answer": "小赵喜欢的水果包括草莓、苹果、香蕉、橘子、葡萄、葡萄（如果有的话）、桃",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "run": "full-fact-semantic-bridge-pilot",
+      "input_sha256": "0b4ae7a8e8f85fc7b097d7eae2ff9ab6270d6015214cfc4d2946d54a5654ddd1",
+      "candidate_sha256": "5e6989ebfe18a52368e228b1ba64a7ea50fdd09d7f272d920aa2d846b9032617",
+      "summary": {
+        "seen_value_new_name": {
+          "correct": 14,
+          "total": 16
+        },
+        "new_value_new_name": {
+          "correct": 0,
+          "total": 2
+        }
+      },
+      "pairs_correct": 0,
+      "pairs_total": 0,
+      "swapped_correct": 0,
+      "off_probe_count": 4,
+      "off_tokens_unchanged": true,
+      "seconds": 708.8443188999954,
+      "rows": [
+        {
+          "expected": "苹果",
+          "answer": "小赵喜欢的水果是苹果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "香蕉",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "西瓜",
+          "answer": "小赵喜欢的水果是西瓜。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "葡萄",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "草莓",
+          "answer": "小赵喜欢的水果是草莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "橘子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "桃子",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "芒果",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是梨子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "柠檬",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "菠萝",
+          "answer": "小赵喜欢的水果是菠萝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "樱桃",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "柚子",
+          "answer": "小赵喜欢的水果是柚子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "榴莲",
+          "answer": "小赵喜欢的水果是榴莲。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "蓝莓",
+          "answer": "小赵喜欢的水果是蓝莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "木瓜",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "run": "full-fact-codebook-upper-bound-320",
+      "input_sha256": "ee309411552ed5425e9499cee10b8b19e2b49d2323c543d9c0b84e7a7c292f9b",
+      "candidate_sha256": "afcc5996af34eeb13e9ad2c8bfa899758bce84ae48fb41b075aded57587d48d6",
+      "summary": {
+        "seen_value_new_name": {
+          "correct": 13,
+          "total": 16
+        },
+        "new_value_new_name": {
+          "correct": 0,
+          "total": 2
+        }
+      },
+      "pairs_correct": 0,
+      "pairs_total": 0,
+      "swapped_correct": 0,
+      "off_probe_count": 4,
+      "off_tokens_unchanged": true,
+      "seconds": 416.70895640000526,
+      "rows": [
+        {
+          "expected": "苹果",
+          "answer": "小赵喜欢的水果是苹果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "香蕉",
+          "answer": "小赵喜欢的水果是苹果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "西瓜",
+          "answer": "小赵喜欢的水果是西瓜。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "葡萄",
+          "answer": "小赵喜欢的水果是葡萄。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "草莓",
+          "answer": "小赵喜欢的水果是草莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "橘子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "桃子",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "芒果",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "柠檬",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "菠萝",
+          "answer": "小赵喜欢的水果是菠萝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "樱桃",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "柚子",
+          "answer": "小赵喜欢的水果是柚子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "榴莲",
+          "answer": "小赵喜欢的水果是榴莲。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "蓝莓",
+          "answer": "小赵喜欢的水果是蓝莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵喜欢的水果包括：苹果、香蕉、橘子、梨、葡萄、葡萄。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "木瓜",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "run": "learned-codec-bridge-pilot",
+      "input_sha256": "51cc5be6fffeda3e08d8566729859ea7a89eeb1a9f803b742d16ace08527cd70",
+      "candidate_sha256": "fc933d09d67bdc4ab5fc31b8715c70f26dd2e6d242b1e6be4d0a6f1b31cff41b",
+      "summary": {
+        "seen_value_new_name": {
+          "correct": 12,
+          "total": 16
+        },
+        "new_value_new_name": {
+          "correct": 0,
+          "total": 2
+        }
+      },
+      "pairs_correct": 0,
+      "pairs_total": 0,
+      "swapped_correct": 0,
+      "off_probe_count": 4,
+      "off_tokens_unchanged": true,
+      "seconds": 699.1478252000088,
+      "rows": [
+        {
+          "expected": "苹果",
+          "answer": "小赵喜欢的水果是苹果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "香蕉",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "西瓜",
+          "answer": "小赵喜欢的水果是西瓜。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "葡萄",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "草莓",
+          "answer": "小赵喜欢的水果是草莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "橘子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "桃子",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "芒果",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "柠檬",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "菠萝",
+          "answer": "小赵喜欢的水果是菠萝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "樱桃",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "柚子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "榴莲",
+          "answer": "小赵喜欢的水果是榴莲。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "蓝莓",
+          "answer": "小赵喜欢的水果是蓝莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "木瓜",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "run": "late-residual-pilot",
+      "input_sha256": "5ce91f9de484e9a7ebec7f3d2b17ec4971efa1a0b591b124a0da6e8d9f476645",
+      "candidate_sha256": "ce010c07cc162c91053990b18a3009c36c00af2cf98486cd76d383fcb05c56b6",
+      "summary": {
+        "seen_value_new_name": {
+          "correct": 15,
+          "total": 16
+        },
+        "new_value_new_name": {
+          "correct": 0,
+          "total": 2
+        }
+      },
+      "pairs_correct": 0,
+      "pairs_total": 0,
+      "swapped_correct": 0,
+      "off_probe_count": 4,
+      "off_tokens_unchanged": true,
+      "seconds": 679.9427313999913,
+      "rows": [
+        {
+          "expected": "苹果",
+          "answer": "小赵喜欢的水果是苹果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "香蕉",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "西瓜",
+          "answer": "小赵喜欢的水果是西瓜。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "葡萄",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "草莓",
+          "answer": "小赵喜欢的水果是草莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "橘子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "桃子",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "芒果",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是梨子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "柠檬",
+          "answer": "小赵喜欢的水果是柠檬。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "菠萝",
+          "answer": "小赵喜欢的水果是菠萝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "樱桃",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "柚子",
+          "answer": "小赵喜欢的水果是柚子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "榴莲",
+          "answer": "小赵喜欢的水果是榴莲。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "蓝莓",
+          "answer": "小赵喜欢的水果是蓝莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        },
+        {
+          "expected": "木瓜",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "run": "late-residual-strict-pilot",
+      "input_sha256": "8f3501fd8d61dcfc5ed8b3440312d9ff5b4c9af17a020dbb14b23918b3b5ee5a",
+      "candidate_sha256": "ce010c07cc162c91053990b18a3009c36c00af2cf98486cd76d383fcb05c56b6",
+      "summary": {
+        "seen_value_new_name": {
+          "correct": 15,
+          "total": 16
+        },
+        "new_value_new_name": {
+          "correct": 0,
+          "total": 2
+        }
+      },
+      "pairs_correct": 13,
+      "pairs_total": 18,
+      "swapped_correct": 15,
+      "off_probe_count": 4,
+      "off_tokens_unchanged": true,
+      "seconds": 698.2616347000003,
+      "rows": [
+        {
+          "expected": "苹果",
+          "answer": "小赵喜欢的水果是苹果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "香蕉",
+          "swapped_answer": "小赵喜欢的水果是香蕉。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "香蕉",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "西瓜",
+          "swapped_answer": "小赵喜欢的水果是西瓜。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "西瓜",
+          "answer": "小赵喜欢的水果是西瓜。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "葡萄",
+          "swapped_answer": "小赵喜欢的水果是樱桃。",
+          "own_correct": true,
+          "swapped_correct": false,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "葡萄",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false,
+          "replacement": "草莓",
+          "swapped_answer": "小赵喜欢的水果是草莓。",
+          "own_correct": false,
+          "swapped_correct": true,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "草莓",
+          "answer": "小赵喜欢的水果是草莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "橘子",
+          "swapped_answer": "小赵喜欢的水果是橘子。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "橘子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "桃子",
+          "swapped_answer": "小赵喜欢的水果是桃子。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "桃子",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "芒果",
+          "swapped_answer": "小赵喜欢的水果是芒果。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "芒果",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "梨子",
+          "swapped_answer": "小赵喜欢的水果是梨子。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是梨子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "柠檬",
+          "swapped_answer": "小赵喜欢的水果是柠檬。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "柠檬",
+          "answer": "小赵喜欢的水果是柠檬。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "菠萝",
+          "swapped_answer": "小赵喜欢的水果是菠萝。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "菠萝",
+          "answer": "小赵喜欢的水果是菠萝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "樱桃",
+          "swapped_answer": "小赵喜欢的水果是樱桃。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "樱桃",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "柚子",
+          "swapped_answer": "小赵喜欢的水果是柚子。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "柚子",
+          "answer": "小赵喜欢的水果是柚子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "荔枝",
+          "swapped_answer": "小赵喜欢的水果是荔枝。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "榴莲",
+          "swapped_answer": "小赵喜欢的水果是榴莲。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "榴莲",
+          "answer": "小赵喜欢的水果是榴莲。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "蓝莓",
+          "swapped_answer": "小赵喜欢的水果是蓝莓。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "蓝莓",
+          "answer": "小赵喜欢的水果是蓝莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "火龙果",
+          "swapped_answer": "小赵喜欢的水果是香蕉。",
+          "own_correct": true,
+          "swapped_correct": false,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false,
+          "replacement": "木瓜",
+          "swapped_answer": "小赵喜欢的水果是桃子。",
+          "own_correct": false,
+          "swapped_correct": false,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "木瓜",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false,
+          "replacement": "苹果",
+          "swapped_answer": "小赵喜欢的水果是苹果。",
+          "own_correct": false,
+          "swapped_correct": true,
+          "pair_correct": false,
+          "original_still_present": false
+        }
+      ]
+    },
+    {
+      "run": "fact-only-late-residual-strict-pilot",
+      "input_sha256": "d0ec917bd6ebcc100d441a872d404db2619b969fbe9be1982000789cdd754425",
+      "candidate_sha256": "919462807b006b1e93637b053fbc4cebacc7f570f941648788c39e4011f65b25",
+      "summary": {
+        "seen_value_new_name": {
+          "correct": 14,
+          "total": 16
+        },
+        "new_value_new_name": {
+          "correct": 0,
+          "total": 2
+        }
+      },
+      "pairs_correct": 12,
+      "pairs_total": 18,
+      "swapped_correct": 14,
+      "off_probe_count": 4,
+      "off_tokens_unchanged": true,
+      "seconds": 686.5717728000018,
+      "rows": [
+        {
+          "expected": "苹果",
+          "answer": "小赵喜欢的水果是苹果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "香蕉",
+          "swapped_answer": "小赵喜欢的水果是香蕉。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "香蕉",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "西瓜",
+          "swapped_answer": "小赵喜欢的水果是西瓜。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "西瓜",
+          "answer": "小赵喜欢的水果是西瓜。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "葡萄",
+          "swapped_answer": "小赵喜欢的水果是葡萄。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "葡萄",
+          "answer": "小赵喜欢的水果是葡萄。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "草莓",
+          "swapped_answer": "小赵喜欢的水果是草莓。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "草莓",
+          "answer": "小赵喜欢的水果是草莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "橘子",
+          "swapped_answer": "小赵喜欢的水果是橘子。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "橘子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "桃子",
+          "swapped_answer": "小赵喜欢的水果是桃子。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "桃子",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "芒果",
+          "swapped_answer": "小赵喜欢的水果是芒果。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "芒果",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "梨子",
+          "swapped_answer": "小赵喜欢的水果是橘子。",
+          "own_correct": true,
+          "swapped_correct": false,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false,
+          "replacement": "柠檬",
+          "swapped_answer": "小赵喜欢的水果是荔枝。",
+          "own_correct": false,
+          "swapped_correct": false,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "柠檬",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false,
+          "replacement": "菠萝",
+          "swapped_answer": "小赵喜欢的水果是菠萝。",
+          "own_correct": false,
+          "swapped_correct": true,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "菠萝",
+          "answer": "小赵喜欢的水果是菠萝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "樱桃",
+          "swapped_answer": "小赵喜欢的水果是樱桃。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "樱桃",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "柚子",
+          "swapped_answer": "小赵喜欢的水果是柚子。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "柚子",
+          "answer": "小赵喜欢的水果是柚子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "荔枝",
+          "swapped_answer": "小赵喜欢的水果是荔枝。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "榴莲",
+          "swapped_answer": "小赵喜欢的水果是榴莲。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "榴莲",
+          "answer": "小赵喜欢的水果是榴莲。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "蓝莓",
+          "swapped_answer": "小赵喜欢的水果是蓝莓。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "蓝莓",
+          "answer": "小赵喜欢的水果是蓝莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "火龙果",
+          "swapped_answer": "小赵喜欢的水果名称包括：苹果、香蕉、橘子、葡萄、草莓、葡萄干、芒果、",
+          "own_correct": true,
+          "swapped_correct": false,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵喜欢的水果名称包括：苹果、香蕉、橘子、葡萄、草莓、葡萄干、芒果、",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false,
+          "replacement": "木瓜",
+          "swapped_answer": "小赵喜欢的水果是榴莲。",
+          "own_correct": false,
+          "swapped_correct": false,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "木瓜",
+          "answer": "小赵喜欢的水果是榴莲。",
+          "name": "小赵",
+          "split": "new_value_new_name",
+          "correct": false,
+          "replacement": "苹果",
+          "swapped_answer": "小赵喜欢的水果是苹果。",
+          "own_correct": false,
+          "swapped_correct": true,
+          "pair_correct": false,
+          "original_still_present": false
+        }
+      ]
+    },
+    {
+      "run": "all-facts-late-residual-strict-pilot",
+      "input_sha256": "8ad86628b872a6baf6900573429583489431bbf763154882369f5756a9eed499",
+      "candidate_sha256": "7877cf9a892a847cc1f9d28e42179e5a266bd9f3124cf0b5ff310822fb04c363",
+      "summary": {
+        "seen_value_new_name": {
+          "correct": 15,
+          "total": 18
+        },
+        "new_value_new_name": {
+          "correct": 0,
+          "total": 0
+        }
+      },
+      "pairs_correct": 12,
+      "pairs_total": 18,
+      "swapped_correct": 15,
+      "off_probe_count": 4,
+      "off_tokens_unchanged": true,
+      "seconds": 740.2367874999909,
+      "rows": [
+        {
+          "expected": "苹果",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false,
+          "replacement": "香蕉",
+          "swapped_answer": "小赵喜欢的水果是香蕉。",
+          "own_correct": false,
+          "swapped_correct": true,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "香蕉",
+          "answer": "小赵喜欢的水果是香蕉。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "西瓜",
+          "swapped_answer": "小赵喜欢的水果是西瓜。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "西瓜",
+          "answer": "小赵喜欢的水果是西瓜。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "葡萄",
+          "swapped_answer": "小赵喜欢的水果是荔枝。",
+          "own_correct": true,
+          "swapped_correct": false,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "葡萄",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false,
+          "replacement": "草莓",
+          "swapped_answer": "小赵喜欢的水果是草莓。",
+          "own_correct": false,
+          "swapped_correct": true,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "草莓",
+          "answer": "小赵喜欢的水果是草莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "橘子",
+          "swapped_answer": "小赵喜欢的水果是橘子。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "橘子",
+          "answer": "小赵喜欢的水果是橘子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "桃子",
+          "swapped_answer": "小赵喜欢的水果是桃子。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "桃子",
+          "answer": "小赵喜欢的水果是桃子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "芒果",
+          "swapped_answer": "小赵喜欢的水果是芒果。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "芒果",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "梨子",
+          "swapped_answer": "小赵喜欢的水果是梨子。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "梨子",
+          "answer": "小赵喜欢的水果是梨子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "柠檬",
+          "swapped_answer": "小赵喜欢的水果是芒果。",
+          "own_correct": true,
+          "swapped_correct": false,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "柠檬",
+          "answer": "小赵喜欢的水果是芒果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": false,
+          "replacement": "菠萝",
+          "swapped_answer": "小赵喜欢的水果是菠萝。",
+          "own_correct": false,
+          "swapped_correct": true,
+          "pair_correct": false,
+          "original_still_present": false
+        },
+        {
+          "expected": "菠萝",
+          "answer": "小赵喜欢的水果是菠萝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "樱桃",
+          "swapped_answer": "小赵喜欢的水果是樱桃。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "樱桃",
+          "answer": "小赵喜欢的水果是樱桃。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "柚子",
+          "swapped_answer": "小赵喜欢的水果是柚子。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "柚子",
+          "answer": "小赵喜欢的水果是柚子。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "荔枝",
+          "swapped_answer": "小赵喜欢的水果是荔枝。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "荔枝",
+          "answer": "小赵喜欢的水果是荔枝。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "榴莲",
+          "swapped_answer": "小赵喜欢的水果是榴莲。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "榴莲",
+          "answer": "小赵喜欢的水果是榴莲。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "蓝莓",
+          "swapped_answer": "小赵喜欢的水果是蓝莓。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "蓝莓",
+          "answer": "小赵喜欢的水果是蓝莓。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "火龙果",
+          "swapped_answer": "小赵喜欢的水果是火龙果。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "火龙果",
+          "answer": "小赵喜欢的水果是火龙果。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "木瓜",
+          "swapped_answer": "小赵喜欢的水果是木瓜。",
+          "own_correct": true,
+          "swapped_correct": true,
+          "pair_correct": true,
+          "original_still_present": false
+        },
+        {
+          "expected": "木瓜",
+          "answer": "小赵喜欢的水果是木瓜。",
+          "name": "小赵",
+          "split": "seen_value_new_name",
+          "correct": true,
+          "replacement": "苹果",
+          "swapped_answer": "小赵喜欢的水果是荔枝。",
+          "own_correct": true,
+          "swapped_correct": false,
+          "pair_correct": false,
+          "original_still_present": false
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "No new generalization test; these outputs were already inspected.",
+    "Original training coverage is reconstructed from versioned run scripts.",
+    "Exact assertions avoid list/negation false positives but can reject paraphrases.",
+    "Off controls here are fruit questions, not general conversation quality.",
+    "Codebook variants are diagnostic retrieval paths, not mathematical performance bounds."
+  ]
+}
