@@ -1,5 +1,6 @@
 """Research-only end-to-end current-fact audit on original language layers."""
 import json
+import math
 import sys
 import tempfile
 import time
@@ -44,13 +45,21 @@ def checked(folder, name, digest_key):
     return torch.load(path, map_location='cpu', weights_only=True), info, path, digest
 
 
-def main():
-    if OUTPUT.exists():
-        raise FileExistsError(OUTPUT)
+def spans_agree(primary, secondary, primary_single, secondary_single):
+    return bool(primary_single and secondary_single and isinstance(primary, torch.Tensor)
+                and isinstance(secondary, torch.Tensor) and primary.dtype == torch.bool
+                and secondary.dtype == torch.bool and primary.shape == secondary.shape
+                and primary.ndim == 1 and torch.equal(primary, secondary))
+
+
+def main(*, output=OUTPUT, gates_folder=GATES, multi_folder=None, calibration_path=None, extra_cases=()):
+    output = Path(output)
+    if output.exists():
+        raise FileExistsError(output)
     base_sha = p.sha(p.MODEL / 'model.safetensors')
     checkpoint_sha = p.sha(p.runtime.CHECKPOINT)
     router, prior, router_path, router_sha = checked(ROUTER, 'router.pt', 'router_sha256')
-    gates, _, gate_path, gate_sha = checked(GATES, 'gates.pt', 'gates_sha256')
+    gates, _, gate_path, gate_sha = checked(Path(gates_folder), 'gates.pt', 'gates_sha256')
     config_sha = feature_files_sha256(p.MODEL)
     if (base_sha != p.WEIGHT_SHA or router['base_sha256'] != base_sha
             or gates['base_sha256'] != base_sha or router['checkpoint_sha256'] != checkpoint_sha
@@ -58,10 +67,34 @@ def main():
             or router['feature_config_sha256'] != config_sha or gates['feature_config_sha256'] != config_sha
             or router['hidden_indices'] != [6, 18] or gates['hidden_indices'] != [6, 18]):
         raise ValueError('Research artifact provenance mismatch')
+    single_threshold = gates['thresholds']['single']
+    protected_extra = []
+    calibration_sha = None
+    if calibration_path is not None:
+        calibration_path = Path(calibration_path)
+        calibration_sha = p.sha(calibration_path)
+        calibration = json.loads(calibration_path.read_text(encoding='utf-8'))
+        if (calibration['gates_sha256'] != gate_sha
+                or calibration['thresholds']['read'] != gates['thresholds']['read']
+                or calibration['thresholds']['single_current'] != single_threshold):
+            raise ValueError('Joint calibration provenance mismatch')
+        single_threshold = float(calibration['thresholds']['single_joint'])
+        if not math.isfinite(single_threshold):
+            raise ValueError('Invalid experimental single threshold')
+        protected_extra.append((calibration_path, calibration_sha))
+    multi, multi_sha = None, None
+    if multi_folder is not None:
+        multi, _, multi_path, multi_sha = checked(Path(multi_folder), 'locator.pt', 'locator_sha256')
+        if (multi.get('format') != 'spora-original-multi-span-research-v1'
+                or multi.get('base_sha256') != base_sha or multi.get('feature_config_sha256') != config_sha
+                or multi.get('hidden_indices') != [6, 18] or not 0 <= multi.get('threshold', -1) <= 1):
+            raise ValueError('Multi-span candidate provenance mismatch')
+        protected_extra.append((multi_path, multi_sha))
     cases = [(row['group'], row['question'], KEYS.index(row['expected_key']) if row['expected_key'] is not None else None)
              for row in prior['rows']]
     cases += [('challenge_' + group, question, None) for group, question, _, _ in CHALLENGE]
     cases += list(FRESH)
+    cases += list(extra_cases)
     if len({q for _, q, _ in cases}) != len(cases):
         raise ValueError('Duplicate audit case')
     torch.set_num_threads(2)
@@ -100,6 +133,10 @@ def main():
         locator_weight = router['locator_state']['weight']
         locator = nn.Linear(locator_weight.shape[1], 1).eval()
         locator.load_state_dict(router['locator_state'], strict=True)
+        multi_locator = None
+        if multi is not None:
+            multi_locator = nn.Linear(multi['state']['weight'].shape[1], 1).eval()
+            multi_locator.load_state_dict(multi['state'], strict=True)
         for group, question, expected_index in cases:
             features, masks = extract(base, chat.tokenizer, [question], batch_size=1)
             qvec = pool(features, masks).float()
@@ -109,15 +146,20 @@ def main():
                 scores = {label: float(model(qvec).squeeze()) for label, model in gate_models.items()}
                 selected, single = single_span_mask(locator(token_vec).squeeze(-1).sigmoid()[0],
                                                     masks[0], router['locator_threshold'])
+                secondary, secondary_single = (single_span_mask(multi_locator(token_vec).squeeze(-1).sigmoid()[0],
+                                                                  masks[0], multi['threshold'])
+                                               if multi_locator is not None else (None, False))
             row = {'group': group, 'question': question, 'expected_key': None if expected_index is None else KEYS[expected_index],
                    'expected_value': None if expected_index is None else p.WORDS[VALUES[expected_index]],
                    'scores': scores, 'accepted': False, 'answer': None, 'memory_accessed': False}
-            if scores['single'] < gates['thresholds']['single']:
+            if scores['single'] < single_threshold:
                 row['reason'] = 'single_gate_rejected'
             elif scores['read'] < gates['thresholds']['read']:
                 row['reason'] = 'read_gate_rejected'
             elif not single:
                 row['reason'] = 'name_span_rejected'
+            elif multi_locator is not None and not spans_agree(selected, secondary, single, secondary_single):
+                row['reason'] = 'multi_span_veto'
             else:
                 name_vector = pooled(features, selected.unsqueeze(0))
                 indices, similarities = predict(name_vector, router['projection'], bases)
@@ -159,7 +201,7 @@ def main():
         if p.frozen_digest(chat.organism, original_state) != source_digest or p.frozen_digest(chat.organism, state) != state_digest:
             raise ValueError('Protected memory state changed')
     for path, digest in ((p.MODEL / 'model.safetensors', base_sha), (p.runtime.CHECKPOINT, checkpoint_sha),
-                         (router_path, router_sha), (gate_path, gate_sha)):
+                         (router_path, router_sha), (gate_path, gate_sha), *protected_extra):
         if p.sha(path) != digest:
             raise ValueError('Protected artifact changed')
     summary = {}
@@ -170,15 +212,18 @@ def main():
                           'correct_key': sum(row['correct_key'] for row in subset),
                           'exact_answer': sum(row['exact_answer'] for row in subset)}
     report = {'summary': summary, 'rows': rows, 'base_sha256': base_sha, 'checkpoint_sha256': checkpoint_sha,
-              'router_sha256': router_sha, 'gates_sha256': gate_sha, 'seconds': time.perf_counter() - started,
+              'router_sha256': router_sha, 'gates_sha256': gate_sha, 'multi_sha256': multi_sha,
+              'calibration_sha256': calibration_sha, 'single_threshold': single_threshold,
+              'seconds': time.perf_counter() - started,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Research-only current-value route; no time classification or historical questions.',
                               'Manually enrolled names and numerical fact writes; not natural learning.',
                               'Small authored development questions reused from prior experiments, not independent.',
                               'Single identity guard can accept truncated names or fail on homonyms.',
+                              'When enabled, two span heads share base features and may share errors.',
                               'Exact short answer matching may miss valid paraphrases.',
                               'No default entry point, base weights, checkpoint or real individual changed.']}
-    with OUTPUT.open('x', encoding='utf-8') as stream:
+    with output.open('x', encoding='utf-8') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2, allow_nan=False)
         stream.write('\n')
     print(json.dumps(summary), flush=True)
