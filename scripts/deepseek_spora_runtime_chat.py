@@ -51,6 +51,7 @@ from spora.structured_text_memory import (StructuredTextMemoryCodec, StructuredT
                                           StructuredTextWriteGate)
 from spora.structured_text_output import (StructuredFactSuffixDecoder, StructuredMemoryTextDecoder,
                                           contains_fact_tokens)
+from spora.identity_read_guard import ConsensusIdentityReadGuard
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 WORKING_CHECKPOINT = ROOT/'runs/spora-runtime-individual/individual.pt'
@@ -439,9 +440,14 @@ class SporaChat:
         # Experimental opt-in only: reject before inspecting memory state or
         # generating. The caller must supply trustworthy enrollment and span
         # verification; the default route has no such guard.
-        if identity_guard is not None and identity_guard.authorize(question, selected, key) is not True:
-            result['reason'] = 'identity_guard_rejected'
-            return result
+        if identity_guard is not None:
+            if isinstance(identity_guard, ConsensusIdentityReadGuard):
+                authorized = identity_guard.authorize_features(question, selected, key, features, masks)
+            else:
+                authorized = identity_guard.authorize(question, selected, key)
+            if authorized is not True:
+                result['reason'] = 'identity_guard_rejected'
+                return result
         organism, state = self.organism, self.state
         if current_memory_status(organism, state, key)['status'] != 'known':
             result['reason'] = 'unknown_memory'

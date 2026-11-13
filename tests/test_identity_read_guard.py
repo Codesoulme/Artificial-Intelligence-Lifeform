@@ -6,7 +6,7 @@ from torch import nn
 
 from scripts import deepseek_spora_runtime_chat as runtime
 from spora.identity_fingerprints import IdentityFingerprints
-from spora.identity_read_guard import IdentityReadGuard
+from spora.identity_read_guard import ConsensusIdentityReadGuard, IdentityReadGuard
 
 
 class CharacterTokenizer:
@@ -52,6 +52,20 @@ class IdentityReadGuardTests(unittest.TestCase):
         mask[5] = True
         self.assertFalse(self.guard.authorize(question, mask, 1))
 
+    def test_consensus_requires_matching_spans_and_enrolled_identity(self):
+        question = '小林喜欢喝什么？'
+        selected = self.mask(question, 0, 2)
+        head = nn.Linear(4, 1)
+        guard = ConsensusIdentityReadGuard(self.fingerprints, CharacterTokenizer(), head.state_dict(), .5)
+        features = torch.zeros(1, 2, len(selected), 2)
+        masks = torch.ones(1, len(selected), dtype=torch.bool)
+        with patch('scripts.deepseek_learned_name_span.single_span_mask', return_value=(selected.clone(), True)):
+            self.assertTrue(guard.authorize_features(question, selected, 1, features, masks))
+            self.assertFalse(guard.authorize_features(question, selected, 2, features, masks))
+        different = selected.clone()
+        different[5] = True
+        with patch('scripts.deepseek_learned_name_span.single_span_mask', return_value=(different, True)):
+            self.assertFalse(guard.authorize_features(question, selected, 1, features, masks))
     def test_runtime_rejection_precedes_memory_access(self):
         chat = object.__new__(runtime.SporaChat)
         chat.base, chat.tokenizer = None, None
