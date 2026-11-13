@@ -53,6 +53,8 @@ TRAIN_BRIDGE = False
 BRIDGE_LANGUAGE_LR = 2e-6
 BRIDGE_RETRIEVAL_RESIDUAL = False
 BRIDGE_MIX_LR = 2e-4
+TEACHER_KL_WEIGHT = 0.0
+TEACHER_KL_TEMPERATURE = 2.0
 LANGUAGE_LR = 1e-4
 QUERY_INTENT_GATE = False
 QUERY_SCALAR_GATE = False
@@ -446,6 +448,26 @@ def bridge_optimizer_groups(parameters, bridge, enabled, learning_rate, mix_lear
         else:
             groups.append({'params': extra, 'lr': float(learning_rate)})
     return groups, existing + extra
+
+
+def explicit_teacher_question(question, name, value):
+    if not all(isinstance(item, str) and item for item in (question, name, value)):
+        raise ValueError('Teacher question, identity and value must be nonempty')
+    return f'以下是虚构记录：{name}喜欢的水果是{value}。\n{question}'
+
+
+def aligned_teacher_kl(student_scores, teacher_scores, temperature):
+    import math
+    if (not isinstance(student_scores, p.torch.Tensor) or not isinstance(teacher_scores, p.torch.Tensor)
+            or student_scores.shape != teacher_scores.shape or student_scores.ndim != 3
+            or not student_scores.numel() or isinstance(temperature, bool)
+            or not isinstance(temperature, (int, float)) or not math.isfinite(temperature) or temperature <= 0):
+        raise ValueError('Invalid aligned teacher logits')
+    torch = p.torch
+    teacher_prob = torch.nn.functional.softmax(teacher_scores.detach().float() / temperature, dim=-1)
+    student_log = torch.nn.functional.log_softmax(student_scores.float() / temperature, dim=-1)
+    return torch.nn.functional.kl_div(student_log, teacher_prob, reduction='sum') * (temperature ** 2) / (
+        student_scores.shape[0] * student_scores.shape[1])
 
 
 def main():
@@ -852,6 +874,17 @@ def main():
             fact_ce = torch.nn.functional.cross_entropy(own, torch.tensor([correct_id], device=device))
             swapped_ce = torch.nn.functional.cross_entropy(other_logits, torch.tensor([wrong_id], device=device))
             loss = 4.0 * full_loss + 0.5 * (fact_ce + swapped_ce) + contrast
+            teacher_kl = torch.zeros((), device=device)
+            if TEACHER_KL_WEIGHT:
+                teacher_question = explicit_teacher_question(item['question'], item['name'], WORDS[item['value']])
+                teacher_prompt = p.closed_think_inputs(tok, teacher_question, 'cuda')
+                teacher_prefix = teacher_prompt['input_ids'].shape[1]
+                teacher_ids = torch.cat((teacher_prompt['input_ids'], target), dim=1)
+                with torch.no_grad():
+                    teacher_full = decoder(input_ids=teacher_ids, attention_mask=torch.ones_like(teacher_ids)).logits.float()
+                    teacher_scores = teacher_full[:, teacher_prefix - 1:teacher_prefix - 1 + target.shape[1]]
+                teacher_kl = aligned_teacher_kl(scores, teacher_scores, TEACHER_KL_TEMPERATURE)
+                loss = loss + TEACHER_KL_WEIGHT * teacher_kl
             intent_ce = torch.zeros((), device=device)
             if intent_logits is not None:
                 intent_target = torch.tensor([item['intent_label']], dtype=torch.long, device=device)
@@ -865,6 +898,7 @@ def main():
             if step in (0, 9, 49, 99, 199, 399, LANGUAGE_STEPS - 1):
                 trace.append({'step': step + 1, 'loss': float(loss.detach()),
                               'full_loss': float(full_loss.detach()), 'contrast': float(contrast.detach()),
+                              'teacher_kl': float(teacher_kl.detach()),
                               'intent_ce': float(intent_ce.detach()),
                               'grad_norm': float(norm)})
             if step % 64 == 0:
@@ -896,6 +930,7 @@ def main():
                 'words': list(WORDS), 'train_value_count': TRAIN_VALUE_COUNT,
                 'train_bridge': TRAIN_BRIDGE, 'bridge_language_lr': BRIDGE_LANGUAGE_LR,
                 'bridge_retrieval_residual': BRIDGE_RETRIEVAL_RESIDUAL, 'bridge_mix_lr': BRIDGE_MIX_LR,
+                'teacher_kl_weight': TEACHER_KL_WEIGHT, 'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
                 'notice': 'Training recovery only; post-training evaluation was not completed at save time.',
             }
             if final_adapters or logit_adapters or QUERY_INTENT_GATE or QUERY_SCALAR_GATE:
@@ -956,6 +991,7 @@ def main():
                          'replay_value_start': REPLAY_VALUE_START, 'replay_value_factor': REPLAY_VALUE_FACTOR,
                          'train_bridge': TRAIN_BRIDGE, 'bridge_language_lr': BRIDGE_LANGUAGE_LR,
                          'bridge_retrieval_residual': BRIDGE_RETRIEVAL_RESIDUAL, 'bridge_mix_lr': BRIDGE_MIX_LR,
+                         'teacher_kl_weight': TEACHER_KL_WEIGHT, 'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
                          'evaluation_values': list(EVALUATION_VALUES) if EVALUATION_VALUES is not None else None,
                          'evaluate_first_multi_question_only': EVALUATE_FIRST_MULTI_QUESTION_ONLY,
                          'start_candidate': str(START_CANDIDATE) if START_CANDIDATE is not None else None,
