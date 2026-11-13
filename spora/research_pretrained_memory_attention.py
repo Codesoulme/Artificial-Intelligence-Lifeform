@@ -37,8 +37,11 @@ class PretrainedMemoryAttention(nn.Module):
         object.__setattr__(self, '_decoder', decoder)
         object.__setattr__(self, '_codec', codec)
         object.__setattr__(self, '_embedding', embedding)
+        object.__setattr__(self, '_rotary_emb', getattr(getattr(getattr(decoder, 'base', None), 'model', None),
+                                                        'rotary_emb', None))
         self.slots = slots
         self.head_dim = attention.head_dim
+        self.use_memory_rope = False
         q = getattr(attention.q_proj, 'base', attention.q_proj)
         k = attention.k_proj
         v = getattr(attention.v_proj, 'base', attention.v_proj)
@@ -81,6 +84,27 @@ class PretrainedMemoryAttention(nn.Module):
         query = qproj(hidden).view(1, hidden.shape[1], self.query_heads, self.head_dim).transpose(1, 2).float()
         key = self.memory_key(memory).view(1, self.slots, self.memory_heads, self.head_dim).transpose(1, 2)
         value = self.memory_value(memory).view(1, self.slots, self.memory_heads, self.head_dim).transpose(1, 2)
+        position_embeddings = kwargs.get('position_embeddings')
+        if self.use_memory_rope:
+            cos = sin = None
+            if self._rotary_emb is not None:
+                position_ids = torch.arange(self.slots, device=key.device, dtype=torch.long).unsqueeze(0)
+                cos, sin = self._rotary_emb(key, position_ids)
+            elif position_embeddings is not None:
+                cos, sin = position_embeddings
+                if (not isinstance(cos, torch.Tensor) or not isinstance(sin, torch.Tensor)
+                        or cos.ndim != 3 or sin.shape != cos.shape or cos.shape[1] < self.slots
+                        or cos.shape[-1] < self.head_dim):
+                    raise ValueError('Memory rotary embeddings have an incompatible shape')
+            if cos is None or sin is None or cos.shape[-1] < self.head_dim:
+                raise ValueError('Memory rotary embeddings are unavailable')
+            if cos.ndim != 3 or sin.shape != cos.shape or cos.shape[1] < self.slots:
+                raise ValueError('Memory rotary embeddings have an incompatible shape')
+            cos = cos[:, :self.slots, :self.head_dim].to(key.device, key.dtype).unsqueeze(1)
+            sin = sin[:, :self.slots, :self.head_dim].to(key.device, key.dtype).unsqueeze(1)
+            rotated = key * cos + torch.cat((-key[..., self.head_dim // 2:],
+                                              key[..., :self.head_dim // 2]), dim=-1) * sin
+            key = rotated
         repeats = self.query_heads // self.memory_heads
         key = key.repeat_interleave(repeats, dim=1)
         value = value.repeat_interleave(repeats, dim=1)

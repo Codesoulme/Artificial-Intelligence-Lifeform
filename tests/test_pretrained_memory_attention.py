@@ -102,6 +102,16 @@ class PretrainedMemoryAttentionTests(unittest.TestCase):
                 raise RuntimeError('injected')
         self.assertEqual(float(self.module.gain), 0.75)
 
+    def test_rotary_memory_key_requires_matching_position_embeddings(self):
+        self.module.use_memory_rope = True
+        token = self.context.set(self.active)
+        try:
+            with self.assertRaisesRegex(ValueError, 'rotary'):
+                self.module(hidden_states=self.hidden,
+                            position_embeddings=(torch.ones(1, 1, 1), torch.ones(1, 1, 1)))
+        finally:
+            self.context.reset(token)
+
 
 if __name__ == '__main__':
     unittest.main()

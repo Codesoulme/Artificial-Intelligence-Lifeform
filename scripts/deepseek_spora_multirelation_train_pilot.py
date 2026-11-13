@@ -40,11 +40,13 @@ INIT_FROM = None
 EXPECTED_INITIAL_RESULT = None
 REPLAY_FACTOR = 1
 REPLAY_OLD_COUNT = 6
+OPTIMIZER_KIND = 'adamw'
 TEACHER_KL_WEIGHT = 0.0
 TEACHER_KL_TEMPERATURE = 2.0
 COUNTERFACTUAL_WEIGHT = 0.0
 BRIDGE_MODE = 'learned'
 MEMORY_ATTENTION = False
+MEMORY_USE_ROPE = False
 MEMORY_PROJECTION_LR = None
 MEMORY_GAIN_LR = None
 EVAL_ATTENTION_ABLATION = False
@@ -176,6 +178,7 @@ def observe(*, decoder, tokenizer, spec, cross_modules, group, name, expected, q
                                     seed=29071, eos_token_id=tokenizer.eos_token_id).to('cuda')
         extension = PretrainedMemoryAttention(original_attention, wrapped_layer.input_layernorm,
                                              decoder, codec, embedding, slots=4)
+        extension.use_memory_rope = MEMORY_USE_ROPE
         wrapped_layer.self_attn = extension
         params += list(extension.memory_key.parameters()) + list(extension.memory_value.parameters()) + [extension.gain]
     if len({id(param) for param in params}) != len(params):
@@ -309,6 +312,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
             raise ValueError('Recovery bridge mode mismatch')
         if payload.get('memory_attention', False) != MEMORY_ATTENTION:
             raise ValueError('Recovery memory attention mode mismatch')
+        if payload.get('memory_use_rope', False) != MEMORY_USE_ROPE:
+            raise ValueError('Recovery memory rotary mode mismatch')
         if payload.get('teacher_kl_weight', 0.0) != TEACHER_KL_WEIGHT:
             raise ValueError('Recovery teacher weight mismatch')
         if RELOAD_FROM is not None and INIT_FROM is not None and directory == RELOAD_FROM:
@@ -368,7 +373,12 @@ def run(decoder, tokenizer, spec, params, parameter_names):
     off_before = [generate(item, False) for item in off_checks]
     memory_module = decoder.base.model.layers[23].self_attn if MEMORY_ATTENTION else None
     groups = optimizer_groups(params, memory_module, MEMORY_PROJECTION_LR, MEMORY_GAIN_LR)
-    optimizer = torch.optim.AdamW(groups, lr=2e-5, weight_decay=0, foreach=False)
+    if OPTIMIZER_KIND == 'adamw':
+        optimizer = torch.optim.AdamW(groups, lr=2e-5, weight_decay=0, foreach=False)
+    elif OPTIMIZER_KIND == 'sgd':
+        optimizer = torch.optim.SGD(groups, lr=2e-5, momentum=0.0)
+    else:
+        raise ValueError('Unsupported optimizer kind')
     trace = []
     visits = {'old': 0, 'new': 0}
     for step in range(STEPS):
@@ -426,9 +436,11 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                             'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
                             'bridge_mode': BRIDGE_MODE,
                             'memory_attention': MEMORY_ATTENTION,
+                            'memory_use_rope': MEMORY_USE_ROPE,
                             'memory_projection_lr': MEMORY_PROJECTION_LR, 'memory_gain_lr': MEMORY_GAIN_LR,
                             'initial_sha256': initial_sha, 'replay_factor': REPLAY_FACTOR,
                             'replay_old_count': REPLAY_OLD_COUNT, 'visits': dict(visits),
+                            'optimizer_kind': OPTIMIZER_KIND,
                             'schedule': [(row['person'], row['domain'], row['fact'], row['question'])
                                          for row in train],
                             'optimizer': optimizer.state_dict(), 'rng': rng.getstate()}, stream)
@@ -448,9 +460,11 @@ def run(decoder, tokenizer, spec, params, parameter_names):
               'teacher_kl_weight': TEACHER_KL_WEIGHT, 'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
               'bridge_mode': BRIDGE_MODE,
               'memory_attention': MEMORY_ATTENTION,
+              'memory_use_rope': MEMORY_USE_ROPE,
               'memory_projection_lr': MEMORY_PROJECTION_LR, 'memory_gain_lr': MEMORY_GAIN_LR,
               'initial_sha256': initial_sha, 'replay_factor': REPLAY_FACTOR,
               'replay_old_count': REPLAY_OLD_COUNT, 'visits': visits,
+              'optimizer_kind': OPTIMIZER_KIND,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Each test has one supplied memory; the same numeric address is reused across people.',
                               'No automatic relation or entity routing, concurrency or real user state.',
