@@ -12,6 +12,7 @@ sys.path[:0] = [str(ROOT), str(ROOT / 'runs/open-base-deps')]
 from scripts import deepseek_spora_bridge_reload_audit as audit
 from spora.continuous_text_memory import ContinuousTextCodec
 from spora.research_oracle_bridge import context_oracle_embeddings
+from spora.research_pretrained_memory_attention import PretrainedMemoryAttention, disable_memory_attention
 
 torch, p, s = audit.torch, audit.p, audit.s
 audit.SOURCE = ROOT / 'runs/continuous-reader-cross-attention-pilot-20261113'
@@ -33,6 +34,8 @@ HELD_VALUE_Q = 1
 EVAL_ALTERNATIVE_QUESTION = False
 COUNTERFACTUAL_WEIGHT = 0.0
 BRIDGE_MODE = 'learned'
+MEMORY_ATTENTION = False
+EVAL_ATTENTION_ABLATION = False
 RELOAD_FROM = None
 done = False
 
@@ -88,6 +91,18 @@ def observe(*, decoder, tokenizer, spec, cross_modules, group, name, expected, q
             params += [adapter.a, adapter.b, adapter.condition]
     direct = decoder.base.model.layers[20].self_attn.o_proj
     params += list(direct.to_hidden.parameters()) + [direct.gate]
+    wrapped_layer = None
+    original_attention = None
+    if MEMORY_ATTENTION:
+        wrapped_layer = decoder.base.model.layers[23]
+        original_attention = wrapped_layer.self_attn
+        embedding = decoder.base.model.embed_tokens.weight.detach()
+        codec = ContinuousTextCodec(embedding.cpu(), memory_width=90, slot_count=5,
+                                    seed=29071, eos_token_id=tokenizer.eos_token_id).to('cuda')
+        extension = PretrainedMemoryAttention(original_attention, wrapped_layer.input_layernorm,
+                                             decoder, codec, embedding, slots=4)
+        wrapped_layer.self_attn = extension
+        params += list(extension.memory_key.parameters()) + list(extension.memory_value.parameters()) + [extension.gain]
     if len({id(param) for param in params}) != len(params):
         raise ValueError('Duplicate training parameter')
     names = {id(param): name for name, param in decoder.named_parameters()}
@@ -112,6 +127,8 @@ def observe(*, decoder, tokenizer, spec, cross_modules, group, name, expected, q
         for module, flag in zip(cross_modules, flags):
             module.enabled = flag
         bridge.forward = bridge_forward
+        if wrapped_layer is not None:
+            wrapped_layer.self_attn = original_attention
 
 
 def run(decoder, tokenizer, spec, params, parameter_names):
@@ -205,6 +222,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
             raise ValueError('Recovery base mismatch')
         if payload.get('bridge_mode', 'learned') != BRIDGE_MODE:
             raise ValueError('Recovery bridge mode mismatch')
+        if payload.get('memory_attention', False) != MEMORY_ATTENTION:
+            raise ValueError('Recovery memory attention mode mismatch')
         with torch.no_grad():
             for param, saved in zip(params, saved_params):
                 if param.shape != saved.shape:
@@ -213,9 +232,20 @@ def run(decoder, tokenizer, spec, params, parameter_names):
         restored = evaluate()
         previous = json.loads((RELOAD_FROM/'multirelation-training-result.json').read_text(encoding='utf-8'))['after']
         comparison = compare_recovery_rows(restored, previous, payload['step'], STEPS)
+        ablation = None
+        if EVAL_ATTENTION_ABLATION:
+            if not MEMORY_ATTENTION:
+                raise ValueError('Attention ablation requires the memory attention branch')
+            module = decoder.base.model.layers[23].self_attn
+            gain = float(module.gain.detach())
+            with disable_memory_attention(module):
+                disabled = evaluate()
+            ablation = {'gain': gain, 'rows': disabled,
+                        'changed_generations': sum(a['token_ids'] != b['token_ids']
+                                                   for a, b in zip(restored, disabled))}
         (audit.OUT/'reload-result.json').write_text(json.dumps(
             {'recovery_step': payload['step'], 'comparison_step': STEPS,
-             **comparison, 'rows': restored},
+             **comparison, 'rows': restored, 'attention_ablation': ablation},
             ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
         print(json.dumps({'recovery_step': payload['step'], 'comparison_step': STEPS,
                           **comparison}), flush=True)
@@ -262,6 +292,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                             'base_sha256': p.WEIGHT_SHA,
                             'counterfactual_weight': COUNTERFACTUAL_WEIGHT,
                             'bridge_mode': BRIDGE_MODE,
+                            'memory_attention': MEMORY_ATTENTION,
                             'schedule': [(row['person'], row['domain'], row['fact'], row['question'])
                                          for row in train],
                             'optimizer': optimizer.state_dict(), 'rng': rng.getstate()}, stream)
@@ -279,6 +310,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
               'after_summary': summary(after), 'off_tokens_unchanged': True, 'trace': trace,
               'steps': STEPS, 'train_cases': len(train), 'counterfactual_weight': COUNTERFACTUAL_WEIGHT,
               'bridge_mode': BRIDGE_MODE,
+              'memory_attention': MEMORY_ATTENTION,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Each test has one supplied memory; the same numeric address is reused across people.',
                               'No automatic relation or entity routing, concurrency or real user state.',
