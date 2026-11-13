@@ -20,6 +20,9 @@ SOURCE = p.ROOT / 'runs/continuous-reader-all-facts-late-residual-strict-pilot-2
 OUT = p.ROOT / 'runs/continuous-reader-bridge-reload-audit-v1'
 NAMES = ('小林', '小周', '小王', '小赵', '小吴', '小郑')
 QUESTION = '请只说出{name}喜欢的水果名称。'
+EXTRA_WORDS = ()
+EXTRA_ONLY = False
+VERIFY_CODEC_READS = False
 
 
 def correct_answer(answer, name, value):
@@ -127,6 +130,16 @@ def main():
                             site.current_basis[key:key + 1].to(device), target,
                             torch.ones(1, device=device), torch.zeros(1, dtype=torch.long, device=device), False)
                 state.current = [x[0].detach() for x in fast]
+                if VERIFY_CODEC_READS and len(events) == 1:
+                    key, value = events[0]
+                    expected = [tok.encode(NAMES[key], add_special_tokens=False)[-1]]
+                    expected += tok.encode(s.WORDS[value], add_special_tokens=False)
+                    expected += [tok.eos_token_id]
+                    reads = [site.retrieve([fast[i][0]], site.current_basis[key:key + 1].to(device))[0]
+                             for i, site in enumerate(model.memories)]
+                    actual = codec.decode(torch.stack(reads).mean(0))['token_ids']
+                    if actual != expected:
+                        raise ValueError('Controlled codec read did not recover written tokens')
             return state
 
         def probe(group, key, value, state, template=QUESTION, condition='memory'):
@@ -155,24 +168,35 @@ def main():
             row = probe('reload_parity', 3, value, state_for([(3, value)]))
             if row['token_ids'] != saved[word]['token_ids']:
                 raise ValueError(f'Reloaded generation mismatch for value {value}')
-        for key in (4, 5):
-            for value in (0, 1, 3, 9, 16, 17):
-                probe('new_identity', key, value, state_for([(key, value)]))
-        for template in ('{name}爱吃什么水果？只回答名字。',
-                         '查一下记忆，告诉我{name}最喜欢哪种水果。'):
-            for value in (0, 1, 16, 17):
-                probe('new_question', 3, value, state_for([(3, value)]), template)
-        assignment = [(0, 0), (1, 1), (2, 3), (3, 9), (4, 16), (5, 17)]
-        together = state_for(assignment)
-        for key, value in assignment:
-            probe('multi_memory', key, value, together)
-        corrected = state_for(assignment + [(3, 1)])
-        for key, value in assignment:
-            probe('after_correction', key, 1 if key == 3 else value, corrected)
-        for key in (3, 4):
-            for value in (1, 16):
-                for condition in ('empty', 'off'):
-                    probe('control', key, value, state_for([]), condition=condition)
+        if EXTRA_WORDS:
+            base_count = len(s.WORDS)
+            if set(EXTRA_WORDS) & set(s.WORDS) or len(set(EXTRA_WORDS)) != len(EXTRA_WORDS):
+                raise ValueError('Extra values must be distinct from original training values')
+            s.WORDS = tuple(s.WORDS) + tuple(EXTRA_WORDS)
+            for offset in range(len(EXTRA_WORDS)):
+                first = base_count + offset
+                second = base_count + (offset + 1) % len(EXTRA_WORDS)
+                probe('unseen_value', 3, first, state_for([(3, first)]))
+                probe('unseen_swap', 3, second, state_for([(3, second)]))
+        if not EXTRA_ONLY:
+            for key in (4, 5):
+                for value in (0, 1, 3, 9, 16, 17):
+                    probe('new_identity', key, value, state_for([(key, value)]))
+            for template in ('{name}爱吃什么水果？只回答名字。',
+                             '查一下记忆，告诉我{name}最喜欢哪种水果。'):
+                for value in (0, 1, 16, 17):
+                    probe('new_question', 3, value, state_for([(3, value)]), template)
+            assignment = [(0, 0), (1, 1), (2, 3), (3, 9), (4, 16), (5, 17)]
+            together = state_for(assignment)
+            for key, value in assignment:
+                probe('multi_memory', key, value, together)
+            corrected = state_for(assignment + [(3, 1)])
+            for key, value in assignment:
+                probe('after_correction', key, 1 if key == 3 else value, corrected)
+            for key in (3, 4):
+                for value in (1, 16):
+                    for condition in ('empty', 'off'):
+                        probe('control', key, value, state_for([]), condition=condition)
         ordinary_after = [generate(q, {}) for q in ordinary]
         if ordinary_before != ordinary_after:
             raise ValueError('Ordinary off-path generations changed on reload')
@@ -186,10 +210,12 @@ def main():
         summary[row['group']]['total'] += 1
     result = dict(summary=dict(summary), rows=rows, source_candidate_sha256=protected[SOURCE / 'candidate.pt'],
                   codec_contract={'slot_count': 5, 'seed': 29071, 'full_fact': True, 'identity': True},
-                  parity_verified=18, ordinary_off_tokens_match=True, source_files_unchanged=True,
+                  parity_verified=18, extra_words=list(EXTRA_WORDS), codec_reads_checked=VERIFY_CODEC_READS,
+                  ordinary_off_tokens_match=True, source_files_unchanged=True,
                   seconds=time.perf_counter() - started, peak_allocated_bytes=torch.cuda.max_memory_allocated(),
                   limitations=['Numeric addressing and controlled writes, no natural write routing.',
-                               'Authored development probes; all fruit values occurred in training.',
+                               ('Authored development probes; additional fruit values were not in the candidate training list.'
+                                if EXTRA_WORDS else 'Authored development probes; all fruit values occurred in training.'),
                                'Strict phrase metric can reject valid paraphrases; raw outputs are retained.',
                                'Off path is the existing hybrid, not untouched original DeepSeek.',
                                'Memory states are recreated for this reader reload, not restored from a saved individual.'])
