@@ -18,9 +18,9 @@ CANDIDATE = ROOT / 'runs/deepseek-spora-cluener-locator-retrained-20261111'
 OUTPUT = ROOT / 'runs/deepseek-spora-consensus-identity-guard-audit-20261113.json'
 
 
-def main(*, cases=None, output=OUTPUT):
-    path = CANDIDATE / 'locator.pt'
-    info = json.loads((CANDIDATE / 'result.json').read_text(encoding='utf-8'))
+def main(*, cases=None, output=OUTPUT, candidate_dir=CANDIDATE):
+    path = Path(candidate_dir) / 'locator.pt'
+    info = json.loads((Path(candidate_dir) / 'result.json').read_text(encoding='utf-8'))
     digest = runtime.sha(path)
     if digest != info['locator_sha256']:
         raise ValueError('Secondary locator checksum mismatch')
