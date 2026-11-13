@@ -45,6 +45,10 @@ DIRECT_RESIDUAL_LAYER = 20
 STRICT_SWAP_EVAL = False
 START_CANDIDATE = None
 RECOVERY_FILE = None
+REPLAY_VALUE_START = None
+REPLAY_VALUE_FACTOR = 1
+EVALUATION_VALUES = None
+EVALUATE_FIRST_MULTI_QUESTION_ONLY = False
 LANGUAGE_LR = 1e-4
 QUERY_INTENT_GATE = False
 QUERY_SCALAR_GATE = False
@@ -369,6 +373,19 @@ def replace_assignment(assignments, target_key, new_value):
     return tuple((key, new_value if key == target_key else value) for key, value in assignments)
 
 
+def add_value_replay(records, start, end, factor):
+    """Oversample selected training values without adding held-out examples."""
+    if (type(start) is not int or type(end) is not int or type(factor) is not int
+            or not 0 <= start < end or factor < 1):
+        raise ValueError('Invalid replay configuration')
+    if any(not row['group'].startswith('train') or not 0 <= row['value'] < end for row in records):
+        raise ValueError('Replay may only contain supervised training values')
+    focus = [row for row in records if start <= row['value'] < end]
+    if not focus:
+        raise ValueError('Replay selection is empty')
+    return list(records) + focus * (factor - 1)
+
+
 def main():
     if OUT.exists():
         raise FileExistsError(OUT)
@@ -646,10 +663,18 @@ def main():
         empty = state_for(None, 0)
         empty_digest = p.frozen_digest(model, empty)
 
-        def evaluate():
+        def evaluate(phase):
             rows = []
             selected = [x for x in cases if x['group'] in ('held_name', 'held_name_multi') or
                         (x['group'] == 'train' and x['value'] < 4 and x['question'] == questions[0].format(name=x['name']))]
+            if EVALUATION_VALUES is not None:
+                allowed_values = set(EVALUATION_VALUES)
+                if not allowed_values or any(type(v) is not int or not 0 <= v < len(WORDS) for v in allowed_values):
+                    raise ValueError('Invalid evaluation value selection')
+                selected = [item for item in selected if item['group'] == 'train' or item['value'] in allowed_values]
+            if EVALUATE_FIRST_MULTI_QUESTION_ONLY:
+                selected = [item for item in selected if item['group'] != 'held_name_multi'
+                            or item['question'] == questions[0].format(name=item['name'])]
             for item in selected:
                 conditions = [('memory', item['spec'])]
                 if (item['group'], item['value']) in (('train', 0), ('held_name', 16)):
@@ -685,9 +710,11 @@ def main():
                                                          if condition in ('memory', 'swapped') else None),
                                  'forced_fact_rank': int((fact_scores > fact_scores[correct_id]).sum()) + 1,
                                  'forced_pair_margin': float(fact_scores[correct_id] - fact_scores[competitor])})
+                    if len(rows) % 16 == 0:
+                        print(json.dumps({'evaluation_phase': phase, 'completed_rows': len(rows)}), flush=True)
             return rows
 
-        before = evaluate()
+        before = evaluate('before')
         train = [x for x in cases if x['group'].startswith('train')]
         if FOCUS_EXTRA_QUESTIONS:
             focus_questions = {question.format(name=name) for name in ('小林', '小周', '小王')
@@ -699,6 +726,8 @@ def main():
             if not focused or not replay:
                 raise ValueError('Focused question schedule is empty')
             train = focused + replay * 2
+        if REPLAY_VALUE_START is not None:
+            train = add_value_replay(train, REPLAY_VALUE_START, TRAIN_VALUE_COUNT, REPLAY_VALUE_FACTOR)
         params = [x for x in decoder.reader.parameters() if x.requires_grad]
         params += [param for _, _, adapter in adapters for param in (adapter.a, adapter.b, adapter.condition)]
         params += [param for _, _, adapter in direct_adapters
@@ -802,7 +831,7 @@ def main():
                 os.fsync(stream.fileno())
             os.replace(partial_path, recovery_path)
             print(json.dumps({'recovery_saved': str(recovery_path), 'steps': LANGUAGE_STEPS}), flush=True)
-        after = evaluate()
+        after = evaluate('after')
         if p.frozen_digest(model, chat.state) != original_digest or p.frozen_digest(model, empty) != empty_digest:
             raise ValueError('Protected state changed')
         if any(p.frozen_digest(model, x['state']) != x['digest'] for x in cases):
@@ -849,6 +878,9 @@ def main():
                          'store_identity': STORE_IDENTITY, 'condition_slots': BRIDGE_CONDITION_SLOTS,
                          'train_value_count': TRAIN_VALUE_COUNT, 'strict_swap_eval': STRICT_SWAP_EVAL,
                          'train_correction_sequences': TRAIN_CORRECTION_SEQUENCES,
+                         'replay_value_start': REPLAY_VALUE_START, 'replay_value_factor': REPLAY_VALUE_FACTOR,
+                         'evaluation_values': list(EVALUATION_VALUES) if EVALUATION_VALUES is not None else None,
+                         'evaluate_first_multi_question_only': EVALUATE_FIRST_MULTI_QUESTION_ONLY,
                          'start_candidate': str(START_CANDIDATE) if START_CANDIDATE is not None else None,
                          'language_lr': LANGUAGE_LR,
                          'query_intent_gate': QUERY_INTENT_GATE,

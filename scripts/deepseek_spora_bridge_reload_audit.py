@@ -25,6 +25,7 @@ EXTRA_KEYS = (3,)
 EXTRA_GROUP_PREFIX = 'unseen'
 EXTRA_ONLY = False
 VERIFY_CODEC_READS = False
+PARITY_VALUE_INDICES = None
 
 
 def correct_answer(answer, name, value):
@@ -166,7 +167,12 @@ def main():
         saved = {row['expected']: row for row in original['after']
                  if row['group'] == 'held_name' and row['condition'] == 'memory'
                  and row['question'] == QUESTION.format(name=NAMES[3])}
-        for value, word in enumerate(s.WORDS):
+        parity_values = range(len(s.WORDS)) if PARITY_VALUE_INDICES is None else tuple(PARITY_VALUE_INDICES)
+        if (not parity_values or any(type(value) is not int or not 0 <= value < len(s.WORDS)
+                                     for value in parity_values) or len(set(parity_values)) != len(parity_values)):
+            raise ValueError('Invalid parity values')
+        for value in parity_values:
+            word = s.WORDS[value]
             row = probe('reload_parity', 3, value, state_for([(3, value)]))
             if row['token_ids'] != saved[word]['token_ids']:
                 raise ValueError(f'Reloaded generation mismatch for value {value}')
@@ -213,7 +219,7 @@ def main():
         summary[row['group']]['total'] += 1
     result = dict(summary=dict(summary), rows=rows, source_candidate_sha256=protected[SOURCE / 'candidate.pt'],
                   codec_contract={'slot_count': 5, 'seed': 29071, 'full_fact': True, 'identity': True},
-                  parity_verified=18, extra_words=list(EXTRA_WORDS), extra_keys=list(EXTRA_KEYS),
+                  parity_verified=len(parity_values), extra_words=list(EXTRA_WORDS), extra_keys=list(EXTRA_KEYS),
                   codec_reads_checked=VERIFY_CODEC_READS,
                   ordinary_off_tokens_match=True, source_files_unchanged=True,
                   seconds=time.perf_counter() - started, peak_allocated_bytes=torch.cuda.max_memory_allocated(),

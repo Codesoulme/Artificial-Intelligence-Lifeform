@@ -1,6 +1,6 @@
 import unittest
 
-from scripts.deepseek_spora_semantic_bridge_pilot import multi_entity_assignments, replace_assignment
+from scripts.deepseek_spora_semantic_bridge_pilot import add_value_replay, multi_entity_assignments, replace_assignment
 
 
 class MultiEntityAssignmentTests(unittest.TestCase):
@@ -26,6 +26,16 @@ class MultiEntityAssignmentTests(unittest.TestCase):
             multi_entity_assignments(3, 0, 5)
         with self.assertRaises(ValueError):
             multi_entity_assignments(1, 5, 5)
+
+    def test_replay_keeps_old_values_and_rejects_held_values(self):
+        rows = [{'group': 'train', 'value': 0}, {'group': 'train_multi', 'value': 3}]
+        result = add_value_replay(rows, 3, 4, 4)
+        self.assertEqual([row['value'] for row in result].count(0), 1)
+        self.assertEqual([row['value'] for row in result].count(3), 4)
+        with self.assertRaises(ValueError):
+            add_value_replay(rows + [{'group': 'held_name', 'value': 3}], 3, 4, 4)
+        with self.assertRaises(ValueError):
+            add_value_replay(rows + [{'group': 'train', 'value': 4}], 3, 4, 4)
 
 
 if __name__ == '__main__':
