@@ -1,8 +1,10 @@
 import unittest
+from unittest.mock import patch
 
 import torch
 
 from scripts.deepseek_spora_joint_span_pilot import JointSpan, selected_text, token_span
+from scripts.deepseek_spora_joint_span_crossed_pilot import build_records, TRAIN_TEMPLATES
 
 
 class JointSpanPilotTests(unittest.TestCase):
@@ -21,6 +23,24 @@ class JointSpanPilotTests(unittest.TestCase):
         for left, right in ((0, 1), (2, 1), (1, 3)):
             self.assertLess(logits[1 + left * 4 + right].item(), -1e8)
         self.assertTrue(torch.isfinite(logits).all())
+
+    def test_crossed_data_breaks_template_variant_pairing(self):
+        training = [{'text': 'train'}]
+        validation = [{'text': 'validation'}]
+        train_names = {f'甲{i:02}' for i in range(48)}
+        eval_names = [f'乙{i:02}' for i in range(20)]
+        with patch('scripts.deepseek_spora_joint_span_crossed_pilot.extract_names',
+                   side_effect=[train_names, set()]), patch(
+                   'scripts.deepseek_spora_joint_span_crossed_pilot.select_names',
+                   return_value=[('digest', name) for name in eval_names]):
+            train, evaluation, count = build_records(training, validation)
+        self.assertEqual(count, 48)
+        questions = {r['question'] for r in train}
+        for subject in ('甲00', '甲00子', '小甲00'):
+            for template in TRAIN_TEMPLATES:
+                self.assertIn(template.format(name=subject), questions)
+        self.assertFalse(questions & {r['question'] for r in evaluation})
+        self.assertEqual(sum(r['group'] == 'suffix_unseen_unseen' for r in evaluation), 20)
 
 
 if __name__ == '__main__':

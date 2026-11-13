@@ -73,12 +73,7 @@ def selected_text(index, offsets, start, question):
     return question[max(0, a):min(len(question), b)]
 
 
-def main():
-    if OUTPUT.exists():
-        raise FileExistsError(OUTPUT)
-    if runtime.sha(TRAIN) != TRAIN_SHA or runtime.sha(SOURCE) != SOURCE_SHA:
-        raise ValueError('Dataset digest mismatch')
-    training, validation = parquet.read_table(TRAIN).to_pylist(), parquet.read_table(SOURCE).to_pylist()
+def original_records(training, validation):
     train_names = sorted(extract_names(training) - extract_names(validation), key=digest)[:64]
     eval_names = [name for _, name in select_names(validation, {r['text'] for r in training})]
     if len(train_names) != 64 or set(train_names) & set(eval_names):
@@ -105,6 +100,16 @@ def main():
     for question in ('你能推荐饮品吗？', '我该怎么休息？', '你现在在想什么？', '有记录吗？',
                      '讲个笑话。', '什么是学习？', '我最喜欢什么？', '当前有什么信息？'):
         evaluation.append({'question': question, 'subject': None, 'group': 'none'})
+    return train, evaluation, len(train_names)
+
+
+def main(*, output=OUTPUT, build_records=original_records, steps=1200):
+    if output.exists():
+        raise FileExistsError(output)
+    if runtime.sha(TRAIN) != TRAIN_SHA or runtime.sha(SOURCE) != SOURCE_SHA:
+        raise ValueError('Dataset digest mismatch')
+    training, validation = parquet.read_table(TRAIN).to_pylist(), parquet.read_table(SOURCE).to_pylist()
+    train, evaluation, name_count = build_records(training, validation)
     if {r['question'] for r in train} & {r['question'] for r in evaluation}:
         raise ValueError('Question overlap')
     source_sha = runtime.sha(runtime.CHECKPOINT)
@@ -142,7 +147,7 @@ def main():
     optimizer = torch.optim.AdamW(head.parameters(), lr=0.0001, weight_decay=0.01)
     generator = torch.Generator().manual_seed(51387)
     losses = []
-    for step in range(1200):
+    for step in range(steps):
         index = usable[torch.randint(len(usable), (), generator=generator).item()]
         loss = F.cross_entropy(head(vectors[index], masks[index]).unsqueeze(0), torch.tensor([labels[index]]))
         if not bool(torch.isfinite(loss)):
@@ -150,7 +155,7 @@ def main():
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
-        if step in (0, 299, 599, 1199):
+        if step in (0, steps // 4 - 1, steps // 2 - 1, steps - 1):
             losses.append({'step': step + 1, 'loss': float(loss.detach())})
     head.eval()
     rows = []
@@ -171,26 +176,26 @@ def main():
                          'joint_matches_reference': predicted is not None and predicted == row.get('reference'),
                          'default_matches_reference': old_text is not None and old_text == row.get('reference')})
     summary = {}
-    for group in ('known', 'near_suffix', 'near_prefix', 'multiple', 'none'):
+    for group in sorted({r['group'] for r in evaluation}):
         subset = [r for r in rows if r['group'] == group]
         summary[group] = {'total': len(subset), **{k: sum(r[k] for r in subset) for k in
                           ('representable', 'joint_exact', 'default_exact', 'joint_single', 'default_single',
                            'joint_matches_reference', 'default_matches_reference')}}
     if runtime.sha(runtime.CHECKPOINT) != source_sha:
         raise ValueError('Source checkpoint changed')
-    OUTPUT.mkdir(parents=False, exist_ok=False)
-    torch.save({'state': head.state_dict(), 'feature_variant_sha256': variant, 'width': 64}, OUTPUT / 'span.pt')
+    output.mkdir(parents=False, exist_ok=False)
+    torch.save({'state': head.state_dict(), 'feature_variant_sha256': variant, 'width': 64}, output / 'span.pt')
     report = {'status': 'development_only_not_deployed', 'summary': summary, 'rows': rows, 'losses': losses,
-              'train_names': len(train_names), 'train_records': len(train), 'usable_train_records': len(usable),
+              'train_names': name_count, 'train_records': len(train), 'usable_train_records': len(usable),
               'train_sha256': TRAIN_SHA, 'validation_sha256': SOURCE_SHA, 'source_checkpoint_sha256': source_sha,
-              'feature_variant_sha256': variant, 'weights_sha256': runtime.sha(OUTPUT / 'span.pt'),
+              'feature_variant_sha256': variant, 'weights_sha256': runtime.sha(output / 'span.pt'),
               'seconds': time.perf_counter() - started,
               'limitations': ['Synthetic questions; validation names and split were previously used for development.',
                               'No actual enrollment, memory read or language generation; near names are artificial.',
                               'Training and evaluation name strings differ, but subnames and pretraining overlap are unknown.',
                               'Reduced-prefix parity established on only ten other examples.',
                               'Multiple-person abstention assumes all such questions should be refused in this pilot.']}
-    with (OUTPUT / 'result.json').open('x', encoding='utf-8', newline='\n') as stream:
+    with (output / 'result.json').open('x', encoding='utf-8', newline='\n') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
     print(json.dumps(summary, ensure_ascii=False), flush=True)
