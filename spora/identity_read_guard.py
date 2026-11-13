@@ -18,33 +18,40 @@ class IdentityReadGuard:
         self.fingerprints = fingerprints
         self.tokenizer = tokenizer
 
-    def authorize(self, question, selected, key):
-        if (not isinstance(question, str) or not question or type(key) is not int
+    def selected_name(self, question, selected):
+        if (not isinstance(question, str) or not question
                 or not isinstance(selected, torch.Tensor) or selected.ndim != 1
                 or selected.dtype != torch.bool or not bool(selected.any())):
-            return False
+            return None
         text = self.tokenizer.apply_chat_template([{'role': 'user', 'content': question}],
                                                   tokenize=False, add_generation_prompt=True)
         start = text.find(question)
         if start < 0 or text.find(question, start + 1) >= 0:
-            return False
+            return None
         encoded = self.tokenizer([text], return_tensors='pt', padding=True, add_special_tokens=False,
                                  return_offsets_mapping=True)
         offsets = encoded['offset_mapping']
         if offsets.ndim != 3 or offsets.shape[0] != 1 or offsets.shape[1] != len(selected) or offsets.shape[2] != 2:
-            return False
+            return None
         indices = selected.nonzero(as_tuple=True)[0].tolist()
         if indices[-1] - indices[0] + 1 != len(indices):
-            return False
+            return None
         chars = set()
         for token in indices:
             left, right = offsets[0, token].tolist()
             if left < start or right > start + len(question) or left >= right:
-                return False
+                return None
             chars.update(range(left - start, right - start))
         if not chars or max(chars) - min(chars) + 1 != len(chars):
+            return None
+        return ''.join(question[i] for i in sorted(chars))
+
+    def authorize(self, question, selected, key):
+        if type(key) is not int:
             return False
-        name = ''.join(question[i] for i in sorted(chars))
+        name = self.selected_name(question, selected)
+        if name is None:
+            return False
         try:
             return self.fingerprints.lookup(name) == key
         except ValueError:
