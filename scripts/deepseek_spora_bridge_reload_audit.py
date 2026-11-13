@@ -26,6 +26,7 @@ EXTRA_GROUP_PREFIX = 'unseen'
 EXTRA_ONLY = False
 VERIFY_CODEC_READS = False
 PARITY_VALUE_INDICES = None
+MIX_ABLATION = False
 
 
 def correct_answer(answer, name, value):
@@ -61,7 +62,13 @@ def main():
         embedding = chat.base.model.embed_tokens.weight.detach()
         codec = s.ContinuousTextCodec(embedding.cpu(), memory_width=model.config.memory_width,
                                      slot_count=5, seed=29071, eos_token_id=tok.eos_token_id).to(device)
-        bridge = s.TokenCodeDecoder(codec.slot_width, embedding.shape[1]).to(device)
+        bridge_class = payload.get('experiment_config', {}).get('bridge_class', 'TokenCodeDecoder')
+        if bridge_class == 'TokenCodebookResidualDecoder':
+            bridge = s.TokenCodebookResidualDecoder(codec, embedding).to(device)
+        elif bridge_class == 'TokenCodeDecoder':
+            bridge = s.TokenCodeDecoder(codec.slot_width, embedding.shape[1]).to(device)
+        else:
+            raise ValueError('Unsupported bridge format for reload audit')
         bridge.slot_count = 5
         bridge.load_state_dict(payload['bridge'], strict=True)
 
@@ -151,12 +158,27 @@ def main():
             if condition == 'off':
                 spec = {}
             answer, tail = generate(template.format(name=NAMES[key]), spec)
+            ablated = None
+            if MIX_ABLATION:
+                if not hasattr(bridge, 'mix'):
+                    raise ValueError('Mix ablation requires the retrieval bridge')
+                with torch.no_grad():
+                    saved_mix = bridge.mix.detach().clone()
+                    bridge.mix.zero_()
+                try:
+                    ablated = generate(template.format(name=NAMES[key]), spec)
+                finally:
+                    with torch.no_grad():
+                        bridge.mix.copy_(saved_mix)
             if p.frozen_digest(model, state) != digest:
                 raise ValueError('Evaluation mutated the memory state')
             row = dict(group=group, key=key, name=NAMES[key], expected=s.WORDS[value],
                        question=template.format(name=NAMES[key]), condition=condition,
                        answer=answer, token_ids=tail,
                        fact_correct=correct_answer(answer, NAMES[key], s.WORDS[value]))
+            if ablated is not None:
+                row.update(zero_mix_answer=ablated[0], zero_mix_token_ids=ablated[1],
+                           zero_mix_fact_correct=correct_answer(ablated[0], NAMES[key], s.WORDS[value]))
             rows.append(row)
             with (OUT / 'rows.jsonl').open('a', encoding='utf-8') as stream:
                 stream.write(json.dumps(row, ensure_ascii=False) + '\n')
@@ -220,7 +242,7 @@ def main():
     result = dict(summary=dict(summary), rows=rows, source_candidate_sha256=protected[SOURCE / 'candidate.pt'],
                   codec_contract={'slot_count': 5, 'seed': 29071, 'full_fact': True, 'identity': True},
                   parity_verified=len(parity_values), extra_words=list(EXTRA_WORDS), extra_keys=list(EXTRA_KEYS),
-                  codec_reads_checked=VERIFY_CODEC_READS,
+                  codec_reads_checked=VERIFY_CODEC_READS, mix_ablation=MIX_ABLATION,
                   ordinary_off_tokens_match=True, source_files_unchanged=True,
                   seconds=time.perf_counter() - started, peak_allocated_bytes=torch.cuda.max_memory_allocated(),
                   limitations=['Numeric addressing and controlled writes, no natural write routing.',

@@ -2,8 +2,10 @@ import unittest
 import torch
 from torch import nn
 
-from scripts.deepseek_spora_semantic_bridge_pilot import (add_value_replay, bridge_optimizer_groups,
+from scripts.deepseek_spora_semantic_bridge_pilot import (TokenCodebookResidualDecoder, TokenCodeDecoder,
+                                                        add_value_replay, bridge_optimizer_groups,
                                                         multi_entity_assignments, replace_assignment)
+from spora.continuous_text_memory import ContinuousTextCodec
 
 
 class MultiEntityAssignmentTests(unittest.TestCase):
@@ -58,6 +60,29 @@ class MultiEntityAssignmentTests(unittest.TestCase):
         self.assertTrue(all(not p.requires_grad for p in bridge.parameters()))
         with self.assertRaises(ValueError):
             bridge_optimizer_groups(list(bridge.parameters()), bridge, True, 0.001)
+
+    def test_retrieval_bridge_starts_identical_and_ignores_empty_slots(self):
+        torch.manual_seed(71)
+        embedding = torch.randn(12, 8)
+        codec = ContinuousTextCodec(embedding, memory_width=8, slot_count=2, seed=4)
+        plain = TokenCodeDecoder(4, 8)
+        bridge = TokenCodebookResidualDecoder(codec, embedding)
+        with torch.no_grad():
+            bridge.linear.weight.copy_(plain.linear.weight)
+        codes = torch.stack((codec.codebook[3], torch.zeros(4))).unsqueeze(0)
+        self.assertTrue(torch.equal(bridge(codes), plain(codes)))
+        self.assertEqual(set(bridge.state_dict()), {'linear.weight', 'mix'})
+        groups, params = bridge_optimizer_groups([], bridge, True, .001, .01)
+        self.assertEqual(len(groups), 3)
+        loss = bridge(codes)[0, 0, 0]
+        loss.backward()
+        self.assertTrue(all(p.grad is not None for p in params))
+        self.assertEqual(float(bridge(codes)[0, 1].norm()), 0.0)
+        with torch.no_grad():
+            bridge.mix.fill_(10.0)
+            expected = torch.nn.functional.normalize(embedding[3], dim=0)
+            self.assertTrue(torch.allclose(bridge(codes)[0, 0], expected, atol=1e-5))
+            self.assertEqual(float(bridge(codes)[0, 1].norm()), 0.0)
 
 
 if __name__ == '__main__':

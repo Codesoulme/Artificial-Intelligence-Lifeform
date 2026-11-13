@@ -51,6 +51,8 @@ EVALUATION_VALUES = None
 EVALUATE_FIRST_MULTI_QUESTION_ONLY = False
 TRAIN_BRIDGE = False
 BRIDGE_LANGUAGE_LR = 2e-6
+BRIDGE_RETRIEVAL_RESIDUAL = False
+BRIDGE_MIX_LR = 2e-4
 LANGUAGE_LR = 1e-4
 QUERY_INTENT_GATE = False
 QUERY_SCALAR_GATE = False
@@ -73,6 +75,34 @@ class TokenCodeDecoder(p.torch.nn.Module):
 
     def forward(self, codes):
         return p.torch.nn.functional.normalize(self.linear(codes.float()), dim=-1)
+
+
+class TokenCodebookResidualDecoder(TokenCodeDecoder):
+    """Research-only vocabulary lookup blended into continuous memory decoding.
+
+    The lookup supplies a latent embedding to the language network, never an
+    output token. The table is derived from the frozen base and is not a
+    substitute for identity routing or a truth check.
+    """
+    def __init__(self, codec, embedding):
+        super().__init__(codec.slot_width, embedding.shape[1])
+        self.mix = p.torch.nn.Parameter(p.torch.zeros((), dtype=p.torch.float32, device=embedding.device))
+        self.register_buffer('lookup_codes', codec.codebook.detach(), persistent=False)
+        self.register_buffer('lookup_embeddings', embedding.detach(), persistent=False)
+
+    def forward(self, codes):
+        torch = p.torch
+        base = super().forward(codes)
+        with torch.no_grad():
+            flat = codes.float().reshape(-1, codes.shape[-1])
+            valid = flat.norm(dim=-1, keepdim=True) > 0
+            queries = torch.nn.functional.normalize(flat, dim=-1)
+            scores = queries @ self.lookup_codes.float().T
+            ids = scores.argmax(dim=-1)
+            retrieved = self.lookup_embeddings.index_select(0, ids).float()
+            retrieved = torch.nn.functional.normalize(retrieved, dim=-1) * valid
+            retrieved = retrieved.reshape_as(base)
+        return base + torch.tanh(self.mix) * (retrieved - base)
 
 
 def fit_token_decoder(decoder, codec, embedding, *, steps=None, seed=SEED):
@@ -388,12 +418,16 @@ def add_value_replay(records, start, end, factor):
     return list(records) + focus * (factor - 1)
 
 
-def bridge_optimizer_groups(parameters, bridge, enabled, learning_rate):
+def bridge_optimizer_groups(parameters, bridge, enabled, learning_rate, mix_learning_rate=None):
     """Make the shared bridge trainable once, with a separate learning rate."""
     import math
     if type(enabled) is not bool or isinstance(learning_rate, bool) or not isinstance(learning_rate, (int, float)) \
             or not math.isfinite(learning_rate) or learning_rate <= 0:
         raise ValueError('Invalid bridge training configuration')
+    if mix_learning_rate is not None and (isinstance(mix_learning_rate, bool)
+            or not isinstance(mix_learning_rate, (int, float))
+            or not math.isfinite(mix_learning_rate) or mix_learning_rate <= 0):
+        raise ValueError('Invalid retrieval mix learning rate')
     existing = list(parameters)
     bridge.requires_grad_(enabled)
     extra = list(bridge.parameters()) if enabled else []
@@ -401,7 +435,16 @@ def bridge_optimizer_groups(parameters, bridge, enabled, learning_rate):
         raise ValueError('Bridge or adapter parameter appears more than once')
     groups = [{'params': existing}]
     if extra:
-        groups.append({'params': extra, 'lr': float(learning_rate)})
+        mix = getattr(bridge, 'mix', None)
+        if mix_learning_rate is not None:
+            if mix is None or not any(p is mix for p in extra):
+                raise ValueError('Retrieval mix parameter missing')
+            rest = [p for p in extra if p is not mix]
+            if rest:
+                groups.append({'params': rest, 'lr': float(learning_rate)})
+            groups.append({'params': [mix], 'lr': float(mix_learning_rate)})
+        else:
+            groups.append({'params': extra, 'lr': float(learning_rate)})
     return groups, existing + extra
 
 
@@ -442,7 +485,10 @@ def main():
         codec = CODEC_FACTORY(embedding.detach().cpu(), memory_width=model.config.memory_width,
                               slot_count=CODEC_SLOT_COUNT, seed=29071,
                               eos_token_id=tok.eos_token_id if CODEC_ADD_EOS else None).to(device)
-        bridge = make_token_decoder(codec, embedding)
+        if BRIDGE_RETRIEVAL_RESIDUAL:
+            bridge = TokenCodebookResidualDecoder(codec, embedding).to(device).eval()
+        else:
+            bridge = make_token_decoder(codec, embedding)
         bridge.slot_count = CODEC_SLOT_COUNT
         start_payload = None
         if START_CANDIDATE is None:
@@ -453,7 +499,12 @@ def main():
                     or start_payload.get('base_sha256') != p.WEIGHT_SHA
                     or start_payload.get('source_sha256') != source_sha):
                 raise ValueError('Starting candidate lineage mismatch')
-            bridge.load_state_dict(start_payload['bridge'], strict=True)
+            if BRIDGE_RETRIEVAL_RESIDUAL and 'mix' not in start_payload['bridge']:
+                missing, unexpected = bridge.load_state_dict(start_payload['bridge'], strict=False)
+                if missing != ['mix'] or unexpected:
+                    raise ValueError('Starting bridge state mismatch')
+            else:
+                bridge.load_state_dict(start_payload['bridge'], strict=True)
             bridge_trace = [{'step': 0, 'cosine_loss': 0.0, 'reused_start_bridge': True}]
         codec.requires_grad_(False)
         bridge.requires_grad_(False)
@@ -762,7 +813,9 @@ def main():
         params += [param for _, _, adapter in logit_adapters
                    for param in (list(adapter.proj.parameters()) + list(adapter.out.parameters())
                                  + [adapter.condition, adapter.scale])]
-        optimizer_groups, params = bridge_optimizer_groups(params, bridge, TRAIN_BRIDGE, BRIDGE_LANGUAGE_LR)
+        optimizer_groups, params = bridge_optimizer_groups(
+            params, bridge, TRAIN_BRIDGE, BRIDGE_LANGUAGE_LR,
+            BRIDGE_MIX_LR if TRAIN_BRIDGE and BRIDGE_RETRIEVAL_RESIDUAL else None)
         optimizer = torch.optim.AdamW(optimizer_groups, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
         trace = []
         for step in range(LANGUAGE_STEPS):
@@ -842,6 +895,7 @@ def main():
                 'start_candidate_sha256': teacher_sha, 'language_steps': LANGUAGE_STEPS,
                 'words': list(WORDS), 'train_value_count': TRAIN_VALUE_COUNT,
                 'train_bridge': TRAIN_BRIDGE, 'bridge_language_lr': BRIDGE_LANGUAGE_LR,
+                'bridge_retrieval_residual': BRIDGE_RETRIEVAL_RESIDUAL, 'bridge_mix_lr': BRIDGE_MIX_LR,
                 'notice': 'Training recovery only; post-training evaluation was not completed at save time.',
             }
             if final_adapters or logit_adapters or QUERY_INTENT_GATE or QUERY_SCALAR_GATE:
@@ -901,6 +955,7 @@ def main():
                          'train_correction_sequences': TRAIN_CORRECTION_SEQUENCES,
                          'replay_value_start': REPLAY_VALUE_START, 'replay_value_factor': REPLAY_VALUE_FACTOR,
                          'train_bridge': TRAIN_BRIDGE, 'bridge_language_lr': BRIDGE_LANGUAGE_LR,
+                         'bridge_retrieval_residual': BRIDGE_RETRIEVAL_RESIDUAL, 'bridge_mix_lr': BRIDGE_MIX_LR,
                          'evaluation_values': list(EVALUATION_VALUES) if EVALUATION_VALUES is not None else None,
                          'evaluate_first_multi_question_only': EVALUATE_FIRST_MULTI_QUESTION_ONLY,
                          'start_candidate': str(START_CANDIDATE) if START_CANDIDATE is not None else None,
