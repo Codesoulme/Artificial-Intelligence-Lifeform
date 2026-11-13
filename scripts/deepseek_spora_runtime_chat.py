@@ -153,7 +153,7 @@ class SporaChat:
 
     @torch.no_grad()
     def observe_structured_text(self, key, identity_text, fact_text, *, query_text=None,
-                                minimum_write_strength=0.20):
+                                minimum_write_strength=0.20, replace_existing=False):
         """Persist one explicitly segmented arbitrary-text memory record.
 
         Natural-language routing is deliberately outside this primitive; the
@@ -167,6 +167,8 @@ class SporaChat:
             raise ValueError('Fact text must be nonempty')
         if query_text is not None and (not isinstance(query_text, str) or not query_text.strip()):
             raise ValueError('Query text must be nonempty when supplied')
+        if type(replace_existing) is not bool:
+            raise ValueError('replace_existing must be a boolean')
         from dataclasses import replace
         from spora.integrated_checkpoint import save_integrated
         codec = self._structured_codec()
@@ -178,7 +180,16 @@ class SporaChat:
             structured = StructuredTextMemoryState(codec.config_dict())
         elif structured.codec_config != codec.config_dict():
             raise ValueError('Structured text codec configuration changed')
-        previous = None if structured is None or key not in structured.records else structured.records[key].packet
+        previous_record = structured.records.get(key)
+        previous = None if previous_record is None else previous_record.packet
+        if previous_record is not None:
+            decoded = codec.decode(previous_record.packet, previous_record.metadata)
+            if decoded['identity']['token_ids'] != identity_ids:
+                return {'action': 'structured_text_deferred', 'key': key,
+                        'reason': 'identity_mismatch'}
+            if decoded['fact']['token_ids'] != fact_ids and not replace_existing:
+                return {'action': 'structured_text_deferred', 'key': key,
+                        'reason': 'replacement_requires_explicit_intent'}
         observation_ids = fact_ids
         query_ids = (None if query_text is None else
                      self.tokenizer.encode(query_text.strip(), add_special_tokens=False))

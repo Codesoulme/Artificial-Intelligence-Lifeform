@@ -14,7 +14,7 @@ import torch
 from scripts import deepseek_spora_runtime_chat as runtime
 
 
-OUTPUT = ROOT / 'runs/deepseek-spora-structured-write-gate-audit-v2-20261113'
+OUTPUT = ROOT / 'runs/deepseek-spora-structured-write-gate-audit-v3-20261113'
 BASELINE = ROOT / 'runs/deepseek-spora-retrained-natural-observation-transaction-20261113/working-individual.pt'
 WORKING = OUTPUT / 'working-individual.pt'
 CHECKPOINT = ROOT / 'runs/deepseek-spora-output-v2-checkpoint-20261111/individual-with-output-v2.pt'
@@ -41,7 +41,8 @@ def write_phase():
     first = chat.observe_structured_text(KEY, IDENTITY, FACT)
     repeat = chat.observe_structured_text(KEY, IDENTITY, FACT, query_text='小梅喜欢喝什么？')
     unrelated = chat.observe_structured_text(KEY, IDENTITY, '喜欢读书', query_text='天气怎么样？')
-    correction = chat.observe_structured_text(KEY, IDENTITY, '喜欢喝咖啡', query_text='小梅喜欢喝什么？')
+    correction = chat.observe_structured_text(KEY, IDENTITY, '喜欢喝咖啡', query_text='小梅喜欢喝什么？',
+                                              replace_existing=True)
     record = chat.read_structured_text(KEY)
     result = {'phase': 'write', 'first': first, 'repeat': repeat,
               'unrelated': unrelated, 'correction': correction, 'record': record,

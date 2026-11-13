@@ -13,6 +13,28 @@ from spora.temporal import TemporalConfig, TemporalSPORA
 
 
 class RuntimeChatPersistenceTests(unittest.TestCase):
+    def test_structured_record_requires_identity_match_and_explicit_replacement(self):
+        from spora.structured_text_memory import StructuredTextMemoryCodec, StructuredTextMemoryState
+        torch.manual_seed(17)
+        embedding = torch.randn(32, 24)
+        codec = StructuredTextMemoryCodec(embedding, memory_width=24, identity_slots=2,
+                                          fact_slots=4, seed=71, eos_token_id=31)
+        packet, metadata = codec.encode([2], [7])
+        structured = StructuredTextMemoryState(codec.config_dict()).put(1, packet, metadata, 24, 8)
+        chat = object.__new__(chat_module.SporaChat)
+        chat.organism = SimpleNamespace(config=SimpleNamespace(key_count=8, memory_width=24))
+        chat.state = SimpleNamespace(structured_text=structured)
+        chat._structured_codec = lambda: codec
+        vocab = {'甲': [2], '乙': [3], '茶': [7], '读书': [8]}
+        chat.tokenizer = SimpleNamespace(encode=lambda text, **kw: vocab[text])
+        before = structured.records[1].packet.clone()
+        different_person = chat.observe_structured_text(1, '乙', '茶', replace_existing=True)
+        different_fact = chat.observe_structured_text(1, '甲', '读书')
+        self.assertEqual(different_person['reason'], 'identity_mismatch')
+        self.assertEqual(different_fact['reason'], 'replacement_requires_explicit_intent')
+        self.assertEqual(structured.revision, 1)
+        self.assertTrue(torch.equal(structured.records[1].packet, before))
+
     def test_temporal_constraint_requires_explicit_history_or_later_evidence(self):
         self.assertEqual(chat_module.constrain_temporal_intent('小梅偏爱的饮料是什么？', 1), 0)
         self.assertEqual(chat_module.constrain_temporal_intent('小梅以前喜欢什么饮料？', 0), 1)
