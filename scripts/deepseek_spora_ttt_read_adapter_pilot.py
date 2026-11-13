@@ -17,14 +17,19 @@ from spora.research_ttt_ntp import (attach_read_adapters, fresh_memory, install,
                                     sequential_ntp_write, use_memory)
 
 
-OUT = ROOT / 'runs/deepseek-spora-ttt-read-adapter-pilot-20261114'
+OUT = ROOT / 'runs/deepseek-spora-ttt-read-adapter-pilot-v4-20261114'
 LAYERS = (6, 12)
 RANK = 16
 ETA = 0.5
 RIDGE = 1.0
-STEPS = 96
-LR = 3e-3
+STEPS = 288
+LR = 1e-3
 SEED = 94217
+TRAIN_TEMPLATES = (
+    '请只回答{name}喜欢喝什么饮料。',
+    '记录中，{name}爱喝哪一种饮品？',
+    '如果现在选择饮料，{name}会选什么？',
+)
 TRAIN = (
     ('小林', '酸奶'), ('阿宁', '豆浆'), ('小雨', '咖啡'), ('阿哲', '果汁'),
     ('小岚', '咖啡'), ('阿明', '酸奶'), ('小周', '豆浆'), ('小吴', '果汁'),
@@ -75,9 +80,11 @@ def device_memory(memory):
     return {layer_id: value.to('cuda', dtype=torch.float32) for layer_id, value in memory.items()}
 
 
-def build_case(model, tokenizer, wrappers, name, value):
+def build_case(model, tokenizer, wrappers, name, value, question_template=None):
     fact = f'{name}喜欢喝{value}。'
-    question = f'请只回答{name}喜欢喝什么饮料。'
+    if question_template is None:
+        question_template = TRAIN_TEMPLATES[0]
+    question = question_template.format(name=name)
     prompt = closed_think_inputs(tokenizer, question, 'cuda')
     target = tokenizer.encode(value, add_special_tokens=False)
     target.append(tokenizer.eos_token_id)
@@ -125,7 +132,12 @@ def main():
             parameter.requires_grad_(True)
         if not trainable:
             raise ValueError('No trainable read adapter parameters')
-        train_cases = [build_case(model, tokenizer, wrappers, name, value) for name, value in TRAIN]
+        train_cases = []
+        for name, value in TRAIN:
+            first = build_case(model, tokenizer, wrappers, name, value, TRAIN_TEMPLATES[0])
+            train_cases.append(first)
+            for template in TRAIN_TEMPLATES[1:]:
+                train_cases.append(build_case(model, tokenizer, wrappers, name, value, template))
         held_cases = [build_case(model, tokenizer, wrappers, name, value) for name, value in HELD]
         ordinary = ('你好，请简单介绍自己。', '请写一句鼓励学习的话。')
         ordinary_before = [generate(model, tokenizer, question) for question in ordinary]
@@ -161,6 +173,18 @@ def main():
             raise ValueError('Memory-off ordinary control changed')
     if p.sha(p.MODEL / 'model.safetensors') != source_sha:
         raise ValueError('Base model changed')
+    OUT.mkdir()
+    adapter_payload = {
+        'format': 'spora-ttt-ntp-read-adapter-v1',
+        'base_sha256': source_sha,
+        'layers': list(LAYERS), 'rank': RANK, 'eta': ETA, 'ridge': RIDGE,
+        'steps': STEPS, 'learning_rate': LR,
+        'adapters': {str(layer_id): {name: tensor.detach().cpu()
+                                     for name, tensor in adapter.state_dict().items()}
+                     for layer_id, adapter in adapters.items()},
+    }
+    torch.save(adapter_payload, OUT / 'adapters.pt')
+    adapter_sha = p.sha(OUT / 'adapters.pt')
     report = {
         'status': 'ttt_ntp_read_adapter_pilot',
         'before': before, 'after': after,
@@ -172,6 +196,7 @@ def main():
         },
         'layers': list(LAYERS), 'rank': RANK, 'eta': ETA, 'ridge': RIDGE,
         'steps': STEPS, 'learning_rate': LR, 'trace': trace,
+        'adapter_sha256': adapter_sha,
         'base_sha256': source_sha, 'seconds': time.perf_counter() - started,
         'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
         'limitations': [
@@ -182,7 +207,6 @@ def main():
             'Held names and values remain within the finite development vocabulary.',
         ],
     }
-    OUT.mkdir()
     (OUT / 'result.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(report['summary'], ensure_ascii=False), flush=True)
 

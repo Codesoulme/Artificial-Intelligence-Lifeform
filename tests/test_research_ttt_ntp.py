@@ -61,6 +61,20 @@ class ResearchTTTNTPTests(unittest.TestCase):
         loss.backward()
         self.assertIsNotNone(adapters[0].up.weight.grad)
 
+    def test_layer_keys_and_alignment(self):
+        decoder = ToyDecoder()
+        wrappers = install(decoder, (0, 1))
+        memory = fresh_memory(wrappers)
+        keys = {0: torch.tensor([[1., 0., 0.]]), 1: torch.tensor([[0., 1., 0.]])}
+        targets = {0: torch.tensor([[2., 3.]]), 1: torch.tensor([[4., 5.]])}
+        sequential_ntp_write(memory, keys, targets, eta=1., ridge=0.001)
+        self.assertGreater(float(memory[0][:, 0].norm()), 0.)
+        self.assertEqual(float(memory[0][:, 1].norm()), 0.)
+        self.assertGreater(float(memory[1][:, 1].norm()), 0.)
+        with self.assertRaisesRegex(ValueError, 'dimensions'):
+            sequential_ntp_write({0: torch.zeros(2, 3)}, {0: torch.ones(2, 3)},
+                                 {0: torch.ones(1, 2)})
+
 
 if __name__ == '__main__':
     unittest.main()

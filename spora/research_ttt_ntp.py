@@ -136,10 +136,11 @@ def sequential_ntp_write(memory, keys, targets, *, eta=0.1, ridge=1.0, max_steps
         target = targets.get(layer_id)
         if (not isinstance(layer_keys, torch.Tensor) or layer_keys.ndim != 2
                 or not layer_keys.shape[0] or not isinstance(target, torch.Tensor) or target.ndim != 2
+                or target.shape[0] != layer_keys.shape[0]
                 or target.shape[1] != fast.shape[0]
                 or layer_keys.shape[1] != fast.shape[1]):
             raise ValueError('Layer key/target dimensions do not match fast weight')
-        steps = min(layer_keys.shape[0], target.shape[0])
+        steps = layer_keys.shape[0]
         if max_steps is not None:
             steps = min(steps, max_steps)
         for position in range(steps):

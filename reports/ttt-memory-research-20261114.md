@@ -17,18 +17,25 @@
 
 初始零训练 graft 的 3 个写入强度均不能召回正确事实，最高只改变了一个错误答案。这说明论文方法不能直接零样本移植到未经过 TTT 目标训练的 DeepSeek 检查点。
 
-随后增加两个低秩语言读取适配器，冻结 DeepSeek 底座和 fast weight，只训练“TTT 读向量 -> 宿主隐藏残差”的映射。96 步后，8 个训练人物/事实从 0/8 提升到 8/8；4 个未见人物从 0/4 提升到 2/4；无记忆普通请求保持不变。这个结果首次证明当前项目的记忆内容可以通过上下文状态写入，再由小型语言适配器接回原生生成路径，而不依赖有限值词表。
+随后增加两个低秩语言读取适配器，冻结 DeepSeek 底座和 fast weight，只训练“TTT 读向量 -> 宿主隐藏残差”的映射。96 步后，8 个训练人物/事实从 0/8 提升到 8/8；4 个未见人物从 0/4 提升到 2/4；无记忆普通请求保持不变。这只能证明指定样例中的输出受新通路影响，不能证明它正确读取了可变事实。
+
+加入多问法后，96 步的训练集得分 9/24、留出人物 1/4；288 步的训练集 23/24、留出人物仍为 1/4。288 步候选在独立进程中加载，在 12 个未训练问法上只答对 1 个。更关键的是，保持人物与问题不变，只在写入事实中切换酸奶和豆浆时，4 对回答全部不变，两种事实均答对的配对为 0/4。每个训练人物只绑定过一个固定值，因此训练分数可能来自固定配对，不能作为记忆读取成功的证据。
 
 ## 当前结论
 
-这条路线值得继续，是研究分支的下一候选，但还不能接入正式个体。未见人物的 2/4 说明读取表示仍含有身份和表面句式偏差；多条关系、历史纠正、自然写入和跨进程恢复尚未验证。下一轮应扩展事实表面形式和问题问法，加入多实体同一状态、当前/历史切换、未知事实拒答，并比较 TTT 写入的检索相似度和适配器输出。
+目前候选不具备接入正式个体的条件。下一轮应先对同一人物交叉训练多个事实值，并保留未见人物与未见值的独立组合；评估必须要求同一问题在切换写入事实后，两侧均正确。随后再评估多关系、历史纠正、未知事实与长期恢复。不能用训练集高分替代反事实验证。
 
 代码和结果：
 
 - `spora/research_ttt_ntp.py`
 - `scripts/deepseek_spora_ttt_ntp_pilot.py`
 - `scripts/deepseek_spora_ttt_read_adapter_pilot.py`
+- `scripts/deepseek_spora_ttt_read_adapter_reload_audit.py`
+- `scripts/deepseek_spora_ttt_counterfactual_audit.py`
 - `runs/deepseek-spora-ttt-ntp-pilot-v2-20261114/result.json`
 - `runs/deepseek-spora-ttt-read-adapter-pilot-20261114/result.json`
+- `runs/deepseek-spora-ttt-read-adapter-pilot-v4-20261114/result.json`
+- `runs/deepseek-spora-ttt-read-adapter-reload-audit-v4-20261114/result.json`
+- `runs/deepseek-spora-ttt-counterfactual-audit-20261114.json`
 
 所有实验均使用临时 fast weight 和临时适配器；DeepSeek 原始权重、默认检查点和正式个体没有修改。
