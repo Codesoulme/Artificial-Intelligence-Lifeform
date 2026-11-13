@@ -87,6 +87,76 @@ class IntegratedDurableTests(unittest.TestCase):
             self.assertEqual(record['metadata'], metadata)
             self.assertEqual(record['revision'], 1)
 
+    def test_relation_records_preserve_legacy_and_isolate_corrections(self):
+        config = {'memory_width': 64, 'identity_slots': 1, 'fact_slots': 1}
+        metadata = {'identity_length': 1, 'fact_length': 1}
+        with self.create() as runtime:
+            runtime.write_structured_text(0, torch.full((64,), 9.), metadata, codec_config=config)
+            first = runtime.write_structured_relation(4, 'drink', torch.ones(64), metadata)
+            second = runtime.write_structured_relation(4, 'hobby', torch.full((64,), 2.), metadata)
+            self.assertNotEqual(first['slot'], second['slot'])
+            self.assertNotEqual(first['slot'], 0)
+            with self.assertRaisesRegex(ValueError, 'explicit replacement'):
+                runtime.write_structured_relation(4, 'drink', torch.full((64,), 3.), metadata)
+            with self.assertRaisesRegex(ValueError, 'Relation-bound'):
+                runtime.write_structured_text(first['slot'], torch.zeros(64), metadata)
+            runtime.write_structured_relation(4, 'drink', torch.full((64,), 3.), metadata,
+                                              replace_existing=True)
+            self.assertIsNone(runtime.read_structured_relation(4, 'unknown'))
+        with self.open() as restored:
+            self.assertTrue(torch.equal(restored.read_structured_text(0)['packet'], torch.full((64,), 9.)))
+            self.assertTrue(torch.equal(restored.read_structured_relation(4, 'drink')['packet'], torch.full((64,), 3.)))
+            self.assertTrue(torch.equal(restored.read_structured_relation(4, 'hobby')['packet'], torch.full((64,), 2.)))
+            self.assertIsNone(restored.read_structured_relation(5, 'hobby'))
+
+    def test_relation_transaction_recovers_and_rejects_stale_allocation(self):
+        config = {'memory_width': 64, 'identity_slots': 1, 'fact_slots': 1}
+        metadata = {'identity_length': 1, 'fact_length': 1}
+        with self.create() as first:
+            first.register_structured_text(config)
+            with self.open() as stale:
+                first.write_structured_relation(4, 'drink', torch.ones(64), metadata)
+                with self.assertRaises(RevisionConflict):
+                    stale.write_structured_relation(4, 'hobby', torch.full((64,), 2.), metadata)
+                self.assertIsNone(stale.read_structured_relation(4, 'hobby'))
+            def interrupt(stage):
+                if stage == 'after_manifest':
+                    raise RuntimeError('injected interruption')
+            with self.assertRaisesRegex(RuntimeError, 'interruption'):
+                first.write_structured_relation(4, 'hobby', torch.full((64,), 2.), metadata, hook=interrupt)
+            self.assertIsNone(first.read_structured_relation(4, 'hobby'))
+        with self.open() as restored:
+            self.assertTrue(torch.equal(restored.read_structured_relation(4, 'drink')['packet'], torch.ones(64)))
+            self.assertIsNone(restored.read_structured_relation(4, 'hobby'))
+
+    def test_relation_process_termination_preserves_atomicity(self):
+        code = r'''
+import os, sys, torch
+from pathlib import Path
+from types import SimpleNamespace
+from tests.test_integrated_open_base import Base
+from spora.integrated_durable import load_integrated_durable
+root = Path(sys.argv[1])
+base = Base(); base.config = SimpleNamespace(hidden_size=3, num_attention_heads=1)
+runtime = load_integrated_durable(root/'individual.sqlite', root/'bootstrap.pt', base, root)
+def stop(stage):
+    if stage == sys.argv[2]: os._exit(42)
+runtime.write_structured_relation(4, sys.argv[3], torch.ones(64),
+    {'identity_length': 1, 'fact_length': 1}, hook=stop)
+os._exit(0)
+'''
+        with self.create() as runtime:
+            runtime.register_structured_text({'memory_width': 64, 'identity_slots': 1, 'fact_slots': 1})
+        for stage, relation, present in [('after_manifest', 'before', False), ('after_commit', 'after', True)]:
+            result = subprocess.run([sys.executable, '-c', code, str(self.root), stage, relation],
+                                    cwd=Path(__file__).resolve().parents[1], timeout=60)
+            self.assertEqual(result.returncode, 42)
+            with self.open() as restored:
+                record = restored.read_structured_relation(4, relation)
+                self.assertEqual(record is not None, present)
+                if present:
+                    self.assertTrue(torch.equal(record['packet'], torch.ones(64)))
+
     def test_v4_adapter_survives_incremental_write_and_rejects_mutation(self):
         from spora.integrated_checkpoint import load_integrated
         decoder, organism, state = load_integrated(self.bootstrap, self.base(), self.root)

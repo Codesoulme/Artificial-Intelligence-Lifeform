@@ -24,11 +24,13 @@ class StructuredTextMemoryState:
     """Persisted structured records accompanying a GrowingState snapshot."""
 
     FORMAT = 'spora-structured-text-state-v1'
+    RELATIONAL_FORMAT = 'spora-structured-text-state-v2'
 
-    def __init__(self, codec_config, records=None, revision=0):
+    def __init__(self, codec_config, records=None, revision=0, relations=None):
         self.codec_config = dict(codec_config)
         self.records = {} if records is None else dict(records)
         self.revision = revision
+        self.relations = {} if relations is None else dict(relations)
 
     @staticmethod
     def tensor_name(key):
@@ -46,6 +48,18 @@ class StructuredTextMemoryState:
             raise ValueError('Invalid structured text revision')
         if not isinstance(self.records, dict):
             raise ValueError('Structured text records must be a mapping')
+        if not isinstance(self.relations, dict):
+            raise ValueError('Structured text relations must be a mapping')
+        slots = set()
+        for pair, slot in self.relations.items():
+            if (not isinstance(pair, tuple) or len(pair) != 2
+                    or type(pair[0]) is not int or pair[0] < 0
+                    or (key_count is not None and pair[0] >= key_count)
+                    or not isinstance(pair[1], str) or not pair[1].strip()
+                    or pair[1] != pair[1].strip() or len(pair[1]) > 128
+                    or type(slot) is not int or slot not in self.records or slot in slots):
+                raise ValueError('Invalid structured text relation binding')
+            slots.add(slot)
         for key, record in self.records.items():
             if type(key) is not int or key < 0 or (key_count is not None and key >= key_count):
                 raise ValueError('Invalid structured text record key')
@@ -65,6 +79,11 @@ class StructuredTextMemoryState:
                 raise ValueError('Structured text record revision is ahead of state')
 
     def put(self, key, packet, metadata, memory_width, key_count=None):
+        if key in self.relations.values():
+            raise ValueError('Relation-bound records require a relation write')
+        return self._put(key, packet, metadata, memory_width, key_count, self.relations)
+
+    def _put(self, key, packet, metadata, memory_width, key_count, relations):
         if type(key) is not int or key < 0 or (key_count is not None and key >= key_count):
             raise ValueError('Invalid structured text record key')
         if not isinstance(packet, torch.Tensor) or packet.shape != (memory_width,):
@@ -74,14 +93,39 @@ class StructuredTextMemoryState:
                    for index, value in self.records.items()}
         next_revision = self.revision + 1
         records[key] = StructuredTextRecord(packet.detach().clone().float(), dict(metadata), next_revision)
-        result = StructuredTextMemoryState(self.codec_config, records, next_revision)
+        result = StructuredTextMemoryState(self.codec_config, records, next_revision, relations)
         result.validate(memory_width, key_count)
         return result
 
+    def put_relation(self, entity, relation, packet, metadata, memory_width, key_count, *, replace_existing=False):
+        """Write an explicitly addressed relation; existing unbound records are untouched.
+
+        Entity identity and relation semantics are caller supplied, not inferred.
+        Corrections replace the current packet; no historical version is retained.
+        """
+        self.validate(memory_width, key_count)
+        if (type(entity) is not int or type(key_count) is not int or key_count < 1
+                or not 0 <= entity < key_count or not isinstance(relation, str)
+                or not relation.strip() or relation != relation.strip() or len(relation) > 128
+                or type(replace_existing) is not bool):
+            raise ValueError('Invalid entity, relation, or replacement intent')
+        pair = (entity, relation)
+        relations = dict(self.relations)
+        if pair in relations:
+            if not replace_existing:
+                raise ValueError('Relation already exists; explicit replacement required')
+            slot = relations[pair]
+        else:
+            slot = next((i for i in range(key_count) if i not in self.records), None)
+            if slot is None:
+                raise ValueError('Structured text record capacity exhausted')
+            relations[pair] = slot
+        return self._put(slot, packet, metadata, memory_width, key_count, relations)
+
     def schema(self):
         self.validate(self.codec_config['memory_width'])
-        return {
-            'format': self.FORMAT,
+        schema = {
+            'format': self.RELATIONAL_FORMAT if self.relations else self.FORMAT,
             'codec': dict(self.codec_config),
             'revision': self.revision,
             'records': [
@@ -89,10 +133,16 @@ class StructuredTextMemoryState:
                 for key, record in sorted(self.records.items())
             ],
         }
+        if self.relations:
+            schema['relations'] = [
+                {'entity': entity, 'relation': relation, 'slot': slot}
+                for (entity, relation), slot in sorted(self.relations.items())
+            ]
+        return schema
 
     @classmethod
     def from_schema(cls, schema, tensors, device='cpu'):
-        if (not isinstance(schema, dict) or schema.get('format') != cls.FORMAT
+        if (not isinstance(schema, dict) or schema.get('format') not in (cls.FORMAT, cls.RELATIONAL_FORMAT)
                 or not isinstance(schema.get('codec'), dict)
                 or not isinstance(schema.get('records'), list)):
             raise ValueError('Invalid structured text state schema')
@@ -106,7 +156,21 @@ class StructuredTextMemoryState:
                 raise ValueError('Missing structured text record tensor')
             records[row['key']] = StructuredTextRecord(
                 tensors[name].to(device), dict(row['metadata']), row['revision'])
-        result = cls(schema['codec'], records, schema.get('revision'))
+        relations = {}
+        if schema['format'] == cls.RELATIONAL_FORMAT:
+            if not isinstance(schema.get('relations'), list) or not schema['relations']:
+                raise ValueError('Invalid structured text relations schema')
+            for row in schema['relations']:
+                if (not isinstance(row, dict) or set(row) != {'entity', 'relation', 'slot'}
+                        or type(row['entity']) is not int or not isinstance(row['relation'], str)):
+                    raise ValueError('Invalid structured text relation schema')
+                pair = (row['entity'], row['relation'])
+                if pair in relations:
+                    raise ValueError('Duplicate structured text relation')
+                relations[pair] = row['slot']
+        elif 'relations' in schema:
+            raise ValueError('Unexpected relations in legacy schema')
+        result = cls(schema['codec'], records, schema.get('revision'), relations)
         result.validate(schema['codec'].get('memory_width'))
         return result
 

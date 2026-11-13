@@ -157,6 +157,37 @@ class IntegratedDurableRuntime:
         return {'packet': record.packet.detach().clone(),
                 'metadata': dict(record.metadata), 'revision': record.revision}
 
+    def write_structured_relation(self, entity, relation, packet, metadata, *,
+                                  codec_config=None, replace_existing=False, hook=None):
+        """Commit an explicitly supplied entity/relation binding and packet together."""
+        self._check()
+        current = self.state.structured_text
+        if current is None:
+            if not isinstance(codec_config, dict):
+                raise ValueError('Codec configuration is required for first structured write')
+            current = StructuredTextMemoryState(codec_config)
+        elif codec_config is not None and current.codec_config != dict(codec_config):
+            raise ValueError('Structured text codec configuration mismatch')
+        updated = current.put_relation(entity, relation, packet, metadata,
+                                       self.organism.config.memory_width,
+                                       self.organism.config.key_count,
+                                       replace_existing=replace_existing)
+        stats = self._commit_state(replace(self.state, structured_text=updated), hook=hook)
+        slot = updated.relations[(entity, relation)]
+        return {'slot': slot, 'record_revision': updated.records[slot].revision,
+                'state_revision': updated.revision, 'stats': stats}
+
+    def read_structured_relation(self, entity, relation):
+        """Read an explicit relation; unknown bindings return no record."""
+        self._check()
+        if (type(entity) is not int or not 0 <= entity < self.organism.config.key_count
+                or not isinstance(relation, str) or not relation.strip()
+                or relation != relation.strip() or len(relation) > 128):
+            raise ValueError('Invalid entity or relation')
+        structured = self.state.structured_text
+        slot = None if structured is None else structured.relations.get((entity, relation))
+        return None if slot is None else self.read_structured_text(slot)
+
 
 def create_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu'):
     bootstrap = Path(bootstrap).resolve()

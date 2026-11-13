@@ -123,6 +123,27 @@ class StructuredTextMemoryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             restore(tampered, tensors)
 
+    def test_relation_capacity_and_schema_validation(self):
+        config = {'memory_width': 16, 'identity_slots': 1, 'fact_slots': 1}
+        meta = {'identity_length': 1, 'fact_length': 1}
+        old = StructuredTextMemoryState(config).put(0, torch.zeros(16), meta, 16, 2)
+        self.assertEqual(old.schema()['format'], old.FORMAT)
+        updated = old.put_relation(1, 'hobby', torch.ones(16), meta, 16, 2)
+        self.assertEqual(updated.relations[(1, 'hobby')], 1)
+        self.assertNotIn((1, 'hobby'), old.relations)
+        with self.assertRaisesRegex(ValueError, 'capacity exhausted'):
+            updated.put_relation(1, 'drink', torch.ones(16), meta, 16, 2)
+        schema = updated.schema()
+        tensors = {updated.tensor_name(k): v.packet for k, v in updated.records.items()}
+        broken = copy.deepcopy(schema)
+        broken['relations'].append({'entity': 1, 'relation': 'drink', 'slot': 1})
+        with self.assertRaises(ValueError):
+            StructuredTextMemoryState.from_schema(broken, tensors)
+        broken = copy.deepcopy(schema)
+        broken['relations'][0]['slot'] = 7
+        with self.assertRaises(ValueError):
+            StructuredTextMemoryState.from_schema(broken, tensors)
+
     def test_structured_records_use_incremental_durable_transactions(self):
         model = TemporalSPORA(TemporalConfig(width=16, layers=2, heads=2,
                                              memory_width=16, expert_rank=4,
