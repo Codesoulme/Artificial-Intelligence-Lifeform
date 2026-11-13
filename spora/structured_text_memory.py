@@ -148,6 +148,7 @@ class StructuredTextMemoryCodec(nn.Module):
         self.identity_slot_width = identity_slot_width
         self.fact_slot_width = fact_slot_width
         self.slot_width = identity_slot_width if identity_slot_width == fact_slot_width else None
+        self.seed = seed
         self.eos_token_id = eos_token_id
         generator = torch.Generator(device='cpu').manual_seed(seed)
         identity_projection = torch.randn((embedding.shape[1], identity_slot_width),
@@ -262,5 +263,26 @@ class StructuredTextMemoryCodec(nn.Module):
             'slot_width': self.slot_width,
             'identity_slot_width': self.identity_slot_width,
             'fact_slot_width': self.fact_slot_width,
+            'seed': self.seed,
             'eos_token_id': self.eos_token_id,
         }
+
+    @classmethod
+    def from_config(cls, embedding, config):
+        """Rebuild a codec from its persisted, versioned configuration."""
+        if not isinstance(config, dict):
+            raise ValueError('Structured text codec configuration must be a mapping')
+        required = ('memory_width', 'identity_slots', 'fact_slots',
+                    'identity_slot_width', 'fact_slot_width')
+        if any(name not in config for name in required):
+            raise ValueError('Structured text codec configuration is incomplete')
+        return cls(
+            embedding,
+            memory_width=config['memory_width'],
+            identity_slots=config['identity_slots'],
+            fact_slots=config['fact_slots'],
+            identity_slot_width=config['identity_slot_width'],
+            fact_slot_width=config['fact_slot_width'],
+            seed=config.get('seed', 29071),
+            eos_token_id=config.get('eos_token_id'),
+        )

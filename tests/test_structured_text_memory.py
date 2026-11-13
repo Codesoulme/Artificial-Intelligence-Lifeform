@@ -14,9 +14,9 @@ from spora.temporal import TemporalConfig, TemporalSPORA
 
 class StructuredTextMemoryTests(unittest.TestCase):
     def setUp(self):
-        embedding = torch.randn(32, 24)
+        self.embedding = torch.randn(32, 24)
         self.codec = StructuredTextMemoryCodec(
-            embedding, memory_width=24, identity_slots=2, fact_slots=4,
+            self.embedding, memory_width=24, identity_slots=2, fact_slots=4,
             seed=71, eos_token_id=31)
 
     def test_lanes_round_trip_independently(self):
@@ -53,6 +53,17 @@ class StructuredTextMemoryTests(unittest.TestCase):
         decoded = codec.decode(code, metadata)
         self.assertEqual(decoded['identity']['token_ids'], [2])
         self.assertEqual(decoded['fact']['token_ids'], [7])
+
+    def test_codec_config_rebuild_preserves_seeded_codebooks(self):
+        code, metadata = self.codec.encode([2], [7, 8])
+        rebuilt = StructuredTextMemoryCodec.from_config(
+            self.embedding, self.codec.config_dict())
+        rebuilt_code, rebuilt_metadata = rebuilt.encode([2], [7, 8])
+        decoded = rebuilt.decode(code, metadata)
+        self.assertTrue(torch.equal(rebuilt_code, code))
+        self.assertEqual(decoded['identity']['token_ids'], [2])
+        self.assertEqual(decoded['fact']['token_ids'], [7, 8])
+        self.assertEqual(rebuilt.config_dict()['seed'], 71)
 
     def test_structured_records_round_trip_through_state_codec(self):
         model = TemporalSPORA(TemporalConfig(width=16, layers=2, heads=2,

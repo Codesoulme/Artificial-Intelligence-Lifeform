@@ -47,6 +47,7 @@ from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
 from spora.working_checkpoint_lock import lock_working_checkpoint
 from spora.durable import RevisionConflict
 from spora.natural_write_heads import load_natural_write_heads
+from spora.structured_text_memory import StructuredTextMemoryCodec, StructuredTextMemoryState
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 WORKING_CHECKPOINT = ROOT/'runs/spora-runtime-individual/individual.pt'
@@ -134,6 +135,79 @@ class SporaChat:
             raise ValueError('Blended structural layers cannot be persisted')
         return {index: layer for index, layer in enumerate(layers)
                 if isinstance(layer, SPORALayerReplacement)}
+
+    def _structured_codec(self):
+        structured = self.state.structured_text
+        if structured is None:
+            return StructuredTextMemoryCodec(
+                self.base.model.embed_tokens.weight.detach().cpu(),
+                memory_width=self.organism.config.memory_width,
+                identity_slots=3, fact_slots=5,
+                identity_slot_width=15, fact_slot_width=9,
+                seed=29071, eos_token_id=self.tokenizer.eos_token_id)
+        return StructuredTextMemoryCodec.from_config(
+            self.base.model.embed_tokens.weight.detach().cpu(), structured.codec_config)
+
+    @torch.no_grad()
+    def observe_structured_text(self, key, identity_text, fact_text):
+        """Persist one explicitly segmented arbitrary-text memory record.
+
+        Natural-language routing is deliberately outside this primitive; the
+        caller must supply a verified entity key and two text lanes.
+        """
+        if type(key) is not int or not 0 <= key < self.organism.config.key_count:
+            raise ValueError('Structured text key is outside the individual address space')
+        if not isinstance(identity_text, str) or not identity_text.strip():
+            raise ValueError('Identity text must be nonempty')
+        if not isinstance(fact_text, str) or not fact_text.strip():
+            raise ValueError('Fact text must be nonempty')
+        from dataclasses import replace
+        from spora.integrated_checkpoint import save_integrated
+        codec = self._structured_codec()
+        identity_ids = self.tokenizer.encode(identity_text.strip(), add_special_tokens=False)
+        fact_ids = self.tokenizer.encode(fact_text.strip(), add_special_tokens=False)
+        packet, metadata = codec.encode(identity_ids, fact_ids)
+        structured = self.state.structured_text
+        if structured is None:
+            structured = StructuredTextMemoryState(codec.config_dict())
+        elif structured.codec_config != codec.config_dict():
+            raise ValueError('Structured text codec configuration changed')
+        candidate = replace(self.state, structured_text=structured.put(
+            key, packet.detach().cpu(), metadata, self.organism.config.memory_width,
+            self.organism.config.key_count))
+        with lock_working_checkpoint(WORKING_CHECKPOINT):
+            current_sha = sha(WORKING_CHECKPOINT) if WORKING_CHECKPOINT.exists() else None
+            if current_sha != self._working_sha256:
+                raise RevisionConflict('Working checkpoint changed; reload before writing')
+            save_integrated(WORKING_CHECKPOINT, self.organism, candidate, self.decoder.reader,
+                            MODEL, self.decoder.layer_indices, replacements=self._replacements(),
+                            output_adapter=self.decoder.output_adapter)
+            self.state = candidate
+            self._working_sha256 = sha(WORKING_CHECKPOINT)
+        return {'action': 'structured_text_written', 'key': key,
+                'identity_length': metadata['identity_length'],
+                'fact_length': metadata['fact_length'],
+                'revision': candidate.structured_text.revision}
+
+    @torch.no_grad()
+    def read_structured_text(self, key):
+        """Decode one persisted structured record without exposing its tensor."""
+        if type(key) is not int or key < 0:
+            raise ValueError('Structured text key must be a nonnegative integer')
+        structured = self.state.structured_text
+        if structured is None or key not in structured.records:
+            return None
+        codec = self._structured_codec()
+        record = structured.records[key]
+        decoded = codec.decode(record.packet, record.metadata)
+        return {
+            'identity_text': self.tokenizer.decode(decoded['identity']['token_ids'], skip_special_tokens=True),
+            'fact_text': self.tokenizer.decode(decoded['fact']['token_ids'], skip_special_tokens=True),
+            'identity_token_ids': decoded['identity']['token_ids'],
+            'fact_token_ids': decoded['fact']['token_ids'],
+            'metadata': dict(record.metadata),
+            'revision': record.revision,
+        }
 
     @torch.no_grad()
     def observe_sourced(self, key, value, source='direct', quality=1.0, valid_at=None):
