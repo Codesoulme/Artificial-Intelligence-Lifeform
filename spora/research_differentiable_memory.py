@@ -20,7 +20,7 @@ class DifferentiablePacketWriter(nn.Module):
             raise ValueError('Observation and memory widths must be positive integers')
         self.packet = nn.Linear(observation_width, memory_width, bias=False)
 
-    def forward(self, matrix, address, observation, *, strength=1.0, active_mask=None):
+    def forward(self, matrix, address, observation, *, strength=1.0, active_mask=None, residual=False):
         if (not isinstance(matrix, torch.Tensor) or matrix.ndim != 3
                 or matrix.shape[1] != matrix.shape[2]
                 or matrix.shape[1] != self.packet.out_features
@@ -30,7 +30,8 @@ class DifferentiablePacketWriter(nn.Module):
                 or not all(x.is_floating_point() and bool(torch.isfinite(x).all())
                            for x in (matrix, address, observation))
                 or isinstance(strength, bool) or not isinstance(strength, (int, float))
-                or not 0 <= strength <= 1 or bool((address.norm(dim=-1) < 1e-8).any())):
+                or not 0 <= strength <= 1 or type(residual) is not bool
+                or bool((address.norm(dim=-1) < 1e-8).any())):
             raise ValueError('Invalid differentiable memory write')
         key = F.normalize(address.float(), dim=-1)
         target = self.packet(observation.float())
@@ -40,6 +41,8 @@ class DifferentiablePacketWriter(nn.Module):
                 raise ValueError('Active mask must match the packet')
             target = target * active_mask.to(target.dtype)
         existing = torch.bmm(matrix.float(), key.unsqueeze(-1)).squeeze(-1)
+        if residual:
+            target = existing + target
         return matrix.float() + float(strength) * (target - existing).unsqueeze(-1) * key.unsqueeze(1)
 
 

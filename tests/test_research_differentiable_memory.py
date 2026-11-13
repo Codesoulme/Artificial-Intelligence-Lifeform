@@ -86,6 +86,16 @@ class DifferentiableMemoryTests(unittest.TestCase):
         self.assertEqual(float(writer.packet.weight.grad[2].abs().max()), 0.)
         self.assertGreater(float(writer.packet.weight.grad[:2].norm()), 0.)
 
+    def test_zero_initialized_residual_preserves_existing_memory(self):
+        writer = DifferentiablePacketWriter(3, 3)
+        nn.init.zeros_(writer.packet.weight)
+        matrix = torch.randn(1, 3, 3)
+        address = torch.tensor([[1., 0., 0.]])
+        updated = writer(matrix, address, torch.ones(1, 3), residual=True)
+        torch.testing.assert_close(updated, matrix, rtol=0, atol=0)
+        updated.sum().backward()
+        self.assertGreater(float(writer.packet.weight.grad.norm()), 0.)
+
 
 if __name__ == '__main__':
     unittest.main()
