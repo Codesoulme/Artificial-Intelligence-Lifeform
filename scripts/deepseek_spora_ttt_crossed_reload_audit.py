@@ -67,7 +67,7 @@ def main():
               'pairs': pairs, 'adapter_sha256': adapter_sha, 'base_sha256': p.WEIGHT_SHA,
               'seconds': time.perf_counter() - start, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Recreates temporary fast weights from the same fact text; no saved individual reload.',
-                              'Two held names and four trained beverage values; pairs overlap.',
+                              f'{len(experiment.HELD_NAMES)} held names and {len(experiment.TRAIN_VALUES)} trained values; pairs overlap.',
                               'Explicit one-fact writes and supplied questions, not autonomous routing.']}
     with OUT.open('x', encoding='utf-8') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
