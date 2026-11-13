@@ -49,7 +49,7 @@ from spora.durable import RevisionConflict
 from spora.natural_write_heads import load_natural_write_heads
 from spora.structured_text_memory import (StructuredTextMemoryCodec, StructuredTextMemoryState,
                                           StructuredTextWriteGate)
-from spora.structured_text_output import StructuredMemoryTextDecoder
+from spora.structured_text_output import StructuredFactSuffixDecoder, StructuredMemoryTextDecoder
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 WORKING_CHECKPOINT = ROOT/'runs/spora-runtime-individual/individual.pt'
@@ -232,14 +232,28 @@ class SporaChat:
         if structured is None or key not in structured.records:
             return {'accepted': False, 'reason': 'unknown_structured_memory'}
         device = next(self.base.parameters()).device
-        decoder = StructuredMemoryTextDecoder.from_checkpoint(
-            self.base.model.embed_tokens.weight.detach(), decoder_path,
-            expected_source_sha256=sha(CHECKPOINT), expected_base_sha256=WEIGHT_SHA,
-            expected_format='spora-structured-memory-text-decoder-v1')
-        decoder = decoder.to(device).eval()
-        packet = structured.records[key].packet.to(device=device, dtype=torch.float32).unsqueeze(0)
-        token_ids = decoder.generate(packet, eos_id=self.tokenizer.eos_token_id,
-                                     max_new_tokens=max_new_tokens)[0].tolist()
+        record = structured.records[key]
+        codec = self._structured_codec()
+        payload = torch.load(decoder_path, map_location='cpu', weights_only=True)
+        decoder_format = payload.get('format') if isinstance(payload, dict) else None
+        if decoder_format == 'spora-structured-fact-suffix-decoder-v1':
+            decoder = StructuredFactSuffixDecoder.from_checkpoint(
+                self.base.model.embed_tokens.weight.detach(), decoder_path,
+                expected_source_sha256=sha(CHECKPOINT), expected_base_sha256=WEIGHT_SHA,
+                expected_codec=codec.config_dict()).to(device).eval()
+            packet = record.packet.to(device=device, dtype=torch.float32).unsqueeze(0)
+            suffix_ids = decoder.generate(packet, eos_id=self.tokenizer.eos_token_id,
+                                          max_new_tokens=max_new_tokens)[0].tolist()
+            identity_ids = codec.decode(record.packet, record.metadata)['identity']['token_ids']
+            token_ids = identity_ids + suffix_ids
+        else:
+            decoder = StructuredMemoryTextDecoder.from_checkpoint(
+                self.base.model.embed_tokens.weight.detach(), decoder_path,
+                expected_source_sha256=sha(CHECKPOINT), expected_base_sha256=WEIGHT_SHA,
+                expected_format='spora-structured-memory-text-decoder-v1').to(device).eval()
+            packet = record.packet.to(device=device, dtype=torch.float32).unsqueeze(0)
+            token_ids = decoder.generate(packet, eos_id=self.tokenizer.eos_token_id,
+                                         max_new_tokens=max_new_tokens)[0].tolist()
         return {'accepted': True, 'reason': 'structured_memory_decoder',
                 'answer': self.tokenizer.decode(token_ids, skip_special_tokens=True).strip(),
                 'token_ids': token_ids, 'revision': structured.records[key].revision}

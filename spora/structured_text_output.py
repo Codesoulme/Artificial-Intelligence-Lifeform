@@ -165,3 +165,90 @@ class StructuredMemoryTextDecoder(nn.Module):
             if bool((next_id == eos_id).all()):
                 break
         return torch.stack(tokens, dim=1)
+
+
+class StructuredFactSuffixDecoder(nn.Module):
+    """Decode only the fact suffix; identity tokens stay codec-authoritative."""
+
+    def __init__(self, embedding, codec_config, *, hidden=384):
+        super().__init__()
+        if not isinstance(codec_config, dict):
+            raise ValueError('Structured codec configuration is required')
+        required = ('memory_width', 'identity_slots', 'fact_slots',
+                    'identity_slot_width', 'fact_slot_width')
+        if any(name not in codec_config for name in required):
+            raise ValueError('Structured codec configuration is incomplete')
+        self.embedding = embedding.detach().float()
+        self.vocab_size, self.embedding_width = embedding.shape
+        self.memory_width = codec_config['memory_width']
+        self.identity_width = codec_config['identity_slots'] * codec_config['identity_slot_width']
+        self.fact_slots = codec_config['fact_slots']
+        self.fact_slot_width = codec_config['fact_slot_width']
+        self.hidden_size = hidden
+        if self.identity_width + self.fact_slots * self.fact_slot_width != self.memory_width:
+            raise ValueError('Structured codec lanes do not cover memory width')
+        self.fact_bridge = _TokenCodeBridge(self.fact_slot_width, self.embedding_width)
+        self.fact_encoder = nn.Sequential(
+            nn.Linear(self.fact_slots * self.embedding_width, hidden), nn.Tanh())
+        self.gru = nn.GRUCell(self.embedding_width, hidden)
+        self.to_embedding = nn.Linear(hidden, self.embedding_width, bias=False)
+
+    @classmethod
+    def from_checkpoint(cls, embedding, path, *, expected_source_sha256=None,
+                        expected_base_sha256=None, expected_codec=None):
+        payload = torch.load(Path(path), map_location='cpu', weights_only=True)
+        if not isinstance(payload, dict) or payload.get('format') != 'spora-structured-fact-suffix-decoder-v1':
+            raise ValueError('Unsupported fact suffix decoder checkpoint')
+        if expected_source_sha256 is not None and payload.get('source_sha256') != expected_source_sha256:
+            raise ValueError('Fact suffix decoder source checkpoint mismatch')
+        if expected_base_sha256 is not None and payload.get('base_sha256') != expected_base_sha256:
+            raise ValueError('Fact suffix decoder base model mismatch')
+        codec = payload.get('codec')
+        if expected_codec is not None and codec != expected_codec:
+            raise ValueError('Fact suffix decoder codec mismatch')
+        state = payload.get('state')
+        if not isinstance(codec, dict) or not isinstance(state, dict):
+            raise ValueError('Fact suffix decoder checkpoint is incomplete')
+        decoder = cls(embedding, codec,
+                      hidden=state['fact_encoder.0.weight'].shape[0])
+        decoder.load_state_dict(state, strict=True)
+        return decoder
+
+    def decode_fact(self, memory):
+        if (not isinstance(memory, torch.Tensor) or memory.ndim != 2
+                or memory.shape[-1] != self.memory_width or not memory.is_floating_point()
+                or not bool(torch.isfinite(memory).all())):
+            raise ValueError('Memory packet has the wrong shape or contains nonfinite values')
+        lane = memory[:, self.identity_width:].reshape(
+            memory.shape[0], self.fact_slots, self.fact_slot_width)
+        lane = F.normalize(lane, dim=-1)
+        return self.fact_encoder(self.fact_bridge(lane).reshape(memory.shape[0], -1).float())
+
+    def forward(self, memory, target_ids):
+        if (not isinstance(target_ids, torch.Tensor) or target_ids.ndim != 2
+                or target_ids.dtype != torch.long or target_ids.shape[0] != memory.shape[0]):
+            raise ValueError('Target ids must be a matching batch of long sequences')
+        hidden = self.decode_fact(memory)
+        outputs = []
+        for position in range(target_ids.shape[1]):
+            outputs.append(self.to_embedding(hidden) @ self.embedding.T)
+            if position + 1 < target_ids.shape[1]:
+                token_embedding = self.embedding.index_select(0, target_ids[:, position])
+                hidden = self.gru(token_embedding.float(), hidden)
+        return torch.stack(outputs, dim=1)
+
+    @torch.no_grad()
+    def generate(self, memory, *, eos_id, max_new_tokens=32):
+        if type(eos_id) is not int or not 0 <= eos_id < self.vocab_size:
+            raise ValueError('EOS id is outside the decoder vocabulary')
+        if type(max_new_tokens) is not int or not 1 <= max_new_tokens <= 1024:
+            raise ValueError('Invalid generation budget')
+        hidden = self.decode_fact(memory)
+        tokens = []
+        for _ in range(max_new_tokens):
+            next_id = self.to_embedding(hidden).matmul(self.embedding.T).argmax(-1)
+            tokens.append(next_id)
+            hidden = self.gru(self.embedding.index_select(0, next_id).float(), hidden)
+            if bool((next_id == eos_id).all()):
+                break
+        return torch.stack(tokens, dim=1)

@@ -14,11 +14,11 @@ import torch
 from scripts import deepseek_spora_runtime_chat as runtime
 
 
-OUTPUT = ROOT / 'runs/deepseek-spora-structured-memory-answer-audit-v2-20261113'
+OUTPUT = ROOT / 'runs/deepseek-spora-structured-memory-answer-audit-v3-20261113'
 BASELINE = ROOT / 'runs/deepseek-spora-retrained-natural-observation-transaction-20261113/working-individual.pt'
 WORKING = OUTPUT / 'working-individual.pt'
 CHECKPOINT = ROOT / 'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
-DECODER = ROOT / 'runs/deepseek-spora-structured-memory-text-decoder-20261113/candidate.pt'
+DECODER = ROOT / 'runs/deepseek-spora-structured-fact-suffix-decoder-20261113/candidate.pt'
 KEY = 16
 IDENTITY = '小赵'
 FACT = '苹果'

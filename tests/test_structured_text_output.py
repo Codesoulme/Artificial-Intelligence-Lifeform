@@ -4,10 +4,20 @@ from pathlib import Path
 
 import torch
 
-from spora.structured_text_output import StructuredMemoryTextDecoder
+from spora.structured_text_output import StructuredFactSuffixDecoder, StructuredMemoryTextDecoder
 
 
 class StructuredTextOutputTests(unittest.TestCase):
+    def test_fact_suffix_is_independent_of_identity_lane(self):
+        torch.manual_seed(8)
+        config = {'memory_width': 22, 'identity_slots': 3, 'identity_slot_width': 4,
+                  'fact_slots': 5, 'fact_slot_width': 2}
+        decoder = StructuredFactSuffixDecoder(torch.randn(32, 12), config, hidden=16)
+        memory = torch.randn(1, 22)
+        changed = memory.clone()
+        changed[:, :12] = torch.randn(1, 12)
+        torch.testing.assert_close(decoder.decode_fact(memory), decoder.decode_fact(changed))
+
     def test_forward_and_generation_shapes(self):
         torch.manual_seed(9)
         embedding = torch.randn(32, 12)
