@@ -6,6 +6,7 @@ from torch import nn
 from scripts.deepseek_spora_multirelation_train_pilot import (checkpoint_due, compare_recovery_rows,
                                                               choose_counterfactual, counterfactual_loss,
                                                               optimizer_groups, validate_domains,
+                                                              aligned_teacher_kl,
                                                               add_old_value_replay)
 
 
@@ -69,6 +70,16 @@ class CheckpointScheduleTests(unittest.TestCase):
         self.assertEqual([r['fact'] for r in replay].count('c'), 1)
         with self.assertRaisesRegex(ValueError, 'supervised'):
             add_old_value_replay([{'domain': 'x', 'fact': 'held'}], domains, 2, 2)
+
+    def test_teacher_kl_validates_shapes_and_backpropagates_student_only(self):
+        student = torch.randn(2, 5, requires_grad=True)
+        teacher = torch.randn(2, 5, requires_grad=True)
+        loss = aligned_teacher_kl(student, teacher, 2.0)
+        loss.backward()
+        self.assertIsNotNone(student.grad)
+        self.assertIsNone(teacher.grad)
+        with self.assertRaises(ValueError):
+            aligned_teacher_kl(student, torch.randn(1, 5), 2.0)
 
 
 if __name__ == '__main__':

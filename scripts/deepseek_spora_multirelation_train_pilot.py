@@ -40,6 +40,8 @@ INIT_FROM = None
 EXPECTED_INITIAL_RESULT = None
 REPLAY_FACTOR = 1
 REPLAY_OLD_COUNT = 6
+TEACHER_KL_WEIGHT = 0.0
+TEACHER_KL_TEMPERATURE = 2.0
 COUNTERFACTUAL_WEIGHT = 0.0
 BRIDGE_MODE = 'learned'
 MEMORY_ATTENTION = False
@@ -121,6 +123,17 @@ def choose_counterfactual(values, actual, cycle):
 def counterfactual_loss(own_ce, swapped_ce, margin=0.5):
     """Favor a given full answer under its matching memory over a swapped one."""
     return torch.nn.functional.softplus(margin + own_ce - swapped_ce)
+
+
+def aligned_teacher_kl(student_logits, teacher_logits, temperature):
+    if (not isinstance(student_logits, torch.Tensor) or not isinstance(teacher_logits, torch.Tensor)
+            or student_logits.shape != teacher_logits.shape or student_logits.ndim != 2
+            or isinstance(temperature, bool) or not isinstance(temperature, (int, float))
+            or not math.isfinite(temperature) or temperature <= 0):
+        raise ValueError('Invalid teacher logits')
+    teacher_prob = torch.nn.functional.softmax(teacher_logits.detach().float() / temperature, dim=-1)
+    student_log = torch.nn.functional.log_softmax(student_logits.float() / temperature, dim=-1)
+    return torch.nn.functional.kl_div(student_log, teacher_prob, reduction='batchmean') * temperature ** 2
 
 
 def optimizer_groups(params, memory_module, projection_lr, gain_lr):
@@ -296,6 +309,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
             raise ValueError('Recovery bridge mode mismatch')
         if payload.get('memory_attention', False) != MEMORY_ATTENTION:
             raise ValueError('Recovery memory attention mode mismatch')
+        if payload.get('teacher_kl_weight', 0.0) != TEACHER_KL_WEIGHT:
+            raise ValueError('Recovery teacher weight mismatch')
         if RELOAD_FROM is not None and INIT_FROM is not None and directory == RELOAD_FROM:
             if payload.get('initial_sha256') != p.sha(INIT_FROM/'recovery.pt'):
                 raise ValueError('Recovery initial checkpoint mismatch')
@@ -366,6 +381,19 @@ def run(decoder, tokenizer, spec, params, parameter_names):
         logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
                          **item['memory'], logits_to_keep=len(item['targets'])).logits[0].float()
         own_ce = torch.nn.functional.cross_entropy(logits, torch.tensor(item['targets'], device='cuda'))
+        teacher_kl = torch.zeros((), device='cuda')
+        if TEACHER_KL_WEIGHT:
+            relation = DOMAINS[item['domain']][0]
+            teacher_question = (f'以下是虚构记录：{item["person"]}{relation}{item["fact"]}。\n'
+                                f'{item["question"]}')
+            teacher_prompt = p.closed_think_inputs(tokenizer, teacher_question, 'cuda')
+            continuation = torch.tensor([item['targets'][:-1]], device='cuda')
+            teacher_ids = torch.cat((teacher_prompt['input_ids'], continuation), dim=1)
+            with torch.no_grad():
+                teacher_full = decoder(input_ids=teacher_ids,
+                    attention_mask=torch.ones_like(teacher_ids), logits_to_keep=len(item['targets'])).logits[0].float()
+            teacher_kl = aligned_teacher_kl(logits, teacher_full,
+                                            TEACHER_KL_TEMPERATURE)
         pair_loss = torch.zeros((), device='cuda')
         if COUNTERFACTUAL_WEIGHT:
             values = DOMAINS[item['domain']][2]
@@ -375,7 +403,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                                      **swapped_memory, logits_to_keep=len(item['targets'])).logits[0].float()
             swapped_ce = torch.nn.functional.cross_entropy(swapped_logits, torch.tensor(item['targets'], device='cuda'))
             pair_loss = counterfactual_loss(own_ce, swapped_ce)
-        loss = own_ce + COUNTERFACTUAL_WEIGHT * pair_loss
+        loss = own_ce + COUNTERFACTUAL_WEIGHT * pair_loss + TEACHER_KL_WEIGHT * teacher_kl
         if not bool(torch.isfinite(loss)):
             raise ValueError('Nonfinite training loss')
         loss.backward()
@@ -383,7 +411,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
         optimizer.step()
         if (step+1) % 16 == 0:
             trace.append({'step': step+1, 'loss': float(loss.detach()), 'own_ce': float(own_ce.detach()),
-                          'counterfactual_loss': float(pair_loss.detach()), 'gradient_l2': float(norm)})
+                          'counterfactual_loss': float(pair_loss.detach()), 'teacher_kl': float(teacher_kl.detach()),
+                          'gradient_l2': float(norm)})
             print(json.dumps(trace[-1]), flush=True)
         if checkpoint_due(step + 1, STEPS):
             temp, path = audit.OUT/'recovery.tmp', audit.OUT/'recovery.pt'
@@ -393,6 +422,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                             'source_sha256': p.sha(audit.SOURCE/'candidate.pt'),
                             'base_sha256': p.WEIGHT_SHA,
                             'counterfactual_weight': COUNTERFACTUAL_WEIGHT,
+                            'teacher_kl_weight': TEACHER_KL_WEIGHT,
+                            'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
                             'bridge_mode': BRIDGE_MODE,
                             'memory_attention': MEMORY_ATTENTION,
                             'memory_projection_lr': MEMORY_PROJECTION_LR, 'memory_gain_lr': MEMORY_GAIN_LR,
@@ -414,6 +445,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
     result = {'before': before, 'after': after, 'before_summary': summary(before),
               'after_summary': summary(after), 'off_tokens_unchanged': True, 'trace': trace,
               'steps': STEPS, 'train_cases': len(train), 'counterfactual_weight': COUNTERFACTUAL_WEIGHT,
+              'teacher_kl_weight': TEACHER_KL_WEIGHT, 'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
               'bridge_mode': BRIDGE_MODE,
               'memory_attention': MEMORY_ATTENTION,
               'memory_projection_lr': MEMORY_PROJECTION_LR, 'memory_gain_lr': MEMORY_GAIN_LR,
