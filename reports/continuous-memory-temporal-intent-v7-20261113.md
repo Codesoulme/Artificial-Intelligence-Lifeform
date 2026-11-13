@@ -17,6 +17,8 @@
 
 v7 剩余失败为实体跨度或意图置信度不足，未出现新的负例误接受。
 
+随后把 `deepseek-spora-boundary-train-pilot-20261112/locator.pt` 仅在内存中替换进行对照，结果仍为正例路由 `15/18`、正例答案 `15/18`、负例拒绝 `11/11`。它没有改善这组剩余失败，因此没有提升为默认 locator。
+
 ## 判定
 
 v7 已替换为默认读取意图头。该结果仍是人工编写、单实体、有限饮料词表的研究评测，不能推导开放领域中文聊天能力。
@@ -27,3 +29,4 @@ v7 已替换为默认读取意图头。该结果仍是人工编写、单实体�
 - `runs/deepseek-spora-runtime-temporal-generalization-audit-v7-20261113.json`
 - `scripts/deepseek_spora_runtime_temporal_generalization_audit.py`
 - `scripts/deepseek_spora_runtime_temporal_generalization_audit_v7.py`
+- `scripts/deepseek_spora_runtime_temporal_generalization_audit_boundary.py`
