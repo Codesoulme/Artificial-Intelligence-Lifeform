@@ -5,7 +5,7 @@ from types import SimpleNamespace
 from torch import nn
 from scripts.deepseek_spora_multirelation_train_pilot import (checkpoint_due, compare_recovery_rows,
                                                               choose_counterfactual, counterfactual_loss,
-                                                              optimizer_groups)
+                                                              optimizer_groups, validate_domains)
 
 
 class CheckpointScheduleTests(unittest.TestCase):
@@ -51,6 +51,13 @@ class CheckpointScheduleTests(unittest.TestCase):
         self.assertIs(groups[2]['params'][0], module.gain)
         with self.assertRaises(ValueError):
             optimizer_groups(params, module, -1, 0.001)
+
+    def test_training_and_held_values_must_not_overlap(self):
+        valid = {'x': ('r', ('{name} one', '{name} two'), ('a', 'b'), ('c',))}
+        validate_domains(valid)
+        invalid = {'x': ('r', ('{name} one', '{name} two'), ('a', 'b'), ('b',))}
+        with self.assertRaisesRegex(ValueError, 'overlapping'):
+            validate_domains(invalid)
 
 
 if __name__ == '__main__':

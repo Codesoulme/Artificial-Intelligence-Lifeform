@@ -34,6 +34,8 @@ STEPS = 144
 HELD_VALUE_Q = 1
 EVAL_ALTERNATIVE_QUESTION = False
 EVAL_NOVEL_QUESTION = False
+EVAL_SEEN_COUNT = None
+CROSS_EVALUATION = False
 COUNTERFACTUAL_WEIGHT = 0.0
 BRIDGE_MODE = 'learned'
 MEMORY_ATTENTION = False
@@ -49,6 +51,24 @@ def checkpoint_due(completed, total, interval=32):
             or not 1 <= completed <= total or interval < 1):
         raise ValueError('Invalid checkpoint schedule')
     return completed % interval == 0 or completed == total
+
+
+def validate_domains(domains):
+    if not isinstance(domains, dict) or not domains:
+        raise ValueError('Domains must be a nonempty mapping')
+    for entry in domains.values():
+        if not isinstance(entry, (tuple, list)) or len(entry) != 4:
+            raise ValueError('Invalid domain entry')
+        relation, questions, train, held = entry
+        if (not isinstance(relation, str) or not relation
+                or not isinstance(questions, (tuple, list)) or len(questions) < 2
+                or any(not isinstance(q, str) or '{name}' not in q for q in questions)
+                or not isinstance(train, (tuple, list)) or not isinstance(held, (tuple, list))
+                or len(train) < 2 or not held
+                or any(not isinstance(value, str) or not value for value in (*train, *held))
+                or len(set(train)) != len(train) or len(set(held)) != len(held)
+                or set(train) & set(held)):
+            raise ValueError('Invalid or overlapping domain split')
 
 
 def compare_recovery_rows(restored, previous, recovery_step, comparison_step):
@@ -156,6 +176,7 @@ def observe(*, decoder, tokenizer, spec, cross_modules, group, name, expected, q
 def run(decoder, tokenizer, spec, params, parameter_names):
     torch.manual_seed(83961)
     rng = random.Random(83961)
+    validate_domains(DOMAINS)
     embedding = decoder.base.model.embed_tokens.weight.detach()
     codec = ContinuousTextCodec(embedding.cpu(), memory_width=90, slot_count=5,
                                 seed=29071, eos_token_id=tokenizer.eos_token_id).to('cuda')
@@ -208,8 +229,11 @@ def run(decoder, tokenizer, spec, params, parameter_names):
              for domain, (_, _, values, _) in DOMAINS.items() for value in values for q in (0, 1)]
     checks = []
     for domain, (_, _, values, held) in DOMAINS.items():
-        checks += [('train_person', case(NAMES[0], domain, value)) for value in values]
-        checks += [('held_person', case(HELD_NAME, domain, value)) for value in values]
+        if EVAL_SEEN_COUNT is not None and (type(EVAL_SEEN_COUNT) is not int or not 1 <= EVAL_SEEN_COUNT <= len(values)):
+            raise ValueError('Invalid supervised evaluation count')
+        selected = values if EVAL_SEEN_COUNT is None else values[:EVAL_SEEN_COUNT]
+        checks += [('train_person', case(NAMES[0], domain, value)) for value in selected]
+        checks += [('held_person', case(HELD_NAME, domain, value)) for value in selected]
         checks += [('held_value', case(HELD_NAME, domain, value, HELD_VALUE_Q)) for value in held]
         if EVAL_ALTERNATIVE_QUESTION:
             checks += [('held_value_alt_question', case(HELD_NAME, domain, value, 1)) for value in held]
@@ -260,6 +284,14 @@ def run(decoder, tokenizer, spec, params, parameter_names):
         previous = json.loads((RELOAD_FROM/'multirelation-training-result.json').read_text(encoding='utf-8'))['after']
         original_groups = {'train_person', 'held_person', 'held_value', 'held_value_alt_question'}
         comparable_rows = [row for row in restored if row['group'] in original_groups]
+        if CROSS_EVALUATION:
+            fields = ('group', 'person', 'domain', 'fact', 'question')
+            prior_keys = {tuple(row[field] for field in fields) for row in previous}
+            comparable_rows = [row for row in comparable_rows if tuple(row[field] for field in fields) in prior_keys]
+            current_keys = {tuple(row[field] for field in fields) for row in comparable_rows}
+            previous = [row for row in previous if tuple(row[field] for field in fields) in current_keys]
+            if not comparable_rows:
+                raise ValueError('Cross evaluation has no shared reference cases')
         comparison = compare_recovery_rows(comparable_rows, previous, payload['step'], STEPS)
         ablation = None
         if EVAL_ATTENTION_ABLATION:
@@ -275,7 +307,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
         (audit.OUT/'reload-result.json').write_text(json.dumps(
             {'recovery_step': payload['step'], 'comparison_step': STEPS,
              **comparison, 'total_evaluated_cases': len(restored),
-             'rows': restored, 'attention_ablation': ablation},
+             'cross_evaluation': CROSS_EVALUATION, 'rows': restored, 'attention_ablation': ablation},
             ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
         print(json.dumps({'recovery_step': payload['step'], 'comparison_step': STEPS,
                           **comparison}), flush=True)
