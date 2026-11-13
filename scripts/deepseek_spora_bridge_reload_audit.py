@@ -27,6 +27,7 @@ EXTRA_ONLY = False
 VERIFY_CODEC_READS = False
 PARITY_VALUE_INDICES = None
 MIX_ABLATION = False
+CROSS_ABLATION = False
 
 
 def correct_answer(answer, name, value):
@@ -108,6 +109,19 @@ def main():
         with torch.no_grad():
             adapter.gate.copy_(old['gate'])
         attention.o_proj = adapter
+        cross_payload = payload.get('cross_adapters', ())
+        cross_modules = []
+        for old_cross in cross_payload:
+            index = old_cross['layer']
+            if old_cross['projection'] != 'o_proj' or index == 20:
+                raise ValueError('Unexpected cross-attention location')
+            target_attention = decoder.base.model.layers[index].self_attn
+            cross = s.MemorySlotCrossAttention(target_attention.o_proj, decoder._memory_context,
+                                                model.config.memory_width, codec, embedding, 4,
+                                                old_cross['width'])
+            cross.load_memory_state(old_cross['state'])
+            target_attention.o_proj = cross
+            cross_modules.append(cross)
         final_payload = payload.get('final_adapters', ())
         if final_payload:
             if len(final_payload) != 1:
@@ -170,6 +184,18 @@ def main():
                 finally:
                     with torch.no_grad():
                         bridge.mix.copy_(saved_mix)
+            cross_ablated = None
+            if CROSS_ABLATION:
+                if not cross_modules:
+                    raise ValueError('Cross ablation requires memory cross-attention')
+                original_enabled = [module.enabled for module in cross_modules]
+                try:
+                    for module in cross_modules:
+                        module.enabled = False
+                    cross_ablated = generate(template.format(name=NAMES[key]), spec)
+                finally:
+                    for module, enabled in zip(cross_modules, original_enabled):
+                        module.enabled = enabled
             if p.frozen_digest(model, state) != digest:
                 raise ValueError('Evaluation mutated the memory state')
             row = dict(group=group, key=key, name=NAMES[key], expected=s.WORDS[value],
@@ -179,6 +205,9 @@ def main():
             if ablated is not None:
                 row.update(zero_mix_answer=ablated[0], zero_mix_token_ids=ablated[1],
                            zero_mix_fact_correct=correct_answer(ablated[0], NAMES[key], s.WORDS[value]))
+            if cross_ablated is not None:
+                row.update(cross_off_answer=cross_ablated[0], cross_off_token_ids=cross_ablated[1],
+                           cross_off_fact_correct=correct_answer(cross_ablated[0], NAMES[key], s.WORDS[value]))
             rows.append(row)
             with (OUT / 'rows.jsonl').open('a', encoding='utf-8') as stream:
                 stream.write(json.dumps(row, ensure_ascii=False) + '\n')
@@ -242,7 +271,7 @@ def main():
     result = dict(summary=dict(summary), rows=rows, source_candidate_sha256=protected[SOURCE / 'candidate.pt'],
                   codec_contract={'slot_count': 5, 'seed': 29071, 'full_fact': True, 'identity': True},
                   parity_verified=len(parity_values), extra_words=list(EXTRA_WORDS), extra_keys=list(EXTRA_KEYS),
-                  codec_reads_checked=VERIFY_CODEC_READS, mix_ablation=MIX_ABLATION,
+                  codec_reads_checked=VERIFY_CODEC_READS, mix_ablation=MIX_ABLATION, cross_ablation=CROSS_ABLATION,
                   ordinary_off_tokens_match=True, source_files_unchanged=True,
                   seconds=time.perf_counter() - started, peak_allocated_bytes=torch.cuda.max_memory_allocated(),
                   limitations=['Numeric addressing and controlled writes, no natural write routing.',

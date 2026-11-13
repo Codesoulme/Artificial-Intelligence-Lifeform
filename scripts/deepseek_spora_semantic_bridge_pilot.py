@@ -55,6 +55,9 @@ BRIDGE_RETRIEVAL_RESIDUAL = False
 BRIDGE_MIX_LR = 2e-4
 TEACHER_KL_WEIGHT = 0.0
 TEACHER_KL_TEMPERATURE = 2.0
+CROSS_ATTENTION_MEMORY = False
+CROSS_ATTENTION_LAYER = 23
+CROSS_ATTENTION_WIDTH = 64
 LANGUAGE_LR = 1e-4
 QUERY_INTENT_GATE = False
 QUERY_SCALAR_GATE = False
@@ -278,6 +281,83 @@ class MemoryResidualOutput(p.torch.nn.Module):
                 self.query_intent_scales)).sum(-1)
             strength = strength * intent_scale.reshape(-1, 1, 1)
         return output + strength.to(output.dtype) * residual.to(output.dtype)
+
+
+class MemorySlotCrossAttention(p.torch.nn.Module):
+    """Query-dependent residual attention over retrieved internal memory slots.
+
+    Each slot uses an explicit nearest-vocabulary embedding as a research
+    control. No answer token or user-prompt text is supplied by this module.
+    """
+    def __init__(self, base, memory_context, memory_width, codec, embedding, slots, width=64):
+        super().__init__()
+        torch = p.torch
+        if (not isinstance(base, torch.nn.Linear) or type(slots) is not int or not 1 <= slots <= codec.slot_count
+                or type(width) is not int or width <= 0 or memory_width != codec.memory_width):
+            raise ValueError('Invalid memory cross-attention configuration')
+        self.base = base
+        self.base.requires_grad_(False)
+        object.__setattr__(self, 'memory_context', memory_context)
+        self.enabled = True
+        self.memory_width, self.slot_width, self.slots, self.width = memory_width, codec.slot_width, slots, width
+        self.register_buffer('lookup_codes', codec.codebook.detach(), persistent=False)
+        self.register_buffer('lookup_embeddings', embedding.detach(), persistent=False)
+        self.query = torch.nn.Linear(base.in_features, width, bias=False, device=base.weight.device, dtype=torch.float32)
+        self.key = torch.nn.Linear(embedding.shape[1], width, bias=False, device=base.weight.device, dtype=torch.float32)
+        self.value = torch.nn.Linear(embedding.shape[1], width, bias=False, device=base.weight.device, dtype=torch.float32)
+        self.out = torch.nn.Linear(width, base.out_features, bias=False, device=base.weight.device, dtype=torch.float32)
+        torch.nn.init.zeros_(self.out.weight)
+        self.gate = torch.nn.Parameter(torch.tensor(-1.0, device=base.weight.device))
+
+    def memory_state(self):
+        return {name: {k: v.detach().cpu().clone() for k, v in getattr(self, name).state_dict().items()}
+                for name in ('query', 'key', 'value', 'out')} | {'gate': self.gate.detach().cpu().clone()}
+
+    def load_memory_state(self, state):
+        if not isinstance(state, dict) or set(state) != {'query', 'key', 'value', 'out', 'gate'}:
+            raise ValueError('Invalid memory cross-attention state')
+        for name in ('query', 'key', 'value', 'out'):
+            getattr(self, name).load_state_dict(state[name], strict=True)
+        with p.torch.no_grad():
+            self.gate.copy_(state['gate'])
+
+    def forward(self, x):
+        torch = p.torch
+        output = self.base(x)
+        if not self.enabled:
+            return output
+        active = self.memory_context.get()
+        if active is None:
+            return output
+        matrices, addresses, mask, slots = active
+        if mask is not None and (mask.numel() != 1 or not bool(mask[0])):
+            return output
+        if (x.ndim != 3 or x.shape[0] != 1 or addresses is None or len(addresses) != 2
+                or len(matrices) != 2 or slots is None or slots.numel() != 1 or int(slots[0]) != 0):
+            raise ValueError('Cross-attention requires a single current-memory address')
+        reads = []
+        for site in range(2):
+            address, matrix = addresses[site], matrices[site][0]
+            if address.shape != (1, self.memory_width) or matrix.shape != (1, self.memory_width, self.memory_width):
+                raise ValueError('Invalid memory cross-attention state')
+            query = torch.nn.functional.normalize(address.to(device=x.device, dtype=torch.float32), dim=-1)
+            reads.append(torch.bmm(matrix.to(device=x.device, dtype=torch.float32), query.unsqueeze(-1)).squeeze(-1))
+        packed = ((reads[0] + reads[1]) * .5)[:, :self.slots * self.slot_width]
+        codes = packed.reshape(1, self.slots, self.slot_width)
+        with torch.no_grad():
+            valid = codes.norm(dim=-1) > 1e-5
+            if not bool(valid.any()):
+                return output
+            normalized = torch.nn.functional.normalize(codes.reshape(-1, self.slot_width).float(), dim=-1)
+            indices = (normalized @ self.lookup_codes.float().T).argmax(-1)
+            memory = self.lookup_embeddings.index_select(0, indices).float().reshape(1, self.slots, -1)
+            memory = torch.nn.functional.normalize(memory, dim=-1)
+        query = self.query(x.float())
+        keys, values = self.key(memory), self.value(memory)
+        logits = torch.matmul(query, keys.transpose(-1, -2)) / (self.width ** .5)
+        weights = torch.softmax(logits.masked_fill(~valid[:, None, :], float('-inf')), dim=-1)
+        residual = self.out(torch.matmul(weights, values)) * torch.sigmoid(self.gate)
+        return output + residual.to(output.dtype)
 
 
 class MemoryFinalHiddenResidual(p.torch.nn.Module):
@@ -620,6 +700,22 @@ def main():
                     adapter.proj.load_state_dict(old['proj'], strict=True)
                     adapter.out.load_state_dict(old['out'], strict=True)
 
+        cross_adapters = []
+        if CROSS_ATTENTION_MEMORY:
+            attention = decoder.base.model.layers[CROSS_ATTENTION_LAYER].self_attn
+            cross = MemorySlotCrossAttention(attention.o_proj, decoder._memory_context,
+                                              model.config.memory_width, codec, embedding,
+                                              BRIDGE_CONDITION_SLOTS, CROSS_ATTENTION_WIDTH)
+            attention.o_proj = cross
+            cross_adapters.append((CROSS_ATTENTION_LAYER, 'o_proj', cross))
+            saved_cross = candidate.get('cross_adapters', ())
+            if saved_cross:
+                if len(saved_cross) != 1 or saved_cross[0]['layer'] != CROSS_ATTENTION_LAYER:
+                    raise ValueError('Starting cross-attention layout mismatch')
+                cross.load_memory_state(saved_cross[0]['state'])
+        elif candidate.get('cross_adapters'):
+            raise ValueError('Starting checkpoint requires cross-attention')
+
         def state_for_assignments(assignments):
             state = p.fresh_controlled_state(model)
             fast, velocity = model.initial_state(1)
@@ -835,6 +931,9 @@ def main():
         params += [param for _, _, adapter in logit_adapters
                    for param in (list(adapter.proj.parameters()) + list(adapter.out.parameters())
                                  + [adapter.condition, adapter.scale])]
+        params += [param for _, _, adapter in cross_adapters
+                   for param in (list(adapter.query.parameters()) + list(adapter.key.parameters())
+                                 + list(adapter.value.parameters()) + list(adapter.out.parameters()) + [adapter.gate])]
         optimizer_groups, params = bridge_optimizer_groups(
             params, bridge, TRAIN_BRIDGE, BRIDGE_LANGUAGE_LR,
             BRIDGE_MIX_LR if TRAIN_BRIDGE and BRIDGE_RETRIEVAL_RESIDUAL else None)
@@ -924,6 +1023,8 @@ def main():
                                      'to_hidden': {k: v.detach().cpu().clone() for k, v in adapter.to_hidden.state_dict().items()},
                                      'gate': adapter.gate.detach().cpu().clone()}
                                     for index, name, adapter in direct_adapters],
+                'cross_adapters': [{'layer': index, 'projection': name, 'width': adapter.width,
+                                    'state': adapter.memory_state()} for index, name, adapter in cross_adapters],
                 'final_adapters': [], 'logit_adapters': [],
                 'source_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA,
                 'start_candidate_sha256': teacher_sha, 'language_steps': LANGUAGE_STEPS,
@@ -975,6 +1076,8 @@ def main():
                         'out': {key: value.detach().cpu().clone()
                                 for key, value in adapter.out.state_dict().items()}}
                        for location, name, adapter in logit_adapters]
+        cross_state = [{'layer': index, 'projection': name, 'width': adapter.width,
+                        'state': adapter.memory_state()} for index, name, adapter in cross_adapters]
         bridge_state = {k: v.detach().cpu().clone() for k, v in bridge.state_dict().items()}
         codec_state = {k: v.detach().cpu().clone() for k, v in codec.state_dict().items()}
         bridge.eval()
@@ -1003,12 +1106,15 @@ def main():
                          'direct_residual': DIRECT_RESIDUAL, 'direct_residual_layer': DIRECT_RESIDUAL_LAYER,
                          'final_residual': FINAL_RESIDUAL,
                          'logit_residual': LOGIT_RESIDUAL,
+                         'cross_attention_memory': CROSS_ATTENTION_MEMORY,
+                         'cross_attention_layer': CROSS_ATTENTION_LAYER if CROSS_ATTENTION_MEMORY else None,
                          'slow_signal_disabled': True, 'words': list(WORDS),
                          'reader_layer_indices': list(decoder.layer_indices)}
     torch.save({'reader': reader_state, 'bridge': bridge_state, 'adapters': adapter_state,
                 'format': 'spora-semantic-bridge-research-v2', 'codec_state': codec_state,
                 'experiment_config': experiment_config,
                 'direct_adapters': direct_state,
+                'cross_adapters': cross_state,
                 'final_adapters': final_state,
                 'logit_adapters': logit_state,
                 'source_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA, 'research_only': True,
