@@ -44,6 +44,7 @@ DIRECT_RESIDUAL = False
 DIRECT_RESIDUAL_LAYER = 20
 STRICT_SWAP_EVAL = False
 START_CANDIDATE = None
+RECOVERY_FILE = None
 LANGUAGE_LR = 1e-4
 QUERY_INTENT_GATE = False
 QUERY_SCALAR_GATE = False
@@ -352,6 +353,22 @@ def torch_mean(left, right):
     return (left + right) * 0.5
 
 
+def multi_entity_assignments(target_key, value, value_count, keys=(0, 1, 2)):
+    """Bind the supervised value to the requested address, with distractors."""
+    if (type(target_key) is not int or target_key not in keys or type(value) is not int
+            or type(value_count) is not int or value_count < 1 or not 0 <= value < value_count
+            or len(set(keys)) != len(keys)):
+        raise ValueError('Invalid multi-entity assignment')
+    return tuple((key, (value + key - target_key) % value_count) for key in keys)
+
+
+def replace_assignment(assignments, target_key, new_value):
+    """Create a counterfactual by changing only the queried memory address."""
+    if sum(key == target_key for key, _ in assignments) != 1:
+        raise ValueError('Counterfactual requires exactly one target address')
+    return tuple((key, new_value if key == target_key else value) for key, value in assignments)
+
+
 def main():
     if OUT.exists():
         raise FileExistsError(OUT)
@@ -544,7 +561,7 @@ def main():
                     for question in range(len(questions))]
         held_questions = questions if TRAIN_EXTRA_QUESTIONS else (questions[0],)
         schedule += [('held_name', 3, value, question)
-                     for value in range(18) for question in range(len(held_questions))]
+                     for value in range(len(WORDS)) for question in range(len(held_questions))]
         for group, key, value, question_index in schedule:
             question_template = questions[question_index]
             intent_label = question_intents[question_index]
@@ -589,7 +606,7 @@ def main():
             for target_key in (0, 1, 2):
                 name = ('小林', '小周', '小王')[target_key]
                 for value in range(TRAIN_VALUE_COUNT):
-                    assignments = tuple((key, (value + key) % TRAIN_VALUE_COUNT) for key in (0, 1, 2))
+                    assignments = multi_entity_assignments(target_key, value, TRAIN_VALUE_COUNT)
                     state = state_for_assignments(assignments)
                     for question_index, question_template in enumerate(questions):
                         question = question_template.format(name=name)
@@ -603,7 +620,7 @@ def main():
                         cases.append({'group': 'train_multi', 'key': target_key, 'value': value, 'name': name,
                                       'question': question, 'state': state, 'prompt': prompt, 'ids': ids,
                                       'spec': spec, 'value_position': value_position,
-                                      'intent_label': question_intents[question_index],
+                                      'intent_label': question_intents[question_index], 'assignments': assignments,
                                       'digest': p.frozen_digest(model, state)})
             held_name = '小赵'
             for value in range(len(WORDS)):
@@ -716,7 +733,11 @@ def main():
                 other_value = (item['value'] + 1 + rng.randrange(TRAIN_VALUE_COUNT - 1)) % TRAIN_VALUE_COUNT
             else:
                 other_value = (item['value'] + 1 + rng.randrange(len(WORDS) - 1)) % len(WORDS)
-            other_spec = p._memory_args(model, states[item['key'], other_value],
+            if item['group'] == 'train_multi':
+                swap_state = state_for_assignments(replace_assignment(item['assignments'], item['key'], other_value))
+            else:
+                swap_state = states[item['key'], other_value]
+            other_spec = p._memory_args(model, swap_state,
                                         {'key': item['key'], 'intent': 'current', 'event_time': 0})
             other_logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
                                    **other_spec).logits[:, prefix - 1 + item['value_position'], :].float()
@@ -747,6 +768,40 @@ def main():
             if step % 64 == 0:
                 print(json.dumps(trace[-1] if trace and trace[-1]['step'] == step + 1 else {'step': step + 1,
                     'loss': float(loss.detach())}), flush=True)
+        if RECOVERY_FILE is not None:
+            import os
+            recovery_path = p.Path(RECOVERY_FILE)
+            partial_path = recovery_path.with_name(recovery_path.name + '.partial')
+            if recovery_path.exists() or partial_path.exists():
+                raise FileExistsError(recovery_path)
+            recovery = {
+                'format': 'spora-semantic-bridge-research-v2', 'research_only': True,
+                'reader': {k: v.detach().cpu().clone() for k, v in decoder.reader.state_dict().items()},
+                'bridge': {k: v.detach().cpu().clone() for k, v in bridge.state_dict().items()},
+                'codec_state': {k: v.detach().cpu().clone() for k, v in codec.state_dict().items()},
+                'codec_config': codec.config_dict(),
+                'adapters': [{'layer': index, 'projection': name, 'a': adapter.a.detach().cpu().clone(),
+                              'b': adapter.b.detach().cpu().clone(),
+                              'condition': adapter.condition.detach().cpu().clone()}
+                             for index, name, adapter in adapters],
+                'direct_adapters': [{'layer': index, 'projection': name,
+                                     'to_hidden': {k: v.detach().cpu().clone() for k, v in adapter.to_hidden.state_dict().items()},
+                                     'gate': adapter.gate.detach().cpu().clone()}
+                                    for index, name, adapter in direct_adapters],
+                'final_adapters': [], 'logit_adapters': [],
+                'source_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA,
+                'start_candidate_sha256': teacher_sha, 'language_steps': LANGUAGE_STEPS,
+                'words': list(WORDS), 'train_value_count': TRAIN_VALUE_COUNT,
+                'notice': 'Training recovery only; post-training evaluation was not completed at save time.',
+            }
+            if final_adapters or logit_adapters or QUERY_INTENT_GATE or QUERY_SCALAR_GATE:
+                raise ValueError('Recovery format does not support these optional adapters')
+            with partial_path.open('xb') as stream:
+                torch.save(recovery, stream)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(partial_path, recovery_path)
+            print(json.dumps({'recovery_saved': str(recovery_path), 'steps': LANGUAGE_STEPS}), flush=True)
         after = evaluate()
         if p.frozen_digest(model, chat.state) != original_digest or p.frozen_digest(model, empty) != empty_digest:
             raise ValueError('Protected state changed')
