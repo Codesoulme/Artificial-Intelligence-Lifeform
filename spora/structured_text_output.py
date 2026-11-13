@@ -11,6 +11,16 @@ from torch import nn
 from torch.nn import functional as F
 
 
+def contains_fact_tokens(output_ids, fact_ids):
+    """Check exact contiguous token inclusion; not a semantic correctness test."""
+    if not isinstance(output_ids, (list, tuple)) or not isinstance(fact_ids, (list, tuple)):
+        raise ValueError('Token sequences are required')
+    if not fact_ids or any(type(x) is not int for x in (*output_ids, *fact_ids)):
+        raise ValueError('Nonempty integer fact tokens are required')
+    return any(list(output_ids[i:i + len(fact_ids)]) == list(fact_ids)
+               for i in range(len(output_ids) - len(fact_ids) + 1))
+
+
 class _TokenCodeBridge(nn.Module):
     def __init__(self, slot_width, embedding_width):
         super().__init__()

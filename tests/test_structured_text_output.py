@@ -4,10 +4,18 @@ from pathlib import Path
 
 import torch
 
-from spora.structured_text_output import StructuredFactSuffixDecoder, StructuredMemoryTextDecoder
+from spora.structured_text_output import (StructuredFactSuffixDecoder, StructuredMemoryTextDecoder,
+                                          contains_fact_tokens)
 
 
 class StructuredTextOutputTests(unittest.TestCase):
+    def test_fact_token_check_rejects_substitution_and_partial_match(self):
+        self.assertTrue(contains_fact_tokens([9, 2, 3, 8], [2, 3]))
+        self.assertFalse(contains_fact_tokens([9, 2, 4, 8], [2, 3]))
+        self.assertFalse(contains_fact_tokens([2], [2, 3]))
+        with self.assertRaises(ValueError):
+            contains_fact_tokens([1], [])
+
     def test_fact_suffix_is_independent_of_identity_lane(self):
         torch.manual_seed(8)
         config = {'memory_width': 22, 'identity_slots': 3, 'identity_slot_width': 4,

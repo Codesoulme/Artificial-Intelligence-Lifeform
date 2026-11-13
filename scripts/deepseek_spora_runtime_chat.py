@@ -49,7 +49,8 @@ from spora.durable import RevisionConflict
 from spora.natural_write_heads import load_natural_write_heads
 from spora.structured_text_memory import (StructuredTextMemoryCodec, StructuredTextMemoryState,
                                           StructuredTextWriteGate)
-from spora.structured_text_output import StructuredFactSuffixDecoder, StructuredMemoryTextDecoder
+from spora.structured_text_output import (StructuredFactSuffixDecoder, StructuredMemoryTextDecoder,
+                                          contains_fact_tokens)
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 WORKING_CHECKPOINT = ROOT/'runs/spora-runtime-individual/individual.pt'
@@ -244,7 +245,14 @@ class SporaChat:
             packet = record.packet.to(device=device, dtype=torch.float32).unsqueeze(0)
             suffix_ids = decoder.generate(packet, eos_id=self.tokenizer.eos_token_id,
                                           max_new_tokens=max_new_tokens)[0].tolist()
-            identity_ids = codec.decode(record.packet, record.metadata)['identity']['token_ids']
+            decoded = codec.decode(record.packet, record.metadata)
+            identity_ids = decoded['identity']['token_ids']
+            fact_ids = decoded['fact']['token_ids']
+            # A token-subsequence check can catch observed substitutions; it is
+            # not proof that the generated relation or identity is correct.
+            if not contains_fact_tokens(suffix_ids, fact_ids):
+                return {'accepted': False, 'reason': 'generated_fact_mismatch',
+                        'revision': record.revision}
             token_ids = identity_ids + suffix_ids
         else:
             decoder = StructuredMemoryTextDecoder.from_checkpoint(
