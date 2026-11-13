@@ -5,6 +5,7 @@ import torch
 
 from scripts.deepseek_spora_joint_span_pilot import JointSpan, selected_text, token_span
 from scripts.deepseek_spora_joint_span_crossed_pilot import build_records, TRAIN_TEMPLATES
+from scripts.deepseek_spora_joint_span_diverse_pilot import build_records as build_diverse, UNSEEN_SUFFIXES
 
 
 class JointSpanPilotTests(unittest.TestCase):
@@ -41,6 +42,18 @@ class JointSpanPilotTests(unittest.TestCase):
                 self.assertIn(template.format(name=subject), questions)
         self.assertFalse(questions & {r['question'] for r in evaluation})
         self.assertEqual(sum(r['group'] == 'suffix_unseen_unseen' for r in evaluation), 20)
+
+    def test_diverse_data_reserves_new_suffixes_and_dialogue(self):
+        prior_eval = [{'group': 'known_unseen', 'reference': f'乙{i:02}'} for i in range(20)]
+        with patch('scripts.deepseek_spora_joint_span_diverse_pilot.crossed_records',
+                   return_value=([], prior_eval, 2)), patch(
+                   'scripts.deepseek_spora_joint_span_diverse_pilot.extract_names',
+                   side_effect=[{'甲00', '甲01'}, set()]):
+            train, evaluation, _ = build_diverse([{'text': 'train'}], [{'text': 'validation'}])
+        subjects = [row['subject'] for row in train if row['subject'] is not None]
+        self.assertFalse(any(subject.endswith(UNSEEN_SUFFIXES) for subject in subjects))
+        self.assertEqual(sum(row['group'] == 'suffix_lan_new_wording' for row in evaluation), 20)
+        self.assertEqual(sum(row['group'] == 'multiple_new_wording' for row in evaluation), 8)
 
 
 if __name__ == '__main__':
