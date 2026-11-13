@@ -52,11 +52,19 @@ CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/indi
 WORKING_CHECKPOINT = ROOT/'runs/spora-runtime-individual/individual.pt'
 TEMPORAL = ROOT/'runs/deepseek-spora-temporal-gate-train-20261111/temporal.pt'
 READ_INTENT_RECOVERY_FLOOR = 2.0
-INTENT = ROOT/'runs/deepseek-spora-read-intent-gate-v4-20261111'
+INTENT = ROOT/'runs/deepseek-spora-read-intent-gate-v7-20261112'
 ENTITY = ROOT/'runs/deepseek-spora-single-entity-gate-v2-20261111'
 MEMORY_DOMAIN_ANCHORS = ('饮品', '饮料', '喝', '饮用')
-PAST_TIME_MARKERS = ('以前', '过去', '原来', '原先', '之前', '曾经', '历史', '变更以前', '更正之前', '先前')
-LATER_TIME_MARKERS = ('后来', '之后', '以后', '更新后', '变更以后', '后续', '修改完成后', '将来')
+PAST_TIME_MARKERS = (
+    '以前', '过去', '原来', '原先', '之前', '曾经', '历史', '先前',
+    '早先', '较早', '最初', '早期', '改口以前', '变更前', '更正前',
+    '修改前', '更改前', '变动前', '变更以前', '更正之前',
+)
+CURRENT_TIME_MARKERS = ('现在', '目前', '当下', '此刻', '眼下', '当前', '最新')
+LATER_TIME_MARKERS = (
+    '后来', '之后', '以后', '更新后', '变更以后', '后续', '修改完成后', '将来',
+    '后来的', '更新完成后', '更正以后', '再往后', '再往后的',
+)
 
 
 def constrain_temporal_intent(question, predicted):
@@ -71,6 +79,8 @@ def constrain_temporal_intent(question, predicted):
         return 1
     if has_later:
         return 2
+    if any(marker in question for marker in CURRENT_TIME_MARKERS):
+        return 0
     if predicted in (1, 2):
         return 0
     return predicted

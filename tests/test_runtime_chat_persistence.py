@@ -19,6 +19,14 @@ class RuntimeChatPersistenceTests(unittest.TestCase):
         self.assertEqual(chat_module.constrain_temporal_intent('小梅更新后喜欢什么饮料？', 0), 2)
         self.assertEqual(chat_module.constrain_temporal_intent('小梅以前喜欢，后来改成什么？', 0), 3)
 
+    def test_temporal_constraint_covers_common_change_boundary_phrasings(self):
+        for question in ('小梅改口以前喜欢什么？', '小梅较早的时候喜欢什么？', '小梅变更前喜欢什么？'):
+            self.assertEqual(chat_module.constrain_temporal_intent(question, 3), 1)
+        for question in ('小梅更新完成后喜欢什么？', '小梅后来的记录是什么？', '小梅再往后的记录是什么？'):
+            self.assertEqual(chat_module.constrain_temporal_intent(question, 3), 2)
+        for question in ('小梅目前喜欢什么？', '小梅当下喜欢什么？', '小梅最新的记录是什么？'):
+            self.assertEqual(chat_module.constrain_temporal_intent(question, 3), 0)
+
     def make_resolution_chat(self):
         chat = object.__new__(chat_module.SporaChat)
         chat.organism = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=64,
