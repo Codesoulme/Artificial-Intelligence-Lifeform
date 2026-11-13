@@ -66,6 +66,18 @@ class IdentityReadGuardTests(unittest.TestCase):
         different[5] = True
         with patch('scripts.deepseek_learned_name_span.single_span_mask', return_value=(different, True)):
             self.assertFalse(guard.authorize_features(question, selected, 1, features, masks))
+
+    def test_consensus_cannot_detect_shared_truncation(self):
+        question = '小林月喜欢喝什么？'
+        truncated = self.mask(question, 0, 2)
+        head = nn.Linear(4, 1)
+        guard = ConsensusIdentityReadGuard(self.fingerprints, CharacterTokenizer(), head.state_dict(), .5)
+        features = torch.zeros(1, 2, len(truncated), 2)
+        masks = torch.ones(1, len(truncated), dtype=torch.bool)
+        # This counterexample explicitly records that agreement is not proof
+        # of full name boundaries or identity authorization.
+        with patch('scripts.deepseek_learned_name_span.single_span_mask', return_value=(truncated.clone(), True)):
+            self.assertTrue(guard.authorize_features(question, truncated, 1, features, masks))
     def test_runtime_rejection_precedes_memory_access(self):
         chat = object.__new__(runtime.SporaChat)
         chat.base, chat.tokenizer = None, None

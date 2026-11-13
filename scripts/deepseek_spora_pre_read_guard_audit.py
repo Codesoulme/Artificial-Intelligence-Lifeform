@@ -96,7 +96,7 @@ def main():
                               and not r['results'][label]['status_calls'] and not r['results'][label]['generate_calls'] for r in rows)}
     result = {'summary': summary, 'rows': rows, 'checkpoint_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA,
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
-              'limitations': ['Eight previously examined authored examples and four manually enrolled names.',
+              'limitations': ['Authored development questions and four manually enrolled names; no population estimate.',
                               'Exact fingerprints can be defeated by truncated name spans and do not resolve homonyms.',
                               'Pre-read guard is explicit opt-in and not a general access control mechanism.',
                               'Numeric fact writes, no natural-language write or persistent enrollment.',
