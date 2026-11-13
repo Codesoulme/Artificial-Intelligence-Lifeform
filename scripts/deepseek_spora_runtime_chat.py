@@ -47,7 +47,8 @@ from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement
 from spora.working_checkpoint_lock import lock_working_checkpoint
 from spora.durable import RevisionConflict
 from spora.natural_write_heads import load_natural_write_heads
-from spora.structured_text_memory import StructuredTextMemoryCodec, StructuredTextMemoryState
+from spora.structured_text_memory import (StructuredTextMemoryCodec, StructuredTextMemoryState,
+                                          StructuredTextWriteGate)
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 WORKING_CHECKPOINT = ROOT/'runs/spora-runtime-individual/individual.pt'
@@ -149,7 +150,8 @@ class SporaChat:
             self.base.model.embed_tokens.weight.detach().cpu(), structured.codec_config)
 
     @torch.no_grad()
-    def observe_structured_text(self, key, identity_text, fact_text):
+    def observe_structured_text(self, key, identity_text, fact_text, *, query_text=None,
+                                minimum_write_strength=0.20):
         """Persist one explicitly segmented arbitrary-text memory record.
 
         Natural-language routing is deliberately outside this primitive; the
@@ -161,6 +163,8 @@ class SporaChat:
             raise ValueError('Identity text must be nonempty')
         if not isinstance(fact_text, str) or not fact_text.strip():
             raise ValueError('Fact text must be nonempty')
+        if query_text is not None and (not isinstance(query_text, str) or not query_text.strip()):
+            raise ValueError('Query text must be nonempty when supplied')
         from dataclasses import replace
         from spora.integrated_checkpoint import save_integrated
         codec = self._structured_codec()
@@ -172,6 +176,15 @@ class SporaChat:
             structured = StructuredTextMemoryState(codec.config_dict())
         elif structured.codec_config != codec.config_dict():
             raise ValueError('Structured text codec configuration changed')
+        previous = None if structured is None or key not in structured.records else structured.records[key].packet
+        observation_ids = fact_ids
+        query_ids = (None if query_text is None else
+                     self.tokenizer.encode(query_text.strip(), add_special_tokens=False))
+        gate = StructuredTextWriteGate(
+            self.base.model.embed_tokens.weight.detach().cpu(), minimum_write_strength)
+        decision = gate.evaluate(packet, previous, observation_ids, query_ids)
+        if not decision['write']:
+            return {'action': 'structured_text_deferred', 'key': key, 'gate': decision}
         candidate = replace(self.state, structured_text=structured.put(
             key, packet.detach().cpu(), metadata, self.organism.config.memory_width,
             self.organism.config.key_count))
@@ -184,7 +197,7 @@ class SporaChat:
                             output_adapter=self.decoder.output_adapter)
             self.state = candidate
             self._working_sha256 = sha(WORKING_CHECKPOINT)
-        return {'action': 'structured_text_written', 'key': key,
+        return {'action': 'structured_text_written', 'key': key, 'gate': decision,
                 'identity_length': metadata['identity_length'],
                 'fact_length': metadata['fact_length'],
                 'revision': candidate.structured_text.revision}

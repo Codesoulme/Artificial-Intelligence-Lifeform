@@ -286,3 +286,58 @@ class StructuredTextMemoryCodec(nn.Module):
             seed=config.get('seed', 29071),
             eos_token_id=config.get('eos_token_id'),
         )
+
+
+class StructuredTextWriteGate:
+    """Score novelty and optional query relevance before a text-lane write."""
+
+    def __init__(self, embedding, minimum_strength=0.35):
+        if (not isinstance(embedding, torch.Tensor) or embedding.ndim != 2
+                or not embedding.is_floating_point() or min(embedding.shape) < 2):
+            raise ValueError('A floating vocabulary embedding matrix is required')
+        if (isinstance(minimum_strength, bool) or not isinstance(minimum_strength, (int, float))
+                or not math.isfinite(minimum_strength) or not 0 <= minimum_strength <= 1):
+            raise ValueError('Minimum write strength must be finite and in [0, 1]')
+        self.embedding = embedding.detach().float()
+        self.minimum_strength = float(minimum_strength)
+
+    def _mean_embedding(self, token_ids):
+        if (not isinstance(token_ids, (list, tuple)) or not token_ids
+                or any(type(token) is not int or not 0 <= token < self.embedding.shape[0]
+                       for token in token_ids)):
+            raise ValueError('Token ids must be a nonempty vocabulary sequence')
+        vector = self.embedding.index_select(0, torch.tensor(token_ids, dtype=torch.long,
+                                                             device=self.embedding.device)).mean(0)
+        return F.normalize(vector, dim=0)
+
+    def evaluate(self, candidate_packet, previous_packet, observation_ids, query_ids=None):
+        if (not isinstance(candidate_packet, torch.Tensor) or candidate_packet.ndim != 1
+                or candidate_packet.numel() < 2 or not candidate_packet.is_floating_point()
+                or not bool(torch.isfinite(candidate_packet).all())):
+            raise ValueError('Candidate packet must be finite and one-dimensional')
+        if previous_packet is not None:
+            if (not isinstance(previous_packet, torch.Tensor)
+                    or previous_packet.shape != candidate_packet.shape
+                    or not previous_packet.is_floating_point()
+                    or not bool(torch.isfinite(previous_packet).all())):
+                raise ValueError('Previous packet must match the candidate packet')
+            novelty = float(1 - F.cosine_similarity(
+                candidate_packet.float().unsqueeze(0), previous_packet.float().unsqueeze(0)).item())
+        else:
+            novelty = 1.0
+        novelty = max(0.0, min(1.0, novelty))
+        if query_ids is None:
+            relevance = 1.0
+        else:
+            relevance = float((1 + F.cosine_similarity(
+                self._mean_embedding(observation_ids).unsqueeze(0),
+                self._mean_embedding(query_ids).unsqueeze(0)).item()) / 2)
+            relevance = max(0.0, min(1.0, relevance))
+        strength = max(0.0, min(1.0, novelty * relevance))
+        return {
+            'novelty': novelty,
+            'query_relevance': relevance,
+            'write_strength': strength,
+            'write': strength >= self.minimum_strength,
+            'minimum_strength': self.minimum_strength,
+        }

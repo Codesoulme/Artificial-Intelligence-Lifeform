@@ -8,12 +8,14 @@ import torch
 from spora.growing import new_state
 from spora.durable import TensorStore
 from spora.state_codec import flatten, restore
-from spora.structured_text_memory import StructuredTextMemoryCodec, StructuredTextMemoryState
+from spora.structured_text_memory import (StructuredTextMemoryCodec, StructuredTextMemoryState,
+                                          StructuredTextWriteGate)
 from spora.temporal import TemporalConfig, TemporalSPORA
 
 
 class StructuredTextMemoryTests(unittest.TestCase):
     def setUp(self):
+        torch.manual_seed(17)
         self.embedding = torch.randn(32, 24)
         self.codec = StructuredTextMemoryCodec(
             self.embedding, memory_width=24, identity_slots=2, fact_slots=4,
@@ -64,6 +66,26 @@ class StructuredTextMemoryTests(unittest.TestCase):
         self.assertEqual(decoded['identity']['token_ids'], [2])
         self.assertEqual(decoded['fact']['token_ids'], [7, 8])
         self.assertEqual(rebuilt.config_dict()['seed'], 71)
+
+    def test_write_gate_rejects_exact_repeat_and_accepts_new_packet(self):
+        gate = StructuredTextWriteGate(self.embedding, minimum_strength=0.20)
+        first, _ = self.codec.encode([2], [7])
+        second, _ = self.codec.encode([2], [8])
+        repeat = gate.evaluate(first, first, [2, 7])
+        correction = gate.evaluate(second, first, [2, 8])
+        self.assertFalse(repeat['write'])
+        self.assertEqual(repeat['novelty'], 0.0)
+        self.assertTrue(correction['write'])
+        self.assertGreater(correction['novelty'], 0.3)
+
+    def test_write_gate_uses_query_relevance_without_deciding_truth(self):
+        gate = StructuredTextWriteGate(self.embedding, minimum_strength=0.0)
+        packet, _ = self.codec.encode([2], [7])
+        result = gate.evaluate(packet, None, [2, 7], query_ids=[2, 7])
+        self.assertEqual(result['novelty'], 1.0)
+        self.assertGreaterEqual(result['query_relevance'], 0.0)
+        self.assertLessEqual(result['query_relevance'], 1.0)
+        self.assertTrue(result['write'])
 
     def test_structured_records_round_trip_through_state_codec(self):
         model = TemporalSPORA(TemporalConfig(width=16, layers=2, heads=2,
