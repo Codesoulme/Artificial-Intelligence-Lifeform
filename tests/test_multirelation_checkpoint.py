@@ -5,7 +5,8 @@ from types import SimpleNamespace
 from torch import nn
 from scripts.deepseek_spora_multirelation_train_pilot import (checkpoint_due, compare_recovery_rows,
                                                               choose_counterfactual, counterfactual_loss,
-                                                              optimizer_groups, validate_domains)
+                                                              optimizer_groups, validate_domains,
+                                                              add_old_value_replay)
 
 
 class CheckpointScheduleTests(unittest.TestCase):
@@ -58,6 +59,16 @@ class CheckpointScheduleTests(unittest.TestCase):
         invalid = {'x': ('r', ('{name} one', '{name} two'), ('a', 'b'), ('b',))}
         with self.assertRaisesRegex(ValueError, 'overlapping'):
             validate_domains(invalid)
+
+    def test_replay_only_repeats_older_supervised_values(self):
+        domains = {'x': ('r', ('{name} one', '{name} two'), ('a', 'b', 'c'), ('held',))}
+        cases = [{'domain': 'x', 'fact': v} for v in ('a', 'b', 'c')]
+        replay = add_old_value_replay(cases, domains, old_count=2, factor=3)
+        self.assertEqual([r['fact'] for r in replay].count('a'), 3)
+        self.assertEqual([r['fact'] for r in replay].count('b'), 3)
+        self.assertEqual([r['fact'] for r in replay].count('c'), 1)
+        with self.assertRaisesRegex(ValueError, 'supervised'):
+            add_old_value_replay([{'domain': 'x', 'fact': 'held'}], domains, 2, 2)
 
 
 if __name__ == '__main__':

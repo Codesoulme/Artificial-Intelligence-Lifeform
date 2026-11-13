@@ -36,6 +36,10 @@ EVAL_ALTERNATIVE_QUESTION = False
 EVAL_NOVEL_QUESTION = False
 EVAL_SEEN_COUNT = None
 CROSS_EVALUATION = False
+INIT_FROM = None
+EXPECTED_INITIAL_RESULT = None
+REPLAY_FACTOR = 1
+REPLAY_OLD_COUNT = 6
 COUNTERFACTUAL_WEIGHT = 0.0
 BRIDGE_MODE = 'learned'
 MEMORY_ATTENTION = False
@@ -69,6 +73,22 @@ def validate_domains(domains):
                 or len(set(train)) != len(train) or len(set(held)) != len(held)
                 or set(train) & set(held)):
             raise ValueError('Invalid or overlapping domain split')
+
+
+def add_old_value_replay(cases, domains, old_count, factor):
+    if type(old_count) is not int or old_count < 1 or type(factor) is not int or factor < 1:
+        raise ValueError('Invalid replay settings')
+    if factor > 1 and any(old_count > len(entry[2]) for entry in domains.values()):
+        raise ValueError('Replay count exceeds the supervised split')
+    old = []
+    for row in cases:
+        if row['domain'] not in domains or row['fact'] not in domains[row['domain']][2]:
+            raise ValueError('Replay cases must be supervised facts')
+        if row['fact'] in domains[row['domain']][2][:old_count]:
+            old.append(row)
+    if not old:
+        raise ValueError('Replay selection is empty')
+    return list(cases) + old * (factor - 1)
 
 
 def compare_recovery_rows(restored, previous, recovery_step, comparison_step):
@@ -227,6 +247,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
 
     train = [case(person, domain, value, q) for person in NAMES
              for domain, (_, _, values, _) in DOMAINS.items() for value in values for q in (0, 1)]
+    train = add_old_value_replay(train, DOMAINS, REPLAY_OLD_COUNT, REPLAY_FACTOR)
     checks = []
     for domain, (_, _, values, held) in DOMAINS.items():
         if EVAL_SEEN_COUNT is not None and (type(EVAL_SEEN_COUNT) is not int or not 1 <= EVAL_SEEN_COUNT <= len(values)):
@@ -260,8 +281,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                  'fact': item['fact'], 'question': item['question'], **generate(item)}
                 for group, item in checks]
 
-    if RELOAD_FROM is not None:
-        payload = torch.load(RELOAD_FROM/'recovery.pt', map_location='cpu', weights_only=True)
+    def load_parameters(directory):
+        payload = torch.load(directory/'recovery.pt', map_location='cpu', weights_only=True)
         saved_params = payload.get('params', ())
         if type(payload.get('step')) is not int or not 0 < payload['step'] <= STEPS or len(saved_params) != len(params):
             raise ValueError('Recovery parameters or training step do not match')
@@ -275,11 +296,18 @@ def run(decoder, tokenizer, spec, params, parameter_names):
             raise ValueError('Recovery bridge mode mismatch')
         if payload.get('memory_attention', False) != MEMORY_ATTENTION:
             raise ValueError('Recovery memory attention mode mismatch')
+        if RELOAD_FROM is not None and INIT_FROM is not None and directory == RELOAD_FROM:
+            if payload.get('initial_sha256') != p.sha(INIT_FROM/'recovery.pt'):
+                raise ValueError('Recovery initial checkpoint mismatch')
         with torch.no_grad():
             for param, saved in zip(params, saved_params):
                 if param.shape != saved.shape:
                     raise ValueError('Recovery parameter dimensions do not match')
                 param.copy_(saved.to(param.device))
+        return payload
+
+    if RELOAD_FROM is not None:
+        payload = load_parameters(RELOAD_FROM)
         restored = evaluate()
         previous = json.loads((RELOAD_FROM/'multirelation-training-result.json').read_text(encoding='utf-8'))['after']
         original_groups = {'train_person', 'held_person', 'held_value', 'held_value_alt_question'}
@@ -313,17 +341,27 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                           **comparison}), flush=True)
         return
 
+    initial_sha = None
+    if INIT_FROM is not None:
+        initial_sha = p.sha(INIT_FROM/'recovery.pt')
+        load_parameters(INIT_FROM)
     before = evaluate()
+    if EXPECTED_INITIAL_RESULT is not None:
+        reference = json.loads(EXPECTED_INITIAL_RESULT.read_text(encoding='utf-8'))['rows']
+        compare_recovery_rows(before, reference, STEPS, STEPS)
     off_checks = [next(item for _, item in checks if item['domain'] == domain) for domain in DOMAINS]
     off_before = [generate(item, False) for item in off_checks]
     memory_module = decoder.base.model.layers[23].self_attn if MEMORY_ATTENTION else None
     groups = optimizer_groups(params, memory_module, MEMORY_PROJECTION_LR, MEMORY_GAIN_LR)
     optimizer = torch.optim.AdamW(groups, lr=2e-5, weight_decay=0, foreach=False)
     trace = []
+    visits = {'old': 0, 'new': 0}
     for step in range(STEPS):
         if step % len(train) == 0:
             rng.shuffle(train)
         item = train[step % len(train)]
+        subset = DOMAINS[item['domain']][2][:REPLAY_OLD_COUNT]
+        visits['old' if item['fact'] in subset else 'new'] += 1
         optimizer.zero_grad(set_to_none=True)
         logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
                          **item['memory'], logits_to_keep=len(item['targets'])).logits[0].float()
@@ -358,6 +396,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                             'bridge_mode': BRIDGE_MODE,
                             'memory_attention': MEMORY_ATTENTION,
                             'memory_projection_lr': MEMORY_PROJECTION_LR, 'memory_gain_lr': MEMORY_GAIN_LR,
+                            'initial_sha256': initial_sha, 'replay_factor': REPLAY_FACTOR,
+                            'replay_old_count': REPLAY_OLD_COUNT, 'visits': dict(visits),
                             'schedule': [(row['person'], row['domain'], row['fact'], row['question'])
                                          for row in train],
                             'optimizer': optimizer.state_dict(), 'rng': rng.getstate()}, stream)
@@ -377,6 +417,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
               'bridge_mode': BRIDGE_MODE,
               'memory_attention': MEMORY_ATTENTION,
               'memory_projection_lr': MEMORY_PROJECTION_LR, 'memory_gain_lr': MEMORY_GAIN_LR,
+              'initial_sha256': initial_sha, 'replay_factor': REPLAY_FACTOR,
+              'replay_old_count': REPLAY_OLD_COUNT, 'visits': visits,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Each test has one supplied memory; the same numeric address is reused across people.',
                               'No automatic relation or entity routing, concurrency or real user state.',
