@@ -4,12 +4,14 @@ import json
 import os
 import random
 import sys
+import types
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / 'runs/open-base-deps')]
 from scripts import deepseek_spora_bridge_reload_audit as audit
 from spora.continuous_text_memory import ContinuousTextCodec
+from spora.research_oracle_bridge import context_oracle_embeddings
 
 torch, p, s = audit.torch, audit.p, audit.s
 audit.SOURCE = ROOT / 'runs/continuous-reader-cross-attention-pilot-20261113'
@@ -30,6 +32,7 @@ STEPS = 144
 HELD_VALUE_Q = 1
 EVAL_ALTERNATIVE_QUESTION = False
 COUNTERFACTUAL_WEIGHT = 0.0
+BRIDGE_MODE = 'learned'
 RELOAD_FROM = None
 done = False
 
@@ -92,6 +95,8 @@ def observe(*, decoder, tokenizer, spec, cross_modules, group, name, expected, q
         raise ValueError('Training parameter is not registered with the decoder')
     saved = [param.detach().clone() for param in params]
     flags = [module.enabled for module in cross_modules]
+    bridge = decoder.base.model.layers[18].self_attn.q_proj.bridge
+    bridge_forward = bridge.forward
     try:
         for module in cross_modules:
             module.enabled = False
@@ -106,6 +111,7 @@ def observe(*, decoder, tokenizer, spec, cross_modules, group, name, expected, q
                 param.requires_grad_(False)
         for module, flag in zip(cross_modules, flags):
             module.enabled = flag
+        bridge.forward = bridge_forward
 
 
 def run(decoder, tokenizer, spec, params, parameter_names):
@@ -114,6 +120,12 @@ def run(decoder, tokenizer, spec, params, parameter_names):
     embedding = decoder.base.model.embed_tokens.weight.detach()
     codec = ContinuousTextCodec(embedding.cpu(), memory_width=90, slot_count=5,
                                 seed=29071, eos_token_id=tokenizer.eos_token_id).to('cuda')
+    if BRIDGE_MODE == 'exact':
+        bridge = decoder.base.model.layers[18].self_attn.q_proj.bridge
+        bridge.forward = types.MethodType(
+            lambda _bridge, codes: context_oracle_embeddings(decoder, codec, embedding, codes), bridge)
+    elif BRIDGE_MODE != 'learned':
+        raise ValueError('Unsupported bridge mode')
     original = spec['memory_state']
     addresses = spec['memory_addresses']
     memories = {}
@@ -191,6 +203,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
             raise ValueError('Recovery source candidate mismatch')
         if payload.get('base_sha256', p.WEIGHT_SHA) != p.WEIGHT_SHA:
             raise ValueError('Recovery base mismatch')
+        if payload.get('bridge_mode', 'learned') != BRIDGE_MODE:
+            raise ValueError('Recovery bridge mode mismatch')
         with torch.no_grad():
             for param, saved in zip(params, saved_params):
                 if param.shape != saved.shape:
@@ -247,6 +261,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                             'source_sha256': p.sha(audit.SOURCE/'candidate.pt'),
                             'base_sha256': p.WEIGHT_SHA,
                             'counterfactual_weight': COUNTERFACTUAL_WEIGHT,
+                            'bridge_mode': BRIDGE_MODE,
                             'schedule': [(row['person'], row['domain'], row['fact'], row['question'])
                                          for row in train],
                             'optimizer': optimizer.state_dict(), 'rng': rng.getstate()}, stream)
@@ -263,6 +278,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
     result = {'before': before, 'after': after, 'before_summary': summary(before),
               'after_summary': summary(after), 'off_tokens_unchanged': True, 'trace': trace,
               'steps': STEPS, 'train_cases': len(train), 'counterfactual_weight': COUNTERFACTUAL_WEIGHT,
+              'bridge_mode': BRIDGE_MODE,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Each test has one supplied memory; the same numeric address is reused across people.',
                               'No automatic relation or entity routing, concurrency or real user state.',
