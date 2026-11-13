@@ -29,7 +29,7 @@ from spora.internal_memory import observe_sourced
 from spora.language_training import frozen_digest
 
 
-OUTPUT = ROOT / 'runs/deepseek-spora-direct-token-oracle-20261114.json'
+OUTPUT = ROOT / 'runs/deepseek-spora-direct-token-oracle-v2-20261114.json'
 MAX_NEW = 24
 FILLER = ('窗边有一本书，桌旁有一盏灯。清晨路边的树叶轻轻摇动。'
           '图书馆有人整理书架，公园里有人缓慢散步。傍晚路灯照亮安静的街道。')
@@ -116,10 +116,11 @@ def main():
                 inputs = closed_think_inputs(tokenizer, FILLER * 3 + question, 'cuda')
                 prompt_length = inputs['input_ids'].shape[1]
                 spec = _memory_args(chat.organism, state,
-                                    {'key': key, 'intent': mode, 'event_time': 0})
+                                    {'key': key, 'intent': mode,
+                                     'event_time': person * 2})
                 keys = torch.tensor([key], dtype=torch.long, device=device)
                 modes = torch.zeros_like(keys) if mode == 'current' else torch.ones_like(keys)
-                times = torch.zeros_like(keys)
+                times = torch.full_like(keys, person * 2)
                 with torch.no_grad():
                     evidence = query(chat.organism, state, keys, modes, times)
                 native_value = int(evidence.argmax(-1)[0])
