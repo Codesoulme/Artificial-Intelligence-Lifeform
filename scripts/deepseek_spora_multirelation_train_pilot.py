@@ -27,6 +27,8 @@ DOMAINS = {
               ('读书', '跑步'), ('画画', '唱歌')),
 }
 STEPS = 144
+HELD_VALUE_Q = 1
+EVAL_ALTERNATIVE_QUESTION = False
 RELOAD_FROM = None
 done = False
 
@@ -36,6 +38,26 @@ def checkpoint_due(completed, total, interval=32):
             or not 1 <= completed <= total or interval < 1):
         raise ValueError('Invalid checkpoint schedule')
     return completed % interval == 0 or completed == total
+
+
+def compare_recovery_rows(restored, previous, recovery_step, comparison_step):
+    fields = ('group', 'person', 'domain', 'fact', 'question')
+    def index(rows):
+        result = {}
+        for row in rows:
+            key = tuple(row[field] for field in fields)
+            if key in result:
+                raise ValueError('Duplicate recovery evaluation case')
+            result[key] = row['token_ids']
+        return result
+    current, earlier = index(restored), index(previous)
+    shared = current.keys() & earlier.keys()
+    same = sum(current[key] == earlier[key] for key in shared)
+    exact = current == earlier
+    if recovery_step == comparison_step and not exact:
+        raise ValueError('Final checkpoint did not reproduce recorded generations')
+    return {'matching_generations': same, 'comparable_cases': len(shared),
+            'cases': len(current), 'exact_replay': exact and recovery_step == comparison_step}
 
 
 def observe(*, decoder, tokenizer, spec, cross_modules, group, name, expected, question):
@@ -124,7 +146,9 @@ def run(decoder, tokenizer, spec, params, parameter_names):
     for domain, (_, _, values, held) in DOMAINS.items():
         checks += [('train_person', case(NAMES[0], domain, value)) for value in values]
         checks += [('held_person', case(HELD_NAME, domain, value)) for value in values]
-        checks += [('held_value', case(HELD_NAME, domain, value, 1)) for value in held]
+        checks += [('held_value', case(HELD_NAME, domain, value, HELD_VALUE_Q)) for value in held]
+        if EVAL_ALTERNATIVE_QUESTION:
+            checks += [('held_value_alt_question', case(HELD_NAME, domain, value, 1)) for value in held]
 
     def generate(item, active=True):
         memory = dict(item['memory']) if active else {}
@@ -161,17 +185,18 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                 param.copy_(saved.to(param.device))
         restored = evaluate()
         previous = json.loads((RELOAD_FROM/'multirelation-training-result.json').read_text(encoding='utf-8'))['after']
-        same = sum(a['token_ids'] == b['token_ids'] for a, b in zip(restored, previous))
+        comparison = compare_recovery_rows(restored, previous, payload['step'], STEPS)
         (audit.OUT/'reload-result.json').write_text(json.dumps(
             {'recovery_step': payload['step'], 'comparison_step': STEPS,
-             'matching_generations': same, 'cases': len(restored), 'rows': restored},
+             **comparison, 'rows': restored},
             ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
         print(json.dumps({'recovery_step': payload['step'], 'comparison_step': STEPS,
-                          'matching_generations': same, 'cases': len(restored)}), flush=True)
+                          **comparison}), flush=True)
         return
 
     before = evaluate()
-    off_before = [generate(item, False) for _, item in checks[::6]]
+    off_checks = [next(item for _, item in checks if item['domain'] == domain) for domain in DOMAINS]
+    off_before = [generate(item, False) for item in off_checks]
     optimizer = torch.optim.AdamW(params, lr=2e-5, weight_decay=0, foreach=False)
     trace = []
     for step in range(STEPS):
@@ -203,19 +228,19 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                 stream.flush(); os.fsync(stream.fileno())
             os.replace(temp, path)
     after = evaluate()
-    off_after = [generate(item, False) for _, item in checks[::6]]
+    off_after = [generate(item, False) for item in off_checks]
     if off_before != off_after:
         raise ValueError('Memory-off ordinary control changed')
     def summary(rows):
         return {group: {'correct': sum(row['strict_correct'] for row in rows if row['group'] == group),
                         'total': sum(row['group'] == group for row in rows)}
-                for group in ('train_person', 'held_person', 'held_value')}
+                for group in dict.fromkeys(row['group'] for row in rows)}
     result = {'before': before, 'after': after, 'before_summary': summary(before),
               'after_summary': summary(after), 'off_tokens_unchanged': True, 'trace': trace,
               'steps': STEPS, 'train_cases': len(train), 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Each test has one supplied memory; the same numeric address is reused across people.',
                               'No automatic relation or entity routing, concurrency or real user state.',
-                              'Held values use an alternative question and held person; groups are confounded.',
+                              'Held values and held person are tested together; their effects are confounded.',
                               'All values were used in previous development diagnostics, not a fresh final test.',
                               'Strict answer scoring can miss correct paraphrases.',
                               'No matched-compute no-training or alternate-seed control.']}
