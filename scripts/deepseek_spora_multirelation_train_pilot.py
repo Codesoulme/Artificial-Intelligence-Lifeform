@@ -1,6 +1,7 @@
 """Train existing memory readers on multiple controlled people and relations."""
 from dataclasses import replace
 import json
+import math
 import os
 import random
 import sys
@@ -32,9 +33,12 @@ DOMAINS = {
 STEPS = 144
 HELD_VALUE_Q = 1
 EVAL_ALTERNATIVE_QUESTION = False
+EVAL_NOVEL_QUESTION = False
 COUNTERFACTUAL_WEIGHT = 0.0
 BRIDGE_MODE = 'learned'
 MEMORY_ATTENTION = False
+MEMORY_PROJECTION_LR = None
+MEMORY_GAIN_LR = None
 EVAL_ATTENTION_ABLATION = False
 RELOAD_FROM = None
 done = False
@@ -77,6 +81,24 @@ def choose_counterfactual(values, actual, cycle):
 def counterfactual_loss(own_ce, swapped_ce, margin=0.5):
     """Favor a given full answer under its matching memory over a swapped one."""
     return torch.nn.functional.softplus(margin + own_ce - swapped_ce)
+
+
+def optimizer_groups(params, memory_module, projection_lr, gain_lr):
+    if projection_lr is None and gain_lr is None:
+        return [{'params': params}]
+    if (memory_module is None or projection_lr is None or gain_lr is None
+            or any(isinstance(lr, bool) or not isinstance(lr, (int, float))
+                   or not math.isfinite(lr) or not 0 < lr <= 0.01 for lr in (projection_lr, gain_lr))):
+        raise ValueError('Invalid memory attention learning rates')
+    projection = list(memory_module.memory_key.parameters()) + list(memory_module.memory_value.parameters())
+    memory_ids = {id(p) for p in projection + [memory_module.gain]}
+    if len(memory_ids) != len(projection) + 1 or not memory_ids.issubset({id(p) for p in params}):
+        raise ValueError('Invalid memory attention parameter groups')
+    base = [param for param in params if id(param) not in memory_ids]
+    if not base:
+        raise ValueError('Original reader parameters are required')
+    return [{'params': base}, {'params': projection, 'lr': float(projection_lr)},
+            {'params': [memory_module.gain], 'lr': float(gain_lr)}]
 
 
 def observe(*, decoder, tokenizer, spec, cross_modules, group, name, expected, question):
@@ -191,6 +213,11 @@ def run(decoder, tokenizer, spec, params, parameter_names):
         checks += [('held_value', case(HELD_NAME, domain, value, HELD_VALUE_Q)) for value in held]
         if EVAL_ALTERNATIVE_QUESTION:
             checks += [('held_value_alt_question', case(HELD_NAME, domain, value, 1)) for value in held]
+        if EVAL_NOVEL_QUESTION:
+            if len(DOMAINS[domain][1]) < 3:
+                raise ValueError('Novel-question evaluation requires a third template')
+            checks += [('novel_question_seen', case(HELD_NAME, domain, value, 2)) for value in values]
+            checks += [('novel_question_held', case(HELD_NAME, domain, value, 2)) for value in held]
 
     def generate(item, active=True):
         memory = dict(item['memory']) if active else {}
@@ -231,7 +258,9 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                 param.copy_(saved.to(param.device))
         restored = evaluate()
         previous = json.loads((RELOAD_FROM/'multirelation-training-result.json').read_text(encoding='utf-8'))['after']
-        comparison = compare_recovery_rows(restored, previous, payload['step'], STEPS)
+        original_groups = {'train_person', 'held_person', 'held_value', 'held_value_alt_question'}
+        comparable_rows = [row for row in restored if row['group'] in original_groups]
+        comparison = compare_recovery_rows(comparable_rows, previous, payload['step'], STEPS)
         ablation = None
         if EVAL_ATTENTION_ABLATION:
             if not MEMORY_ATTENTION:
@@ -245,7 +274,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                                                    for a, b in zip(restored, disabled))}
         (audit.OUT/'reload-result.json').write_text(json.dumps(
             {'recovery_step': payload['step'], 'comparison_step': STEPS,
-             **comparison, 'rows': restored, 'attention_ablation': ablation},
+             **comparison, 'total_evaluated_cases': len(restored),
+             'rows': restored, 'attention_ablation': ablation},
             ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
         print(json.dumps({'recovery_step': payload['step'], 'comparison_step': STEPS,
                           **comparison}), flush=True)
@@ -254,7 +284,9 @@ def run(decoder, tokenizer, spec, params, parameter_names):
     before = evaluate()
     off_checks = [next(item for _, item in checks if item['domain'] == domain) for domain in DOMAINS]
     off_before = [generate(item, False) for item in off_checks]
-    optimizer = torch.optim.AdamW(params, lr=2e-5, weight_decay=0, foreach=False)
+    memory_module = decoder.base.model.layers[23].self_attn if MEMORY_ATTENTION else None
+    groups = optimizer_groups(params, memory_module, MEMORY_PROJECTION_LR, MEMORY_GAIN_LR)
+    optimizer = torch.optim.AdamW(groups, lr=2e-5, weight_decay=0, foreach=False)
     trace = []
     for step in range(STEPS):
         if step % len(train) == 0:
@@ -293,6 +325,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                             'counterfactual_weight': COUNTERFACTUAL_WEIGHT,
                             'bridge_mode': BRIDGE_MODE,
                             'memory_attention': MEMORY_ATTENTION,
+                            'memory_projection_lr': MEMORY_PROJECTION_LR, 'memory_gain_lr': MEMORY_GAIN_LR,
                             'schedule': [(row['person'], row['domain'], row['fact'], row['question'])
                                          for row in train],
                             'optimizer': optimizer.state_dict(), 'rng': rng.getstate()}, stream)
@@ -311,6 +344,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
               'steps': STEPS, 'train_cases': len(train), 'counterfactual_weight': COUNTERFACTUAL_WEIGHT,
               'bridge_mode': BRIDGE_MODE,
               'memory_attention': MEMORY_ATTENTION,
+              'memory_projection_lr': MEMORY_PROJECTION_LR, 'memory_gain_lr': MEMORY_GAIN_LR,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Each test has one supplied memory; the same numeric address is reused across people.',
                               'No automatic relation or entity routing, concurrency or real user state.',

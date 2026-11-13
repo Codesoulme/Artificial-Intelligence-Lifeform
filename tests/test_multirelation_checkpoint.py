@@ -1,8 +1,11 @@
 import unittest
 
 import torch
+from types import SimpleNamespace
+from torch import nn
 from scripts.deepseek_spora_multirelation_train_pilot import (checkpoint_due, compare_recovery_rows,
-                                                              choose_counterfactual, counterfactual_loss)
+                                                              choose_counterfactual, counterfactual_loss,
+                                                              optimizer_groups)
 
 
 class CheckpointScheduleTests(unittest.TestCase):
@@ -36,6 +39,18 @@ class CheckpointScheduleTests(unittest.TestCase):
         counterfactual_loss(own, swapped).backward()
         self.assertGreater(float(own.grad), 0.)
         self.assertLess(float(swapped.grad), 0.)
+
+    def test_memory_learning_rates_preserve_separate_original_group(self):
+        module = SimpleNamespace(memory_key=nn.Linear(2, 2), memory_value=nn.Linear(2, 2),
+                                 gain=nn.Parameter(torch.tensor(0.)))
+        base = nn.Parameter(torch.ones(1))
+        params = [base, *module.memory_key.parameters(), *module.memory_value.parameters(), module.gain]
+        groups = optimizer_groups(params, module, 0.0001, 0.001)
+        self.assertEqual(groups[0]['params'], [base])
+        self.assertEqual(groups[1]['lr'], 0.0001)
+        self.assertIs(groups[2]['params'][0], module.gain)
+        with self.assertRaises(ValueError):
+            optimizer_groups(params, module, -1, 0.001)
 
 
 if __name__ == '__main__':
