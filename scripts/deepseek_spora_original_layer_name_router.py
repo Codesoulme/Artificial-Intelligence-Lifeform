@@ -31,6 +31,20 @@ TRAIN_NEGATIVE = ('请写一句鼓励的话。', '我现在想喝饮料。', '�
                   '今天应该喝水吗？', '小林和阿宁喜欢什么？', '小雨与阿哲的饮品是什么？')
 HELD_NEGATIVE = ('讲一个关于饮料的故事。', '我想知道现在几点。',
                  '小梅和阿远分别喜欢什么饮料？', '阿明和小岚爱喝什么？')
+LOCATOR_ONLY = ()
+
+
+def locator_only_rows(examples):
+    rows = []
+    for item in examples:
+        if (not isinstance(item, (tuple, list)) or len(item) != 2
+                or not all(isinstance(x, str) and x for x in item)):
+            raise ValueError('Expected a nonempty name and question')
+        name, text = item
+        if name in NAMES or text.count(name) != 1:
+            raise ValueError('Locator-only examples require one unbound name')
+        rows.append({'group': 'train_locator_only', 'name': name, 'key': None, 'text': text})
+    return rows
 
 
 def unpad_selection(selected, single_length):
@@ -50,6 +64,7 @@ def main():
         raise ValueError('Base checksum mismatch')
     training = [{'group': 'train_known', 'name': name, 'key': key, 'text': t.format(name=name)}
                 for name, key in zip(NAMES, KEYS) for t in TRAIN]
+    training += locator_only_rows(LOCATOR_ONLY)
     training += [{'group': 'train_negative', 'name': None, 'key': None, 'text': text}
                  for text in TRAIN_NEGATIVE]
     held = [{'group': 'known', 'name': name, 'key': key, 'text': t.format(name=name)}
@@ -182,6 +197,7 @@ def main():
                 'address_basis_sha256': basis_sha, 'hidden_indices': [6, 18], 'locator_threshold': 0.5,
                 'address_threshold': threshold, 'locator_state': locator_state, 'projection': projection.cpu()}, path)
     report = {'summary': summary, 'rows': results, 'train_count': len(training), 'dropped_train': dropped_train,
+              'locator_only_train_count': sum(row['group'] == 'train_locator_only' for row in training),
               'threshold': threshold,
               'loss': float(loss.detach()), 'unrepresentable_held': len([i for i in unrepresentable if i >= n_train]),
               'base_sha256': base_sha, 'checkpoint_sha256': checkpoint_sha, 'basis_sha256': basis_sha,
