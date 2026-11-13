@@ -1,6 +1,8 @@
 import unittest
 
-from scripts.deepseek_spora_multirelation_train_pilot import checkpoint_due, compare_recovery_rows
+import torch
+from scripts.deepseek_spora_multirelation_train_pilot import (checkpoint_due, compare_recovery_rows,
+                                                              choose_counterfactual, counterfactual_loss)
 
 
 class CheckpointScheduleTests(unittest.TestCase):
@@ -24,6 +26,16 @@ class CheckpointScheduleTests(unittest.TestCase):
         different_step = compare_recovery_rows([first], [first, second], 128, 144)
         self.assertFalse(different_step['exact_replay'])
         self.assertEqual(different_step['comparable_cases'], 1)
+
+    def test_counterfactual_schedule_and_margin_direction(self):
+        values = ('a', 'b', 'c')
+        self.assertEqual({choose_counterfactual(values, 'a', cycle) for cycle in range(4)}, {'b', 'c'})
+        with self.assertRaises(ValueError):
+            choose_counterfactual(('a', 'a'), 'a', 0)
+        own, swapped = torch.tensor(1., requires_grad=True), torch.tensor(2., requires_grad=True)
+        counterfactual_loss(own, swapped).backward()
+        self.assertGreater(float(own.grad), 0.)
+        self.assertLess(float(swapped.grad), 0.)
 
 
 if __name__ == '__main__':

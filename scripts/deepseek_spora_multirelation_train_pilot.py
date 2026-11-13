@@ -29,6 +29,7 @@ DOMAINS = {
 STEPS = 144
 HELD_VALUE_Q = 1
 EVAL_ALTERNATIVE_QUESTION = False
+COUNTERFACTUAL_WEIGHT = 0.0
 RELOAD_FROM = None
 done = False
 
@@ -58,6 +59,18 @@ def compare_recovery_rows(restored, previous, recovery_step, comparison_step):
         raise ValueError('Final checkpoint did not reproduce recorded generations')
     return {'matching_generations': same, 'comparable_cases': len(shared),
             'cases': len(current), 'exact_replay': exact and recovery_step == comparison_step}
+
+
+def choose_counterfactual(values, actual, cycle):
+    if (not isinstance(values, (tuple, list)) or len(values) < 2 or len(set(values)) != len(values)
+            or actual not in values or type(cycle) is not int or cycle < 0):
+        raise ValueError('Invalid counterfactual schedule')
+    return values[(values.index(actual) + 1 + cycle % (len(values)-1)) % len(values)]
+
+
+def counterfactual_loss(own_ce, swapped_ce, margin=0.5):
+    """Favor a given full answer under its matching memory over a swapped one."""
+    return torch.nn.functional.softplus(margin + own_ce - swapped_ce)
 
 
 def observe(*, decoder, tokenizer, spec, cross_modules, group, name, expected, question):
@@ -206,14 +219,25 @@ def run(decoder, tokenizer, spec, params, parameter_names):
         optimizer.zero_grad(set_to_none=True)
         logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
                          **item['memory'], logits_to_keep=len(item['targets'])).logits[0].float()
-        loss = torch.nn.functional.cross_entropy(logits, torch.tensor(item['targets'], device='cuda'))
+        own_ce = torch.nn.functional.cross_entropy(logits, torch.tensor(item['targets'], device='cuda'))
+        pair_loss = torch.zeros((), device='cuda')
+        if COUNTERFACTUAL_WEIGHT:
+            values = DOMAINS[item['domain']][2]
+            other = choose_counterfactual(values, item['fact'], step // len(train))
+            swapped_memory = memory_for(item['person'], other)
+            swapped_logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
+                                     **swapped_memory, logits_to_keep=len(item['targets'])).logits[0].float()
+            swapped_ce = torch.nn.functional.cross_entropy(swapped_logits, torch.tensor(item['targets'], device='cuda'))
+            pair_loss = counterfactual_loss(own_ce, swapped_ce)
+        loss = own_ce + COUNTERFACTUAL_WEIGHT * pair_loss
         if not bool(torch.isfinite(loss)):
             raise ValueError('Nonfinite training loss')
         loss.backward()
         norm = torch.nn.utils.clip_grad_norm_(params, 1., error_if_nonfinite=True)
         optimizer.step()
         if (step+1) % 16 == 0:
-            trace.append({'step': step+1, 'loss': float(loss.detach()), 'gradient_l2': float(norm)})
+            trace.append({'step': step+1, 'loss': float(loss.detach()), 'own_ce': float(own_ce.detach()),
+                          'counterfactual_loss': float(pair_loss.detach()), 'gradient_l2': float(norm)})
             print(json.dumps(trace[-1]), flush=True)
         if checkpoint_due(step + 1, STEPS):
             temp, path = audit.OUT/'recovery.tmp', audit.OUT/'recovery.pt'
@@ -222,6 +246,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                             'parameter_names': parameter_names,
                             'source_sha256': p.sha(audit.SOURCE/'candidate.pt'),
                             'base_sha256': p.WEIGHT_SHA,
+                            'counterfactual_weight': COUNTERFACTUAL_WEIGHT,
                             'schedule': [(row['person'], row['domain'], row['fact'], row['question'])
                                          for row in train],
                             'optimizer': optimizer.state_dict(), 'rng': rng.getstate()}, stream)
@@ -237,7 +262,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                 for group in dict.fromkeys(row['group'] for row in rows)}
     result = {'before': before, 'after': after, 'before_summary': summary(before),
               'after_summary': summary(after), 'off_tokens_unchanged': True, 'trace': trace,
-              'steps': STEPS, 'train_cases': len(train), 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
+              'steps': STEPS, 'train_cases': len(train), 'counterfactual_weight': COUNTERFACTUAL_WEIGHT,
+              'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Each test has one supplied memory; the same numeric address is reused across people.',
                               'No automatic relation or entity routing, concurrency or real user state.',
                               'Held values and held person are tested together; their effects are confounded.',
