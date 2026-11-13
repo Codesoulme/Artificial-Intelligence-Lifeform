@@ -49,6 +49,8 @@ REPLAY_VALUE_START = None
 REPLAY_VALUE_FACTOR = 1
 EVALUATION_VALUES = None
 EVALUATE_FIRST_MULTI_QUESTION_ONLY = False
+TRAIN_BRIDGE = False
+BRIDGE_LANGUAGE_LR = 2e-6
 LANGUAGE_LR = 1e-4
 QUERY_INTENT_GATE = False
 QUERY_SCALAR_GATE = False
@@ -384,6 +386,23 @@ def add_value_replay(records, start, end, factor):
     if not focus:
         raise ValueError('Replay selection is empty')
     return list(records) + focus * (factor - 1)
+
+
+def bridge_optimizer_groups(parameters, bridge, enabled, learning_rate):
+    """Make the shared bridge trainable once, with a separate learning rate."""
+    import math
+    if type(enabled) is not bool or isinstance(learning_rate, bool) or not isinstance(learning_rate, (int, float)) \
+            or not math.isfinite(learning_rate) or learning_rate <= 0:
+        raise ValueError('Invalid bridge training configuration')
+    existing = list(parameters)
+    bridge.requires_grad_(enabled)
+    extra = list(bridge.parameters()) if enabled else []
+    if len({id(x) for x in existing + extra}) != len(existing) + len(extra):
+        raise ValueError('Bridge or adapter parameter appears more than once')
+    groups = [{'params': existing}]
+    if extra:
+        groups.append({'params': extra, 'lr': float(learning_rate)})
+    return groups, existing + extra
 
 
 def main():
@@ -743,7 +762,8 @@ def main():
         params += [param for _, _, adapter in logit_adapters
                    for param in (list(adapter.proj.parameters()) + list(adapter.out.parameters())
                                  + [adapter.condition, adapter.scale])]
-        optimizer = torch.optim.AdamW(params, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
+        optimizer_groups, params = bridge_optimizer_groups(params, bridge, TRAIN_BRIDGE, BRIDGE_LANGUAGE_LR)
+        optimizer = torch.optim.AdamW(optimizer_groups, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
         trace = []
         for step in range(LANGUAGE_STEPS):
             if step % len(train) == 0:
@@ -821,6 +841,7 @@ def main():
                 'source_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA,
                 'start_candidate_sha256': teacher_sha, 'language_steps': LANGUAGE_STEPS,
                 'words': list(WORDS), 'train_value_count': TRAIN_VALUE_COUNT,
+                'train_bridge': TRAIN_BRIDGE, 'bridge_language_lr': BRIDGE_LANGUAGE_LR,
                 'notice': 'Training recovery only; post-training evaluation was not completed at save time.',
             }
             if final_adapters or logit_adapters or QUERY_INTENT_GATE or QUERY_SCALAR_GATE:
@@ -879,6 +900,7 @@ def main():
                          'train_value_count': TRAIN_VALUE_COUNT, 'strict_swap_eval': STRICT_SWAP_EVAL,
                          'train_correction_sequences': TRAIN_CORRECTION_SEQUENCES,
                          'replay_value_start': REPLAY_VALUE_START, 'replay_value_factor': REPLAY_VALUE_FACTOR,
+                         'train_bridge': TRAIN_BRIDGE, 'bridge_language_lr': BRIDGE_LANGUAGE_LR,
                          'evaluation_values': list(EVALUATION_VALUES) if EVALUATION_VALUES is not None else None,
                          'evaluate_first_multi_question_only': EVALUATE_FIRST_MULTI_QUESTION_ONLY,
                          'start_candidate': str(START_CANDIDATE) if START_CANDIDATE is not None else None,

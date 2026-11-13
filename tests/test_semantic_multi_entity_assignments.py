@@ -1,6 +1,9 @@
 import unittest
+import torch
+from torch import nn
 
-from scripts.deepseek_spora_semantic_bridge_pilot import add_value_replay, multi_entity_assignments, replace_assignment
+from scripts.deepseek_spora_semantic_bridge_pilot import (add_value_replay, bridge_optimizer_groups,
+                                                        multi_entity_assignments, replace_assignment)
 
 
 class MultiEntityAssignmentTests(unittest.TestCase):
@@ -36,6 +39,25 @@ class MultiEntityAssignmentTests(unittest.TestCase):
             add_value_replay(rows + [{'group': 'held_name', 'value': 3}], 3, 4, 4)
         with self.assertRaises(ValueError):
             add_value_replay(rows + [{'group': 'train', 'value': 4}], 3, 4, 4)
+
+    def test_shared_bridge_is_trainable_once(self):
+        bridge = nn.Linear(3, 2)
+        adapter = nn.Linear(2, 1)
+        groups, params = bridge_optimizer_groups(list(adapter.parameters()), bridge, True, 0.001)
+        self.assertEqual(len(groups), 2)
+        self.assertTrue(all(p.requires_grad for p in bridge.parameters()))
+        self.assertEqual(len(params), len(list(adapter.parameters())) + len(list(bridge.parameters())))
+        optimizer = torch.optim.SGD(groups, lr=.01)
+        before = bridge.weight.detach().clone()
+        loss = adapter(bridge(torch.ones(1, 3))).square().sum()
+        loss.backward()
+        optimizer.step()
+        self.assertFalse(torch.equal(before, bridge.weight))
+        groups, _ = bridge_optimizer_groups(list(adapter.parameters()), bridge, False, 0.001)
+        self.assertEqual(len(groups), 1)
+        self.assertTrue(all(not p.requires_grad for p in bridge.parameters()))
+        with self.assertRaises(ValueError):
+            bridge_optimizer_groups(list(bridge.parameters()), bridge, True, 0.001)
 
 
 if __name__ == '__main__':
