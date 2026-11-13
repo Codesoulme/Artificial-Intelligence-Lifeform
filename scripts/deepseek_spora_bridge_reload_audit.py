@@ -28,6 +28,7 @@ VERIFY_CODEC_READS = False
 PARITY_VALUE_INDICES = None
 MIX_ABLATION = False
 CROSS_ABLATION = False
+PROBE_OBSERVER = None
 
 
 def correct_answer(answer, name, value):
@@ -196,6 +197,11 @@ def main():
                 finally:
                     for module, enabled in zip(cross_modules, original_enabled):
                         module.enabled = enabled
+            if PROBE_OBSERVER is not None:
+                PROBE_OBSERVER(decoder=decoder, tokenizer=tok, spec=spec,
+                               cross_modules=tuple(cross_modules), group=group,
+                               name=NAMES[key], expected=s.WORDS[value],
+                               question=template.format(name=NAMES[key]))
             if p.frozen_digest(model, state) != digest:
                 raise ValueError('Evaluation mutated the memory state')
             row = dict(group=group, key=key, name=NAMES[key], expected=s.WORDS[value],
