@@ -21,6 +21,8 @@ OUT = p.ROOT / 'runs/continuous-reader-bridge-reload-audit-v1'
 NAMES = ('小林', '小周', '小王', '小赵', '小吴', '小郑')
 QUESTION = '请只说出{name}喜欢的水果名称。'
 EXTRA_WORDS = ()
+EXTRA_KEYS = (3,)
+EXTRA_GROUP_PREFIX = 'unseen'
 EXTRA_ONLY = False
 VERIFY_CODEC_READS = False
 
@@ -173,11 +175,12 @@ def main():
             if set(EXTRA_WORDS) & set(s.WORDS) or len(set(EXTRA_WORDS)) != len(EXTRA_WORDS):
                 raise ValueError('Extra values must be distinct from original training values')
             s.WORDS = tuple(s.WORDS) + tuple(EXTRA_WORDS)
-            for offset in range(len(EXTRA_WORDS)):
-                first = base_count + offset
-                second = base_count + (offset + 1) % len(EXTRA_WORDS)
-                probe('unseen_value', 3, first, state_for([(3, first)]))
-                probe('unseen_swap', 3, second, state_for([(3, second)]))
+            for key in EXTRA_KEYS:
+                for offset in range(len(EXTRA_WORDS)):
+                    first = base_count + offset
+                    second = base_count + (offset + 1) % len(EXTRA_WORDS)
+                    probe(EXTRA_GROUP_PREFIX + '_value', key, first, state_for([(key, first)]))
+                    probe(EXTRA_GROUP_PREFIX + '_swap', key, second, state_for([(key, second)]))
         if not EXTRA_ONLY:
             for key in (4, 5):
                 for value in (0, 1, 3, 9, 16, 17):
@@ -210,11 +213,12 @@ def main():
         summary[row['group']]['total'] += 1
     result = dict(summary=dict(summary), rows=rows, source_candidate_sha256=protected[SOURCE / 'candidate.pt'],
                   codec_contract={'slot_count': 5, 'seed': 29071, 'full_fact': True, 'identity': True},
-                  parity_verified=18, extra_words=list(EXTRA_WORDS), codec_reads_checked=VERIFY_CODEC_READS,
+                  parity_verified=18, extra_words=list(EXTRA_WORDS), extra_keys=list(EXTRA_KEYS),
+                  codec_reads_checked=VERIFY_CODEC_READS,
                   ordinary_off_tokens_match=True, source_files_unchanged=True,
                   seconds=time.perf_counter() - started, peak_allocated_bytes=torch.cuda.max_memory_allocated(),
                   limitations=['Numeric addressing and controlled writes, no natural write routing.',
-                               ('Authored development probes; additional fruit values were not in the candidate training list.'
+                               ('Authored development probes; consult the candidate configuration to determine trained versus held values.'
                                 if EXTRA_WORDS else 'Authored development probes; all fruit values occurred in training.'),
                                'Strict phrase metric can reject valid paraphrases; raw outputs are retained.',
                                'Off path is the existing hybrid, not untouched original DeepSeek.',
