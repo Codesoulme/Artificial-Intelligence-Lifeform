@@ -49,6 +49,7 @@ from spora.durable import RevisionConflict
 from spora.natural_write_heads import load_natural_write_heads
 from spora.structured_text_memory import (StructuredTextMemoryCodec, StructuredTextMemoryState,
                                           StructuredTextWriteGate)
+from spora.structured_text_output import StructuredMemoryTextDecoder
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 WORKING_CHECKPOINT = ROOT/'runs/spora-runtime-individual/individual.pt'
@@ -221,6 +222,27 @@ class SporaChat:
             'metadata': dict(record.metadata),
             'revision': record.revision,
         }
+
+    @torch.no_grad()
+    def generate_structured_text(self, key, decoder_path, *, max_new_tokens=32):
+        """Generate a fact sentence from a persisted packet via an opt-in head."""
+        if type(key) is not int or key < 0:
+            raise ValueError('Structured text key must be a nonnegative integer')
+        structured = self.state.structured_text
+        if structured is None or key not in structured.records:
+            return {'accepted': False, 'reason': 'unknown_structured_memory'}
+        device = next(self.base.parameters()).device
+        decoder = StructuredMemoryTextDecoder.from_checkpoint(
+            self.base.model.embed_tokens.weight.detach(), decoder_path,
+            expected_source_sha256=sha(CHECKPOINT), expected_base_sha256=WEIGHT_SHA,
+            expected_format='spora-structured-memory-text-decoder-v1')
+        decoder = decoder.to(device).eval()
+        packet = structured.records[key].packet.to(device=device, dtype=torch.float32).unsqueeze(0)
+        token_ids = decoder.generate(packet, eos_id=self.tokenizer.eos_token_id,
+                                     max_new_tokens=max_new_tokens)[0].tolist()
+        return {'accepted': True, 'reason': 'structured_memory_decoder',
+                'answer': self.tokenizer.decode(token_ids, skip_special_tokens=True).strip(),
+                'token_ids': token_ids, 'revision': structured.records[key].revision}
 
     @torch.no_grad()
     def observe_sourced(self, key, value, source='direct', quality=1.0, valid_at=None):
