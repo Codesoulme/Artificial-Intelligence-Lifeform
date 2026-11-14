@@ -9,6 +9,7 @@ from pathlib import Path
 
 from scripts import deepseek_spora_long_memory_generate_parity as p
 from scripts.deepseek_named_binding_probe import KEYS, NAMES
+from spora.paired_read_loss import paired_read_loss
 
 OUTPUT = p.ROOT / 'runs/deepseek-spora-reader-full-answer-pilot-20261112'
 SEED = 98117
@@ -31,7 +32,7 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
         raise ValueError('Output must be a new directory under runs')
     if not math.isfinite(learning_rate) or not 0 < learning_rate <= 1e-3:
         raise ValueError('Invalid learning rate')
-    if objective not in ('full', 'value_contrastive', 'mixed'):
+    if objective not in ('full', 'value_contrastive', 'mixed', 'paired'):
         raise ValueError('Invalid objective')
     if type(steps) is not int or not 1 <= steps <= 1000:
         raise ValueError('Invalid step count')
@@ -39,6 +40,8 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
         raise ValueError('Replay requires mixed objective and weight in [0, 10]')
     if dataset not in ('small', 'diverse', 'diverse_multi') or (dataset != 'small' and replay_weight):
         raise ValueError('Invalid dataset or overlapping replay split')
+    if objective == 'paired' and dataset != 'diverse_multi':
+        raise ValueError('Paired objective requires all eight training values')
     if type(original_layers) is not bool:
         raise ValueError('original_layers must be a boolean')
     if output.exists():
@@ -113,6 +116,13 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
                           'answer': answer, 'prompt': prompt, 'ids': ids, 'spec': spec,
                           'value_position': position, 'value_token': value_ids[0], 'value_tokens': value_ids,
                           'competitor_tokens': [ids[0] for ids in competitor_ids]})
+
+        pair_cases = {(item['key'], item['question'], item['value']): item for item in cases
+                      if item['group'] == 'train'}
+        if objective == 'paired':
+            first_tokens = [tokenizer(p.WORDS[v], add_special_tokens=False).input_ids[0] for v in range(8)]
+            if len(set(first_tokens)) != len(first_tokens):
+                raise ValueError('Paired values must have distinct first tokens')
 
         replays = []
         if replay_weight:
@@ -192,7 +202,7 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
             targets = item['ids'][:, prefix_len:]
             if scores.shape[:2] != targets.shape:
                 raise ValueError('Causal answer alignment mismatch')
-            if objective in ('full', 'mixed'):
+            if objective in ('full', 'mixed', 'paired'):
                 loss = p.torch.nn.functional.cross_entropy(scores.reshape(-1, scores.shape[-1]), targets.reshape(-1))
             else:
                 value_logits = scores[:, item['value_position'], :]
@@ -202,7 +212,8 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
                 loss = p.torch.nn.functional.cross_entropy(value_logits, targets[:, item['value_position']]) + margin_loss
             if not bool(p.torch.isfinite(loss)):
                 raise ValueError('Nonfinite loss')
-            if objective == 'mixed':
+            paired_loss_value = None
+            if objective in ('mixed', 'paired'):
                 (loss * 0.5).backward()
                 direct_target = p.torch.tensor([item['value_tokens'] + [tokenizer.eos_token_id]], device=device)
                 direct_ids = p.torch.cat((item['prompt']['input_ids'], direct_target), dim=1)
@@ -212,7 +223,23 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
                     direct_scores.reshape(-1, direct_scores.shape[-1]), direct_target.reshape(-1))
                 if not bool(p.torch.isfinite(direct_loss)):
                     raise ValueError('Nonfinite direct-answer loss')
-                (direct_loss * 0.5).backward()
+                paired_first = None
+                if objective == 'paired':
+                    other_value = (item['value'] + 1) % 8
+                    other = pair_cases[(item['key'], item['question'], other_value)]
+                    a_token, b_token = item['value_token'], other['value_token']
+                    with p.torch.no_grad():
+                        other_scores = decoder(**other['prompt'], **other['spec']).logits[:, -1, :].float()
+                        other_margin = other_scores[:, a_token] - other_scores[:, b_token]
+                    first_scores = direct_scores[:, 0, :]
+                    first_margin = first_scores[:, a_token] - first_scores[:, b_token]
+                    paired_first = paired_read_loss(first_margin, other_margin)
+                    paired_loss_value = float(paired_first.detach())
+                (direct_loss * 0.5 + (0.25 * paired_first if paired_first is not None else 0)).backward()
+                if objective == 'paired':
+                    other_scores = decoder(**other['prompt'], **other['spec']).logits[:, -1, :].float()
+                    other_margin = other_scores[:, a_token] - other_scores[:, b_token]
+                    (0.25 * paired_read_loss(first_margin.detach(), other_margin)).backward()
                 loss = (loss.detach() + direct_loss.detach()) * 0.5
             else:
                 loss.backward()
@@ -229,7 +256,7 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
             grad = p.torch.nn.utils.clip_grad_norm_(parameters, 1.0, error_if_nonfinite=True)
             optimizer.step()
             trace.append({'step': step + 1, 'loss': float(loss.detach()), 'gradient_norm': float(grad),
-                          'replay_kl': replay_loss_value})
+                          'replay_kl': replay_loss_value, 'paired_loss': paired_loss_value})
             print(json.dumps(trace[-1]), flush=True)
         after = evaluate()
         ordinary_after = ordinary_answers()
@@ -278,7 +305,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', type=Path, default=OUTPUT)
     parser.add_argument('--learning-rate', type=float, default=1e-4)
-    parser.add_argument('--objective', choices=('full', 'value_contrastive', 'mixed'), default='full')
+    parser.add_argument('--objective', choices=('full', 'value_contrastive', 'mixed', 'paired'), default='full')
     parser.add_argument('--steps', type=int, default=STEPS)
     parser.add_argument('--replay-weight', type=float, default=0.0)
     parser.add_argument('--dataset', choices=('small', 'diverse', 'diverse_multi'), default='small')

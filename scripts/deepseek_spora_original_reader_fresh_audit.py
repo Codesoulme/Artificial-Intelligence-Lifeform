@@ -1,5 +1,6 @@
 """Predeclare held-out names and question forms for the 256-step reader."""
 import sys
+import argparse
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,5 +18,8 @@ audit.ORDINARY = ('请用一句话描述下雨的场景。', '三加二等于多
 
 
 if __name__ == '__main__':
-    audit.main(ROOT / 'runs/deepseek-spora-original-reader-mixed-256-20261114',
-               ROOT / 'runs/deepseek-spora-original-reader-fresh-256-20261114.json')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--source', type=Path, default=ROOT / 'runs/deepseek-spora-original-reader-mixed-256-20261114')
+    parser.add_argument('--output', type=Path, default=ROOT / 'runs/deepseek-spora-original-reader-fresh-256-20261114.json')
+    options = parser.parse_args()
+    audit.main(options.source, options.output)
