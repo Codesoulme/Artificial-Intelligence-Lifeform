@@ -24,7 +24,8 @@ def unique_token_span(sequence, value):
     return found[0]
 
 
-def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, replay_weight=0.0, dataset='small'):
+def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, replay_weight=0.0, dataset='small',
+         original_layers=False):
     output = Path(output).resolve()
     if not output.is_relative_to((p.ROOT / 'runs').resolve()) or output == (p.ROOT / 'runs').resolve():
         raise ValueError('Output must be a new directory under runs')
@@ -38,6 +39,8 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
         raise ValueError('Replay requires mixed objective and weight in [0, 10]')
     if dataset not in ('small', 'diverse', 'diverse_multi') or (dataset != 'small' and replay_weight):
         raise ValueError('Invalid dataset or overlapping replay split')
+    if type(original_layers) is not bool:
+        raise ValueError('original_layers must be a boolean')
     if output.exists():
         raise FileExistsError(output)
     source_sha = p.sha(p.runtime.CHECKPOINT)
@@ -49,7 +52,12 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
     tokenizer = p.AutoTokenizer.from_pretrained(p.MODEL, local_files_only=True, trust_remote_code=False)
     with tempfile.TemporaryDirectory() as directory:
         p.runtime.WORKING_CHECKPOINT = Path(directory) / 'unused.pt'
-        chat = p.runtime.load_chat(base_loader=lambda: p.load_full_streamed(skip_replaced=(6, 12)))
+        base = p.load_full_streamed(skip_replaced=() if original_layers else (6, 12))
+        originals = {index: base.model.layers[index] for index in (6, 12)} if original_layers else {}
+        chat = p.runtime.load_chat(base_loader=lambda: base)
+        replaced = {index: base.model.layers[index] for index in originals}
+        for index, layer in originals.items():
+            base.model.layers[index] = layer
         decoder, organism = chat.decoder.eval(), chat.organism.eval()
         if any(x.is_meta for x in list(chat.base.parameters()) + list(chat.base.buffers())):
             raise ValueError('Unmaterialized layer')
@@ -225,6 +233,8 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
             print(json.dumps(trace[-1]), flush=True)
         after = evaluate()
         ordinary_after = ordinary_answers()
+        for index, layer in replaced.items():
+            base.model.layers[index] = layer
         if p.frozen_digest(organism, chat.state) != original_digest:
             raise ValueError('Original state changed')
         if any(p.frozen_digest(organism, item['state']) != item['state_digest'] for item in cases):
@@ -238,11 +248,12 @@ def main(output=OUTPUT, learning_rate=1e-4, objective='full', steps=STEPS, repla
     p.torch.save({'state': reader_state, 'source_checkpoint_sha256': source_sha,
                   'base_sha256': p.WEIGHT_SHA, 'steps': steps, 'seed': SEED,
                   'learning_rate': learning_rate, 'objective': objective, 'replay_weight': replay_weight,
-                  'dataset': dataset}, output / 'reader.pt')
+                  'dataset': dataset, 'original_layers': original_layers}, output / 'reader.pt')
     report = {'before': before, 'after': after, 'trace': trace, 'source_checkpoint_sha256': source_sha,
               'ordinary_before': ordinary_before, 'ordinary_after': ordinary_after,
               'ordinary_tokens_match': [a['token_ids'] == b['token_ids'] for a, b in zip(ordinary_before, ordinary_after)],
               'learning_rate': learning_rate, 'objective': objective, 'replay_weight': replay_weight, 'dataset': dataset,
+              'original_layers': original_layers,
               'training_examples': sum(item['group'] == 'train' for item in cases),
               'evaluated_train_examples': sum(item['group'] == 'train' and item['evaluate'] for item in cases),
               'evaluated_held_examples': sum(item['group'] == 'held' and item['evaluate'] for item in cases),
@@ -271,5 +282,7 @@ if __name__ == '__main__':
     parser.add_argument('--steps', type=int, default=STEPS)
     parser.add_argument('--replay-weight', type=float, default=0.0)
     parser.add_argument('--dataset', choices=('small', 'diverse', 'diverse_multi'), default='small')
+    parser.add_argument('--original-layers', action='store_true')
     options = parser.parse_args()
-    main(options.output, options.learning_rate, options.objective, options.steps, options.replay_weight, options.dataset)
+    main(options.output, options.learning_rate, options.objective, options.steps, options.replay_weight,
+         options.dataset, options.original_layers)
