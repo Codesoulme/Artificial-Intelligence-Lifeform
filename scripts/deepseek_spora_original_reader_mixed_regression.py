@@ -19,7 +19,7 @@ OUTPUT = ROOT / 'runs/deepseek-spora-original-reader-mixed-regression-20261114.j
 ORDINARY = ('请写一句鼓励学习的话。', '现在几点了？')
 
 
-def main(source=SOURCE, output=OUTPUT):
+def main(source=SOURCE, output=OUTPUT, baseline_source=None):
     source, output = Path(source).resolve(), Path(output).resolve()
     if not source.is_relative_to((ROOT / 'runs').resolve()) or not output.is_relative_to((ROOT / 'runs').resolve()):
         raise ValueError('Research source and output must be under runs')
@@ -34,6 +34,18 @@ def main(source=SOURCE, output=OUTPUT):
     if (candidate['base_sha256'] != base_sha or candidate['source_checkpoint_sha256'] != checkpoint_sha
             or candidate['original_layers'] is not True):
         raise ValueError('Candidate provenance mismatch')
+    alternate_baseline, baseline_sha = None, None
+    if baseline_source is not None:
+        baseline_source = Path(baseline_source).resolve()
+        if not baseline_source.is_relative_to((ROOT / 'runs').resolve()):
+            raise ValueError('Baseline source must be under runs')
+        baseline_report = json.loads((baseline_source / 'result.json').read_text(encoding='utf-8'))
+        baseline_sha = p.sha(baseline_source / 'reader.pt')
+        alternate_baseline = torch.load(baseline_source / 'reader.pt', map_location='cpu', weights_only=True)
+        if (baseline_sha != baseline_report['candidate_sha256'] or alternate_baseline['base_sha256'] != base_sha
+                or alternate_baseline['source_checkpoint_sha256'] != checkpoint_sha
+                or alternate_baseline['original_layers'] is not True):
+            raise ValueError('Baseline candidate provenance mismatch')
     torch.set_num_threads(2)
     torch.cuda.reset_peak_memory_stats()
     started = time.perf_counter()
@@ -48,7 +60,8 @@ def main(source=SOURCE, output=OUTPUT):
         replacements = {i: base.model.layers[i] for i in originals}
         for i in originals:
             base.model.layers[i] = originals[i]
-        baseline = {k: v.detach().cpu().clone() for k, v in chat.decoder.reader.state_dict().items()}
+        original_reader = {k: v.detach().cpu().clone() for k, v in chat.decoder.reader.state_dict().items()}
+        baseline = original_reader if alternate_baseline is None else alternate_baseline['state']
         weights = {'baseline': baseline, 'candidate': candidate['state']}
 
         def generate(question, args):
@@ -96,20 +109,21 @@ def main(source=SOURCE, output=OUTPUT):
             ordinary.append({'question': question, 'results': variants})
         if p.frozen_digest(chat.organism, state) != digest:
             raise ValueError('Control state changed')
-        chat.decoder.reader.load_state_dict(baseline, strict=True)
+        chat.decoder.reader.load_state_dict(original_reader, strict=True)
         for i in originals:
             base.model.layers[i] = replacements[i]
         if p.frozen_digest(chat.organism, chat.state) != source_digest:
             raise ValueError('Source individual changed')
     if (p.sha(p.MODEL / 'model.safetensors') != base_sha or p.sha(p.runtime.CHECKPOINT) != checkpoint_sha
-            or p.sha(source / 'reader.pt') != candidate_sha):
+            or p.sha(source / 'reader.pt') != candidate_sha
+            or (baseline_source is not None and p.sha(baseline_source / 'reader.pt') != baseline_sha)):
         raise ValueError('Protected file changed')
     summary = {'conditions': len(rows), **{label + '_exact': sum(r['answers'][label]['exact'] for r in rows)
                                           for label in weights},
                **{label + '_paired_correct': sum(all(r['answers'][label]['exact'] for r in rows if r['name'] == name)
                                                  for name, _, _, _, _ in CASES) for label in weights}}
     report = {'summary': summary, 'rows': rows, 'ordinary': ordinary, 'base_sha256': base_sha,
-              'checkpoint_sha256': checkpoint_sha, 'candidate_sha256': candidate_sha,
+              'checkpoint_sha256': checkpoint_sha, 'candidate_sha256': candidate_sha, 'baseline_sha256': baseline_sha,
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Prior development prompts, not independent validation.',
                               'Manual numeric addresses and writes; no routing or natural learning.',
@@ -126,5 +140,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', type=Path, default=SOURCE)
     parser.add_argument('--output', type=Path, default=OUTPUT)
+    parser.add_argument('--baseline-source', type=Path)
     options = parser.parse_args()
-    main(options.source, options.output)
+    main(options.source, options.output, options.baseline_source)
