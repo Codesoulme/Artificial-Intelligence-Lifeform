@@ -1,5 +1,6 @@
 """Compare an isolated original-layer reader candidate on prior failures."""
 import json
+import argparse
 import sys
 import tempfile
 import time
@@ -18,15 +19,18 @@ OUTPUT = ROOT / 'runs/deepseek-spora-original-reader-mixed-regression-20261114.j
 ORDINARY = ('请写一句鼓励学习的话。', '现在几点了？')
 
 
-def main():
-    if OUTPUT.exists():
-        raise FileExistsError(OUTPUT)
+def main(source=SOURCE, output=OUTPUT):
+    source, output = Path(source).resolve(), Path(output).resolve()
+    if not source.is_relative_to((ROOT / 'runs').resolve()) or not output.is_relative_to((ROOT / 'runs').resolve()):
+        raise ValueError('Research source and output must be under runs')
+    if output.exists():
+        raise FileExistsError(output)
     base_sha, checkpoint_sha = p.sha(p.MODEL / 'model.safetensors'), p.sha(p.runtime.CHECKPOINT)
-    source_report = json.loads((SOURCE / 'result.json').read_text(encoding='utf-8'))
-    candidate_sha = p.sha(SOURCE / 'reader.pt')
+    source_report = json.loads((source / 'result.json').read_text(encoding='utf-8'))
+    candidate_sha = p.sha(source / 'reader.pt')
     if base_sha != p.WEIGHT_SHA or candidate_sha != source_report['candidate_sha256']:
         raise ValueError('Protected artifact checksum mismatch')
-    candidate = torch.load(SOURCE / 'reader.pt', map_location='cpu', weights_only=True)
+    candidate = torch.load(source / 'reader.pt', map_location='cpu', weights_only=True)
     if (candidate['base_sha256'] != base_sha or candidate['source_checkpoint_sha256'] != checkpoint_sha
             or candidate['original_layers'] is not True):
         raise ValueError('Candidate provenance mismatch')
@@ -98,7 +102,7 @@ def main():
         if p.frozen_digest(chat.organism, chat.state) != source_digest:
             raise ValueError('Source individual changed')
     if (p.sha(p.MODEL / 'model.safetensors') != base_sha or p.sha(p.runtime.CHECKPOINT) != checkpoint_sha
-            or p.sha(SOURCE / 'reader.pt') != candidate_sha):
+            or p.sha(source / 'reader.pt') != candidate_sha):
         raise ValueError('Protected file changed')
     summary = {'conditions': len(rows), **{label + '_exact': sum(r['answers'][label]['exact'] for r in rows)
                                           for label in weights},
@@ -112,11 +116,15 @@ def main():
                               'Output adapter disabled; exact short answer is not general chat.',
                               'Ordinary requests with forced memory are stress tests, not actual router behavior.',
                               'Only original layers and temporary states; candidate remains isolated.']}
-    with OUTPUT.open('x', encoding='utf-8', newline='\n') as stream:
+    with output.open('x', encoding='utf-8', newline='\n') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2, allow_nan=False)
         stream.write('\n')
     print(json.dumps(summary), flush=True)
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--source', type=Path, default=SOURCE)
+    parser.add_argument('--output', type=Path, default=OUTPUT)
+    options = parser.parse_args()
+    main(options.source, options.output)
