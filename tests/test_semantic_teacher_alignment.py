@@ -7,6 +7,7 @@ from scripts.deepseek_spora_semantic_bridge_pilot import (
     aligned_teacher_hidden_cosine,
     aligned_teacher_kl,
     explicit_teacher_question,
+    remap_condition_weight,
     select_condition_slots,
 )
 
@@ -61,6 +62,18 @@ class SemanticTeacherAlignmentTests(unittest.TestCase):
         self.assertTrue(torch.equal(selected, expected))
         with self.assertRaises(ValueError):
             select_condition_slots(memory, 5, 4, 2)
+
+    def test_condition_weight_remap_moves_fact_columns_and_zeros_tail(self):
+        import scripts.deepseek_spora_semantic_bridge_pilot as pilot
+        old_flag = pilot.REMAP_CONDITION_INIT
+        pilot.REMAP_CONDITION_INIT = True
+        try:
+            old = torch.arange(8., dtype=torch.float32).reshape(2, 4)
+            target = torch.empty(2, 4)
+            mapped = remap_condition_weight(old, target, 1, 1)
+            self.assertTrue(torch.equal(mapped, torch.tensor([[1., 2., 3., 0.], [5., 6., 7., 0.]])))
+        finally:
+            pilot.REMAP_CONDITION_INIT = old_flag
 
 
 if __name__ == '__main__':

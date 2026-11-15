@@ -9,10 +9,13 @@
 | 绝对隐藏状态蒸馏（最佳候选） | 98/108 -> 100/108 | 98/108 -> 100/108 | 91/108 -> 93/108 |
 | 隐藏状态增量蒸馏 | 98/108 -> 99/108 | 98/108 -> 99/108 | 91/108 -> 92/108 |
 | 身份槽排除的直接迁移 | 3/108 -> 4/108 | 3/108 -> 4/108 | 0/108 -> 0/108 |
+| 身份槽排除并重排旧列 | 68/108 -> 83/108 | 59/108 -> 72/108 | 37/108 -> 50/108 |
 
 增量试验：`scripts/deepseek_spora_hidden_delta_bridge_distill.py`，结果在 `runs/deepseek-spora-hidden-delta-bridge-distill-20261115/result.json`。它把记忆学生相对于无记忆基线的隐藏状态变化对齐到带事实教师的变化，理论上更能保持原语言风格，但本轮没有超过绝对隐藏状态目标。
 
 身份槽试验：`scripts/deepseek_spora_factored_hidden_bridge_distill.py`，结果在 `runs/deepseek-spora-factored-hidden-bridge-distill-20261115/result.json`。适配器只读取事实槽，身份槽被排除；直接复用已有适配器时首步损失约 13.17，远高于最佳候选的约 0.84，且事实生成大幅退化。
+
+重排复验：`scripts/deepseek_spora_factored_hidden_bridge_remapped_pilot.py`，结果在 `runs/deepseek-spora-factored-hidden-bridge-remapped-20261115/result.json`。把事实列正确搬到新 lane 后效果恢复一部分，但严格配对仍只有 `50/108`，低于联合身份+事实表示的最佳结果。
 
 ## 判定
 

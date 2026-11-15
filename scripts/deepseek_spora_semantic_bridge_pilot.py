@@ -30,6 +30,7 @@ STORE_FULL_FACT = False
 STORE_IDENTITY = True
 BRIDGE_CONDITION_SLOTS = 2
 BRIDGE_CONDITION_OFFSET = 0
+REMAP_CONDITION_INIT = False
 TRAIN_VALUE_COUNT = 16
 TRAIN_CORRECTION_SEQUENCES = False
 TRAIN_MULTI_ENTITY_STATES = False
@@ -494,6 +495,29 @@ def select_condition_slots(memory, slot_count, condition_slots, offset):
         memory[:, offset:offset + condition_slots], dim=-1)
 
 
+def remap_condition_weight(weight, target, embedding_width, offset):
+    """Reindex old slot columns when a new lane excludes leading slots."""
+    torch = p.torch
+    if not REMAP_CONDITION_INIT:
+        return weight
+    if (not isinstance(weight, torch.Tensor) or not isinstance(target, torch.Tensor)
+            or weight.ndim != 2 or target.ndim != 2
+            or weight.shape[0] != target.shape[0]
+            or type(embedding_width) is not int or embedding_width <= 0
+            or weight.shape[1] % embedding_width or target.shape[1] % embedding_width
+            or type(offset) is not int or offset < 0):
+        raise ValueError('Invalid condition weight remapping')
+    source_slots = weight.shape[1] // embedding_width
+    target_slots = target.shape[1] // embedding_width
+    if offset >= source_slots:
+        raise ValueError('Condition remap offset exceeds source slots')
+    output = torch.zeros_like(target)
+    copied = min(source_slots - offset, target_slots)
+    output[:, :copied * embedding_width] = weight[:, offset * embedding_width:
+                                                   (offset + copied) * embedding_width]
+    return output
+
+
 def multi_entity_assignments(target_key, value, value_count, keys=(0, 1, 2)):
     """Bind the supervised value to the requested address, with distractors."""
     if (type(target_key) is not int or target_key not in keys or type(value) is not int
@@ -717,7 +741,8 @@ def main():
                 adapter.a.copy_(old['a'])
                 adapter.b.copy_(old['b'])
                 if 'condition' in old:
-                    adapter.condition.copy_(old['condition'])
+                    adapter.condition.copy_(remap_condition_weight(
+                        old['condition'], adapter.condition, embedding.shape[1], BRIDGE_CONDITION_OFFSET))
         if start_payload is not None:
             if len(candidate.get('direct_adapters', ())) != len(direct_adapters):
                 raise ValueError('Starting direct residual count mismatch')
@@ -725,7 +750,10 @@ def main():
                 if old['layer'] != index or old['projection'] != name:
                     raise ValueError('Starting direct residual position mismatch')
                 with torch.no_grad():
-                    adapter.to_hidden.load_state_dict(old['to_hidden'], strict=True)
+                    state = dict(old['to_hidden'])
+                    state['weight'] = remap_condition_weight(
+                        state['weight'], adapter.to_hidden.weight, embedding.shape[1], BRIDGE_CONDITION_OFFSET)
+                    adapter.to_hidden.load_state_dict(state, strict=True)
                     adapter.gate.copy_(old['gate'])
                     if hasattr(adapter, 'query_gate') and 'query_gate' in old:
                         adapter.query_gate.load_state_dict(old['query_gate'], strict=True)
@@ -739,7 +767,10 @@ def main():
                 if old['location'] != location or old['name'] != name:
                     raise ValueError('Starting final residual position mismatch')
                 with torch.no_grad():
-                    adapter.to_hidden.load_state_dict(old['to_hidden'], strict=True)
+                    state = dict(old['to_hidden'])
+                    state['weight'] = remap_condition_weight(
+                        state['weight'], adapter.to_hidden.weight, embedding.shape[1], BRIDGE_CONDITION_OFFSET)
+                    adapter.to_hidden.load_state_dict(state, strict=True)
                     adapter.gate.copy_(old['gate'])
             saved_logits = candidate.get('logit_adapters', ())
             if saved_logits and len(saved_logits) != len(logit_adapters):
@@ -1190,6 +1221,7 @@ def main():
                          'bridge_class': type(bridge).__name__, 'store_full_fact': STORE_FULL_FACT,
                          'store_identity': STORE_IDENTITY, 'condition_slots': BRIDGE_CONDITION_SLOTS,
                          'condition_offset': BRIDGE_CONDITION_OFFSET,
+                         'remap_condition_init': REMAP_CONDITION_INIT,
                          'train_value_count': TRAIN_VALUE_COUNT, 'strict_swap_eval': STRICT_SWAP_EVAL,
                          'train_correction_sequences': TRAIN_CORRECTION_SEQUENCES,
                          'replay_value_start': REPLAY_VALUE_START, 'replay_value_factor': REPLAY_VALUE_FACTOR,
