@@ -38,6 +38,8 @@ CODEC_SLOT_COUNT = 4
 CODEC_ADD_EOS = True
 STORE_FULL_FACT = False
 STORE_IDENTITY = True
+STORE_RELATION = False
+RELATION_TOKEN_IDS = None
 BRIDGE_CONDITION_SLOTS = 2
 BRIDGE_CONDITION_OFFSET = 0
 REMAP_CONDITION_INIT = False
@@ -567,6 +569,15 @@ def relation_for_value(value):
     return relation, tuple(questions)
 
 
+def domain_for_value(value):
+    if VALUE_GROUPS is None:
+        return None
+    matches = [domain for domain, values in VALUE_GROUPS.items() if value in values]
+    if len(matches) != 1:
+        raise ValueError('Value must belong to exactly one relation domain')
+    return matches[0]
+
+
 def values_for_relation(value):
     if VALUE_GROUPS is None:
         return tuple(range(len(WORDS)))
@@ -697,6 +708,23 @@ def main():
     source_sha = p.sha(p.runtime.CHECKPOINT)
     tok = p.AutoTokenizer.from_pretrained(p.MODEL, local_files_only=True, trust_remote_code=False)
     word_ids = [tok.encode(word, add_special_tokens=False) for word in WORDS]
+    relation_token_ids = RELATION_TOKEN_IDS
+    if STORE_RELATION:
+        if VALUE_GROUPS is None or RELATION_TEMPLATES is None:
+            raise ValueError('Relation storage requires relation domains')
+        if relation_token_ids is None:
+            relation_token_ids = {
+                domain: tok.encode(relation, add_special_tokens=False)[-1]
+                for domain, (relation, _) in RELATION_TEMPLATES.items()
+            }
+            if len(set(relation_token_ids.values())) != len(relation_token_ids):
+                labels = tuple(chr(ord('A') + index) for index in range(len(VALUE_GROUPS)))
+                relation_token_ids = {
+                    domain: tok.encode(label, add_special_tokens=False)[-1]
+                    for domain, label in zip(VALUE_GROUPS, labels)
+                }
+        if set(relation_token_ids) != set(VALUE_GROUPS) or len(set(relation_token_ids.values())) != len(relation_token_ids):
+            raise ValueError('Relation storage requires one distinct token per domain')
     answer_word_ids = []
     for value, word in enumerate(WORDS):
         answer = answer_for_value('小林', value)
@@ -885,7 +913,10 @@ def main():
             for key, value in assignments:
                     target = torch.zeros((1, model.config.memory_width), device=device)
                     fact_ids = word_ids[value] if STORE_FULL_FACT else [word_ids[value][0]]
-                    stored_ids = ([identity_ids[key]] if STORE_IDENTITY else []) + fact_ids
+                    relation_ids = ([relation_token_ids[domain_for_value(value)]]
+                                    if STORE_RELATION else [])
+                    stored_ids = (([identity_ids[key]] if STORE_IDENTITY else [])
+                                  + relation_ids + fact_ids)
                     token_ids = torch.tensor(stored_ids, device=device)
                     if differentiable:
                         if not hasattr(codec, 'encode_differentiable'):
