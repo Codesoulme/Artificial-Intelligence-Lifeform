@@ -19,6 +19,16 @@ from spora.continuous_text_memory import ContinuousTextCodec
 from scripts.spora_memory_generation_metrics import asserted_fact
 
 
+def checked_value_span(answer_tokens, value_tokens, value, answer):
+    """Raise a provenance-rich error when a target value is not uniquely tokenized."""
+    try:
+        return unique_token_span(answer_tokens, value_tokens)
+    except ValueError as error:
+        raise ValueError(
+            f'Value token span is not unique: value={value!r}, answer={answer!r}, '
+            f'answer_tokens={answer_tokens!r}, value_tokens={value_tokens!r}') from error
+
+
 OUT = p.ROOT / 'runs/continuous-reader-semantic-bridge-pilot-20261112'
 TEACHER_CANDIDATE = p.ROOT / 'runs/continuous-reader-memory-conditioned-lowrank-pilot-20261112/reader.pt'
 SEED = 72381
@@ -76,6 +86,9 @@ LOGIT_RESIDUAL = False
 WORDS = ('苹果', '香蕉', '西瓜', '葡萄', '草莓', '橘子', '桃子', '芒果',
          '梨子', '柠檬', '菠萝', '樱桃', '柚子', '荔枝', '榴莲', '蓝莓',
          '火龙果', '木瓜')
+VALUE_GROUPS = None
+RELATION_TEMPLATES = None
+TRAIN_VALUES = None
 
 
 class TokenCodeDecoder(p.torch.nn.Module):
@@ -537,6 +550,48 @@ def replace_assignment(assignments, target_key, new_value):
     return tuple((key, new_value if key == target_key else value) for key, value in assignments)
 
 
+def relation_for_value(value):
+    """Return the relation label and question templates for one value."""
+    if VALUE_GROUPS is None or RELATION_TEMPLATES is None:
+        return '喜欢的水果是', (
+            '请只说出{name}喜欢的水果名称。',
+            '记录里{name}喜欢哪种水果？只写名称。',
+            '{name}当前最喜欢的水果是什么？',
+        )
+    if type(value) is not int or not 0 <= value < len(WORDS):
+        raise ValueError('Value is outside the relation vocabulary')
+    matches = [domain for domain, values in VALUE_GROUPS.items() if value in values]
+    if len(matches) != 1 or matches[0] not in RELATION_TEMPLATES:
+        raise ValueError('Every value must belong to exactly one relation')
+    relation, questions = RELATION_TEMPLATES[matches[0]]
+    return relation, tuple(questions)
+
+
+def values_for_relation(value):
+    if VALUE_GROUPS is None:
+        return tuple(range(len(WORDS)))
+    for values in VALUE_GROUPS.values():
+        if value in values:
+            return tuple(values)
+    raise ValueError('Value has no relation group')
+
+
+def answer_for_value(name, value):
+    relation, _ = relation_for_value(value)
+    separator = ' ' if VALUE_GROUPS is not None else ''
+    return f'{name}{relation}{separator}{WORDS[value]}。'
+
+
+def stored_value_correct(answer, name, value):
+    """Evaluate a stored fact across the optional relation vocabulary."""
+    if VALUE_GROUPS is None:
+        return asserted_fact(answer, name, WORDS[value])
+    if WORDS[value] not in answer:
+        return False
+    return all(other == value or WORDS[other] not in answer
+               for other in values_for_relation(value))
+
+
 def add_value_replay(records, start, end, factor):
     """Oversample selected training values without adding held-out examples."""
     if (type(start) is not int or type(end) is not int or type(factor) is not int
@@ -580,10 +635,10 @@ def bridge_optimizer_groups(parameters, bridge, enabled, learning_rate, mix_lear
     return groups, existing + extra
 
 
-def explicit_teacher_question(question, name, value):
-    if not all(isinstance(item, str) and item for item in (question, name, value)):
+def explicit_teacher_question(question, name, value, relation='喜欢的水果是'):
+    if not all(isinstance(item, str) and item for item in (question, name, value, relation)):
         raise ValueError('Teacher question, identity and value must be nonempty')
-    return f'以下是虚构记录：{name}喜欢的水果是{value}。\n{question}'
+    return f'以下是虚构记录：{name}{relation}{value}。\n{question}'
 
 
 def aligned_teacher_kl(student_scores, teacher_scores, temperature):
@@ -642,6 +697,17 @@ def main():
     source_sha = p.sha(p.runtime.CHECKPOINT)
     tok = p.AutoTokenizer.from_pretrained(p.MODEL, local_files_only=True, trust_remote_code=False)
     word_ids = [tok.encode(word, add_special_tokens=False) for word in WORDS]
+    answer_word_ids = []
+    for value, word in enumerate(WORDS):
+        answer = answer_for_value('小林', value)
+        encoded = tok(answer, add_special_tokens=False, return_offsets_mapping=True)
+        start = answer.rfind(word)
+        end = start + len(word)
+        contextual = [token_id for token_id, (left, right) in zip(
+            encoded['input_ids'], encoded['offset_mapping']) if left < end and right > start]
+        if not contextual:
+            raise ValueError(f'Answer tokenizer produced no value span for {word!r}')
+        answer_word_ids.append(contextual)
     if any(not ids or len(ids) > 3 for ids in word_ids):
         raise ValueError('Each word must occupy one to three tokens')
     if len({ids[0] for ids in word_ids}) != len(word_ids):
@@ -866,30 +932,51 @@ def main():
         if TRAIN_EXTRA_QUESTIONS:
             questions += tuple(EXTRA_QUESTION_TEMPLATES)
             question_intents += (2, 2, 3)
+        training_values = (tuple(range(TRAIN_VALUE_COUNT)) if TRAIN_VALUES is None
+                           else tuple(TRAIN_VALUES))
+        if (not training_values or any(type(value) is not int or not 0 <= value < len(WORDS)
+                                       for value in training_values)
+                or len(set(training_values)) != len(training_values)):
+            raise ValueError('Invalid training value schedule')
+
+        def templates_for_value(value):
+            _, templates = relation_for_value(value)
+            if TRAIN_EXTRA_QUESTIONS and VALUE_GROUPS is None:
+                return templates + tuple(EXTRA_QUESTION_TEMPLATES)
+            return templates
+
+        def intents_for_value(value):
+            count = len(templates_for_value(value))
+            return tuple((0, 0, 1, 2, 2, 3)[:count])
+
         cases = []
         states = {}
         schedule = [('train', key, value, question)
-                    for key in (0, 1, 2) for value in range(TRAIN_VALUE_COUNT)
-                    for question in range(len(questions))]
-        held_questions = questions if TRAIN_EXTRA_QUESTIONS else (questions[0],)
+                    for key in (0, 1, 2) for value in training_values
+                    for question in range(len(templates_for_value(value)))]
         schedule += [('held_name', 3, value, question)
-                     for value in range(len(WORDS)) for question in range(len(held_questions))]
+                     for value in range(len(WORDS)) for question in range(
+                         len(templates_for_value(value)) if TRAIN_EXTRA_QUESTIONS or VALUE_GROUPS is not None else 1)]
         for group, key, value, question_index in schedule:
-            question_template = questions[question_index]
-            intent_label = question_intents[question_index]
+            value_questions = templates_for_value(value)
+            value_intents = intents_for_value(value)
+            question_template = value_questions[question_index]
+            intent_label = value_intents[question_index]
             if (key, value) not in states:
                 states[key, value] = state_for(value, key)
             state = states[key, value]
             name = ('小林', '小周', '小王', '小赵')[key]
             question = question_template.format(name=name)
-            answer = f'{name}喜欢的水果是{WORDS[value]}。'
+            answer = answer_for_value(name, value)
             prompt = p.closed_think_inputs(tok, question, 'cuda')
             answer_tokens = tok.encode(answer, add_special_tokens=False)
-            value_position = unique_token_span(answer_tokens, word_ids[value])
+            value_position = checked_value_span(answer_tokens, answer_word_ids[value], WORDS[value], answer)
             target = torch.tensor([answer_tokens + [tok.eos_token_id]], device=device)
             ids = torch.cat((prompt['input_ids'], target), dim=1)
             spec = p._memory_args(model, state, {'key': key, 'intent': 'current', 'event_time': 0})
+            relation, _ = relation_for_value(value)
             cases.append({'group': group, 'key': key, 'value': value, 'name': name,
+                          'relation': relation,
                           'question': question, 'state': state, 'prompt': prompt, 'ids': ids,
                           'spec': spec, 'value_position': value_position,
                           'intent_label': intent_label,
@@ -897,18 +984,21 @@ def main():
         if TRAIN_CORRECTION_SEQUENCES:
             for key in (0, 1, 2):
                 name = ('小林', '小周', '小王')[key]
-                for value in range(TRAIN_VALUE_COUNT):
-                    old_value = (value + 1) % TRAIN_VALUE_COUNT
-                    question = questions[0].format(name=name)
+                for value in training_values:
+                    candidates = values_for_relation(value)
+                    old_value = candidates[(candidates.index(value) - 1) % len(candidates)]
+                    question = templates_for_value(value)[0].format(name=name)
                     state = state_for_values((old_value, value), key)
-                    answer = f'{name}喜欢的水果是{WORDS[value]}。'
+                    answer = answer_for_value(name, value)
                     prompt = p.closed_think_inputs(tok, question, 'cuda')
                     answer_tokens = tok.encode(answer, add_special_tokens=False)
-                    value_position = unique_token_span(answer_tokens, word_ids[value])
+                    value_position = checked_value_span(answer_tokens, answer_word_ids[value], WORDS[value], answer)
                     target = torch.tensor([answer_tokens + [tok.eos_token_id]], device=device)
                     ids = torch.cat((prompt['input_ids'], target), dim=1)
                     spec = p._memory_args(model, state, {'key': key, 'intent': 'current', 'event_time': 0})
+                    relation, _ = relation_for_value(value)
                     cases.append({'group': 'train_correction', 'key': key, 'value': value, 'name': name,
+                                  'relation': relation,
                                   'question': question, 'state': state, 'prompt': prompt, 'ids': ids,
                                   'spec': spec, 'value_position': value_position,
                                   'intent_label': question_intents[0],
@@ -917,19 +1007,21 @@ def main():
         if TRAIN_MULTI_ENTITY_STATES:
             for target_key in (0, 1, 2):
                 name = ('小林', '小周', '小王')[target_key]
-                for value in range(TRAIN_VALUE_COUNT):
-                    assignments = multi_entity_assignments(target_key, value, TRAIN_VALUE_COUNT)
+                for value in training_values:
+                    assignments = multi_entity_assignments(target_key, value, len(WORDS))
                     state = state_for_assignments(assignments)
-                    for question_index, question_template in enumerate(questions):
+                    for question_index, question_template in enumerate(templates_for_value(value)):
                         question = question_template.format(name=name)
-                        answer = f'{name}喜欢的水果是{WORDS[value]}。'
+                        answer = answer_for_value(name, value)
                         prompt = p.closed_think_inputs(tok, question, 'cuda')
                         answer_tokens = tok.encode(answer, add_special_tokens=False)
-                        value_position = unique_token_span(answer_tokens, word_ids[value])
+                        value_position = checked_value_span(answer_tokens, answer_word_ids[value], WORDS[value], answer)
                         target = torch.tensor([answer_tokens + [tok.eos_token_id]], device=device)
                         ids = torch.cat((prompt['input_ids'], target), dim=1)
                         spec = p._memory_args(model, state, {'key': target_key, 'intent': 'current', 'event_time': 0})
+                        relation, _ = relation_for_value(value)
                         cases.append({'group': 'train_multi', 'key': target_key, 'value': value, 'name': name,
+                                      'relation': relation,
                                       'question': question, 'state': state, 'prompt': prompt, 'ids': ids,
                                       'spec': spec, 'value_position': value_position,
                                       'intent_label': question_intents[question_index], 'assignments': assignments,
@@ -945,7 +1037,7 @@ def main():
                     answer = f'{held_name}喜欢的水果是{WORDS[value]}。'
                     prompt = p.closed_think_inputs(tok, question, 'cuda')
                     answer_tokens = tok.encode(answer, add_special_tokens=False)
-                    value_position = unique_token_span(answer_tokens, word_ids[value])
+                    value_position = checked_value_span(answer_tokens, answer_word_ids[value], WORDS[value], answer)
                     target = torch.tensor([answer_tokens + [tok.eos_token_id]], device=device)
                     ids = torch.cat((prompt['input_ids'], target), dim=1)
                     spec = p._memory_args(model, held_multi_states[value],
@@ -961,7 +1053,7 @@ def main():
         def evaluate(phase):
             rows = []
             selected = [x for x in cases if x['group'] in ('held_name', 'held_name_multi') or
-                        (x['group'] == 'train' and x['value'] < 4 and x['question'] == questions[0].format(name=x['name']))]
+                        (x['group'] == 'train' and x['question'] == templates_for_value(x['value'])[0].format(name=x['name']))]
             if EVALUATION_VALUES is not None:
                 allowed_values = set(EVALUATION_VALUES)
                 if not allowed_values or any(type(v) is not int or not 0 <= v < len(WORDS) for v in allowed_values):
@@ -969,14 +1061,15 @@ def main():
                 selected = [item for item in selected if item['group'] == 'train' or item['value'] in allowed_values]
             if EVALUATE_FIRST_MULTI_QUESTION_ONLY:
                 selected = [item for item in selected if item['group'] != 'held_name_multi'
-                            or item['question'] == questions[0].format(name=item['name'])]
+                            or item['question'] == templates_for_value(item['value'])[0].format(name=item['name'])]
             for item in selected:
                 conditions = [('memory', item['spec'])]
                 if (item['group'], item['value']) in (('train', 0), ('held_name', 16)):
                     conditions += [('empty', p._memory_args(model, empty,
                         {'key': item['key'], 'intent': 'current', 'event_time': 0})), ('off', None)]
                 if STRICT_SWAP_EVAL and item['group'] in ('held_name', 'held_name_multi'):
-                    swapped = (item['value'] + 1) % len(WORDS)
+                    candidates = values_for_relation(item['value'])
+                    swapped = candidates[(candidates.index(item['value']) + 1) % len(candidates)]
                     swap_state = (states[item['key'], swapped] if item['group'] == 'held_name'
                                   else held_multi_states[swapped])
                     conditions.append(('swapped', p._memory_args(model, swap_state,
@@ -988,20 +1081,23 @@ def main():
                         prefix = item['prompt']['input_ids'].shape[1]
                         scores = forced[0, prefix - 1:prefix - 1 + item['ids'].shape[1] - prefix]
                         fact_scores = scores[item['value_position']]
-                        correct_id = word_ids[item['value']][0]
-                        competitor = word_ids[(item['value'] + 1) % len(WORDS)][0]
+                        correct_id = answer_word_ids[item['value']][0]
+                        candidates = values_for_relation(item['value'])
+                        competitor_value = candidates[(candidates.index(item['value']) + 1) % len(candidates)]
+                        competitor = answer_word_ids[competitor_value][0]
                         output = decoder.generate(**item['prompt'], **({**spec, 'use_cache': True} if spec else {}),
                             max_new_tokens=24, do_sample=False, pad_token_id=tok.pad_token_id,
                             eos_token_id=tok.eos_token_id)
                     tail = output[0, prefix:].tolist()
                     answer = tok.decode(tail, skip_special_tokens=True).strip()
-                    stored_value = (item['value'] + 1) % len(WORDS) if condition == 'swapped' else item['value']
+                    stored_value = (competitor_value if condition == 'swapped' else item['value'])
+                    expected_text = answer_for_value(item['name'], item['value'])
                     rows.append({'group': item['group'], 'name': item['name'], 'condition': condition,
                                  'question': item['question'], 'expected': WORDS[item['value']],
-                                 'answer': answer, 'token_ids': tail, 'exact': answer == WORDS[item['value']],
+                                 'answer': answer, 'token_ids': tail, 'exact': answer == expected_text,
                                  'contains_expected': WORDS[item['value']] in answer,
                                  'stored_expected': WORDS[stored_value] if condition in ('memory', 'swapped') else None,
-                                 'stored_fact_correct': (asserted_fact(answer, item['name'], WORDS[stored_value])
+                                 'stored_fact_correct': (stored_value_correct(answer, item['name'], stored_value)
                                                          if condition in ('memory', 'swapped') else None),
                                  'forced_fact_rank': int((fact_scores > fact_scores[correct_id]).sum()) + 1,
                                  'forced_pair_margin': float(fact_scores[correct_id] - fact_scores[competitor])})
@@ -1073,10 +1169,13 @@ def main():
             target = item['ids'][:, prefix:]
             scores = logits[:, prefix - 1:prefix - 1 + target.shape[1]]
             full_loss = torch.nn.functional.cross_entropy(scores.reshape(-1, scores.shape[-1]), target.reshape(-1))
-            if TRAIN_VALUE_COUNT < len(WORDS):
-                other_value = (item['value'] + 1 + rng.randrange(TRAIN_VALUE_COUNT - 1)) % TRAIN_VALUE_COUNT
-            else:
-                other_value = (item['value'] + 1 + rng.randrange(len(WORDS) - 1)) % len(WORDS)
+            candidates = values_for_relation(item['value'])
+            if item['group'].startswith('train'):
+                candidates = tuple(value for value in candidates if value in training_values)
+            if len(candidates) < 2:
+                raise ValueError('A relation requires at least two counterfactual values')
+            offset = 1 + rng.randrange(len(candidates) - 1)
+            other_value = candidates[(candidates.index(item['value']) + offset) % len(candidates)]
             if item['group'] == 'train_multi':
                 swap_state = state_for_assignments(replace_assignment(item['assignments'], item['key'], other_value))
             else:
@@ -1092,7 +1191,7 @@ def main():
                 other_spec['preserve_memory_grad'] = True
             other_logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
                                    **other_spec).logits[:, prefix - 1 + item['value_position'], :].float()
-            correct_id, wrong_id = word_ids[item['value']][0], word_ids[other_value][0]
+            correct_id, wrong_id = answer_word_ids[item['value']][0], answer_word_ids[other_value][0]
             own = scores[:, item['value_position'], :]
             correct_margin = own[:, correct_id] - own[:, wrong_id]
             wrong_margin = other_logits[:, correct_id] - other_logits[:, wrong_id]
@@ -1103,7 +1202,9 @@ def main():
             loss = 4.0 * full_loss + 0.5 * (fact_ce + swapped_ce) + contrast
             teacher_kl = torch.zeros((), device=device)
             if TEACHER_KL_WEIGHT:
-                teacher_question = explicit_teacher_question(item['question'], item['name'], WORDS[item['value']])
+                teacher_question = explicit_teacher_question(
+                    item['question'], item['name'], WORDS[item['value']],
+                    item.get('relation', relation_for_value(item['value'])[0]))
                 teacher_prompt = p.closed_think_inputs(tok, teacher_question, 'cuda')
                 teacher_prefix = teacher_prompt['input_ids'].shape[1]
                 teacher_ids = torch.cat((teacher_prompt['input_ids'], target), dim=1)
@@ -1116,7 +1217,9 @@ def main():
             teacher_hidden_logit = torch.zeros((), device=device)
             teacher_hidden_delta = torch.zeros((), device=device)
             if TEACHER_HIDDEN_WEIGHT or TEACHER_HIDDEN_DELTA_WEIGHT:
-                teacher_question = explicit_teacher_question(item['question'], item['name'], WORDS[item['value']])
+                teacher_question = explicit_teacher_question(
+                    item['question'], item['name'], WORDS[item['value']],
+                    item.get('relation', relation_for_value(item['value'])[0]))
                 teacher_prompt = p.closed_think_inputs(tok, teacher_question, 'cuda')
                 teacher_prefix = teacher_prompt['input_ids'].shape[1]
                 teacher_ids = torch.cat((teacher_prompt['input_ids'], target), dim=1)
