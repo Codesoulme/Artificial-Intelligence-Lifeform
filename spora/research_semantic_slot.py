@@ -8,6 +8,7 @@ from torch import nn
 
 
 _ACTIVE_SLOT = ContextVar('spora_semantic_slot', default=None)
+_ACTIVE_SEQUENCE = ContextVar('spora_semantic_slot_sequence', default=None)
 
 
 def _consume_slot():
@@ -16,6 +17,15 @@ def _consume_slot():
         return None
     state['used'] = True
     return state['slot']
+
+
+def _consume_sequence_slot():
+    state = _ACTIVE_SEQUENCE.get()
+    if state is None or state['index'] >= len(state['slots']):
+        return None
+    slot = state['slots'][state['index']]
+    state['index'] += 1
+    return slot
 
 
 class SemanticSlotBridge(nn.Module):
@@ -60,7 +70,9 @@ class SemanticSlotLMHead(nn.Module):
         self.bridge = bridge
 
     def forward(self, hidden):
-        slot = _consume_slot()
+        slot = _consume_sequence_slot()
+        if slot is None:
+            slot = _consume_slot()
         if slot is None:
             return self.base(hidden)
         residual = self.bridge(slot).to(device=hidden.device, dtype=hidden.dtype)
@@ -80,7 +92,9 @@ class ScaledSemanticSlotLMHead(nn.Module):
         self.scale = float(scale)
 
     def forward(self, hidden):
-        slot = _consume_slot()
+        slot = _consume_sequence_slot()
+        if slot is None:
+            slot = _consume_slot()
         if slot is None:
             return self.base(hidden)
         residual = (self.scale * slot).to(device=hidden.device, dtype=hidden.dtype)
@@ -119,6 +133,38 @@ def install_gain(model, *, rank=16, initial_gain=32.0):
     return bridge
 
 
+class SequenceSemanticSlotLMHead(nn.Module):
+    """Apply one semantic vector per cached decoder step."""
+
+    def __init__(self, base, scale=32.0):
+        super().__init__()
+        if not isinstance(base, nn.Linear) or not isinstance(scale, (int, float)) or scale <= 0:
+            raise ValueError('A linear head and positive scale are required')
+        self.base = base
+        self.scale = float(scale)
+
+    def forward(self, hidden):
+        slot = _consume_sequence_slot()
+        if slot is None:
+            slot = _consume_slot()
+        if slot is None:
+            return self.base(hidden)
+        residual = (self.scale * slot).to(device=hidden.device, dtype=hidden.dtype)
+        while residual.ndim < hidden.ndim:
+            residual = residual.unsqueeze(0)
+        return self.base(hidden + residual)
+
+
+def install_sequence_scaled(model, *, scale=32.0):
+    """Install a direct sequence-slot capacity probe head."""
+    head = getattr(model, 'lm_head', None)
+    if isinstance(head, (SemanticSlotLMHead, ScaledSemanticSlotLMHead,
+                         SequenceSemanticSlotLMHead)) or not isinstance(head, nn.Linear):
+        raise ValueError('Expected an unwrapped linear language head')
+    model.lm_head = SequenceSemanticSlotLMHead(head, scale=scale)
+    return model.lm_head
+
+
 @contextmanager
 def use_slot(slot):
     """Expose one isolated slot for a call, including cached generation steps."""
@@ -131,3 +177,26 @@ def use_slot(slot):
         yield
     finally:
         _ACTIVE_SLOT.reset(token)
+
+
+@contextmanager
+def use_slot_sequence(slots):
+    """Expose a finite sequence of semantic vectors for cached generation."""
+    if isinstance(slots, torch.Tensor):
+        if slots.ndim != 2:
+            raise ValueError('Semantic slot sequence must be rank two')
+        slots = tuple(slots[index] for index in range(slots.shape[0]))
+    if not isinstance(slots, (tuple, list)) or not slots:
+        raise ValueError('A nonempty semantic slot sequence is required')
+    normalized = []
+    for slot in slots:
+        if not isinstance(slot, torch.Tensor) or slot.ndim != 1 or not slot.is_floating_point():
+            raise ValueError('Every semantic sequence slot must be a floating vector')
+        if not bool(torch.isfinite(slot).all()):
+            raise ValueError('Semantic sequence slots must be finite')
+        normalized.append(slot.detach())
+    token = _ACTIVE_SEQUENCE.set({'slots': tuple(normalized), 'index': 0})
+    try:
+        yield
+    finally:
+        _ACTIVE_SEQUENCE.reset(token)

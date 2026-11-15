@@ -4,8 +4,9 @@ import torch
 from torch import nn
 
 from spora.research_semantic_slot import (GainSemanticSlotBridge, ScaledSemanticSlotLMHead,
-                                           SemanticSlotBridge, install, install_gain,
-                                           install_scaled, use_slot)
+                                           SemanticSlotBridge, SequenceSemanticSlotLMHead,
+                                           install, install_gain, install_scaled,
+                                           install_sequence_scaled, use_slot, use_slot_sequence)
 
 
 class ToyCausalLM(nn.Module):
@@ -59,6 +60,21 @@ class ResearchSemanticSlotTests(unittest.TestCase):
             output = model.lm_head(torch.zeros(1, 2, 3))
         expected = model.lm_head.base((3. * slot).reshape(1, 1, 3).expand(1, 2, 3))
         torch.testing.assert_close(output, expected)
+
+    def test_sequence_head_consumes_vectors_in_order(self):
+        model = ToyCausalLM()
+        install_sequence_scaled(model, scale=2.)
+        self.assertIsInstance(model.lm_head, SequenceSemanticSlotLMHead)
+        hidden = torch.zeros(1, 2, 3)
+        first = torch.tensor([1., 0., 0.])
+        second = torch.tensor([0., 1., 0.])
+        with use_slot_sequence([first, second]):
+            first_output = model.lm_head(hidden)
+            second_output = model.lm_head(hidden)
+            exhausted_output = model.lm_head(hidden)
+        torch.testing.assert_close(first_output, model.lm_head.base((2 * first).reshape(1, 1, 3).expand_as(hidden)))
+        torch.testing.assert_close(second_output, model.lm_head.base((2 * second).reshape(1, 1, 3).expand_as(hidden)))
+        torch.testing.assert_close(exhausted_output, model.lm_head.base(hidden))
 
 
 if __name__ == '__main__':
