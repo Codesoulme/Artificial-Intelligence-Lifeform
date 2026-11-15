@@ -3,9 +3,11 @@ import unittest
 import torch
 
 from scripts.deepseek_spora_semantic_bridge_pilot import (
+    aligned_teacher_hidden_delta,
     aligned_teacher_hidden_cosine,
     aligned_teacher_kl,
     explicit_teacher_question,
+    select_condition_slots,
 )
 
 
@@ -40,6 +42,25 @@ class SemanticTeacherAlignmentTests(unittest.TestCase):
         self.assertLess(float(aligned_teacher_hidden_cosine(teacher.detach(), teacher).abs()), 1e-5)
         with self.assertRaises(ValueError):
             aligned_teacher_hidden_cosine(student, teacher[:, :1])
+
+    def test_hidden_delta_alignment_uses_a_detached_baseline(self):
+        baseline = torch.tensor([[[1., 1.], [1., 1.]]])
+        teacher = torch.tensor([[[2., 1.], [1., 3.]]])
+        student = (baseline + torch.tensor([[[0., 1.], [1., 0.]]])).requires_grad_()
+        loss = aligned_teacher_hidden_delta(student, baseline, teacher)
+        self.assertGreater(float(loss), 0.0)
+        loss.backward()
+        self.assertGreater(float(student.grad.norm()), 0.0)
+        with self.assertRaises(ValueError):
+            aligned_teacher_hidden_delta(student, baseline[:, :1], teacher)
+
+    def test_condition_lane_can_exclude_identity_slot(self):
+        memory = torch.arange(30., dtype=torch.float32).reshape(1, 5, 6)
+        selected = select_condition_slots(memory, 5, 3, 1)
+        expected = torch.nn.functional.normalize(memory[:, 1:4], dim=-1)
+        self.assertTrue(torch.equal(selected, expected))
+        with self.assertRaises(ValueError):
+            select_condition_slots(memory, 5, 4, 2)
 
 
 if __name__ == '__main__':

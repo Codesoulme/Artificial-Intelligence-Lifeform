@@ -29,6 +29,7 @@ CODEC_ADD_EOS = True
 STORE_FULL_FACT = False
 STORE_IDENTITY = True
 BRIDGE_CONDITION_SLOTS = 2
+BRIDGE_CONDITION_OFFSET = 0
 TRAIN_VALUE_COUNT = 16
 TRAIN_CORRECTION_SEQUENCES = False
 TRAIN_MULTI_ENTITY_STATES = False
@@ -57,6 +58,7 @@ TEACHER_KL_WEIGHT = 0.0
 TEACHER_KL_TEMPERATURE = 2.0
 TEACHER_HIDDEN_WEIGHT = 0.0
 TEACHER_HIDDEN_LOGIT_WEIGHT = 0.0
+TEACHER_HIDDEN_DELTA_WEIGHT = 0.0
 CROSS_ATTENTION_MEMORY = False
 CROSS_ATTENTION_LAYER = 23
 CROSS_ATTENTION_WIDTH = 64
@@ -155,6 +157,7 @@ class MemorySemanticGatedLowRankLinear(p.torch.nn.Module):
         self.slot_count = getattr(bridge, 'slot_count', CODEC_SLOT_COUNT)
         self.slot_width = memory_width // self.slot_count
         self.condition_slots = condition_slots
+        self.condition_offset = BRIDGE_CONDITION_OFFSET
         self.bridge = bridge
         self.bridge.requires_grad_(False)
         self.a = p.torch.nn.Parameter(torch_empty(rank, base.in_features, base.weight.device))
@@ -193,7 +196,7 @@ class MemorySemanticGatedLowRankLinear(p.torch.nn.Module):
             reads.append(raw)
         packed = torch_mean(reads[0], reads[1])[:, :self.slot_count * self.slot_width]
         memory = packed.reshape(1, self.slot_count, self.slot_width)
-        slots = p.torch.nn.functional.normalize(memory[:, :self.condition_slots], dim=-1)
+        slots = select_condition_slots(memory, self.slot_count, self.condition_slots, self.condition_offset)
         decoded = self.bridge(slots).reshape(1, -1)
         gate = p.torch.tanh(p.torch.nn.functional.linear(decoded, self.condition))
         hidden = p.torch.nn.functional.linear(x.float(), self.a) * gate.unsqueeze(1)
@@ -216,6 +219,7 @@ class MemoryResidualOutput(p.torch.nn.Module):
         self.slot_count = getattr(bridge, 'slot_count', CODEC_SLOT_COUNT)
         self.slot_width = memory_width // self.slot_count
         self.condition_slots = condition_slots
+        self.condition_offset = BRIDGE_CONDITION_OFFSET
         self.bridge = bridge
         self.bridge.requires_grad_(False)
         self.to_hidden = p.torch.nn.Linear(condition_slots * embedding_width,
@@ -258,7 +262,7 @@ class MemoryResidualOutput(p.torch.nn.Module):
             reads.append(raw)
         packed = torch_mean(reads[0], reads[1])[:, :self.slot_count * self.slot_width]
         memory = packed.reshape(1, self.slot_count, self.slot_width)
-        slots = p.torch.nn.functional.normalize(memory[:, :self.condition_slots], dim=-1)
+        slots = select_condition_slots(memory, self.slot_count, self.condition_slots, self.condition_offset)
         return self.bridge(slots).reshape(1, -1)
 
     def forward(self, x):
@@ -302,6 +306,7 @@ class MemorySlotCrossAttention(p.torch.nn.Module):
         object.__setattr__(self, 'memory_context', memory_context)
         self.enabled = True
         self.memory_width, self.slot_width, self.slots, self.width = memory_width, codec.slot_width, slots, width
+        self.condition_offset = BRIDGE_CONDITION_OFFSET
         self.register_buffer('lookup_codes', codec.codebook.detach(), persistent=False)
         self.register_buffer('lookup_embeddings', embedding.detach(), persistent=False)
         self.query = torch.nn.Linear(base.in_features, width, bias=False, device=base.weight.device, dtype=torch.float32)
@@ -344,7 +349,9 @@ class MemorySlotCrossAttention(p.torch.nn.Module):
                 raise ValueError('Invalid memory cross-attention state')
             query = torch.nn.functional.normalize(address.to(device=x.device, dtype=torch.float32), dim=-1)
             reads.append(torch.bmm(matrix.to(device=x.device, dtype=torch.float32), query.unsqueeze(-1)).squeeze(-1))
-        packed = ((reads[0] + reads[1]) * .5)[:, :self.slots * self.slot_width]
+        start = self.condition_offset * self.slot_width
+        end = (self.condition_offset + self.slots) * self.slot_width
+        packed = ((reads[0] + reads[1]) * .5)[:, start:end]
         codes = packed.reshape(1, self.slots, self.slot_width)
         with torch.no_grad():
             valid = codes.norm(dim=-1) > 1e-5
@@ -374,6 +381,7 @@ class MemoryFinalHiddenResidual(p.torch.nn.Module):
         self.slot_count = getattr(bridge, 'slot_count', CODEC_SLOT_COUNT)
         self.slot_width = memory_width // self.slot_count
         self.condition_slots = condition_slots
+        self.condition_offset = BRIDGE_CONDITION_OFFSET
         self.bridge = bridge
         self.bridge.requires_grad_(False)
         hidden_width = int(base.weight.shape[0])
@@ -406,7 +414,7 @@ class MemoryFinalHiddenResidual(p.torch.nn.Module):
             reads.append(raw)
         packed = ((reads[0] + reads[1]) * 0.5)[:, :self.slot_count * self.slot_width]
         memory = packed.reshape(1, self.slot_count, self.slot_width)
-        selected = p.torch.nn.functional.normalize(memory[:, :self.condition_slots], dim=-1)
+        selected = select_condition_slots(memory, self.slot_count, self.condition_slots, self.condition_offset)
         decoded = self.bridge(selected).reshape(1, -1)
         residual = self.to_hidden(decoded).unsqueeze(1)
         return output + p.torch.sigmoid(self.gate).to(output.dtype) * residual.to(output.dtype)
@@ -424,6 +432,7 @@ class MemorySemanticLogitResidual(p.torch.nn.Module):
         self.slot_count = getattr(bridge, 'slot_count', CODEC_SLOT_COUNT)
         self.slot_width = memory_width // self.slot_count
         self.condition_slots = condition_slots
+        self.condition_offset = BRIDGE_CONDITION_OFFSET
         self.bridge = bridge
         self.bridge.requires_grad_(False)
         self.register_buffer('embedding', embedding.detach().float().clone())
@@ -456,7 +465,7 @@ class MemorySemanticLogitResidual(p.torch.nn.Module):
                                      query.unsqueeze(-1)).squeeze(-1))
         packed = ((reads[0] + reads[1]) * 0.5)[:, :self.slot_count * self.slot_width]
         memory = packed.reshape(1, self.slot_count, self.slot_width)
-        selected = p.torch.nn.functional.normalize(memory[:, :self.condition_slots], dim=-1)
+        selected = select_condition_slots(memory, self.slot_count, self.condition_slots, self.condition_offset)
         decoded = self.bridge(selected).reshape(1, -1)
         semantic = decoded.reshape(1, self.condition_slots, -1).mean(1)
         semantic_logits = semantic @ self.embedding.to(device=hidden.device).T
@@ -471,6 +480,18 @@ def torch_empty(rows, cols, device):
 
 def torch_mean(left, right):
     return (left + right) * 0.5
+
+
+def select_condition_slots(memory, slot_count, condition_slots, offset):
+    """Select a contiguous semantic lane without exposing other slots."""
+    if (not isinstance(memory, p.torch.Tensor) or memory.ndim != 3
+            or type(slot_count) is not int or type(condition_slots) is not int
+            or type(offset) is not int or slot_count < 1 or condition_slots < 1
+            or offset < 0 or offset + condition_slots > slot_count
+            or memory.shape[1] < offset + condition_slots):
+        raise ValueError('Invalid semantic condition lane')
+    return p.torch.nn.functional.normalize(
+        memory[:, offset:offset + condition_slots], dim=-1)
 
 
 def multi_entity_assignments(target_key, value, value_count, keys=(0, 1, 2)):
@@ -562,6 +583,24 @@ def aligned_teacher_hidden_cosine(student_hidden, teacher_hidden):
     student = torch.nn.functional.normalize(student_hidden.float(), dim=-1)
     teacher = torch.nn.functional.normalize(teacher_hidden.detach().float(), dim=-1)
     return (1.0 - (student * teacher).sum(-1)).mean()
+
+
+def aligned_teacher_hidden_delta(student_hidden, baseline_hidden, teacher_hidden):
+    """Match the fact-induced hidden-state change while preserving base style."""
+    torch = p.torch
+    if (not all(isinstance(item, torch.Tensor) for item in
+                (student_hidden, baseline_hidden, teacher_hidden))
+            or student_hidden.shape != baseline_hidden.shape
+            or student_hidden.shape != teacher_hidden.shape
+            or student_hidden.ndim != 3 or not student_hidden.numel()):
+        raise ValueError('Invalid hidden-state delta alignment')
+    baseline = baseline_hidden.detach().float()
+    student_delta = student_hidden.float() - baseline
+    teacher_delta = teacher_hidden.detach().float() - baseline
+    cosine = 1.0 - torch.nn.functional.cosine_similarity(student_delta, teacher_delta, dim=-1)
+    teacher_norm = teacher_delta.square().mean(dim=-1).clamp_min(1e-6)
+    magnitude = (student_delta - teacher_delta).square().mean(dim=-1) / teacher_norm
+    return (cosine + 0.1 * magnitude).mean()
 
 
 def main():
@@ -960,7 +999,7 @@ def main():
             prefix = item['prompt']['input_ids'].shape[1]
             optimizer.zero_grad(set_to_none=True)
             student_output = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
-                                     output_hidden_states=bool(TEACHER_HIDDEN_WEIGHT),
+                                     output_hidden_states=bool(TEACHER_HIDDEN_WEIGHT or TEACHER_HIDDEN_DELTA_WEIGHT),
                                      return_dict=True, **item['spec'])
             logits = student_output.logits.float()
             intent_logits = (direct_adapters[0][2].last_intent_logits
@@ -1003,7 +1042,8 @@ def main():
                 loss = loss + TEACHER_KL_WEIGHT * teacher_kl
             teacher_hidden = torch.zeros((), device=device)
             teacher_hidden_logit = torch.zeros((), device=device)
-            if TEACHER_HIDDEN_WEIGHT:
+            teacher_hidden_delta = torch.zeros((), device=device)
+            if TEACHER_HIDDEN_WEIGHT or TEACHER_HIDDEN_DELTA_WEIGHT:
                 teacher_question = explicit_teacher_question(item['question'], item['name'], WORDS[item['value']])
                 teacher_prompt = p.closed_think_inputs(tok, teacher_question, 'cuda')
                 teacher_prefix = teacher_prompt['input_ids'].shape[1]
@@ -1018,8 +1058,20 @@ def main():
                 student_hidden_states = student_output.hidden_states[-1]
                 student_answer_hidden = student_hidden_states[:, prefix - 1:prefix - 1 + target.shape[1]]
                 teacher_answer_hidden = teacher_hidden_states[:, teacher_prefix - 1:teacher_prefix - 1 + target.shape[1]]
-                teacher_hidden = aligned_teacher_hidden_cosine(student_answer_hidden, teacher_answer_hidden)
-                loss = loss + TEACHER_HIDDEN_WEIGHT * teacher_hidden
+                if TEACHER_HIDDEN_WEIGHT:
+                    teacher_hidden = aligned_teacher_hidden_cosine(student_answer_hidden, teacher_answer_hidden)
+                    loss = loss + TEACHER_HIDDEN_WEIGHT * teacher_hidden
+                if TEACHER_HIDDEN_DELTA_WEIGHT:
+                    with torch.no_grad():
+                        baseline_output = decoder(input_ids=item['ids'],
+                                                  attention_mask=torch.ones_like(item['ids']),
+                                                  output_hidden_states=True, return_dict=True,
+                                                  use_cache=False)
+                        baseline_hidden_states = baseline_output.hidden_states[-1]
+                    baseline_answer_hidden = baseline_hidden_states[:, prefix - 1:prefix - 1 + target.shape[1]]
+                    teacher_hidden_delta = aligned_teacher_hidden_delta(
+                        student_answer_hidden, baseline_answer_hidden, teacher_answer_hidden)
+                    loss = loss + TEACHER_HIDDEN_DELTA_WEIGHT * teacher_hidden_delta
                 if TEACHER_HIDDEN_LOGIT_WEIGHT:
                     student_answer_scores = logits[:, prefix - 1:prefix - 1 + target.shape[1]]
                     teacher_answer_scores = teacher_scores[:, teacher_prefix - 1:teacher_prefix - 1 + target.shape[1]]
@@ -1041,6 +1093,7 @@ def main():
                               'full_loss': float(full_loss.detach()), 'contrast': float(contrast.detach()),
                               'teacher_kl': float(teacher_kl.detach()),
                               'teacher_hidden': float(teacher_hidden.detach()),
+                              'teacher_hidden_delta': float(teacher_hidden_delta.detach()),
                               'teacher_hidden_logit': float(teacher_hidden_logit.detach()),
                               'intent_ce': float(intent_ce.detach()),
                               'grad_norm': float(norm)})
@@ -1078,6 +1131,7 @@ def main():
                 'teacher_kl_weight': TEACHER_KL_WEIGHT, 'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
                 'teacher_hidden_weight': TEACHER_HIDDEN_WEIGHT,
                 'teacher_hidden_logit_weight': TEACHER_HIDDEN_LOGIT_WEIGHT,
+                'teacher_hidden_delta_weight': TEACHER_HIDDEN_DELTA_WEIGHT,
                 'notice': 'Training recovery only; post-training evaluation was not completed at save time.',
             }
             if final_adapters or logit_adapters or QUERY_INTENT_GATE or QUERY_SCALAR_GATE:
@@ -1135,6 +1189,7 @@ def main():
     experiment_config = {'codec': codec.config_dict(), 'codec_class': type(codec).__name__,
                          'bridge_class': type(bridge).__name__, 'store_full_fact': STORE_FULL_FACT,
                          'store_identity': STORE_IDENTITY, 'condition_slots': BRIDGE_CONDITION_SLOTS,
+                         'condition_offset': BRIDGE_CONDITION_OFFSET,
                          'train_value_count': TRAIN_VALUE_COUNT, 'strict_swap_eval': STRICT_SWAP_EVAL,
                          'train_correction_sequences': TRAIN_CORRECTION_SEQUENCES,
                          'replay_value_start': REPLAY_VALUE_START, 'replay_value_factor': REPLAY_VALUE_FACTOR,
@@ -1143,6 +1198,7 @@ def main():
                          'teacher_kl_weight': TEACHER_KL_WEIGHT, 'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
                          'teacher_hidden_weight': TEACHER_HIDDEN_WEIGHT,
                          'teacher_hidden_logit_weight': TEACHER_HIDDEN_LOGIT_WEIGHT,
+                         'teacher_hidden_delta_weight': TEACHER_HIDDEN_DELTA_WEIGHT,
                          'evaluation_values': list(EVALUATION_VALUES) if EVALUATION_VALUES is not None else None,
                          'evaluate_first_multi_question_only': EVALUATE_FIRST_MULTI_QUESTION_ONLY,
                          'start_candidate': str(START_CANDIDATE) if START_CANDIDATE is not None else None,
