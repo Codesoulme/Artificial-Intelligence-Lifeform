@@ -63,6 +63,18 @@ class PretrainedMemoryAttention(nn.Module):
         self.memory_value.load_state_dict({n: t.detach().float() for n, t in v.state_dict().items()})
         self.gain = nn.Parameter(torch.zeros((), device=k.weight.device, dtype=torch.float32))
 
+    def enable_query_gate(self, bias=-2.0):
+        """Add an opt-in per-token gate for an isolated research experiment."""
+        if hasattr(self, 'query_gate'):
+            raise ValueError('Query gate is already enabled')
+        if isinstance(bias, bool) or not isinstance(bias, (int, float)):
+            raise ValueError('Query gate bias must be numeric')
+        source = getattr(self.inner.q_proj, 'base', self.inner.q_proj)
+        self.query_gate = nn.Linear(source.in_features, 1, bias=True,
+                                    device=source.weight.device, dtype=torch.float32)
+        nn.init.zeros_(self.query_gate.weight)
+        nn.init.constant_(self.query_gate.bias, float(bias))
+
     def forward(self, *args, **kwargs):
         result = self.inner(*args, **kwargs)
         if not isinstance(result, tuple) or len(result) != 2:
@@ -112,4 +124,7 @@ class PretrainedMemoryAttention(nn.Module):
         scores = scores.masked_fill(~valid[:, None, None, :], float('-inf'))
         output = torch.matmul(scores.softmax(dim=-1), value).transpose(1, 2).reshape(1, hidden.shape[1], -1)
         delta = oproj(output.to(oproj.weight.dtype)).to(result[0].dtype)
-        return result[0] + self.gain.to(delta.dtype) * delta, result[1]
+        scale = self.gain.to(delta.dtype)
+        if hasattr(self, 'query_gate'):
+            scale = scale * torch.sigmoid(self.query_gate(hidden.float())).to(delta.dtype)
+        return result[0] + scale * delta, result[1]

@@ -49,6 +49,7 @@ MEMORY_ATTENTION = False
 MEMORY_USE_ROPE = False
 MEMORY_PROJECTION_LR = None
 MEMORY_GAIN_LR = None
+MEMORY_QUERY_GATE = False
 EVAL_ATTENTION_ABLATION = False
 RELOAD_FROM = None
 done = False
@@ -179,8 +180,12 @@ def observe(*, decoder, tokenizer, spec, cross_modules, group, name, expected, q
         extension = PretrainedMemoryAttention(original_attention, wrapped_layer.input_layernorm,
                                              decoder, codec, embedding, slots=4)
         extension.use_memory_rope = MEMORY_USE_ROPE
+        if MEMORY_QUERY_GATE:
+            extension.enable_query_gate()
         wrapped_layer.self_attn = extension
         params += list(extension.memory_key.parameters()) + list(extension.memory_value.parameters()) + [extension.gain]
+        if MEMORY_QUERY_GATE:
+            params += list(extension.query_gate.parameters())
     if len({id(param) for param in params}) != len(params):
         raise ValueError('Duplicate training parameter')
     names = {id(param): name for name, param in decoder.named_parameters()}
@@ -312,6 +317,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
             raise ValueError('Recovery bridge mode mismatch')
         if payload.get('memory_attention', False) != MEMORY_ATTENTION:
             raise ValueError('Recovery memory attention mode mismatch')
+        if payload.get('memory_query_gate', False) != MEMORY_QUERY_GATE:
+            raise ValueError('Recovery memory query gate mode mismatch')
         if payload.get('memory_use_rope', False) != MEMORY_USE_ROPE:
             raise ValueError('Recovery memory rotary mode mismatch')
         if payload.get('teacher_kl_weight', 0.0) != TEACHER_KL_WEIGHT:
@@ -435,7 +442,8 @@ def run(decoder, tokenizer, spec, params, parameter_names):
                             'teacher_kl_weight': TEACHER_KL_WEIGHT,
                             'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
                             'bridge_mode': BRIDGE_MODE,
-                            'memory_attention': MEMORY_ATTENTION,
+                          'memory_attention': MEMORY_ATTENTION,
+                          'memory_query_gate': MEMORY_QUERY_GATE,
                             'memory_use_rope': MEMORY_USE_ROPE,
                             'memory_projection_lr': MEMORY_PROJECTION_LR, 'memory_gain_lr': MEMORY_GAIN_LR,
                             'initial_sha256': initial_sha, 'replay_factor': REPLAY_FACTOR,
@@ -460,6 +468,7 @@ def run(decoder, tokenizer, spec, params, parameter_names):
               'teacher_kl_weight': TEACHER_KL_WEIGHT, 'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
               'bridge_mode': BRIDGE_MODE,
               'memory_attention': MEMORY_ATTENTION,
+              'memory_query_gate': MEMORY_QUERY_GATE,
               'memory_use_rope': MEMORY_USE_ROPE,
               'memory_projection_lr': MEMORY_PROJECTION_LR, 'memory_gain_lr': MEMORY_GAIN_LR,
               'initial_sha256': initial_sha, 'replay_factor': REPLAY_FACTOR,
