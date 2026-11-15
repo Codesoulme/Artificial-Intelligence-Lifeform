@@ -6,6 +6,7 @@ from scripts.deepseek_spora_semantic_bridge_pilot import (
     aligned_teacher_hidden_delta,
     aligned_teacher_hidden_cosine,
     aligned_teacher_kl,
+    codec_reconstruction_loss,
     explicit_teacher_question,
     remap_condition_weight,
     select_condition_slots,
@@ -93,6 +94,18 @@ class SemanticTeacherAlignmentTests(unittest.TestCase):
         codec.refresh_codebook()
         self.assertTrue(torch.allclose(codec.encode(ids), codec.encode_differentiable(ids), atol=1e-6))
         self.assertEqual(codec.decode(codec.encode(ids))['token_ids'], [1, 11])
+
+    def test_codec_reconstruction_trains_codec_and_bridge_not_embedding(self):
+        from scripts.deepseek_spora_semantic_bridge_pilot import TokenCodeDecoder
+        torch.manual_seed(13)
+        embedding = torch.randn(10, 8, requires_grad=True)
+        codec = JointCodec(embedding, memory_width=4, slot_count=2)
+        bridge = TokenCodeDecoder(codec.slot_width, codec.embedding_width)
+        loss = codec_reconstruction_loss(codec, bridge, embedding[:4])
+        loss.backward()
+        self.assertGreater(float(codec.projection.grad.norm()), 0.)
+        self.assertGreater(float(bridge.linear.weight.grad.norm()), 0.)
+        self.assertIsNone(embedding.grad)
 
 
 if __name__ == '__main__':

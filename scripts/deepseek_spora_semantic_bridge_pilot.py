@@ -47,6 +47,8 @@ REMAP_CONDITION_INIT = False
 LOAD_START_BRIDGE = True
 JOINT_CODEC_TRAINING = False
 JOINT_CODEC_LR = 1e-5
+CODEC_RECONSTRUCTION_WEIGHT = 0.0
+CODEC_RECONSTRUCTION_BATCH = 256
 TRAIN_VALUE_COUNT = 16
 TRAIN_CORRECTION_SEQUENCES = False
 TRAIN_MULTI_ENTITY_STATES = False
@@ -679,6 +681,18 @@ def aligned_teacher_hidden_cosine(student_hidden, teacher_hidden):
     return (1.0 - (student * teacher).sum(-1)).mean()
 
 
+def codec_reconstruction_loss(codec, bridge, frozen_embeddings):
+    """Align compressed token representations to frozen host embeddings."""
+    torch = p.torch
+    if (not isinstance(frozen_embeddings, torch.Tensor) or frozen_embeddings.ndim != 2
+            or frozen_embeddings.shape[1] != codec.embedding_width or not frozen_embeddings.numel()):
+        raise ValueError('Invalid embedding reconstruction batch')
+    targets = frozen_embeddings.detach().float().to(codec.projection.device)
+    codes = torch.nn.functional.normalize(targets @ codec.projection, dim=-1)
+    predicted = torch.nn.functional.normalize(bridge(codes), dim=-1)
+    return (1.0 - (predicted * torch.nn.functional.normalize(targets, dim=-1)).sum(-1)).mean()
+
+
 def aligned_teacher_hidden_delta(student_hidden, baseline_hidden, teacher_hidden):
     """Match the fact-induced hidden-state change while preserving base style."""
     torch = p.torch
@@ -702,6 +716,8 @@ def main():
         raise FileExistsError(OUT)
     if JOINT_CODEC_TRAINING and (TRAIN_CORRECTION_SEQUENCES or TRAIN_MULTI_ENTITY_STATES):
         raise ValueError('Joint codec evaluation refresh does not yet support multi-event cases')
+    if CODEC_RECONSTRUCTION_WEIGHT and (not JOINT_CODEC_TRAINING or not TRAIN_BRIDGE):
+        raise ValueError('Reconstruction requires trainable codec and bridge')
     torch = p.torch
     torch.manual_seed(SEED)
     torch.set_num_threads(2)
@@ -1196,6 +1212,7 @@ def main():
         optimizer = torch.optim.AdamW(optimizer_groups, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
         trace = []
         max_codec_grad_norm = 0.0
+        reconstruction_generator = torch.Generator(device=device).manual_seed(SEED + 941)
         for step in range(LANGUAGE_STEPS):
             if step % len(train) == 0:
                 rng.shuffle(train)
@@ -1250,6 +1267,13 @@ def main():
             fact_ce = torch.nn.functional.cross_entropy(own, torch.tensor([correct_id], device=device))
             swapped_ce = torch.nn.functional.cross_entropy(other_logits, torch.tensor([wrong_id], device=device))
             loss = 4.0 * full_loss + 0.5 * (fact_ce + swapped_ce) + contrast
+            reconstruction_loss = torch.zeros((), device=device)
+            if CODEC_RECONSTRUCTION_WEIGHT:
+                sample_ids = torch.randint(embedding.shape[0], (CODEC_RECONSTRUCTION_BATCH,),
+                                           generator=reconstruction_generator, device=device)
+                reconstruction_loss = codec_reconstruction_loss(
+                    codec, bridge, embedding.index_select(0, sample_ids))
+                loss = loss + CODEC_RECONSTRUCTION_WEIGHT * reconstruction_loss
             teacher_kl = torch.zeros((), device=device)
             if TEACHER_KL_WEIGHT:
                 teacher_question = explicit_teacher_question(
@@ -1329,6 +1353,7 @@ def main():
                               'teacher_hidden_delta': float(teacher_hidden_delta.detach()),
                               'teacher_hidden_logit': float(teacher_hidden_logit.detach()),
                               'intent_ce': float(intent_ce.detach()),
+                              'codec_reconstruction': float(reconstruction_loss.detach()),
                               'grad_norm': float(norm), 'codec_grad_norm': codec_grad_norm})
             if step % 64 == 0:
                 print(json.dumps(trace[-1] if trace and trace[-1]['step'] == step + 1 else {'step': step + 1,
@@ -1443,6 +1468,8 @@ def main():
                          'load_start_bridge': LOAD_START_BRIDGE,
                          'joint_codec_training': JOINT_CODEC_TRAINING,
                          'joint_codec_lr': JOINT_CODEC_LR,
+                         'codec_reconstruction_weight': CODEC_RECONSTRUCTION_WEIGHT,
+                         'codec_reconstruction_batch': CODEC_RECONSTRUCTION_BATCH,
                          'train_value_count': TRAIN_VALUE_COUNT, 'strict_swap_eval': STRICT_SWAP_EVAL,
                          'train_correction_sequences': TRAIN_CORRECTION_SEQUENCES,
                          'replay_value_start': REPLAY_VALUE_START, 'replay_value_factor': REPLAY_VALUE_FACTOR,
