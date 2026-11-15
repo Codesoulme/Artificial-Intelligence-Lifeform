@@ -69,7 +69,7 @@ def load_reviewed_prompts():
     return selected[:8], selected[8:]
 
 
-def main():
+def main(candidate_callback=None):
     if OUT.exists():
         raise FileExistsError(OUT)
     base_sha = p.sha(p.MODEL / 'model.safetensors')
@@ -181,6 +181,8 @@ def main():
             before_adapter = [{key: value.detach().clone() for key, value in module.state_dict().items()
                                if key.startswith(('down.', 'up.'))} for module in modules]
             before_optimizer = copy.deepcopy(optimizer.state_dict())
+        if state_name == 'corrected_full_sequence' and candidate_callback is not None:
+            candidate_callback(modules, optimizer, STEPS * 2)
         rows = []
         for group, question, name in generation_cases:
             answer = pilot.generate(model, tokenizer, question)
