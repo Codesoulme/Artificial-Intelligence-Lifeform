@@ -28,6 +28,14 @@ class NaturalSemanticPhraseMemory:
                 or any(token_id < 0 or token_id >= embedding.shape[0] for token_id in token_ids)):
             raise ValueError('Embedding table cannot represent fact value')
         sequence = embedding[torch.tensor(token_ids, device=embedding.device)].detach().float()
+        return self.write_encoded_sequence(text, sequence, token_count=len(token_ids) - 1)
+
+    def write_encoded_sequence(self, text, sequence, *, token_count=None):
+        fact = parse_fact(text)
+        if (not isinstance(sequence, torch.Tensor) or sequence.ndim != 2
+                or sequence.shape[1] != self.state.width or not sequence.shape[0]
+                or not sequence.is_floating_point() or not bool(torch.isfinite(sequence).all())):
+            raise ValueError('Encoded phrase sequence is invalid')
         keys = list(getattr(self, '_keys', [None] * self.state.max_slots))
         if len(keys) != self.state.max_slots:
             raise ValueError('Semantic phrase slot key table is inconsistent')
@@ -45,7 +53,8 @@ class NaturalSemanticPhraseMemory:
         self._keys = tuple(keys)
         return {'action': 'replace' if replacing else 'new', 'subject': fact.subject,
                 'relation': fact.relation, 'value': fact.value, 'slot': index,
-                'token_count': len(token_ids) - 1, 'revision': self.state.revision}
+                'token_count': token_count if token_count is not None else sequence.shape[0],
+                'revision': self.state.revision}
 
     def query_slot(self, text):
         subject, relation = parse_question_route(text)

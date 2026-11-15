@@ -31,7 +31,8 @@ def parse_fact(text):
         match = pattern.fullmatch(text)
         if match is not None:
             subject, value = match.group('subject').strip(), match.group('value').strip()
-            if not subject or not value:
+            if (not subject or not value or value in ('什么饮料', '什么饮品', '什么颜色')
+                    or value.startswith('什么')):
                 raise ValueError('Fact subject and value must be nonempty')
             return ParsedFact(subject, value, relation)
     raise ValueError('Unsupported fact form')

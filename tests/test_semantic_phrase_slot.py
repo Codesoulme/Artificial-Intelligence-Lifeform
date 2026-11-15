@@ -7,6 +7,7 @@ import torch
 
 from spora.semantic_phrase_slot_runtime import NaturalSemanticPhraseMemory
 from spora.semantic_phrase_slot_state import SemanticPhraseSlotState
+from spora.semantic_text_writer import TextSemanticWriter
 
 
 class SemanticPhraseSlotTests(unittest.TestCase):
@@ -24,6 +25,20 @@ class SemanticPhraseSlotTests(unittest.TestCase):
             torch.testing.assert_close(restored.query_slot('甲喜欢喝什么饮料？')['value'],
                                        torch.stack([embedding[1], embedding[2], embedding[0]]))
             self.assertIsNone(restored.query_slot('丙喜欢喝什么饮料？')['slot'])
+
+    def test_encoded_sequence_uses_the_same_routing_and_replaces(self):
+        state = SemanticPhraseSlotState(3, 1, max_tokens=4)
+        memory = NaturalSemanticPhraseMemory(state, base_sha256='base')
+        sequence = torch.ones(2, 3)
+        result = memory.write_encoded_sequence('甲喜欢喝乙。', sequence, token_count=1)
+        self.assertEqual(result['action'], 'new')
+        result = memory.write_encoded_sequence('甲喜欢喝丙。', sequence, token_count=1)
+        self.assertEqual(result['action'], 'replace')
+
+    def test_text_writer_preserves_sequence_shape(self):
+        writer = TextSemanticWriter(3)
+        output = writer(torch.zeros(2, 3))
+        self.assertEqual(tuple(output.shape), (2, 3))
 
 
 if __name__ == '__main__':

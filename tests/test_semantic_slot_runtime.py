@@ -16,6 +16,8 @@ class SemanticSlotRuntimeTests(unittest.TestCase):
         self.assertEqual(parse_question('小林喜欢喝什么饮料？'), '小林')
         self.assertEqual(parse_fact('小林喜欢的颜色是蓝色。').relation, 'color')
         self.assertEqual(parse_question_route('小林喜欢什么颜色？'), ('小林', 'color'))
+        with self.assertRaises(ValueError):
+            parse_fact('小林喜欢喝什么饮料？')
 
     def test_write_replace_query_and_roundtrip(self):
         state = SemanticSlotState(3, 2)
