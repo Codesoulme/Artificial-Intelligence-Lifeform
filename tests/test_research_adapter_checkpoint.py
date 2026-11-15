@@ -91,6 +91,38 @@ class ResearchAdapterCheckpointTests(unittest.TestCase):
                 checkpoint.save(Path(directory) / 'candidate.pt', [source], optimizer,
                                 base_sha256='base', feature_sha256='features', layers=[2], steps=1)
 
+    def test_optimizer_parameter_order_and_ownership(self):
+        source, target, unrelated = Adapter(), Adapter(), Adapter()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'candidate.pt'
+            with self.assertRaisesRegex(ValueError, 'parameters do not match'):
+                checkpoint.save(path, [source], torch.optim.AdamW(unrelated.parameters()),
+                                base_sha256='base', feature_sha256='features', layers=[2], steps=0)
+            checkpoint.save(path, [source], torch.optim.AdamW(source.parameters()),
+                            base_sha256='base', feature_sha256='features', layers=[2], steps=0)
+            reversed_optimizer = torch.optim.AdamW(list(target.parameters())[::-1])
+            original = target.down.weight.detach().clone()
+            with self.assertRaisesRegex(ValueError, 'parameter order'):
+                checkpoint.restore(path, [target], base_sha256='base', feature_sha256='features',
+                                   layers=[2], optimizer=reversed_optimizer)
+            torch.testing.assert_close(target.down.weight, original)
+
+    def test_legacy_optimizer_requires_explicit_permission(self):
+        source, target = Adapter(), Adapter()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'candidate.pt'
+            checkpoint.save(path, [source], torch.optim.AdamW(source.parameters()),
+                            base_sha256='base', feature_sha256='features', layers=[2], steps=0)
+            payload = torch.load(path, map_location='cpu', weights_only=True)
+            del payload['optimizer_layout']
+            torch.save(payload, path)
+            optimizer = torch.optim.AdamW(target.parameters())
+            with self.assertRaisesRegex(ValueError, 'Legacy optimizer'):
+                checkpoint.restore(path, [target], base_sha256='base', feature_sha256='features',
+                                   layers=[2], optimizer=optimizer)
+            checkpoint.restore(path, [target], base_sha256='base', feature_sha256='features',
+                               layers=[2], optimizer=optimizer, allow_legacy_optimizer=True)
+
 
 if __name__ == '__main__':
     unittest.main()

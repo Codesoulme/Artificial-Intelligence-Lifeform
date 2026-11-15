@@ -53,6 +53,30 @@ def _adapter_state(modules):
     return states
 
 
+def _optimizer_parameter_layout(modules, optimizer):
+    names = {}
+    for index, module in enumerate(modules):
+        for name in ('down', 'up'):
+            parameter = getattr(module, name).weight
+            if id(parameter) in names:
+                raise ValueError('Adapter parameters must not be shared')
+            names[id(parameter)] = f'{index}.{name}.weight'
+    layout = []
+    seen = set()
+    for group in optimizer.param_groups:
+        entries = []
+        for parameter in group['params']:
+            key = id(parameter)
+            if key not in names or key in seen:
+                raise ValueError('Optimizer parameters do not match adapters')
+            seen.add(key)
+            entries.append(names[key])
+        layout.append(entries)
+    if seen != set(names):
+        raise ValueError('Optimizer parameters do not match adapters')
+    return layout
+
+
 def save(path, modules, optimizer, *, base_sha256, feature_sha256, layers, steps):
     destination = Path(path)
     if destination.exists():
@@ -64,16 +88,20 @@ def save(path, modules, optimizer, *, base_sha256, feature_sha256, layers, steps
             or len(set(layers)) != len(layers) or type(steps) is not int or steps < 0
             or not isinstance(optimizer, torch.optim.Optimizer)):
         raise ValueError('Invalid research checkpoint binding or progress')
+    _adapter_state(modules)
+    layout = _optimizer_parameter_layout(modules, optimizer)
     optimizer_state = _cpu_copy(optimizer.state_dict())
     _validate_finite(optimizer_state)
     payload = {'format': FORMAT, 'base_sha256': base_sha256,
                'feature_sha256': feature_sha256, 'layers': list(layers), 'steps': steps,
                'adapters': _adapter_state(modules), 'optimizer': optimizer_state,
-               'optimizer_type': type(optimizer).__module__ + '.' + type(optimizer).__qualname__}
+               'optimizer_type': type(optimizer).__module__ + '.' + type(optimizer).__qualname__,
+               'optimizer_layout': layout}
     atomic_save(payload, destination)
 
 
-def restore(path, modules, *, base_sha256, feature_sha256, layers, optimizer=None):
+def restore(path, modules, *, base_sha256, feature_sha256, layers, optimizer=None,
+            allow_legacy_optimizer=False):
     payload = torch.load(Path(path), map_location='cpu', weights_only=True)
     if (not isinstance(payload, dict) or payload.get('format') != FORMAT
             or payload.get('base_sha256') != base_sha256
@@ -99,6 +127,12 @@ def restore(path, modules, *, base_sha256, feature_sha256, layers, optimizer=Non
         optimizer_type = type(optimizer).__module__ + '.' + type(optimizer).__qualname__
         if payload.get('optimizer_type') != optimizer_type:
             raise ValueError('Research checkpoint optimizer type mismatch')
+        layout = _optimizer_parameter_layout(modules, optimizer)
+        saved_layout = payload.get('optimizer_layout')
+        if saved_layout is None and not allow_legacy_optimizer:
+            raise ValueError('Legacy optimizer layout requires explicit verification')
+        if saved_layout is not None and saved_layout != layout:
+            raise ValueError('Research checkpoint optimizer parameter order mismatch')
         _validate_finite(payload['optimizer'])
         # Validate parameter groups before changing any live state.
         copy.deepcopy(optimizer).load_state_dict(copy.deepcopy(payload['optimizer']))

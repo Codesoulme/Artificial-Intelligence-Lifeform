@@ -80,7 +80,8 @@ def verify():
               for parameter in part.parameters()]
     optimizer = torch.optim.AdamW(params, lr=0.001, weight_decay=0, foreach=False)
     restored = checkpoint.restore(OUT / 'candidate.pt', modules, base_sha256=base,
-                                  feature_sha256=features, layers=LAYERS, optimizer=optimizer)
+                                  feature_sha256=features, layers=LAYERS, optimizer=optimizer,
+                                  allow_legacy_optimizer=True)
     rows = []
     original_rows = training['states'][-1]['rows']
     for original in original_rows:
