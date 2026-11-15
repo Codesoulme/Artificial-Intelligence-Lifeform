@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import torch
 
 from spora.semantic_slot_runtime import (NaturalSemanticSlotMemory, parse_fact,
-                                          parse_question)
+                                          parse_question, parse_question_route)
 from spora.semantic_slot_state import SemanticSlotState
 
 
@@ -14,6 +14,8 @@ class SemanticSlotRuntimeTests(unittest.TestCase):
     def test_parsers_accept_unseen_value_text_without_a_lexicon(self):
         self.assertEqual(parse_fact('小林喜欢喝一种新饮品。').value, '一种新饮品')
         self.assertEqual(parse_question('小林喜欢喝什么饮料？'), '小林')
+        self.assertEqual(parse_fact('小林喜欢的颜色是蓝色。').relation, 'color')
+        self.assertEqual(parse_question_route('小林喜欢什么颜色？'), ('小林', 'color'))
 
     def test_write_replace_query_and_roundtrip(self):
         state = SemanticSlotState(3, 2)
@@ -22,6 +24,8 @@ class SemanticSlotRuntimeTests(unittest.TestCase):
         embedding = torch.tensor([[1., 2., 3.], [4., 5., 6.]])
         self.assertEqual(memory.write('甲喜欢喝乙。', tokenizer, embedding)['action'], 'new')
         self.assertEqual(memory.query_slot('甲喜欢喝什么饮料？')['slot'], 0)
+        self.assertEqual(memory.write('甲喜欢的颜色是乙。', tokenizer, embedding)['action'], 'new')
+        self.assertEqual(memory.query_slot('甲喜欢什么颜色？')['slot'], 1)
         self.assertEqual(memory.write('甲喜欢喝乙。', tokenizer, embedding)['action'], 'replace')
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'memory.pt'
