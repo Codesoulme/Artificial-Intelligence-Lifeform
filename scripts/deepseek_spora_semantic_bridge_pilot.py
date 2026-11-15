@@ -40,6 +40,7 @@ STORE_FULL_FACT = False
 STORE_IDENTITY = True
 STORE_RELATION = False
 RELATION_TOKEN_IDS = None
+RESET_LANGUAGE_ADAPTERS = False
 BRIDGE_CONDITION_SLOTS = 2
 BRIDGE_CONDITION_OFFSET = 0
 REMAP_CONDITION_INIT = False
@@ -884,6 +885,19 @@ def main():
                     adapter.scale.copy_(old['scale'])
                     adapter.proj.load_state_dict(old['proj'], strict=True)
                     adapter.out.load_state_dict(old['out'], strict=True)
+
+        if RESET_LANGUAGE_ADAPTERS:
+            with torch.no_grad():
+                for _, _, adapter in adapters:
+                    torch.nn.init.kaiming_uniform_(adapter.a, a=5 ** 0.5)
+                    adapter.b.zero_()
+                    torch.nn.init.xavier_uniform_(adapter.condition)
+                for _, _, adapter in direct_adapters:
+                    torch.nn.init.zeros_(adapter.to_hidden.weight)
+                    adapter.gate.fill_(-1.0)
+                for _, _, adapter in final_adapters:
+                    torch.nn.init.zeros_(adapter.to_hidden.weight)
+                    adapter.gate.fill_(-1.0)
 
         cross_adapters = []
         if CROSS_ATTENTION_MEMORY:
