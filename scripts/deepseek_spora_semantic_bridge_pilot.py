@@ -1408,7 +1408,10 @@ def main():
     OUT.mkdir(parents=False, exist_ok=False)
     experiment_config = {'codec': codec.config_dict(), 'codec_class': type(codec).__name__,
                          'bridge_class': type(bridge).__name__, 'store_full_fact': STORE_FULL_FACT,
-                         'store_identity': STORE_IDENTITY, 'condition_slots': BRIDGE_CONDITION_SLOTS,
+                         'store_identity': STORE_IDENTITY, 'store_relation': STORE_RELATION,
+                         'relation_token_ids': relation_token_ids if STORE_RELATION else None,
+                         'reset_language_adapters': RESET_LANGUAGE_ADAPTERS,
+                         'train_values': list(training_values), 'condition_slots': BRIDGE_CONDITION_SLOTS,
                          'condition_offset': BRIDGE_CONDITION_OFFSET,
                          'remap_condition_init': REMAP_CONDITION_INIT,
                          'load_start_bridge': LOAD_START_BRIDGE,
