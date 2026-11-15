@@ -31,6 +31,23 @@ OUT = ROOT / 'runs/deepseek-spora-sentence-gate-audit-20261116'
 SEED = 61813
 
 
+def synthetic_name_groups(names):
+    if len(names) != 24 or len(set(names)) != 24:
+        raise ValueError('Expected 24 distinct synthetic names')
+    fit, calibration = [], []
+    for target, group_names in ((fit, names[:16]), (calibration, names[16:])):
+        for name in group_names:
+            for template in ('请问{name}的饮品偏好？', '记得{name}住在哪个城市吗？'):
+                target.append({'question': template.format(name=name), 'subject': name,
+                               'group': 'synthetic_single', 'doc': None})
+        for i in range(0, len(group_names), 2):
+            a, b = group_names[i:i + 2]
+            for question in (f'比较{a}和{b}喜欢什么？', f'{a}与{b}各住在哪里？'):
+                target.append({'question': question, 'subject': None,
+                               'group': 'synthetic_multiple', 'doc': None})
+    return fit, calibration
+
+
 def split_training(rows):
     groups = ('weak_single', 'weak_multiple', 'synthetic_none')
     fit, calibration = [], []
@@ -55,7 +72,7 @@ def calibrated_cutoff(scores, labels):
     return max(negatives)
 
 
-def main():
+def main(include_synthetic=False):
     OUT.mkdir(parents=True, exist_ok=False)
     started = time.perf_counter()
     reviewed = dev.reviewed_sample(dev.select_sample())
@@ -65,6 +82,33 @@ def main():
     with ZipFile(ARCHIVE) as source:
         training = adaptation.build_training(list(source.open('DuConv/train.txt')), reviewed)
     fit_indices, calibration_indices = split_training(training)
+    synthetic_name_digests = {}
+    if include_synthetic:
+        import pyarrow.parquet as parquet
+        from scripts.deepseek_cluener_locator_train import TRAIN, TRAIN_SHA
+        from scripts.deepseek_cluener_span_audit import SOURCE, SOURCE_SHA
+        from scripts.deepseek_spora_boundary_train_pilot import extract_names
+
+        if runtime.sha(TRAIN) != TRAIN_SHA or runtime.sha(SOURCE) != SOURCE_SHA:
+            raise ValueError('Name-source checksum mismatch')
+        source_names = extract_names(parquet.read_table(TRAIN).to_pylist())
+        held_source_names = extract_names(parquet.read_table(SOURCE).to_pylist())
+        forbidden = ({name for row in reviewed + test for name in row['names']}
+                     | {row['subject'] for row in reviewed + test if row['subject']}
+                     | {name for _, _, name in synthetic.CASES if name})
+        names = sorted((name for name in source_names - held_source_names
+                        if not any(name in other or other in name for other in forbidden)
+                        and not any(name in row['question'] for row in training)), key=dev.digest)[:24]
+        if len(names) != 24:
+            raise ValueError('Insufficient disjoint names for synthetic training')
+        extra_fit, extra_calibration = synthetic_name_groups(names)
+        synthetic_name_digests = {'fit': [dev.digest(name) for name in names[:16]],
+                                  'calibration': [dev.digest(name) for name in names[16:]],
+                                  'train_source_sha256': TRAIN_SHA, 'held_source_sha256': SOURCE_SHA}
+        fit_indices.extend(range(len(training), len(training) + len(extra_fit)))
+        training += extra_fit
+        calibration_indices.extend(range(len(training), len(training) + len(extra_calibration)))
+        training += extra_calibration
     evaluation = [{'question': row['text'], 'subject': row['subject'],
                    'group': 'dev_' + row['reviewed_group']} for row in reviewed]
     evaluation += [{'question': row['text'], 'subject': row['subject'],
@@ -107,7 +151,7 @@ def main():
     mean = pooled[fit_indices].mean(dim=0)
     scale = pooled[fit_indices].std(dim=0).clamp_min(.01)
     x = (pooled - mean) / scale
-    labels = torch.tensor([int(row['group'] == 'weak_single') for row in training])
+    labels = torch.tensor([int(row['group'] in ('weak_single', 'synthetic_single')) for row in training])
     gate = nn.Linear(x.shape[1], 2)
     optimizer = torch.optim.AdamW(gate.parameters(), lr=.001, weight_decay=.1)
     weights = torch.tensor([1 / int((labels[fit_indices] == i).sum()) for i in range(2)])
@@ -185,6 +229,7 @@ def main():
                                      for metric in ('correct', 'selected', 'route_correct', 'false_accept')}
     report = {'status': 'offline_weak_label_development_only', 'summary': summary, 'rows': rows,
               'fit_examples': len(fit_indices), 'calibration': calibration, 'gate_sha256': runtime.sha(OUT / 'gate.pt'),
+              'synthetic_name_groups': synthetic_name_digests,
               'candidate_sha256': head_hashes, 'feature_variant_sha256': variant,
               'source_checkpoint_sha256': source_sha, 'archive_sha256': ARCHIVE_SHA,
               'seconds': time.perf_counter() - started,
@@ -202,4 +247,10 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if sys.argv[1:] == ['--include-synthetic']:
+        OUT = ROOT / 'runs/deepseek-spora-sentence-gate-synthetic-audit-20261116'
+        main(include_synthetic=True)
+    elif not sys.argv[1:]:
+        main()
+    else:
+        raise SystemExit('Usage: script [--include-synthetic]')

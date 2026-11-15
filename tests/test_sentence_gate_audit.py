@@ -24,6 +24,16 @@ class SentenceGateAuditTests(unittest.TestCase):
         self.assertEqual(len(calibration), 6)
         self.assertFalse(set(fit) & set(calibration))
 
+    def test_synthetic_name_families_are_disjoint(self):
+        names = [f'name-{index:02}' for index in range(24)]
+        fit, calibration = audit.synthetic_name_groups(names)
+        self.assertEqual(len(fit), 48)
+        self.assertEqual(len(calibration), 24)
+        self.assertFalse({row['question'] for row in fit} & {row['question'] for row in calibration})
+        self.assertFalse(any(name in row['question'] for name in names[:16] for row in calibration))
+        with self.assertRaises(ValueError):
+            audit.synthetic_name_groups(names[:23] + [names[0]])
+
 
 if __name__ == '__main__':
     unittest.main()
