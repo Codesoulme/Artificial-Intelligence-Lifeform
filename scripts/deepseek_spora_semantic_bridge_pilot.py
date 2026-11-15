@@ -31,6 +31,7 @@ STORE_IDENTITY = True
 BRIDGE_CONDITION_SLOTS = 2
 BRIDGE_CONDITION_OFFSET = 0
 REMAP_CONDITION_INIT = False
+LOAD_START_BRIDGE = True
 TRAIN_VALUE_COUNT = 16
 TRAIN_CORRECTION_SEQUENCES = False
 TRAIN_MULTI_ENTITY_STATES = False
@@ -670,7 +671,7 @@ def main():
             bridge = make_token_decoder(codec, embedding)
         bridge.slot_count = CODEC_SLOT_COUNT
         start_payload = None
-        if START_CANDIDATE is None:
+        if START_CANDIDATE is None or not LOAD_START_BRIDGE:
             bridge_trace = fit_token_decoder(bridge, codec, embedding)
         else:
             start_payload = torch.load(START_CANDIDATE, map_location='cpu', weights_only=True)
@@ -1222,6 +1223,7 @@ def main():
                          'store_identity': STORE_IDENTITY, 'condition_slots': BRIDGE_CONDITION_SLOTS,
                          'condition_offset': BRIDGE_CONDITION_OFFSET,
                          'remap_condition_init': REMAP_CONDITION_INIT,
+                         'load_start_bridge': LOAD_START_BRIDGE,
                          'train_value_count': TRAIN_VALUE_COUNT, 'strict_swap_eval': STRICT_SWAP_EVAL,
                          'train_correction_sequences': TRAIN_CORRECTION_SEQUENCES,
                          'replay_value_start': REPLAY_VALUE_START, 'replay_value_factor': REPLAY_VALUE_FACTOR,
