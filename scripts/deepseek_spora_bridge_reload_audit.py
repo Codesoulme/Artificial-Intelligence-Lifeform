@@ -64,6 +64,8 @@ def main():
         embedding = chat.base.model.embed_tokens.weight.detach()
         codec = s.ContinuousTextCodec(embedding.cpu(), memory_width=model.config.memory_width,
                                      slot_count=5, seed=29071, eos_token_id=tok.eos_token_id).to(device)
+        if 'codec_state' in payload:
+            codec.load_state_dict(payload['codec_state'], strict=True)
         bridge_class = payload.get('experiment_config', {}).get('bridge_class', 'TokenCodeDecoder')
         if bridge_class == 'TokenCodebookResidualDecoder':
             bridge = s.TokenCodebookResidualDecoder(codec, embedding).to(device)

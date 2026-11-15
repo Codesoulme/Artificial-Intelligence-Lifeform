@@ -10,6 +10,7 @@ from scripts.deepseek_spora_semantic_bridge_pilot import (
     remap_condition_weight,
     select_condition_slots,
 )
+from scripts.deepseek_spora_joint_codec_bridge_pilot import JointCodec
 
 
 class SemanticTeacherAlignmentTests(unittest.TestCase):
@@ -74,6 +75,13 @@ class SemanticTeacherAlignmentTests(unittest.TestCase):
             self.assertTrue(torch.equal(mapped, torch.tensor([[1., 2., 3., 0.], [5., 6., 7., 0.]])))
         finally:
             pilot.REMAP_CONDITION_INIT = old_flag
+
+    def test_joint_codec_projection_receives_gradient(self):
+        codec = JointCodec(torch.randn(10, 8), memory_width=4, slot_count=2, eos_token_id=9)
+        encoded = codec.encode_differentiable(torch.tensor([1]))
+        encoded.square().sum().backward()
+        self.assertIsNotNone(codec.projection.grad)
+        self.assertGreater(float(codec.projection.grad.abs().sum()), 0.0)
 
 
 if __name__ == '__main__':

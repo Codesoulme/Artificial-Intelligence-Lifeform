@@ -220,9 +220,12 @@ class IntegratedOpenBase(nn.Module):
             layers[index] = _MemoryDecoderLayer(layers[index], reader, site, self._memory_context)
 
     @contextmanager
-    def _snapshot(self, state, addresses, current_only, read_mask, memory_slots):
+    def _snapshot(self, state, addresses, current_only, read_mask, memory_slots,
+                  preserve_memory_grad=False):
         if type(current_only) is not bool:
             raise ValueError('current_only must be a boolean')
+        if type(preserve_memory_grad) is not bool:
+            raise ValueError('preserve_memory_grad must be a boolean')
         if self._memory_context.get() is not None:
             raise ValueError('Nested memory calls are not supported')
         if state is None:
@@ -241,7 +244,8 @@ class IntegratedOpenBase(nn.Module):
                                          or not memory_slots.numel()):
             raise ValueError('Memory slots must be a nonempty integer vector')
         with torch.no_grad():
-            matrices = tuple(tuple(t.detach().clone() for t in
+            snapshot = (lambda tensor: tensor.clone() if preserve_memory_grad else tensor.detach().clone())
+            matrices = tuple(tuple(snapshot(t) for t in
                                    [state.current[site]] + ([] if current_only else
                                     [history_site(page, site)[0] for page in state.pages]))
                              for site in range(2))
@@ -255,16 +259,18 @@ class IntegratedOpenBase(nn.Module):
             self._memory_context.reset(token)
 
     def forward(self, *args, memory_state=None, memory_addresses=None, memory_read_mask=None, memory_slots=None,
-                current_only=False, **kwargs):
+                current_only=False, preserve_memory_grad=False, **kwargs):
         if memory_state is not None and len(args) > 1:
             raise ValueError('Memory calls accept at most one positional base argument')
         if memory_state is not None and kwargs.get('past_key_values') is not None:
             raise ValueError('External key-value caches are not supported with memory state')
-        with self._snapshot(memory_state, memory_addresses, current_only, memory_read_mask, memory_slots):
+        with self._snapshot(memory_state, memory_addresses, current_only, memory_read_mask, memory_slots,
+                            preserve_memory_grad):
             return self.base(*args, **kwargs)
 
     def generate(self, *args, memory_state=None, memory_addresses=None, memory_read_mask=None, memory_slots=None,
-                 current_only=False, memory_output_logits=None, memory_output_gain=1.0, **kwargs):
+                 current_only=False, preserve_memory_grad=False, memory_output_logits=None,
+                 memory_output_gain=1.0, **kwargs):
         if memory_state is not None and len(args) > 1:
             raise ValueError('Memory calls accept at most one positional base argument')
         if memory_state is not None and kwargs.get('past_key_values') is not None:
@@ -275,5 +281,6 @@ class IntegratedOpenBase(nn.Module):
             processor = MemoryOutputLogitsProcessor(self.output_adapter, memory_output_logits, memory_output_gain)
             existing = kwargs.get('logits_processor')
             kwargs['logits_processor'] = ([processor] if existing is None else [processor] + list(existing))
-        with self._snapshot(memory_state, memory_addresses, current_only, memory_read_mask, memory_slots):
+        with self._snapshot(memory_state, memory_addresses, current_only, memory_read_mask, memory_slots,
+                            preserve_memory_grad):
             return self.base.generate(*args, **kwargs)

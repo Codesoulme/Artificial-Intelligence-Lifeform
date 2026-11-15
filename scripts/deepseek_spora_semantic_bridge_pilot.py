@@ -32,6 +32,8 @@ BRIDGE_CONDITION_SLOTS = 2
 BRIDGE_CONDITION_OFFSET = 0
 REMAP_CONDITION_INIT = False
 LOAD_START_BRIDGE = True
+JOINT_CODEC_TRAINING = False
+JOINT_CODEC_LR = 1e-5
 TRAIN_VALUE_COUNT = 16
 TRAIN_CORRECTION_SEQUENCES = False
 TRAIN_MULTI_ENTITY_STATES = False
@@ -686,7 +688,11 @@ def main():
             else:
                 bridge.load_state_dict(start_payload['bridge'], strict=True)
             bridge_trace = [{'step': 0, 'cosine_loss': 0.0, 'reused_start_bridge': True}]
-        codec.requires_grad_(False)
+        if JOINT_CODEC_TRAINING and START_CANDIDATE is not None:
+            if 'codec_state' not in start_payload:
+                raise ValueError('Joint codec continuation requires codec state')
+            codec.load_state_dict(start_payload['codec_state'], strict=True)
+        codec.requires_grad_(JOINT_CODEC_TRAINING)
         bridge.requires_grad_(False)
         decoder.requires_grad_(False)
         decoder.reader.requires_grad_(True)
@@ -801,7 +807,11 @@ def main():
         elif candidate.get('cross_adapters'):
             raise ValueError('Starting checkpoint requires cross-attention')
 
-        def state_for_assignments(assignments):
+        def state_for_assignments(assignments, differentiable=False):
+            if type(differentiable) is not bool:
+                raise ValueError('differentiable must be a boolean')
+            if differentiable and not JOINT_CODEC_TRAINING:
+                raise ValueError('Differentiable memory requires joint codec training')
             state = p.fresh_controlled_state(model)
             fast, velocity = model.initial_state(1)
             for site in fast:
@@ -810,21 +820,33 @@ def main():
                     target = torch.zeros((1, model.config.memory_width), device=device)
                     fact_ids = word_ids[value] if STORE_FULL_FACT else [word_ids[value][0]]
                     stored_ids = ([identity_ids[key]] if STORE_IDENTITY else []) + fact_ids
-                    encoded = codec.encode(torch.tensor(stored_ids, device=device))
+                    token_ids = torch.tensor(stored_ids, device=device)
+                    if differentiable:
+                        if not hasattr(codec, 'encode_differentiable'):
+                            raise ValueError('Joint codec must provide encode_differentiable')
+                        encoded = codec.encode_differentiable(token_ids)
+                    else:
+                        encoded = codec.encode(token_ids)
                     target[0, :encoded.numel()] = encoded
-                    with torch.no_grad():
+                    if differentiable:
                         for i, site in enumerate(model.memories):
                             fast[i], velocity[i] = site.write_temporal(
                                 fast[i], velocity[i], site.current_basis[key:key + 1].to(device),
-                                target, torch.ones(1, device=device), torch.zeros(1, dtype=torch.long, device=device), False)
-                            read = site.retrieve([fast[i][0]], site.current_basis[key:key + 1].to(device))
-                            decoded = codec.decode(read[0, :encoded.numel()])['token_ids']
-                            expected = stored_ids[:]
-                            if CODEC_ADD_EOS:
-                                expected.append(tok.eos_token_id)
-                            if decoded != expected:
-                                raise ValueError('Controlled code reconstruction failed')
-            state.current = [x[0].detach() for x in fast]
+                                target, torch.ones(1, device=device), torch.zeros(1, dtype=torch.long, device=device), True)
+                    else:
+                        with torch.no_grad():
+                            for i, site in enumerate(model.memories):
+                                fast[i], velocity[i] = site.write_temporal(
+                                    fast[i], velocity[i], site.current_basis[key:key + 1].to(device),
+                                    target, torch.ones(1, device=device), torch.zeros(1, dtype=torch.long, device=device), False)
+                                read = site.retrieve([fast[i][0]], site.current_basis[key:key + 1].to(device))
+                                decoded = codec.decode(read[0, :encoded.numel()])['token_ids']
+                                expected = stored_ids[:]
+                                if CODEC_ADD_EOS:
+                                    expected.append(tok.eos_token_id)
+                                if decoded != expected:
+                                    raise ValueError('Controlled code reconstruction failed')
+            state.current = [x[0] if differentiable else x[0].detach() for x in fast]
             return state
 
         def state_for_values(values, key):
@@ -1019,9 +1041,13 @@ def main():
         params += [param for _, _, adapter in cross_adapters
                    for param in (list(adapter.query.parameters()) + list(adapter.key.parameters())
                                  + list(adapter.value.parameters()) + list(adapter.out.parameters()) + [adapter.gate])]
+        codec_params = list(codec.parameters()) if JOINT_CODEC_TRAINING else []
         optimizer_groups, params = bridge_optimizer_groups(
             params, bridge, TRAIN_BRIDGE, BRIDGE_LANGUAGE_LR,
             BRIDGE_MIX_LR if TRAIN_BRIDGE and BRIDGE_RETRIEVAL_RESIDUAL else None)
+        if codec_params:
+            optimizer_groups.append({'params': codec_params, 'lr': float(JOINT_CODEC_LR)})
+            params += codec_params
         optimizer = torch.optim.AdamW(optimizer_groups, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
         trace = []
         for step in range(LANGUAGE_STEPS):
@@ -1030,9 +1056,16 @@ def main():
             item = train[step % len(train)]
             prefix = item['prompt']['input_ids'].shape[1]
             optimizer.zero_grad(set_to_none=True)
+            item_spec = item['spec']
+            if JOINT_CODEC_TRAINING:
+                item_assignments = item.get('assignments', ((item['key'], item['value']),))
+                joint_state = state_for_assignments(item_assignments, differentiable=True)
+                item_spec = p._memory_args(model, joint_state,
+                                           {'key': item['key'], 'intent': 'current', 'event_time': 0})
+                item_spec['preserve_memory_grad'] = True
             student_output = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
                                      output_hidden_states=bool(TEACHER_HIDDEN_WEIGHT or TEACHER_HIDDEN_DELTA_WEIGHT),
-                                     return_dict=True, **item['spec'])
+                                     return_dict=True, **item_spec)
             logits = student_output.logits.float()
             intent_logits = (direct_adapters[0][2].last_intent_logits
                              if direct_adapters and hasattr(direct_adapters[0][2], 'last_intent_logits')
@@ -1048,8 +1081,15 @@ def main():
                 swap_state = state_for_assignments(replace_assignment(item['assignments'], item['key'], other_value))
             else:
                 swap_state = states[item['key'], other_value]
+            if JOINT_CODEC_TRAINING:
+                swap_assignments = (replace_assignment(item['assignments'], item['key'], other_value)
+                                    if item['group'] == 'train_multi'
+                                    else ((item['key'], other_value),))
+                swap_state = state_for_assignments(swap_assignments, differentiable=True)
             other_spec = p._memory_args(model, swap_state,
                                         {'key': item['key'], 'intent': 'current', 'event_time': 0})
+            if JOINT_CODEC_TRAINING:
+                other_spec['preserve_memory_grad'] = True
             other_logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
                                    **other_spec).logits[:, prefix - 1 + item['value_position'], :].float()
             correct_id, wrong_id = word_ids[item['value']][0], word_ids[other_value][0]
@@ -1224,6 +1264,8 @@ def main():
                          'condition_offset': BRIDGE_CONDITION_OFFSET,
                          'remap_condition_init': REMAP_CONDITION_INIT,
                          'load_start_bridge': LOAD_START_BRIDGE,
+                         'joint_codec_training': JOINT_CODEC_TRAINING,
+                         'joint_codec_lr': JOINT_CODEC_LR,
                          'train_value_count': TRAIN_VALUE_COUNT, 'strict_swap_eval': STRICT_SWAP_EVAL,
                          'train_correction_sequences': TRAIN_CORRECTION_SEQUENCES,
                          'replay_value_start': REPLAY_VALUE_START, 'replay_value_factor': REPLAY_VALUE_FACTOR,

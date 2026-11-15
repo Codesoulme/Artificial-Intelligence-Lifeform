@@ -61,13 +61,15 @@ class TemporalSite(DeltaMemorySite):
             projected=torch.bmm(precision,key.unsqueeze(-1)).squeeze(-1)
             denominator=1+(key*projected).sum(-1)
             gain=projected/denominator[:,None]
-            matrix=params[1]+gate[:,None,None]*(target.detach()-self.retrieve([params[1]],key)).unsqueeze(-1)*gain.unsqueeze(1)
+            target_value = target if differentiable else target.detach()
+            matrix=params[1]+gate[:,None,None]*(target_value-self.retrieve([params[1]],key)).unsqueeze(-1)*gain.unsqueeze(1)
             inverse=precision-gate[:,None,None]*projected.unsqueeze(-1)*gain.unsqueeze(1)
             inverse=(inverse+inverse.transpose(-1,-2))*.5
             updated=[params[0],matrix,inverse]
             return ([x if differentiable else x.detach().requires_grad_(True) for x in updated],velocity)
         matrix=self.selected(params,mode)
-        update=gate[:,None,None]*torch.sigmoid(self.log_lr)*(target.detach()-self.retrieve([matrix],key)).unsqueeze(-1)*key.unsqueeze(1)
+        target_value = target if differentiable else target.detach()
+        update=gate[:,None,None]*torch.sigmoid(self.log_lr)*(target_value-self.retrieve([matrix],key)).unsqueeze(-1)*key.unsqueeze(1)
         updated=[]
         for i,p in enumerate(params):
             mask=(mode==i).to(p.dtype)[:,None,None] if self.split else 1.
