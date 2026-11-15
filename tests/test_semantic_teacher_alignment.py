@@ -83,6 +83,17 @@ class SemanticTeacherAlignmentTests(unittest.TestCase):
         self.assertIsNotNone(codec.projection.grad)
         self.assertGreater(float(codec.projection.grad.abs().sum()), 0.0)
 
+    def test_joint_codec_refresh_matches_train_and_inference_codes(self):
+        torch.manual_seed(42)
+        codec = JointCodec(torch.randn(12, 8), memory_width=6, slot_count=2, eos_token_id=11)
+        ids = torch.tensor([1])
+        with torch.no_grad():
+            codec.projection.add_(torch.randn_like(codec.projection) * 0.5)
+        self.assertFalse(torch.allclose(codec.encode(ids), codec.encode_differentiable(ids)))
+        codec.refresh_codebook()
+        self.assertTrue(torch.allclose(codec.encode(ids), codec.encode_differentiable(ids), atol=1e-6))
+        self.assertEqual(codec.decode(codec.encode(ids))['token_ids'], [1, 11])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -700,6 +700,8 @@ def aligned_teacher_hidden_delta(student_hidden, baseline_hidden, teacher_hidden
 def main():
     if OUT.exists():
         raise FileExistsError(OUT)
+    if JOINT_CODEC_TRAINING and (TRAIN_CORRECTION_SEQUENCES or TRAIN_MULTI_ENTITY_STATES):
+        raise ValueError('Joint codec evaluation refresh does not yet support multi-event cases')
     torch = p.torch
     torch.manual_seed(SEED)
     torch.set_num_threads(2)
@@ -787,6 +789,8 @@ def main():
             if 'codec_state' not in start_payload:
                 raise ValueError('Joint codec continuation requires codec state')
             codec.load_state_dict(start_payload['codec_state'], strict=True)
+        if JOINT_CODEC_TRAINING:
+            codec.refresh_codebook()
         codec.requires_grad_(JOINT_CODEC_TRAINING)
         bridge.requires_grad_(False)
         decoder.requires_grad_(False)
@@ -1191,6 +1195,7 @@ def main():
             params += codec_params
         optimizer = torch.optim.AdamW(optimizer_groups, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
         trace = []
+        max_codec_grad_norm = 0.0
         for step in range(LANGUAGE_STEPS):
             if step % len(train) == 0:
                 rng.shuffle(train)
@@ -1306,6 +1311,14 @@ def main():
             if not bool(torch.isfinite(loss)):
                 raise ValueError('Nonfinite language loss')
             loss.backward()
+            codec_grad_norm = None
+            if JOINT_CODEC_TRAINING:
+                if codec.projection.grad is None:
+                    raise ValueError('Joint codec projection is disconnected from language loss')
+                codec_grad_norm = float(codec.projection.grad.detach().norm())
+                if not 0.0 <= codec_grad_norm < float('inf'):
+                    raise ValueError('Joint codec projection gradient is nonfinite')
+                max_codec_grad_norm = max(max_codec_grad_norm, codec_grad_norm)
             norm = torch.nn.utils.clip_grad_norm_(params, 1.0, error_if_nonfinite=True)
             optimizer.step()
             if step in (0, 9, 49, 99, 199, 399, LANGUAGE_STEPS - 1):
@@ -1316,10 +1329,12 @@ def main():
                               'teacher_hidden_delta': float(teacher_hidden_delta.detach()),
                               'teacher_hidden_logit': float(teacher_hidden_logit.detach()),
                               'intent_ce': float(intent_ce.detach()),
-                              'grad_norm': float(norm)})
+                              'grad_norm': float(norm), 'codec_grad_norm': codec_grad_norm})
             if step % 64 == 0:
                 print(json.dumps(trace[-1] if trace and trace[-1]['step'] == step + 1 else {'step': step + 1,
                     'loss': float(loss.detach())}), flush=True)
+        if JOINT_CODEC_TRAINING and LANGUAGE_STEPS and max_codec_grad_norm == 0.0:
+            raise ValueError('Joint codec projection received no nonzero gradient during training')
         if RECOVERY_FILE is not None:
             import os
             recovery_path = p.Path(RECOVERY_FILE)
@@ -1362,6 +1377,17 @@ def main():
                 os.fsync(stream.fileno())
             os.replace(partial_path, recovery_path)
             print(json.dumps({'recovery_saved': str(recovery_path), 'steps': LANGUAGE_STEPS}), flush=True)
+        if JOINT_CODEC_TRAINING:
+            codec.refresh_codebook()
+            # Rebuild every evaluation state with the updated projection; cached
+            # states were encoded before the optimizer changed the codec.
+            states = {(key, value): state_for(value, key) for key, value in states}
+            for item in cases:
+                state = states[item['key'], item['value']]
+                item['state'] = state
+                item['spec'] = p._memory_args(model, state,
+                    {'key': item['key'], 'intent': 'current', 'event_time': 0})
+                item['digest'] = p.frozen_digest(model, state)
         after = evaluate('after')
         if p.frozen_digest(model, chat.state) != original_digest or p.frozen_digest(model, empty) != empty_digest:
             raise ValueError('Protected state changed')

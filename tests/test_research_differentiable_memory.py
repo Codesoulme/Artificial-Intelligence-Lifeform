@@ -1,4 +1,5 @@
 import unittest
+from types import SimpleNamespace
 
 import torch
 from torch import nn
@@ -26,6 +27,22 @@ class IdentityBridge(nn.Module):
 
 
 class DifferentiableMemoryTests(unittest.TestCase):
+    def test_integrated_snapshot_preserves_requested_writer_gradient(self):
+        decoder = IntegratedOpenBase(HeadBase(), make_reader(), (0, 2))
+        writer = DifferentiablePacketWriter(3, 3)
+        address = torch.tensor([[1., 0., 0.]])
+        matrices = [writer(torch.zeros(1, 3, 3), address, torch.ones(1, 3)) for _ in range(2)]
+        state = SimpleNamespace(current=[[m] for m in matrices], pages=[])
+        # Real state.current entries are per-site lists of matrix tensors.
+        state.current = [m[0] for m in matrices]
+        with decoder._snapshot(state, (address, address), True, None, None, True):
+            captured = decoder._memory_context.get()[0]
+            sum(site[0].square().sum() for site in captured).backward()
+        self.assertGreater(float(writer.packet.weight.grad.norm()), 0.)
+        with decoder._snapshot(state, (address, address), True, None, None, False):
+            self.assertFalse(decoder._memory_context.get()[0][0][0].requires_grad)
+        self.assertIsNone(decoder._memory_context.get())
+
     def test_write_receives_gradient_and_preserves_other_orthogonal_address(self):
         writer = DifferentiablePacketWriter(3, 3)
         matrix = torch.zeros(1, 3, 3)

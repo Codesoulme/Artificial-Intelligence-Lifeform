@@ -42,6 +42,16 @@ class JointCodec(pilot.ContinuousTextCodec):
         result[:sequence.numel()] = codes
         return result.reshape(-1)
 
+    @torch.no_grad()
+    def refresh_codebook(self):
+        """Synchronize inference codes with the current trainable projection."""
+        source = self.embedding_source.detach().cpu().float()
+        projection = self.projection.detach().cpu().float()
+        updated = F.normalize(source @ projection, dim=-1)
+        if not bool(torch.isfinite(updated).all()):
+            raise ValueError('Nonfinite refreshed codebook')
+        self.codebook.copy_(updated.to(self.codebook.device))
+
 
 pilot.CODEC_FACTORY = JointCodec
 pilot.OUT = ROOT / 'runs/deepseek-spora-joint-codec-bridge-20261115'

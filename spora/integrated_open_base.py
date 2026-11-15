@@ -243,12 +243,12 @@ class IntegratedOpenBase(nn.Module):
                                          or memory_slots.dtype != torch.long or memory_slots.ndim != 1
                                          or not memory_slots.numel()):
             raise ValueError('Memory slots must be a nonempty integer vector')
+        snapshot = (lambda tensor: tensor.clone() if preserve_memory_grad else tensor.detach().clone())
+        matrices = tuple(tuple(snapshot(t) for t in
+                               [state.current[site]] + ([] if current_only else
+                                [history_site(page, site)[0] for page in state.pages]))
+                         for site in range(2))
         with torch.no_grad():
-            snapshot = (lambda tensor: tensor.clone() if preserve_memory_grad else tensor.detach().clone())
-            matrices = tuple(tuple(snapshot(t) for t in
-                                   [state.current[site]] + ([] if current_only else
-                                    [history_site(page, site)[0] for page in state.pages]))
-                             for site in range(2))
             fixed_addresses = None if addresses is None else tuple(address.detach().clone() for address in addresses)
             fixed_mask = None if read_mask is None else read_mask.detach().clone()
             fixed_slots = None if memory_slots is None else memory_slots.detach().clone()
