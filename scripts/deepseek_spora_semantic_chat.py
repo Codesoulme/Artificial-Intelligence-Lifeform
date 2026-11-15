@@ -1,5 +1,6 @@
 """Local chat entry for the persisted semantic phrase-slot prototype."""
 import argparse
+import copy
 import sys
 from pathlib import Path
 
@@ -48,6 +49,14 @@ def generate(model, tokenizer, question, *, slot=None, max_new_tokens=64):
                             skip_special_tokens=True).strip()
 
 
+def persist_fact(memory, text, tokenizer, embedding, path):
+    """Publish the candidate only after the state file was saved."""
+    candidate = copy.deepcopy(memory)
+    result = candidate.write(text, tokenizer, embedding)
+    candidate.save(path, metadata={'interface': 'semantic-sequence-chat-v1'})
+    return candidate, result
+
+
 def main():
     for stream in (sys.stdin, sys.stdout):
         reconfigure = getattr(stream, 'reconfigure', None)
@@ -82,8 +91,11 @@ def main():
         except ValueError:
             fact = None
         if fact is not None:
-            result = memory.write(text, tokenizer, embedding)
-            memory.save(args.state, metadata={'interface': 'semantic-sequence-chat-v1'})
+            try:
+                memory, result = persist_fact(memory, text, tokenizer, embedding, args.state)
+            except (OSError, ValueError, RuntimeError) as error:
+                print(f'记录失败：{error}', flush=True)
+                continue
             print(f"已记录：{result['subject']}的{result['relation']}事实已保存。", flush=True)
             continue
         try:

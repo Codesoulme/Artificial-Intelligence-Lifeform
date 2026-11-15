@@ -27,10 +27,16 @@ class ParsedFact:
 def parse_fact(text):
     if not isinstance(text, str):
         raise ValueError('Fact text must be a string')
+    if any(mark in text for mark in ('?', '？')):
+        raise ValueError('Questions cannot be stored as affirmative facts')
     for relation, pattern in _FACTS:
         match = pattern.fullmatch(text)
         if match is not None:
             subject, value = match.group('subject').strip(), match.group('value').strip()
+            if any(marker in subject for marker in ('不', '没', '别', '是否', '可能', '如果', '听说', '据说', '假如', '也许')):
+                raise ValueError('Uncertain or negated facts require explicit interpretation')
+            if any(marker in value for marker in ('吗', '么', '还是', '或者', '可能', '也许', '不知道')):
+                raise ValueError('Uncertain or interrogative values cannot be stored')
             if (not subject or not value or value in ('什么饮料', '什么饮品', '什么颜色')
                     or value.startswith('什么')):
                 raise ValueError('Fact subject and value must be nonempty')
