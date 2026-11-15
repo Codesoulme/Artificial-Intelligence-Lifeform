@@ -3,9 +3,10 @@ import unittest
 import torch
 from torch import nn
 
-from spora.research_ttt_ntp import (TTTNTPMemoryLinear, attach_read_adapters,
-                                    fresh_memory, install, sequential_ntp_write,
-                                    use_memory)
+from spora.research_ttt_ntp import (TTTNTPMemoryLinear, TTTNTPWriteTargetAdapter,
+                                    attach_read_adapters, fresh_memory, install,
+                                    sequential_ntp_write, use_memory,
+                                    use_memory_with_grad)
 
 
 class ToyDecoder(nn.Module):
@@ -74,6 +75,21 @@ class ResearchTTTNTPTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'dimensions'):
             sequential_ntp_write({0: torch.zeros(2, 3)}, {0: torch.ones(2, 3)},
                                  {0: torch.ones(1, 2)})
+
+    def test_write_target_adapter_is_zero_initialized_and_differentiable(self):
+        decoder = ToyDecoder()
+        wrappers = install(decoder, (0,))
+        writer = TTTNTPWriteTargetAdapter(2, rank=1)
+        target = torch.tensor([2., 3.])
+        torch.testing.assert_close(writer(target), target)
+        key = torch.tensor([1., 0., 0.])
+        fast = writer(target).unsqueeze(1) * key.unsqueeze(0)
+        hidden = key.reshape(1, 1, 3)
+        with use_memory_with_grad({0: fast}):
+            loss = wrappers[0](hidden).square().sum()
+        loss.backward()
+        self.assertIsNotNone(writer.up.weight.grad)
+        self.assertGreater(float(writer.up.weight.grad.abs().sum()), 0.)
 
 
 if __name__ == '__main__':

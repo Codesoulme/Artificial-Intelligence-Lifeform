@@ -61,6 +61,25 @@ class TTTNTPReadAdapter(nn.Module):
         return self.up(torch.tanh(self.down(read.float())))
 
 
+class TTTNTPWriteTargetAdapter(nn.Module):
+    """Low-rank residual correction applied to a next-state write target."""
+
+    def __init__(self, width, rank=8):
+        super().__init__()
+        if type(width) is not int or width < 2 or type(rank) is not int or not 1 <= rank <= width:
+            raise ValueError('Invalid TTT write adapter dimensions')
+        self.down = nn.Linear(width, rank, bias=False, dtype=torch.float32)
+        self.up = nn.Linear(rank, width, bias=False, dtype=torch.float32)
+        nn.init.normal_(self.down.weight, std=width ** -0.5)
+        nn.init.zeros_(self.up.weight)
+
+    def forward(self, target):
+        if not isinstance(target, torch.Tensor) or target.shape[-1] != self.down.in_features:
+            raise ValueError('TTT target has an incompatible hidden width')
+        target = target.float()
+        return target + self.up(torch.tanh(self.down(target)))
+
+
 def install(model, layer_ids=(6, 12)):
     """Wrap Qwen-style MLP down projections and return the wrappers."""
     layers = getattr(getattr(model, 'model', None), 'layers', None)
@@ -110,6 +129,25 @@ def use_memory(memory):
         raise ValueError('Memory must be a layer-indexed dictionary')
     snapshot = {key: value.detach() for key, value in memory.items()}
     token = _ACTIVE_MEMORY.set(snapshot)
+    try:
+        yield
+    finally:
+        _ACTIVE_MEMORY.reset(token)
+
+
+@contextmanager
+def use_memory_with_grad(memory):
+    """Expose a temporary state without detaching its write computation graph.
+
+    This is research-only.  The caller owns the isolated tensors and must not
+    reuse them after the optimizer step.
+    """
+    if not isinstance(memory, dict) or any(not isinstance(key, int) for key in memory):
+        raise ValueError('Memory must be a layer-indexed dictionary')
+    if any(not isinstance(value, torch.Tensor) or not value.is_floating_point()
+           or not bool(torch.isfinite(value).all()) for value in memory.values()):
+        raise ValueError('Memory must contain finite floating tensors')
+    token = _ACTIVE_MEMORY.set(memory)
     try:
         yield
     finally:
