@@ -2,7 +2,11 @@ import unittest
 
 import torch
 
-from scripts.deepseek_spora_semantic_bridge_pilot import aligned_teacher_kl, explicit_teacher_question
+from scripts.deepseek_spora_semantic_bridge_pilot import (
+    aligned_teacher_hidden_cosine,
+    aligned_teacher_kl,
+    explicit_teacher_question,
+)
 
 
 class SemanticTeacherAlignmentTests(unittest.TestCase):
@@ -24,6 +28,18 @@ class SemanticTeacherAlignmentTests(unittest.TestCase):
         self.assertLess(float(aligned_teacher_kl(teacher.detach(), teacher, 2.0).abs()), 1e-5)
         with self.assertRaises(ValueError):
             aligned_teacher_kl(student, teacher[:, :1], 2.0)
+
+    def test_hidden_alignment_trains_student_only(self):
+        teacher = torch.tensor([[[2., 0.], [0., 2.]]], requires_grad=True)
+        student = torch.tensor([[[0., 1.], [1., 1.]]], requires_grad=True)
+        loss = aligned_teacher_hidden_cosine(student, teacher)
+        self.assertGreater(float(loss), 0.0)
+        loss.backward()
+        self.assertIsNone(teacher.grad)
+        self.assertGreater(float(student.grad.norm()), 0.0)
+        self.assertLess(float(aligned_teacher_hidden_cosine(teacher.detach(), teacher).abs()), 1e-5)
+        with self.assertRaises(ValueError):
+            aligned_teacher_hidden_cosine(student, teacher[:, :1])
 
 
 if __name__ == '__main__':

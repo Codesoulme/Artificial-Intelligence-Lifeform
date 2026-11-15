@@ -55,6 +55,8 @@ BRIDGE_RETRIEVAL_RESIDUAL = False
 BRIDGE_MIX_LR = 2e-4
 TEACHER_KL_WEIGHT = 0.0
 TEACHER_KL_TEMPERATURE = 2.0
+TEACHER_HIDDEN_WEIGHT = 0.0
+TEACHER_HIDDEN_LOGIT_WEIGHT = 0.0
 CROSS_ATTENTION_MEMORY = False
 CROSS_ATTENTION_LAYER = 23
 CROSS_ATTENTION_WIDTH = 64
@@ -550,6 +552,18 @@ def aligned_teacher_kl(student_scores, teacher_scores, temperature):
         student_scores.shape[0] * student_scores.shape[1])
 
 
+def aligned_teacher_hidden_cosine(student_hidden, teacher_hidden):
+    """Align student answer-position states with a fact-conditioned teacher."""
+    torch = p.torch
+    if (not isinstance(student_hidden, torch.Tensor) or not isinstance(teacher_hidden, torch.Tensor)
+            or student_hidden.shape != teacher_hidden.shape or student_hidden.ndim != 3
+            or not student_hidden.numel()):
+        raise ValueError('Invalid aligned teacher hidden states')
+    student = torch.nn.functional.normalize(student_hidden.float(), dim=-1)
+    teacher = torch.nn.functional.normalize(teacher_hidden.detach().float(), dim=-1)
+    return (1.0 - (student * teacher).sum(-1)).mean()
+
+
 def main():
     if OUT.exists():
         raise FileExistsError(OUT)
@@ -945,7 +959,10 @@ def main():
             item = train[step % len(train)]
             prefix = item['prompt']['input_ids'].shape[1]
             optimizer.zero_grad(set_to_none=True)
-            logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']), **item['spec']).logits.float()
+            student_output = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
+                                     output_hidden_states=bool(TEACHER_HIDDEN_WEIGHT),
+                                     return_dict=True, **item['spec'])
+            logits = student_output.logits.float()
             intent_logits = (direct_adapters[0][2].last_intent_logits
                              if direct_adapters and hasattr(direct_adapters[0][2], 'last_intent_logits')
                              else None)
@@ -984,6 +1001,31 @@ def main():
                     teacher_scores = teacher_full[:, teacher_prefix - 1:teacher_prefix - 1 + target.shape[1]]
                 teacher_kl = aligned_teacher_kl(scores, teacher_scores, TEACHER_KL_TEMPERATURE)
                 loss = loss + TEACHER_KL_WEIGHT * teacher_kl
+            teacher_hidden = torch.zeros((), device=device)
+            teacher_hidden_logit = torch.zeros((), device=device)
+            if TEACHER_HIDDEN_WEIGHT:
+                teacher_question = explicit_teacher_question(item['question'], item['name'], WORDS[item['value']])
+                teacher_prompt = p.closed_think_inputs(tok, teacher_question, 'cuda')
+                teacher_prefix = teacher_prompt['input_ids'].shape[1]
+                teacher_ids = torch.cat((teacher_prompt['input_ids'], target), dim=1)
+                with torch.no_grad():
+                    teacher_output = decoder(input_ids=teacher_ids,
+                                             attention_mask=torch.ones_like(teacher_ids),
+                                             output_hidden_states=True, return_dict=True,
+                                             use_cache=False)
+                    teacher_scores = teacher_output.logits.float()
+                    teacher_hidden_states = teacher_output.hidden_states[-1]
+                student_hidden_states = student_output.hidden_states[-1]
+                student_answer_hidden = student_hidden_states[:, prefix - 1:prefix - 1 + target.shape[1]]
+                teacher_answer_hidden = teacher_hidden_states[:, teacher_prefix - 1:teacher_prefix - 1 + target.shape[1]]
+                teacher_hidden = aligned_teacher_hidden_cosine(student_answer_hidden, teacher_answer_hidden)
+                loss = loss + TEACHER_HIDDEN_WEIGHT * teacher_hidden
+                if TEACHER_HIDDEN_LOGIT_WEIGHT:
+                    student_answer_scores = logits[:, prefix - 1:prefix - 1 + target.shape[1]]
+                    teacher_answer_scores = teacher_scores[:, teacher_prefix - 1:teacher_prefix - 1 + target.shape[1]]
+                    teacher_hidden_logit = aligned_teacher_kl(
+                        student_answer_scores, teacher_answer_scores, TEACHER_KL_TEMPERATURE)
+                    loss = loss + TEACHER_HIDDEN_LOGIT_WEIGHT * teacher_hidden_logit
             intent_ce = torch.zeros((), device=device)
             if intent_logits is not None:
                 intent_target = torch.tensor([item['intent_label']], dtype=torch.long, device=device)
@@ -998,6 +1040,8 @@ def main():
                 trace.append({'step': step + 1, 'loss': float(loss.detach()),
                               'full_loss': float(full_loss.detach()), 'contrast': float(contrast.detach()),
                               'teacher_kl': float(teacher_kl.detach()),
+                              'teacher_hidden': float(teacher_hidden.detach()),
+                              'teacher_hidden_logit': float(teacher_hidden_logit.detach()),
                               'intent_ce': float(intent_ce.detach()),
                               'grad_norm': float(norm)})
             if step % 64 == 0:
@@ -1032,6 +1076,8 @@ def main():
                 'train_bridge': TRAIN_BRIDGE, 'bridge_language_lr': BRIDGE_LANGUAGE_LR,
                 'bridge_retrieval_residual': BRIDGE_RETRIEVAL_RESIDUAL, 'bridge_mix_lr': BRIDGE_MIX_LR,
                 'teacher_kl_weight': TEACHER_KL_WEIGHT, 'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
+                'teacher_hidden_weight': TEACHER_HIDDEN_WEIGHT,
+                'teacher_hidden_logit_weight': TEACHER_HIDDEN_LOGIT_WEIGHT,
                 'notice': 'Training recovery only; post-training evaluation was not completed at save time.',
             }
             if final_adapters or logit_adapters or QUERY_INTENT_GATE or QUERY_SCALAR_GATE:
@@ -1095,6 +1141,8 @@ def main():
                          'train_bridge': TRAIN_BRIDGE, 'bridge_language_lr': BRIDGE_LANGUAGE_LR,
                          'bridge_retrieval_residual': BRIDGE_RETRIEVAL_RESIDUAL, 'bridge_mix_lr': BRIDGE_MIX_LR,
                          'teacher_kl_weight': TEACHER_KL_WEIGHT, 'teacher_kl_temperature': TEACHER_KL_TEMPERATURE,
+                         'teacher_hidden_weight': TEACHER_HIDDEN_WEIGHT,
+                         'teacher_hidden_logit_weight': TEACHER_HIDDEN_LOGIT_WEIGHT,
                          'evaluation_values': list(EVALUATION_VALUES) if EVALUATION_VALUES is not None else None,
                          'evaluate_first_multi_question_only': EVALUATE_FIRST_MULTI_QUESTION_ONLY,
                          'start_candidate': str(START_CANDIDATE) if START_CANDIDATE is not None else None,
