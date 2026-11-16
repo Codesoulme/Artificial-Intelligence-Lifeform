@@ -51,7 +51,7 @@ def replay_distillation(student, teacher, temperature=2.):
                     reduction='batchmean') * temperature ** 2
 
 
-def main(output=OUT, replay_kl=0.):
+def main(output=OUT, replay_kl=0., subject=SUBJECT, target_word=TARGET):
     if output.exists():
         raise FileExistsError(output)
     if not 0 <= replay_kl <= 100:
@@ -67,14 +67,14 @@ def main(output=OUT, replay_kl=0.):
         raise ValueError('Writer provenance mismatch')
     payload = torch.load(source, map_location='cpu', weights_only=True)
     tokenizer = base.AutoTokenizer.from_pretrained(base.MODEL, local_files_only=True, trust_remote_code=False)
-    target_ids = tokenizer.encode(TARGET, add_special_tokens=False)
+    target_ids = tokenizer.encode(target_word, add_special_tokens=False)
     if len(target_ids) != 1:
         raise ValueError('This pilot requires a single-token correction')
     replay_values = random.Random(SEED).sample(report['train_values'], REPLAY)
     train_ids = target_ids + [tokenizer.encode(value, add_special_tokens=False)[0] for value in replay_values]
     held_ids = [tokenizer.encode(value, add_special_tokens=False)[0] for value in report['held_values']]
     sampled_ids = sample_output_tokens(tokenizer.vocab_size, train_ids, held_ids, 4096, SEED)
-    cases = [{'name': SUBJECT, 'value': TARGET}]
+    cases = [{'name': subject, 'value': target_word}]
     cases += [{'name': person, 'value': value} for person in prior.TRAIN_NAMES for value in replay_values]
     paths = {i: PAIR / f'layer-{i}.pt' for i in (6, 12)}
     layer_hashes = {str(i): base.sha(path) for i, path in paths.items()}
@@ -86,7 +86,7 @@ def main(output=OUT, replay_kl=0.):
     features, _ = collect(model, tokenizer, cases)
     features = features['shallow_layer_1'].to('cuda')
     prompts = {}
-    for person in (SUBJECT,) + prior.TRAIN_NAMES:
+    for person in (subject,) + prior.TRAIN_NAMES:
         question = pilot.closed_think_inputs(tokenizer, f'{person}喜欢喝什么饮料？', 'cuda')
         with torch.inference_mode():
             prompts[person] = model.model(**question, use_cache=False, return_dict=True).last_hidden_state[0, -1].float().cpu().clone()
@@ -143,11 +143,11 @@ def main(output=OUT, replay_kl=0.):
     target = output / 'writer.pt'
     atomic_save({'format': 'spora-output-aware-writer-v1', 'base_sha256': base.WEIGHT_SHA,
                  'state': {'projection.weight': merged}, 'train_norm': payload['train_norm'],
-                 'source_writer_sha256': source_sha, 'correction': TARGET, 'rank': RANK}, target)
+                 'source_writer_sha256': source_sha, 'correction': target_word, 'rank': RANK}, target)
     result = {'base_sha256': base.WEIGHT_SHA, 'source_writer_sha256': source_sha,
               'writer_sha256': base.sha(target), 'layers': layer_hashes,
               'train_values': report['train_values'], 'held_values': report['held_values'],
-              'replay_values': replay_values, 'target': TARGET, 'subject': SUBJECT,
+              'replay_values': replay_values, 'target': target_word, 'subject': subject,
               'steps': STEPS, 'replay_kl_weight': replay_kl,
               'trace': trace, 'merge_max_abs_difference': max_difference,
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
@@ -165,5 +165,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=OUT)
     parser.add_argument('--replay-kl', type=float, default=0.)
+    parser.add_argument('--subject', default=SUBJECT)
+    parser.add_argument('--target', default=TARGET)
     args = parser.parse_args()
-    main(args.output, args.replay_kl)
+    main(args.output, args.replay_kl, args.subject, args.target)
