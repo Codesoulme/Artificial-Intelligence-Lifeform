@@ -5,7 +5,7 @@ from torch import nn
 
 from spora.research_ttt_ntp import (TTTNTPMemoryLinear, TTTNTPWriteTargetAdapter,
                                     attach_read_adapters, fresh_memory, install,
-                                    sequential_ntp_write, use_memory,
+                                    attach_query_bridges, attach_query_basis_bridges, sequential_ntp_write, use_memory,
                                     use_memory_with_grad)
 
 
@@ -90,6 +90,35 @@ class ResearchTTTNTPTests(unittest.TestCase):
         loss.backward()
         self.assertIsNotNone(writer.up.weight.grad)
         self.assertGreater(float(writer.up.weight.grad.abs().sum()), 0.)
+
+    def test_query_bridge_changes_only_fast_delta_path(self):
+        decoder = ToyDecoder()
+        wrappers = install(decoder, (0,))
+        memory = fresh_memory(wrappers)
+        sequential_ntp_write(memory, torch.tensor([[1., 0., 0.]]), {0: torch.tensor([[2., 3.]])},
+                             eta=1., ridge=.001)
+        hidden = torch.tensor([[[0., 1., 0.]]])
+        ordinary = wrappers[0](hidden)
+        bridge = torch.tensor([[0., 1., 0.], [1., 0., 0.], [0., 0., 1.]])
+        attach_query_bridges(wrappers, {0: bridge})
+        with use_memory(memory):
+            adapted = wrappers[0](hidden)
+        self.assertFalse(torch.equal(adapted, ordinary))
+        torch.testing.assert_close(adapted - ordinary, torch.tensor([[[2., 3.]]]), atol=.02, rtol=.02)
+        torch.testing.assert_close(wrappers[0].base(hidden), ordinary)
+
+    def test_basis_query_bridge_maps_a_query_to_a_write_key(self):
+        decoder = ToyDecoder()
+        wrappers = install(decoder, (0,))
+        memory = fresh_memory(wrappers)
+        key = torch.tensor([[1., 0., 0.]])
+        sequential_ntp_write(memory, key, {0: torch.tensor([[2., 3.]])}, eta=1., ridge=.001)
+        bridge = attach_query_basis_bridges(wrappers, {0: (key, key)})
+        hidden = torch.tensor([[[1., 0., 0.]]])
+        with use_memory(memory):
+            output = wrappers[0](hidden)
+        torch.testing.assert_close(output - wrappers[0].base(hidden), torch.tensor([[[2., 3.]]]), atol=.02, rtol=.02)
+        self.assertEqual(bridge[0].query_basis.shape, (1, 3))
 
 
 if __name__ == '__main__':

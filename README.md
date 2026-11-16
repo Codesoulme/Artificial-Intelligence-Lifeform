@@ -29,6 +29,8 @@
 - [后续待办](docs/TODO.md)：完整睡眠想象尚未实现；中文训练已启动，可靠语言能力及记忆语义对齐待完成。
 - [TencentDB Agent Memory 评审](docs/tencentdb-memory-review.md)：区分内部机制、后续学习内容与外部工具能力。
 - [P12/P13报告](reports/P12-P13-report.md)、[完整结果](reports/P12-P13-results.json)、[内部实施计划](docs/internal-memory-plan.md)及[命令与限制](docs/internal-memory-implementation.md)。
+- [Anthropic Agent Memory 研究与睡眠巩固映射](docs/anthropic-agent-memory-components-20261116.md)
+- [TTT query-key 桥接与共享状态探针](reports/ttt-query-basis-read-20261116.md)、[共享状态结果](reports/ttt-query-basis-shared-20261116.md)
 - [在线阅读总体设计](docs/SPORA-v2.md)及[P5–P7 结构补充](docs/P5-P7-design.md)；下列 Word 文件保留为设计基线。
 - [下载 Word 文档](SPORA%20%E6%9E%B6%E6%9E%84%EF%BC%9A%E9%9D%A2%E5%90%91%E6%8C%81%E7%BB%AD%E5%AD%A6%E4%B9%A0%E4%B8%8E%E7%94%9F%E6%80%81%E6%BC%94%E5%8C%96%E7%9A%84%E6%99%BA%E8%83%BD%E4%BD%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1.docx)
 - [首轮实践结果与已知问题](reports/P1-report.md)

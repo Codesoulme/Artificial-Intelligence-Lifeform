@@ -26,6 +26,7 @@ class TTTNTPMemoryLinear(nn.Module):
         self.base.requires_grad_(False)
         self.layer_id = layer_id
         self.read_adapter = None
+        self.query_bridge = None
 
     def forward(self, hidden):
         output = self.base(hidden)
@@ -37,7 +38,11 @@ class TTTNTPMemoryLinear(nn.Module):
                 or tuple(fast.shape) != tuple(self.base.weight.shape)
                 or not fast.is_floating_point() or not bool(torch.isfinite(fast).all())):
             raise ValueError('Fast weight has an incompatible shape or value')
-        delta = F.linear(hidden.float(), fast.float())
+        read_hidden = hidden.float() if self.query_bridge is None else self.query_bridge(hidden.float())
+        if (not isinstance(read_hidden, torch.Tensor) or read_hidden.shape != hidden.shape
+                or not bool(torch.isfinite(read_hidden).all())):
+            raise ValueError('Query bridge returned an incompatible value')
+        delta = F.linear(read_hidden, fast.float())
         if self.read_adapter is not None:
             return output + self.read_adapter(delta).to(device=output.device, dtype=output.dtype)
         return output + delta.to(device=output.device, dtype=output.dtype)
@@ -59,6 +64,28 @@ class TTTNTPReadAdapter(nn.Module):
         if not isinstance(read, torch.Tensor) or read.shape[-1] != self.down.in_features:
             raise ValueError('TTT read has an incompatible hidden width')
         return self.up(torch.tanh(self.down(read.float())))
+
+
+class QueryKeyBasisBridge(nn.Module):
+    """Map a query hidden state through a small learned key basis."""
+
+    def __init__(self, query_basis, key_basis, ridge=10.):
+        super().__init__()
+        if (not isinstance(query_basis, torch.Tensor) or not isinstance(key_basis, torch.Tensor)
+                or query_basis.ndim != 2 or key_basis.ndim != 2
+                or query_basis.shape[0] != key_basis.shape[0] or not query_basis.shape[0]
+                or ridge <= 0):
+            raise ValueError('Query/key basis tensors are incompatible')
+        self.register_buffer('query_basis', query_basis.float())
+        self.register_buffer('key_basis', key_basis.float())
+        gram = query_basis.float() @ query_basis.float().T
+        self.register_buffer('ridge_inverse', torch.linalg.inv(gram + ridge * torch.eye(query_basis.shape[0])))
+
+    def forward(self, hidden):
+        if not isinstance(hidden, torch.Tensor) or hidden.shape[-1] != self.query_basis.shape[1]:
+            raise ValueError('Query hidden width does not match bridge')
+        coefficients = hidden.float() @ self.query_basis.T @ self.ridge_inverse
+        return coefficients @ self.key_basis
 
 
 class TTTNTPWriteTargetAdapter(nn.Module):
@@ -120,6 +147,54 @@ def attach_read_adapters(wrappers, *, rank=16):
         wrapper.read_adapter = TTTNTPReadAdapter(wrapper.base.out_features, rank=rank).to(
             device=wrapper.base.weight.device)
     return {layer_id: wrapper.read_adapter for layer_id, wrapper in wrappers.items()}
+
+
+def attach_query_bridges(wrappers, weights):
+    """Attach frozen full-width query-to-write-key maps to fast read paths."""
+    if not isinstance(wrappers, dict) or not wrappers or not isinstance(weights, dict):
+        raise ValueError('Installed wrappers and layer-indexed weights are required')
+    result = {}
+    for layer_id, wrapper in wrappers.items():
+        weight = weights.get(layer_id)
+        if (not isinstance(weight, torch.Tensor) or weight.ndim != 2
+                or tuple(weight.shape) != (wrapper.base.in_features, wrapper.base.in_features)
+                or not bool(torch.isfinite(weight).all())):
+            raise ValueError('Query bridge weight has an incompatible shape or value')
+        bridge = nn.Linear(wrapper.base.in_features, wrapper.base.in_features, bias=False,
+                           dtype=torch.float32).to(device=wrapper.base.weight.device)
+        bridge.weight.data.copy_(weight.to(device=bridge.weight.device, dtype=bridge.weight.dtype))
+        bridge.requires_grad_(False)
+        wrapper.query_bridge = bridge
+        result[layer_id] = bridge
+    return result
+
+
+def attach_query_basis_bridges(wrappers, bases, *, ridge=1e-6):
+    """Attach compact sample-basis bridges: layer -> (queries, write_keys).
+
+    The sample basis is intended to interpolate the observed write keys. A
+    caller evaluating a noisy, high-dimensional fit can pass a larger ridge;
+    the default keeps the bridge faithful on its supplied basis.
+    """
+    if not isinstance(wrappers, dict) or not isinstance(bases, dict):
+        raise ValueError('Installed wrappers and basis mapping are required')
+    if not isinstance(ridge, (int, float)) or not ridge > 0:
+        raise ValueError('Bridge ridge must be positive')
+    result = {}
+    for layer_id, wrapper in wrappers.items():
+        pair = bases.get(layer_id)
+        if (not isinstance(pair, (tuple, list)) or len(pair) != 2
+                or not isinstance(pair[0], torch.Tensor) or not isinstance(pair[1], torch.Tensor)
+                or pair[0].ndim != 2 or pair[1].ndim != 2
+                or pair[0].shape[0] != pair[1].shape[0]
+                or pair[0].shape[1] != wrapper.base.in_features
+                or pair[1].shape[1] != wrapper.base.in_features):
+            raise ValueError('Basis bridge width or row count is incompatible')
+        bridge = QueryKeyBasisBridge(pair[0], pair[1], ridge=ridge).to(device=wrapper.base.weight.device)
+        bridge.requires_grad_(False)
+        wrapper.query_bridge = bridge
+        result[layer_id] = bridge
+    return result
 
 
 @contextmanager
