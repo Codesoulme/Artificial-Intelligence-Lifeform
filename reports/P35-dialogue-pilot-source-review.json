@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "status": "bounded_noisy_dialogue_pilot",
+  "approved_for_pilot": true,
+  "max_schedule_steps": 100,
+  "max_target_shares": {
+    "pretrain": 0.98,
+    "teacher": 0.02
+  },
+  "reviewed_checkpoint_sha256": "78fe0c8d0309d423f0bd2f788fda873715a229cc7af75058703fc286fa74eb52",
+  "training_source_sha256": {
+    "pretrain": "781088fbcc6c81650d1e01b0e49a7e2a7393034e88399e585f6487073f10acdf",
+    "teacher": "dea112e677f92fb6cc97be547c5c725419c40da6e23c28978b5fa98124c6a69e"
+  },
+  "basis": {
+    "dialogue_review": "reports/P30-clean-teacher-256-review.json",
+    "dialogue_review_sha256": "94cbff71ac148ab8860d3841c22e22587293276a5435fdc207150389a79a4733",
+    "dialogue_manifest": "runs/teaching-curriculum-v4/manifest.json",
+    "dialogue_manifest_sha256": "843eaa698c2fa6de19168da60524be21c15f374af9f37fefcf25d3179cc916ef",
+    "dialogue_artifact": "runs/teaching-curriculum-v4/teacher-tokens.jsonl",
+    "pretrain_review": "reports/P34-continuation-1500-source-review.json",
+    "pretrain_review_sha256": "42bc20e5316dce544027379f14d8199cb14a105f31392adae5387fd5abe8ce32"
+  },
+  "scope": "A 100-update diagnostic that preserves ordinary-language replay while adding a 2 percent bounded teacher dialogue stream. The dialogue stream inherits the fixed manual review and exact v4 artifact binding; it is not a factual corpus certification or chat release approval.",
+  "limitations": [
+    "The dialogue rows are synthetic instruction data rather than natural human conversation.",
+    "The inherited review is a bounded single-reviewer audit and does not certify the full corpus.",
+    "This pilot cannot establish normal free chat, internal parameter memory, consciousness, or identity safety.",
+    "No source is permitted to write into the formal individual during this run."
+  ]
+}
