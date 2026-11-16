@@ -62,10 +62,11 @@ ENTITY = ROOT/'runs/deepseek-spora-single-entity-gate-v2-20261111'
 MEMORY_DOMAIN_ANCHORS = ('饮品', '饮料', '喝', '饮用')
 PAST_TIME_MARKERS = (
     '以前', '过去', '原来', '原先', '之前', '曾经', '历史', '先前',
-    '早先', '较早', '最初', '早期', '改口以前', '变更前', '更正前',
+    '早先', '较早', '最初', '早期', '改口以前', '改口前', '变更前', '更正前',
     '修改前', '更改前', '变动前', '变更以前', '更正之前',
 )
 CURRENT_TIME_MARKERS = ('现在', '目前', '当下', '此刻', '眼下', '当前', '最新')
+UNSUPPORTED_BEVERAGE_ATTRIBUTES = ('什么颜色', '何种颜色', '哪种颜色', '多少钱', '什么价格', '价格是多少')
 LATER_TIME_MARKERS = (
     '后来', '之后', '以后', '更新后', '变更以后', '后续', '修改完成后', '将来',
     '后来的', '更新完成后', '更正以后', '再往后', '再往后的',
@@ -410,6 +411,9 @@ class SporaChat:
                   'entity_score': entity_score}
         if not any(anchor in question for anchor in MEMORY_DOMAIN_ANCHORS):
             result['reason'] = 'unsupported_memory_predicate'
+            return result
+        if any(attribute in question for attribute in UNSUPPORTED_BEVERAGE_ATTRIBUTES):
+            result['reason'] = 'unsupported_memory_attribute'
             return result
         intent_confident = intent_logit >= self.intent_data['threshold']
         intent_recovered = (intent_logit >= getattr(self, 'read_intent_recovery_floor', READ_INTENT_RECOVERY_FLOOR)

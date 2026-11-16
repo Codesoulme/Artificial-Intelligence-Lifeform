@@ -42,7 +42,7 @@ class RuntimeChatPersistenceTests(unittest.TestCase):
         self.assertEqual(chat_module.constrain_temporal_intent('小梅以前喜欢，后来改成什么？', 0), 3)
 
     def test_temporal_constraint_covers_common_change_boundary_phrasings(self):
-        for question in ('小梅改口以前喜欢什么？', '小梅较早的时候喜欢什么？', '小梅变更前喜欢什么？'):
+        for question in ('小梅改口以前喜欢什么？', '小梅改口前喜欢什么？', '小梅较早的时候喜欢什么？', '小梅变更前喜欢什么？'):
             self.assertEqual(chat_module.constrain_temporal_intent(question, 3), 1)
         for question in ('小梅更新完成后喜欢什么？', '小梅后来的记录是什么？', '小梅再往后的记录是什么？'):
             self.assertEqual(chat_module.constrain_temporal_intent(question, 3), 2)
@@ -282,6 +282,12 @@ class RuntimeChatPersistenceTests(unittest.TestCase):
         for question in ('小林的颜色偏好是什么？', '小林的工作偏好是什么？'):
             self.assertFalse(any(word in question for word in chat_module.MEMORY_DOMAIN_ANCHORS))
         self.assertTrue(any(word in '小林喜欢喝什么？' for word in chat_module.MEMORY_DOMAIN_ANCHORS))
+
+    def test_unavailable_beverage_attributes_are_identified(self):
+        for question in ('小林喜欢的饮料通常是什么颜色？', '阿宁喜欢的饮品多少钱？'):
+            self.assertTrue(any(attribute in question for attribute in chat_module.UNSUPPORTED_BEVERAGE_ATTRIBUTES))
+        self.assertFalse(any(attribute in '小林现在喜欢什么饮料？'
+                             for attribute in chat_module.UNSUPPORTED_BEVERAGE_ATTRIBUTES))
 
     def test_unsupported_and_unknown_values_do_not_reach_output_head(self):
         for value in range(17):
