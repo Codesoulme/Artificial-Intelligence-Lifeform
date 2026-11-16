@@ -1,6 +1,7 @@
 import tempfile
 import subprocess
 import sys
+import copy
 import unittest
 from pathlib import Path
 
@@ -122,3 +123,59 @@ store.write(1, [0, 1], [1], [4, 5], allow_update=True, hook=terminate)
         self.assertEqual(store.read(1)['fact_ids'], [6, 7])
         with self.assertRaises(ValueError):
             store.read(True)
+
+    def test_variable_length_versions_reserve_addresses_and_restore(self):
+        store = self.create()
+        store.write(1, [0, 1], [1], [2, 3])
+        store.write(1, [0], [1], [4], allow_update=True)
+        with self.assertRaisesRegex(ValueError, 'another record'):
+            store.write(2, [1], [2], [6])
+        store.write(1, [0, 1, 2], [1], [5, 6, 7], allow_update=True)
+        reopened = ResearchChunkHistoryStore.open(self.path, self.codec)
+        self.addCleanup(reopened.close)
+        for version, values in enumerate(([2, 3], [4], [5, 6, 7])):
+            self.assertEqual(reopened.read(1, version)['fact_ids'], values)
+        self.assertEqual(reopened.read(1)['fact_ids'], [5, 6, 7])
+        with self.assertRaisesRegex(ValueError, 'order'):
+            reopened.write(1, [2, 1], [1], [8, 9], allow_update=True)
+
+    def test_failed_expansion_keeps_old_addresses_and_cursor(self):
+        store = self.create()
+        store.write(1, [0], [1], [2])
+        def fail(stage):
+            if stage == 'after_first_tensor':
+                raise RuntimeError('interrupted')
+        with self.assertRaises(RuntimeError):
+            store.write(1, [0, 1], [1], [3, 4], allow_update=True, hook=fail)
+        reopened = ResearchChunkHistoryStore.open(self.path, self.codec)
+        self.addCleanup(reopened.close)
+        self.assertEqual(reopened.state.cursor, 1)
+        self.assertEqual(reopened.read(1)['fact_ids'], [2])
+        reopened.write(2, [1], [2], [5])
+        self.assertEqual(reopened.read(2)['fact_ids'], [5])
+
+    def test_fixed_length_legacy_upgrade_is_transactional(self):
+        store = self.create()
+        store.write(1, [0, 1], [1], [2, 3])
+        metadata = copy.deepcopy(store.metadata)
+        metadata['format'] = 'spora-research-chunk-history-v1'
+        store.store.commit(store.model, store.state, expected_revision=store.store.revision, metadata=metadata)
+        store.metadata = metadata
+        legacy = ResearchChunkHistoryStore.open(self.path, self.codec)
+        self.addCleanup(legacy.close)
+        self.assertEqual(legacy.read(1)['fact_ids'], [2, 3])
+        def fail(stage):
+            if stage == 'before_commit':
+                raise RuntimeError('interrupted')
+        with self.assertRaises(RuntimeError):
+            legacy.write(1, [0], [1], [4], allow_update=True, hook=fail)
+        check = ResearchChunkHistoryStore.open(self.path, self.codec)
+        try:
+            self.assertEqual(check.metadata['format'], 'spora-research-chunk-history-v1')
+            self.assertEqual(check.read(1)['fact_ids'], [2, 3])
+        finally:
+            check.close()
+        legacy.write(1, [0], [1], [4], allow_update=True)
+        self.assertEqual(legacy.metadata['format'], 'spora-research-chunk-history-v2')
+        self.assertEqual(legacy.read(1, 0)['fact_ids'], [2, 3])
+        self.assertEqual(legacy.read(1)['fact_ids'], [4])

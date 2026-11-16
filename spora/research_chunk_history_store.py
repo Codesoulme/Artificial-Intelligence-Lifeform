@@ -14,7 +14,8 @@ from spora.growing import GrowingState, new_state
 from spora.research_chunked_text import encode_chunks
 from spora.structured_text_memory import StructuredTextMemoryCodec
 
-FORMAT = 'spora-research-chunk-history-v1'
+LEGACY_FORMAT = 'spora-research-chunk-history-v1'
+FORMAT = 'spora-research-chunk-history-v2'
 
 
 def codec_fingerprint(codec):
@@ -35,7 +36,7 @@ def _check_model(model, state):
 
 
 def _validate_metadata(model, state, metadata, codec):
-    if (not isinstance(metadata, dict) or metadata.get('format') != FORMAT
+    if (not isinstance(metadata, dict) or metadata.get('format') not in (LEGACY_FORMAT, FORMAT)
             or metadata.get('codec') != codec.config_dict()
             or metadata.get('codec_sha256') != codec_fingerprint(codec)
             or not isinstance(metadata.get('records'), list)
@@ -60,7 +61,8 @@ def _validate_metadata(model, state, metadata, codec):
             raise ValueError('Invalid or overlapping addresses')
         used.update(keys)
         for version, times in enumerate(record['versions']):
-            if not isinstance(times, list) or len(times) != len(keys):
+            if (not isinstance(times, list) or not 1 <= len(times) <= len(keys)
+                    or (metadata['format'] == LEGACY_FORMAT and len(times) != len(keys))):
                 raise ValueError('Invalid version extent')
             for index, (key, event_time) in enumerate(zip(keys, times)):
                 if type(event_time) is not int or not 0 <= event_time < len(events):
@@ -129,6 +131,9 @@ class ResearchChunkHistoryStore:
                 or len(set(keys)) != len(keys) or self.state.cursor + len(keys) > self.model.config.time_count):
             raise ValueError('Invalid address or history capacity')
         metadata = copy.deepcopy(self.metadata)
+        # Legacy fixed-width states remain readable; upgrade only in the same
+        # transaction as a successful new version.
+        metadata['format'] = FORMAT
         record = next((r for r in metadata['records'] if r['id'] == record_id), None)
         if record is None:
             if set(keys).intersection(k for r in metadata['records'] for k in r['keys']):
@@ -138,10 +143,16 @@ class ResearchChunkHistoryStore:
         else:
             if not allow_update:
                 raise ValueError('Existing record requires explicit update intent')
-            if record['keys'] != keys:
-                raise ValueError('Existing record addresses cannot change')
+            old_keys = record['keys']
+            common = min(len(old_keys), len(keys))
+            if old_keys[:common] != keys[:common]:
+                raise ValueError('Existing record address order cannot change')
+            extra = keys[len(old_keys):]
+            if set(extra).intersection(k for r in metadata['records'] if r['id'] != record_id for k in r['keys']):
+                raise ValueError('Address belongs to another record')
             if self.read(record_id)['identity_ids'] != self.codec._ids(identity_ids, 'Identity'):
                 raise ValueError('Existing record identity mismatch')
+            record['keys'] = old_keys + extra
         version = len(record['versions'])
         current = [x.detach().clone() for x in self.state.current]
         history = [[x.detach().clone() for x in site] for site in self.state.pages[0]]
