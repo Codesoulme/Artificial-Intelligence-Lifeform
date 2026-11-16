@@ -41,6 +41,13 @@ class RuntimeChatPersistenceTests(unittest.TestCase):
         self.assertEqual(chat_module.constrain_temporal_intent('小梅更新后喜欢什么饮料？', 0), 2)
         self.assertEqual(chat_module.constrain_temporal_intent('小梅以前喜欢，后来改成什么？', 0), 3)
 
+    def test_temporal_agreement_abstention_cannot_be_overridden_by_markers(self):
+        for text in ('小梅以前喜欢什么饮料？', '小梅现在喜欢什么饮料？', '小梅后来喜欢什么饮料？'):
+            self.assertEqual(chat_module.constrain_temporal_intent(text, 3, preserve_abstain=True), 3)
+        self.assertEqual(chat_module.constrain_temporal_intent('小梅以前喜欢什么饮料？', 3), 1)
+        with self.assertRaises(ValueError):
+            chat_module.constrain_temporal_intent('小梅以前喜欢什么饮料？', 3, preserve_abstain=1)
+
     def test_temporal_constraint_covers_common_change_boundary_phrasings(self):
         for question in ('小梅改口以前喜欢什么？', '小梅改口前喜欢什么？', '小梅较早的时候喜欢什么？', '小梅变更前喜欢什么？'):
             self.assertEqual(chat_module.constrain_temporal_intent(question, 3), 1)

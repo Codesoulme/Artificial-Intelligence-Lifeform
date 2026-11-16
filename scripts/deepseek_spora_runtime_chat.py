@@ -52,6 +52,7 @@ from spora.structured_text_memory import (StructuredTextMemoryCodec, StructuredT
 from spora.structured_text_output import (StructuredFactSuffixDecoder, StructuredMemoryTextDecoder,
                                           contains_fact_tokens)
 from spora.identity_read_guard import ConsensusIdentityReadGuard
+from spora.temporal_agreement import TemporalAgreement
 
 CHECKPOINT = ROOT/'runs/deepseek-spora-memory-output-integrated-v5-20261111/individual-with-output-adapter.pt'
 WORKING_CHECKPOINT = ROOT/'runs/spora-runtime-individual/individual.pt'
@@ -73,10 +74,12 @@ LATER_TIME_MARKERS = (
 )
 
 
-def constrain_temporal_intent(question, predicted):
+def constrain_temporal_intent(question, predicted, *, preserve_abstain=False):
     """Require explicit temporal evidence before selecting a historical page."""
-    if not isinstance(question, str) or predicted not in (0, 1, 2, 3):
+    if not isinstance(question, str) or predicted not in (0, 1, 2, 3) or type(preserve_abstain) is not bool:
         raise ValueError('Temporal constraint inputs are invalid')
+    if preserve_abstain and predicted == 3:
+        return 3
     has_past = any(marker in question for marker in PAST_TIME_MARKERS)
     has_later = any(marker in question for marker in LATER_TIME_MARKERS)
     if has_past and has_later:
@@ -401,7 +404,8 @@ class SporaChat:
         winner = int(probabilities.argmax())
         temporal_intent = (winner if winner != 3 and
                            float(probabilities[:3].max()) >= self.temporal_data['threshold'] else 3)
-        temporal_intent = constrain_temporal_intent(question, temporal_intent)
+        temporal_intent = constrain_temporal_intent(
+            question, temporal_intent, preserve_abstain=isinstance(self.temporal, TemporalAgreement))
         selected, single = single_span_mask(
             locator(token_vec).squeeze(-1).sigmoid()[0], masks[0], self.router['locator_threshold'])
         intent_logit = float(intent(qvec).squeeze(-1)[0])
