@@ -4,6 +4,7 @@ This is an isolated feasibility experiment. Fact boundaries and event order are
 provided by the script; the candidate is never installed into the formal
 individual or the DeepSeek base checkpoint.
 """
+import argparse
 import json
 import random
 import sys
@@ -114,7 +115,7 @@ def make_query_batch(tokenizer, cases):
     return {'input_ids': ids, 'attention_mask': mask, 'rows': rows}
 
 
-def teacher_forced_loss(model, batch):
+def teacher_forced_loss(model, batch, *, return_logits=False):
     result = model(input_ids=batch['input_ids'], attention_mask=batch['attention_mask'],
                    use_cache=False, return_dict=True)
     losses = []
@@ -122,7 +123,27 @@ def teacher_forced_loss(model, batch):
         prefix = prompt.numel()
         scores = result.logits[row, prefix - 1:prefix - 1 + target.numel()].float()
         losses.append(torch.nn.functional.cross_entropy(scores, target))
-    return torch.stack(losses).mean()
+    mean_loss = torch.stack(losses).mean()
+    return (mean_loss, result.logits) if return_logits else mean_loss
+
+
+def paired_margin_loss(first_logits, second_logits, old_id, new_id, margin=0.5):
+    """Require the same question to favor its own value in each state."""
+    if old_id == new_id:
+        raise ValueError('Paired facts must have different value tokens')
+    first_margin = first_logits[old_id] - first_logits[new_id]
+    second_margin = second_logits[new_id] - second_logits[old_id]
+    return (torch.nn.functional.softplus(margin - first_margin)
+            + torch.nn.functional.softplus(margin - second_margin)) / 2
+
+
+def change_last_event(events, name, replacement):
+    changed = list(events)
+    indices = [index for index, (person, _) in enumerate(changed) if person == name]
+    if not indices or changed[indices[-1]][1] == replacement:
+        raise ValueError('Paired intervention requires an existing different value')
+    changed[indices[-1]] = (name, replacement)
+    return changed
 
 
 def evaluate(model, tokenizer, wrappers, writers, caches, cases, *, events=None):
@@ -139,9 +160,11 @@ def evaluate(model, tokenizer, wrappers, writers, caches, cases, *, events=None)
     return rows
 
 
-def main():
-    if OUT.exists():
-        raise FileExistsError(OUT)
+def main(output=OUT, steps=STEPS, paired_weight=0.0):
+    if output.exists():
+        raise FileExistsError(output)
+    if steps < 1 or not 0 <= paired_weight <= 10:
+        raise ValueError('Invalid steps or paired weight')
     random.seed(SEED)
     torch.manual_seed(SEED)
     torch.set_num_threads(2)
@@ -182,7 +205,7 @@ def main():
     ordinary = ('你好，请简单介绍自己。', '请写一句鼓励学习的话。')
     ordinary_before = [pilot.generate(model, tokenizer, question) for question in ordinary]
 
-    for step in range(STEPS):
+    for step in range(steps):
         events, expected, correction = sample_episode(rng, step)
         event_caches = [caches[item] for item in events]
         query_cases = [(name, value, rng.choice(TEMPLATES)) for name, value in expected]
@@ -190,33 +213,53 @@ def main():
         optimizer.zero_grad(set_to_none=True)
         memory = write_sequence(wrappers, event_caches, writers, differentiable=True)
         with use_memory_with_grad(memory):
-            loss = teacher_forced_loss(model, batch)
+            loss, first_logits = teacher_forced_loss(model, batch, return_logits=True)
+        paired = torch.zeros((), device=loss.device)
+        if paired_weight:
+            target_index = rng.randrange(len(expected))
+            name, old_value = expected[target_index]
+            new_value = rng.choice([value for value in VALUES if value != old_value])
+            paired_events = change_last_event(events, name, new_value)
+            paired_memory = write_sequence(wrappers, [caches[item] for item in paired_events], writers,
+                                           differentiable=True)
+            paired_batch = make_query_batch(tokenizer, [(name, new_value, query_cases[target_index][2])])
+            with use_memory_with_grad(paired_memory):
+                _paired_ce, second_logits = teacher_forced_loss(model, paired_batch, return_logits=True)
+            old_id, new_id = tokenizer.encode(old_value, add_special_tokens=False), tokenizer.encode(new_value, add_special_tokens=False)
+            if len(old_id) != 1 or len(new_id) != 1:
+                raise ValueError('Pair objective requires single-token values')
+            first_pos = batch['rows'][target_index][0].numel() - 1
+            second_pos = paired_batch['rows'][0][0].numel() - 1
+            paired = paired_margin_loss(first_logits[target_index, first_pos].float(),
+                                        second_logits[0, second_pos].float(), old_id[0], new_id[0])
         align = alignment_loss(writers, event_caches)
         regularization = 1e-5 * sum(parameter.square().mean() for parameter in trainable)
-        total = loss + ALIGNMENT_WEIGHT * align + regularization
+        total = loss + ALIGNMENT_WEIGHT * align + regularization + paired_weight * paired
         if not bool(torch.isfinite(total)):
             raise ValueError('Nonfinite shared joint loss')
         total.backward()
         grad = torch.nn.utils.clip_grad_norm_(trainable, 1., error_if_nonfinite=True)
         optimizer.step()
         row = {'step': step + 1, 'loss': float(loss.detach()), 'alignment': float(align.detach()),
-               'total': float(total.detach()), 'gradient_norm': float(grad), 'correction': correction}
+               'total': float(total.detach()), 'paired': float(paired.detach()),
+               'gradient_norm': float(grad), 'correction': correction}
         trace.append(row)
         if (step + 1) % 16 == 0:
             print(json.dumps(row), flush=True)
 
-    OUT.mkdir()
+    output.mkdir()
     payload = {'format': 'spora-ttt-shared-joint-v1', 'base_sha256': base_sha,
                'layers': list(LAYERS), 'read_rank': READ_RANK, 'write_rank': WRITE_RANK,
-               'steps': STEPS, 'seed': SEED, 'alignment_weight': ALIGNMENT_WEIGHT,
+               'steps': steps, 'seed': SEED, 'alignment_weight': ALIGNMENT_WEIGHT,
+               'paired_weight': paired_weight,
                'readers': {str(layer): {name: tensor.detach().cpu()
                                         for name, tensor in reader.state_dict().items()}
                            for layer, reader in readers.items()},
                'writers': {str(layer): {name: tensor.detach().cpu()
                                         for name, tensor in writer.state_dict().items()}
                            for layer, writer in writers.items()}}
-    torch.save(payload, OUT / 'candidate.pt')
-    (OUT / 'training-trace.json').write_text(json.dumps(trace, indent=2) + '\n', encoding='utf-8')
+    torch.save(payload, output / 'candidate.pt')
+    (output / 'training-trace.json').write_text(json.dumps(trace, indent=2) + '\n', encoding='utf-8')
     eval_cases = [(name, value, TEMPLATES[0]) for name, value in TRAIN]
     held_cases = [(name, value, TEMPLATES[0]) for name, value in HELD]
     alternate_cases = [(name, VALUES[(VALUES.index(value) + 1) % len(VALUES)], TEMPLATES[0])
@@ -260,17 +303,23 @@ def main():
               'train_rows': train_rows, 'held_rows': held_rows,
               'train_changed_value_rows': alternate_rows, 'correction_rows': correction_rows,
               'unknown': unknown, 'trace': trace, 'base_sha256': base_sha,
-              'candidate_sha256': base.sha(OUT / 'candidate.pt'), 'steps': STEPS,
+              'candidate_sha256': base.sha(output / 'candidate.pt'), 'steps': steps,
+              'paired_weight': paired_weight,
               'seconds': time.perf_counter() - started,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Fact boundaries and event order are supplied by the experiment.',
                               'Training uses four synthetic people and four beverage values in random bindings.',
                               'Held people, correction, unknown rejection and open dialogue are not sealed benchmarks.',
                               'The candidate is separate from the formal individual and base checkpoint.']}
-    (OUT / 'result.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n',
+    (output / 'result.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n',
                                      encoding='utf-8')
     print(json.dumps(summary, ensure_ascii=False), flush=True)
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, default=OUT)
+    parser.add_argument('--steps', type=int, default=STEPS)
+    parser.add_argument('--paired-weight', type=float, default=0.0)
+    args = parser.parse_args()
+    main(args.output, args.steps, args.paired_weight)

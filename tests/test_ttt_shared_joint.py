@@ -4,11 +4,27 @@ import random
 
 import torch
 
-from scripts.deepseek_spora_ttt_shared_joint_pilot import make_query_batch, exact, evaluate, sample_episode, write_sequence
+from scripts.deepseek_spora_ttt_shared_joint_pilot import (make_query_batch, exact, evaluate, sample_episode,
+                                                          write_sequence, paired_margin_loss, change_last_event)
 from spora.research_ttt_ntp import sequential_ntp_write
 
 
 class SharedJointTests(unittest.TestCase):
+    def test_paired_margin_penalizes_unchanged_predictions(self):
+        same = paired_margin_loss(torch.tensor([2., 0.]), torch.tensor([2., 0.]), 0, 1)
+        switched = paired_margin_loss(torch.tensor([2., 0.]), torch.tensor([0., 2.]), 0, 1)
+        self.assertLess(switched, same)
+        with self.assertRaises(ValueError):
+            paired_margin_loss(torch.ones(2), torch.ones(2), 0, 0)
+
+    def test_pair_changes_only_last_write_of_requested_person(self):
+        original = [('A', 'old'), ('B', 'other'), ('A', 'new')]
+        changed = change_last_event(original, 'A', 'next')
+        self.assertEqual(changed, [('A', 'old'), ('B', 'other'), ('A', 'next')])
+        self.assertEqual(original[-1], ('A', 'new'))
+        with self.assertRaises(ValueError):
+            change_last_event(original, 'missing', 'x')
+
     def test_multi_token_write_matches_sequential_reference_and_keeps_gradients(self):
         wrapper = type('Wrapper', (), {'base': torch.nn.Linear(3, 2, bias=False)})()
         wrappers = {0: wrapper}
