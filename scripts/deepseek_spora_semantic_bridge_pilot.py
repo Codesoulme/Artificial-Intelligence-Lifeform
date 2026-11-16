@@ -80,6 +80,7 @@ TEACHER_HIDDEN_WEIGHT = 0.0
 TEACHER_HIDDEN_LOGIT_WEIGHT = 0.0
 TEACHER_HIDDEN_DELTA_WEIGHT = 0.0
 MULTITOKEN_COUNTERFACTUAL_WEIGHT = 0.0
+SPAN_GRADIENT_DIAGNOSTIC = False
 CROSS_ATTENTION_MEMORY = False
 CROSS_ATTENTION_LAYER = 23
 CROSS_ATTENTION_WIDTH = 64
@@ -721,6 +722,8 @@ def main():
             or not math.isfinite(MULTITOKEN_COUNTERFACTUAL_WEIGHT)
             or MULTITOKEN_COUNTERFACTUAL_WEIGHT < 0):
         raise ValueError('Invalid multi-token counterfactual weight')
+    if type(SPAN_GRADIENT_DIAGNOSTIC) is not bool or (SPAN_GRADIENT_DIAGNOSTIC and not MULTITOKEN_COUNTERFACTUAL_WEIGHT):
+        raise ValueError('Gradient diagnostic requires an enabled span loss')
     if JOINT_CODEC_TRAINING and (TRAIN_CORRECTION_SEQUENCES or TRAIN_MULTI_ENTITY_STATES):
         raise ValueError('Joint codec evaluation refresh does not yet support multi-event cases')
     if CODEC_RECONSTRUCTION_WEIGHT and (not JOINT_CODEC_TRAINING or not TRAIN_BRIDGE):
@@ -863,6 +866,10 @@ def main():
         if (candidate['source_sha256'] != source_sha or candidate['base_sha256'] != p.WEIGHT_SHA):
             raise ValueError('Teacher candidate source mismatch')
         decoder.reader.load_state_dict(candidate['reader'], strict=True)
+        loaded_read_biases = [
+            {'site': i, 'max_abs': float(site.read_out.bias.detach().abs().max()),
+             'trainable': bool(site.read_out.bias.requires_grad)}
+            for i, site in enumerate(decoder.reader.native_sites)]
         with torch.no_grad():
             for (index, name, adapter), old in zip(adapters, candidate['adapters']):
                 if old['layer'] != index or old['projection'] != name:
@@ -1220,6 +1227,7 @@ def main():
         trace = []
         multitoken_original_count = 0
         multitoken_swapped_count = 0
+        span_gradient_diagnostic = None
         max_codec_grad_norm = 0.0
         reconstruction_generator = torch.Generator(device=device).manual_seed(SEED + 941)
         for step in range(LANGUAGE_STEPS):
@@ -1303,6 +1311,22 @@ def main():
                     logits[:, a_start:a_start+a_len], b_on_a_logits[:, b_start:b_start+b_len],
                     other_full_logits[:, a_start:a_start+a_len], b_on_b_logits[:, b_start:b_start+b_len],
                     a_targets, b_targets)
+                if SPAN_GRADIENT_DIAGNOSTIC and step == 0:
+                    from spora.research_counterfactual_span_loss import diagnostic_gradient_norms
+                    reader_params = [v for v in decoder.reader.parameters() if v.requires_grad]
+                    reader_ids = {id(v) for v in reader_params}
+                    other_params = [v for v in params if id(v) not in reader_ids]
+                    diagnostic_groups = {}
+                    for i, site in enumerate(decoder.reader.native_sites):
+                        for layer_name in ('read_out', 'read_gate'):
+                            diagnostic_groups[f'site_{i}_{layer_name}'] = [
+                                v for v in getattr(site, layer_name).parameters() if v.requires_grad]
+                    specific_ids = {id(v) for group in diagnostic_groups.values() for v in group}
+                    diagnostic_groups['other_reader'] = [v for v in reader_params if id(v) not in specific_ids]
+                    diagnostic_groups['adapters'] = other_params
+                    span_gradient_diagnostic = diagnostic_gradient_norms(
+                        multitoken_contrast, diagnostic_groups)
+                    print(json.dumps({'span_gradient_diagnostic': span_gradient_diagnostic}), flush=True)
                 loss = loss + MULTITOKEN_COUNTERFACTUAL_WEIGHT * multitoken_contrast
             reconstruction_loss = torch.zeros((), device=device)
             if CODEC_RECONSTRUCTION_WEIGHT:
@@ -1520,6 +1544,8 @@ def main():
                          'multitoken_counterfactual_weight': MULTITOKEN_COUNTERFACTUAL_WEIGHT,
                          'multitoken_original_count': multitoken_original_count,
                          'multitoken_swapped_count': multitoken_swapped_count,
+                         'span_gradient_diagnostic': span_gradient_diagnostic,
+                         'loaded_read_biases': loaded_read_biases,
                          'evaluation_values': list(EVALUATION_VALUES) if EVALUATION_VALUES is not None else None,
                          'evaluate_first_multi_question_only': EVALUATE_FIRST_MULTI_QUESTION_ONLY,
                          'start_candidate': str(START_CANDIDATE) if START_CANDIDATE is not None else None,

@@ -43,3 +43,28 @@ def counterfactual_span_loss(a_on_a, b_on_a, a_on_b, b_on_b, targets_a, targets_
         raise ValueError('Counterfactual batches must match')
     return 0.5 * (F.softplus(margin - (a_a - b_a)).mean()
                   + F.softplus(margin - (b_b - a_b)).mean())
+
+
+def diagnostic_gradient_norms(loss, groups):
+    """Measure one loss component's gradients without changing .grad fields."""
+    if loss.ndim != 0 or not loss.requires_grad or not groups:
+        raise ValueError('Expected differentiable scalar and parameter groups')
+    ordered = [(name, list(parameters)) for name, parameters in groups.items()]
+    parameters = [p for _, group in ordered for p in group]
+    if not parameters or len({id(p) for p in parameters}) != len(parameters):
+        raise ValueError('Parameter groups must be nonempty overall and disjoint')
+    if any(not p.requires_grad for p in parameters):
+        raise ValueError('Diagnostic parameters must require gradients')
+    gradients = torch.autograd.grad(loss, parameters, retain_graph=True, allow_unused=True)
+    output, index = {}, 0
+    for name, group in ordered:
+        selected = gradients[index:index + len(group)]
+        index += len(group)
+        finite = all(g is None or bool(torch.isfinite(g).all()) for g in selected)
+        if not finite:
+            raise ValueError('Nonfinite diagnostic gradient')
+        square = sum(float(g.detach().float().square().sum()) for g in selected if g is not None)
+        output[name] = {'parameters': len(group), 'connected': sum(g is not None for g in selected),
+                        'nonzero': sum(g is not None and bool((g != 0).any()) for g in selected),
+                        'norm': square ** 0.5}
+    return output

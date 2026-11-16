@@ -2,7 +2,8 @@ import unittest
 
 import torch
 
-from spora.research_counterfactual_span_loss import counterfactual_span_loss, span_mean_log_probability
+from spora.research_counterfactual_span_loss import (
+    counterfactual_span_loss, diagnostic_gradient_norms, span_mean_log_probability)
 
 
 class CounterfactualSpanLossTests(unittest.TestCase):
@@ -30,3 +31,19 @@ class CounterfactualSpanLossTests(unittest.TestCase):
             span_mean_log_probability(scores, torch.full((1, 3), -100))
         with self.assertRaises(ValueError):
             span_mean_log_probability(scores, torch.tensor([[0, 1, 2]]))
+
+    def test_diagnostic_finds_disconnected_and_does_not_write_gradients(self):
+        reader = torch.nn.Parameter(torch.tensor(2.))
+        unused = torch.nn.Parameter(torch.tensor(3.))
+        adapter = torch.nn.Parameter(torch.tensor(4.))
+        loss = (reader * adapter).square()
+        result = diagnostic_gradient_norms(loss, {'reader': [reader, unused], 'adapter': [adapter]})
+        self.assertEqual(result['reader']['connected'], 1)
+        self.assertEqual(result['reader']['nonzero'], 1)
+        self.assertGreater(result['reader']['norm'], 0)
+        self.assertGreater(result['adapter']['norm'], 0)
+        self.assertIsNone(reader.grad)
+        loss.backward()
+        self.assertIsNotNone(reader.grad)
+        with self.assertRaises(ValueError):
+            diagnostic_gradient_norms(loss, {'a': [reader], 'b': [reader]})

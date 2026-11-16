@@ -1,5 +1,6 @@
 import unittest
 from scripts.deepseek_multirelation_strict_report_20261117 import score_phase
+from scripts.deepseek_multitoken_strict_report_20261117 import VALUES
 
 
 class MultiRelationStrictReportTests(unittest.TestCase):
@@ -18,3 +19,10 @@ class MultiRelationStrictReportTests(unittest.TestCase):
                'condition': 'memory', 'stored_expected': '果汁', 'answer': '小赵喜欢喝果汁。'}
         with self.assertRaises(ValueError):
             score_phase([row, row])
+
+    def test_multi_token_values_are_scored_in_their_own_domain(self):
+        row = {'group': 'held_name', 'name': '小赵', 'question': '问题', 'expected': '奶昔',
+               'condition': 'memory', 'stored_expected': '奶昔', 'answer': '小赵喜欢喝奶昔。'}
+        result = score_phase([row], VALUES)
+        self.assertEqual(result['groups'][0]['relation'], '饮品')
+        self.assertEqual(result['groups'][0]['correct'], 1)

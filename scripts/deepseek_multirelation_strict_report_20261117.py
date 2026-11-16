@@ -14,16 +14,17 @@ VALUE_RELATIONS = {**{v: '饮品' for v in ('茶', '咖啡', '牛奶', '豆浆',
 DEFAULT_RESULT = ROOT / 'runs/deepseek-spora-multirelation-hidden-bridge-64-20261117/result.json'
 
 
-def score_phase(rows):
+def score_phase(rows, value_relations=None):
+    value_relations = VALUE_RELATIONS if value_relations is None else value_relations
     groups, pairs = defaultdict(lambda: {'correct': 0, 'total': 0}), {}
     for row in rows:
         condition = row['condition']
         if condition not in ('memory', 'swapped'):
             continue
         value = row['stored_expected']
-        if value not in VALUE_RELATIONS:
+        if value not in value_relations:
             raise ValueError('Unknown evaluated value')
-        domain = VALUE_RELATIONS[value]
+        domain = value_relations[value]
         ok = score_relation_answer(row['answer'], row['name'], domain, value)
         key = (row['group'], domain, condition)
         groups[key]['total'] += 1
