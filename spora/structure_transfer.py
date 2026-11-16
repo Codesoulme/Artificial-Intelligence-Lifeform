@@ -123,6 +123,12 @@ class SPORALayerReplacement(nn.Module):
             raise ValueError('Invalid absolute position IDs')
         position_ids = position_ids.expand(batch, -1)
         past_length = int(past_key_values.get_seq_length(self.layer_idx))
+        if cache_position is not None:
+            expected = torch.arange(past_length, past_length + length, device=hidden_states.device)
+            if (not isinstance(cache_position, torch.Tensor) or cache_position.dtype != torch.long
+                    or cache_position.ndim != 1 or cache_position.shape[0] != length
+                    or not torch.equal(cache_position.to(expected.device), expected)):
+                raise ValueError('Cache positions must append contiguously')
         position = self.position(position_ids.to(self.position.weight.device))
         values = hidden_states.to(device=position.device, dtype=position.dtype) + position
         b, n, d = values.shape

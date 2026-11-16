@@ -1,4 +1,5 @@
 """Compare whole-prefix and chunked inference in the actual replacement model."""
+import argparse
 import json
 import sys
 import time
@@ -13,7 +14,9 @@ from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.deepseek_spora_memory_answer_distill import OUTPUT, _load_candidate
 
 
-def main():
+def main(output_path):
+    if output_path.exists():
+        raise FileExistsError(output_path)
     start = time.perf_counter()
     torch.set_num_threads(2)
     torch.cuda.reset_peak_memory_stats()
@@ -61,11 +64,13 @@ def main():
               'limitations': ['Three short fixed prompts; no active memory or generated answers.',
                               'Append-only dynamic cache, no padding or beam search.',
                               'Floating point inference may differ across execution shapes.']}
-    path = ROOT / 'runs/deepseek-spora-chunk-cache-audit-20261116.json'
-    with path.open('x', encoding='utf-8', newline='\n') as stream:
+    with output_path.open('x', encoding='utf-8', newline='\n') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2, allow_nan=False)
         stream.write('\n')
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path,
+                        default=ROOT / 'runs/deepseek-spora-chunk-cache-audit-20261116.json')
+    main(parser.parse_args().output)

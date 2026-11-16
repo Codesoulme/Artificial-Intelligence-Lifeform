@@ -229,6 +229,24 @@ class StructureTransferTests(unittest.TestCase):
                   past_key_values=cache, use_cache=True)
         self.assertEqual(cache.get_seq_length(2), 0)
 
+    def test_invalid_cache_positions_do_not_modify_cache(self):
+        layer = SPORALayerReplacement(16, 4, max_length=8, layer_idx=2).eval()
+        cache = self.Cache()
+        with torch.no_grad():
+            layer(torch.randn(1, 2, 16), cache_position=torch.arange(2),
+                  past_key_values=cache, use_cache=True)
+            keys, values = (item.clone() for item in cache.values[2])
+            for positions in (torch.tensor([1, 2]), torch.tensor([2, 4]),
+                              torch.tensor([2.0, 3.0]), torch.tensor([[2, 3]]), [2, 3]):
+                with self.subTest(positions=positions), self.assertRaisesRegex(ValueError, 'append contiguously'):
+                    layer(torch.randn(1, 2, 16), cache_position=positions,
+                          past_key_values=cache, use_cache=True)
+                torch.testing.assert_close(cache.values[2][0], keys)
+                torch.testing.assert_close(cache.values[2][1], values)
+            layer(torch.randn(1, 2, 16), cache_position=torch.tensor([2, 3]),
+                  past_key_values=cache, use_cache=True)
+        self.assertEqual(cache.get_seq_length(2), 4)
+
     def test_blend_endpoints_and_cache_guard(self):
         torch.manual_seed(42)
         teacher = torch.nn.Linear(16, 16, bias=False)
