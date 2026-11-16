@@ -23,14 +23,14 @@ VALUES = ('酸奶', '咖啡', '豆浆', '矿泉水', '柠檬水', '椰汁', '红
 QUESTIONS = ('{name}喜欢喝什么饮料？', '请只说{name}最喜欢的饮品。')
 
 
-def main(output=OUT, replace_spora=False):
+def main(output=OUT, replace_spora=False, source_dir=SOURCE):
     if output.exists():
         raise FileExistsError(output)
     started = time.perf_counter()
     torch.set_num_threads(2)
     torch.cuda.reset_peak_memory_stats()
-    report = json.loads((SOURCE / 'result.json').read_text(encoding='utf-8'))
-    source = SOURCE / 'writer.pt'
+    report = json.loads((source_dir / 'result.json').read_text(encoding='utf-8'))
+    source = source_dir / 'writer.pt'
     digest = base.sha(source)
     if report['base_sha256'] != base.WEIGHT_SHA or report['writer_sha256'] != digest:
         raise ValueError('Writer provenance mismatch')
@@ -98,5 +98,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=OUT)
     parser.add_argument('--replace-spora', action='store_true')
+    parser.add_argument('--source', type=Path, default=SOURCE)
     args = parser.parse_args()
-    main(args.output, args.replace_spora)
+    main(args.output, args.replace_spora, args.source)
