@@ -22,8 +22,19 @@ from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.internal_memory import observe_sourced
 from spora.identity_fingerprints import IdentityFingerprints
 from spora.identity_read_guard import IdentityReadGuard
+from spora.integrated_checkpoint import replacement_feature_variant_sha256
+from spora.memory_output import MemoryOutputAdapter
 
 OUT = ROOT / 'runs/deepseek-spora-interleaved-routed-audit-20261116.json'
+V2 = ROOT / 'runs/deepseek-spora-memory-output-adapter-v2-20261111'
+INTEGRATED_REPORT = runtime.CHECKPOINT.parent / 'result.json'
+
+
+def validate_v2_binding(candidate, base_sha, layer_hashes):
+    if (candidate.get('format') != 'spora-memory-output-adapter-v1'
+            or candidate.get('base_sha256') != base_sha
+            or candidate.get('candidate_sha256') != layer_hashes):
+        raise ValueError('Output adapter training sources do not match')
 
 
 def make_cases():
@@ -58,7 +69,7 @@ def score(case, result, events):
             'answer_exact': bool(result['accepted'] and key_correct and mode_correct and time_correct and answer_exact)}
 
 
-def main(output=OUT, fingerprint_guard=False):
+def main(output=OUT, fingerprint_guard=False, output_adapter_v2=False):
     if output.exists():
         raise FileExistsError(output)
     started = time.perf_counter()
@@ -67,10 +78,32 @@ def main(output=OUT, fingerprint_guard=False):
     paths = {'base': runtime.MODEL / 'model.safetensors', 'integrated': runtime.CHECKPOINT,
              'router': runtime.ROUTER / 'router.pt', 'entity': runtime.ENTITY / 'gate.pt',
              'intent': runtime.INTENT / 'intent.pt', 'temporal': runtime.TEMPORAL}
+    if output_adapter_v2:
+        paths.update({'v2': V2 / 'adapter.pt', 'v2_report': V2 / 'result.json',
+                      'integrated_report': INTEGRATED_REPORT})
+        integrated_info = json.loads(INTEGRATED_REPORT.read_text(encoding='utf-8'))
+        candidate_dir = Path(integrated_info['candidate_source'])
+        paths.update({f'candidate_layer_{layer}': candidate_dir / f'layer-{layer}.pt'
+                      for layer in (6, 12)})
     hashes = {name: runtime.sha(path) for name, path in paths.items()}
     with tempfile.TemporaryDirectory(prefix='spora-route-audit-') as directory:
         runtime.WORKING_CHECKPOINT = Path(directory) / 'not-created.pt'
         chat = runtime.load_chat()
+        if output_adapter_v2:
+            v2_info = json.loads(paths['v2_report'].read_text(encoding='utf-8'))
+            if (hashes['v2'] != v2_info['adapter_sha256']
+                    or hashes['integrated'] != integrated_info['checkpoint_sha256']
+                    or replacement_feature_variant_sha256(runtime.MODEL, chat._replacements())
+                       != integrated_info['feature_variant_sha256']):
+                raise ValueError('Output adapter or integrated checkpoint provenance mismatch')
+            candidate = torch.load(paths['v2'], map_location='cpu', weights_only=True)
+            validate_v2_binding(candidate, hashes['base'],
+                                {str(layer): hashes[f'candidate_layer_{layer}'] for layer in (6, 12)})
+            if candidate['config']['value_count'] != chat.organism.config.value_count:
+                raise ValueError('Output adapter value count mismatch')
+            v2_adapter = MemoryOutputAdapter(**candidate['config']).to(next(chat.base.parameters()).device).eval()
+            v2_adapter.load_state_dict(candidate['state'], strict=True)
+            chat.decoder.output_adapter = v2_adapter
         guard = None
         if fingerprint_guard:
             fingerprints = IdentityFingerprints(chat.organism.config.key_count)
@@ -104,7 +137,7 @@ def main(output=OUT, fingerprint_guard=False):
                'negative': len(negative), 'negative_rejected': sum(row['score']['negative_rejected'] for row in negative),
                'negative_accepted': sum(not row['score']['negative_rejected'] for row in negative)}
     result = {'summary': summary, 'events': list(events.values()), 'rows': rows, 'source_sha256': hashes,
-              'fingerprint_guard': fingerprint_guard,
+              'fingerprint_guard': fingerprint_guard, 'output_adapter_v2': output_adapter_v2,
               'seconds': time.perf_counter() - started, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Facts, values, source and event order were provided directly by the test.',
                               'Existing known names, finite beverage vocabulary and authored question forms.',
@@ -122,6 +155,7 @@ def main(output=OUT, fingerprint_guard=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--fingerprint-guard', action='store_true')
+    parser.add_argument('--output-adapter-v2', action='store_true')
     parser.add_argument('--output', type=Path, default=OUT)
     args = parser.parse_args()
-    main(args.output, args.fingerprint_guard)
+    main(args.output, args.fingerprint_guard, args.output_adapter_v2)

@@ -1,8 +1,17 @@
 import unittest
-from scripts.deepseek_spora_interleaved_routed_audit import make_cases, score
+from scripts.deepseek_spora_interleaved_routed_audit import make_cases, score, validate_v2_binding
 
 
 class InterleavedRouteAuditTests(unittest.TestCase):
+    def test_v2_adapter_rejects_wrong_base_and_layer_sources(self):
+        data = {'format': 'spora-memory-output-adapter-v1', 'base_sha256': 'base',
+                'candidate_sha256': {'6': 'a', '12': 'b'}}
+        validate_v2_binding(data, 'base', {'6': 'a', '12': 'b'})
+        with self.assertRaises(ValueError):
+            validate_v2_binding(data, 'different', {'6': 'a', '12': 'b'})
+        with self.assertRaises(ValueError):
+            validate_v2_binding(data, 'base', {'6': 'a', '12': 'different'})
+
     def test_expected_routes_cover_each_entity_and_phase(self):
         cases = make_cases()
         positives = [case for case in cases if case['index'] is not None]
