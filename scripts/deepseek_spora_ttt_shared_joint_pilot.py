@@ -25,7 +25,7 @@ from spora.research_ttt_ntp import (TTTNTPWriteTargetAdapter, attach_read_adapte
                                     use_memory_with_grad)
 
 
-OUT = ROOT / 'runs/deepseek-spora-ttt-shared-joint-random-bindings-20261116'
+OUT = ROOT / 'runs/deepseek-spora-ttt-shared-joint-random-prompts-20261116'
 LAYERS = (6, 12)
 READ_RANK = 16
 WRITE_RANK = 8
@@ -80,7 +80,8 @@ def write_sequence(wrappers, caches, writers, *, differentiable):
                 prediction = torch.nn.functional.linear(current_key.unsqueeze(0), fast)[0]
                 residual = current_target - prediction
                 denominator = current_key.square().sum() + RIDGE
-                memory[layer] = fast + ETA * residual.unsqueeze(1) * current_key.unsqueeze(0) / denominator
+                fast = fast + ETA * residual.unsqueeze(1) * current_key.unsqueeze(0) / denominator
+            memory[layer] = fast
     if not differentiable:
         memory = {layer: value.detach() for layer, value in memory.items()}
     return memory
@@ -184,7 +185,7 @@ def main():
     for step in range(STEPS):
         events, expected, correction = sample_episode(rng, step)
         event_caches = [caches[item] for item in events]
-        query_cases = [(name, value, TEMPLATES[step % len(TEMPLATES)]) for name, value in expected]
+        query_cases = [(name, value, rng.choice(TEMPLATES)) for name, value in expected]
         batch = make_query_batch(tokenizer, query_cases)
         optimizer.zero_grad(set_to_none=True)
         memory = write_sequence(wrappers, event_caches, writers, differentiable=True)

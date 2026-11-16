@@ -4,10 +4,24 @@ import random
 
 import torch
 
-from scripts.deepseek_spora_ttt_shared_joint_pilot import make_query_batch, exact, evaluate, sample_episode
+from scripts.deepseek_spora_ttt_shared_joint_pilot import make_query_batch, exact, evaluate, sample_episode, write_sequence
+from spora.research_ttt_ntp import sequential_ntp_write
 
 
 class SharedJointTests(unittest.TestCase):
+    def test_multi_token_write_matches_sequential_reference_and_keeps_gradients(self):
+        wrapper = type('Wrapper', (), {'base': torch.nn.Linear(3, 2, bias=False)})()
+        wrappers = {0: wrapper}
+        keys = torch.tensor([[1., 0., 0.], [0., 1., 0.]])
+        targets = torch.tensor([[2., 3.], [4., 5.]], requires_grad=True)
+        cache = {'keys': {0: keys}, 'targets': {0: targets}}
+        actual = write_sequence(wrappers, [cache], None, differentiable=True)
+        reference = {0: torch.zeros(2, 3)}
+        sequential_ntp_write(reference, {0: keys}, {0: targets.detach()}, eta=.5, ridge=1.)
+        torch.testing.assert_close(actual[0], reference[0])
+        actual[0].sum().backward()
+        self.assertTrue(torch.all(targets.grad.abs().sum(dim=1) > 0))
+
     def test_exact_strips_one_terminal_punctuation(self):
         self.assertTrue(exact('豆浆。', '豆浆'))
         self.assertFalse(exact('酸奶', '豆浆'))
