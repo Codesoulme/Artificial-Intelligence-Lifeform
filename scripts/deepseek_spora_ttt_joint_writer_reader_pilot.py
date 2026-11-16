@@ -4,6 +4,7 @@ The fact boundary is supplied by the experiment and only the selected value
 positions are written.  This is an isolated feasibility pilot: it does not
 alter the base model, formal individual, or persistent checkpoint.
 """
+import argparse
 import json
 import random
 import sys
@@ -67,6 +68,8 @@ def fact_cache(model, tokenizer, wrappers, fact, value):
         'keys': {layer: captured[layer].index_select(0, indices) for layer in wrappers},
         'targets': {layer: result.hidden_states[layer + 1][0].detach().float()
                     .index_select(0, indices + 1) for layer in wrappers},
+        'value_embeddings': model.model.embed_tokens(inputs['input_ids'][0].index_select(0, indices + 1))
+                           .detach().float(),
         'positions': positions,
     }
 
@@ -90,9 +93,19 @@ def write_memory(wrappers, cache, writers, *, differentiable):
     return result
 
 
-def main():
-    if OUT.exists():
-        raise FileExistsError(OUT)
+def value_alignment_loss(writers, cache):
+    values = cache['value_embeddings']
+    return torch.stack([
+        (1 - torch.nn.functional.cosine_similarity(writer(cache['targets'][layer]), values, dim=-1)).mean()
+        for layer, writer in writers.items()
+    ]).mean()
+
+
+def main(output=OUT, value_alignment_weight=0.0):
+    if output.exists():
+        raise FileExistsError(output)
+    if not 0 <= value_alignment_weight <= 10:
+        raise ValueError('Alignment weight must be between 0 and 10')
     base_sha = p.sha(p.MODEL / 'model.safetensors')
     if base_sha != p.WEIGHT_SHA:
         raise ValueError('Unexpected base weight')
@@ -160,7 +173,8 @@ def main():
         loss = torch.nn.functional.cross_entropy(scores.reshape(-1, scores.shape[-1]),
                                                  target.reshape(-1))
         regularization = 1e-5 * sum(parameter.square().mean() for parameter in trainable)
-        total = loss + regularization
+        alignment = value_alignment_loss(writers, caches[(item['name'], item['value'])])
+        total = loss + regularization + value_alignment_weight * alignment
         if not bool(torch.isfinite(total)):
             raise ValueError('Nonfinite joint writer loss')
         total.backward()
@@ -168,6 +182,7 @@ def main():
         optimizer.step()
         trace.append({'step': step + 1, 'loss': float(loss.detach()),
                       'regularization': float(regularization.detach()),
+                      'value_alignment': float(alignment.detach()),
                       'gradient_norm': float(gradient)})
         if (step + 1) % 16 == 0:
             print(json.dumps(trace[-1]), flush=True)
@@ -206,11 +221,12 @@ def main():
                                                         if row['name'] == name) for name in names),
                           'names': len(names)}
 
-    OUT.mkdir()
+    output.mkdir()
     payload = {
         'format': 'spora-ttt-joint-writer-reader-v1', 'base_sha256': base_sha,
         'layers': list(LAYERS), 'read_rank': READ_RANK, 'write_rank': WRITE_RANK,
         'eta': ETA, 'ridge': RIDGE, 'steps': STEPS, 'learning_rate': LR, 'seed': SEED,
+        'value_alignment_weight': value_alignment_weight,
         'readers': {str(layer): {name: tensor.detach().cpu()
                                  for name, tensor in reader.state_dict().items()}
                     for layer, reader in readers.items()},
@@ -218,12 +234,13 @@ def main():
                                  for name, tensor in writer.state_dict().items()}
                     for layer, writer in writers.items()},
     }
-    torch.save(payload, OUT / 'candidate.pt')
-    candidate_sha = p.sha(OUT / 'candidate.pt')
+    torch.save(payload, output / 'candidate.pt')
+    candidate_sha = p.sha(output / 'candidate.pt')
     report = {'status': 'ttt_joint_writer_reader_pilot', 'summary': summary, 'rows': rows,
               'trace': trace, 'train_names': crossed.TRAIN_NAMES, 'held_names': crossed.HELD_NAMES,
               'train_values': crossed.TRAIN_VALUES, 'held_values': crossed.HELD_VALUES,
               'base_sha256': base_sha, 'candidate_sha256': candidate_sha,
+              'value_alignment_weight': value_alignment_weight,
               'seconds': time.perf_counter() - started,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': [
@@ -232,10 +249,14 @@ def main():
                   'Synthetic one-fact beverage records and short exact answers only.',
                   'No persistent reload, correction, unknown-fact refusal, or open-domain chat.',
               ]}
-    (OUT / 'result.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n',
+    (output / 'result.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n',
                                      encoding='utf-8')
     print(json.dumps(summary, ensure_ascii=False), flush=True)
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, default=OUT)
+    parser.add_argument('--value-alignment-weight', type=float, default=0.0)
+    args = parser.parse_args()
+    main(args.output, args.value_alignment_weight)
