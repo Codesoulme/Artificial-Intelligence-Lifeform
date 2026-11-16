@@ -15,7 +15,9 @@ from spora.research_chunked_text import encode_chunks
 from spora.structured_text_memory import StructuredTextMemoryCodec
 
 LEGACY_FORMAT = 'spora-research-chunk-history-v1'
-FORMAT = 'spora-research-chunk-history-v2'
+VARIABLE_FORMAT = 'spora-research-chunk-history-v2'
+FORMAT = 'spora-research-chunk-history-v3'
+MAX_PAGES = 16
 
 
 class MemoryIntegrityError(RuntimeError):
@@ -35,19 +37,22 @@ def _check_model(model, state):
     if (model.config.temporal_kind != 'split' or model.config.history_writer != 'rls'
             or model.config.current_address != 'orthogonal' or state.internal is not None
             or hasattr(model, 'write_control') or state.structured_text is not None
-            or len(state.pages) != 1 or not isinstance(state.pages[0], list)):
-        raise ValueError('Only uncontrolled, single-page research individuals are supported')
+            or not 1 <= len(state.pages) <= MAX_PAGES
+            or any(not isinstance(page, list) for page in state.pages)):
+        raise ValueError('Only uncontrolled, active-page research individuals are supported')
 
 
 def _validate_metadata(model, state, metadata, codec):
-    if (not isinstance(metadata, dict) or metadata.get('format') not in (LEGACY_FORMAT, FORMAT)
+    if (not isinstance(metadata, dict) or metadata.get('format') not in (LEGACY_FORMAT, VARIABLE_FORMAT, FORMAT)
             or metadata.get('codec') != codec.config_dict()
             or metadata.get('codec_sha256') != codec_fingerprint(codec)
             or not isinstance(metadata.get('records'), list)
             or not isinstance(metadata.get('events'), list)):
         raise ValueError('Invalid or incompatible experiment metadata')
     events, records = metadata['events'], metadata['records']
-    if len(events) != state.cursor or state.cursor > model.config.time_count:
+    if (len(events) != state.cursor or state.cursor > len(state.pages) * model.config.time_count
+            or len(state.pages) != max(1, (state.cursor + model.config.time_count - 1) // model.config.time_count)
+            or (metadata['format'] != FORMAT and len(state.pages) != 1)):
         raise ValueError('Event count and cursor differ')
     used, indexed = set(), set()
     for record in records:
@@ -132,7 +137,8 @@ class ResearchChunkHistoryStore:
         packets = encode_chunks(self.codec, identity_ids, fact_ids, max_chunks=self.model.config.key_count)
         keys = list(keys)
         if (len(keys) != len(packets) or any(type(k) is not int or not 0 <= k < self.model.config.key_count for k in keys)
-                or len(set(keys)) != len(keys) or self.state.cursor + len(keys) > self.model.config.time_count):
+                or len(set(keys)) != len(keys)
+                or self.state.cursor + len(keys) > MAX_PAGES * self.model.config.time_count):
             raise ValueError('Invalid address or history capacity')
         metadata = copy.deepcopy(self.metadata)
         # Legacy fixed-width states remain readable; upgrade only in the same
@@ -159,15 +165,22 @@ class ResearchChunkHistoryStore:
             record['keys'] = old_keys + extra
         version = len(record['versions'])
         current = [x.detach().clone() for x in self.state.current]
-        history = [[x.detach().clone() for x in site] for site in self.state.pages[0]]
-        fast = [[cur] + page for cur, page in zip(current, history)]
-        velocity = [[torch.zeros_like(x) for x in site] for site in fast]
+        pages = [[[x.detach().clone() for x in site] for site in page] for page in self.state.pages]
+        needed = (self.state.cursor + len(keys) + self.model.config.time_count - 1) // self.model.config.time_count
+        while len(pages) < needed:
+            initial, _ = self.model.initial_state(1)
+            for site in initial:
+                site[1] = torch.zeros_like(site[1])
+            pages.append([[x.detach().clone() for x in site[1:]] for site in initial])
         device = next(self.model.parameters()).device
         times = []
         for index, (key, chunk) in enumerate(zip(keys, packets)):
             event_time = self.state.cursor + index
+            page_index, local_time = divmod(event_time, self.model.config.time_count)
+            fast = [[cur] + page for cur, page in zip(current, pages[page_index])]
+            velocity = [[torch.zeros_like(x) for x in site] for site in fast]
             key_tensor = torch.tensor([key], dtype=torch.long, device=device)
-            time_tensor = torch.full_like(key_tensor, event_time)
+            time_tensor = torch.full_like(key_tensor, local_time)
             # Durable TensorStore tracks tensor version counters; inference
             # tensors have none, so create normal tensors without gradients.
             with torch.no_grad():
@@ -180,11 +193,13 @@ class ResearchChunkHistoryStore:
                             fast[site_index], velocity[site_index], address,
                             chunk.packet.reshape(1, -1).to(device), torch.ones(1, device=device),
                             mode_tensor, False)
+            current = [site[0] for site in fast]
+            pages[page_index] = [site[1:] for site in fast]
             metadata['events'].append({'key': key, 'record': record_id, 'version': version,
                                        'chunk': index, 'metadata': dict(chunk.metadata)})
             times.append(event_time)
         record['versions'].append(times)
-        candidate = GrowingState([site[0] for site in fast], [[site[1:] for site in fast]],
+        candidate = GrowingState(current, pages,
                                  self.state.cursor + len(keys), self.state.runtime, None, None)
         _validate_metadata(self.model, candidate, metadata, self.codec)
         # A successful database transaction is not sufficient: dense history
@@ -237,10 +252,11 @@ class ResearchChunkHistoryStore:
         identity, fact = None, []
         for key, event_time in zip(record['keys'], chosen):
             keys = torch.tensor([key], dtype=torch.long, device=device)
-            modes, times = torch.full_like(keys, mode), torch.full_like(keys, event_time)
+            page_index, local_time = divmod(event_time, self.model.config.time_count)
+            modes, times = torch.full_like(keys, mode), torch.full_like(keys, local_time)
             with torch.inference_mode():
                 _, bound = self.model.representation(keys, modes, times)
-                vectors = [site.retrieve([self.state.current[i] if mode == 0 else self.state.pages[0][i][0]],
+                vectors = [site.retrieve([self.state.current[i] if mode == 0 else self.state.pages[page_index][i][0]],
                                          self.model.memory_address(site, bound, keys, modes))[0]
                            for i, site in enumerate(self.model.memories)]
                 decoded = self.codec.decode(torch.stack(vectors).mean(0), self.metadata['events'][event_time]['metadata'])

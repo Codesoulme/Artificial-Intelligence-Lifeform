@@ -177,7 +177,7 @@ store.write(1, [0, 1], [1], [4, 5], allow_update=True, hook=terminate)
         finally:
             check.close()
         legacy.write(1, [0], [1], [4], allow_update=True)
-        self.assertEqual(legacy.metadata['format'], 'spora-research-chunk-history-v2')
+        self.assertEqual(legacy.metadata['format'], 'spora-research-chunk-history-v3')
         self.assertEqual(legacy.read(1, 0)['fact_ids'], [2, 3])
         self.assertEqual(legacy.read(1)['fact_ids'], [4])
 
@@ -199,3 +199,102 @@ store.write(1, [0, 1], [1], [4, 5], allow_update=True, hook=terminate)
         self.addCleanup(reopened.close)
         self.assertEqual(reopened.read(1)['fact_ids'], [2, 3])
         self.assertEqual(reopened.read(1, 0)['fact_ids'], [2, 3])
+
+
+class ResearchChunkPagedTests(unittest.TestCase):
+    def setUp(self):
+        ResearchChunkHistoryTests.setUp(self)
+        torch.manual_seed(991)
+        self.model = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=32,
+                    key_count=16, expert_rank=4, memory_layers=(0, 1), history_writer='rls',
+                    current_address='orthogonal', time_count=4))
+
+    create = ResearchChunkHistoryTests.create
+
+    def test_version_can_span_page_and_reload(self):
+        store = self.create()
+        store.write(1, [0, 1, 2], [1], [2, 3, 4])
+        result = store.write(1, [0, 1, 2], [1], [5, 6, 7], allow_update=True)
+        self.assertEqual(result['times'], [3, 4, 5])
+        self.assertEqual(len(store.state.pages), 2)
+        reopened = ResearchChunkHistoryStore.open(self.path, self.codec)
+        self.addCleanup(reopened.close)
+        self.assertEqual(reopened.read(1, 0)['fact_ids'], [2, 3, 4])
+        self.assertEqual(reopened.read(1, 1)['fact_ids'], [5, 6, 7])
+        self.assertEqual(reopened.read(1)['fact_ids'], [5, 6, 7])
+
+    def test_cross_page_transaction_failure_leaves_old_state(self):
+        store = self.create()
+        store.write(1, [0, 1, 2], [1], [2, 3, 4])
+        def fail(stage):
+            if stage == 'after_first_tensor':
+                raise RuntimeError('interrupted')
+        with self.assertRaises(RuntimeError):
+            store.write(1, [0, 1, 2], [1], [5, 6, 7], allow_update=True, hook=fail)
+        self.assertEqual((store.state.cursor, len(store.state.pages)), (3, 1))
+        reopened = ResearchChunkHistoryStore.open(self.path, self.codec)
+        self.addCleanup(reopened.close)
+        self.assertEqual((reopened.state.cursor, len(reopened.state.pages)), (3, 1))
+        self.assertEqual(reopened.read(1)['fact_ids'], [2, 3, 4])
+
+    def test_v2_upgrade_occurs_with_cross_page_commit(self):
+        store = self.create()
+        store.write(1, [0, 1, 2], [1], [2, 3, 4])
+        metadata = copy.deepcopy(store.metadata)
+        metadata['format'] = 'spora-research-chunk-history-v2'
+        store.store.commit(store.model, store.state, expected_revision=store.store.revision, metadata=metadata)
+        store.metadata = metadata
+        store.write(1, [0, 1, 2], [1], [5, 6, 7], allow_update=True)
+        reopened = ResearchChunkHistoryStore.open(self.path, self.codec)
+        self.addCleanup(reopened.close)
+        self.assertEqual(reopened.metadata['format'], 'spora-research-chunk-history-v3')
+        self.assertEqual((reopened.state.cursor, len(reopened.state.pages)), (6, 2))
+        self.assertEqual(reopened.read(1, 0)['fact_ids'], [2, 3, 4])
+        self.assertEqual(reopened.read(1, 1)['fact_ids'], [5, 6, 7])
+
+    def test_process_termination_across_page_commit(self):
+        store = self.create()
+        store.write(1, [0, 1, 2], [1], [2, 3, 4])
+        child = '''
+import os, sys, torch
+from spora.research_chunk_history_store import ResearchChunkHistoryStore
+from spora.structured_text_memory import StructuredTextMemoryCodec
+torch.set_num_threads(2)
+embedding = torch.randn((32, 64), generator=torch.Generator().manual_seed(42))
+codec = StructuredTextMemoryCodec(embedding, memory_width=32, identity_slots=2,
+    fact_slots=2, identity_slot_width=8, fact_slot_width=8, eos_token_id=0)
+store = ResearchChunkHistoryStore.open(sys.argv[1], codec)
+def terminate(stage):
+    if stage == sys.argv[2]: os._exit(77)
+store.write(1, [0, 1, 2], [1], [5, 6, 7], allow_update=True, hook=terminate)
+'''
+        for stage, cursor, pages, expected in (('after_first_tensor', 3, 1, [2, 3, 4]),
+                                                ('after_commit', 6, 2, [5, 6, 7])):
+            result = subprocess.run([sys.executable, '-c', child, str(self.path), stage],
+                                    capture_output=True, text=True, timeout=40)
+            self.assertEqual(result.returncode, 77, result.stderr)
+            reopened = ResearchChunkHistoryStore.open(self.path, self.codec)
+            try:
+                self.assertEqual((reopened.state.cursor, len(reopened.state.pages)), (cursor, pages))
+                self.assertEqual(reopened.read(1)['fact_ids'], expected)
+                self.assertEqual(reopened.read(1, 0)['fact_ids'], [2, 3, 4])
+            finally:
+                reopened.close()
+
+    def test_maximum_pages_reject_without_mutation(self):
+        torch.manual_seed(991)
+        self.model = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=32,
+                    key_count=16, expert_rank=4, memory_layers=(0, 1), history_writer='rls',
+                    current_address='orthogonal', time_count=2))
+        store = self.create()
+        for index in range(32):
+            store.write(1, [0], [1], [2 + index % 28], allow_update=index > 0)
+        self.assertEqual((store.state.cursor, len(store.state.pages)), (32, 16))
+        before = store.store.revision
+        with self.assertRaisesRegex(ValueError, 'capacity'):
+            store.write(1, [0], [1], [20], allow_update=True)
+        self.assertEqual((store.state.cursor, len(store.state.pages), store.store.revision), (32, 16, before))
+        reopened = ResearchChunkHistoryStore.open(self.path, self.codec)
+        self.addCleanup(reopened.close)
+        for index in range(32):
+            self.assertEqual(reopened.read(1, index)['fact_ids'], [2 + index % 28])
