@@ -7,6 +7,7 @@ to condition the language update.  Numeric addresses and direct writes remain
 deliberate controls; this is not an adopted runtime path.
 """
 import json
+import math
 import random
 import tempfile
 import time
@@ -78,6 +79,7 @@ TEACHER_KL_TEMPERATURE = 2.0
 TEACHER_HIDDEN_WEIGHT = 0.0
 TEACHER_HIDDEN_LOGIT_WEIGHT = 0.0
 TEACHER_HIDDEN_DELTA_WEIGHT = 0.0
+MULTITOKEN_COUNTERFACTUAL_WEIGHT = 0.0
 CROSS_ATTENTION_MEMORY = False
 CROSS_ATTENTION_LAYER = 23
 CROSS_ATTENTION_WIDTH = 64
@@ -714,6 +716,11 @@ def aligned_teacher_hidden_delta(student_hidden, baseline_hidden, teacher_hidden
 def main():
     if OUT.exists():
         raise FileExistsError(OUT)
+    if (isinstance(MULTITOKEN_COUNTERFACTUAL_WEIGHT, bool)
+            or not isinstance(MULTITOKEN_COUNTERFACTUAL_WEIGHT, (int, float))
+            or not math.isfinite(MULTITOKEN_COUNTERFACTUAL_WEIGHT)
+            or MULTITOKEN_COUNTERFACTUAL_WEIGHT < 0):
+        raise ValueError('Invalid multi-token counterfactual weight')
     if JOINT_CODEC_TRAINING and (TRAIN_CORRECTION_SEQUENCES or TRAIN_MULTI_ENTITY_STATES):
         raise ValueError('Joint codec evaluation refresh does not yet support multi-event cases')
     if CODEC_RECONSTRUCTION_WEIGHT and (not JOINT_CODEC_TRAINING or not TRAIN_BRIDGE):
@@ -1211,6 +1218,8 @@ def main():
             params += codec_params
         optimizer = torch.optim.AdamW(optimizer_groups, lr=LANGUAGE_LR, weight_decay=0, foreach=False)
         trace = []
+        multitoken_original_count = 0
+        multitoken_swapped_count = 0
         max_codec_grad_norm = 0.0
         reconstruction_generator = torch.Generator(device=device).manual_seed(SEED + 941)
         for step in range(LANGUAGE_STEPS):
@@ -1256,8 +1265,9 @@ def main():
                                         {'key': item['key'], 'intent': 'current', 'event_time': 0})
             if JOINT_CODEC_TRAINING:
                 other_spec['preserve_memory_grad'] = True
-            other_logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
-                                   **other_spec).logits[:, prefix - 1 + item['value_position'], :].float()
+            other_full_logits = decoder(input_ids=item['ids'], attention_mask=torch.ones_like(item['ids']),
+                                        **other_spec).logits
+            other_logits = other_full_logits[:, prefix - 1 + item['value_position'], :].float()
             correct_id, wrong_id = answer_word_ids[item['value']][0], answer_word_ids[other_value][0]
             own = scores[:, item['value_position'], :]
             correct_margin = own[:, correct_id] - own[:, wrong_id]
@@ -1267,6 +1277,33 @@ def main():
             fact_ce = torch.nn.functional.cross_entropy(own, torch.tensor([correct_id], device=device))
             swapped_ce = torch.nn.functional.cross_entropy(other_logits, torch.tensor([wrong_id], device=device))
             loss = 4.0 * full_loss + 0.5 * (fact_ce + swapped_ce) + contrast
+            multitoken_contrast = torch.zeros((), device=device)
+            if MULTITOKEN_COUNTERFACTUAL_WEIGHT:
+                # Candidate B has its own teacher-forced prefix; evaluating B
+                # under A's prefix would compare the wrong token context.
+                from spora.research_counterfactual_span_loss import counterfactual_span_loss
+                other_answer = answer_for_value(item['name'], other_value)
+                other_answer_tokens = tok.encode(other_answer, add_special_tokens=False)
+                other_pos = checked_value_span(other_answer_tokens, answer_word_ids[other_value],
+                                               WORDS[other_value], other_answer)
+                other_target = torch.tensor([other_answer_tokens + [tok.eos_token_id]], device=device)
+                other_ids = torch.cat((item['prompt']['input_ids'], other_target), dim=1)
+                b_on_a_logits = decoder(input_ids=other_ids, attention_mask=torch.ones_like(other_ids),
+                                        **item_spec).logits
+                b_on_b_logits = decoder(input_ids=other_ids, attention_mask=torch.ones_like(other_ids),
+                                        **other_spec).logits
+                a_start = prefix - 1 + item['value_position']
+                b_start = prefix - 1 + other_pos
+                a_len, b_len = len(answer_word_ids[item['value']]), len(answer_word_ids[other_value])
+                multitoken_original_count += int(a_len > 1)
+                multitoken_swapped_count += int(b_len > 1)
+                a_targets = torch.tensor([answer_word_ids[item['value']]], device=device, dtype=torch.long)
+                b_targets = torch.tensor([answer_word_ids[other_value]], device=device, dtype=torch.long)
+                multitoken_contrast = counterfactual_span_loss(
+                    logits[:, a_start:a_start+a_len], b_on_a_logits[:, b_start:b_start+b_len],
+                    other_full_logits[:, a_start:a_start+a_len], b_on_b_logits[:, b_start:b_start+b_len],
+                    a_targets, b_targets)
+                loss = loss + MULTITOKEN_COUNTERFACTUAL_WEIGHT * multitoken_contrast
             reconstruction_loss = torch.zeros((), device=device)
             if CODEC_RECONSTRUCTION_WEIGHT:
                 sample_ids = torch.randint(embedding.shape[0], (CODEC_RECONSTRUCTION_BATCH,),
@@ -1348,6 +1385,7 @@ def main():
             if step in (0, 9, 49, 99, 199, 399, LANGUAGE_STEPS - 1):
                 trace.append({'step': step + 1, 'loss': float(loss.detach()),
                               'full_loss': float(full_loss.detach()), 'contrast': float(contrast.detach()),
+                              'multitoken_contrast': float(multitoken_contrast.detach()),
                               'teacher_kl': float(teacher_kl.detach()),
                               'teacher_hidden': float(teacher_hidden.detach()),
                               'teacher_hidden_delta': float(teacher_hidden_delta.detach()),
@@ -1479,6 +1517,9 @@ def main():
                          'teacher_hidden_weight': TEACHER_HIDDEN_WEIGHT,
                          'teacher_hidden_logit_weight': TEACHER_HIDDEN_LOGIT_WEIGHT,
                          'teacher_hidden_delta_weight': TEACHER_HIDDEN_DELTA_WEIGHT,
+                         'multitoken_counterfactual_weight': MULTITOKEN_COUNTERFACTUAL_WEIGHT,
+                         'multitoken_original_count': multitoken_original_count,
+                         'multitoken_swapped_count': multitoken_swapped_count,
                          'evaluation_values': list(EVALUATION_VALUES) if EVALUATION_VALUES is not None else None,
                          'evaluate_first_multi_question_only': EVALUATE_FIRST_MULTI_QUESTION_ONLY,
                          'start_candidate': str(START_CANDIDATE) if START_CANDIDATE is not None else None,
