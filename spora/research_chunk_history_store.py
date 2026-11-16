@@ -18,6 +18,10 @@ LEGACY_FORMAT = 'spora-research-chunk-history-v1'
 FORMAT = 'spora-research-chunk-history-v2'
 
 
+class MemoryIntegrityError(RuntimeError):
+    """A candidate write cannot preserve or reproduce its memory contents."""
+
+
 def codec_fingerprint(codec):
     digest = hashlib.sha256()
     for name in ('identity_codebook', 'fact_codebook'):
@@ -183,6 +187,27 @@ class ResearchChunkHistoryStore:
         candidate = GrowingState([site[0] for site in fast], [[site[1:] for site in fast]],
                                  self.state.cursor + len(keys), self.state.runtime, None, None)
         _validate_metadata(self.model, candidate, metadata, self.codec)
+        # A successful database transaction is not sufficient: dense history
+        # writes can disturb previously readable vectors. Compare all retained
+        # versions before publishing, and check both views of the new value.
+        # This is a conservative local check, not proof that the old contents
+        # were factually correct or that an untested future write is safe.
+        candidate_view = ResearchChunkHistoryStore(self.store, self.model, candidate, metadata, self.codec)
+        expected_new = {'identity_ids': self.codec._ids(identity_ids, 'Identity'),
+                        'fact_ids': self.codec._ids(fact_ids, 'Fact')}
+        try:
+            if (candidate_view._read_unchecked(record_id) != expected_new or
+                    candidate_view._read_unchecked(record_id, version) != expected_new):
+                raise MemoryIntegrityError('Candidate cannot reproduce the new current and historical record')
+            for previous_record in self.metadata['records']:
+                old_id = previous_record['id']
+                if old_id != record_id and self._read_unchecked(old_id) != candidate_view._read_unchecked(old_id):
+                    raise MemoryIntegrityError('Candidate changes an unrelated current record')
+                for old_version in range(len(previous_record['versions'])):
+                    if self._read_unchecked(old_id, old_version) != candidate_view._read_unchecked(old_id, old_version):
+                        raise MemoryIntegrityError('Candidate changes a prior historical version')
+        except ValueError as exc:
+            raise MemoryIntegrityError('A prior or candidate memory could not be decoded') from exc
         previous = self.store.revision
         try:
             stats = self.store.commit(self.model, candidate, expected_revision=previous,
@@ -198,6 +223,9 @@ class ResearchChunkHistoryStore:
         _validate_metadata(self.model, self.state, self.metadata, self.codec)
         if type(record_id) is not int or record_id < 0:
             raise ValueError('Invalid record id')
+        return self._read_unchecked(record_id, version)
+
+    def _read_unchecked(self, record_id, version=None):
         record = next((r for r in self.metadata['records'] if r['id'] == record_id), None)
         if record is None:
             return None

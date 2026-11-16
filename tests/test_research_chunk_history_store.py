@@ -2,13 +2,14 @@ import tempfile
 import subprocess
 import sys
 import copy
+from unittest.mock import patch
 import unittest
 from pathlib import Path
 
 import torch
 
 from spora.durable import RevisionConflict
-from spora.research_chunk_history_store import ResearchChunkHistoryStore
+from spora.research_chunk_history_store import MemoryIntegrityError, ResearchChunkHistoryStore
 from spora.structured_text_memory import StructuredTextMemoryCodec
 from spora.temporal import TemporalConfig, TemporalSPORA
 
@@ -179,3 +180,22 @@ store.write(1, [0, 1], [1], [4, 5], allow_update=True, hook=terminate)
         self.assertEqual(legacy.metadata['format'], 'spora-research-chunk-history-v2')
         self.assertEqual(legacy.read(1, 0)['fact_ids'], [2, 3])
         self.assertEqual(legacy.read(1)['fact_ids'], [4])
+
+    def test_history_drift_refuses_commit_and_preserves_snapshot(self):
+        store = self.create()
+        store.write(1, [0, 1], [1], [2, 3])
+        original_read = ResearchChunkHistoryStore._read_unchecked
+        def corrupt_candidate(view, record_id, version=None):
+            result = original_read(view, record_id, version)
+            if view.state.cursor > 2 and record_id == 1 and version == 0:
+                return {'identity_ids': result['identity_ids'], 'fact_ids': [7, 7]}
+            return result
+        with patch.object(ResearchChunkHistoryStore, '_read_unchecked', corrupt_candidate):
+            with self.assertRaisesRegex(MemoryIntegrityError, 'prior historical'):
+                store.write(1, [0, 1], [1], [4, 5], allow_update=True)
+        self.assertEqual(store.state.cursor, 2)
+        self.assertEqual(store.store.revision, 1)
+        reopened = ResearchChunkHistoryStore.open(self.path, self.codec)
+        self.addCleanup(reopened.close)
+        self.assertEqual(reopened.read(1)['fact_ids'], [2, 3])
+        self.assertEqual(reopened.read(1, 0)['fact_ids'], [2, 3])
