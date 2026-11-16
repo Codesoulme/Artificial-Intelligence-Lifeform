@@ -13,14 +13,17 @@ from scripts import deepseek_spora_text_writer_broad_generalization as prior
 from scripts import deepseek_spora_ttt_read_adapter_pilot as pilot
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.deepseek_spora_output_aware_writer import GAIN, OUT as SOURCE, norm_vectors
+from spora.research_semantic_slot import install_sequence_scaled, use_slot_sequence
 from spora.semantic_text_writer import TextSemanticWriter, value_positions
 
 OUT = ROOT / 'runs/deepseek-spora-output-aware-reload-20261116.json'
 
 
-def main(source=SOURCE, output=OUT):
+def main(source=SOURCE, output=OUT, value_limit=8, generate_held=False):
     if output.exists():
         raise FileExistsError(output)
+    if type(value_limit) is not int or value_limit < 1:
+        raise ValueError('Value limit must be positive')
     start = time.perf_counter()
     torch.set_num_threads(2)
     torch.cuda.reset_peak_memory_stats()
@@ -34,6 +37,8 @@ def main(source=SOURCE, output=OUT):
     model = load_full_streamed().eval()
     writer = TextSemanticWriter(model.config.hidden_size).to('cuda').eval()
     writer.load_state_dict(payload['state'], strict=True)
+    if generate_held:
+        install_sequence_scaled(model, scale=GAIN)
     rows = []
     for name_split, names in (('train', prior.TRAIN_NAMES), ('held', prior.HELD_NAMES)):
         for name in names:
@@ -41,7 +46,7 @@ def main(source=SOURCE, output=OUT):
             with torch.inference_mode():
                 prompt_hidden = model.model(**prompt, use_cache=False, return_dict=True).last_hidden_state[:, -1]
             for value_split in ('train', 'held'):
-                values = report[f'{value_split}_values'][:8]
+                values = report[f'{value_split}_values'][:value_limit]
                 for value in values:
                     encoded, positions = value_positions(tokenizer, f'{name}喜欢喝{value}。', value)
                     if len(positions) != 1:
@@ -52,11 +57,21 @@ def main(source=SOURCE, output=OUT):
                         hidden = model.model(**encoded, use_cache=False, output_hidden_states=True,
                                              return_dict=True).hidden_states[1][0, positions[0]].float()
                         vector = norm_vectors(writer(hidden), payload['train_norm'])
-                        logits = model.lm_head(prompt_hidden + (GAIN * vector).to(prompt_hidden.dtype)).float()[0]
+                        head = model.lm_head.base if generate_held else model.lm_head
+                        logits = head(prompt_hidden + (GAIN * vector).to(prompt_hidden.dtype)).float()[0]
                         rank = int((logits > logits[token]).sum()) + 1
+                        generated = None
+                        if generate_held and name_split == 'held' and value_split == 'held':
+                            eos = model.model.embed_tokens.weight[tokenizer.eos_token_id].float()
+                            with use_slot_sequence(torch.stack((vector, eos))):
+                                result = model.generate(**prompt, use_cache=True, do_sample=False, max_new_tokens=4,
+                                                        pad_token_id=tokenizer.pad_token_id,
+                                                        eos_token_id=tokenizer.eos_token_id)
+                            generated = result[0, prompt['input_ids'].shape[1]:].tolist()
                     rows.append({'name': name, 'value': value, 'name_split': name_split,
                                  'value_split': value_split, 'target': token, 'rank': rank,
-                                 'top1': int(logits.argmax())})
+                                 'top1': int(logits.argmax()), 'generated_ids': generated,
+                                 'full_exact': generated == [token, tokenizer.eos_token_id]})
             print(json.dumps({'completed_name_split': name_split, 'cases': len(rows)}), flush=True)
     if base.sha(path) != digest or base.sha(base.MODEL / 'model.safetensors') != base.WEIGHT_SHA:
         raise ValueError('Source changed')
@@ -65,11 +80,13 @@ def main(source=SOURCE, output=OUT):
         for v in ('train', 'held'):
             subset = [r for r in rows if r['name_split'] == n and r['value_split'] == v]
             summary[f'{n}_name_{v}_value'] = {'count': len(subset),
-                                               'top1': sum(r['rank'] == 1 for r in subset)}
+                                               'top1': sum(r['rank'] == 1 for r in subset),
+                                               'generated': sum(r['generated_ids'] is not None for r in subset),
+                                               'full_exact': sum(r['full_exact'] for r in subset)}
     result = {'summary': summary, 'rows': rows, 'base_sha256': base.WEIGHT_SHA, 'writer_sha256': digest,
               'seconds': time.perf_counter() - start, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
-              'limitations': ['First eight values per split, two names per split, fixed artificial question.',
-                              'Teacher-forced first token only; no answer or EOS generation here.',
+              'limitations': ['First values per split, two names per split, fixed artificial question.',
+                              'EOS is externally supplied for any generation, not naturally learned.',
                               'Program supplies value boundaries; no autonomous memory routing.',
                               'No SPORA replacement layer or persistent individual.']}
     with output.open('x', encoding='utf-8', newline='\n') as stream:
@@ -82,5 +99,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, default=SOURCE)
     parser.add_argument('--output', type=Path, default=OUT)
+    parser.add_argument('--value-limit', type=int, default=8)
+    parser.add_argument('--generate-held', action='store_true')
     args = parser.parse_args()
-    main(args.source, args.output)
+    main(args.source, args.output, args.value_limit, args.generate_held)

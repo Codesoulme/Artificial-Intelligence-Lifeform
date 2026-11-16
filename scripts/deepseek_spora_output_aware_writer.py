@@ -46,6 +46,38 @@ def norm_vectors(vectors, norm):
     return F.normalize(vectors, dim=-1) * norm
 
 
+def expanded_value_split(pool, train_count, is_eligible=None):
+    if type(train_count) is not int or train_count < prior.TRAIN_COUNT:
+        raise ValueError('Training coverage must include the original training set')
+    held_start = prior.TRAIN_COUNT
+    held_end = held_start + prior.HELD_COUNT
+    if len(pool) < train_count + prior.HELD_COUNT or len(set(pool)) != len(pool):
+        raise ValueError('Insufficient unique values for the requested split')
+    held = pool[held_start:held_end]
+    train = list(pool[:held_start])
+    if is_eligible is not None and not all(is_eligible(value) for value in train + held):
+        raise ValueError('Original train or holdout value has an invalid boundary')
+    for value in pool[held_end:]:
+        if len(train) == train_count:
+            break
+        if is_eligible is None or is_eligible(value):
+            train.append(value)
+    if len(train) != train_count:
+        raise ValueError('Insufficient context-aligned training values')
+    return train, held
+
+
+def context_aligned(tokenizer, value):
+    for name in prior.TRAIN_NAMES + prior.HELD_NAMES:
+        try:
+            _, positions = value_positions(tokenizer, f'{name}喜欢喝{value}。', value)
+        except ValueError:
+            return False
+        if len(positions) != 1:
+            return False
+    return True
+
+
 def hard_negative_ids(logits, existing, held, top_k):
     if logits.ndim != 2 or top_k < 1 or top_k > logits.shape[1]:
         raise ValueError('Expected a rank-two logit matrix and valid top_k')
@@ -58,9 +90,11 @@ def hard_negative_ids(logits, existing, held, top_k):
     return result
 
 
-def main(output=OUT, hard_negatives=False):
+def main(output=OUT, hard_negatives=False, train_count=prior.TRAIN_COUNT, steps=STEPS):
     if output.exists():
         raise FileExistsError(output)
+    if type(steps) is not int or steps < 1:
+        raise ValueError('Training steps must be positive')
     start = time.perf_counter()
     torch.set_num_threads(2)
     torch.manual_seed(SEED)
@@ -68,8 +102,9 @@ def main(output=OUT, hard_negatives=False):
     tokenizer = base.AutoTokenizer.from_pretrained(base.MODEL, local_files_only=True, trust_remote_code=False)
     pool = prior.stable_cjk_pool(tokenizer)
     random.Random(prior.SEED).shuffle(pool)
-    train, held = pool[:prior.TRAIN_COUNT], pool[prior.TRAIN_COUNT:prior.TRAIN_COUNT + prior.HELD_COUNT]
-    cases = create_cases(prior.TRAIN_NAMES, prior.HELD_NAMES, train, held)
+    train, held = expanded_value_split(pool, train_count, lambda value: context_aligned(tokenizer, value))
+    cases = [case for case in create_cases(prior.TRAIN_NAMES, prior.HELD_NAMES, train, held)
+             if case['name_split'] == 'train' and case['value_split'] == 'train']
     model = load_full_streamed().eval()
     features, targets = collect(model, tokenizer, cases)
     train_ids = [tokenizer.encode(value, add_special_tokens=False)[0] for value in train]
@@ -91,7 +126,7 @@ def main(output=OUT, hard_negatives=False):
     optimizer = torch.optim.AdamW(writer.parameters(), lr=prior.LR, weight_decay=1e-5, foreach=False)
     sampler = torch.Generator(device='cpu').manual_seed(SEED)
     trace = []
-    for step in range(STEPS):
+    for step in range(steps):
         batch = torch.randint(len(indexes), (BATCH,), generator=sampler).to('cuda')
         vector = norm_vectors(writer(training.index_select(0, batch)), train_norm)
         hidden = prompts.index_select(0, batch) + GAIN * vector
@@ -141,12 +176,13 @@ def main(output=OUT, hard_negatives=False):
     path = output / 'writer.pt'
     atomic_save({'format': 'spora-output-aware-writer-v1', 'base_sha256': base.WEIGHT_SHA,
                  'state': {k: v.detach().cpu() for k, v in writer.state_dict().items()},
-                 'train_norm': train_norm, 'seed': SEED}, path)
+                 'train_norm': train_norm, 'seed': SEED, 'steps': steps, 'train_count': train_count}, path)
     report = {'base_sha256': base.WEIGHT_SHA, 'writer_sha256': base.sha(path), 'rows': rows, 'trace': trace,
               'summary': {'first_correct': sum(r['first_correct'] for r in rows),
                           'full_exact': sum(r['exact'] for r in rows), 'cases': len(rows)},
               'train_values': train, 'held_values': held, 'sampled_negative_count': NEGATIVES,
               'hard_negatives': hard_negatives, 'final_output_classes': len(sampled_ids),
+              'steps': steps, 'train_count': train_count,
               'seconds': time.perf_counter() - start, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Frozen base, oracle boundaries and synthetic one-token values.',
                               'Training uses sampled output vocabulary; held values excluded from targets and negatives.',
@@ -163,5 +199,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=OUT)
     parser.add_argument('--hard-negatives', action='store_true')
+    parser.add_argument('--train-count', type=int, default=prior.TRAIN_COUNT)
+    parser.add_argument('--steps', type=int, default=STEPS)
     args = parser.parse_args()
-    main(args.output, args.hard_negatives)
+    main(args.output, args.hard_negatives, args.train_count, args.steps)
