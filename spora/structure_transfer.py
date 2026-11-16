@@ -41,7 +41,7 @@ class SPORALayerReplacement(nn.Module):
     """A distilled SPORA causal block with learned absolute position input.
 
     It accepts Qwen2 decoder-layer calls and supports a mutable cache for
-    prefill and single-token continuation. Position embeddings remain bounded
+    prefill and chunked continuation with an append-only dynamic cache. Position embeddings remain bounded
     by the checkpoint's configured maximum length.
     """
 
@@ -123,8 +123,6 @@ class SPORALayerReplacement(nn.Module):
             raise ValueError('Invalid absolute position IDs')
         position_ids = position_ids.expand(batch, -1)
         past_length = int(past_key_values.get_seq_length(self.layer_idx))
-        if past_length and length != 1:
-            raise ValueError('Cached continuation currently accepts exactly one new token')
         position = self.position(position_ids.to(self.position.weight.device))
         values = hidden_states.to(device=position.device, dtype=position.dtype) + position
         b, n, d = values.shape
@@ -134,6 +132,10 @@ class SPORALayerReplacement(nn.Module):
         query, key, value = qkv.unbind(0)
         mask = _attention_mask(attention_mask, b, self.block.heads, n, past_length + n, past_length,
                                query.device, query.dtype)
+        if mask is None and past_length and n > 1:
+            mask = _attention_mask(torch.ones((b, past_length + n), device=query.device),
+                                   b, self.block.heads, n, past_length + n, past_length,
+                                   query.device, query.dtype)
         cache_kwargs = {} if cache_position is None else {'cache_position': cache_position}
         key, value = past_key_values.update(key, value, self.layer_idx, cache_kwargs)
         attended = torch.nn.functional.scaled_dot_product_attention(

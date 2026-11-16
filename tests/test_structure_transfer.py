@@ -136,6 +136,39 @@ class StructureTransferTests(unittest.TestCase):
         torch.testing.assert_close(first[1], second[1])
         self.assertTrue(torch.isfinite(first).all())
 
+    def test_cached_chunks_match_full_forward_and_remain_causal(self):
+        torch.manual_seed(127)
+        layer = SPORALayerReplacement(16, 4, max_length=8, layer_idx=2).eval()
+        values = torch.randn(2, 7, 16)
+        changed = values.clone()
+        changed[:, -1] += 100
+        with torch.no_grad():
+            full = layer(values)
+            outputs = []
+            for sample in (values, changed):
+                cache = self.Cache()
+                parts = []
+                for start, end in ((0, 2), (2, 5), (5, 7)):
+                    parts.append(layer(sample[:, start:end], past_key_values=cache, use_cache=True))
+                outputs.append(torch.cat(parts, dim=1))
+        torch.testing.assert_close(outputs[0], full, atol=2e-6, rtol=2e-6)
+        torch.testing.assert_close(outputs[0][:, :-1], outputs[1][:, :-1], atol=2e-6, rtol=2e-6)
+
+    def test_cached_chunk_with_left_padding_matches_full_forward(self):
+        torch.manual_seed(128)
+        layer = SPORALayerReplacement(16, 4, max_length=8, layer_idx=2).eval()
+        values = torch.randn(2, 6, 16)
+        mask = torch.tensor([[0, 0, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]])
+        positions = torch.tensor([[0, 0, 0, 1, 2, 3], [0, 1, 2, 3, 4, 5]])
+        with torch.no_grad():
+            full = layer(values, attention_mask=mask, position_ids=positions)
+            cache = self.Cache()
+            layer(values[:, :3], attention_mask=mask[:, :3], position_ids=positions[:, :3],
+                  past_key_values=cache, use_cache=True)
+            chunk = layer(values[:, 3:], attention_mask=mask, position_ids=positions[:, 3:],
+                          past_key_values=cache, use_cache=True)
+        torch.testing.assert_close(chunk, full[:, 3:], atol=2e-6, rtol=2e-6)
+
     def test_cached_left_padding_matches_full_forward(self):
         torch.manual_seed(124)
         layer = SPORALayerReplacement(16, 4, max_length=8, layer_idx=2).eval()
