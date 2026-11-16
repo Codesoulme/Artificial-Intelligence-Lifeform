@@ -6,7 +6,7 @@ from torch import nn
 from spora.research_ttt_ntp import (TTTNTPMemoryLinear, TTTNTPWriteTargetAdapter,
                                     attach_read_adapters, fresh_memory, install,
                                     attach_query_bridges, attach_query_basis_bridges, sequential_ntp_write, use_memory,
-                                    use_memory_with_grad)
+                                    use_memory_with_grad, use_query_bridges)
 
 
 class ToyDecoder(nn.Module):
@@ -119,6 +119,25 @@ class ResearchTTTNTPTests(unittest.TestCase):
             output = wrappers[0](hidden)
         torch.testing.assert_close(output - wrappers[0].base(hidden), torch.tensor([[[2., 3.]]]), atol=.02, rtol=.02)
         self.assertEqual(bridge[0].query_basis.shape, (1, 3))
+
+    def test_query_bridge_is_restored_across_matched_control_reads(self):
+        wrappers = install(ToyDecoder(), (0,))
+        memory = fresh_memory(wrappers)
+        key = torch.tensor([[1., 0., 0.]])
+        sequential_ntp_write(memory, key, {0: torch.tensor([[2., 3.]])}, eta=1., ridge=.001)
+        bridges = attach_query_bridges(wrappers, {0: torch.tensor(
+            [[0., 1., 0.], [1., 0., 0.], [0., 0., 1.]])})
+        hidden = torch.tensor([[[0., 1., 0.]]])
+        for _ in range(2):
+            with use_query_bridges(wrappers), use_memory(memory):
+                baseline = wrappers[0](hidden)
+                self.assertIsNone(wrappers[0].query_bridge)
+            with use_query_bridges(wrappers, bridges), use_memory(memory):
+                actual = wrappers[0](hidden)
+                self.assertIs(wrappers[0].query_bridge, bridges[0])
+            torch.testing.assert_close(actual - baseline, torch.tensor([[[2., 3.]]]),
+                                       atol=.02, rtol=.02)
+        self.assertIs(wrappers[0].query_bridge, bridges[0])
 
 
 if __name__ == '__main__':

@@ -12,10 +12,11 @@ from scripts import deepseek_spora_ttt_read_adapter_pilot as pilot
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.deepseek_spora_ttt_joint_writer_reader_pilot import fact_cache
 from scripts.deepseek_spora_ttt_persistence_interference import SOURCE
+from scripts.deepseek_spora_ttt_query_basis_shared_probe import query_state
 from spora.research_ttt_ntp import (attach_query_basis_bridges, attach_read_adapters, fresh_memory, install,
-                                    sequential_ntp_write)
+                                    sequential_ntp_write, use_query_bridges)
 
-OUT = ROOT / 'runs/deepseek-spora-ttt-query-basis-read-20261116'
+OUT = ROOT / 'runs/deepseek-spora-ttt-query-basis-read-v2-20261116'
 TRAIN = (('小林', '酸奶'), ('阿宁', '豆浆'), ('小雨', '咖啡'), ('阿哲', '果汁'))
 HELD = (('小赵', '豆浆'), ('小郑', '咖啡'), ('小王', '酸奶'), ('小孙', '果汁'))
 UNKNOWN = ('小雪', '阿松')
@@ -55,38 +56,31 @@ def main():
             raise ValueError('This probe requires one-token values')
         caches[(name, value)] = cache
     bases = {}
+    queries = {name: query_state(model, tokenizer, wrappers,
+                                 f'请只回答{name}喜欢喝什么饮料。') for name, _ in TRAIN}
     for layer in wrappers:
-        query_rows, key_rows = [], []
-        for name, value in TRAIN:
-            question = f'请只回答{name}喜欢喝什么饮料。'
-            prompt = tokenizer(question, return_tensors='pt', add_special_tokens=False).to('cuda')
-            captured = {}
-            def capture_query(module, args, output):
-                # A forward hook must return None; returning setdefault's value
-                # would replace the 1536-wide down-projection output with the
-                # 8960-wide input tensor.
-                captured.setdefault('query', args[0][0, -1].detach().float().cpu())
-
-            handle = wrappers[layer].base.register_forward_hook(capture_query)
-            try:
-                with torch.inference_mode():
-                    model(**prompt, use_cache=False, return_dict=True)
-            finally:
-                handle.remove()
-            query_rows.append(captured['query'])
-            key_rows.append(caches[(name, value)]['keys'][layer][0].cpu())
+        query_rows = [queries[name][layer] for name, _ in TRAIN]
+        key_rows = [caches[(name, value)]['keys'][layer][0].cpu() for name, value in TRAIN]
         bases[layer] = (torch.stack(query_rows), torch.stack(key_rows))
-    attach_query_basis_bridges(wrappers, bases)
+    bridges = attach_query_basis_bridges(wrappers, bases, ridge=10.)
+    bridge_calls = {layer: 0 for layer in bridges}
+    for layer, bridge in bridges.items():
+        def count_call(module, args, output, layer=layer):
+            bridge_calls[layer] += 1
+        bridge.register_forward_hook(count_call)
 
     def evaluate(name, value, bridged):
         memory = fresh_memory(wrappers)
         sequential_ntp_write(memory, caches[(name, value)]['keys'], caches[(name, value)]['targets'],
                              eta=adapter['eta'], ridge=adapter['ridge'])
-        for wrapper in wrappers.values():
-            if not bridged:
-                wrapper.query_bridge = None
-        result = pilot.generate(model, tokenizer, f'请只回答{name}喜欢喝什么饮料。', memory)
-        return {'answer': result['answer'], 'token_ids': result['token_ids'], 'exact': exact(result['answer'], value)}
+        before = dict(bridge_calls)
+        with use_query_bridges(wrappers, bridges if bridged else None):
+            result = pilot.generate(model, tokenizer, f'请只回答{name}喜欢喝什么饮料。', memory)
+        calls = {layer: bridge_calls[layer] - before[layer] for layer in bridges}
+        if any((count == 0) if bridged else (count != 0) for count in calls.values()):
+            raise RuntimeError('Bridge execution did not match the selected condition')
+        return {'answer': result['answer'], 'token_ids': result['token_ids'],
+                'exact': exact(result['answer'], value), 'bridge_calls': calls}
 
     for split, cases in (('train', TRAIN), ('held', HELD)):
         for name, value in cases:

@@ -198,6 +198,24 @@ def attach_query_basis_bridges(wrappers, bases, *, ridge=1e-6):
 
 
 @contextmanager
+def use_query_bridges(wrappers, bridges=None):
+    """Temporarily select every layer's query bridge for a controlled read."""
+    if not isinstance(wrappers, dict) or not wrappers:
+        raise ValueError('Installed wrappers are required')
+    if bridges is not None and (not isinstance(bridges, dict) or set(bridges) != set(wrappers)
+                                or any(not isinstance(bridge, nn.Module) for bridge in bridges.values())):
+        raise ValueError('Bridges must cover exactly the installed layers')
+    previous = {layer: wrapper.query_bridge for layer, wrapper in wrappers.items()}
+    try:
+        for layer, wrapper in wrappers.items():
+            wrapper.query_bridge = None if bridges is None else bridges[layer]
+        yield
+    finally:
+        for layer, wrapper in wrappers.items():
+            wrapper.query_bridge = previous[layer]
+
+
+@contextmanager
 def use_memory(memory):
     """Expose an immutable snapshot to the wrapped layers for one call."""
     if not isinstance(memory, dict) or any(not isinstance(key, int) for key in memory):
