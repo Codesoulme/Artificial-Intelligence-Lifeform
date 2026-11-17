@@ -12,8 +12,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.models.qwen2.modeling_qwen2 import apply_rotary_pos_emb
 from scripts.deepseek_local_baseline import MODEL, WEIGHT_SHA, sha
 from spora.research_positive_feature_memory import read as feature_read, write as feature_write
+from spora.research_random_feature_attention import read as random_read, write as random_write
+from spora.research_positive_feature_memory import features as positive_features
 
-OUT = ROOT / 'runs/deepseek-attention-kv-feature-probe-20261117.json'
+OUT = ROOT / 'runs/deepseek-attention-kv-random-feature-probe-20261117.json'
 TEXTS = (
     '小林喜欢羽毛球，小周喜欢游泳。第二天他们在公园散步。后来小林的爱好改成踢足球。请说出小林现在喜欢做什么。',
     '小王住在成都，小赵住在杭州。周末两人都去图书馆。小王搬到了南京。请说出小王现在住在哪座城市。',
@@ -30,6 +32,8 @@ def main():
     if sha(source) != WEIGHT_SHA:
         raise ValueError('Base checksum mismatch')
     torch.set_num_threads(2)
+    generator = torch.Generator(device='cpu').manual_seed(110617)
+    random_projection = torch.randn((512, 128), generator=generator).to('cuda')
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     model = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True,
              trust_remote_code=False, torch_dtype=torch.float16, attn_implementation='sdpa').to('cuda').eval()
@@ -68,6 +72,11 @@ def main():
                     mapping = keys.T @ dual
                     prediction = queries @ mapping
                     positive = feature_read(queries, feature_write(keys, values))
+                    random_prediction = random_read(queries, random_projection, random_write(keys, values, random_projection))
+                    positive_weights = positive_features(queries) @ positive_features(keys).T
+                    positive_weights = positive_weights / positive_weights.sum(-1, keepdim=True)
+                    def entropy(prob):
+                        return float(-(prob * prob.clamp_min(1e-30).log()).sum(-1).mean())
                     def metrics(pred, truth):
                         return {'mse': float((pred - truth).square().mean()),
                                 'cosine': float(F.cosine_similarity(pred, truth, dim=-1).mean())}
@@ -76,6 +85,10 @@ def main():
                                  'stored_kv_reconstruction': metrics(keys @ mapping, values),
                                  'query_historical_attention': metrics(prediction, target),
                                  'positive_feature_memory': metrics(positive, target),
+                                 'random_feature_memory': metrics(random_prediction, target),
+                                 'attention_entropy': entropy(weights),
+                                 'positive_feature_entropy': entropy(positive_weights),
+                                 'uniform_entropy': float(torch.log(torch.tensor(float(split)))),
                                  'history_mean_baseline': metrics(baseline, target)})
     finally:
         for hook in hooks:
