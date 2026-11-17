@@ -20,6 +20,7 @@ SOURCE = p.ROOT / 'runs/continuous-reader-all-facts-late-residual-strict-pilot-2
 OUT = p.ROOT / 'runs/continuous-reader-bridge-reload-audit-v1'
 NAMES = ('小林', '小周', '小王', '小赵', '小吴', '小郑')
 QUESTION = '请只说出{name}喜欢的水果名称。'
+QUESTION_BY_VALUE = None
 EXTRA_WORDS = ()
 EXTRA_KEYS = (3,)
 EXTRA_GROUP_PREFIX = 'unseen'
@@ -29,6 +30,32 @@ PARITY_VALUE_INDICES = None
 MIX_ABLATION = False
 CROSS_ABLATION = False
 PROBE_OBSERVER = None
+
+
+def question_template(value):
+    if QUESTION_BY_VALUE is None:
+        return QUESTION
+    if type(value) is not int or not 0 <= value < len(QUESTION_BY_VALUE):
+        raise ValueError('Missing value-specific question template')
+    return QUESTION_BY_VALUE[value]
+
+
+def restore_cross_attention(old_cross, attention, decoder, model, codec, embedding, config):
+    representation = config.get('cross_attention_representation', 'vocab_lookup')
+    if representation == 'continuous':
+        from spora.research_continuous_memory_attention import ContinuousMemoryAttention
+        cross = ContinuousMemoryAttention(
+            attention.o_proj, decoder._memory_context, model.config.memory_width, codec, embedding, 4,
+            old_cross['width'], condition_offset=config.get('condition_offset', 0),
+            output_gain=config.get('cross_attention_output_gain', 1.0))
+    elif representation == 'vocab_lookup':
+        cross = s.MemorySlotCrossAttention(attention.o_proj, decoder._memory_context,
+                                          model.config.memory_width, codec, embedding, 4,
+                                          old_cross['width'])
+    else:
+        raise ValueError('Unsupported cross-attention representation')
+    cross.load_memory_state(old_cross['state'])
+    return cross
 
 
 def correct_answer(answer, name, value):
@@ -119,10 +146,8 @@ def main():
             if old_cross['projection'] != 'o_proj' or index == 20:
                 raise ValueError('Unexpected cross-attention location')
             target_attention = decoder.base.model.layers[index].self_attn
-            cross = s.MemorySlotCrossAttention(target_attention.o_proj, decoder._memory_context,
-                                                model.config.memory_width, codec, embedding, 4,
-                                                old_cross['width'])
-            cross.load_memory_state(old_cross['state'])
+            cross = restore_cross_attention(old_cross, target_attention, decoder, model, codec, embedding,
+                                             payload.get('experiment_config', {}))
             target_attention.o_proj = cross
             cross_modules.append(cross)
         final_payload = payload.get('final_adapters', ())
@@ -169,7 +194,8 @@ def main():
                         raise ValueError('Controlled codec read did not recover written tokens')
             return state
 
-        def probe(group, key, value, state, template=QUESTION, condition='memory'):
+        def probe(group, key, value, state, template=None, condition='memory'):
+            template = question_template(value) if template is None else template
             digest = p.frozen_digest(model, state)
             spec = p._memory_args(model, state, {'key': key, 'intent': 'current', 'event_time': 0})
             if condition == 'off':
@@ -225,7 +251,8 @@ def main():
 
         saved = {row['expected']: row for row in original['after']
                  if row['group'] == 'held_name' and row['condition'] == 'memory'
-                 and row['question'] == QUESTION.format(name=NAMES[3])}
+                 and row['expected'] in s.WORDS
+                 and row['question'] == question_template(s.WORDS.index(row['expected'])).format(name=NAMES[3])}
         parity_values = range(len(s.WORDS)) if PARITY_VALUE_INDICES is None else tuple(PARITY_VALUE_INDICES)
         if (not parity_values or any(type(value) is not int or not 0 <= value < len(s.WORDS)
                                      for value in parity_values) or len(set(parity_values)) != len(parity_values)):

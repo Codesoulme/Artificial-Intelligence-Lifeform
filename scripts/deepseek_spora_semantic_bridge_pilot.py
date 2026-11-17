@@ -89,6 +89,7 @@ CROSS_ATTENTION_CONTINUOUS = False
 CROSS_ATTENTION_LAYER = 23
 CROSS_ATTENTION_WIDTH = 64
 CROSS_ATTENTION_LR = None
+CROSS_ATTENTION_OUTPUT_GAIN = 1.0
 LANGUAGE_LR = 1e-4
 QUERY_INTENT_GATE = False
 QUERY_SCALAR_GATE = False
@@ -770,6 +771,10 @@ def main():
         raise ValueError('Continuous attention requires enabled memory cross-attention')
     if CROSS_ATTENTION_LR is not None and not CROSS_ATTENTION_MEMORY:
         raise ValueError('Cross-attention learning rate requires enabled cross-attention')
+    if (isinstance(CROSS_ATTENTION_OUTPUT_GAIN, bool) or not isinstance(CROSS_ATTENTION_OUTPUT_GAIN, (int, float))
+            or not math.isfinite(CROSS_ATTENTION_OUTPUT_GAIN) or CROSS_ATTENTION_OUTPUT_GAIN <= 0
+            or (CROSS_ATTENTION_OUTPUT_GAIN != 1.0 and not CROSS_ATTENTION_CONTINUOUS)):
+        raise ValueError('Cross-attention output gain requires continuous attention and must be positive')
     if CODEC_RECONSTRUCTION_WEIGHT and (not JOINT_CODEC_TRAINING or not TRAIN_BRIDGE):
         raise ValueError('Reconstruction requires trainable codec and bridge')
     torch = p.torch
@@ -985,7 +990,8 @@ def main():
                 cross = ContinuousMemoryAttention(attention.o_proj, decoder._memory_context,
                                                    model.config.memory_width, codec, embedding,
                                                    BRIDGE_CONDITION_SLOTS, CROSS_ATTENTION_WIDTH,
-                                                   condition_offset=BRIDGE_CONDITION_OFFSET)
+                                                   condition_offset=BRIDGE_CONDITION_OFFSET,
+                                                   output_gain=CROSS_ATTENTION_OUTPUT_GAIN)
             else:
                 cross = MemorySlotCrossAttention(attention.o_proj, decoder._memory_context,
                                                   model.config.memory_width, codec, embedding,
@@ -999,6 +1005,9 @@ def main():
                     'cross_attention_representation', 'vocab_lookup')
                 if actual_representation != expected_representation:
                     raise ValueError('Starting cross-attention representation mismatch')
+                saved_gain = candidate.get('experiment_config', {}).get('cross_attention_output_gain', 1.0)
+                if CROSS_ATTENTION_CONTINUOUS and saved_gain != CROSS_ATTENTION_OUTPUT_GAIN:
+                    raise ValueError('Starting cross-attention output gain mismatch')
                 if len(saved_cross) != 1 or saved_cross[0]['layer'] != CROSS_ATTENTION_LAYER:
                     raise ValueError('Starting cross-attention layout mismatch')
                 cross.load_memory_state(saved_cross[0]['state'])
@@ -1566,7 +1575,8 @@ def main():
                 'format': 'spora-semantic-bridge-research-v2', 'research_only': True,
                 'experiment_config': {'cross_attention_representation': (
                     'continuous' if CROSS_ATTENTION_CONTINUOUS else 'vocab_lookup')
-                    if CROSS_ATTENTION_MEMORY else None, 'cross_attention_lr': CROSS_ATTENTION_LR},
+                    if CROSS_ATTENTION_MEMORY else None, 'cross_attention_lr': CROSS_ATTENTION_LR,
+                    'cross_attention_output_gain': CROSS_ATTENTION_OUTPUT_GAIN},
                 'reader': {k: v.detach().cpu().clone() for k, v in decoder.reader.state_dict().items()},
                 'bridge': {k: v.detach().cpu().clone() for k, v in bridge.state_dict().items()},
                 'codec_state': {k: v.detach().cpu().clone() for k, v in codec.state_dict().items()},
@@ -1696,6 +1706,7 @@ def main():
                                                             else 'vocab_lookup') if CROSS_ATTENTION_MEMORY else None,
                          'cross_attention_layer': CROSS_ATTENTION_LAYER if CROSS_ATTENTION_MEMORY else None,
                          'cross_attention_lr': CROSS_ATTENTION_LR,
+                         'cross_attention_output_gain': CROSS_ATTENTION_OUTPUT_GAIN,
                          'slow_signal_disabled': True, 'words': list(WORDS),
                          'reader_layer_indices': list(decoder.layer_indices)}
     torch.save({'reader': reader_state, 'bridge': bridge_state, 'adapters': adapter_state,

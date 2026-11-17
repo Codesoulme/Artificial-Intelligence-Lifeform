@@ -4,6 +4,7 @@ This module performs no vocabulary lookup and injects no answer text. The
 caller still supplies addresses and the slot layout, and must independently
 evaluate identity, routing, empty-memory behavior and factual generation.
 """
+import math
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -11,12 +12,14 @@ from torch.nn import functional as F
 
 class ContinuousMemoryAttention(nn.Module):
     def __init__(self, base, memory_context, memory_width, codec, embedding, slots, width=64,
-                 condition_offset=0):
+                 condition_offset=0, output_gain=1.0):
         super().__init__()
         if (not isinstance(base, nn.Linear) or type(slots) is not int or type(width) is not int
                 or type(condition_offset) is not int or width <= 0 or condition_offset < 0
                 or memory_width != codec.memory_width or not 1 <= slots <= codec.slot_count
-                or slots + condition_offset > codec.slot_count):
+                or slots + condition_offset > codec.slot_count or isinstance(output_gain, bool)
+                or not isinstance(output_gain, (int, float)) or not math.isfinite(output_gain)
+                or output_gain <= 0):
             raise ValueError('Invalid continuous memory attention configuration')
         self.base = base
         self.base.requires_grad_(False)
@@ -24,6 +27,7 @@ class ContinuousMemoryAttention(nn.Module):
         self.enabled = True
         self.memory_width, self.slot_width = memory_width, codec.slot_width
         self.slots, self.width, self.condition_offset = slots, width, condition_offset
+        self.output_gain = float(output_gain)
         device = base.weight.device
         self.query = nn.Linear(base.in_features, width, bias=False, device=device, dtype=torch.float32)
         self.key = nn.Linear(self.slot_width, width, bias=False, device=device, dtype=torch.float32)
@@ -71,5 +75,5 @@ class ContinuousMemoryAttention(nn.Module):
         codes = F.normalize(codes, dim=-1)
         logits = torch.matmul(self.query(x.float()), self.key(codes).transpose(-1, -2)) / self.width ** .5
         weights = logits.masked_fill(~valid[:, None, :], float('-inf')).softmax(dim=-1)
-        residual = self.out(torch.matmul(weights, self.value(codes))) * torch.sigmoid(self.gate)
+        residual = self.out(torch.matmul(weights, self.value(codes))) * torch.sigmoid(self.gate) * self.output_gain
         return output + residual.to(output.dtype)

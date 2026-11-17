@@ -75,3 +75,20 @@ class ContinuousMemoryAttentionTests(unittest.TestCase):
             gradient = getattr(self.layer, name).weight.grad
             self.assertIsNotNone(gradient, name)
             self.assertGreater(gradient.abs().sum().item(), 0, name)
+
+    def test_output_gain_scales_only_active_memory_residual(self):
+        codec = SimpleNamespace(memory_width=12, slot_width=4, slot_count=3)
+        stronger = ContinuousMemoryAttention(nn.Linear(6, 6, bias=False), self.context,
+                                            12, codec, None, slots=2, width=4, output_gain=10.)
+        with torch.no_grad():
+            self.layer.out.weight.normal_()
+        stronger.load_state_dict(self.layer.state_dict(), strict=True)
+        self.context.value = make_state([1, 2, 3, 4, 4, 3, 2, 1])
+        base = self.layer.base(self.x)
+        torch.testing.assert_close(stronger(self.x) - base, 10 * (self.layer(self.x) - base),
+                                   atol=1e-5, rtol=1e-5)
+        self.context.value = None
+        torch.testing.assert_close(stronger(self.x), base)
+        with self.assertRaises(ValueError):
+            ContinuousMemoryAttention(nn.Linear(6, 6), self.context, 12, codec, None,
+                                      slots=2, width=4, output_gain=float('nan'))
