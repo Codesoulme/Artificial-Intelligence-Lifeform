@@ -14,6 +14,7 @@ from spora.research_memory_value_transform import MemoryValueTransform
 
 SOURCE=ROOT/'runs/deepseek-kernel-paired-value-train-20261117'
 OUT=ROOT/'runs/deepseek-kernel-paired-reload-audit-20261117.json'
+EXTRA_MULTI_ENTITY=False
 
 
 def main():
@@ -73,15 +74,26 @@ def main():
             for q in questions:
                 off=generate(q,None);on=generate(q,forced)
                 challenges.append({'question':q,'off':off,'forced_unrelated_memory':on,'same_tokens':off['token_ids']==on['token_ids']})
+            multi=[]
+            if EXTRA_MULTI_ENTITY:
+                first=make_state('小赵','咖啡');second=make_state('小林','牛奶')
+                merged=(torch.cat((first[0],second[0]),dim=0),torch.cat((first[1],second[1]),dim=0))
+                for name,own,other in (('小赵',first,second),('小林',second,first)):
+                    q=f'{name}最喜欢的饮品是什么？请简洁回答。'
+                    for label,state in (('off',None),('own',own),('other',other),('merged',merged)):
+                        multi.append({'name':name,'condition':label,**generate(q,state)})
+                q='小钱最喜欢的饮品是什么？请简洁回答。'
+                multi.append({'name':'小钱','condition':'merged',**generate(q,merged)})
     finally:
         for h in hooks:h.remove()
     if sha(candidate)!=recorded['candidate_sha256'] or sha(MODEL/'model.safetensors')!=WEIGHT_SHA:raise ValueError('Protected input changed')
     result={'base_sha256':WEIGHT_SHA,'candidate_sha256':recorded['candidate_sha256'],'reload_rows':rows,
-            'challenges':challenges,'seconds':time.perf_counter()-started,'peak_allocated_bytes':torch.cuda.max_memory_allocated(),
+            'challenges':challenges,'multi_entity':multi,'seconds':time.perf_counter()-started,'peak_allocated_bytes':torch.cuda.max_memory_allocated(),
             'limitations':['Forced unrelated memory, not automatic routing or natural write.',
                            'Small authored set; responses capped at 16 tokens.',
                            'Regenerates state, not persisted individual recovery.',
-                           'Unknown person is queried while explicitly supplying another person\'s state.']}
+                           'Unknown person is queried while explicitly supplying another person\'s state.',
+                           'Merged states use independently encoded facts with positions restarting at zero; no automatic routing.']}
     with OUT.open('x',encoding='utf8') as f:json.dump(result,f,ensure_ascii=False,indent=2,allow_nan=False)
     print(json.dumps(result,ensure_ascii=False,indent=2),flush=True)
 
