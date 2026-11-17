@@ -11,11 +11,12 @@ from scripts.deepseek_local_baseline import MODEL,WEIGHT_SHA,sha
 from scripts.deepseek_addressed_read import closed_think_inputs
 from scripts.deepseek_learned_kernel_probe_20261117 import LearnedKernel,OUT as INITIAL
 from spora.research_memory_value_transform import MemoryValueTransform
+from spora.research_first_token_pair_loss import pair_loss
 
 OUT=ROOT/'runs/deepseek-kernel-counterfactual-train-20261117'
 TRAIN_NAMES=('小林','小周'); HELD_NAME='小赵'
 TRAIN_VALUES=('豆浆','咖啡','牛奶','可乐'); HELD_VALUES=('绿茶','果汁')
-SEED=110622; STEPS=128; OUTPUT_MAP_ENABLED=False
+SEED=110622; STEPS=128; OUTPUT_MAP_ENABLED=False; PAIR_WEIGHT=0.0
 
 
 def main():
@@ -97,20 +98,31 @@ def main():
         before={'train':score(train),'held':score(held)}
         parameters=list(kernel.parameters())+(list(value_transform.parameters()) if value_transform is not None else [])
         opt=torch.optim.AdamW(parameters,lr=3e-4,weight_decay=0.0)
-        order=train.copy();rng=random.Random(SEED);trace=[]
+        order=train.copy();rng=random.Random(SEED);pair_rng=random.Random(SEED+1);trace=[]
         for step in range(STEPS):
             if step%len(order)==0:rng.shuffle(order)
             pair=order[step%len(order)];ids,label=labels[pair]
             opt.zero_grad(set_to_none=True)
             logits=forward(ids,states[pair],offset)
             loss=F.cross_entropy(logits,torch.tensor([label],device='cuda'))
+            paired_loss=None
+            if PAIR_WEIGHT:
+                other=pair_rng.choice([v for v in TRAIN_VALUES if v!=pair[1]])
+                other_ids,other_label=labels[(pair[0],other)]
+                if not torch.equal(ids,other_ids):raise ValueError('Counterfactual prompts differ')
+                other_logits=forward(ids,states[(pair[0],other)],offset)
+                contrast=pair_loss(logits,other_logits,label,other_label)
+                other_ce=F.cross_entropy(other_logits,torch.tensor([other_label],device='cuda'))
+                paired_loss=0.5*other_ce+contrast
+                loss=loss+PAIR_WEIGHT*paired_loss
             if not bool(torch.isfinite(loss)):raise ValueError('Nonfinite loss')
             loss.backward()
             map_grad=(float(value_transform.delta.weight.grad.norm()) if value_transform is not None else None)
             grad=float(torch.nn.utils.clip_grad_norm_(parameters,1.0,error_if_nonfinite=True))
             opt.step()
             if step in (0,15,31,63,127):
-                trace.append({'step':step+1,'loss':float(loss.detach()),'gradient_norm':grad,'value_map_gradient_norm':map_grad})
+                trace.append({'step':step+1,'loss':float(loss.detach()),'gradient_norm':grad,'value_map_gradient_norm':map_grad,
+                              'paired_loss':float(paired_loss.detach()) if paired_loss is not None else None})
                 print(json.dumps(trace[-1]),flush=True)
         after={'train':score(train),'held':score(held)}
         responses=[]
@@ -126,7 +138,7 @@ def main():
                 'value_transform':({k:v.detach().cpu() for k,v in value_transform.state_dict().items()}
                                    if value_transform is not None else None),
                 'parent_sha256':previous['candidate_sha256'],'seed':SEED,'layer':5,'head':0},OUT/'candidate.pt')
-    result={'status':'research_only','seed':SEED,'steps':STEPS,'output_map_enabled':OUTPUT_MAP_ENABLED,'train_names':TRAIN_NAMES,'held_name':HELD_NAME,
+    result={'status':'research_only','seed':SEED,'steps':STEPS,'output_map_enabled':OUTPUT_MAP_ENABLED,'pair_weight':PAIR_WEIGHT,'train_names':TRAIN_NAMES,'held_name':HELD_NAME,
             'train_values':TRAIN_VALUES,'held_values':HELD_VALUES,'offset':offset,'before':before,'after':after,
             'held_responses':responses,'held_no_memory':no_memory,'trace':trace,'candidate_sha256':sha(OUT/'candidate.pt'),
             'base_sha256':WEIGHT_SHA,'parent_sha256':previous['candidate_sha256'],
