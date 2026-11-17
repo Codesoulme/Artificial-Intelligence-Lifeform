@@ -9,6 +9,7 @@ from transformers import AutoModelForCausalLM,AutoTokenizer
 from scripts.deepseek_local_baseline import MODEL,WEIGHT_SHA,sha
 from spora.research_identity_selector import IdentitySelector
 from scripts.deepseek_kernel_value_span_audit_20261117 import value_token_indices
+from spora.research_hard_identity_episode import hard_episode
 
 OUT=ROOT/'runs/deepseek-identity-selector-near-name-probe-20261117'
 TRAIN=('小林','小周','小王','小李','小陈','小吴','小郑','小冯','小韩','小朱','小秦','小许',
@@ -19,6 +20,7 @@ HELD_Q=('告诉我{name}爱喝哪种饮料。','{name}的饮品喜好是什么�
 RECORD='这条记录属于{name}。'
 SEED=110623
 USE_ORACLE_SUBJECT_SPAN=False
+HARD_NEGATIVE_TRAINING=False
 
 
 def main():
@@ -45,18 +47,29 @@ def main():
         records[name]=feature(RECORD.format(name=name),name)
         templates=TRAIN_Q if name in TRAIN else HELD_Q
         queries[name]=[feature(template.format(name=name),name) for template in templates]
+    if HARD_NEGATIVE_TRAINING:
+        for name in TRAIN:
+            near=name+'甲'
+            if near in TRAIN or near in HELD:raise ValueError('Augmented training identity overlaps held set')
+            records[near]=feature(RECORD.format(name=near),near)
+            queries[near]=[feature(template.format(name=near),near) for template in TRAIN_Q]
     ordinary=[feature(x) for x in ('今天的天气怎么样？','三加四等于多少？','红灯时行人应当怎么做？')]
     del model;torch.cuda.empty_cache()
     selector=IdentitySelector();optimizer=torch.optim.AdamW(selector.parameters(),lr=0.001,weight_decay=0.001)
     rng=random.Random(SEED)
     trace=[]
     for step in range(2400):
-        name=rng.choice(TRAIN);known=(step%2==0)
-        names=rng.sample([n for n in TRAIN if n!=name],3)
-        if known:names.insert(rng.randrange(4),name)
-        else:names.append(rng.choice([n for n in TRAIN if n!=name and n not in names]))
+        name=rng.choice(TRAIN);known=(step%2==0);query_name=name
+        if HARD_NEGATIVE_TRAINING:
+            # Explicitly contrast the base identity with a previously unseen
+            # suffix variant; the held near names use different suffixes.
+            query_name,names,target=hard_episode(name,TRAIN,known,step,rng)
+        else:
+            names=rng.sample([n for n in TRAIN if n!=name],3)
+            if known:names.insert(rng.randrange(4),name)
+            else:names.append(rng.choice([n for n in TRAIN if n!=name and n not in names]))
         target=names.index(name) if known else 4
-        q=queries[name][rng.randrange(len(TRAIN_Q))].unsqueeze(0)
+        q=queries[query_name][rng.randrange(len(TRAIN_Q))].unsqueeze(0)
         rec=torch.stack([records[n] for n in names]).unsqueeze(0)
         logits=selector(q,rec)
         loss=F.cross_entropy(logits,torch.tensor([target]))
@@ -97,7 +110,7 @@ def main():
         return {'total':len(subset),'correct':sum(x['target']==x['prediction'] for x in subset),
                 'wrong_record':sum(x['prediction']!=4 and x['prediction']!=x['target'] for x in subset),
                 'null':sum(x['prediction']==4 for x in subset)}
-    result={'seed':SEED,'oracle_subject_span':USE_ORACLE_SUBJECT_SPAN,'base_sha256':WEIGHT_SHA,'candidate_sha256':sha(OUT/'candidate.pt'),
+    result={'seed':SEED,'oracle_subject_span':USE_ORACLE_SUBJECT_SPAN,'hard_negative_training':HARD_NEGATIVE_TRAINING,'base_sha256':WEIGHT_SHA,'candidate_sha256':sha(OUT/'candidate.pt'),
             'train_names':TRAIN,'held_names':HELD,'train_templates':TRAIN_Q,'held_templates':HELD_Q,
             'known':stats(rows,True),'unknown':stats(rows,False),
             'train_known':stats(train_rows,True),'train_unknown':stats(train_rows,False),
