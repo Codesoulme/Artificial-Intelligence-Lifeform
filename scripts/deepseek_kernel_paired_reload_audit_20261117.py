@@ -13,11 +13,13 @@ from scripts.deepseek_learned_kernel_probe_20261117 import LearnedKernel
 from spora.research_memory_value_transform import MemoryValueTransform
 from spora.research_vector_identity_select import select_identity
 from scripts.deepseek_kernel_value_span_audit_20261117 import value_token_indices
+from spora.research_ordered_identity import select_ordered
 
 SOURCE=ROOT/'runs/deepseek-kernel-paired-value-train-20261117'
 OUT=ROOT/'runs/deepseek-kernel-paired-reload-audit-20261117.json'
 EXTRA_MULTI_ENTITY=False
 EXTRA_ORACLE_ROUTE=False
+EXTRA_ORDERED_ROUTE=False
 
 
 def main():
@@ -106,11 +108,31 @@ def main():
                     index=decision['index']
                     output=generate(question,record_states[index]) if index is not None else None
                     routed.append({'question':question,'oracle_subject':name,'decision':decision,'response':output})
+            ordered_routed=[]
+            if EXTRA_ORDERED_ROUTE:
+                threshold_data=json.loads((ROOT/'runs/ordered-identity-embedding-20261117.json').read_text(encoding='utf8'))
+                if threshold_data['base_sha256']!=WEIGHT_SHA:raise ValueError('Threshold base mismatch')
+                def identity_tokens(text,name):
+                    encoded=tok(text,return_offsets_mapping=True,add_special_tokens=False)
+                    pos=value_token_indices(text,name,encoded['offset_mapping'])
+                    ids=torch.tensor([encoded['input_ids'][i] for i in pos],device='cuda')
+                    return model.model.embed_tokens(ids).float()
+                supplied=(('小赵','咖啡'),('小林','牛奶'))
+                vectors=[identity_tokens(f'{n}最喜欢的饮品是{v}。',n) for n,v in supplied]
+                states=[make_state(n,v) for n,v in supplied]
+                for name in ('小赵','小林','小钱','小林子'):
+                    question=f'{name}最喜欢的饮品是什么？请简洁回答。'
+                    q=identity_tokens(question,name)
+                    decision=select_ordered(q,vectors,threshold_data['threshold'])
+                    index=decision['index'];output=generate(question,states[index]) if index is not None else None
+                    ordered_routed.append({'question':question,'oracle_subject':name,'decision':decision,'response':output})
+                duplicate=select_ordered(vectors[0],[vectors[0],vectors[0].clone()],threshold_data['threshold'])
+                ordered_routed.append({'question':'same-name duplicate diagnostic','decision':duplicate,'response':None})
     finally:
         for h in hooks:h.remove()
     if sha(candidate)!=recorded['candidate_sha256'] or sha(MODEL/'model.safetensors')!=WEIGHT_SHA:raise ValueError('Protected input changed')
     result={'base_sha256':WEIGHT_SHA,'candidate_sha256':recorded['candidate_sha256'],'reload_rows':rows,
-            'challenges':challenges,'multi_entity':multi,'oracle_routed':routed,'seconds':time.perf_counter()-started,'peak_allocated_bytes':torch.cuda.max_memory_allocated(),
+            'challenges':challenges,'multi_entity':multi,'oracle_routed':routed,'ordered_oracle_routed':ordered_routed,'seconds':time.perf_counter()-started,'peak_allocated_bytes':torch.cuda.max_memory_allocated(),
             'limitations':['Forced unrelated memory, not automatic routing or natural write.',
                            'Small authored set; responses capped at 16 tokens.',
                            'Regenerates state, not persisted individual recovery.',

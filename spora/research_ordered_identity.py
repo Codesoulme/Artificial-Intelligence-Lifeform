@@ -1,4 +1,5 @@
 """Ordered identity-token vector comparison, only for controlled research."""
+import math
 import torch
 import torch.nn.functional as F
 
@@ -15,3 +16,16 @@ def ordered_similarity(query, record):
         return -1.0
     q=F.normalize(query.float(),dim=-1);r=F.normalize(record.float(),dim=-1)
     return float((q*r).sum(-1).min())
+
+
+def select_ordered(query, records, threshold, tie_tolerance=1e-6):
+    if (not isinstance(records,(list,tuple)) or not records
+            or isinstance(threshold,bool) or not isinstance(threshold,(int,float)) or not math.isfinite(threshold)
+            or isinstance(tie_tolerance,bool) or not isinstance(tie_tolerance,(int,float))
+            or not math.isfinite(tie_tolerance) or tie_tolerance<0):
+        raise ValueError('Invalid selection inputs')
+    scores=[ordered_similarity(query,record) for record in records]
+    order=sorted(range(len(scores)),key=lambda i:scores[i],reverse=True)
+    ambiguous=len(order)>1 and scores[order[0]]-scores[order[1]]<=tie_tolerance
+    return {'index':order[0] if scores[order[0]]>threshold and not ambiguous else None,
+            'scores':scores,'ambiguous':ambiguous}
