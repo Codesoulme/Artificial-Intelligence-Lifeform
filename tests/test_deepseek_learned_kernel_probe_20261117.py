@@ -15,6 +15,14 @@ class LearnedKernelTests(unittest.TestCase):
         expected=(weights@v)/weights.sum(-1,keepdim=True)
         result=m(q,k,v)
         torch.testing.assert_close(result,expected,atol=1e-6,rtol=1e-5)
+        combined_a=torch.zeros(128,128)
+        combined_z=torch.zeros(128)
+        for start in range(0,len(k),3):
+            part=kf[start:start+3]
+            combined_a=combined_a+part.T@v[start:start+3]
+            combined_z=combined_z+part.sum(0)
+        chunk=(qf@combined_a)/(qf@combined_z).unsqueeze(-1)
+        torch.testing.assert_close(result,chunk,atol=1e-6,rtol=1e-5)
         result.square().sum().backward()
         for p in m.parameters():
             self.assertIsNotNone(p.grad)
