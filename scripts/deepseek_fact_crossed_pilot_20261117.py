@@ -23,6 +23,7 @@ NAMES_TRAIN = (('小榆', '阿澄'), ('小楠', '阿芮'))
 NAMES_HELD = (('小庄', '阿齐'), ('小芮', '阿谭'))
 FACTS_TRAIN = ('喜欢喝茶', '喜欢蓝色', '喜欢跑步')
 FACTS_HELD = ('喜欢喝果汁', '喜欢绿色', '喜欢爬山')
+STEPS = 300
 
 
 def cases(names, facts):
@@ -86,7 +87,7 @@ def main():
         raise ValueError('Unrepresentable training span')
     head.train()
     optimizer = torch.optim.AdamW(head.parameters(), lr=.00002, weight_decay=.01)
-    for step in range(300):
+    for step in range(STEPS):
         x, mask, target, usable = batches[step % len(batches)]
         loss = F.cross_entropy(head(x[usable], mask[usable]), target[usable])
         if not bool(torch.isfinite(loss)):
@@ -99,7 +100,7 @@ def main():
         raise ValueError('Protected source changed')
     OUT.mkdir()
     torch.save({'state': head.state_dict(), 'rank': head.rank, 'source_sha256': hashes}, OUT / 'head.pt')
-    result = {'before': before, 'after': after, 'counts': {k: len(v) for k, v in groups.items()},
+    result = {'before': before, 'after': after, 'counts': {k: len(v) for k, v in groups.items()}, 'steps': STEPS,
               'source_sha256': hashes, 'seconds': time.perf_counter() - started,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Synthetic fixed syntax; development comparison only.',
