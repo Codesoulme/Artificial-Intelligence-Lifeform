@@ -11,8 +11,9 @@ import torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.models.qwen2.modeling_qwen2 import apply_rotary_pos_emb
 from scripts.deepseek_local_baseline import MODEL, WEIGHT_SHA, sha
+from spora.research_positive_feature_memory import read as feature_read, write as feature_write
 
-OUT = ROOT / 'runs/deepseek-attention-kv-memory-probe-20261117.json'
+OUT = ROOT / 'runs/deepseek-attention-kv-feature-probe-20261117.json'
 TEXTS = (
     '小林喜欢羽毛球，小周喜欢游泳。第二天他们在公园散步。后来小林的爱好改成踢足球。请说出小林现在喜欢做什么。',
     '小王住在成都，小赵住在杭州。周末两人都去图书馆。小王搬到了南京。请说出小王现在住在哪座城市。',
@@ -66,6 +67,7 @@ def main():
                     dual = torch.linalg.solve(keys @ keys.T + ridge * torch.eye(split, device=keys.device), values)
                     mapping = keys.T @ dual
                     prediction = queries @ mapping
+                    positive = feature_read(queries, feature_write(keys, values))
                     def metrics(pred, truth):
                         return {'mse': float((pred - truth).square().mean()),
                                 'cosine': float(F.cosine_similarity(pred, truth, dim=-1).mean())}
@@ -73,6 +75,7 @@ def main():
                                  'history_tokens': split, 'queries': int(queries.shape[0]),
                                  'stored_kv_reconstruction': metrics(keys @ mapping, values),
                                  'query_historical_attention': metrics(prediction, target),
+                                 'positive_feature_memory': metrics(positive, target),
                                  'history_mean_baseline': metrics(baseline, target)})
     finally:
         for hook in hooks:
