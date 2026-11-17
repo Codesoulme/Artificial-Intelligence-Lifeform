@@ -28,5 +28,15 @@ class LearnedKernelTests(unittest.TestCase):
             self.assertIsNotNone(p.grad)
             self.assertTrue(torch.isfinite(p.grad).all())
 
+    def test_single_key_cancels_query_and_key_maps(self):
+        torch.manual_seed(11)
+        m=LearnedKernel()
+        q,k,v=torch.randn(5,128),torch.randn(1,128),torch.randn(1,128)
+        out=m(q,k,v)
+        torch.testing.assert_close(out,v.expand_as(out),atol=1e-6,rtol=1e-5)
+        (out.square().sum()).backward()
+        for p in m.parameters():
+            self.assertLess(float(p.grad.abs().max()),1e-4)
+
 
 if __name__=='__main__':unittest.main()
