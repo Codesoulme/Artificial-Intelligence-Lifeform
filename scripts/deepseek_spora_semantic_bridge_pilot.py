@@ -83,6 +83,7 @@ MULTITOKEN_COUNTERFACTUAL_WEIGHT = 0.0
 SPAN_GRADIENT_DIAGNOSTIC = False
 SPAN_GRADIENT_COMPARE = False
 DIAGNOSTIC_ONLY = False
+PATH_ABLATION_DIAGNOSTIC = False
 CROSS_ATTENTION_MEMORY = False
 CROSS_ATTENTION_LAYER = 23
 CROSS_ATTENTION_WIDTH = 64
@@ -509,6 +510,15 @@ def torch_mean(left, right):
     return (left + right) * 0.5
 
 
+def snapshot_final_adapters(final_adapters):
+    """Copy final residual state for a research checkpoint without aliasing."""
+    return [{'location': location, 'name': name,
+             'to_hidden': {key: value.detach().cpu().clone()
+                           for key, value in adapter.to_hidden.state_dict().items()},
+             'gate': adapter.gate.detach().cpu().clone()}
+            for location, name, adapter in final_adapters]
+
+
 def select_condition_slots(memory, slot_count, condition_slots, offset):
     """Select a contiguous semantic lane without exposing other slots."""
     if (not isinstance(memory, p.torch.Tensor) or memory.ndim != 3
@@ -727,8 +737,10 @@ def main():
     if type(SPAN_GRADIENT_DIAGNOSTIC) is not bool or (SPAN_GRADIENT_DIAGNOSTIC and not MULTITOKEN_COUNTERFACTUAL_WEIGHT):
         raise ValueError('Gradient diagnostic requires an enabled span loss')
     if (type(SPAN_GRADIENT_COMPARE) is not bool or type(DIAGNOSTIC_ONLY) is not bool
+            or type(PATH_ABLATION_DIAGNOSTIC) is not bool
             or (SPAN_GRADIENT_COMPARE and not SPAN_GRADIENT_DIAGNOSTIC)
-            or (DIAGNOSTIC_ONLY and not SPAN_GRADIENT_COMPARE)):
+            or (DIAGNOSTIC_ONLY and not SPAN_GRADIENT_COMPARE)
+            or (PATH_ABLATION_DIAGNOSTIC and not DIAGNOSTIC_ONLY)):
         raise ValueError('Invalid gradient comparison configuration')
     if JOINT_CODEC_TRAINING and (TRAIN_CORRECTION_SEQUENCES or TRAIN_MULTI_ENTITY_STATES):
         raise ValueError('Joint codec evaluation refresh does not yet support multi-event cases')
@@ -1409,6 +1421,46 @@ def main():
                                                                    diagnostic_groups, clip_norm=1.0)
                 print(json.dumps({'span_gradient_comparison': span_gradient_comparison}), flush=True)
                 if DIAGNOSTIC_ONLY:
+                    path_ablations = None
+                    if PATH_ABLATION_DIAGNOSTIC:
+                        from spora.research_counterfactual_span_loss import span_mean_log_probability
+                        from spora.research_memory_path_ablation import ablate_memory_paths
+                        modules = {'low_rank': [v for _, _, v in adapters],
+                                   'direct': [v for _, _, v in direct_adapters],
+                                   'final': [v for _, _, v in final_adapters]}
+                        variants = {'full': (), 'without_native': ('native',),
+                                    'without_low_rank': ('low_rank',), 'without_direct': ('direct',),
+                                    'without_final': ('final',),
+                                    'without_all': ('native', 'low_rank', 'direct', 'final')}
+
+                        def measure_value(ids, start, length, targets, spec):
+                            kwargs = {'use_cache': False} if spec is None else spec
+                            with torch.inference_mode():
+                                output = decoder(input_ids=ids, attention_mask=torch.ones_like(ids), **kwargs).logits
+                                value_logits = output[:, start:start + length]
+                                probability = span_mean_log_probability(value_logits, targets)
+                                first_correct = value_logits[:, 0].argmax(-1) == targets[:, 0]
+                            return float(probability[0]), bool(first_correct[0])
+
+                        def measure_pair(disabled, use_memory=True):
+                            with ablate_memory_paths(decoder.reader, modules['low_rank'], modules['direct'],
+                                                     modules['final'], disabled):
+                                spec_a, spec_b = (item_spec, other_spec) if use_memory else (None, None)
+                                aa = measure_value(item['ids'], a_start, a_len, a_targets, spec_a)
+                                ba = measure_value(other_ids, b_start, b_len, b_targets, spec_a)
+                                ab = measure_value(item['ids'], a_start, a_len, a_targets, spec_b)
+                                bb = measure_value(other_ids, b_start, b_len, b_targets, spec_b)
+                            return {'a_on_a': aa[0], 'b_on_a': ba[0], 'a_on_b': ab[0], 'b_on_b': bb[0],
+                                    'margin_a': aa[0] - ba[0], 'margin_b': bb[0] - ab[0],
+                                    'first_token_correct': {'a_on_a': aa[1], 'b_on_a': ba[1],
+                                                            'a_on_b': ab[1], 'b_on_b': bb[1]}}
+
+                        path_ablations = {name: measure_pair(disabled) for name, disabled in variants.items()}
+                        path_ablations['no_memory'] = measure_pair((), use_memory=False)
+                        for key in ('a_on_a', 'b_on_a', 'a_on_b', 'b_on_b'):
+                            if abs(path_ablations['without_all'][key] - path_ablations['no_memory'][key]) > 1e-4:
+                                raise ValueError('All-path ablation differs from no-memory control')
+                        print(json.dumps({'path_ablations': path_ablations}), flush=True)
                     if (p.frozen_digest(model, chat.state) != original_digest
                             or p.sha(p.runtime.CHECKPOINT) != source_sha
                             or p.sha(p.MODEL / 'model.safetensors') != p.WEIGHT_SHA
@@ -1420,6 +1472,7 @@ def main():
                                   'original_context_tokens': a_len, 'swapped_context_tokens': b_len,
                                   'loss': float(loss.detach()), 'span_loss': float(multitoken_contrast.detach()),
                                   'gradient_components': span_gradient_comparison,
+                                  'path_ablations': path_ablations,
                                   'span_gradient_diagnostic': span_gradient_diagnostic,
                                   'loaded_read_biases': loaded_read_biases,
                                   'source_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA,
@@ -1481,7 +1534,7 @@ def main():
                                     for index, name, adapter in direct_adapters],
                 'cross_adapters': [{'layer': index, 'projection': name, 'width': adapter.width,
                                     'state': adapter.memory_state()} for index, name, adapter in cross_adapters],
-                'final_adapters': [], 'logit_adapters': [],
+                'final_adapters': snapshot_final_adapters(final_adapters), 'logit_adapters': [],
                 'source_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA,
                 'start_candidate_sha256': teacher_sha, 'language_steps': LANGUAGE_STEPS,
                 'words': list(WORDS), 'train_value_count': TRAIN_VALUE_COUNT,
@@ -1493,7 +1546,7 @@ def main():
                 'teacher_hidden_delta_weight': TEACHER_HIDDEN_DELTA_WEIGHT,
                 'notice': 'Training recovery only; post-training evaluation was not completed at save time.',
             }
-            if final_adapters or logit_adapters or QUERY_INTENT_GATE or QUERY_SCALAR_GATE:
+            if logit_adapters or QUERY_INTENT_GATE or QUERY_SCALAR_GATE:
                 raise ValueError('Recovery format does not support these optional adapters')
             with partial_path.open('xb') as stream:
                 torch.save(recovery, stream)
@@ -1533,11 +1586,7 @@ def main():
                              'query_intent_scales': adapter.query_intent_scales.detach().cpu().clone()}
                             if hasattr(adapter, 'query_intent') else {})}
                         for index, name, adapter in direct_adapters]
-        final_state = [{'location': location, 'name': name,
-                        'to_hidden': {key: value.detach().cpu().clone()
-                                      for key, value in adapter.to_hidden.state_dict().items()},
-                        'gate': adapter.gate.detach().cpu().clone()}
-                       for location, name, adapter in final_adapters]
+        final_state = snapshot_final_adapters(final_adapters)
         logit_state = [{'location': location, 'name': name,
                         'condition': adapter.condition.detach().cpu().clone(),
                         'scale': adapter.scale.detach().cpu().clone(),
