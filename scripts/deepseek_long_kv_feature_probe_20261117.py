@@ -16,7 +16,7 @@ from spora.research_bound_feature_memory import BoundFeatureMemory
 
 CORPUS = ROOT / 'runs/clean-zh-pretrain-v1/pretrain-train.jsonl'
 MANIFEST = ROOT / 'runs/clean-zh-pretrain-v1/manifest.json'
-OUT = ROOT / 'runs/deepseek-long-kv-feature-probe-20261117.json'
+OUT = ROOT / 'runs/deepseek-long-kv-centering-probe-20261117.json'
 
 
 def main():
@@ -71,6 +71,10 @@ def main():
                         true = torch.softmax(queries @ keys.T / (128**0.5), dim=-1) @ vals
                         baseline = vals.mean(0).expand_as(true)
                         base_mse = float(F.mse_loss(baseline, true))
+                        anchor = keys[:min(128, length)].mean(0)
+                        centered = keys - anchor
+                        exact_centered = torch.softmax(queries @ centered.T / (128**0.5), dim=-1) @ vals
+                        exact_error = float((true-exact_centered).abs().max())
                         for seed in (110617, 110618, 110619):
                             p = torch.randn((512,128), generator=torch.Generator().manual_seed(seed)).to('cuda')
                             bound = BoundFeatureMemory(p, base_sha256=WEIGHT_SHA, layer=5, kv_head=head)
@@ -80,8 +84,18 @@ def main():
                                 state = block if state is None else bound.merge(state, block)
                             prediction = bound.read(queries, state)
                             whole = bound.read(queries, bound.write(keys, vals))
+                            centered_state = None
+                            for i in range(0,length,128):
+                                block = bound.write(centered[i:i+128], vals[i:i+128])
+                                centered_state = block if centered_state is None else bound.merge(centered_state, block)
+                            centered_prediction = bound.read(queries, centered_state)
                             rows.append({'segment': segment, 'head': head, 'history_length': length,
                                          'seed': seed, 'mse': float(F.mse_loss(prediction,true)),
+                                         'centered_mse': float(F.mse_loss(centered_prediction,true)),
+                                         'query_norm_mean': float(queries.norm(dim=-1).mean()),
+                                         'key_norm_mean': float(keys.norm(dim=-1).mean()),
+                                         'centered_key_norm_mean': float(centered.norm(dim=-1).mean()),
+                                         'exact_centered_max_abs': exact_error,
                                          'baseline_mse': base_mse,
                                          'cosine': float(F.cosine_similarity(prediction,true,dim=-1).mean()),
                                          'chunk_vs_whole_max_abs': float((prediction-whole).abs().max())})
@@ -95,7 +109,8 @@ def main():
               'token_ids_sha256':hashlib.sha256(torch.tensor(tokens[:2080],dtype=torch.int64).numpy().tobytes()).hexdigest(),
               'rows':rows, 'seconds':time.perf_counter()-started,
               'peak_allocated_bytes':torch.cuda.max_memory_allocated(),
-              'limitations':['Two contiguous corpus segments with possible document boundaries, not independent samples.',
+              'limitations':['Center uses first 128 historical tokens; center is oracle-provided and not bound to the memory state.',
+                             'Two contiguous corpus segments with possible document boundaries, not independent samples.',
                              'Full history visible to earlier layers; no answer generation.',
                              'One layer; no held-out subjects or natural memory writes.',
                              'Direct full attention is required for evaluation; timing not a deployment cost.']}
