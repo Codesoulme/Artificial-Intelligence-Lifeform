@@ -20,6 +20,24 @@ def write(keys, values, projection):
     return phi.T @ values.float(), phi.sum(0), shift
 
 
+def merge(first, second):
+    """Merge independently scaled states made with the *same* projection.
+
+    The caller must ensure identical projections and token semantics; shapes
+    alone cannot establish identity. Inputs are not modified.
+    """
+    a, az, ashift = first
+    b, bz, bshift = second
+    if (a.ndim != 2 or a.shape != b.shape or az.shape != bz.shape
+            or az.shape != (a.shape[0],) or ashift.ndim != 0 or bshift.ndim != 0
+            or any(not bool(torch.isfinite(x).all()) for x in (a, az, ashift, b, bz, bshift))
+            or bool((az < 0).any()) or bool((bz < 0).any())):
+        raise ValueError('Incompatible or nonfinite memory states')
+    shift = torch.maximum(ashift, bshift)
+    aw, bw = (ashift - shift).exp(), (bshift - shift).exp()
+    return aw * a + bw * b, aw * az + bw * bz, shift
+
+
 def read(queries, projection, state):
     matrix, total, _ = state
     logs = log_features(queries, projection)
