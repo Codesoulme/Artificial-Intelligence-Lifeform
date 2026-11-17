@@ -12,11 +12,12 @@ from scripts.deepseek_addressed_read import closed_think_inputs
 from scripts.deepseek_learned_kernel_probe_20261117 import LearnedKernel,OUT as INITIAL
 from spora.research_memory_value_transform import MemoryValueTransform
 from spora.research_first_token_pair_loss import pair_loss
+from spora.research_response_token_loss import response_token_loss
 
 OUT=ROOT/'runs/deepseek-kernel-counterfactual-train-20261117'
 TRAIN_NAMES=('小林','小周'); HELD_NAME='小赵'
 TRAIN_VALUES=('豆浆','咖啡','牛奶','可乐'); HELD_VALUES=('绿茶','果汁')
-SEED=110622; STEPS=128; OUTPUT_MAP_ENABLED=False; PAIR_WEIGHT=0.0
+SEED=110622; STEPS=128; OUTPUT_MAP_ENABLED=False; PAIR_WEIGHT=0.0; FULL_ANSWER_WEIGHT=0.0
 
 
 def main():
@@ -56,9 +57,10 @@ def main():
         full=tok.encode(prefix+value,add_special_tokens=False)
         if full[:len(p)]!=p or len(full)<=len(p):raise ValueError('Token boundary invalid')
         return torch.cat((prompt(name),torch.tensor([p],device='cuda')),dim=1),full[len(p)]
-    def forward(ids,kv,offset):
+    def forward(ids,kv,offset,return_all=False):
         active['kv']=kv;active['positions']=torch.arange(offset,offset+ids.shape[1],device='cuda').unsqueeze(0)
-        return model(input_ids=ids,position_ids=active['positions'],use_cache=False).logits[:,-1].float()
+        logits=model(input_ids=ids,position_ids=active['positions'],use_cache=False).logits.float()
+        return logits if return_all else logits[:,-1]
     def generate(name,kv,offset):
         ids=prompt(name);start=ids.shape[1]
         with torch.no_grad():
@@ -115,6 +117,15 @@ def main():
                 other_ce=F.cross_entropy(other_logits,torch.tensor([other_label],device='cuda'))
                 paired_loss=0.5*other_ce+contrast
                 loss=loss+PAIR_WEIGHT*paired_loss
+            full_answer_loss=None
+            if FULL_ANSWER_WEIGHT:
+                prompt_only=prompt(pair[0])
+                answer=f'{pair[0]}最喜欢的饮品是{pair[1]}。'
+                answer_ids=tok.encode(answer,add_special_tokens=False)+[tok.eos_token_id]
+                complete=torch.cat((prompt_only,torch.tensor([answer_ids],device='cuda')),dim=1)
+                all_logits=forward(complete,states[pair],offset,return_all=True)
+                full_answer_loss=response_token_loss(all_logits,complete,prompt_only.shape[1])
+                loss=loss+FULL_ANSWER_WEIGHT*full_answer_loss
             if not bool(torch.isfinite(loss)):raise ValueError('Nonfinite loss')
             loss.backward()
             map_grad=(float(value_transform.delta.weight.grad.norm()) if value_transform is not None else None)
@@ -122,7 +133,8 @@ def main():
             opt.step()
             if step in (0,15,31,63,127):
                 trace.append({'step':step+1,'loss':float(loss.detach()),'gradient_norm':grad,'value_map_gradient_norm':map_grad,
-                              'paired_loss':float(paired_loss.detach()) if paired_loss is not None else None})
+                              'paired_loss':float(paired_loss.detach()) if paired_loss is not None else None,
+                              'full_answer_loss':float(full_answer_loss.detach()) if full_answer_loss is not None else None})
                 print(json.dumps(trace[-1]),flush=True)
         after={'train':score(train),'held':score(held)}
         responses=[]
@@ -138,12 +150,13 @@ def main():
                 'value_transform':({k:v.detach().cpu() for k,v in value_transform.state_dict().items()}
                                    if value_transform is not None else None),
                 'parent_sha256':previous['candidate_sha256'],'seed':SEED,'layer':5,'head':0},OUT/'candidate.pt')
-    result={'status':'research_only','seed':SEED,'steps':STEPS,'output_map_enabled':OUTPUT_MAP_ENABLED,'pair_weight':PAIR_WEIGHT,'train_names':TRAIN_NAMES,'held_name':HELD_NAME,
+    result={'status':'research_only','seed':SEED,'steps':STEPS,'output_map_enabled':OUTPUT_MAP_ENABLED,'pair_weight':PAIR_WEIGHT,'full_answer_weight':FULL_ANSWER_WEIGHT,'train_names':TRAIN_NAMES,'held_name':HELD_NAME,
             'train_values':TRAIN_VALUES,'held_values':HELD_VALUES,'offset':offset,'before':before,'after':after,
             'held_responses':responses,'held_no_memory':no_memory,'trace':trace,'candidate_sha256':sha(OUT/'candidate.pt'),
             'base_sha256':WEIGHT_SHA,'parent_sha256':previous['candidate_sha256'],
             'seconds':time.perf_counter()-started,'peak_allocated_bytes':torch.cuda.max_memory_allocated(),
-            'limitations':['Artificial single-relation facts, only first answer token directly supervised.',
+            'limitations':['Artificial single-relation facts with a fixed question and answer template.',
+                           'Full-response supervision is optional; see full_answer_weight.',
                            'Known subject and explicitly supplied fact; no autonomous writes or multiple facts per state.',
                            'Question contains no fact text; no past cache, one layer and one KV head only.',
                            'Single run, fixed templates and tiny value/name splits, no normal-chat safety test.',
