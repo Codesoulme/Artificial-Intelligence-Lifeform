@@ -1,10 +1,22 @@
 import json
 import unittest
 
-from scripts.deepseek_intent_fixed_challenge_20261117 import CASES, summarize
+from types import SimpleNamespace
+import torch
+from torch.nn import functional as F
+from scripts.deepseek_intent_fixed_challenge_20261117 import CASES, extract_feature, summarize
 
 
 class IntentFixedChallengeTests(unittest.TestCase):
+    def test_feature_selection_uses_requested_layer_and_pool(self):
+        early = torch.tensor([[[1., 0.], [1., 2.]]])
+        final = torch.tensor([[[0., 3.], [4., 0.]]])
+        output = SimpleNamespace(hidden_states=(None, early), last_hidden_state=final)
+        torch.testing.assert_close(extract_feature(output, 'early_mean'), F.normalize(torch.tensor([1., 1.]), dim=0))
+        torch.testing.assert_close(extract_feature(output, 'final_mean'), F.normalize(torch.tensor([2., 1.5]), dim=0))
+        torch.testing.assert_close(extract_feature(output, 'final_last'), torch.tensor([1., 0.]))
+        with self.assertRaises(ValueError):
+            extract_feature(output, 'unknown')
     def test_group_accounting_separates_false_accepts_and_rejects(self):
         rows = [
             {'group': 'current', 'read': True, 'accepted': True},

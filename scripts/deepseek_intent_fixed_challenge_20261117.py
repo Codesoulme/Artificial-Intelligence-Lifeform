@@ -32,6 +32,19 @@ def summarize(rows):
     return result
 
 
+def extract_feature(output, feature):
+    """Match the exact feature definition used by intent-contrast training."""
+    if feature == 'early_mean':
+        value = output.hidden_states[1][0].float().mean(0)
+    elif feature == 'final_mean':
+        value = output.last_hidden_state[0].float().mean(0)
+    elif feature == 'final_last':
+        value = output.last_hidden_state[0, -1].float()
+    else:
+        raise ValueError('Unsupported intent feature')
+    return F.normalize(value.cpu(), dim=-1)
+
+
 def main():
     if OUT.exists():
         raise FileExistsError(OUT)
@@ -46,7 +59,7 @@ def main():
     report = json.loads((GATE / 'result.json').read_text(encoding='utf-8'))
     if (before['base'] != base.WEIGHT_SHA or before['gate'] != report['gate_sha256']
             or payload['source_sha256'] != {k: before[k] for k in ('base', 'layer6', 'layer12')}
-            or payload['feature'] != 'early_mean'):
+            or payload['feature'] not in ('early_mean', 'final_mean', 'final_last')):
         raise ValueError('Intent probe provenance mismatch')
     start = time.perf_counter()
     torch.set_num_threads(2)
@@ -63,7 +76,7 @@ def main():
         for case in cases:
             inputs = tokenizer(case['question'], return_tensors='pt', add_special_tokens=False).to('cuda')
             output = model.model(**inputs, output_hidden_states=True, use_cache=False, return_dict=True)
-            features = F.normalize(output.hidden_states[1][0].float().mean(0).cpu(), dim=-1)
+            features = extract_feature(output, payload['feature'])
             score = float(gate(features).sigmoid().item())
             rows.append({**case, 'score': score, 'accepted': score >= payload['threshold']})
     if any(base.sha(path) != before[key] for key, path in paths.items()):

@@ -19,7 +19,7 @@ from torch.nn import functional as F
 from scripts import deepseek_local_baseline as base
 from scripts.deepseek_dulemon_persona_audit import normalize_turn
 from scripts.deepseek_dulemon_routing_audit import ARCHIVE, ARCHIVE_SHA
-from scripts.deepseek_intent_fixed_challenge_20261117 import GATE
+from scripts.deepseek_intent_fixed_challenge_20261117 import GATE, extract_feature
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.deepseek_spora_memory_answer_distill import OUTPUT as PAIR, _load_candidate
 
@@ -65,7 +65,8 @@ def main():
     gate_data = torch.load(paths['gate'], map_location='cpu', weights_only=True)
     provenance = json.loads((GATE/'result.json').read_text(encoding='utf-8'))
     if (before['archive'] != ARCHIVE_SHA or before['base'] != base.WEIGHT_SHA
-            or before['gate'] != provenance['gate_sha256'] or gate_data['feature'] != 'early_mean'
+            or before['gate'] != provenance['gate_sha256']
+            or gate_data['feature'] not in ('early_mean', 'final_mean', 'final_last')
             or gate_data['source_sha256'] != {k: before[k] for k in ('base', 'layer6', 'layer12')}):
         raise ValueError('Input provenance mismatch')
     cases = select_dialogues(ARCHIVE)
@@ -89,7 +90,7 @@ def main():
             for text in texts:
                 encoded = tokenizer(text, return_tensors='pt', add_special_tokens=False).to('cuda')
                 output = model.model(**encoded, output_hidden_states=True, use_cache=False, return_dict=True)
-                features = F.normalize(output.hidden_states[1][0].float().mean(0).cpu(), dim=-1)
+                features = extract_feature(output, gate_data['feature'])
                 scores.append(float(gate(features).sigmoid().item()))
             rows.append({'session': case['session'], 'turn': case['turn'], 'role': case['role'],
                          'sample_sha256': case['sample_sha256'], 'read': case['read'],
