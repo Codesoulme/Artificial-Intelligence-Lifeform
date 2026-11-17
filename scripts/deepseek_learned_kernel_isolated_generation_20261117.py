@@ -14,7 +14,7 @@ from scripts.deepseek_local_baseline import MODEL,WEIGHT_SHA,sha
 from scripts.deepseek_addressed_read import closed_think_inputs
 from scripts.deepseek_learned_kernel_probe_20261117 import LearnedKernel,OUT as TRAIN
 
-OUT=ROOT/'runs/deepseek-learned-kernel-isolated-generation-v2-20261117.json'
+OUT=ROOT/'runs/deepseek-learned-kernel-isolated-logit-diagnostic-20261117.json'
 FACTS=('小林最喜欢的饮品是豆浆。','小林最喜欢的饮品是咖啡。')
 QUESTION='小林最喜欢的饮品是什么？请简洁回答。'
 
@@ -45,6 +45,8 @@ def main():
         qf=F.softplus(kernel.qmap(F.layer_norm(query,(128,))))+1e-5
         matrix,total=active['state'];pred=qf@matrix/(qf@total).unsqueeze(-1)
         delta=pred.reshape(6,n,128).permute(1,0,2).reshape(1,n,768)
+        active['last_delta']=delta[0,-1].detach().float()
+        active['last_local']=hidden[0,-1,:768].detach().float()
         modified=hidden.clone();modified[:,:,:768]+=delta.to(hidden.dtype)
         active['count']+=1
         return (modified,)+args[1:]
@@ -93,6 +95,32 @@ def main():
             for index,state in enumerate(states):
                 result=generate(qids.clone(),offset,state)
                 rows.append({'fact_index':index,'expected':FACTS[index],'response':result})
+            # The same answer prefix is forced in all conditions, with no
+            # target value present. Scores are diagnostic, not generation.
+            prefix='小林最喜欢的饮品是'
+            prefix_tokens=tok.encode(prefix,add_special_tokens=False)
+            target_ids=[]
+            for value in ('豆浆','咖啡'):
+                full=tok.encode(prefix+value,add_special_tokens=False)
+                if full[:len(prefix_tokens)]!=prefix_tokens or len(full)<=len(prefix_tokens):
+                    raise ValueError('Target crosses tokenizer prefix boundary')
+                target_ids.append(full[len(prefix_tokens)])
+            if target_ids[0]==target_ids[1]:raise ValueError('Target first tokens identical')
+            forced=torch.cat((qids,torch.tensor([prefix_tokens],device='cuda')),dim=1)
+            conditions=[];deltas=[]
+            for label,state in [('off',None),('soy',states[0]),('coffee',states[1])]:
+                active['state']=state;active['positions']=torch.arange(offset,offset+forced.shape[1],device='cuda').unsqueeze(0)
+                active['count']=0
+                logits=model(input_ids=forced,position_ids=active['positions'],use_cache=False).logits[0,-1].float()
+                entry={'condition':label,'target_logits':[float(logits[x]) for x in target_ids],
+                       'target_ranks':[int((logits>logits[x]).sum())+1 for x in target_ids],
+                       'argmax_token_id':int(logits.argmax()),'injections':active['count']}
+                if state is not None:
+                    delta=active['last_delta'].clone();deltas.append(delta)
+                    entry.update({'delta_norm':float(delta.norm()),'local_norm':float(active['last_local'].norm())})
+                conditions.append(entry)
+            delta_diff=float((deltas[0]-deltas[1]).norm())
+            delta_cos=float(F.cosine_similarity(deltas[0].unsqueeze(0),deltas[1].unsqueeze(0)).item())
             references=[]
             for fact in FACTS:
                 ids=prompt_ids(fact+'\n'+QUESTION)
@@ -104,6 +132,8 @@ def main():
     result={'candidate_sha256':trained['candidate_sha256'],'base_sha256':WEIGHT_SHA,'question':QUESTION,
             'question_input_sha256':question_hash,'question_offset':offset,'no_memory':off,'memory':rows,
             'no_memory_zero_offset':off_zero_offset,'state_sha256':state_hashes,
+            'forced_prefix_diagnostic':{'prefix':prefix,'target_token_ids':target_ids,'conditions':conditions,
+                                        'delta_difference_norm':delta_diff,'delta_cosine':delta_cos},
             'full_context_reference':references,'seconds':time.perf_counter()-started,
             'peak_allocated_bytes':torch.cuda.max_memory_allocated(),
             'limitations':['One authored fact pair, one question, capped at 16 output tokens.',
