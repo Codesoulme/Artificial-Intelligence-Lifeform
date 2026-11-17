@@ -1,0 +1,13 @@
+{
+  "source_member": "DuLeMon/both/dev.json",
+  "items": [
+    {"session": 151, "evidence_turn": 13, "speaker": "Bot", "span": [3, 6], "question": "对话中Bot最喜欢什么运动？", "split": "development"},
+    {"session": 178, "evidence_turn": 10, "speaker": "Usr", "span": [21, 28], "question": "对话中Usr最喜欢哪位魔术师？", "split": "development"},
+    {"session": 93, "evidence_turn": 8, "speaker": "Usr", "span": [4, 8], "question": "对话中Usr最喜欢喝哪种酒？", "split": "development"},
+    {"session": 128, "evidence_turn": 9, "speaker": "Bot", "span": [3, 10], "question": "对话中Bot喜欢哪位歌手？", "split": "development"},
+    {"session": 164, "evidence_turn": 6, "speaker": "Usr", "span": [23, 27], "question": "对话中Usr从事什么工作？", "split": "development"},
+    {"session": 146, "evidence_turn": 13, "speaker": "Bot", "span": [3, 6], "question": "对话中Bot最喜欢吃什么？", "split": "development"},
+    {"session": 95, "evidence_turn": 11, "speaker": "Bot", "span": [4, 6], "question": "对话中Bot喜欢听哪种音乐？", "split": "development"},
+    {"session": 50, "evidence_turn": 8, "speaker": "Usr", "span": [5, 10], "question": "对话中Usr经常听哪个乐队？", "split": "development"}
+  ]
+}
