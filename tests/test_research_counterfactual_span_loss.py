@@ -3,7 +3,7 @@ import unittest
 import torch
 
 from spora.research_counterfactual_span_loss import (
-    counterfactual_span_loss, diagnostic_gradient_norms, span_mean_log_probability)
+    compare_loss_gradients, counterfactual_span_loss, diagnostic_gradient_norms, span_mean_log_probability)
 
 
 class CounterfactualSpanLossTests(unittest.TestCase):
@@ -47,3 +47,17 @@ class CounterfactualSpanLossTests(unittest.TestCase):
         self.assertIsNotNone(reader.grad)
         with self.assertRaises(ValueError):
             diagnostic_gradient_norms(loss, {'a': [reader], 'b': [reader]})
+
+    def test_gradient_comparison_distinguishes_opposed_and_aligned_signals(self):
+        p = torch.nn.Parameter(torch.tensor([1., 2.]))
+        q = torch.nn.Parameter(torch.tensor([1.]))
+        first = p.sum() + q.sum()
+        other = -2 * p.sum() + 2 * q.sum()
+        result = compare_loss_gradients(first, other, {'reader': [p], 'adapter': [q]})
+        self.assertAlmostEqual(result['groups']['reader']['cosine'], -1.)
+        self.assertAlmostEqual(result['groups']['adapter']['cosine'], 1.)
+        self.assertAlmostEqual(result['total_norm'], 11 ** 0.5)
+        self.assertLess(result['clip_factor'], 1.)
+        self.assertIsNone(p.grad)
+        (first + other).backward()
+        torch.testing.assert_close(p.grad, torch.tensor([-1., -1.]))

@@ -68,3 +68,37 @@ def diagnostic_gradient_norms(loss, groups):
                         'nonzero': sum(g is not None and bool((g != 0).any()) for g in selected),
                         'norm': square ** 0.5}
     return output
+
+
+def compare_loss_gradients(first_loss, other_loss, groups, clip_norm=1.0):
+    """Compare per-group pre-clipping gradients without changing optimizer state."""
+    if (first_loss.ndim != 0 or other_loss.ndim != 0 or not first_loss.requires_grad
+            or not other_loss.requires_grad or not groups or not 0 < clip_norm < float('inf')):
+        raise ValueError('Invalid diagnostic losses or clipping threshold')
+    ordered = [(name, list(parameters)) for name, parameters in groups.items()]
+    parameters = [p for _, group in ordered for p in group]
+    if (not parameters or len({id(p) for p in parameters}) != len(parameters)
+            or any(not p.requires_grad for p in parameters)):
+        raise ValueError('Parameter groups must be disjoint and trainable')
+    first = torch.autograd.grad(first_loss, parameters, retain_graph=True, allow_unused=True)
+    other = torch.autograd.grad(other_loss, parameters, retain_graph=True, allow_unused=True)
+    result, index, total_squared = {}, 0, 0.0
+    for name, group in ordered:
+        f, o = first[index:index+len(group)], other[index:index+len(group)]
+        index += len(group)
+        if any(g is not None and not bool(torch.isfinite(g).all()) for g in (*f, *o)):
+            raise ValueError('Nonfinite diagnostic gradient')
+        first_sq = sum(float(g.detach().float().square().sum()) for g in f if g is not None)
+        other_sq = sum(float(g.detach().float().square().sum()) for g in o if g is not None)
+        dot = sum(float((x.detach().float() * y.detach().float()).sum())
+                  for x, y in zip(f, o) if x is not None and y is not None)
+        total = max(0.0, first_sq + other_sq + 2.0 * dot)
+        total_squared += total
+        cosine = dot / ((first_sq * other_sq) ** 0.5) if first_sq and other_sq else None
+        result[name] = {'first_norm': first_sq ** 0.5, 'other_norm': other_sq ** 0.5,
+                        'combined_norm': total ** 0.5, 'cosine': cosine,
+                        'first_connected': sum(x is not None for x in f),
+                        'other_connected': sum(x is not None for x in o)}
+    total_norm = total_squared ** 0.5
+    return {'groups': result, 'total_norm': total_norm,
+            'clip_norm': clip_norm, 'clip_factor': min(1.0, clip_norm / (total_norm + 1e-6))}

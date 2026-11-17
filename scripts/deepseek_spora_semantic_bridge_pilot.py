@@ -81,6 +81,8 @@ TEACHER_HIDDEN_LOGIT_WEIGHT = 0.0
 TEACHER_HIDDEN_DELTA_WEIGHT = 0.0
 MULTITOKEN_COUNTERFACTUAL_WEIGHT = 0.0
 SPAN_GRADIENT_DIAGNOSTIC = False
+SPAN_GRADIENT_COMPARE = False
+DIAGNOSTIC_ONLY = False
 CROSS_ATTENTION_MEMORY = False
 CROSS_ATTENTION_LAYER = 23
 CROSS_ATTENTION_WIDTH = 64
@@ -724,6 +726,10 @@ def main():
         raise ValueError('Invalid multi-token counterfactual weight')
     if type(SPAN_GRADIENT_DIAGNOSTIC) is not bool or (SPAN_GRADIENT_DIAGNOSTIC and not MULTITOKEN_COUNTERFACTUAL_WEIGHT):
         raise ValueError('Gradient diagnostic requires an enabled span loss')
+    if (type(SPAN_GRADIENT_COMPARE) is not bool or type(DIAGNOSTIC_ONLY) is not bool
+            or (SPAN_GRADIENT_COMPARE and not SPAN_GRADIENT_DIAGNOSTIC)
+            or (DIAGNOSTIC_ONLY and not SPAN_GRADIENT_COMPARE)):
+        raise ValueError('Invalid gradient comparison configuration')
     if JOINT_CODEC_TRAINING and (TRAIN_CORRECTION_SEQUENCES or TRAIN_MULTI_ENTITY_STATES):
         raise ValueError('Joint codec evaluation refresh does not yet support multi-event cases')
     if CODEC_RECONSTRUCTION_WEIGHT and (not JOINT_CODEC_TRAINING or not TRAIN_BRIDGE):
@@ -1184,7 +1190,7 @@ def main():
                         print(json.dumps({'evaluation_phase': phase, 'completed_rows': len(rows)}), flush=True)
             return rows
 
-        before = evaluate('before')
+        before = [] if DIAGNOSTIC_ONLY else evaluate('before')
         train = [x for x in cases if x['group'].startswith('train')]
         if FOCUS_EXTRA_QUESTIONS:
             focus_questions = {question.format(name=name) for name in ('小林', '小周', '小王')
@@ -1228,6 +1234,7 @@ def main():
         multitoken_original_count = 0
         multitoken_swapped_count = 0
         span_gradient_diagnostic = None
+        span_gradient_comparison = None
         max_codec_grad_norm = 0.0
         reconstruction_generator = torch.Generator(device=device).manual_seed(SEED + 941)
         for step in range(LANGUAGE_STEPS):
@@ -1395,6 +1402,36 @@ def main():
                 loss = loss + INTENT_LOSS_WEIGHT * intent_ce
             if not bool(torch.isfinite(loss)):
                 raise ValueError('Nonfinite language loss')
+            if SPAN_GRADIENT_COMPARE and step == 0:
+                from spora.research_counterfactual_span_loss import compare_loss_gradients
+                component = MULTITOKEN_COUNTERFACTUAL_WEIGHT * multitoken_contrast
+                span_gradient_comparison = compare_loss_gradients(component, loss - component,
+                                                                   diagnostic_groups, clip_norm=1.0)
+                print(json.dumps({'span_gradient_comparison': span_gradient_comparison}), flush=True)
+                if DIAGNOSTIC_ONLY:
+                    if (p.frozen_digest(model, chat.state) != original_digest
+                            or p.sha(p.runtime.CHECKPOINT) != source_sha
+                            or p.sha(p.MODEL / 'model.safetensors') != p.WEIGHT_SHA
+                            or p.sha(candidate_path) != teacher_sha):
+                        raise ValueError('Protected input changed during diagnostic')
+                    OUT.mkdir()
+                    diagnostic = {'status': 'single_sample_no_optimizer_step', 'seed': SEED,
+                                  'original_value': WORDS[item['value']], 'swapped_value': WORDS[other_value],
+                                  'original_context_tokens': a_len, 'swapped_context_tokens': b_len,
+                                  'loss': float(loss.detach()), 'span_loss': float(multitoken_contrast.detach()),
+                                  'gradient_components': span_gradient_comparison,
+                                  'span_gradient_diagnostic': span_gradient_diagnostic,
+                                  'loaded_read_biases': loaded_read_biases,
+                                  'source_sha256': source_sha, 'base_sha256': p.WEIGHT_SHA,
+                                  'candidate_sha256': teacher_sha, 'seconds': time.perf_counter()-started,
+                                  'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
+                                  'limitations': ['One controlled sample and fixed address, not model generalization.',
+                                                  'Diagnostic omits actual optimizer update and parameter ablation.',
+                                                  'Gradients measured before global clipping.']}
+                    with (OUT / 'diagnostic.json').open('x', encoding='utf-8', newline='\n') as stream:
+                        json.dump(diagnostic, stream, ensure_ascii=False, indent=2, allow_nan=False)
+                        stream.write('\n')
+                    return
             loss.backward()
             codec_grad_norm = None
             if JOINT_CODEC_TRAINING:
@@ -1545,6 +1582,7 @@ def main():
                          'multitoken_original_count': multitoken_original_count,
                          'multitoken_swapped_count': multitoken_swapped_count,
                          'span_gradient_diagnostic': span_gradient_diagnostic,
+                         'span_gradient_comparison': span_gradient_comparison,
                          'loaded_read_biases': loaded_read_biases,
                          'evaluation_values': list(EVALUATION_VALUES) if EVALUATION_VALUES is not None else None,
                          'evaluate_first_multi_question_only': EVALUATE_FIRST_MULTI_QUESTION_ONLY,
