@@ -10,11 +10,12 @@ from transformers.models.qwen2.modeling_qwen2 import apply_rotary_pos_emb
 from scripts.deepseek_local_baseline import MODEL,WEIGHT_SHA,sha
 from scripts.deepseek_addressed_read import closed_think_inputs
 from scripts.deepseek_learned_kernel_probe_20261117 import LearnedKernel,OUT as INITIAL
+from spora.research_memory_value_transform import MemoryValueTransform
 
 OUT=ROOT/'runs/deepseek-kernel-counterfactual-train-20261117'
 TRAIN_NAMES=('小林','小周'); HELD_NAME='小赵'
 TRAIN_VALUES=('豆浆','咖啡','牛奶','可乐'); HELD_VALUES=('绿茶','果汁')
-SEED=110622; STEPS=128
+SEED=110622; STEPS=128; OUTPUT_MAP_ENABLED=False
 
 
 def main():
@@ -30,6 +31,7 @@ def main():
     model=AutoModelForCausalLM.from_pretrained(MODEL,local_files_only=True,trust_remote_code=False,
         torch_dtype=torch.float16,attn_implementation='sdpa').to('cuda').eval();model.requires_grad_(False)
     kernel=LearnedKernel().to('cuda');kernel.load_state_dict(checkpoint['state'])
+    value_transform=MemoryValueTransform(128).to('cuda') if OUTPUT_MAP_ENABLED else None
     attention=model.model.layers[5].self_attn;captured={};active={'kv':None,'positions':None}
     def record(name):return lambda mod,args,out:captured.__setitem__(name,out.detach())
     def inject(mod,args):
@@ -41,6 +43,7 @@ def main():
         qf=F.softplus(kernel.qmap(F.layer_norm(query,(128,))))+1e-5
         kf=F.softplus(kernel.kmap(F.layer_norm(keys,(128,))))+1e-5
         pred=qf@(kf.T@values)/(qf@kf.sum(0)).unsqueeze(-1)
+        if value_transform is not None:pred=value_transform(pred)
         delta=pred.reshape(6,n,128).permute(1,0,2).reshape(1,n,768)
         return (torch.cat((hidden[:,:,:768]+delta.to(hidden.dtype),hidden[:,:,768:]),dim=-1),)+args[1:]
     hooks=[getattr(attention,n+'_proj').register_forward_hook(record(n)) for n in ('q','k','v')]
@@ -92,7 +95,8 @@ def main():
                         'rank':int((logits>logits[label]).sum())+1,'top1':int(logits.argmax())==label})
             return results
         before={'train':score(train),'held':score(held)}
-        opt=torch.optim.AdamW(kernel.parameters(),lr=3e-4,weight_decay=0.0)
+        parameters=list(kernel.parameters())+(list(value_transform.parameters()) if value_transform is not None else [])
+        opt=torch.optim.AdamW(parameters,lr=3e-4,weight_decay=0.0)
         order=train.copy();rng=random.Random(SEED);trace=[]
         for step in range(STEPS):
             if step%len(order)==0:rng.shuffle(order)
@@ -102,10 +106,11 @@ def main():
             loss=F.cross_entropy(logits,torch.tensor([label],device='cuda'))
             if not bool(torch.isfinite(loss)):raise ValueError('Nonfinite loss')
             loss.backward()
-            grad=float(torch.nn.utils.clip_grad_norm_(kernel.parameters(),1.0,error_if_nonfinite=True))
+            map_grad=(float(value_transform.delta.weight.grad.norm()) if value_transform is not None else None)
+            grad=float(torch.nn.utils.clip_grad_norm_(parameters,1.0,error_if_nonfinite=True))
             opt.step()
             if step in (0,15,31,63,127):
-                trace.append({'step':step+1,'loss':float(loss.detach()),'gradient_norm':grad})
+                trace.append({'step':step+1,'loss':float(loss.detach()),'gradient_norm':grad,'value_map_gradient_norm':map_grad})
                 print(json.dumps(trace[-1]),flush=True)
         after={'train':score(train),'held':score(held)}
         responses=[]
@@ -118,8 +123,10 @@ def main():
         raise ValueError('Protected source changed')
     OUT.mkdir()
     torch.save({'state':{k:v.detach().cpu() for k,v in kernel.state_dict().items()},'base_sha256':WEIGHT_SHA,
+                'value_transform':({k:v.detach().cpu() for k,v in value_transform.state_dict().items()}
+                                   if value_transform is not None else None),
                 'parent_sha256':previous['candidate_sha256'],'seed':SEED,'layer':5,'head':0},OUT/'candidate.pt')
-    result={'status':'research_only','seed':SEED,'steps':STEPS,'train_names':TRAIN_NAMES,'held_name':HELD_NAME,
+    result={'status':'research_only','seed':SEED,'steps':STEPS,'output_map_enabled':OUTPUT_MAP_ENABLED,'train_names':TRAIN_NAMES,'held_name':HELD_NAME,
             'train_values':TRAIN_VALUES,'held_values':HELD_VALUES,'offset':offset,'before':before,'after':after,
             'held_responses':responses,'held_no_memory':no_memory,'trace':trace,'candidate_sha256':sha(OUT/'candidate.pt'),
             'base_sha256':WEIGHT_SHA,'parent_sha256':previous['candidate_sha256'],
