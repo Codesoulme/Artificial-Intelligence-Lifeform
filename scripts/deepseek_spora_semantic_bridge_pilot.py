@@ -85,8 +85,10 @@ SPAN_GRADIENT_COMPARE = False
 DIAGNOSTIC_ONLY = False
 PATH_ABLATION_DIAGNOSTIC = False
 CROSS_ATTENTION_MEMORY = False
+CROSS_ATTENTION_CONTINUOUS = False
 CROSS_ATTENTION_LAYER = 23
 CROSS_ATTENTION_WIDTH = 64
+CROSS_ATTENTION_LR = None
 LANGUAGE_LR = 1e-4
 QUERY_INTENT_GATE = False
 QUERY_SCALAR_GATE = False
@@ -664,6 +666,26 @@ def bridge_optimizer_groups(parameters, bridge, enabled, learning_rate, mix_lear
     return groups, existing + extra
 
 
+def cross_attention_optimizer_group(groups, cross_parameters, learning_rate):
+    """Assign the cross-attention parameters a separate optional learning rate."""
+    if (not groups or not cross_parameters or isinstance(learning_rate, bool)
+            or not isinstance(learning_rate, (int, float)) or not math.isfinite(learning_rate)
+            or learning_rate <= 0):
+        raise ValueError('Invalid cross-attention optimizer configuration')
+    selected = list(cross_parameters)
+    ids = {id(v) for v in selected}
+    if len(ids) != len(selected):
+        raise ValueError('Duplicate cross-attention parameter')
+    original = list(groups[0]['params'])
+    if not ids <= {id(v) for v in original} or any(
+            id(v) in ids for group in groups[1:] for v in group['params']):
+        raise ValueError('Cross-attention parameters must occur only in the primary group')
+    result = [{**groups[0], 'params': [v for v in original if id(v) not in ids]}]
+    result += [{**group, 'params': list(group['params'])} for group in groups[1:]]
+    result.append({'params': selected, 'lr': float(learning_rate)})
+    return result
+
+
 def explicit_teacher_question(question, name, value, relation='喜欢的水果是'):
     if not all(isinstance(item, str) and item for item in (question, name, value, relation)):
         raise ValueError('Teacher question, identity and value must be nonempty')
@@ -744,6 +766,10 @@ def main():
         raise ValueError('Invalid gradient comparison configuration')
     if JOINT_CODEC_TRAINING and (TRAIN_CORRECTION_SEQUENCES or TRAIN_MULTI_ENTITY_STATES):
         raise ValueError('Joint codec evaluation refresh does not yet support multi-event cases')
+    if type(CROSS_ATTENTION_CONTINUOUS) is not bool or (CROSS_ATTENTION_CONTINUOUS and not CROSS_ATTENTION_MEMORY):
+        raise ValueError('Continuous attention requires enabled memory cross-attention')
+    if CROSS_ATTENTION_LR is not None and not CROSS_ATTENTION_MEMORY:
+        raise ValueError('Cross-attention learning rate requires enabled cross-attention')
     if CODEC_RECONSTRUCTION_WEIGHT and (not JOINT_CODEC_TRAINING or not TRAIN_BRIDGE):
         raise ValueError('Reconstruction requires trainable codec and bridge')
     torch = p.torch
@@ -954,13 +980,25 @@ def main():
         cross_adapters = []
         if CROSS_ATTENTION_MEMORY:
             attention = decoder.base.model.layers[CROSS_ATTENTION_LAYER].self_attn
-            cross = MemorySlotCrossAttention(attention.o_proj, decoder._memory_context,
-                                              model.config.memory_width, codec, embedding,
-                                              BRIDGE_CONDITION_SLOTS, CROSS_ATTENTION_WIDTH)
+            if CROSS_ATTENTION_CONTINUOUS:
+                from spora.research_continuous_memory_attention import ContinuousMemoryAttention
+                cross = ContinuousMemoryAttention(attention.o_proj, decoder._memory_context,
+                                                   model.config.memory_width, codec, embedding,
+                                                   BRIDGE_CONDITION_SLOTS, CROSS_ATTENTION_WIDTH,
+                                                   condition_offset=BRIDGE_CONDITION_OFFSET)
+            else:
+                cross = MemorySlotCrossAttention(attention.o_proj, decoder._memory_context,
+                                                  model.config.memory_width, codec, embedding,
+                                                  BRIDGE_CONDITION_SLOTS, CROSS_ATTENTION_WIDTH)
             attention.o_proj = cross
             cross_adapters.append((CROSS_ATTENTION_LAYER, 'o_proj', cross))
             saved_cross = candidate.get('cross_adapters', ())
             if saved_cross:
+                expected_representation = 'continuous' if CROSS_ATTENTION_CONTINUOUS else 'vocab_lookup'
+                actual_representation = candidate.get('experiment_config', {}).get(
+                    'cross_attention_representation', 'vocab_lookup')
+                if actual_representation != expected_representation:
+                    raise ValueError('Starting cross-attention representation mismatch')
                 if len(saved_cross) != 1 or saved_cross[0]['layer'] != CROSS_ATTENTION_LAYER:
                     raise ValueError('Starting cross-attention layout mismatch')
                 cross.load_memory_state(saved_cross[0]['state'])
@@ -1231,13 +1269,16 @@ def main():
         params += [param for _, _, adapter in logit_adapters
                    for param in (list(adapter.proj.parameters()) + list(adapter.out.parameters())
                                  + [adapter.condition, adapter.scale])]
-        params += [param for _, _, adapter in cross_adapters
-                   for param in (list(adapter.query.parameters()) + list(adapter.key.parameters())
-                                 + list(adapter.value.parameters()) + list(adapter.out.parameters()) + [adapter.gate])]
+        cross_parameters = [param for _, _, adapter in cross_adapters
+                            for param in (list(adapter.query.parameters()) + list(adapter.key.parameters())
+                                          + list(adapter.value.parameters()) + list(adapter.out.parameters()) + [adapter.gate])]
+        params += cross_parameters
         codec_params = list(codec.parameters()) if JOINT_CODEC_TRAINING else []
         optimizer_groups, params = bridge_optimizer_groups(
             params, bridge, TRAIN_BRIDGE, BRIDGE_LANGUAGE_LR,
             BRIDGE_MIX_LR if TRAIN_BRIDGE and BRIDGE_RETRIEVAL_RESIDUAL else None)
+        if CROSS_ATTENTION_LR is not None:
+            optimizer_groups = cross_attention_optimizer_group(optimizer_groups, cross_parameters, CROSS_ATTENTION_LR)
         if codec_params:
             optimizer_groups.append({'params': codec_params, 'lr': float(JOINT_CODEC_LR)})
             params += codec_params
@@ -1427,11 +1468,14 @@ def main():
                         from spora.research_memory_path_ablation import ablate_memory_paths
                         modules = {'low_rank': [v for _, _, v in adapters],
                                    'direct': [v for _, _, v in direct_adapters],
-                                   'final': [v for _, _, v in final_adapters]}
+                                   'final': [v for _, _, v in final_adapters],
+                                   'cross': [v for _, _, v in cross_adapters]}
                         variants = {'full': (), 'without_native': ('native',),
                                     'without_low_rank': ('low_rank',), 'without_direct': ('direct',),
                                     'without_final': ('final',),
-                                    'without_all': ('native', 'low_rank', 'direct', 'final')}
+                                    'without_all': ('native', 'low_rank', 'direct', 'final', 'cross')}
+                        if modules['cross']:
+                            variants['without_cross'] = ('cross',)
 
                         def measure_value(ids, start, length, targets, spec):
                             kwargs = {'use_cache': False} if spec is None else spec
@@ -1444,7 +1488,7 @@ def main():
 
                         def measure_pair(disabled, use_memory=True):
                             with ablate_memory_paths(decoder.reader, modules['low_rank'], modules['direct'],
-                                                     modules['final'], disabled):
+                                                     modules['final'], disabled, cross=modules['cross']):
                                 spec_a, spec_b = (item_spec, other_spec) if use_memory else (None, None)
                                 aa = measure_value(item['ids'], a_start, a_len, a_targets, spec_a)
                                 ba = measure_value(other_ids, b_start, b_len, b_targets, spec_a)
@@ -1520,6 +1564,9 @@ def main():
                 raise FileExistsError(recovery_path)
             recovery = {
                 'format': 'spora-semantic-bridge-research-v2', 'research_only': True,
+                'experiment_config': {'cross_attention_representation': (
+                    'continuous' if CROSS_ATTENTION_CONTINUOUS else 'vocab_lookup')
+                    if CROSS_ATTENTION_MEMORY else None, 'cross_attention_lr': CROSS_ATTENTION_LR},
                 'reader': {k: v.detach().cpu().clone() for k, v in decoder.reader.state_dict().items()},
                 'bridge': {k: v.detach().cpu().clone() for k, v in bridge.state_dict().items()},
                 'codec_state': {k: v.detach().cpu().clone() for k, v in codec.state_dict().items()},
@@ -1645,7 +1692,10 @@ def main():
                          'final_residual': FINAL_RESIDUAL,
                          'logit_residual': LOGIT_RESIDUAL,
                          'cross_attention_memory': CROSS_ATTENTION_MEMORY,
+                         'cross_attention_representation': ('continuous' if CROSS_ATTENTION_CONTINUOUS
+                                                            else 'vocab_lookup') if CROSS_ATTENTION_MEMORY else None,
                          'cross_attention_layer': CROSS_ATTENTION_LAYER if CROSS_ATTENTION_MEMORY else None,
+                         'cross_attention_lr': CROSS_ATTENTION_LR,
                          'slow_signal_disabled': True, 'words': list(WORDS),
                          'reader_layer_indices': list(decoder.layer_indices)}
     torch.save({'reader': reader_state, 'bridge': bridge_state, 'adapters': adapter_state,

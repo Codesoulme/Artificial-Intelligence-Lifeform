@@ -44,3 +44,10 @@ class MemoryPathAblationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             with ablate_memory_paths(reader, [low], [low], [final], {'direct'}):
                 pass
+
+    def test_cross_attention_is_isolated_and_restored(self):
+        reader, cross = Reader(), Residual(7)
+        x = torch.tensor([2.])
+        with ablate_memory_paths(reader, [], [], [], {'cross'}, cross=[cross]):
+            self.assertEqual(cross(x).item(), 2)
+        self.assertEqual(cross(x).item(), 9)

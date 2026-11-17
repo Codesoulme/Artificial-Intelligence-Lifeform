@@ -2,11 +2,11 @@
 from contextlib import ExitStack, contextmanager
 from unittest.mock import patch
 
-PATHS = frozenset(('native', 'low_rank', 'direct', 'final'))
+PATHS = frozenset(('native', 'low_rank', 'direct', 'final', 'cross'))
 
 
 @contextmanager
-def ablate_memory_paths(reader, low_rank, direct, final, disabled):
+def ablate_memory_paths(reader, low_rank, direct, final, disabled, *, cross=()):
     """Bypass selected modules and restore all forward methods on exit.
 
     The bypass of a residual adapter invokes its own base operation; the
@@ -16,7 +16,7 @@ def ablate_memory_paths(reader, low_rank, direct, final, disabled):
     disabled = frozenset(disabled)
     if not disabled <= PATHS:
         raise ValueError('Unknown memory path')
-    lists = {'low_rank': tuple(low_rank), 'direct': tuple(direct), 'final': tuple(final)}
+    lists = {'low_rank': tuple(low_rank), 'direct': tuple(direct), 'final': tuple(final), 'cross': tuple(cross)}
     modules = [module for group in lists.values() for module in group]
     if len({id(module) for module in modules}) != len(modules):
         raise ValueError('Adapters must be distinct')
