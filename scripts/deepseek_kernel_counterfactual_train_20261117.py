@@ -13,11 +13,12 @@ from scripts.deepseek_learned_kernel_probe_20261117 import LearnedKernel,OUT as 
 from spora.research_memory_value_transform import MemoryValueTransform
 from spora.research_first_token_pair_loss import pair_loss
 from spora.research_response_token_loss import response_token_loss
+from spora.research_multi_entity_kv import concatenate_kv
 
 OUT=ROOT/'runs/deepseek-kernel-counterfactual-train-20261117'
 TRAIN_NAMES=('小林','小周'); HELD_NAME='小赵'
 TRAIN_VALUES=('豆浆','咖啡','牛奶','可乐'); HELD_VALUES=('绿茶','果汁')
-SEED=110622; STEPS=128; OUTPUT_MAP_ENABLED=False; PAIR_WEIGHT=0.0; FULL_ANSWER_WEIGHT=0.0
+SEED=110622; STEPS=128; OUTPUT_MAP_ENABLED=False; PAIR_WEIGHT=0.0; FULL_ANSWER_WEIGHT=0.0; MULTI_ENTITY_ENABLED=False
 
 
 def main():
@@ -98,21 +99,44 @@ def main():
                         'rank':int((logits>logits[label]).sum())+1,'top1':int(logits.argmax())==label})
             return results
         before={'train':score(train),'held':score(held)}
+        def audit_multi():
+            result=[]
+            with torch.no_grad():
+                for value in TRAIN_VALUES+HELD_VALUES:
+                    distractor='牛奶' if value!='牛奶' else '咖啡'
+                    pair=(HELD_NAME,value);other=(TRAIN_NAMES[0],distractor)
+                    combined=concatenate_kv(states[pair],states[other])
+                    ids,label=labels[pair];logits=forward(ids,combined,offset)[0]
+                    result.append({'name':pair[0],'value':value,'distractor_name':other[0],
+                                   'distractor_value':other[1],'rank':int((logits>logits[label]).sum())+1,
+                                   'top1':int(logits.argmax())==label})
+            return result
+        multi_before=audit_multi() if MULTI_ENTITY_ENABLED else None
         parameters=list(kernel.parameters())+(list(value_transform.parameters()) if value_transform is not None else [])
         opt=torch.optim.AdamW(parameters,lr=3e-4,weight_decay=0.0)
-        order=train.copy();rng=random.Random(SEED);pair_rng=random.Random(SEED+1);trace=[]
+        order=train.copy();rng=random.Random(SEED);pair_rng=random.Random(SEED+1);mix_rng=random.Random(SEED+2);trace=[]
         for step in range(STEPS):
             if step%len(order)==0:rng.shuffle(order)
             pair=order[step%len(order)];ids,label=labels[pair]
+            other=pair_rng.choice([v for v in TRAIN_VALUES if v!=pair[1]]) if PAIR_WEIGHT else None
+            primary=states[pair]
+            paired_state=states[(pair[0],other)] if other is not None else None
+            if MULTI_ENTITY_ENABLED:
+                if other is None:raise ValueError('Multi-entity training requires paired loss')
+                distractor_name=TRAIN_NAMES[1] if pair[0]==TRAIN_NAMES[0] else TRAIN_NAMES[0]
+                distractor_value=mix_rng.choice([v for v in TRAIN_VALUES if v not in (pair[1],other)])
+                distractor=states[(distractor_name,distractor_value)]
+                reverse=bool(mix_rng.randrange(2))
+                primary=concatenate_kv(primary,distractor,reverse=reverse)
+                paired_state=concatenate_kv(paired_state,distractor,reverse=reverse)
             opt.zero_grad(set_to_none=True)
-            logits=forward(ids,states[pair],offset)
+            logits=forward(ids,primary,offset)
             loss=F.cross_entropy(logits,torch.tensor([label],device='cuda'))
             paired_loss=None
             if PAIR_WEIGHT:
-                other=pair_rng.choice([v for v in TRAIN_VALUES if v!=pair[1]])
                 other_ids,other_label=labels[(pair[0],other)]
                 if not torch.equal(ids,other_ids):raise ValueError('Counterfactual prompts differ')
-                other_logits=forward(ids,states[(pair[0],other)],offset)
+                other_logits=forward(ids,paired_state,offset)
                 contrast=pair_loss(logits,other_logits,label,other_label)
                 other_ce=F.cross_entropy(other_logits,torch.tensor([other_label],device='cuda'))
                 paired_loss=0.5*other_ce+contrast
@@ -123,7 +147,7 @@ def main():
                 answer=f'{pair[0]}最喜欢的饮品是{pair[1]}。'
                 answer_ids=tok.encode(answer,add_special_tokens=False)+[tok.eos_token_id]
                 complete=torch.cat((prompt_only,torch.tensor([answer_ids],device='cuda')),dim=1)
-                all_logits=forward(complete,states[pair],offset,return_all=True)
+                all_logits=forward(complete,primary,offset,return_all=True)
                 full_answer_loss=response_token_loss(all_logits,complete,prompt_only.shape[1])
                 loss=loss+FULL_ANSWER_WEIGHT*full_answer_loss
             if not bool(torch.isfinite(loss)):raise ValueError('Nonfinite loss')
@@ -137,6 +161,13 @@ def main():
                               'full_answer_loss':float(full_answer_loss.detach()) if full_answer_loss is not None else None})
                 print(json.dumps(trace[-1]),flush=True)
         after={'train':score(train),'held':score(held)}
+        multi_after=audit_multi() if MULTI_ENTITY_ENABLED else None
+        multi_responses=[]
+        if MULTI_ENTITY_ENABLED:
+            for row in multi_after:
+                own=states[(row['name'],row['value'])]
+                other=states[(row['distractor_name'],row['distractor_value'])]
+                multi_responses.append({**row,**generate(row['name'],concatenate_kv(own,other),offset)})
         responses=[]
         for pair in held:
             responses.append({'name':pair[0],'value':pair[1],**generate(pair[0],states[pair],offset)})
@@ -150,14 +181,15 @@ def main():
                 'value_transform':({k:v.detach().cpu() for k,v in value_transform.state_dict().items()}
                                    if value_transform is not None else None),
                 'parent_sha256':previous['candidate_sha256'],'seed':SEED,'layer':5,'head':0},OUT/'candidate.pt')
-    result={'status':'research_only','seed':SEED,'steps':STEPS,'output_map_enabled':OUTPUT_MAP_ENABLED,'pair_weight':PAIR_WEIGHT,'full_answer_weight':FULL_ANSWER_WEIGHT,'train_names':TRAIN_NAMES,'held_name':HELD_NAME,
+    result={'status':'research_only','seed':SEED,'steps':STEPS,'output_map_enabled':OUTPUT_MAP_ENABLED,'pair_weight':PAIR_WEIGHT,'full_answer_weight':FULL_ANSWER_WEIGHT,'multi_entity_enabled':MULTI_ENTITY_ENABLED,'train_names':TRAIN_NAMES,'held_name':HELD_NAME,
             'train_values':TRAIN_VALUES,'held_values':HELD_VALUES,'offset':offset,'before':before,'after':after,
-            'held_responses':responses,'held_no_memory':no_memory,'trace':trace,'candidate_sha256':sha(OUT/'candidate.pt'),
+            'held_responses':responses,'held_no_memory':no_memory,'multi_before':multi_before,'multi_after':multi_after,
+            'multi_responses':multi_responses,'trace':trace,'candidate_sha256':sha(OUT/'candidate.pt'),
             'base_sha256':WEIGHT_SHA,'parent_sha256':previous['candidate_sha256'],
             'seconds':time.perf_counter()-started,'peak_allocated_bytes':torch.cuda.max_memory_allocated(),
             'limitations':['Artificial single-relation facts with a fixed question and answer template.',
                            'Full-response supervision is optional; see full_answer_weight.',
-                           'Known subject and explicitly supplied fact; no autonomous writes or multiple facts per state.',
+                           'Known subjects and explicitly supplied facts; no autonomous writes; see multi_entity_enabled.',
                            'Question contains no fact text; no past cache, one layer and one KV head only.',
                            'Single run, fixed templates and tiny value/name splits, no normal-chat safety test.',
                            'No independent reload, formal individual changes or durable memory demonstrated.']}
