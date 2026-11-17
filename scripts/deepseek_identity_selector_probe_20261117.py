@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from transformers import AutoModelForCausalLM,AutoTokenizer
 from scripts.deepseek_local_baseline import MODEL,WEIGHT_SHA,sha
 from spora.research_identity_selector import IdentitySelector
+from scripts.deepseek_kernel_value_span_audit_20261117 import value_token_indices
 
 OUT=ROOT/'runs/deepseek-identity-selector-near-name-probe-20261117'
 TRAIN=('小林','小周','小王','小李','小陈','小吴','小郑','小冯','小韩','小朱','小秦','小许',
@@ -17,6 +18,7 @@ TRAIN_Q=('{name}喜欢喝什么？','请问{name}的饮品偏好是什么？')
 HELD_Q=('告诉我{name}爱喝哪种饮料。','{name}的饮品喜好是什么？')
 RECORD='这条记录属于{name}。'
 SEED=110623
+USE_ORACLE_SUBJECT_SPAN=False
 
 
 def main():
@@ -29,16 +31,20 @@ def main():
           torch_dtype=torch.float16,attn_implementation='sdpa').to('cuda').eval();model.requires_grad_(False)
     # Identity text is manually supplied separately as the record's identity;
     # no automatic extraction from facts is claimed.
-    def feature(text):
-        ids=tok(text,return_tensors='pt',add_special_tokens=False).input_ids.to('cuda')
+    def feature(text,subject=None):
+        encoded=tok(text,return_tensors='pt',return_offsets_mapping=True,add_special_tokens=False)
+        ids=encoded.input_ids.to('cuda')
+        positions=(value_token_indices(text,subject,encoded.offset_mapping[0].tolist())
+                   if USE_ORACLE_SUBJECT_SPAN and subject is not None else None)
         with torch.inference_mode():
-            result=model.model(input_ids=ids,use_cache=False).last_hidden_state[0,-1].float().cpu()
+            hidden=model.model(input_ids=ids,use_cache=False).last_hidden_state[0].float()
+            result=(hidden[positions].mean(0) if positions is not None else hidden[-1]).cpu()
         return result.clone()
     records={};queries={}
     for name in TRAIN+HELD:
-        records[name]=feature(RECORD.format(name=name))
+        records[name]=feature(RECORD.format(name=name),name)
         templates=TRAIN_Q if name in TRAIN else HELD_Q
-        queries[name]=[feature(template.format(name=name)) for template in templates]
+        queries[name]=[feature(template.format(name=name),name) for template in templates]
     ordinary=[feature(x) for x in ('今天的天气怎么样？','三加四等于多少？','红灯时行人应当怎么做？')]
     del model;torch.cuda.empty_cache()
     selector=IdentitySelector();optimizer=torch.optim.AdamW(selector.parameters(),lr=0.001,weight_decay=0.001)
@@ -91,14 +97,14 @@ def main():
         return {'total':len(subset),'correct':sum(x['target']==x['prediction'] for x in subset),
                 'wrong_record':sum(x['prediction']!=4 and x['prediction']!=x['target'] for x in subset),
                 'null':sum(x['prediction']==4 for x in subset)}
-    result={'seed':SEED,'base_sha256':WEIGHT_SHA,'candidate_sha256':sha(OUT/'candidate.pt'),
+    result={'seed':SEED,'oracle_subject_span':USE_ORACLE_SUBJECT_SPAN,'base_sha256':WEIGHT_SHA,'candidate_sha256':sha(OUT/'candidate.pt'),
             'train_names':TRAIN,'held_names':HELD,'train_templates':TRAIN_Q,'held_templates':HELD_Q,
             'known':stats(rows,True),'unknown':stats(rows,False),
             'train_known':stats(train_rows,True),'train_unknown':stats(train_rows,False),
             'ordinary':ordinary_rows,'near_name':near_rows,'rows':rows,'train_rows':train_rows,'trace':trace,
             'seconds':time.perf_counter()-started,'peak_allocated_bytes':torch.cuda.max_memory_allocated(),
             'limitations':['Synthetic isolated names, oracle supplies record subject text.',
-                           'Question and record last-token features from frozen base; no fact state is read.',
+                           'Question/record feature pooling depends on oracle_subject_span; no fact state is read.',
                            'No alias, homonym, multi-person context or independently annotated natural dialogue.',
                            'Held names and templates are local split only; base pretraining exposure unknown.',
                            'Null selection is a read refusal, not a generated truthful response.']}
