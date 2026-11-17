@@ -21,26 +21,34 @@ QUESTIONS = ('你好，请简单介绍你自己。', '请计算三加四等于�
              '请用一句话解释什么是地图。', '用一句话鼓励一个学习新知识的人。', '路口红灯亮了应该怎么做？')
 CROSS_ABLATION = False
 OTHER_PATH_ABLATION = False
+MEMORY_VALUES = ('奶昔', '淡粉色', '练瑜伽')
+INCLUDE_EMPTY_MEMORY = False
+ADDITIONAL_INPUTS = {}
 
 
 def variant_summary(rows):
-    total = changed = isolated = 0
+    total = changed = isolated = empty_total = empty_changed = 0
     for row in rows:
         off = row['variants'][0]['token_ids']
         for variant in row['variants'][1:]:
+            if variant['condition'] == 'empty':
+                empty_total += 1
+                empty_changed += int(variant['token_ids'] != off)
+                continue
             total += 1
             changed += int(variant['token_ids'] != off)
             if 'cross_off_token_ids' in variant:
                 isolated += int(variant['token_ids'] != variant['cross_off_token_ids'])
     return {'forced_memory_conditions': total, 'changed_conditions': changed,
-            'cross_ablation_changed_conditions': isolated if CROSS_ABLATION else None}
+            'cross_ablation_changed_conditions': isolated if CROSS_ABLATION else None,
+            'empty_conditions': empty_total, 'empty_changed_conditions': empty_changed}
 
 
 def main():
     if OUT.exists():
         raise FileExistsError(OUT)
     paths = {'candidate': SOURCE/'candidate.pt', 'report': SOURCE/'result.json',
-             'source': p.runtime.CHECKPOINT, 'base': p.MODEL/'model.safetensors'}
+             'source': p.runtime.CHECKPOINT, 'base': p.MODEL/'model.safetensors', **ADDITIONAL_INPUTS}
     before = {k: p.sha(v) for k, v in paths.items()}
     payload = torch.load(paths['candidate'], map_location='cpu', weights_only=True)
     report = json.loads(paths['report'].read_text(encoding='utf-8'))
@@ -102,7 +110,7 @@ def main():
         attention.o_proj = cross
         decoder.requires_grad_(False)
         identities = ('小赵',)
-        values = ('奶昔', '淡粉色', '练瑜伽')
+        values = MEMORY_VALUES
         states = []
         with torch.no_grad():
             for value in values:
@@ -117,15 +125,27 @@ def main():
                     temp_fast[i], temp_velocity[i] = site.write_temporal(
                         temp_fast[i], temp_velocity[i], site.current_basis[3:4].to(device), target,
                         torch.ones(1, device=device), torch.zeros(1, dtype=torch.long, device=device), False)
+                for i, site in enumerate(model.memories):
+                    recovered = site.retrieve([temp_fast[i][0]], site.current_basis[3:4].to(device))[0]
+                    if codec.decode(recovered)['token_ids'] != ids + [tok.eos_token_id]:
+                        raise ValueError('Controlled memory read does not match written tokens')
                 snapshot = p.fresh_controlled_state(model)
                 snapshot.current = [x[0].detach() for x in temp_fast]
                 states.append(snapshot)
+            empty_state = p.fresh_controlled_state(model)
+            empty_fast, _ = model.initial_state(1)
+            empty_state.current = [torch.zeros_like(x[0]) for x in empty_fast]
         rows = []
         state_digests = [p.frozen_digest(model, state) for state in states]
+        empty_digest = p.frozen_digest(model, empty_state)
         with torch.inference_mode():
             for question in QUESTIONS:
                 prompt = p.closed_think_inputs(tok, question, 'cuda')
-                variants = [('off', {})] + [(f'memory_{i}', p._memory_args(model, st,
+                variants = [('off', {})]
+                if INCLUDE_EMPTY_MEMORY:
+                    variants.append(('empty', p._memory_args(model, empty_state,
+                        {'key': 3, 'intent': 'current', 'event_time': 0})))
+                variants += [(f'memory_{i}', p._memory_args(model, st,
                     {'key': 3, 'intent': 'current', 'event_time': 0})) for i, st in enumerate(states)]
                 results = []
                 for name, spec in variants:
@@ -169,10 +189,12 @@ def main():
             raise ValueError('Original individual changed')
         if [p.frozen_digest(model, state) for state in states] != state_digests:
             raise ValueError('Experimental memory changed')
+        if p.frozen_digest(model, empty_state) != empty_digest:
+            raise ValueError('Empty memory changed')
     if any(p.sha(v) != before[k] for k, v in paths.items()):
         raise ValueError('Protected source changed')
     result = {'rows': rows, **variant_summary(rows), 'cross_ablation': CROSS_ABLATION,
-              'other_path_ablation': OTHER_PATH_ABLATION,
+              'other_path_ablation': OTHER_PATH_ABLATION, 'memory_values': list(values),
               'source_sha256': before, 'seconds': time.perf_counter()-started,
               'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
               'limitations': ['Forced activation and explicit addresses, not an actual learned routing gate.',
