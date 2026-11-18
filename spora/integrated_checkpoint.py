@@ -43,11 +43,22 @@ class IntegratedSPORARuntime:
         self.checkpoint_path = None if checkpoint_path is None else Path(checkpoint_path)
 
     def generate(self, *args, memory_key=None, memory_mode=0, memory_time=0,
-                 memory_output=False, **kwargs):
+                 memory_output=False, use_event_focus=False, **kwargs):
         if 'memory_state' in kwargs or 'memory_output_logits' in kwargs:
             raise ValueError('Runtime owns memory state and output evidence')
         if type(memory_output) is not bool:
             raise ValueError('memory_output must be a boolean')
+        if type(use_event_focus) is not bool:
+            raise ValueError('use_event_focus must be a boolean')
+        if use_event_focus:
+            if (memory_key is not None or type(memory_mode) is not int or memory_mode != 0
+                    or type(memory_time) is not int or memory_time != 0
+                    or any(k in kwargs for k in ('memory_addresses', 'memory_slots', 'current_only', 'memory_read_mask'))):
+                raise ValueError('Event focus cannot be overridden by explicit memory controls')
+            from .event_focus import focused_memory_args
+            controls, selection = focused_memory_args(self.organism, self.state)
+            kwargs.update(controls)
+            memory_key, memory_mode, memory_time = selection['key'], 1, selection['event_time']
         if memory_output:
             if self.decoder.output_adapter is None:
                 raise ValueError('Runtime has no memory output adapter')
@@ -70,9 +81,14 @@ class IntegratedSPORARuntime:
         return self.decoder.generate(*args, memory_state=self.state,
                                      memory_output_logits=memory_output_logits, **kwargs)
 
-    def observe_sourced(self, key, value, source, quality, valid_at=None, *, checkpoint_path=None):
+    def observe_sourced(self, key, value, source, quality, valid_at=None, *, checkpoint_path=None,
+                       update_event_focus=False):
         """Apply one guarded SPORA write; publish the new state only after save."""
-        candidate, decision = observe_spora_sourced(
+        if type(update_event_focus) is not bool:
+            raise ValueError('update_event_focus must be a boolean')
+        from .event_focus import observe_focused
+        observe = observe_focused if update_event_focus else observe_spora_sourced
+        candidate, decision = observe(
             self.organism, self.state, key, value, source, quality, valid_at)
         destination = self.checkpoint_path if checkpoint_path is None else Path(checkpoint_path)
         if destination is not None:

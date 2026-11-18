@@ -89,6 +89,9 @@ def flatten(model, state):
         state.internal.validate(model,state)
         schema['write_control']=model.write_control.config_dict()
         schema['internal']=state.internal.metadata()
+        if state.internal.event_focus is not None:
+            schema['internal']['event_focus'] = True
+            tensors['internal/event_focus'] = state.internal.event_focus
         if state.internal.event_keys is not None:
             schema['internal']['event_key_index'] = True
             for p, tensor in enumerate(state.internal.event_keys):
@@ -188,12 +191,16 @@ def restore(schema, tensors, device='cpu'):
             raise ValueError('Invalid event-key index metadata')
         event_keys = ([tensors[f'internal/event_keys/{p}'].to(device) for p in range(len(pages))]
                       if has_event_keys else None)
+        has_event_focus = internal_metadata.pop('event_focus', False)
+        if type(has_event_focus) is not bool:
+            raise ValueError('Invalid event focus metadata')
+        event_focus = tensors['internal/event_focus'].to(device) if has_event_focus else None
         provenance_ridge = internal_metadata.pop('provenance_ridge', None)
         provenance_precision = ([tensors[f'internal/provenance_precision/{p}'].to(device) for p in range(len(pages))]
                                 if provenance_ridge is not None else None)
         state.internal=InternalState(evidence=tensors['internal/evidence'].to(device),
             provenance=[tensors[f'internal/provenance/{p}'].to(device) for p in range(len(pages))],
-            router_factors=factors,event_keys=event_keys,provenance_precision=provenance_precision,
+            router_factors=factors,event_keys=event_keys,event_focus=event_focus,provenance_precision=provenance_precision,
             provenance_ridge=provenance_ridge,**internal_metadata)
     check, expected = flatten(model, state)
     if set(tensors) != set(expected):

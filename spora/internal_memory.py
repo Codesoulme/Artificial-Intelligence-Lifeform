@@ -77,6 +77,7 @@ class InternalState:
     event_keys: object = None
     provenance_precision: object = None
     provenance_ridge: object = None
+    event_focus: object = None
 
     def metadata(self):
         return {k: getattr(self, k) for k in ('start_cursor', 'informative', 'corrections', 'router_cursor', 'encoding')}
@@ -104,6 +105,17 @@ class InternalState:
             if (bool(((keys[:state.cursor] < 0) | (keys[:state.cursor] >= model.config.key_count)).any())
                     or bool((keys[state.cursor:] != -1).any())):
                 raise ValueError('Incomplete or invalid event-key index')
+        if self.event_focus is not None:
+            focus = self.event_focus
+            if (self.event_keys is None or not isinstance(focus, torch.Tensor)
+                    or focus.shape != (2,) or focus.dtype != torch.int64
+                    or focus.device != self.evidence.device):
+                raise ValueError('Invalid event focus tensor or missing event-key index')
+            key, event = focus.tolist()
+            if (key, event) != (-1, -1):
+                if (not 0 <= key < model.config.key_count or not 0 <= event < state.cursor
+                        or int(self.event_keys[event // model.config.time_count][event % model.config.time_count]) != key):
+                    raise ValueError('Event focus does not match a recorded object and event')
         if self.provenance_precision is None:
             if self.provenance_ridge is not None:
                 raise ValueError('Missing independent provenance precision')

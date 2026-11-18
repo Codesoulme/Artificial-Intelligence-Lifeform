@@ -89,6 +89,7 @@ def scalars(state):
     if state.internal is not None:
         internal=state.internal.evidence.numel()+sum(p.numel() for p in state.internal.provenance)
         if state.internal.event_keys is not None:internal+=sum(p.numel() for p in state.internal.event_keys)
+        if state.internal.event_focus is not None:internal+=state.internal.event_focus.numel()
         if state.internal.provenance_precision is not None:internal+=sum(p.numel() for p in state.internal.provenance_precision)
         if state.internal.router_factors is not None:
             internal+=sum(t.numel() for site in state.internal.router_factors for pair in site for t in pair)
