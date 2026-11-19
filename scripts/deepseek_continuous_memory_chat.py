@@ -87,10 +87,19 @@ class ContinuousMemoryChat:
         self.codes, self.scale = projected_codebook(weight, basis.to(weight.device))
 
     def _read_tokens(self, bank, entity):
-        address = self.site.current_basis[entity:entity + 1]
-        slots = read_bank(self.site, bank, address).to(self.codes.device)[:, :RANK]
-        scores = torch.nn.functional.normalize(slots, dim=-1) @ self.codes.T
-        return scores.argmax(dim=-1).masked_fill(slots.norm(dim=-1) < .2, -1).tolist()
+        return self._read_address_tokens(bank, (entity,))[0]
+
+    def _read_address_tokens(self, bank, entities):
+        results = []
+        # Bound the temporary vocabulary scores independently of address capacity.
+        for start in range(0, len(entities), 8):
+            group = entities[start:start + 8]
+            slots = torch.stack([read_bank(self.site, bank, self.site.current_basis[key:key + 1])[:, :RANK]
+                                 for key in group]).to(self.codes.device)
+            directions = torch.nn.functional.normalize(slots.flatten(0, 1), dim=-1)
+            tokens = (directions @ self.codes.T).argmax(dim=-1).reshape(len(group), SLOTS)
+            results.extend(tokens.masked_fill(slots.norm(dim=-1) < .2, -1).tolist())
+        return results
 
     def _check_revision(self):
         current = sha(self.working_path) if self.working_path.exists() else None
@@ -138,10 +147,10 @@ class ContinuousMemoryChat:
             candidate = write_bank(self.site, bank, self.site.current_basis[entity:entity + 1], target)
             if self._read_tokens(candidate, entity) != expected:
                 raise ValueError('Candidate matrix did not reproduce the written value')
-            for other, other_field, version in self.filled:
-                if other != entity and other_field == field and version == 1:
-                    if self._read_tokens(candidate, other) != self._read_tokens(bank, other):
-                        raise ValueError('Candidate matrix changed another occupied address')
+            neighbors = sorted(other for other, other_field, version in self.filled
+                               if other != entity and other_field == field and version == 1)
+            if self._read_address_tokens(candidate, neighbors) != self._read_address_tokens(bank, neighbors):
+                raise ValueError('Candidate matrix changed another occupied address')
             updated = dict(self.banks)
             updated[field, 1] = candidate
             self._save(updated, self.addresses, self.filled | {record})
