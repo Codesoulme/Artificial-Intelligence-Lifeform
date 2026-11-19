@@ -97,24 +97,22 @@ class NativeSPORAMemoryReader(ScaledOpenBaseMemory):
                     or matrix.shape[0] not in (1, hidden.shape[0]) or not matrix.is_floating_point()):
                 raise ValueError('Memory matrices must have shape [1 or batch, memory_width, memory_width]')
             fixed_matrices.append(matrix.detach().to(device=x.device, dtype=x.dtype).expand(hidden.shape[0], -1, -1))
+        token_hidden = x.reshape(batch_size * sequence_length, 1, self.hidden_width)
+        token_query = query.reshape(batch_size * sequence_length, self.memory_width)
+
         def read_page(matrix):
-            token_hidden = x.reshape(batch_size * sequence_length, 1, self.hidden_width)
-            token_query = query.reshape(batch_size * sequence_length, self.memory_width)
-            token_matrix = matrix[:, None, :, :].expand(-1, sequence_length, -1, -1).reshape(
-                batch_size * sequence_length, self.memory_width, self.memory_width)
-            return native_site.read(token_hidden, token_query, [token_matrix]).reshape_as(x)
+            retrieved = torch.bmm(matrix, query.transpose(1, 2)).transpose(1, 2)
+            output = native_site.read_retrieved(token_hidden, token_query, retrieved.reshape_as(token_query))
+            return retrieved, output.reshape_as(x)
 
         if len(fixed_matrices) == 1:
-            injected = read_page(fixed_matrices[0])
+            _, injected = read_page(fixed_matrices[0])
         else:
             page_outputs, page_scores = [], []
             for matrix in fixed_matrices:
-                token_matrix = matrix[:, None, :, :].expand(-1, sequence_length, -1, -1).reshape(
-                    batch_size * sequence_length, self.memory_width, self.memory_width)
-                retrieved = native_site.retrieve([token_matrix], query.reshape(-1, self.memory_width))
-                retrieved = retrieved.reshape(batch_size, sequence_length, self.memory_width)
+                retrieved, output = read_page(matrix)
                 page_scores.append((retrieved * query).sum(-1))
-                page_outputs.append(read_page(matrix))
+                page_outputs.append(output)
             weights = torch.stack(page_scores, dim=1).softmax(dim=1)
             residuals = torch.stack([output - x for output in page_outputs], dim=1)
             injected = x + (residuals * weights[:, :, :, None]).sum(1)

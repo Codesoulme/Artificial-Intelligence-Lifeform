@@ -8,6 +8,7 @@ from deepseek_output_aligned_memory import MODEL, SOURCE, sha, torch, write
 from scripts.deepseek_semantic_value_pilot import WORDS
 from scripts.deepseek_spora_memory_answer_distill import _memory_args
 from scripts.spora_unknown_state_probe import fresh_controlled_state
+from spora.growing import query
 from spora.internal_memory import observe_sourced
 from spora.integrated_open_base import SPORAGatedFeedForward
 from spora.language_training import frozen_digest
@@ -15,7 +16,7 @@ from spora.language_training import frozen_digest
 
 ORDINARY = ('只回复两个字：你好。', '五张桌子，每桌三把椅子，一共有几把椅子？', '为什么冬天的金属把手摸起来比木头凉？')
 MEMORY = ('记录里这个人最喜欢喝什么饮料？', '这个人的饮料偏好是什么？')
-HISTORY = ((1, '小林', 2, 5), (2, '阿宁', 3, 4))
+HISTORY = ((1, '小林', 2, 5), (2, '阿宁', 3, 4), (3, '小陈', 1, 7), (4, '小杨', 4, 0))
 
 
 def history_cases(organism):
@@ -32,7 +33,12 @@ def history_cases(organism):
             ('past', f'{person}最早那次偏爱喝什么？', earlier),
         ):
             args = _memory_args(organism, state, dict(key=key, intent=intent, event_time=2 * index))
-            rows.append((question, WORDS[expected], args))
+            device = next(organism.parameters()).device
+            replay_time = 2 * index if intent == 'past' else 0
+            readout = query(organism, state, torch.tensor([key], device=device),
+                            torch.tensor([int(intent == 'past')], device=device),
+                            torch.tensor([replay_time], device=device))
+            rows.append((question, WORDS[expected], args, readout))
     return state, rows
 
 
@@ -60,21 +66,25 @@ def main(output, layer_index, fractions):
                                                  add_generation_prompt=True) + '</think>\n\n'
         return tokenizer.encode(rendered, add_special_tokens=False, return_tensors='pt').to('cuda')
 
-    def run(text, memory_args):
+    def run(text, memory_args, output_logits=None):
         ids = prompt(text)
         mask = torch.ones_like(ids)
+        if output_logits is not None:
+            output_logits = output_logits.to(decoder.output_adapter.value_to_rank.weight.device)
         forward_args = dict(memory_args, use_cache=False)
         generation_args = dict(memory_args, use_cache=True)
         logits = decoder(input_ids=ids, attention_mask=mask, **forward_args).logits[0, -1].float().cpu()
         generation = decoder.generate(input_ids=ids, attention_mask=mask, do_sample=False,
                                        top_p=None, temperature=None, max_new_tokens=32, pad_token_id=tokenizer.pad_token_id,
-                                       eos_token_id=tokenizer.eos_token_id, **generation_args)
+                                       eos_token_id=tokenizer.eos_token_id, memory_output_logits=output_logits,
+                                       **generation_args)
         tokens = generation[0, ids.shape[1]:].tolist()
         return logits, dict(answer=tokenizer.decode(tokens, skip_special_tokens=True).strip(), tokens=tokens)
 
     ordinary_before = [run(q, {}) for q in ORDINARY]
     memory_before = [[run(q, args) for args in args_by_value] for q in MEMORY]
-    history_before = [run(question, args)[1] for question, _, args in historical] if fractions else []
+    history_before = [run(question, args)[1] for question, _, args, _ in historical] if fractions else []
+    history_adapted = [run(question, args, readout)[1] for question, _, args, readout in historical] if fractions else []
     original_mlp = wrapper.layer.mlp
     wrapper.layer.mlp = SPORAGatedFeedForward(original_mlp).eval()
     fused_memory = [[run(q, args) for args in args_by_value] for q in MEMORY]
@@ -88,11 +98,16 @@ def main(output, layer_index, fractions):
         decoder.use_feedforward_memory(layer_index, fraction=fraction)
         rows = [[run(question, args)[1] for args in args_by_value] for question in MEMORY]
         blends[fraction] = rows
-        history[fraction] = [dict(question=question, expected=expected, before=before, after=run(question, args)[1])
-                             for (question, expected, args), before in zip(historical, history_before, strict=True)]
+        history[fraction] = [dict(question=question, expected=expected, matrix_value=int(readout[0].argmax()),
+                                  before=before, after=run(question, args)[1], before_adapted=adapted,
+                                  after_adapted=run(question, args, readout)[1])
+                             for (question, expected, args, readout), before, adapted
+                             in zip(historical, history_before, history_adapted, strict=True)]
         print('Fraction', fraction, [[row['answer'] for row in pair] for pair in rows], flush=True)
         print('History', fraction, [(row['expected'], row['before']['answer'], row['after']['answer'])
                                     for row in history[fraction]], flush=True)
+        print('Adapted history', fraction, [(row['expected'], row['before_adapted']['answer'], row['after_adapted']['answer'])
+                                            for row in history[fraction]], flush=True)
     ordinary = []
     for question, (logits_a, a), (logits_b, b) in zip(ORDINARY, ordinary_before, ordinary_after, strict=True):
         ordinary.append(dict(question=question, before=a, after=b, same_tokens=a['tokens'] == b['tokens'],

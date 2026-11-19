@@ -47,6 +47,27 @@ def make_reader():
 
 
 class IntegratedOpenBaseTests(unittest.TestCase):
+    def test_native_reader_matches_tokenwise_reads_with_distinct_batch_pages(self):
+        torch.manual_seed(29)
+        reader = NativeSPORAMemoryReader(6, 3, .6).eval()
+        site = reader.native_sites[0]
+        with torch.no_grad():
+            site.read_out.weight.normal_()
+        hidden = torch.randn(2, 4, 6)
+        pages = [torch.randn(2, 3, 3), torch.randn(1, 3, 3)]
+        for selected in (pages[:1], pages):
+            actual = reader(hidden, selected, 0)
+            outputs = []
+            for token in hidden.unbind(1):
+                x = token.unsqueeze(1)
+                query = site.address(token)
+                fast = [[page.expand(2, -1, -1)] for page in selected]
+                retrieved = [site.retrieve(page, query) for page in fast]
+                candidates = torch.stack([site.read(x, query, page) - x for page in fast], dim=1)
+                scores = torch.stack([(value * query).sum(-1) for value in retrieved], dim=1)
+                outputs.append(x + .6 * (candidates * scores.softmax(1)[..., None, None]).sum(1))
+            torch.testing.assert_close(actual, torch.cat(outputs, dim=1))
+
     def test_feedforward_transplant_preserves_plain_output_and_reads_each_selected_row_once(self):
         class GatedMLP(nn.Module):
             def __init__(self):

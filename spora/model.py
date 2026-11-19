@@ -101,7 +101,9 @@ class MemorySite(nn.Module):
         return F.normalize(self.value(value_embedding), dim=-1) * math.sqrt(self.initial[0].shape[0])
 
     def read(self, x, query, fast):
-        recent = self.retrieve(fast, query)
+        return self.read_retrieved(x, query, self.retrieve(fast, query))
+
+    def read_retrieved(self, x, query, recent):
         signal = recent + self.slow_signal(x,query)
         residual = torch.sigmoid(self.read_gate(x[:, -1])) * self.read_out(signal)
         return torch.cat([x[:, :-1], (x[:, -1]+residual).unsqueeze(1)], dim=1)
