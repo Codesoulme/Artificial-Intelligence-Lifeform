@@ -171,3 +171,13 @@ cd D:/SPORA
 .venv/Scripts/python.exe scripts/deepseek_awake_self_name.py --output runs/self-name.json --identity runs/self-name.pt --name '孢子'
 .venv/Scripts/python.exe scripts/deepseek_continuous_memory_chat.py --self-name-state runs/self-name.pt --awake-state runs/awake-with-name.pt --awake-topic-recall --memory-file runs/deepseek-continuous-memory-capacity-batched/timeline-smoke.sqlite3 --earlier-readout --json
 ```
+
+## 普通对话的分流
+
+用 48 条训练句和 12 条校准句训练普通请求分类器。16 条普通留出句的正确分流从 9 条升至 16 条。16 条记忆对照原有两条进入普通分流，加入分类器后仍为两条。实机启用分类器后，热水冷却、饮品推荐、冰块计算、翻译和穿衣建议均进入普通生成。已知人物读取、两种追问、个体名称和缺少人物的查询也通过检查。
+
+普通回答仍存在内容缺陷。热水解释和翻译答错，饮品、算术及穿衣三条碰到 64 词元上限。当前入口可通过 `--ordinary-intent-head` 加载这项实验，默认启动器仍使用已验证的原分流。
+
+```powershell
+.venv/Scripts/python.exe scripts/deepseek_awake_ordinary_route.py --output runs/ordinary-route.json --head runs/ordinary-intent.pt
+```

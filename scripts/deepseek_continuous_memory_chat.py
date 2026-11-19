@@ -22,7 +22,7 @@ from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
 from spora.awake_chat import awake_chat_lines
-from spora.awake_recall_intent import SUBJECT_SCOPE_CONFLICT, RecallIntent, SameSubjectIntent, SelfNameIntent
+from spora.awake_recall_intent import SUBJECT_SCOPE_CONFLICT, OrdinaryIntent, RecallIntent, SameSubjectIntent, SelfNameIntent
 from spora.continuous_bank_store import (
     bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_slots_as_of,
 )
@@ -149,6 +149,7 @@ class ContinuousMemoryChat:
         self.inherited_router = inherited_router
         self.recall_intent = None
         self.same_subject_intent = None
+        self.ordinary_intent = None
         self.subject_hops = 1
         self.self_name = None
         self.gate_cutoff = setup['gate_cutoff'] if gate_cutoff is None else gate_cutoff
@@ -390,6 +391,10 @@ class ContinuousMemoryChat:
                 topic_observer(predicted['probabilities'])
         selected = predicted['selected']
         action = route_action(predicted, self.cutoff)
+        if (action != 'ordinary' and self.ordinary_intent is not None and subject_reason == 'no_subject'
+                and not (inherits or elliptical or learned_repeat or requested_back or back or scope_conflict)
+                and as_of is None and history_issue is None and self.ordinary_intent(*features[:2])):
+            selected, action = 'ordinary', 'ordinary'
         start = None
         confirmed = False
         reason = action
@@ -596,6 +601,7 @@ def main():
     parser.add_argument('--awake-subject-hops', type=int, choices=(1, 2, 3), default=1,
                         help='Maximum consecutive verified same-person reads')
     parser.add_argument('--self-name-state', type=Path, help='Load an experimental self-name matrix for chat')
+    parser.add_argument('--ordinary-intent-head', type=Path, help='Load the experimental ordinary-request classifier')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
@@ -670,6 +676,12 @@ def main():
         print(json.dumps(chat.remember(args.entity, *args.remember), ensure_ascii=False))
         return
     timing_threshold = EARLY_TIMING_THRESHOLD if args.earlier_readout else THRESHOLD
+    if args.ordinary_intent_head is not None:
+        ordinary_path = args.ordinary_intent_head.resolve()
+        if ordinary_path == chat.working_path or (args.awake_state is not None and ordinary_path == args.awake_state.resolve()):
+            parser.error('--ordinary-intent-head needs a separate file from memory and awake state')
+        width = chat.decoder.base.lm_head.weight.shape[1]
+        chat.ordinary_intent = OrdinaryIntent.load(ordinary_path, width, chat.recall_fingerprint)
     if args.self_name_state is not None:
         name_path = args.self_name_state.resolve()
         if name_path == chat.working_path or (args.awake_state is not None and name_path == args.awake_state.resolve()):

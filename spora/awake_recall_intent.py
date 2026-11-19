@@ -54,6 +54,10 @@ class SameSubjectIntent(RecallIntent):
     format = 'spora-awake-same-subject-intent-v1'
 
 
+class OrdinaryIntent(RecallIntent):
+    format = 'spora-awake-ordinary-intent-v1'
+
+
 class SelfNameIntent(RecallIntent):
     format = 'spora-awake-self-name-v1'
     other_target = re.compile(r'(?:称呼|叫)我(?:[^叫]|$)|我的(?:实际|真实|常用)?(?:名字|姓名|名称|称呼)|我一直叫什么')
