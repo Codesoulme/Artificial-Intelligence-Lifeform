@@ -20,7 +20,9 @@ from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, l
 from spora.continuous_bank_store import bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks
 from spora.durable import RevisionConflict, pack
 from spora.language_training import atomic_save
-from spora.research_continuous_observation import ADDRESSES, can_register, inherited_query_subject, parse_observation, query_subject
+from spora.research_continuous_observation import (
+    ADDRESSES, can_register, inherited_query_subject, parse_observation, query_subject, split_history_query,
+)
 from spora.working_checkpoint_lock import lock_working_checkpoint
 
 ENTITIES = tuple(ADDRESSES.values())
@@ -253,6 +255,19 @@ class ContinuousMemoryChat:
             raise ValueError('Unknown experimental address or snapshot')
         if type(back) is not int or not 0 <= back <= 2**63 - 1 or (back and (version != 1 or not uses_database(self.working_path))):
             raise ValueError('Historical recall requires a SQLite checkpoint and version 1')
+        question, requested_back = split_history_query(question)
+        history_issue = None
+        if requested_back is None:
+            history_issue = 'invalid_history_query'
+        elif requested_back:
+            if back and requested_back != back:
+                history_issue = 'conflicting_history_offsets'
+            elif version != 1 or not uses_database(self.working_path):
+                history_issue = 'history_requires_sqlite'
+            else:
+                back = requested_back
+        if history:
+            history, _ = split_history_query(history)
         row = dict(key='input', question=question, history=history, target_turn=0)
         features = features_for(self.decoder, self.tokenizer, row, False)
         probability, = gate_probabilities(self.inheritance, [row], {'input': features})
@@ -280,8 +295,12 @@ class ContinuousMemoryChat:
         action = route_action(predicted, self.cutoff)
         start = None
         reason = action
-        if entity is None and (action in ('read', 'missing') or subject_reason != 'no_subject'):
+        if history_issue is not None:
+            action, reason, response = 'clarify', history_issue, CLARIFY
+        elif entity is None and (requested_back or action in ('read', 'missing') or subject_reason != 'no_subject'):
             action, reason, response = 'clarify', subject_reason, ASK_SUBJECT
+        elif requested_back and action == 'ordinary':
+            action, reason, response = 'clarify', 'history_field_unresolved', CLARIFY
         elif action == 'read' and (entity, selected, version) not in self.filled:
             action, reason, response = 'missing', 'unwritten_field', MISSING
         elif action == 'read':
@@ -306,6 +325,8 @@ class ContinuousMemoryChat:
                     action, reason, response = 'clarify', 'injection_not_triggered', CLARIFY
                 else:
                     response = self.tokenizer.decode(tokens, skip_special_tokens=True).strip()
+                    if requested_back:
+                        response = f'{requested_back} 次更正前的记录是「{response}」。'
         elif action == 'ordinary':
             ids = torch.tensor([features[3]], device=self.codes.device)
             tokens = self.decoder.generate(input_ids=ids, attention_mask=torch.ones_like(ids), do_sample=False,

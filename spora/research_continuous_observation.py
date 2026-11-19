@@ -20,6 +20,30 @@ ELLIPTICAL_QUERY = re.compile(
     r'(?:那|那么)?(?:查到了就说一下|说来听听|这项具体写了什么|具体内容呢|那一项的答案是什么|'
     r'你能说出那款的名字吗|能再告诉我这个细节吗|请把这个细节说给我|具体是什么|那项是什么)[。？！.!?]?'
 )
+HISTORY_PREFIX = re.compile(
+    r'^(?:请)?(?:查(?:一下)?|回看)?(?:上一次记录(?:里|中)?|'
+    r'(?P<count>[0-9零一二两三四五六七八九十]+)次更正前)(?=[，,：:\s]|$)'
+)
+CHINESE_DIGITS = '零一二三四五六七八九'
+
+
+def split_history_query(text):
+    """Remove an explicit history prefix and return its correction offset."""
+    match = HISTORY_PREFIX.match(text.strip())
+    if match is None:
+        return text, 0
+    question = text.strip()[match.end():].lstrip('，,：: \t\n\r')
+    count = (match['count'] or '一').replace('两', '二')
+    if count.isascii() and len(count) <= 2:
+        offset = int(count)
+    elif len(count) == 1 and count in CHINESE_DIGITS:
+        offset = CHINESE_DIGITS.index(count)
+    elif re.fullmatch(r'[一二三四五六七八九]?十[一二三四五六七八九]?', count):
+        tens, units = count.split('十')
+        offset = 10 * CHINESE_DIGITS.index(tens or '一') + CHINESE_DIGITS.index(units or '零')
+    else:
+        offset = 0
+    return (question, offset) if question and offset else (text, None)
 
 
 @lru_cache(maxsize=16)

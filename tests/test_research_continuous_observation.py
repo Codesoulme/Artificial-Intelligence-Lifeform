@@ -1,9 +1,22 @@
 import unittest
 
-from spora.research_continuous_observation import ADDRESSES, can_register, inherited_query_subject, parse_observation, query_subject
+from spora.research_continuous_observation import (
+    ADDRESSES, can_register, inherited_query_subject, parse_observation, query_subject, split_history_query,
+)
 
 
 class ContinuousObservationTests(unittest.TestCase):
+    def test_history_prefix_keeps_event_time_separate_from_corrections(self):
+        question = '沈亦平常最爱喝什么？'
+        for prefix, back in (('上一次记录里，', 1), ('请查一下上一次记录：', 1), ('两次更正前，', 2),
+                             ('回看3次更正前：', 3), ('十二次更正前 ', 12), ('九十九次更正前，', 99)):
+            with self.subTest(prefix=prefix):
+                self.assertEqual(split_history_query(prefix + question), (question, back))
+        for message in ('沈亦上一次去哪里？', '沈亦何时抵达？', '沈亦两天前去了哪？', question):
+            self.assertEqual(split_history_query(message), (message, 0))
+        for message in ('上一次记录，', '零次更正前，' + question, '100次更正前，' + question):
+            self.assertEqual(split_history_query(message), (message, None))
+
     def test_registered_subjects_are_scoped_to_the_supplied_registry(self):
         addresses = {**ADDRESSES, '周岚': 0}
         observation = '周岚最喜欢喝杏仁茶。'
