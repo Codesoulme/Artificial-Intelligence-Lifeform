@@ -22,6 +22,7 @@ from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
 from spora.awake_chat import awake_chat_lines
+from spora.awake_recall_intent import RecallIntent
 from spora.continuous_bank_store import (
     bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_slots_as_of,
 )
@@ -142,6 +143,7 @@ class ContinuousMemoryChat:
         self.styles, self.timing, self.columns = styles, timing, columns
         self.contextual, self.direct, self.inheritance = contextual, direct, inheritance
         self.inherited_router = inherited_router
+        self.recall_intent = None
         self.gate_cutoff = setup['gate_cutoff'] if gate_cutoff is None else gate_cutoff
         self.cutoff = setup['cutoffs']['priority']
         self.working_path, self.working_sha, self.seed_sha = working_path, working_sha, seed_sha
@@ -311,10 +313,13 @@ class ContinuousMemoryChat:
                 previous, _ = query_subject(history, self.addresses)
                 if previous != entity:
                     inherits = False
-        elliptical = (consume_topic is not None and subject_reason == 'no_subject'
-                      and ELLIPTICAL_QUERY.fullmatch(question.strip()) is not None)
-        use_topic = (elliptical and recent_read is not None and version == 1 and not back and as_of is None
-                     and history_issue is None and probability >= self.gate_cutoff)
+        elliptical = False
+        learned_repeat = False
+        if consume_topic is not None and subject_reason == 'no_subject':
+            elliptical = ELLIPTICAL_QUERY.fullmatch(question.strip()) is not None
+            learned_repeat = self.recall_intent is not None and self.recall_intent(*features[:2])
+        use_topic = (recent_read is not None and version == 1 and not back and as_of is None and history_issue is None
+                     and ((elliptical and probability >= self.gate_cutoff) or learned_repeat))
         if use_topic:
             entity, selected, confidence = recent_read
             subject_reason = 'awake_recent_read'
@@ -333,7 +338,7 @@ class ContinuousMemoryChat:
                 router = self.inherited_router
                 route_features = features_for(self.decoder, self.tokenizer, dict(question=history), False)
             predicted, = route(router, [row], {'input': route_features})
-            if topic_observer is not None and not elliptical:
+            if topic_observer is not None and not (elliptical or learned_repeat):
                 topic_observer(predicted['probabilities'])
         selected = predicted['selected']
         action = route_action(predicted, self.cutoff)
@@ -342,7 +347,7 @@ class ContinuousMemoryChat:
         reason = action
         if history_issue is not None:
             action, reason, response = 'clarify', history_issue, CLARIFY
-        elif elliptical and entity is None:
+        elif (elliptical or learned_repeat) and entity is None:
             action, reason, response = 'clarify', 'awake_topic_unavailable', ASK_SUBJECT
         elif entity is None and (requested_back or as_of is not None or action in ('read', 'missing') or subject_reason != 'no_subject'):
             action, reason, response = 'clarify', subject_reason, ASK_SUBJECT
@@ -495,6 +500,7 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_ret
                                 addresses=addresses, filled=filled, pages=pages, saved_page_size=page_size,
                                 bank_digests=tracked, bank_specs={key: (bank.shape, bank.dtype) for key, bank in seed_banks.items()})
     chat.organism = organism
+    chat.recall_fingerprint = {path.name: expected[path] for path in model_files}
     chat.awake_individual = dict(model_sha256=expected[MODEL / 'model.safetensors'], source_sha256=expected[SOURCE],
                                  memory_path=str(working_path), seed_sha256=expected[paths['banks']])
     return chat
@@ -534,6 +540,7 @@ def main():
     parser.add_argument('--history', help='Preceding user turn')
     parser.add_argument('--awake-state', type=Path, help='Persist the experimental awake core during stdin chat')
     parser.add_argument('--awake-topic-recall', action='store_true', help='Use verified recent reads for bounded follow-ups')
+    parser.add_argument('--awake-recall-intent-head', type=Path, help='Load the experimental repeat-intent classifier')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
@@ -547,6 +554,8 @@ def main():
         parser.error('--awake-state is available during stdin chat')
     if args.awake_topic_recall and args.awake_state is None:
         parser.error('--awake-topic-recall requires --awake-state')
+    if args.awake_recall_intent_head is not None and not args.awake_topic_recall:
+        parser.error('--awake-recall-intent-head requires --awake-topic-recall')
     if not 0 <= args.back <= 2**63 - 1 or (args.back and (
             args.version != 1 or not uses_database(args.memory_file) or observation is not None
             or args.remember or args.register is not None or args.import_checkpoint is not None)):
@@ -625,6 +634,12 @@ def main():
         trained = SOURCE.parents[1] / 'p24-awake' / 'core-seed7.pt'
         if state_path in (chat.working_path, trained.resolve()) or state_path.suffix.lower() != '.pt':
             parser.error('--awake-state needs a separate .pt path')
+        if args.awake_recall_intent_head is not None:
+            head_path = args.awake_recall_intent_head.resolve()
+            if state_path == head_path:
+                parser.error('--awake-state needs a path separate from the recall intent head')
+            width = chat.decoder.base.lm_head.weight.shape[1]
+            chat.recall_intent = RecallIntent.load(head_path, width, chat.recall_fingerprint)
 
         def report(status):
             print(json.dumps(dict(awake=status), ensure_ascii=False), flush=True)

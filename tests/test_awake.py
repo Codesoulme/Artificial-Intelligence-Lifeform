@@ -5,6 +5,7 @@ from unittest.mock import patch
 import torch
 from spora.awake import AwakeConfig,AwakeCore,attach_awake
 from spora.awake_chat import awake_chat_lines
+from spora.awake_recall_intent import FORMAT as RECALL_INTENT_FORMAT, RecallIntent
 from spora.awake_session import AwakeSession
 from spora.awake_topics import AwakeTopics, supports_field
 from spora.language_training import atomic_save
@@ -15,6 +16,25 @@ from spora.durable import TensorStore
 
 
 class AwakeChatTests(unittest.TestCase):
+    def test_recall_intent_checkpoint_requires_matching_decoder(self):
+        source = RecallIntent(2, .7)
+        with torch.no_grad():
+            source.head.weight.zero_()
+            source.head.bias.fill_(2.)
+        fingerprint = {'model.safetensors': 'model-a'}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'intent.pt'
+            payload = dict(format=RECALL_INTENT_FORMAT, fingerprint=fingerprint, cutoff=.7,
+                           state=source.head.state_dict())
+            torch.save(payload, path)
+            loaded = RecallIntent.load(path, 2, fingerprint)
+            self.assertTrue(loaded(torch.ones(2), torch.ones(3, 2)))
+            with self.assertRaisesRegex(ValueError, 'different decoder'):
+                RecallIntent.load(path, 2, {'model.safetensors': 'model-b'})
+            torch.save(dict(payload, cutoff=float('nan')), path)
+            with self.assertRaisesRegex(ValueError, 'cutoff'):
+                RecallIntent.load(path, 2, fingerprint)
+
     def test_read_binding_requires_matching_activity_and_is_consumed_once(self):
         topics = AwakeTopics(('drink', 'work'))
         topics.observe([.95, .05])

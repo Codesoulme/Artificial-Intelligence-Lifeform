@@ -88,3 +88,21 @@ cd D:/SPORA
 ```powershell
 .venv/Scripts/python.exe scripts/deepseek_awake_recall_intent.py --output runs/deepseek-awake-recall-intent-pooled.json
 ```
+
+## 相近措辞训练和可选实机验证
+
+借鉴开放类别识别评测，将历史、离开当前话题和取消请求作为独立对照。新增 14 对训练句，每对尽量保留相同用词，只改变要做的事。另写 8 对句子用于测试，阈值只用原有校准集选取。[开放类别评测论文](https://aclanthology.org/D19-1131/)
+
+| 条件 | 原探测复述 8 条 | 原探测误放 8 条 | 新留出复述 6 条 | 新留出误放 12 条 | 成对留出复述 8 条 | 成对留出误放 8 条 |
+|---|---:|---:|---:|---:|---:|---:|
+| 原整句分类器 | 8 | 1 | 5 | 2 | 8 | 8 |
+| 加入成对训练的分类器 | 3 | 0 | 4 | 0 | 8 | 0 |
+
+可用参数 `--awake-recall-intent-head` 加载成对训练的分类器。它用当前句判断复述意图，仍须通过在线主题绑定、版本约束和事实核对。加载时核对 DeepSeek 权重、词表配置和孢子集成检查点的摘要。
+
+实机分别用三种新问法读回「香橙冰茶」「织机检修师」「新荷档案馆」。对应的历史查询、问人物和取消请求均未读回旧值。已验证一次性承接、等待 4.5 秒、睡眠与唤醒、原有固定问法、SQLite 摘要和 24 项相关单元测试。取消请求进入普通生成并收到无关的自我介绍。分类训练及本轮评测均使用手写句，独立自然对话覆盖和取消请求的答复表现仍待验证。
+
+```powershell
+.venv/Scripts/python.exe scripts/deepseek_awake_recall_intent.py --output runs/recall-intent.json --head runs/recall-intent.pt
+.venv/Scripts/python.exe scripts/deepseek_continuous_memory_chat.py --awake-state runs/awake-topic-recall.pt --awake-topic-recall --awake-recall-intent-head runs/recall-intent.pt --memory-file runs/deepseek-continuous-memory-capacity-batched/timeline-smoke.sqlite3 --inherited-router --retrained-gate --earlier-readout --json
+```
