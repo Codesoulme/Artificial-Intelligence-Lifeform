@@ -24,7 +24,7 @@ from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, l
 from spora.awake_chat import awake_chat_lines
 from spora.awake_recall_intent import SUBJECT_SCOPE_CONFLICT, OrdinaryIntent, RecallIntent, SameSubjectIntent, SelfNameIntent
 from spora.continuous_bank_store import (
-    bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_slots_as_of,
+    bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_recent_snapshots, read_slots_as_of,
 )
 from spora.durable import RevisionConflict, pack
 from spora.language_training import atomic_save
@@ -299,6 +299,41 @@ class ContinuousMemoryChat:
             return dict(action='defer', reason='value_does_not_fit')
         except MemoryUpdateRejected:
             return dict(action='defer', reason='matrix_verification_failed')
+
+    @torch.inference_mode()
+    def verify_recent_memory(self, limit):
+        if not uses_database(self.working_path):
+            raise ValueError('Replay verification requires a SQLite memory file')
+        if self.working_sha is None:
+            self._check_revision()
+            return dict(action='replay_verified', checked=0, mismatches=[], revision=None)
+        snapshots = read_recent_snapshots(self.working_path, self.working_sha, limit)
+        mismatches = []
+        eos = self.tokenizer.eos_token_id
+        for entity, field, revision, slots in snapshots:
+            evidence = dict(entity=entity, field=field, write_revision=revision)
+            if entity not in self.addresses.values() or (entity, field, 1) not in self.filled:
+                mismatches.append(dict(evidence, reason='address_missing'))
+                continue
+            if slots.shape != (SLOTS, RANK) or slots.dtype != self.bank_specs[field, 1][1]:
+                mismatches.append(dict(evidence, reason='snapshot_layout'))
+                continue
+            if not bool(torch.isfinite(slots).all()):
+                mismatches.append(dict(evidence, reason='snapshot_not_finite'))
+                continue
+            bias = cosine_slot_bias(slots, self.codes, self.scale)
+            reference = bias.argmax(dim=-1).tolist() if bias is not None else []
+            if eos not in reference or reference.index(eos) == 0:
+                mismatches.append(dict(evidence, reason='snapshot_missing_value'))
+                continue
+            end = reference.index(eos) + 1
+            bank = self.bank_for(entity, field, 1)
+            actual = self._read_tokens(bank, entity) if bank is not None else []
+            if actual[:end] != reference[:end]:
+                mismatches.append(dict(evidence, reason='current_value_differs'))
+        self._check_revision()
+        return dict(action='replay_mismatch' if mismatches else 'replay_verified', checked=len(snapshots),
+                    mismatches=mismatches, revision=self.working_sha)
 
     def _answer_self_name(self, prompt, confirm_recent_read):
         bias = cosine_bias(self.site, self.self_name.name_bank, self._local_address(0), self.codes, self.scale)
@@ -591,10 +626,12 @@ def main():
     operation.add_argument('--preview-observation', metavar='STATEMENT')
     operation.add_argument('--register', metavar='NAME')
     operation.add_argument('--import-checkpoint', type=Path, metavar='SOURCE_PT')
+    operation.add_argument('--verify-replay', type=int, metavar='WRITES', help='Check a bounded suffix of SQLite memory writes')
     parser.add_argument('--expand', action='store_true', help='Allocate one memory page when registration reaches capacity')
     parser.add_argument('--memory-file', type=Path, default=WORKING_BANKS)
     parser.add_argument('--history', help='Preceding user turn')
     parser.add_argument('--awake-state', type=Path, help='Persist the experimental awake core during stdin chat')
+    parser.add_argument('--sleep-replay', type=int, metavar='WRITES', help='Verify recent writes when entering sleep')
     parser.add_argument('--awake-topic-recall', action='store_true', help='Use verified recent reads for bounded follow-ups')
     parser.add_argument('--awake-recall-intent-head', type=Path, help='Load the experimental repeat-intent classifier')
     parser.add_argument('--awake-subject-intent-head', type=Path, help='Load the experimental same-person classifier')
@@ -609,9 +646,15 @@ def main():
     args = parser.parse_args()
     if args.expand and args.register is None:
         parser.error('--expand requires --register')
+    if args.verify_replay is not None and (not 1 <= args.verify_replay <= 256 or not uses_database(args.memory_file)):
+        parser.error('--verify-replay requires a SQLite file and a budget from 1 to 256 writes')
+    if args.sleep_replay is not None and (args.awake_state is None or not uses_database(args.memory_file)
+                                          or not 1 <= args.sleep_replay <= 256):
+        parser.error('--sleep-replay requires --awake-state, a SQLite file and a budget from 1 to 256 writes')
     observation = args.observe if args.observe is not None else args.preview_observation
     if args.awake_state is not None and (args.question is not None or observation is not None or args.remember
-                                         or args.register is not None or args.import_checkpoint is not None):
+                                         or args.register is not None or args.import_checkpoint is not None
+                                         or args.verify_replay is not None):
         parser.error('--awake-state is available during stdin chat')
     if args.awake_topic_recall and args.awake_state is None:
         parser.error('--awake-topic-recall requires --awake-state')
@@ -661,6 +704,10 @@ def main():
             print(json.dumps(dict(action='preview', entity=entity, field=field, value=value), ensure_ascii=False))
             return
     chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router, use_retrained_gate=args.retrained_gate)
+    if args.verify_replay is not None:
+        result = chat.verify_recent_memory(args.verify_replay)
+        print(json.dumps(result, ensure_ascii=False))
+        return
     if args.register is not None:
         print(json.dumps(chat.register(args.register, expand=args.expand), ensure_ascii=False))
         return
@@ -752,10 +799,17 @@ def main():
         def report(status):
             print(json.dumps(dict(awake=status), ensure_ascii=False), flush=True)
 
+        def replay_on_sleep():
+            try:
+                return chat.verify_recent_memory(args.sleep_replay)
+            except RevisionConflict:
+                return dict(action='defer', reason='reload_required')
+
         print('Awake controls: /status /relax /focus /sleep /wake /observe', file=sys.stderr, flush=True)
         with awake_chat_lines(
             chat.organism, sys.stdin, state_path, trained, chat.awake_individual, report,
             topic_labels=KEYS, clear_topics_on_sleep=args.awake_topic_recall,
+            on_sleep=replay_on_sleep if args.sleep_replay is not None else None,
         ) as (lines, observe_topic, consume_topic, bind_topic):
             if args.awake_topic_recall:
                 answer_lines(lines, observe_topic, consume_topic, bind_topic)

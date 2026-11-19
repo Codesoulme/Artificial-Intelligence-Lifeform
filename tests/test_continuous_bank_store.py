@@ -9,7 +9,7 @@ from unittest.mock import patch
 import torch
 
 from spora.continuous_bank_store import (
-    bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_slots_as_of,
+    bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_recent_snapshots, read_slots_as_of,
 )
 from spora.durable import RevisionConflict
 
@@ -20,6 +20,20 @@ class ContinuousBankStoreTests(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.path = Path(self.directory.name) / 'banks.sqlite3'
         self.payload = dict(banks={('drink', 1): torch.ones(2, 3)}, pages=[{}], addresses={'one': 0})
+
+    def test_replay_is_bounded_and_uses_the_newest_write_per_address(self):
+        revision, digests, _ = commit_banks(self.path, self.payload, None, {})
+        self.assertEqual(read_recent_snapshots(self.path, revision, 4), [])
+        for entity, number in ((0, 2), (1, 3), (0, 4), (0, 5)):
+            tensor = torch.full((2, 3), float(number))
+            revision, digests, _ = commit_banks(self.path, self.payload, revision, digests,
+                                                recorded=(entity, 'drink', tensor))
+        self.assertEqual([row[:3] for row in read_recent_snapshots(self.path, revision, 2)], [(0, 'drink', 4)])
+        rows = read_recent_snapshots(self.path, revision, 3)
+        self.assertEqual([row[:3] for row in rows], [(0, 'drink', 4), (1, 'drink', 2)])
+        torch.testing.assert_close(rows[0][3], torch.full((2, 3), 5.))
+        with self.assertRaises(RevisionConflict):
+            read_recent_snapshots(self.path, revision - 1, 3)
 
     def test_as_of_uses_commit_time_and_revision_to_break_ties(self):
         key = (0, 'drink', 1)

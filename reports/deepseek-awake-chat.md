@@ -187,3 +187,9 @@ cd D:/SPORA
 ```powershell
 .venv/Scripts/python.exe scripts/audit_awake_ordinary_generation.py --output runs/awake-ordinary-generation-v1.json
 ```
+
+## 睡眠时回放近期事实
+
+聊天入口支持 `--sleep-replay 16`。进入睡眠后按预算查看最近提交的快照，同一人物的同一字段只核对最新一次。回放比较快照与当前神经矩阵读出的词元，报告检查数、当前修订号和差异位置。单独运行 `--verify-replay 16` 可在随后启动的进程中执行同样的核对。旧版数据库没有写入快照时会返回零条。
+
+实机在 SQLite 副本上新增两条明确事实，进入睡眠关联三项快照，结果全部一致。连续两次睡眠命令只运行一次回放。唤醒后能读回新饮品和上一版饮品。另一份隔离副本将当前饮品矩阵置空，回放定位出沈亦的饮品与写入修订 7 不一致。源文件和该故障副本的摘要均通过核验。相关 28 项单元测试通过。[研究参考](../docs/anthropic-agent-memory-components-20261116.md)

@@ -101,6 +101,27 @@ def read_slots_as_of(path, entity, field, revision, cutoff_us):
         return unpack(*record) if record is not None else None
 
 
+def read_recent_snapshots(path, revision, limit):
+    """Read a bounded suffix of the append-only timeline, newest per field."""
+    if type(limit) is not int or not 1 <= limit <= 256:
+        raise ValueError('Replay budget must be between 1 and 256 writes')
+    with closing(sqlite3.connect(path.as_uri() + '?mode=rw', uri=True)) as conn, conn:
+        conn.execute('BEGIN')
+        active_revision, _ = _read_head(conn)
+        if active_revision != revision:
+            raise RevisionConflict('Continuous memory changed; reload before replay')
+        if conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='bank_timeline'").fetchone() is None:
+            return []
+        rows = conn.execute('SELECT entity, field, revision, dtype, shape, body, digest FROM bank_timeline '
+                            'ORDER BY rowid DESC LIMIT ?', (limit,))
+        latest = {}
+        for entity, field, write_revision, *record in rows:
+            key = entity, field
+            if key not in latest:
+                latest[key] = (entity, field, write_revision, unpack(*record))
+    return list(latest.values())
+
+
 def commit_banks(path, payload, revision, digests, *, changed=(), archive=None, recorded=None, hook=None):
     tensors = _tensors(payload)
     if not set(digests) <= tensors.keys():

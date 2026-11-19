@@ -21,7 +21,8 @@ SAVE_INTERVAL_NS = 5_000_000_000
 
 
 @contextmanager
-def awake_chat_lines(model, lines, path, trained_core, individual, report, *, topic_labels=(), clear_topics_on_sleep=False):
+def awake_chat_lines(model, lines, path, trained_core, individual, report, *, topic_labels=(), clear_topics_on_sleep=False,
+                     on_sleep=None):
     core_data = trained_core.read_bytes()
     core_digest = hashlib.sha256(core_data).hexdigest()
     provenance = dict(format=FORMAT, individual=individual, core_sha256=core_digest)
@@ -143,10 +144,12 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report, *, to
                     raise line
                 command = line.strip()
                 if command == '/status' or command in CONTROLS:
+                    entering_sleep = False
                     with state_changed:
                         mode = CONTROLS.get(command)
                         status = core.status()
                         if mode is not None and status['mode'] != mode:
+                            entering_sleep = mode == 'sleep'
                             tick()
                             if clear_topics_on_sleep and topics is not None and mode == 'sleep':
                                 topics.invalidate()
@@ -155,6 +158,8 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report, *, to
                             status = core.status()
                         if topics is not None:
                             status['topics'] = topics.status()
+                    if entering_sleep and on_sleep is not None:
+                        status['replay'] = on_sleep()
                     report(status)
                 elif command:
                     yield line
