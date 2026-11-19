@@ -24,7 +24,7 @@ def verify_matrix(chat, expected):
     for (entity, field, version), value in expected.items():
         tokens = [*encode(chat.tokenizer, value), chat.tokenizer.eos_token_id]
         tokens.extend([-1] * (SLOTS - len(tokens)))
-        if chat._read_tokens(chat.banks[field, version], entity) != tokens:
+        if chat._read_tokens(chat.bank_for(entity, field, version), entity) != tokens:
             raise ValueError(f'Matrix read differs: {entity}/{field}/{version}')
 
 
