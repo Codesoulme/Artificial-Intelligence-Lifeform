@@ -20,24 +20,27 @@ class AwakeTopics(nn.Module):
         self.register_buffer('drive', torch.zeros(len(self.labels)))
         self.register_buffer('activity', torch.zeros_like(self.drive))
         self.register_buffer('observations', torch.zeros((), dtype=torch.long))
-        self.register_buffer('binding', torch.full((2,), -1, dtype=torch.long), persistent=False)
+        self.register_buffer('binding', torch.full((3,), -1, dtype=torch.long), persistent=False)
 
-    def bind_read(self, entity, field):
+    def bind_read(self, entity, field, remaining=1):
         if type(entity) is not int or not 0 <= entity < 2**63:
             raise ValueError('Expected a nonnegative memory address')
+        if type(remaining) is not int or not 0 < remaining < 2**63:
+            raise ValueError('Expected a positive number of remaining turns')
         index = self.labels.index(field)
         self.binding[0] = entity
         self.binding[1] = index
+        self.binding[2] = remaining
 
     def consume_read(self):
-        entity, index = self.binding.tolist()
+        entity, index, remaining = self.binding.tolist()
         if entity < 0:
             return None
         self.binding.fill_(-1)
         field = self.labels[index]
         activity = self.status()['activity']
         if supports_field(activity, field):
-            return entity, field, activity[field] / sum(activity.values())
+            return entity, field, activity[field] / sum(activity.values()), remaining - 1
         return None
 
     def observe(self, probabilities):

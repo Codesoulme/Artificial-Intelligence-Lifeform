@@ -145,6 +145,7 @@ class ContinuousMemoryChat:
         self.inherited_router = inherited_router
         self.recall_intent = None
         self.same_subject_intent = None
+        self.subject_hops = 1
         self.gate_cutoff = setup['gate_cutoff'] if gate_cutoff is None else gate_cutoff
         self.cutoff = setup['cutoffs']['priority']
         self.working_path, self.working_sha, self.seed_sha = working_path, working_sha, seed_sha
@@ -326,7 +327,7 @@ class ContinuousMemoryChat:
         use_topic = eligible_binding and ((elliptical and probability >= self.gate_cutoff) or learned_repeat)
         use_subject = False
         if use_topic:
-            entity, selected, confidence = recent_read
+            entity, selected, confidence, _ = recent_read
             subject_reason = 'awake_recent_read'
             inherits = False
             predicted = dict(selected=selected, confidence=confidence)
@@ -389,6 +390,9 @@ class ContinuousMemoryChat:
                 if matches_memory_suffix(tokens, bias, self.tokenizer.eos_token_id):
                     start = 0
                     response = self.tokenizer.decode(tokens, skip_special_tokens=True).strip()
+                    if (use_subject and bind_topic is not None and recent_read[3] > 0
+                            and selected != recent_read[1]):
+                        confirmed = bind_topic(entity, selected, recent_read[3])
                 else:
                     action, reason, response = 'clarify', 'awake_read_unconfirmed', CLARIFY
             else:
@@ -400,7 +404,7 @@ class ContinuousMemoryChat:
                 else:
                     if (bind_topic is not None and subject_reason == 'named_subject' and version == 1 and not back
                             and as_of is None and matches_memory_suffix(tokens[start:], bias, self.tokenizer.eos_token_id)):
-                        confirmed = bind_topic(entity, selected)
+                        confirmed = bind_topic(entity, selected, self.subject_hops)
                     response = self.tokenizer.decode(tokens, skip_special_tokens=True).strip()
                     if requested_back:
                         response = f'{requested_back} 次更正前的记录是「{response}」。'
@@ -552,6 +556,8 @@ def main():
     parser.add_argument('--awake-topic-recall', action='store_true', help='Use verified recent reads for bounded follow-ups')
     parser.add_argument('--awake-recall-intent-head', type=Path, help='Load the experimental repeat-intent classifier')
     parser.add_argument('--awake-subject-intent-head', type=Path, help='Load the experimental same-person classifier')
+    parser.add_argument('--awake-subject-hops', type=int, choices=(1, 2, 3), default=1,
+                        help='Maximum consecutive verified same-person reads')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
@@ -569,6 +575,8 @@ def main():
         parser.error('--awake-recall-intent-head requires --awake-topic-recall')
     if args.awake_subject_intent_head is not None and not args.awake_topic_recall:
         parser.error('--awake-subject-intent-head requires --awake-topic-recall')
+    if args.awake_subject_hops > 1 and args.awake_subject_intent_head is None:
+        parser.error('--awake-subject-hops above 1 requires --awake-subject-intent-head')
     if not 0 <= args.back <= 2**63 - 1 or (args.back and (
             args.version != 1 or not uses_database(args.memory_file) or observation is not None
             or args.remember or args.register is not None or args.import_checkpoint is not None)):
@@ -659,6 +667,7 @@ def main():
                 parser.error('--awake-state needs a path separate from the subject intent head')
             width = chat.decoder.base.lm_head.weight.shape[1]
             chat.same_subject_intent = SameSubjectIntent.load(head_path, width, chat.recall_fingerprint)
+            chat.subject_hops = args.awake_subject_hops
 
         def report(status):
             print(json.dumps(dict(awake=status), ensure_ascii=False), flush=True)

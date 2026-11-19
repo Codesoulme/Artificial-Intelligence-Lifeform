@@ -81,11 +81,11 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report, *, to
                     return topics.consume_read()
             return None
 
-        def bind_topic(entity, field):
+        def bind_topic(entity, field, remaining=1):
             with state_changed:
                 if topics is None or int(core.mode) == 2 or stop.is_set():
                     return False
-                topics.bind_read(entity, field)
+                topics.bind_read(entity, field, remaining)
                 return True
 
         def run_clock():

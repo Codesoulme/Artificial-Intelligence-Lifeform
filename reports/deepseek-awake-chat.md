@@ -142,3 +142,5 @@ cd D:/SPORA
 .venv/Scripts/python.exe scripts/deepseek_awake_subject_switch.py --output runs/subject-intent.json --head runs/subject-intent.pt
 .venv/Scripts/python.exe scripts/deepseek_continuous_memory_chat.py --awake-state runs/awake-topic-recall.pt --awake-topic-recall --awake-recall-intent-head runs/recall-intent.pt --awake-subject-intent-head runs/subject-intent.pt --memory-file runs/deepseek-continuous-memory-capacity-batched/timeline-smoke.sqlite3 --inherited-router --retrained-gate --earlier-readout --json
 ```
+
+追加 `--awake-subject-hops 3` 可以复现连续改问实验。点名齐宁并读回饮品后，依次问职业、到访地点和饮品，读出「织机检修师」「新荷档案馆」「青杏冰茶」。第四次追问需要重新点名。在线模块的张量保存剩余次数，只有读回新字段并通过词元校验，才在扣减后保留人物。纯复述、本轮读取失败或请求澄清均结束这次承接。另一组中途点名温谨，复述返回温谨的值。提到未指明的其他人物后，下一条追问也要求重新点名。SQLite 摘要和 24 项相关单元测试通过。默认承接一次，三次模式的实机样本来自同一检查点。

@@ -42,9 +42,14 @@ class AwakeChatTests(unittest.TestCase):
         topics.observe([.95, .05])
         topics.advance(500_000_000)
         topics.bind_read(0, 'drink')
-        subject, field, confidence = topics.consume_read()
+        subject, field, confidence, remaining = topics.consume_read()
         self.assertEqual((subject, field), (0, 'drink'))
+        self.assertEqual(remaining, 0)
         self.assertAlmostEqual(confidence, .95)
+        self.assertIsNone(topics.consume_read())
+
+        topics.bind_read(0, 'drink', 3)
+        self.assertEqual(topics.consume_read()[3], 2)
         self.assertIsNone(topics.consume_read())
 
         topics.bind_read(1, 'work')
