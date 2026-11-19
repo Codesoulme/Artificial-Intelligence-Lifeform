@@ -19,10 +19,11 @@ from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilitie
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
 from spora.durable import RevisionConflict
 from spora.language_training import atomic_save
-from spora.research_continuous_observation import ADDRESSES, parse_observation
+from spora.research_continuous_observation import ADDRESSES, inherited_query_subject, parse_observation, query_subject
 from spora.working_checkpoint_lock import lock_working_checkpoint
 
 ENTITIES = tuple(ADDRESSES.values())
+ASK_SUBJECT = '请明确你想查询谁的记录。'
 WORKING_BANKS = TRANSFER_RUN / 'working-banks.pt'
 WORKING_FORMAT = 'spora-continuous-chat-banks-v1'
 
@@ -103,13 +104,24 @@ class ContinuousMemoryChat:
         return dict(action='stored', entity=entity, field=field)
 
     @torch.inference_mode()
-    def answer(self, question, entity, version, history=None, *, timing_threshold=THRESHOLD):
-        if entity not in ENTITIES or version not in (0, 1):
+    def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD):
+        if (entity is not None and entity not in ENTITIES) or version not in (0, 1):
             raise ValueError('Unknown experimental address or snapshot')
         row = dict(key='input', question=question, history=history, target_turn=0)
         features = features_for(self.decoder, self.tokenizer, row, False)
         probability, = gate_probabilities(self.inheritance, [row], {'input': features})
         inherits = bool(history) and probability >= self.gate_cutoff
+        subject_reason = 'specified_subject'
+        if entity is None:
+            entity, subject_reason = query_subject(question)
+            if entity is not None and history:
+                previous, _ = query_subject(history)
+                if previous != entity:
+                    inherits = False
+            elif subject_reason == 'no_subject' and inherits:
+                entity = inherited_query_subject(question, history)
+                if entity is not None:
+                    subject_reason = 'inherited_subject'
         router = self.contextual if inherits else self.direct
         if inherits:
             features = features_for(self.decoder, self.tokenizer, row, True)
@@ -122,7 +134,9 @@ class ContinuousMemoryChat:
         action = route_action(predicted, self.cutoff)
         start = None
         reason = action
-        if action == 'read':
+        if entity is None and (action in ('read', 'missing') or subject_reason != 'no_subject'):
+            action, reason, response = 'clarify', subject_reason, ASK_SUBJECT
+        elif action == 'read':
             address = self.site.current_basis[entity:entity + 1]
             bias = cosine_bias(self.site, self.banks[selected, version], address, self.codes, self.scale)
             if bias is None:
@@ -144,7 +158,7 @@ class ContinuousMemoryChat:
         else:
             response = MISSING if action == 'missing' else CLARIFY
         return dict(response=response, action=action, reason=reason, field=selected, confidence=predicted['confidence'],
-                    inherits=inherits, memory_start=start, entity=entity, version=version)
+                    inherits=inherits, memory_start=start, entity=entity, version=version, subject_reason=subject_reason)
 
 
 def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_retrained_gate=False):
@@ -245,8 +259,8 @@ def main():
     parser.add_argument('--json', action='store_true', help='Include routing and read diagnostics')
     args = parser.parse_args()
     observation = args.observe if args.observe is not None else args.preview_observation
-    if observation is None and args.entity is None:
-        parser.error('--entity is required for queries and field-based writes')
+    if args.remember and args.entity is None:
+        parser.error('--entity is required for field-based writes')
     if args.observe is not None and args.version != 1:
         parser.error('--observe updates version 1')
     if args.remember and (args.version != 1 or args.remember[0] not in FIELDS):

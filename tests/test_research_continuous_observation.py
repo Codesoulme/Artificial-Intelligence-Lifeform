@@ -1,9 +1,28 @@
 import unittest
 
-from spora.research_continuous_observation import parse_observation
+from spora.research_continuous_observation import inherited_query_subject, parse_observation, query_subject
 
 
 class ContinuousObservationTests(unittest.TestCase):
+    def test_query_subject_requires_one_bounded_mention(self):
+        for text, expected in (
+            ('何程平常最爱喝什么？', (47, 'named_subject')),
+            ('想查齐宁当时做的工作。', (26, 'named_subject')),
+            ('我翻了何程的资料，想核实他那阵子是靠什么营生的。', (47, 'named_subject')),
+            ('何程远平常最爱喝什么？', (None, 'unresolved_subject')),
+            ('何诚平常最爱喝什么？', (None, 'no_subject')),
+            ('齐宁和何程都喜欢喝什么？', (None, 'ambiguous_subject')),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(query_subject(text), expected)
+
+    def test_query_subject_inheritance_is_bounded(self):
+        history = '齐宁当时的工作有记录。'
+        self.assertEqual(inherited_query_subject('查到了就说一下。', history), 26)
+        self.assertIsNone(inherited_query_subject('何诚平常最爱喝什么？', history))
+        self.assertIsNone(inherited_query_subject('查到了就说一下。', '齐宁和何程当时的工作。'))
+        self.assertIsNone(inherited_query_subject('查到了就说一下。', None))
+
     def test_extracts_exact_subject_field_and_value(self):
         for text, expected in (
             ('何程现在最喜欢喝青梅花茶。', (47, 'drink', '青梅花茶')),
