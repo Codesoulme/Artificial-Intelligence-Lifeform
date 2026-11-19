@@ -17,6 +17,7 @@ from deepseek_memory_inheritance_gate import OUT as INHERITANCE_GATE_RUN
 from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
+from spora.continuous_bank_store import bank_revision, commit_banks, read_banks
 from spora.durable import RevisionConflict
 from spora.language_training import atomic_save
 from spora.research_continuous_observation import ADDRESSES, can_register, inherited_query_subject, parse_observation, query_subject
@@ -35,13 +36,29 @@ class InvalidMemoryValue(ValueError):
     """The submitted value cannot fit the continuous-memory slots."""
 
 
+def uses_database(path):
+    return path.suffix.lower() == '.sqlite3'
+
+
+def bank_payload(banks, seed_sha, addresses, filled, pages, page_size):
+    payload = dict(format=WORKING_FORMAT, seed_sha256=seed_sha, banks=banks,
+                   addresses=addresses, filled=sorted(filled))
+    if pages:
+        payload.update(format=PAGED_FORMAT, pages=list(pages), page_size=page_size)
+    return payload
+
+
 def load_working_banks(path, seed_banks, seed_sha):
+    tracked = {}
     if not path.exists():
-        return seed_banks, None, dict(ADDRESSES), SEED_FILLED, (), None
-    digest = sha(path)
-    payload = torch.load(path, map_location='cpu', weights_only=True)
-    if sha(path) != digest:
-        raise RevisionConflict('Continuous memory changed during load; retry')
+        return seed_banks, None, dict(ADDRESSES), SEED_FILLED, (), None, tracked
+    if uses_database(path):
+        payload, digest, tracked = read_banks(path.resolve())
+    else:
+        digest = sha(path)
+        payload = torch.load(path, map_location='cpu', weights_only=True)
+        if sha(path) != digest:
+            raise RevisionConflict('Continuous memory changed during load; retry')
     checkpoint_format = payload.get('format')
     if checkpoint_format not in (LEGACY_WORKING_FORMAT, WORKING_FORMAT, PAGED_FORMAT) or payload.get('seed_sha256') != seed_sha:
         raise ValueError('Working banks have incompatible provenance')
@@ -84,13 +101,13 @@ def load_working_banks(path, seed_banks, seed_sha):
                 template = seed_banks[field, 1]
                 if bank.shape != template.shape or bank.dtype != template.dtype or not bool(torch.isfinite(bank).all()):
                     raise ValueError('Invalid paged bank')
-    return banks, digest, addresses, filled, pages, page_size
+    return banks, digest, addresses, filled, pages, page_size, tracked
 
 
 class ContinuousMemoryChat:
     def __init__(self, decoder, tokenizer, site, banks, styles, timing, columns, contextual, direct, inheritance, setup,
                  *, working_path, working_sha, seed_sha, addresses, filled, pages=(), saved_page_size=None,
-                 inherited_router=None, gate_cutoff=None):
+                 inherited_router=None, gate_cutoff=None, bank_digests=None):
         self.decoder, self.tokenizer, self.site, self.banks = decoder, tokenizer, site, banks
         self.styles, self.timing, self.columns = styles, timing, columns
         self.contextual, self.direct, self.inheritance = contextual, direct, inheritance
@@ -98,6 +115,7 @@ class ContinuousMemoryChat:
         self.gate_cutoff = setup['gate_cutoff'] if gate_cutoff is None else gate_cutoff
         self.cutoff = setup['cutoffs']['priority']
         self.working_path, self.working_sha, self.seed_sha = working_path, working_sha, seed_sha
+        self.bank_digests = bank_digests if bank_digests is not None else {}
         self.page_size = site.current_basis.shape[0]
         if saved_page_size is not None and saved_page_size != self.page_size:
             raise ValueError('Saved page size does not match the address basis')
@@ -135,17 +153,21 @@ class ContinuousMemoryChat:
         return results
 
     def _check_revision(self):
-        current = sha(self.working_path) if self.working_path.exists() else None
+        if uses_database(self.working_path):
+            current = bank_revision(self.working_path)
+        else:
+            current = sha(self.working_path) if self.working_path.exists() else None
         if current != self.working_sha:
             raise RevisionConflict('Continuous memory changed; reload before writing')
 
-    def _save(self, banks, addresses, filled, pages):
-        payload = dict(format=WORKING_FORMAT, seed_sha256=self.seed_sha, banks=banks,
-                       addresses=addresses, filled=sorted(filled))
-        if pages:
-            payload.update(format=PAGED_FORMAT, pages=list(pages), page_size=self.page_size)
-        atomic_save(payload, self.working_path)
-        self.working_sha = sha(self.working_path)
+    def _save(self, banks, addresses, filled, pages, *, changed=()):
+        payload = bank_payload(banks, self.seed_sha, addresses, filled, pages, self.page_size)
+        if uses_database(self.working_path):
+            self.working_sha, self.bank_digests, _ = commit_banks(
+                self.working_path, payload, self.working_sha, self.bank_digests, changed=changed)
+        else:
+            atomic_save(payload, self.working_path)
+            self.working_sha = sha(self.working_path)
         self.banks, self.addresses, self.filled = banks, addresses, filled
         self.pages = pages
 
@@ -201,7 +223,7 @@ class ContinuousMemoryChat:
                 updated[field, 1] = candidate
             else:
                 pages[page - 1] = {**pages[page - 1], field: candidate}
-            self._save(updated, self.addresses, self.filled | {record}, tuple(pages))
+            self._save(updated, self.addresses, self.filled | {record}, tuple(pages), changed=((page, field, 1),))
         return dict(action='stored', entity=entity, field=field)
 
     @torch.inference_mode()
@@ -312,7 +334,8 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_ret
     if working_path in {path.resolve() for path in (*expected, plan_path)}:
         raise ValueError('Working memory requires its own checkpoint path')
     seed_banks = torch.load(paths['banks'], weights_only=True)
-    banks, working_sha, addresses, filled, pages, page_size = load_working_banks(working_path, seed_banks, expected[paths['banks']])
+    banks, working_sha, addresses, filled, pages, page_size, tracked = load_working_banks(
+        working_path, seed_banks, expected[paths['banks']])
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     base = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False,
@@ -343,7 +366,23 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_ret
                                 contextual, direct, inheritance, read(paths['routes']), working_path=working_path,
                                 working_sha=working_sha, seed_sha=expected[paths['banks']], inherited_router=previous,
                                 gate_cutoff=None if gate_result is None else gate_result['cutoffs']['tail'],
-                                addresses=addresses, filled=filled, pages=pages, saved_page_size=page_size)
+                                addresses=addresses, filled=filled, pages=pages, saved_page_size=page_size, bank_digests=tracked)
+
+
+def import_checkpoint(source, destination):
+    if uses_database(source) or not uses_database(destination) or not source.is_file():
+        raise ValueError('Import requires an existing .pt checkpoint and a new .sqlite3 destination')
+    seed = TRANSFER_RUN / 'banks.pt'
+    digest = read(TRANSFER_RUN / 'result.json')['artifact_sha256'][seed.name]
+    if sha(seed) != digest:
+        raise ValueError('Seed bank digest mismatch')
+    banks, _, addresses, filled, pages, page_size, _ = load_working_banks(source, torch.load(seed, weights_only=True), digest)
+    payload = bank_payload(banks, digest, addresses, filled, pages, page_size)
+    with lock_working_checkpoint(destination):
+        if destination.exists():
+            raise FileExistsError(destination)
+        revision, _, size = commit_banks(destination, payload, None, {})
+    return dict(action='imported', revision=revision, subjects=len(addresses), tensor_bytes_written=size)
 
 
 def main():
@@ -356,6 +395,7 @@ def main():
     operation.add_argument('--observe', metavar='STATEMENT')
     operation.add_argument('--preview-observation', metavar='STATEMENT')
     operation.add_argument('--register', metavar='NAME')
+    operation.add_argument('--import-checkpoint', type=Path, metavar='SOURCE_PT')
     parser.add_argument('--expand', action='store_true', help='Allocate one memory page when registration reaches capacity')
     parser.add_argument('--memory-file', type=Path, default=WORKING_BANKS)
     parser.add_argument('--history', help='Preceding user turn')
@@ -375,6 +415,9 @@ def main():
         parser.error('--remember updates version 1 and requires drink, work, or place')
     if args.retrained_gate and not args.inherited_router:
         parser.error('--retrained-gate requires --inherited-router')
+    if args.import_checkpoint is not None:
+        print(json.dumps(import_checkpoint(args.import_checkpoint.resolve(), args.memory_file.resolve())))
+        return
     if observation is not None:
         addresses = ADDRESSES
         if args.memory_file.exists():
@@ -382,7 +425,7 @@ def main():
             digest = read(TRANSFER_RUN / 'result.json')['artifact_sha256'][seed.name]
             if sha(seed) != digest:
                 raise ValueError('Seed bank digest mismatch')
-            _, _, addresses, _, _, _ = load_working_banks(args.memory_file, torch.load(seed, weights_only=True), digest)
+            _, _, addresses, _, _, _, _ = load_working_banks(args.memory_file, torch.load(seed, weights_only=True), digest)
         candidate = parse_observation(observation, addresses)
         if candidate is None:
             print(json.dumps(dict(action='defer', reason='unsupported_or_ambiguous_statement')))

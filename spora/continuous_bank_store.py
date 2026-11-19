@@ -1,0 +1,105 @@
+"""Transactional storage for continuous-memory bank tensors."""
+
+import json
+import os
+import sqlite3
+from contextlib import closing
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+from .durable import RevisionConflict, canonical, pack, sha, unpack
+
+
+def _tensors(payload):
+    banks = {(0, field, version): bank for (field, version), bank in payload['banks'].items()}
+    for index, page in enumerate(payload.get('pages', ()), start=1):
+        banks.update({(index, field, 1): bank for field, bank in page.items()})
+    return banks
+
+
+def bank_revision(path):
+    if not path.exists():
+        return None
+    with closing(sqlite3.connect(path.as_uri() + '?mode=rw', uri=True)) as conn:
+        row = conn.execute('SELECT revision FROM bank_head WHERE id=1').fetchone()
+        return row[0] if row else None
+
+
+def read_banks(path):
+    # Opening read-write allows SQLite to recover an interrupted transaction on load.
+    with closing(sqlite3.connect(path.as_uri() + '?mode=rw', uri=True)) as conn, conn:
+        conn.execute('BEGIN')
+        row = conn.execute('SELECT revision, manifest, digest FROM bank_head WHERE id=1').fetchone()
+        if row is None or sha(row[1].encode()) != row[2]:
+            raise ValueError('Bank manifest is missing or damaged')
+        revision, manifest, _ = row
+        data = json.loads(manifest)
+        records = conn.execute('SELECT page, field, version, dtype, shape, body, digest FROM bank_tensors').fetchall()
+        actual = [[*record[:3], record[-1]] for record in sorted(records, key=lambda record: record[:3])]
+        if data['digests'] != actual:
+            raise ValueError('Bank tensors differ from the manifest')
+        payload = data['metadata']
+        payload['banks'] = {}
+        if 'page_count' in payload:
+            payload['pages'] = [{} for _ in range(payload.pop('page_count'))]
+        for page, field, version, *record in records:
+            bank = unpack(*record)
+            if page == 0:
+                payload['banks'][field, version] = bank
+            elif 0 < page <= len(payload.get('pages', ())) and version == 1:
+                payload['pages'][page - 1][field] = bank
+            else:
+                raise ValueError('Bank tensor is outside its page layout')
+    return payload, revision, {tuple(row[:3]): row[3] for row in actual}
+
+
+def commit_banks(path, payload, revision, digests, *, changed=(), hook=None):
+    tensors = _tensors(payload)
+    if not set(digests) <= tensors.keys():
+        raise ValueError('Bank tensor removal is unsupported')
+    staged = {}
+    next_digests = dict(digests)
+    for key in (tensors.keys() - digests.keys()) | set(changed):
+        record = pack(tensors[key])
+        if digests.get(key) != record[-1]:
+            staged[key] = record
+            next_digests[key] = record[-1]
+    metadata = {key: value for key, value in payload.items() if key not in ('banks', 'pages')}
+    if 'pages' in payload:
+        metadata['page_count'] = len(payload['pages'])
+    manifest = canonical(dict(metadata=metadata, digests=[[*key, next_digests[key]] for key in sorted(tensors)]))
+    if revision is None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with TemporaryDirectory(dir=path.parent, prefix='.bank-init-') as folder:
+            temporary = Path(folder) / 'banks.sqlite3'
+            next_revision = _commit(temporary, manifest, staged, revision, hook)
+            try:
+                os.link(temporary, path)
+            except FileExistsError as error:
+                raise RevisionConflict('Continuous memory was created by another writer') from error
+    else:
+        next_revision = _commit(path, manifest, staged, revision, hook)
+    return next_revision, next_digests, sum(len(record[2]) for record in staged.values())
+
+
+def _commit(path, manifest, staged, revision, hook):
+    mode = 'rwc' if revision is None else 'rw'
+    with closing(sqlite3.connect(path.as_uri() + '?mode=' + mode, uri=True, timeout=5)) as conn, conn:
+        conn.execute('PRAGMA synchronous=FULL')
+        conn.execute('BEGIN IMMEDIATE')
+        conn.execute('CREATE TABLE IF NOT EXISTS bank_head (id INTEGER PRIMARY KEY CHECK(id=1), '
+                     'revision INTEGER NOT NULL, manifest TEXT NOT NULL, digest TEXT NOT NULL)')
+        conn.execute('CREATE TABLE IF NOT EXISTS bank_tensors (page INTEGER, field TEXT, version INTEGER, '
+                     'dtype TEXT NOT NULL, shape TEXT NOT NULL, body BLOB NOT NULL, digest TEXT NOT NULL, '
+                     'PRIMARY KEY(page, field, version))')
+        found = conn.execute('SELECT revision FROM bank_head WHERE id=1').fetchone()
+        if (found[0] if found else None) != revision:
+            raise RevisionConflict('Continuous memory changed; reload before writing')
+        conn.executemany('INSERT OR REPLACE INTO bank_tensors VALUES (?,?,?,?,?,?,?)',
+                         [(*key, *record) for key, record in staged.items()])
+        next_revision = 0 if revision is None else revision + 1
+        conn.execute('INSERT OR REPLACE INTO bank_head VALUES (1,?,?,?)',
+                     (next_revision, manifest, sha(manifest.encode())))
+        if hook is not None:
+            hook()
+    return next_revision

@@ -116,3 +116,23 @@ cd D:/SPORA
 用满载检查点的副本验证了扩容，在新页登记地址 64 和 65，写入两条饮品记录并更正其中一条。76 条矩阵记录全部通过读回校验，旧页张量逐项相同。新对象空字段和初始快照返回无记录。独立进程按姓名读出了更正后的“蜜瓜冰茶”，源检查点摘要一致。
 
 这次扩容将可分配地址从 64 增至 128，实测用到 66 个。新增一个饮品矩阵后，检查点从 1,559,240 字节增至 1,818,692 字节。更新仍会原子保存整个文件，多页长期运行的写盘成本和更大规模的读写延迟尚待测量。
+
+## 多页增量保存
+
+将 `--memory-file` 指向 `.sqlite3` 文件可使用增量存储，`.pt` 仍可直接读写。导入命令创建一个新的目标文件，沿用原检查点的姓名、字段状态与矩阵。此后的更正只提交变化的矩阵和同一事务中的元数据。首次发布需要目标目录所在的文件系统支持硬链接，加载需要写权限，以便 SQLite 恢复未完成的事务。
+
+```powershell
+.venv/Scripts/python.exe scripts/deepseek_continuous_memory_chat.py --import-checkpoint 'runs/deepseek-continuous-memory-capacity-batched/expanded-smoke.pt' --memory-file 'runs/continuous-memory.sqlite3'
+.venv/Scripts/python.exe scripts/deepseek_continuous_memory_chat.py --observe '沈亦现在最喜欢喝荔枝冰茶。' --memory-file 'runs/continuous-memory.sqlite3'
+.venv/Scripts/python.exe scripts/deepseek_continuous_memory_chat.py --question '沈亦平常最爱喝什么？' --memory-file 'runs/continuous-memory.sqlite3' --json
+```
+
+实机从两页 `.pt` 检查点导入 66 个对象，提交一句中文更正，随后在独立进程中读出“荔枝冰茶”。与导入源逐项比较，只有第二页的饮品矩阵变化，源文件摘要一致。存储测试覆盖了重复初始化冲突、旧版本提交、损坏张量校验以及一次强制终止进程后从回滚日志恢复上一版。
+
+| 新增矩阵页数 | 整文件保存中位耗时 | SQLite 增量提交中位耗时 |
+|---:|---:|---:|
+| 1 | 29.9 毫秒 | 22.1 毫秒 |
+| 8 | 54.3 毫秒 | 23.0 毫秒 |
+| 32 | 200.9 毫秒 | 24.5 毫秒 |
+
+基准复制饮品矩阵构造各规模，每组交替运行八次整文件保存和增量提交，每次改动最后一页的一个矩阵。增量提交每次包含 259,200 字节的矩阵数据，另有 SQLite 元数据和回滚日志。耗时仅覆盖存储调用，尚未评估多页模型的完整对话延迟。当前启动时会加载全部矩阵到内存。
