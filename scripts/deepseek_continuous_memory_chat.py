@@ -1,8 +1,9 @@
-"""Interactive read-only chat for the continuous-memory research checkpoint."""
+"""Interactive chat and explicit writes for the continuous-memory research checkpoint."""
 
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from deepseek_aligned_memory_calibration import load_adapter
 from deepseek_aligned_memory_dialogue import OUT as ADAPTER_RUN, RANK, generate_with_memory
@@ -13,21 +14,85 @@ from deepseek_memory_dialogue_context import OUT as DIALOGUE_RUN, features_for, 
 from deepseek_memory_field_decoding import FIELDS, OUT as FIELD_RUN
 from deepseek_memory_field_transfer import OUT as TRANSFER_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
-from deepseek_output_aligned_memory import MODEL, SEED, SOURCE, fresh, load_integrated, read, sha, torch
+from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
+from spora.durable import RevisionConflict
+from spora.language_training import atomic_save
+from spora.working_checkpoint_lock import lock_working_checkpoint
 
 ENTITIES = (26, 47)
+WORKING_BANKS = TRANSFER_RUN / 'working-banks.pt'
+WORKING_FORMAT = 'spora-continuous-chat-banks-v1'
+
+
+def load_working_banks(path, seed_banks, seed_sha):
+    if not path.exists():
+        return seed_banks, None
+    digest = sha(path)
+    payload = torch.load(path, map_location='cpu', weights_only=True)
+    if sha(path) != digest:
+        raise RevisionConflict('Continuous memory changed during load; retry')
+    if payload.get('format') != WORKING_FORMAT or payload.get('seed_sha256') != seed_sha:
+        raise ValueError('Working banks have incompatible provenance')
+    banks = payload['banks']
+    if set(banks) != set(seed_banks):
+        raise ValueError('Working banks have incompatible fields or versions')
+    for key, original in seed_banks.items():
+        bank = banks[key]
+        if (bank.shape != original.shape or bank.dtype != original.dtype or not bool(torch.isfinite(bank).all())
+                or (key[1] == 0 and not torch.equal(bank, original))):
+            raise ValueError('Invalid working bank')
+    return banks, digest
 
 
 class ContinuousMemoryChat:
-    def __init__(self, decoder, tokenizer, site, banks, styles, timing, columns, contextual, direct, inheritance, setup):
+    def __init__(self, decoder, tokenizer, site, banks, styles, timing, columns, contextual, direct, inheritance, setup,
+                 *, working_path, working_sha, seed_sha):
         self.decoder, self.tokenizer, self.site, self.banks = decoder, tokenizer, site, banks
         self.styles, self.timing, self.columns = styles, timing, columns
         self.contextual, self.direct, self.inheritance = contextual, direct, inheritance
         self.gate_cutoff = setup['gate_cutoff']
         self.cutoff = setup['cutoffs']['priority']
+        self.working_path, self.working_sha, self.seed_sha = working_path, working_sha, seed_sha
         weight = decoder.base.lm_head.weight
         basis = torch.linalg.qr(torch.randn(weight.shape[1], RANK, generator=torch.Generator().manual_seed(SEED))).Q
         self.codes, self.scale = projected_codebook(weight, basis.to(weight.device))
+
+    def _read_tokens(self, bank, entity):
+        address = self.site.current_basis[entity:entity + 1]
+        slots = read_bank(self.site, bank, address).to(self.codes.device)[:, :RANK]
+        scores = torch.nn.functional.normalize(slots, dim=-1) @ self.codes.T
+        return scores.argmax(dim=-1).masked_fill(slots.norm(dim=-1) < .2, -1).tolist()
+
+    @torch.inference_mode()
+    def remember(self, entity, field, value):
+        if entity not in ENTITIES or field not in FIELDS:
+            raise ValueError('Unknown experimental address or field')
+        tokens = encode(self.tokenizer, value.strip())
+        if not 1 <= len(tokens) < SLOTS or set(tokens) & set(self.tokenizer.all_special_ids):
+            raise ValueError(f'Value must have 1 to {SLOTS - 1} non-special tokens')
+        tokens.append(self.tokenizer.eos_token_id)
+        bank = self.banks[field, 1]
+        other, = (key for key in ENTITIES if key != entity)
+        expected = tokens + [-1] * (SLOTS - len(tokens))
+        with lock_working_checkpoint(self.working_path):
+            current = sha(self.working_path) if self.working_path.exists() else None
+            if current != self.working_sha:
+                raise RevisionConflict('Continuous memory changed; reload before writing')
+            if self._read_tokens(bank, entity) == expected:
+                return dict(action='already_stored', entity=entity, field=field)
+            target = torch.zeros_like(bank[:, :, 0])
+            target[:len(tokens), :RANK] = self.codes[tokens].cpu()
+            candidate = write_bank(self.site, bank, self.site.current_basis[entity:entity + 1], target)
+            if self._read_tokens(candidate, entity) != expected:
+                raise ValueError('Candidate matrix did not reproduce the written value')
+            if self._read_tokens(candidate, other) != self._read_tokens(bank, other):
+                raise ValueError('Candidate matrix changed the other address')
+            updated = dict(self.banks)
+            updated[field, 1] = candidate
+            atomic_save(dict(format=WORKING_FORMAT, seed_sha256=self.seed_sha, banks=updated), self.working_path)
+            self.working_sha = sha(self.working_path)
+            self.banks = updated
+        return dict(action='stored', entity=entity, field=field)
 
     @torch.inference_mode()
     def answer(self, question, entity, version, history=None):
@@ -69,7 +134,7 @@ class ContinuousMemoryChat:
                     inherits=inherits, memory_start=start, entity=entity, version=version)
 
 
-def load_chat():
+def load_chat(working_path=WORKING_BANKS):
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     paths = dict(adapter=ADAPTER_RUN / 'candidate.pt', styles=FIELD_RUN / 'field-adapters.pt',
@@ -88,6 +153,11 @@ def load_chat():
     for path, digest in expected.items():
         if sha(path) != digest:
             raise ValueError(f'Artifact digest mismatch: {path}')
+    working_path = Path(working_path).resolve()
+    if working_path in {path.resolve() for path in (*expected, plan_path)}:
+        raise ValueError('Working memory requires its own checkpoint path')
+    seed_banks = torch.load(paths['banks'], weights_only=True)
+    banks, working_sha = load_working_banks(working_path, seed_banks, expected[paths['banks']])
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     base = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False,
@@ -109,20 +179,28 @@ def load_chat():
     direct.load_state_dict(priority['direct'])
     inheritance = torch.nn.Linear(width, 1).eval()
     inheritance.load_state_dict(priority['inheritance'])
-    banks = torch.load(paths['banks'], weights_only=True)
     return ContinuousMemoryChat(decoder, tokenizer, organism.memories[0], banks, styles, timing, columns,
-                                contextual, direct, inheritance, read(paths['routes']))
+                                contextual, direct, inheritance, read(paths['routes']), working_path=working_path,
+                                working_sha=working_sha, seed_sha=expected[paths['banks']])
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--entity', type=int, choices=ENTITIES, required=True)
     parser.add_argument('--version', type=int, choices=(0, 1), default=1)
-    parser.add_argument('--question')
+    operation = parser.add_mutually_exclusive_group()
+    operation.add_argument('--question')
+    operation.add_argument('--remember', nargs=2, metavar=('FIELD', 'VALUE'))
+    parser.add_argument('--memory-file', type=Path, default=WORKING_BANKS)
     parser.add_argument('--history', help='Preceding user turn')
     parser.add_argument('--json', action='store_true', help='Include routing and read diagnostics')
     args = parser.parse_args()
-    chat = load_chat()
+    if args.remember and (args.version != 1 or args.remember[0] not in FIELDS):
+        parser.error('--remember updates version 1 and requires drink, work, or place')
+    chat = load_chat(args.memory_file)
+    if args.remember:
+        print(json.dumps(chat.remember(args.entity, *args.remember), ensure_ascii=False))
+        return
     history = args.history
     lines = sys.stdin if args.question is None else (args.question,)
     if args.question is None and sys.stdin.isatty():
