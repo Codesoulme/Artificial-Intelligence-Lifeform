@@ -43,3 +43,15 @@
 .venv/Scripts/python.exe scripts/train_awake_partial_layer.py --output runs/partial
 .venv/Scripts/python.exe scripts/train_awake_partial_layer.py --output runs/partial-output --steps 0 --output-steps 48 --start runs/partial/partial-layer.pt
 ```
+
+## 复用预训练投影，把记忆读入前馈网络
+
+借鉴 Net2Net 保留初始函数再改结构的做法，将预训练的门控和上投影合成一个线性映射，保留 SiLU 与下投影。将原先在层末加入的孢子记忆残差按设定比例移到该层前馈输入。第 6、12 层替换块沿用同一集成检查点。[Net2Net 论文](https://arxiv.org/abs/1511.05641)
+
+第 5 层和第 17 层的单层实验中，三条关闭记忆的普通题在改动前后逐词元一致。仅融合投影时，两条问句分别在以咖啡、水为事实的状态下正确生成，四个条件均与原路径一致。将读取全部移入前馈入口后，两层分别都失去全部四个正确输出。第 5 层将 5% 或 15% 的残差移入前馈入口时，保留四个正确值。比例 30% 时保留三个。
+
+固定第 5 层 15% 后，另用两个地址、各两次写入测试当前值和历史值。原路径和新路径均正确生成 3/4 项。两边都漏读了阿宁的历史值「果汁」，并给出不同的无关介绍。本轮使用实验直接指定的地址和版本。新计算仍依赖原有层末读取，大范围迁移需重新对齐读取位置。运行文件不覆盖正式检查点。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_feedforward_memory.py --layer 5 --fraction 0.15 --output runs/feedforward-memory.json
+```

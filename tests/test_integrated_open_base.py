@@ -47,6 +47,52 @@ def make_reader():
 
 
 class IntegratedOpenBaseTests(unittest.TestCase):
+    def test_feedforward_transplant_preserves_plain_output_and_reads_each_selected_row_once(self):
+        class GatedMLP(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.gate_proj = nn.Linear(3, 4, bias=False)
+                self.up_proj = nn.Linear(3, 4, bias=False)
+                self.down_proj = nn.Linear(4, 3, bias=False)
+                self.act_fn = nn.SiLU()
+
+            def forward(self, x):
+                return self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
+
+        class GatedDecoder(Decoder):
+            def __init__(self):
+                super().__init__()
+                self.mlp = GatedMLP()
+
+            def forward(self, x):
+                return x + self.mlp(x)
+
+        base, reader = Base(), make_reader()
+        base.model.layers[0] = GatedDecoder()
+        model = IntegratedOpenBase(base, reader, (0, 2))
+        values = torch.randn(2, 2, 3)
+        plain = model(values)
+        with self.assertRaisesRegex(ValueError, 'compatible'):
+            model.use_feedforward_memory(2)
+        model.use_feedforward_memory(0)
+        model.use_feedforward_memory(0)
+        torch.testing.assert_close(model(values), plain)
+        calls = []
+        hook = reader.register_forward_hook(lambda module, args, output: calls.append((args[2], args[0].shape[0])))
+        try:
+            result = model(values, memory_state=make_state(1.), current_only=True,
+                           memory_read_mask=torch.tensor([True, False]))
+        finally:
+            hook.remove()
+        self.assertEqual(calls, [(0, 1), (1, 1)])
+        torch.testing.assert_close(result[1], plain[1])
+        self.assertFalse(torch.allclose(result[0], plain[0]))
+        model.use_feedforward_memory(0, fraction=.15)
+        mixed = model(values, memory_state=make_state(1.), current_only=True,
+                      memory_read_mask=torch.tensor([True, False]))
+        torch.testing.assert_close(mixed[1], plain[1])
+        self.assertFalse(torch.allclose(mixed[0], result[0]))
+
     def test_native_dynamic_address_cannot_read_future_tokens(self):
         torch.manual_seed(90)
         reader = NativeSPORAMemoryReader(3, 3, 1.0).eval()

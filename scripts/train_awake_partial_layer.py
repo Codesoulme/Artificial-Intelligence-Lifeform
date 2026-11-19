@@ -90,7 +90,7 @@ def refine_output(decoder, tokenizer, student, original, teacher, teacher_layers
 def main(output, steps, output_steps, start):
     sources = {path: sha(path) for path in (SOURCE, MODEL/'model.safetensors', *TRAIN_FILES)}
     torch.manual_seed(SEED)
-    decoder, tokenizer, originals, replacements = load_layer_pair()
+    decoder, tokenizer, originals, replacements, _, _ = load_layer_pair()
     original = originals[LAYER]
     teacher = original.mlp
     student = SPORAFeedForward(copy.deepcopy(replacements[LAYER].block.ff)).requires_grad_(True)

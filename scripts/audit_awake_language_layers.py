@@ -29,20 +29,20 @@ def load_layer_pair():
     del payload
     base = load_full_streamed()
     originals = {i: base.model.layers[i] for i in indices}
-    decoder, _, _ = load_integrated(SOURCE, base, MODEL)
+    decoder, organism, state = load_integrated(SOURCE, base, MODEL)
     decoder.eval().requires_grad_(False)
     replacements = {i: base.model.layers[i] for i in indices}
     if not all(isinstance(block, SPORALayerReplacement) for block in replacements.values()):
         raise ValueError('Unexpected active replacement type')
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True)
-    return decoder, tokenizer, originals, replacements
+    return decoder, tokenizer, originals, replacements, organism, state
 
 
 @torch.inference_mode()
 def main(output, limit):
     checkpoint_hash = sha(SOURCE)
     base_hash = sha(MODEL / 'model.safetensors')
-    decoder, tokenizer, originals, replacements = load_layer_pair()
+    decoder, tokenizer, originals, replacements, _, _ = load_layer_pair()
     base = decoder.base
     indices = tuple(originals)
     cases = []

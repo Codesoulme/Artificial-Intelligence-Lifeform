@@ -121,17 +121,56 @@ class NativeSPORAMemoryReader(ScaledOpenBaseMemory):
         return hidden + self.strength * (injected.to(device=hidden.device, dtype=hidden.dtype) - hidden)
 
 
+class SPORAGatedFeedForward(nn.Module):
+    """Fused pretrained feed-forward projection with a native memory input."""
+
+    def __init__(self, source, read_memory=None):
+        super().__init__()
+        gate, up, down = source.gate_proj, source.up_proj, source.down_proj
+        if gate.weight.shape != up.weight.shape or gate.bias is not None or up.bias is not None:
+            raise ValueError('Expected matching bias-free gate and up projections')
+        weights = torch.cat((gate.weight.detach(), up.weight.detach()), dim=0)
+        self.projection = nn.Linear(gate.in_features, 2 * gate.out_features, bias=False, device='meta')
+        self.projection.weight = nn.Parameter(weights, requires_grad=gate.weight.requires_grad or up.weight.requires_grad)
+        self.down = down
+        self.activation = source.act_fn
+        self.read_memory = read_memory
+
+    def forward(self, hidden):
+        if self.read_memory is not None:
+            hidden = self.read_memory(hidden)
+        gate, value = self.projection(hidden).chunk(2, dim=-1)
+        return self.down(self.activation(gate) * value)
+
+
 class _MemoryDecoderLayer(nn.Module):
     def __init__(self, layer, reader, site, context):
         super().__init__()
         self.layer = layer
         self.attention_type = layer.attention_type
         self.site = site
+        self.feedforward_fraction = 0.
         object.__setattr__(self, '_reader', reader)
         object.__setattr__(self, '_memory_context', context)
 
     def forward(self, *args, **kwargs):
         output = self.layer(*args, **kwargs)
+        if self.feedforward_fraction == 1. or self._memory_context.get() is None:
+            return output
+        read = self.read_memory(output)
+        if self.feedforward_fraction == 0.:
+            return read
+        return output + (1. - self.feedforward_fraction) * (read - output)
+
+    def read_feedforward_memory(self, hidden):
+        if self.feedforward_fraction == 0. or self._memory_context.get() is None:
+            return hidden
+        read = self.read_memory(hidden)
+        if self.feedforward_fraction == 1.:
+            return read
+        return hidden + self.feedforward_fraction * (read - hidden)
+
+    def read_memory(self, output):
         active = self._memory_context.get()
         if active is None:
             return output
@@ -218,6 +257,20 @@ class IntegratedOpenBase(nn.Module):
         self._memory_context = ContextVar('spora_integrated_memory', default=None)
         for site, index in enumerate(self.layer_indices):
             layers[index] = _MemoryDecoderLayer(layers[index], reader, site, self._memory_context)
+
+    def use_feedforward_memory(self, layer_index, *, fraction=1.):
+        """Move a fraction of one configured reader into its feed-forward input."""
+        if type(layer_index) is not int or layer_index not in self.layer_indices:
+            raise ValueError('Expected a configured memory layer index')
+        if type(fraction) not in (int, float) or not math.isfinite(fraction) or not 0. <= fraction <= 1.:
+            raise ValueError('Feed-forward memory fraction must be finite and in [0, 1]')
+        wrapper = self.base.model.layers[layer_index]
+        source = getattr(wrapper.layer, 'mlp', None)
+        if not isinstance(source, SPORAGatedFeedForward):
+            if source is None or any(not hasattr(source, name) for name in ('gate_proj', 'up_proj', 'down_proj', 'act_fn')):
+                raise ValueError('Memory layer does not expose a compatible gated feed-forward network')
+            wrapper.layer.mlp = SPORAGatedFeedForward(source, wrapper.read_feedforward_memory).train(source.training)
+        wrapper.feedforward_fraction = float(fraction)
 
     @contextmanager
     def _snapshot(self, state, addresses, current_only, read_mask, memory_slots,

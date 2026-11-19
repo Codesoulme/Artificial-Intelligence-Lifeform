@@ -83,7 +83,7 @@ def evaluate(decoder, tokenizer, cases, teacher):
 def main(output, steps, learning_rate, reference_weight):
     protected = {path: sha(path) for path in (SOURCE, MODEL / 'model.safetensors')}
     torch.manual_seed(SEED)
-    decoder, tokenizer, originals, replacements = load_layer_pair()
+    decoder, tokenizer, originals, replacements, _, _ = load_layer_pair()
     train = encode_cases(tokenizer, TRAIN)
     held = encode_cases(tokenizer, tuple(zip(QUESTIONS, REFERENCES, strict=True)))
     if {question for question, _, _ in train} & {question for question, _, _ in held}:
