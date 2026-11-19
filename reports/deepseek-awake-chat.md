@@ -181,3 +181,9 @@ cd D:/SPORA
 ```powershell
 .venv/Scripts/python.exe scripts/deepseek_awake_ordinary_route.py --output runs/ordinary-route.json --head runs/ordinary-intent.pt
 ```
+
+对六条普通问题比较三种解码设置。直接生成的 64 词元版本有 2/6 条自然终止，扩大至 192 词元后有 4/6 条自然终止，算术答案完整，但两条解释和翻译错误依旧。开启推理并以 0.6 温度采样的 256 词元版本有 6/6 条自然终止，算术正确，热水解释、饮品推荐和翻译仍有明显错误。增加输出预算缓解了截断，普通对话的准确性仍需单独改进。本轮解码对照保留于实验脚本。[DeepSeek-R1 使用建议](https://github.com/deepseek-ai/DeepSeek-R1#usage-recommendations)
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_ordinary_generation.py --output runs/awake-ordinary-generation-v1.json
+```
