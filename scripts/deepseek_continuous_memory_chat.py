@@ -22,7 +22,7 @@ from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
 from spora.awake_chat import awake_chat_lines
-from spora.awake_recall_intent import RecallIntent
+from spora.awake_recall_intent import SUBJECT_SCOPE_CONFLICT, RecallIntent, SameSubjectIntent
 from spora.continuous_bank_store import (
     bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_slots_as_of,
 )
@@ -144,6 +144,7 @@ class ContinuousMemoryChat:
         self.contextual, self.direct, self.inheritance = contextual, direct, inheritance
         self.inherited_router = inherited_router
         self.recall_intent = None
+        self.same_subject_intent = None
         self.gate_cutoff = setup['gate_cutoff'] if gate_cutoff is None else gate_cutoff
         self.cutoff = setup['cutoffs']['priority']
         self.working_path, self.working_sha, self.seed_sha = working_path, working_sha, seed_sha
@@ -315,11 +316,15 @@ class ContinuousMemoryChat:
                     inherits = False
         elliptical = False
         learned_repeat = False
+        scope_conflict = False
         if consume_topic is not None and subject_reason == 'no_subject':
             elliptical = ELLIPTICAL_QUERY.fullmatch(question.strip()) is not None
+            scope_conflict = self.same_subject_intent is not None and SUBJECT_SCOPE_CONFLICT.search(question) is not None
             learned_repeat = self.recall_intent is not None and self.recall_intent(*features[:2])
-        use_topic = (recent_read is not None and version == 1 and not back and as_of is None and history_issue is None
-                     and ((elliptical and probability >= self.gate_cutoff) or learned_repeat))
+        eligible_binding = (recent_read is not None and version == 1 and not back and as_of is None
+                            and history_issue is None and not scope_conflict)
+        use_topic = eligible_binding and ((elliptical and probability >= self.gate_cutoff) or learned_repeat)
+        use_subject = False
         if use_topic:
             entity, selected, confidence = recent_read
             subject_reason = 'awake_recent_read'
@@ -338,6 +343,11 @@ class ContinuousMemoryChat:
                 router = self.inherited_router
                 route_features = features_for(self.decoder, self.tokenizer, dict(question=history), False)
             predicted, = route(router, [row], {'input': route_features})
+            if (eligible_binding and entity is None and subject_reason == 'no_subject' and self.same_subject_intent is not None
+                    and route_action(predicted, self.cutoff) == 'read' and self.same_subject_intent(*features[:2])):
+                entity = recent_read[0]
+                subject_reason = 'awake_same_subject'
+                use_subject = True
             if topic_observer is not None and not (elliptical or learned_repeat):
                 topic_observer(predicted['probabilities'])
         selected = predicted['selected']
@@ -373,7 +383,7 @@ class ContinuousMemoryChat:
                                    self.codes, self.scale)
             if bias is None:
                 action, reason, response = 'missing', missing_reason, MISSING
-            elif use_topic:
+            elif use_topic or use_subject:
                 ids = torch.tensor([features[3]], device=bias.device)
                 tokens = generate_memory_suffix(self.decoder, self.tokenizer, ids, 2 * bias, SLOTS)
                 if matches_memory_suffix(tokens, bias, self.tokenizer.eos_token_id):
@@ -541,6 +551,7 @@ def main():
     parser.add_argument('--awake-state', type=Path, help='Persist the experimental awake core during stdin chat')
     parser.add_argument('--awake-topic-recall', action='store_true', help='Use verified recent reads for bounded follow-ups')
     parser.add_argument('--awake-recall-intent-head', type=Path, help='Load the experimental repeat-intent classifier')
+    parser.add_argument('--awake-subject-intent-head', type=Path, help='Load the experimental same-person classifier')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
@@ -556,6 +567,8 @@ def main():
         parser.error('--awake-topic-recall requires --awake-state')
     if args.awake_recall_intent_head is not None and not args.awake_topic_recall:
         parser.error('--awake-recall-intent-head requires --awake-topic-recall')
+    if args.awake_subject_intent_head is not None and not args.awake_topic_recall:
+        parser.error('--awake-subject-intent-head requires --awake-topic-recall')
     if not 0 <= args.back <= 2**63 - 1 or (args.back and (
             args.version != 1 or not uses_database(args.memory_file) or observation is not None
             or args.remember or args.register is not None or args.import_checkpoint is not None)):
@@ -640,6 +653,12 @@ def main():
                 parser.error('--awake-state needs a path separate from the recall intent head')
             width = chat.decoder.base.lm_head.weight.shape[1]
             chat.recall_intent = RecallIntent.load(head_path, width, chat.recall_fingerprint)
+        if args.awake_subject_intent_head is not None:
+            head_path = args.awake_subject_intent_head.resolve()
+            if state_path == head_path:
+                parser.error('--awake-state needs a path separate from the subject intent head')
+            width = chat.decoder.base.lm_head.weight.shape[1]
+            chat.same_subject_intent = SameSubjectIntent.load(head_path, width, chat.recall_fingerprint)
 
         def report(status):
             print(json.dumps(dict(awake=status), ensure_ascii=False), flush=True)

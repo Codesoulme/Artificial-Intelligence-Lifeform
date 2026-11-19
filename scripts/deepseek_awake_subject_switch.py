@@ -9,8 +9,9 @@ from deepseek_continuous_memory_chat import load_chat
 from deepseek_memory_attribute_span import route_action
 from deepseek_memory_dialogue_context import features_for, route
 from deepseek_memory_turn_priority import gate_probabilities, train_inheritance
-from deepseek_output_aligned_memory import sha, write
-from spora.awake_recall_intent import intent_features
+from deepseek_output_aligned_memory import sha, torch, write
+from spora.awake_recall_intent import SUBJECT_SCOPE_CONFLICT, SameSubjectIntent, intent_features
+from spora.language_training import atomic_save
 from spora.research_continuous_observation import query_subject
 
 
@@ -61,12 +62,8 @@ HOLDOUT = (
     ('drink', '再看一下这个人的饮料偏好。'), ('switch', '再看一下温谨的饮料偏好。'),
 )
 SUPPORTED = frozenset(('drink', 'work', 'place'))
+INTENTS = ('follow', 'switch', 'history', 'time', 'ordinary', 'repeat')
 PRONOUN = re.compile(r'^(?:那|再查查|再问问|也查一下)?(?:他|她|那位|这位|此人|这个人)|^(?:还是)?同一(?:个)?(?:人|位|对象)')
-CONFLICTING_SCOPE = re.compile(
-    r'更正|修正|改动前|更改前|更新以?前|原先登记|原始记录|原来的值|旧版|过去的版本|'
-    r'哪[一天月日时]点?|何时|什么时候|几点|几月|'
-    r'另[一外]|换.{0,4}(?:人|对象)|下[一个]位|新的对象'
-)
 
 
 def rows_for(group):
@@ -81,7 +78,7 @@ def assess(rows, destinations):
 
 
 def guarded_field(row, cutoff):
-    if row['subject_score'] >= cutoff and not CONFLICTING_SCOPE.search(row['question']):
+    if row['subject_score'] >= cutoff and not SUBJECT_SCOPE_CONFLICT.search(row['question']):
         return row['direct']
     return None
 
@@ -94,7 +91,28 @@ def choose_guarded_cutoff(rows):
     return min((.5, .6, .7, .8, .9, .95, 1.), key=rank)
 
 
-def main(database, output):
+def train_intents(rows, features):
+    vectors = torch.stack([features[row['key']][0] for row in rows])
+    labels = torch.tensor([INTENTS.index(row['kind']) for row in rows])
+    weights = labels.bincount(minlength=len(INTENTS)).float().reciprocal()
+    torch.manual_seed(82437)
+    head = torch.nn.Linear(vectors.shape[1], len(INTENTS))
+    optimizer = torch.optim.AdamW(head.parameters(), lr=.025, weight_decay=.04)
+    for _ in range(400):
+        optimizer.zero_grad(set_to_none=True)
+        loss = torch.nn.functional.cross_entropy(head(vectors), labels, weight=weights)
+        loss.backward()
+        optimizer.step()
+    return head.eval().requires_grad_(False)
+
+
+def multiclass_field(row, cutoff):
+    if row['intent'] == 'follow' and row['intent_score'] >= cutoff:
+        return row['direct']
+    return None
+
+
+def main(database, output, head_path=None):
     digest = sha(database)
     groups = {name: rows_for(group) for name, group in (
         ('train', TRAIN), ('calibration', CALIBRATION), ('probe', PROBE), ('holdout', HOLDOUT),
@@ -106,6 +124,7 @@ def main(database, output):
     features = {question: features_for(chat.decoder, chat.tokenizer, dict(question=question), False) for question in prompts}
     pooled = {question: (intent_features(*feature[:2]), *feature[1:]) for question, feature in features.items()}
     head = train_inheritance(groups['train'], pooled)
+    intent_head = train_intents(groups['train'], pooled)
     calibration = groups['calibration']
     cutoff = choose_cutoff(calibration, gate_probabilities(head, calibration, pooled))
     detailed_groups = {}
@@ -113,33 +132,50 @@ def main(database, output):
         rows = groups[name]
         predictions = route(chat.direct, rows, features)
         scores = gate_probabilities(head, rows, pooled)
+        logits = intent_head(torch.stack([pooled[row['key']][0] for row in rows]))
+        intent_scores, intent_ids = logits.softmax(-1).max(-1)
         details = []
-        for row, prediction, score in zip(rows, predictions, scores, strict=True):
+        for row, prediction, score, intent_score, intent_id in zip(rows, predictions, scores, intent_scores.tolist(),
+                                                                  intent_ids.tolist(), strict=True):
             question = row['question']
             _, subject_status = query_subject(question, chat.addresses)
             field = prediction['selected'] if subject_status == 'no_subject' and route_action(prediction, chat.cutoff) == 'read' else None
             details.append(dict(row, direct=field, pronoun=field if PRONOUN.search(question) else None,
-                                learned=field if score >= cutoff else None, subject_score=score))
+                                learned=field if score >= cutoff else None, subject_score=score,
+                                intent=INTENTS[intent_id], intent_score=intent_score))
         detailed_groups[name] = details
     guarded_cutoff = choose_guarded_cutoff(detailed_groups['calibration'])
+    multiclass_calibration = [dict(row, subject_score=row['intent_score'] if row['intent'] == 'follow' else 0.)
+                              for row in detailed_groups['calibration']]
+    multiclass_cutoff = choose_guarded_cutoff(multiclass_calibration)
     results = {}
     for name, rows in detailed_groups.items():
         for row in rows:
             row['guarded'] = guarded_field(row, guarded_cutoff)
-        summary = {mode: assess(rows, [row[mode] for row in rows]) for mode in ('direct', 'pronoun', 'learned', 'guarded')}
+            row['multiclass'] = multiclass_field(row, multiclass_cutoff)
+            row['guarded_multiclass'] = row['multiclass'] if not SUBJECT_SCOPE_CONFLICT.search(row['question']) else None
+        summary = {mode: assess(rows, [row[mode] for row in rows])
+                   for mode in ('direct', 'pronoun', 'learned', 'guarded', 'multiclass', 'guarded_multiclass')}
         results[name] = dict(summary=summary, rows=rows)
         print(name, summary, flush=True)
     if sha(database) != digest:
         raise ValueError('Source memory database changed during audit')
-    write(output, dict(cutoff=cutoff, guarded_cutoff=guarded_cutoff, database_sha256=digest,
+    write(output, dict(cutoff=cutoff, guarded_cutoff=guarded_cutoff, multiclass_cutoff=multiclass_cutoff, database_sha256=digest,
                        train=groups['train'], results=results))
+    if head_path is not None:
+        atomic_save(dict(format=SameSubjectIntent.format, fingerprint=chat.recall_fingerprint,
+                         cutoff=guarded_cutoff, state=head.state_dict()), head_path)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--database', type=Path, default=DEFAULT_DATABASE)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--head', type=Path, help='Export the binary same-subject head for opt-in chat')
     args = parser.parse_args()
-    if args.output.exists():
-        raise FileExistsError(args.output)
-    main(args.database, args.output)
+    for path in (args.output, args.head):
+        if path is not None and path.exists():
+            raise FileExistsError(path)
+    if args.head is not None and args.head.resolve() == args.output.resolve():
+        parser.error('--output and --head require separate paths')
+    main(args.database, args.output, args.head)

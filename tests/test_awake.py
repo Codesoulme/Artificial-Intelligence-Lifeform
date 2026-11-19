@@ -5,7 +5,7 @@ from unittest.mock import patch
 import torch
 from spora.awake import AwakeConfig,AwakeCore,attach_awake
 from spora.awake_chat import awake_chat_lines
-from spora.awake_recall_intent import FORMAT as RECALL_INTENT_FORMAT, RecallIntent
+from spora.awake_recall_intent import FORMAT as RECALL_INTENT_FORMAT, RecallIntent, SameSubjectIntent
 from spora.awake_session import AwakeSession
 from spora.awake_topics import AwakeTopics, supports_field
 from spora.language_training import atomic_save
@@ -29,6 +29,8 @@ class AwakeChatTests(unittest.TestCase):
             torch.save(payload, path)
             loaded = RecallIntent.load(path, 2, fingerprint)
             self.assertTrue(loaded(torch.ones(2), torch.ones(3, 2)))
+            with self.assertRaisesRegex(ValueError, 'different format'):
+                SameSubjectIntent.load(path, 2, fingerprint)
             with self.assertRaisesRegex(ValueError, 'different decoder'):
                 RecallIntent.load(path, 2, {'model.safetensors': 'model-b'})
             torch.save(dict(payload, cutoff=float('nan')), path)

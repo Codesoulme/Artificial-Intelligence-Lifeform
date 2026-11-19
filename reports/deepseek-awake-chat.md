@@ -133,3 +133,12 @@ cd D:/SPORA
 ```powershell
 .venv/Scripts/python.exe scripts/deepseek_awake_subject_switch.py --output runs/deepseek-awake-subject-switch-guarded.json
 ```
+
+把换人、历史、时间、普通请求和复述分开训练的多分类器，在同一留出集上仍为 4/10，范围检查后的误放为 0/10。另将正确的人物和字段直接交给解码器，首词元起注入通过 16/16，常规读取通过 14/16。两项失败分别来自回答开场未触发读取，以及字段置信度不足。
+
+实机可通过 `--awake-subject-intent-head` 启用经过范围检查的二分类器。它沿用模型在线状态里已核验的人物，由当前问句选择新字段，并从首词元起读回和校验。三个实机序列验证齐宁的饮品转职业、职业转到访地点、到访地点转饮品。随后连续用同一句改问时均需重新点名。时间、未指明的其他人物、更正以前的记录三个对照均未读出事实。点名切换到温谨后，复述读出了温谨的值。唤醒后无人物绑定，SQLite 摘要保持一致。这组实机验证覆盖固定检查点和三个字段，新措辞命中率以留出结果为准。
+
+```powershell
+.venv/Scripts/python.exe scripts/deepseek_awake_subject_switch.py --output runs/subject-intent.json --head runs/subject-intent.pt
+.venv/Scripts/python.exe scripts/deepseek_continuous_memory_chat.py --awake-state runs/awake-topic-recall.pt --awake-topic-recall --awake-recall-intent-head runs/recall-intent.pt --awake-subject-intent-head runs/subject-intent.pt --memory-file runs/deepseek-continuous-memory-capacity-batched/timeline-smoke.sqlite3 --inherited-router --retrained-gate --earlier-readout --json
+```
