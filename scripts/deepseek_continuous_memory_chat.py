@@ -29,10 +29,12 @@ from spora.continuous_bank_store import (
 )
 from spora.durable import RevisionConflict, pack
 from spora.language_training import atomic_save
+from spora.online_time import OnlineSession, OnlineState
 from spora.research_continuous_observation import (
     ADDRESSES, ELLIPTICAL_QUERY, can_register, inherited_query_subject, parse_observation, query_subject, split_history_query,
 )
 from spora.working_checkpoint_lock import lock_working_checkpoint
+from spora.world_time import TimeWorld
 
 ENTITIES = tuple(ADDRESSES.values())
 ASK_SUBJECT = '请明确你想查询谁的记录。'
@@ -42,6 +44,7 @@ WORKING_FORMAT = 'spora-continuous-chat-banks-v2'
 PAGED_FORMAT = 'spora-continuous-chat-banks-v3'
 SEED_FILLED = frozenset((entity, field, version) for entity in ENTITIES for field in FIELDS for version in (0, 1))
 UTC_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
+DEMO_WORLD_ACTIONS = ((0., 0.), (.5, 0.), (-.5, 0.), (0., .5), (0., -.5))
 
 
 def parse_as_of(text):
@@ -680,6 +683,7 @@ def main():
     parser.add_argument('--history', help='Preceding user turn')
     parser.add_argument('--awake-state', type=Path, help='Persist the experimental awake core during stdin chat')
     parser.add_argument('--sleep-replay', type=int, metavar='WRITES', help='Verify recent writes when entering sleep')
+    parser.add_argument('--sleep-world', type=Path, help='Load a bounded P11 world model for synthetic sleep simulations')
     parser.add_argument('--awake-topic-recall', action='store_true', help='Use verified recent reads for bounded follow-ups')
     parser.add_argument('--awake-recall-intent-head', type=Path, help='Load the experimental repeat-intent classifier')
     parser.add_argument('--awake-subject-intent-head', type=Path, help='Load the experimental same-person classifier')
@@ -702,6 +706,8 @@ def main():
     if args.sleep_replay is not None and (args.awake_state is None or not uses_database(args.memory_file)
                                           or not 1 <= args.sleep_replay <= 256):
         parser.error('--sleep-replay requires --awake-state, a SQLite file and a budget from 1 to 256 writes')
+    if args.sleep_world is not None and args.awake_state is None:
+        parser.error('--sleep-world requires --awake-state')
     observation = args.observe if args.observe is not None else args.preview_observation
     if args.awake_state is not None and (args.question is not None or observation is not None or args.remember
                                          or args.register is not None or args.import_checkpoint is not None
@@ -774,6 +780,13 @@ def main():
         print(json.dumps(chat.remember(args.entity, *args.remember), ensure_ascii=False))
         return
     timing_threshold = EARLY_TIMING_THRESHOLD if args.earlier_readout else THRESHOLD
+    world_session = None
+    if args.sleep_world is not None:
+        world_path = args.sleep_world.resolve()
+        if world_path in (chat.working_path, args.awake_state.resolve()):
+            parser.error('--sleep-world requires a separate model file')
+        chat.organism.time_world, _ = TimeWorld.load(world_path)
+        world_session = OnlineSession(chat.organism.time_world, OnlineState())
     if args.ordinary_intent_head is not None:
         ordinary_path = args.ordinary_intent_head.resolve()
         if ordinary_path == chat.working_path or (args.awake_state is not None and ordinary_path == args.awake_state.resolve()):
@@ -796,6 +809,19 @@ def main():
             if not question:
                 continue
             command = question.split(maxsplit=1)
+            if world_session is not None and command[0] == '/world':
+                if consume_topic is not None:
+                    consume_topic()
+                history = None
+                try:
+                    numbers = [float(token) for token in command[1].split()] if len(command) == 2 else []
+                    world_session.observe_world(numbers[:3], numbers[3:5], numbers[5:], 'synthetic')
+                except ValueError:
+                    world = dict(action='defer', reason='expected_supported_world_observation')
+                else:
+                    world = dict(action='world_observed', source='synthetic', count=world_session.state.world_count)
+                print(json.dumps(world, ensure_ascii=False), flush=True)
+                continue
             if args.question is None and command[0] in ('/observe', '/记住'):
                 if consume_topic is not None:
                     consume_topic()
@@ -851,16 +877,23 @@ def main():
             print(json.dumps(dict(awake=status), ensure_ascii=False), flush=True)
 
         def replay_on_sleep():
-            try:
-                return chat.verify_recent_memory(args.sleep_replay)
-            except RevisionConflict:
-                return dict(action='defer', reason='reload_required')
+            result = {}
+            if world_session is not None:
+                result['imagination'] = world_session.imagine([[action] * 4 for action in DEMO_WORLD_ACTIONS], [.25] * 4)
+                if result['imagination']['kind'] == 'simulation':
+                    result['imagination']['actions'] = DEMO_WORLD_ACTIONS
+            if args.sleep_replay is not None:
+                try:
+                    result['replay'] = chat.verify_recent_memory(args.sleep_replay)
+                except RevisionConflict:
+                    result['replay'] = dict(action='defer', reason='reload_required')
+            return result
 
         print('Awake controls: /status /relax /focus /sleep /wake /observe', file=sys.stderr, flush=True)
         with awake_chat_lines(
             chat.organism, sys.stdin, state_path, trained, chat.awake_individual, report,
             topic_labels=KEYS, clear_topics_on_sleep=args.awake_topic_recall,
-            on_sleep=replay_on_sleep if args.sleep_replay is not None else None,
+            on_sleep=replay_on_sleep if args.sleep_replay is not None or world_session is not None else None,
         ) as (lines, observe_topic, consume_topic, bind_topic):
             if args.awake_topic_recall:
                 answer_lines(lines, observe_topic, consume_topic, bind_topic)

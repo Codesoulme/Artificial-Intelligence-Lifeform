@@ -159,7 +159,7 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report, *, to
                         if topics is not None:
                             status['topics'] = topics.status()
                     if entering_sleep and on_sleep is not None:
-                        status['replay'] = on_sleep()
+                        status.update(on_sleep())
                     report(status)
                 elif command:
                     yield line

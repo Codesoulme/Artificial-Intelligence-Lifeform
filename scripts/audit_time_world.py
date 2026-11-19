@@ -6,18 +6,14 @@ from pathlib import Path
 import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from spora.world_time import TimeWorld, WorldTimeConfig
+from spora.world_time import TimeWorld
 from spora.online_time import OnlineSession, OnlineState
 from train_time_world import sample, environment_step
 
 
 def load_module(path):
-    data = torch.load(path, map_location='cpu', weights_only=True)
-    if data['format'] != 'spora-time-world-v1':
-        raise ValueError('Unknown time module')
-    model = TimeWorld(WorldTimeConfig(**data['config']))
-    model.load_state_dict(data['state'])
-    return model.eval(), data['training']
+    model, data = TimeWorld.load(path)
+    return model, data['training']
 
 
 @torch.no_grad()

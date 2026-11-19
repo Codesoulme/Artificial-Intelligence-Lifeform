@@ -33,6 +33,26 @@ class OnlineTests(unittest.TestCase):
     def observation(self, session=None):
         (session or self.session).observe_world([0., .4, -.2], [.5, .2], [.4, .3], 'synthetic')
 
+    def test_imagination_requires_fresh_observation_and_preserves_runtime(self):
+        actions = [[[.5, 0.], [0., 0.]], [[-.5, 0.], [0., 0.]]]
+        self.assertEqual(self.session.imagine(actions, [.25, .25]), {'kind': 'needs_observation'})
+        self.observation()
+        before = copy.deepcopy(self.state)
+        result = self.session.imagine(actions, [.25, .25])
+        self.assertEqual(result['kind'], 'simulation')
+        self.assertEqual(result['observation'], 1)
+        self.assertEqual(result['source'], 'synthetic')
+        first_state = self.module.predict(before.tensors['observed'], torch.tensor([[.5, 0.]]),
+                                          before.tensors['environment'], .25)
+        torch.testing.assert_close(torch.tensor(result['states'][0][0]), first_state[0])
+        self.assertEqual(self.state.metadata(), before.metadata())
+        for key, tensor in before.tensors.items():
+            torch.testing.assert_close(self.state.tensors[key], tensor)
+        with self.assertRaisesRegex(ValueError, 'validated window'):
+            self.session.imagine(actions, [1., 1.5])
+        self.clock.advance(2_000_000_001)
+        self.assertEqual(self.session.imagine(actions, [.25, .25]), {'kind': 'needs_observation'})
+
     def model_state(self):
         model = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=16,
             expert_rank=4, memory_layers=(0, 1), history_writer='rls'))

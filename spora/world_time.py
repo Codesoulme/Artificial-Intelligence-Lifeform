@@ -31,6 +31,17 @@ class TimeWorld(nn.Module):
     def config_dict(self):
         return asdict(self.config)
 
+    @classmethod
+    def load(cls, path):
+        data = torch.load(path, map_location='cpu', weights_only=True)
+        if data['format'] != 'spora-time-world-v1':
+            raise ValueError('Unknown time module')
+        model = cls(WorldTimeConfig(**data['config']))
+        model.load_state_dict(data['state'], strict=True)
+        if any(not bool(torch.isfinite(tensor).all()) for tensor in model.parameters()):
+            raise ValueError('World model weights must be finite')
+        return model.eval().requires_grad_(False), data
+
     def derivative(self, state, action, environment):
         return self.field(torch.cat([state, action, environment], -1))
 
@@ -60,6 +71,34 @@ class TimeWorld(nn.Module):
             k4 = self.derivative(x+h*k3, action, environment)
             x = x+h*(k1+2*k2+2*k3+k4)/6
         return x
+
+    @torch.inference_mode()
+    def imagine(self, state, actions, environment, durations):
+        """Roll out bounded alternative actions from the same observed state."""
+        if (state.shape != (1, 3) or actions.ndim != 3 or actions.shape[-1] != 2
+                or not 1 <= actions.shape[0] <= 64 or not 1 <= actions.shape[1] <= 16
+                or environment.shape != (1, 2) or durations.shape != (actions.shape[1],)):
+            raise ValueError('Expected one observed start and 1–64 plans of at most 16 actions')
+        if not all(tensor.device == state.device and tensor.dtype == state.dtype and bool(torch.isfinite(tensor).all())
+                   for tensor in (state, actions, environment, durations)):
+            raise ValueError('Imagined inputs must be finite with the same device and dtype')
+        if (bool((state.abs() > state.new_tensor([3., 2., 2.])).any()) or bool((actions.abs() > 1.).any())
+                or bool(((environment < .15) | (environment > .8)).any())):
+            raise ValueError('Imagined inputs are outside the training domain')
+        if bool((durations <= 0).any()) or float(durations.double().sum()) > self.config.max_horizon:
+            raise ValueError('Imagined duration exceeds the validated window')
+        current = state.expand(actions.shape[0], -1)
+        parameters = environment.expand(actions.shape[0], -1)
+        active = torch.ones(actions.shape[0], device=state.device, dtype=torch.bool)
+        bound = state.new_tensor([3., 2., 2.])
+        states, supported = [], []
+        for action, duration in zip(actions.unbind(1), durations.unbind(), strict=True):
+            predicted = self.predict(current, action, parameters, duration)
+            active = active & (predicted.abs() <= bound).all(dim=-1)
+            current = torch.where(active[:, None], predicted, current)
+            states.append(current)
+            supported.append(active)
+        return torch.stack(states, dim=1), torch.stack(supported, dim=1)
 
     def period(self, intervals):
         if intervals.ndim != 2 or intervals.shape[-1] != 2 or not bool(torch.isfinite(intervals).all()) or bool((intervals <= 0).any()):

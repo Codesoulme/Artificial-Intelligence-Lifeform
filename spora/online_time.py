@@ -109,6 +109,20 @@ class OnlineSession:
         s.world_count += 1
         s.world_valid, s.world_source = True, source
 
+    def imagine(self, actions, durations):
+        elapsed = self.monotonic_ns() - self.anchor
+        if elapsed < 0:
+            raise ValueError('Monotonic clock moved backwards')
+        state = self.state
+        if not state.world_valid or (state.world_age_ns + elapsed) / 1e9 > self.module.config.max_horizon:
+            return dict(kind='needs_observation')
+        observed, environment = state.tensors['observed'], state.tensors['environment']
+        plans = torch.as_tensor(actions, device=observed.device, dtype=observed.dtype)
+        steps = torch.as_tensor(durations, device=observed.device, dtype=observed.dtype)
+        states, in_domain = self.module.imagine(observed, plans, environment, steps)
+        return dict(kind='simulation', observation=state.world_count, source=state.world_source,
+                    states=states.tolist(), in_domain=in_domain.tolist())
+
     def pulse(self, source):
         if source not in ('synthetic', 'sensor'):
             raise ValueError('Label the source of actual input')
