@@ -3,6 +3,7 @@
 import argparse
 import json
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from deepseek_aligned_memory_calibration import load_adapter
@@ -17,7 +18,9 @@ from deepseek_memory_inheritance_gate import OUT as INHERITANCE_GATE_RUN
 from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
-from spora.continuous_bank_store import bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks
+from spora.continuous_bank_store import (
+    bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_slots_as_of,
+)
 from spora.durable import RevisionConflict, pack
 from spora.language_training import atomic_save
 from spora.research_continuous_observation import (
@@ -32,6 +35,17 @@ LEGACY_WORKING_FORMAT = 'spora-continuous-chat-banks-v1'
 WORKING_FORMAT = 'spora-continuous-chat-banks-v2'
 PAGED_FORMAT = 'spora-continuous-chat-banks-v3'
 SEED_FILLED = frozenset((entity, field, version) for entity in ENTITIES for field in FIELDS for version in (0, 1))
+UTC_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
+
+
+def parse_as_of(text):
+    try:
+        value = datetime.fromisoformat(text)
+        if value.tzinfo is None:
+            raise ValueError('Timezone required')
+        return (value - UTC_EPOCH) // timedelta(microseconds=1)
+    except (OverflowError, ValueError) as error:
+        raise argparse.ArgumentTypeError('Use an ISO 8601 timestamp with Z or a UTC offset') from error
 
 
 class InvalidMemoryValue(ValueError):
@@ -175,11 +189,12 @@ class ContinuousMemoryChat:
         if current != self.working_sha:
             raise RevisionConflict('Continuous memory changed; reload before writing')
 
-    def _save(self, banks, addresses, filled, pages, *, changed=(), archive=None):
+    def _save(self, banks, addresses, filled, pages, *, changed=(), archive=None, recorded=None):
         payload = bank_payload(banks, self.seed_sha, addresses, filled, pages, self.page_size)
         if uses_database(self.working_path):
             self.working_sha, self.bank_digests, _ = commit_banks(
-                self.working_path, payload, self.working_sha, self.bank_digests, changed=changed, archive=archive)
+                self.working_path, payload, self.working_sha, self.bank_digests, changed=changed, archive=archive,
+                recorded=recorded)
             banks = dict.fromkeys(banks)
             pages = tuple(dict.fromkeys(page) for page in pages)
         else:
@@ -242,25 +257,31 @@ class ContinuousMemoryChat:
             else:
                 pages[page - 1] = {**pages[page - 1], field: candidate}
             archive = None
-            if record in self.filled and uses_database(self.working_path):
-                previous = read_bank(self.site, bank, self._local_address(entity))[:, :RANK]
-                archive = entity, field, previous
+            recorded = None
+            if uses_database(self.working_path):
+                address = self._local_address(entity)
+                recorded = entity, field, read_bank(self.site, candidate, address)[:, :RANK]
+                if record in self.filled:
+                    archive = entity, field, read_bank(self.site, bank, address)[:, :RANK]
             self._save(updated, self.addresses, self.filled | {record}, tuple(pages),
-                       changed=((page, field, 1),), archive=archive)
+                       changed=((page, field, 1),), archive=archive, recorded=recorded)
         return dict(action='stored', entity=entity, field=field)
 
     @torch.inference_mode()
-    def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD, back=0):
+    def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD, back=0, as_of=None):
         if (entity is not None and entity not in self.addresses.values()) or version not in (0, 1):
             raise ValueError('Unknown experimental address or snapshot')
         if type(back) is not int or not 0 <= back <= 2**63 - 1 or (back and (version != 1 or not uses_database(self.working_path))):
             raise ValueError('Historical recall requires a SQLite checkpoint and version 1')
+        if as_of is not None and (back or version != 1 or not uses_database(self.working_path)):
+            raise ValueError('Timestamp recall requires a version-1 SQLite query without --back')
+        as_of_utc = (UTC_EPOCH + timedelta(microseconds=as_of)).isoformat() if as_of is not None else None
         question, requested_back = split_history_query(question)
         history_issue = None
         if requested_back is None:
             history_issue = 'invalid_history_query'
         elif requested_back:
-            if back and requested_back != back:
+            if as_of is not None or (back and requested_back != back):
                 history_issue = 'conflicting_history_offsets'
             elif version != 1 or not uses_database(self.working_path):
                 history_issue = 'history_requires_sqlite'
@@ -297,17 +318,21 @@ class ContinuousMemoryChat:
         reason = action
         if history_issue is not None:
             action, reason, response = 'clarify', history_issue, CLARIFY
-        elif entity is None and (requested_back or action in ('read', 'missing') or subject_reason != 'no_subject'):
+        elif entity is None and (requested_back or as_of is not None or action in ('read', 'missing') or subject_reason != 'no_subject'):
             action, reason, response = 'clarify', subject_reason, ASK_SUBJECT
-        elif requested_back and action == 'ordinary':
+        elif (requested_back or as_of is not None) and action == 'ordinary':
             action, reason, response = 'clarify', 'history_field_unresolved', CLARIFY
         elif action == 'read' and (entity, selected, version) not in self.filled:
             action, reason, response = 'missing', 'unwritten_field', MISSING
         elif action == 'read':
             missing_reason = 'empty_matrix'
-            if back:
-                archive = (read_archived_slots(self.working_path, entity, selected, self.working_sha, back)
-                           if self.working_sha is not None else None)
+            if back or as_of is not None:
+                archive = None
+                if self.working_sha is not None:
+                    if as_of is None:
+                        archive = read_archived_slots(self.working_path, entity, selected, self.working_sha, back)
+                    else:
+                        archive = read_slots_as_of(self.working_path, entity, selected, self.working_sha, as_of)
                 if archive is not None and (archive.shape != (SLOTS, RANK) or archive.dtype != self.bank_specs[selected, 1][1]):
                     raise ValueError('Archived memory shape or dtype differs from the model layout')
                 bias = cosine_slot_bias(archive, self.codes, self.scale) if archive is not None else None
@@ -327,6 +352,8 @@ class ContinuousMemoryChat:
                     response = self.tokenizer.decode(tokens, skip_special_tokens=True).strip()
                     if requested_back:
                         response = f'{requested_back} 次更正前的记录是「{response}」。'
+                    elif as_of_utc is not None:
+                        response = f'截至 {as_of_utc} 的记录是「{response}」。'
         elif action == 'ordinary':
             ids = torch.tensor([features[3]], device=self.codes.device)
             tokens = self.decoder.generate(input_ids=ids, attention_mask=torch.ones_like(ids), do_sample=False,
@@ -339,6 +366,8 @@ class ContinuousMemoryChat:
                       inherits=inherits, memory_start=start, entity=entity, version=version, subject_reason=subject_reason)
         if back:
             result['corrections_back'] = back
+        if as_of_utc is not None:
+            result['as_of_utc'] = as_of_utc
         return result
 
 
@@ -447,6 +476,7 @@ def main():
     parser.add_argument('--entity', type=int)
     parser.add_argument('--version', type=int, choices=(0, 1), default=1)
     parser.add_argument('--back', type=int, default=0, help='Read this many SQLite corrections back for the selected field')
+    parser.add_argument('--as-of', type=parse_as_of, help='Read the latest SQLite observation at a timestamp with timezone')
     operation = parser.add_mutually_exclusive_group()
     operation.add_argument('--question')
     operation.add_argument('--remember', nargs=2, metavar=('FIELD', 'VALUE'))
@@ -469,6 +499,10 @@ def main():
             args.version != 1 or not uses_database(args.memory_file) or observation is not None
             or args.remember or args.register is not None or args.import_checkpoint is not None)):
         parser.error('--back requires a version-1 SQLite query')
+    if args.as_of is not None and (args.back or args.version != 1 or not uses_database(args.memory_file)
+                                   or observation is not None or args.remember or args.register is not None
+                                   or args.import_checkpoint is not None):
+        parser.error('--as-of requires a version-1 SQLite query without --back')
     if args.remember and args.entity is None:
         parser.error('--entity is required for field-based writes')
     if args.observe is not None and args.version != 1:
@@ -527,7 +561,8 @@ def main():
         question = line.strip()
         if not question:
             continue
-        result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold, back=args.back)
+        result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold,
+                             back=args.back, as_of=args.as_of)
         print(json.dumps(result, ensure_ascii=False) if args.json else result['response'], flush=True)
         history = question
 

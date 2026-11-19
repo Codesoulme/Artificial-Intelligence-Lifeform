@@ -3,6 +3,7 @@
 import json
 import os
 import sqlite3
+import time
 from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -86,7 +87,21 @@ def read_archived_slots(path, entity, field, revision, back):
         return unpack(*record) if record is not None else None
 
 
-def commit_banks(path, payload, revision, digests, *, changed=(), archive=None, hook=None):
+def read_slots_as_of(path, entity, field, revision, cutoff_us):
+    with closing(sqlite3.connect(path.as_uri() + '?mode=rw', uri=True)) as conn, conn:
+        conn.execute('BEGIN')
+        found = conn.execute('SELECT revision FROM bank_head WHERE id=1').fetchone()
+        if found is None or found[0] != revision:
+            raise RevisionConflict('Continuous memory changed; reload before reading history')
+        if conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='bank_timeline'").fetchone() is None:
+            return None
+        record = conn.execute('SELECT dtype, shape, body, digest FROM bank_timeline '
+                              'WHERE entity=? AND field=? AND recorded_us<=? '
+                              'ORDER BY recorded_us DESC, revision DESC LIMIT 1', (entity, field, cutoff_us)).fetchone()
+        return unpack(*record) if record is not None else None
+
+
+def commit_banks(path, payload, revision, digests, *, changed=(), archive=None, recorded=None, hook=None):
     tensors = _tensors(payload)
     if not set(digests) <= tensors.keys():
         raise ValueError('Bank tensor removal is unsupported')
@@ -102,21 +117,22 @@ def commit_banks(path, payload, revision, digests, *, changed=(), archive=None, 
         metadata['page_count'] = len(payload['pages'])
     manifest = canonical(dict(metadata=metadata, digests=[[*key, next_digests[key]] for key in sorted(tensors)]))
     previous = None if archive is None else (archive[0], archive[1], *pack(archive[2]))
+    snapshot = None if recorded is None else (recorded[0], recorded[1], *pack(recorded[2]))
     if revision is None:
         path.parent.mkdir(parents=True, exist_ok=True)
         with TemporaryDirectory(dir=path.parent, prefix='.bank-init-') as folder:
             temporary = Path(folder) / 'banks.sqlite3'
-            next_revision = _commit(temporary, manifest, staged, revision, previous, hook)
+            next_revision = _commit(temporary, manifest, staged, revision, previous, snapshot, hook)
             try:
                 os.link(temporary, path)
             except FileExistsError as error:
                 raise RevisionConflict('Continuous memory was created by another writer') from error
     else:
-        next_revision = _commit(path, manifest, staged, revision, previous, hook)
+        next_revision = _commit(path, manifest, staged, revision, previous, snapshot, hook)
     return next_revision, next_digests, sum(len(record[2]) for record in staged.values())
 
 
-def _commit(path, manifest, staged, revision, previous, hook):
+def _commit(path, manifest, staged, revision, previous, snapshot, hook):
     mode = 'rwc' if revision is None else 'rw'
     with closing(sqlite3.connect(path.as_uri() + '?mode=' + mode, uri=True, timeout=5)) as conn, conn:
         conn.execute('PRAGMA synchronous=FULL')
@@ -137,6 +153,16 @@ def _commit(path, manifest, staged, revision, previous, hook):
                          'replaced_at INTEGER NOT NULL, dtype TEXT NOT NULL, shape TEXT NOT NULL, body BLOB NOT NULL, '
                          'digest TEXT NOT NULL, PRIMARY KEY(entity, field, replaced_at))')
             conn.execute('INSERT INTO bank_history VALUES (?,?,?,?,?,?,?)', (*previous[:2], next_revision, *previous[2:]))
+        if snapshot is not None:
+            conn.execute('CREATE TABLE IF NOT EXISTS bank_timeline (entity INTEGER NOT NULL, field TEXT NOT NULL, '
+                         'recorded_us INTEGER NOT NULL, revision INTEGER NOT NULL, dtype TEXT NOT NULL, shape TEXT NOT NULL, '
+                         'body BLOB NOT NULL, digest TEXT NOT NULL, PRIMARY KEY(entity, field, recorded_us, revision))')
+            latest = conn.execute('SELECT MAX(recorded_us) FROM bank_timeline WHERE entity=? AND field=?', snapshot[:2]).fetchone()[0]
+            recorded_us = time.time_ns() // 1000
+            if latest is not None and recorded_us < latest:
+                raise ValueError('System clock moved behind this record’s previous write time')
+            conn.execute('INSERT INTO bank_timeline VALUES (?,?,?,?,?,?,?,?)',
+                         (*snapshot[:2], recorded_us, next_revision, *snapshot[2:]))
         conn.execute('INSERT OR REPLACE INTO bank_head VALUES (1,?,?,?)',
                      (next_revision, manifest, sha(manifest.encode())))
         if hook is not None:

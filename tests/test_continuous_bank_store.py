@@ -8,7 +8,9 @@ from unittest.mock import patch
 
 import torch
 
-from spora.continuous_bank_store import bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks
+from spora.continuous_bank_store import (
+    bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_slots_as_of,
+)
 from spora.durable import RevisionConflict
 
 
@@ -18,6 +20,36 @@ class ContinuousBankStoreTests(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.path = Path(self.directory.name) / 'banks.sqlite3'
         self.payload = dict(banks={('drink', 1): torch.ones(2, 3)}, pages=[{}], addresses={'one': 0})
+
+    def test_as_of_uses_commit_time_and_revision_to_break_ties(self):
+        key = (0, 'drink', 1)
+        revision, digests, _ = commit_banks(self.path, self.payload, None, {})
+        self.assertIsNone(read_slots_as_of(self.path, 0, 'drink', revision, 1000))
+        for micros, entity, value in ((100, 0, 2), (110, 1, 3), (120, 0, 4), (120, 0, 5)):
+            tensor = torch.full((2, 3), float(value))
+            self.payload['banks']['drink', 1] = tensor
+            with patch('spora.continuous_bank_store.time.time_ns', return_value=1000 * micros):
+                revision, digests, _ = commit_banks(self.path, self.payload, revision, digests, changed=(key,),
+                                                    recorded=(entity, 'drink', tensor))
+        self.assertIsNone(read_slots_as_of(self.path, 0, 'drink', revision, 99))
+        self.assertIsNone(read_slots_as_of(self.path, 0, 'work', revision, 120))
+        for entity, cutoff, value in ((0, 100, 2), (0, 119, 2), (0, 120, 5), (1, 120, 3)):
+            record = read_slots_as_of(self.path, entity, 'drink', revision, cutoff)
+            torch.testing.assert_close(record, torch.full((2, 3), float(value)))
+        with self.assertRaises(RevisionConflict):
+            read_slots_as_of(self.path, 0, 'drink', revision - 1, 120)
+
+        previous = self.payload['banks']['drink', 1]
+        replacement = torch.full_like(previous, 6)
+        self.payload['banks']['drink', 1] = replacement
+        with patch('spora.continuous_bank_store.time.time_ns', return_value=119_000):
+            with self.assertRaisesRegex(ValueError, 'System clock moved behind'):
+                commit_banks(self.path, self.payload, revision, digests, changed=(key,),
+                             archive=(0, 'drink', previous), recorded=(0, 'drink', replacement))
+        self.assertEqual(bank_revision(self.path), revision)
+        self.assertIsNone(read_archived_slots(self.path, 0, 'drink', revision, 1))
+        torch.testing.assert_close(read_bank_tensor(self.path, key, revision, digests[key]), previous)
+        torch.testing.assert_close(read_slots_as_of(self.path, 0, 'drink', revision, 130), previous)
 
     def test_history_is_ordered_by_field_and_committed_with_the_update(self):
         key = (0, 'drink', 1)
