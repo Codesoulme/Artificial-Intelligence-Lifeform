@@ -15,6 +15,38 @@ from spora.durable import TensorStore
 
 
 class AwakeChatTests(unittest.TestCase):
+    def test_read_binding_requires_matching_activity_and_is_consumed_once(self):
+        topics = AwakeTopics(('drink', 'work'))
+        topics.observe([.95, .05])
+        topics.advance(500_000_000)
+        topics.bind_read(0, 'drink')
+        subject, field, confidence = topics.consume_read()
+        self.assertEqual((subject, field), (0, 'drink'))
+        self.assertAlmostEqual(confidence, .95)
+        self.assertIsNone(topics.consume_read())
+
+        topics.bind_read(1, 'work')
+        self.assertIsNone(topics.consume_read())
+        topics.observe([.05, .95])
+        topics.advance(500_000_000)
+        self.assertIsNone(topics.consume_read())
+        topics.bind_read(1, 'work')
+        topics.invalidate()
+        topics.observe([.05, .95])
+        topics.advance(500_000_000)
+        self.assertIsNone(topics.consume_read())
+
+    def test_read_binding_is_absent_from_checkpoint(self):
+        topics = AwakeTopics(('drink', 'work'))
+        topics.observe([.95, .05])
+        topics.advance(500_000_000)
+        topics.bind_read(0, 'drink')
+        state = topics.state_dict()
+        self.assertEqual(set(state), {'activity', 'drive', 'observations'})
+        restored = AwakeTopics(topics.labels)
+        restored.load_state_dict(state)
+        self.assertIsNone(restored.consume_read())
+
     def test_topic_support_requires_active_and_matching_prior(self):
         self.assertTrue(supports_field({'drink': .6, 'work': .1}, 'drink'))
         self.assertFalse(supports_field({'drink': .1, 'work': .6}, 'drink'))
@@ -55,7 +87,7 @@ class AwakeChatTests(unittest.TestCase):
             with (patch('spora.awake_chat.SAVE_INTERVAL_NS', 100_000_000),
                   patch('spora.awake_chat.atomic_save', side_effect=observe_save),
                   awake_chat_lines(model, ['question'], saved, trained, {}, lambda status: None,
-                                   topic_labels=('drink', 'work')) as (lines, observe, _)):
+                                   topic_labels=('drink', 'work')) as (lines, observe, _, _bind)):
                 self.assertEqual(next(lines), 'question')
                 observe([.1, .9])
                 self.assertTrue(checkpointed.wait(timeout=5))

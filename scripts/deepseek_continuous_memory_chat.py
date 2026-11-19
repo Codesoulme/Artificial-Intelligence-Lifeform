@@ -22,7 +22,6 @@ from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
 from spora.awake_chat import awake_chat_lines
-from spora.awake_topics import supports_field
 from spora.continuous_bank_store import (
     bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_slots_as_of,
 )
@@ -279,13 +278,14 @@ class ContinuousMemoryChat:
 
     @torch.inference_mode()
     def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD, back=0, as_of=None,
-               topic_observer=None, recent_read=None, topic_activity=None):
+               topic_observer=None, consume_topic=None, bind_topic=None):
         if (entity is not None and entity not in self.addresses.values()) or version not in (0, 1):
             raise ValueError('Unknown experimental address or snapshot')
         if type(back) is not int or not 0 <= back <= 2**63 - 1 or (back and (version != 1 or not uses_database(self.working_path))):
             raise ValueError('Historical recall requires a SQLite checkpoint and version 1')
         if as_of is not None and (back or version != 1 or not uses_database(self.working_path)):
             raise ValueError('Timestamp recall requires a version-1 SQLite query without --back')
+        recent_read = consume_topic() if consume_topic is not None else None
         as_of_utc = (UTC_EPOCH + timedelta(microseconds=as_of)).isoformat() if as_of is not None else None
         question, requested_back = split_history_query(question)
         history_issue = None
@@ -311,16 +311,15 @@ class ContinuousMemoryChat:
                 previous, _ = query_subject(history, self.addresses)
                 if previous != entity:
                     inherits = False
-        elliptical = (topic_activity is not None and subject_reason == 'no_subject'
+        elliptical = (consume_topic is not None and subject_reason == 'no_subject'
                       and ELLIPTICAL_QUERY.fullmatch(question.strip()) is not None)
         use_topic = (elliptical and recent_read is not None and version == 1 and not back and as_of is None
-                     and history_issue is None and probability >= self.gate_cutoff
-                     and supports_field(topic_activity, recent_read[1]))
+                     and history_issue is None and probability >= self.gate_cutoff)
         if use_topic:
-            entity, selected = recent_read
+            entity, selected, confidence = recent_read
             subject_reason = 'awake_recent_read'
             inherits = False
-            predicted = dict(selected=selected, confidence=topic_activity[selected] / sum(topic_activity.values()))
+            predicted = dict(selected=selected, confidence=confidence)
         else:
             if subject_reason == 'no_subject' and inherits:
                 entity = inherited_query_subject(question, history, self.addresses)
@@ -384,8 +383,9 @@ class ContinuousMemoryChat:
                 if start is None:
                     action, reason, response = 'clarify', 'injection_not_triggered', CLARIFY
                 else:
-                    if topic_activity and subject_reason == 'named_subject' and version == 1 and not back and as_of is None:
-                        confirmed = matches_memory_suffix(tokens[start:], bias, self.tokenizer.eos_token_id)
+                    if (bind_topic is not None and subject_reason == 'named_subject' and version == 1 and not back
+                            and as_of is None and matches_memory_suffix(tokens[start:], bias, self.tokenizer.eos_token_id)):
+                        confirmed = bind_topic(entity, selected)
                     response = self.tokenizer.decode(tokens, skip_special_tokens=True).strip()
                     if requested_back:
                         response = f'{requested_back} 次更正前的记录是「{response}」。'
@@ -405,7 +405,7 @@ class ContinuousMemoryChat:
             result['corrections_back'] = back
         if as_of_utc is not None:
             result['as_of_utc'] = as_of_utc
-        if topic_activity is not None:
+        if consume_topic is not None:
             result['confirmed_recent_read'] = confirmed
         return result
 
@@ -606,18 +606,16 @@ def main():
         return
     timing_threshold = EARLY_TIMING_THRESHOLD if args.earlier_readout else THRESHOLD
 
-    def answer_lines(lines, topic_observer=None, topic_snapshot=None):
+    def answer_lines(lines, topic_observer=None, consume_topic=None, bind_topic=None):
         history = args.history
-        recent_read = None
         for line in lines:
             question = line.strip()
             if not question:
                 continue
             result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold,
-                                 back=args.back, as_of=args.as_of, topic_observer=topic_observer, recent_read=recent_read,
-                                 topic_activity=(topic_snapshot() or {}) if topic_snapshot is not None else None)
+                                 back=args.back, as_of=args.as_of, topic_observer=topic_observer,
+                                 consume_topic=consume_topic, bind_topic=bind_topic)
             print(json.dumps(result, ensure_ascii=False) if args.json else result['response'], flush=True)
-            recent_read = ((result['entity'], result['field']) if result.get('confirmed_recent_read') else None)
             history = None if args.awake_topic_recall else question
 
     if args.question is not None:
@@ -635,8 +633,11 @@ def main():
         with awake_chat_lines(
             chat.organism, sys.stdin, state_path, trained, chat.awake_individual, report,
             topic_labels=KEYS, clear_topics_on_sleep=args.awake_topic_recall,
-        ) as (lines, observe_topic, topic_snapshot):
-            answer_lines(lines, observe_topic, topic_snapshot if args.awake_topic_recall else None)
+        ) as (lines, observe_topic, consume_topic, bind_topic):
+            if args.awake_topic_recall:
+                answer_lines(lines, observe_topic, consume_topic, bind_topic)
+            else:
+                answer_lines(lines, observe_topic)
     else:
         if sys.stdin.isatty():
             print('Enter one question per line. Ctrl+Z then Enter exits on Windows.', file=sys.stderr, flush=True)

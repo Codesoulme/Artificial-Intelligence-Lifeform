@@ -75,11 +75,18 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report, *, to
                 if topics is not None and int(core.mode) != 2 and not stop.is_set():
                     topics.observe(probabilities)
 
-        def topic_activity():
+        def consume_topic():
             with state_changed:
                 if topics is not None and int(core.mode) != 2 and not stop.is_set():
-                    return topics.status()['activity']
+                    return topics.consume_read()
             return None
+
+        def bind_topic(entity, field):
+            with state_changed:
+                if topics is None or int(core.mode) == 2 or stop.is_set():
+                    return False
+                topics.bind_read(entity, field)
+                return True
 
         def run_clock():
             with state_changed:
@@ -156,7 +163,7 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report, *, to
         threading.Thread(target=read_input, daemon=True).start()
         worker.start()
         try:
-            yield active_lines(), observe, topic_activity
+            yield active_lines(), observe, consume_topic, bind_topic
         finally:
             stop.set()
             with state_changed:

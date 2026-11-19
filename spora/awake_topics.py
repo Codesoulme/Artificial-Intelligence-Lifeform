@@ -20,6 +20,25 @@ class AwakeTopics(nn.Module):
         self.register_buffer('drive', torch.zeros(len(self.labels)))
         self.register_buffer('activity', torch.zeros_like(self.drive))
         self.register_buffer('observations', torch.zeros((), dtype=torch.long))
+        self.register_buffer('binding', torch.full((2,), -1, dtype=torch.long), persistent=False)
+
+    def bind_read(self, entity, field):
+        if type(entity) is not int or not 0 <= entity < 2**63:
+            raise ValueError('Expected a nonnegative memory address')
+        index = self.labels.index(field)
+        self.binding[0] = entity
+        self.binding[1] = index
+
+    def consume_read(self):
+        entity, index = self.binding.tolist()
+        if entity < 0:
+            return None
+        self.binding.fill_(-1)
+        field = self.labels[index]
+        activity = self.status()['activity']
+        if supports_field(activity, field):
+            return entity, field, activity[field] / sum(activity.values())
+        return None
 
     def observe(self, probabilities):
         values = torch.as_tensor(probabilities, dtype=self.drive.dtype, device=self.drive.device)
@@ -37,6 +56,7 @@ class AwakeTopics(nn.Module):
     def invalidate(self):
         self.drive.zero_()
         self.activity.zero_()
+        self.binding.fill_(-1)
 
     def status(self):
         return dict(observations=int(self.observations),
