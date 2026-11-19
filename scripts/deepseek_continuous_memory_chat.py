@@ -10,7 +10,7 @@ from pathlib import Path
 from deepseek_aligned_memory_calibration import load_adapter
 from deepseek_aligned_memory_dialogue import EARLY_TIMING_THRESHOLD, OUT as ADAPTER_RUN, RANK, THRESHOLD, generate_with_memory
 from deepseek_memory_attribute_router import CLARIFY, MISSING
-from deepseek_memory_attribute_span import Route, route_action
+from deepseek_memory_attribute_span import KEYS, Route, route_action
 from deepseek_memory_cosine_readout import cosine_bias, cosine_slot_bias, projected_codebook
 from deepseek_memory_dialogue_context import OUT as DIALOGUE_RUN, features_for, route
 from deepseek_memory_field_decoding import FIELDS, OUT as FIELD_RUN
@@ -270,7 +270,8 @@ class ContinuousMemoryChat:
         return dict(action='stored', entity=entity, field=field)
 
     @torch.inference_mode()
-    def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD, back=0, as_of=None):
+    def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD, back=0, as_of=None,
+               topic_observer=None):
         if (entity is not None and entity not in self.addresses.values()) or version not in (0, 1):
             raise ValueError('Unknown experimental address or snapshot')
         if type(back) is not int or not 0 <= back <= 2**63 - 1 or (back and (version != 1 or not uses_database(self.working_path))):
@@ -314,6 +315,8 @@ class ContinuousMemoryChat:
             router = self.inherited_router
             route_features = features_for(self.decoder, self.tokenizer, dict(question=history), False)
         predicted, = route(router, [row], {'input': route_features})
+        if topic_observer is not None:
+            topic_observer(predicted['probabilities'])
         selected = predicted['selected']
         action = route_action(predicted, self.cutoff)
         start = None
@@ -566,14 +569,14 @@ def main():
         return
     timing_threshold = EARLY_TIMING_THRESHOLD if args.earlier_readout else THRESHOLD
 
-    def answer_lines(lines):
+    def answer_lines(lines, topic_observer=None):
         history = args.history
         for line in lines:
             question = line.strip()
             if not question:
                 continue
             result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold,
-                                 back=args.back, as_of=args.as_of)
+                                 back=args.back, as_of=args.as_of, topic_observer=topic_observer)
             print(json.dumps(result, ensure_ascii=False) if args.json else result['response'], flush=True)
             history = question
 
@@ -589,8 +592,9 @@ def main():
             print(json.dumps(dict(awake=status), ensure_ascii=False), flush=True)
 
         print('Awake controls: /status /relax /focus /sleep /wake', file=sys.stderr, flush=True)
-        with awake_chat_lines(chat.organism, sys.stdin, state_path, trained, chat.awake_individual, report) as lines:
-            answer_lines(lines)
+        with awake_chat_lines(chat.organism, sys.stdin, state_path, trained, chat.awake_individual, report,
+                              topic_labels=KEYS) as (lines, observe_topic):
+            answer_lines(lines, observe_topic)
     else:
         if sys.stdin.isatty():
             print('Enter one question per line. Ctrl+Z then Enter exits on Windows.', file=sys.stderr, flush=True)

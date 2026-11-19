@@ -6,6 +6,7 @@ import torch
 from spora.awake import AwakeConfig,AwakeCore,attach_awake
 from spora.awake_chat import awake_chat_lines
 from spora.awake_session import AwakeSession
+from spora.awake_topics import AwakeTopics
 from spora.language_training import atomic_save
 from spora.temporal import TemporalSPORA,TemporalConfig
 from spora.growing import new_state,save,load,grow
@@ -14,6 +15,24 @@ from spora.durable import TensorStore
 
 
 class AwakeChatTests(unittest.TestCase):
+    def test_topic_posterior_changes_recurrence_and_expires_with_elapsed_time(self):
+        drink, work, no_input = (AwakeTopics(('drink', 'work')) for _ in range(3))
+        drink.observe([.9, .1])
+        work.observe([.1, .9])
+        for trace in (drink, work, no_input):
+            trace.advance(500_000_000)
+        self.assertEqual(int(drink.activity.argmax()), 0)
+        self.assertEqual(int(work.activity.argmax()), 1)
+        torch.testing.assert_close(drink.activity, work.activity.flip(0))
+        self.assertEqual(float(no_input.activity.sum()), 0.)
+        initial = float(drink.activity.sum())
+        for _ in range(40):
+            drink.advance(250_000_000)
+        self.assertLess(float(drink.activity.sum()), initial / 10)
+        drink.invalidate()
+        self.assertEqual(float(drink.activity.sum()), 0.)
+        self.assertEqual(int(drink.observations), 1)
+
     def test_clock_and_periodic_save_continue_while_chat_processes_a_line(self):
         model = torch.nn.Linear(1, 1)
         core = AwakeCore(AwakeConfig(relax_seconds=.03, focus_seconds=.01))
@@ -28,8 +47,10 @@ class AwakeChatTests(unittest.TestCase):
             torch.save(dict(config=core.config_dict(), state=core.state_dict()), trained)
             with (patch('spora.awake_chat.SAVE_INTERVAL_NS', 100_000_000),
                   patch('spora.awake_chat.atomic_save', side_effect=observe_save),
-                  awake_chat_lines(model, ['question'], saved, trained, {}, lambda status: None) as lines):
+                  awake_chat_lines(model, ['question'], saved, trained, {}, lambda status: None,
+                                   topic_labels=('drink', 'work')) as (lines, observe)):
                 self.assertEqual(next(lines), 'question')
+                observe([.1, .9])
                 self.assertTrue(checkpointed.wait(timeout=5))
                 state = torch.load(saved, weights_only=True)['core']['state']
                 self.assertGreater(int(state['neural_steps']), 0)
@@ -37,6 +58,9 @@ class AwakeChatTests(unittest.TestCase):
                 self.assertEqual(list(lines), [])
             final = torch.load(saved, weights_only=True)['core']['state']
             self.assertGreaterEqual(int(final['neural_steps']), int(state['neural_steps']))
+            topics = torch.load(saved, weights_only=True)['topics']['state']
+            self.assertEqual(int(topics['observations']), 1)
+            self.assertGreater(float(topics['activity'][1]), float(topics['activity'][0]))
 
 
 class AwakeTests(unittest.TestCase):

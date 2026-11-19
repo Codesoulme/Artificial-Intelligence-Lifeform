@@ -10,6 +10,7 @@ import torch
 
 from .awake import AwakeConfig, AwakeCore, attach_awake
 from .awake_session import AwakeSession
+from .awake_topics import AwakeTopics
 from .language_training import atomic_save
 from .working_checkpoint_lock import lock_working_checkpoint
 
@@ -20,7 +21,7 @@ SAVE_INTERVAL_NS = 5_000_000_000
 
 
 @contextmanager
-def awake_chat_lines(model, lines, path, trained_core, individual, report):
+def awake_chat_lines(model, lines, path, trained_core, individual, report, *, topic_labels=()):
     core_data = trained_core.read_bytes()
     core_digest = hashlib.sha256(core_data).hexdigest()
     provenance = dict(format=FORMAT, individual=individual, core_sha256=core_digest)
@@ -31,20 +32,48 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report):
                 raise ValueError('Awake state belongs to a different chat individual or core')
             payload = saved['core']
         else:
+            saved = {}
             payload = torch.load(BytesIO(core_data), map_location='cpu', weights_only=True)
         core = AwakeCore(AwakeConfig(**payload['config']))
         core.load_state_dict(payload['state'])
         attach_awake(model, core.requires_grad_(False))
         session = AwakeSession(model)
+        topics = AwakeTopics(topic_labels) if topic_labels else None
+        if 'topics' in saved:
+            if topics is None or tuple(saved['topics']['labels']) != topics.labels:
+                raise ValueError('Awake state has different topic labels')
+            topics.load_state_dict(saved['topics']['state'])
+            if int(topics.observations) < 0:
+                raise ValueError('Negative topic observation count')
+            topics.invalidate()
+        if topics is not None:
+            model.awake_topics = topics
+
+        def tick():
+            awake_ns, gap_ns = int(core.awake_ns), int(core.gap_ns)
+            session.tick()
+            if topics is not None:
+                if int(core.gap_ns) != gap_ns:
+                    topics.invalidate()
+                elif int(core.awake_ns) > awake_ns:
+                    topics.advance(int(core.awake_ns) - awake_ns)
 
         def save():
             core.last_utc_ns.fill_(session.utc())
-            atomic_save(dict(provenance=provenance, core=dict(config=core.config_dict(), state=core.state_dict())), path)
+            payload = dict(provenance=provenance, core=dict(config=core.config_dict(), state=core.state_dict()))
+            if topics is not None:
+                payload['topics'] = dict(labels=topics.labels, state=topics.state_dict())
+            atomic_save(payload, path)
 
         inbox = queue.Queue(maxsize=16)
         stop = threading.Event()
         state_changed = threading.Condition()
         failures = []
+
+        def observe(probabilities):
+            with state_changed:
+                if topics is not None and int(core.mode) != 2 and not stop.is_set():
+                    topics.observe(probabilities)
 
         def run_clock():
             with state_changed:
@@ -58,11 +87,11 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report):
                             state_changed.wait(delay / 1e9)
                             continue
                         if now >= next_tick:
-                            session.tick()
+                            tick()
                         if now >= next_save:
                             save()
                             next_save = session.clock() + SAVE_INTERVAL_NS
-                    session.tick()
+                    tick()
                     save()
                 except Exception as error:
                     failures.append(error)
@@ -105,10 +134,12 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report):
                         mode = CONTROLS.get(command)
                         status = core.status()
                         if mode is not None and status['mode'] != mode:
-                            session.tick()
+                            tick()
                             session.set_mode(mode)
                             state_changed.notify()
                             status = core.status()
+                        if topics is not None:
+                            status['topics'] = topics.status()
                     report(status)
                 elif command:
                     yield line
@@ -117,7 +148,7 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report):
         threading.Thread(target=read_input, daemon=True).start()
         worker.start()
         try:
-            yield active_lines()
+            yield active_lines(), observe
         finally:
             stop.set()
             with state_changed:
