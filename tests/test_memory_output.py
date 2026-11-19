@@ -6,6 +6,17 @@ from spora.memory_output import MemoryOutputAdapter, MemoryOutputLogitsProcessor
 
 
 class MemoryOutputTests(unittest.TestCase):
+    @unittest.skipUnless(torch.cuda.is_available(), 'CUDA required to test cross-device generation')
+    def test_processor_accepts_cpu_memory_readout_with_cuda_adapter(self):
+        adapter = MemoryOutputAdapter(4, 9, rank=3).cuda()
+        with torch.no_grad():
+            adapter.rank_to_vocab.weight.normal_()
+        memory_logits = torch.tensor([[4., 0., 0., 0.]])
+        scores = torch.zeros(1, 9, device='cuda')
+        processor = MemoryOutputLogitsProcessor(adapter, memory_logits)
+        actual = processor(torch.zeros(1, 2, dtype=torch.long, device='cuda'), scores)
+        torch.testing.assert_close(actual, adapter(memory_logits.cuda()))
+
     def test_zero_initialized_adapter_is_inactive_and_finite(self):
         torch.manual_seed(4)
         adapter = MemoryOutputAdapter(17, 101, rank=8)

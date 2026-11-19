@@ -38,7 +38,8 @@ class MemoryOutputAdapter(nn.Module):
                 or memory_logits.shape[-1] != self.value_count or not memory_logits.is_floating_point()
                 or not bool(torch.isfinite(memory_logits).all())):
             raise ValueError('Finite memory logits with the configured value width required')
-        probabilities = memory_logits.float().softmax(-1)
+        weight = self.value_to_rank.weight
+        probabilities = memory_logits.to(device=weight.device, dtype=torch.float32).softmax(-1).to(weight.dtype)
         hidden = torch.tanh(self.value_to_rank(probabilities))
         scale = self.max_scale * self.scale_logit.sigmoid()
         result = scale * self.rank_to_vocab(hidden)
