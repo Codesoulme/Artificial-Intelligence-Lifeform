@@ -18,6 +18,7 @@ from deepseek_memory_inheritance_gate import OUT as INHERITANCE_GATE_RUN
 from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
+from spora.awake_chat import awake_chat_lines
 from spora.continuous_bank_store import (
     bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_slots_as_of,
 )
@@ -447,12 +448,16 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_ret
     if use_inherited_router:
         previous = Route(width, localized=True).eval()
         previous.load_state_dict(torch.load(paths['previous'], weights_only=True))
-    return ContinuousMemoryChat(decoder, tokenizer, organism.memories[0], banks, styles, timing, columns,
+    chat = ContinuousMemoryChat(decoder, tokenizer, organism.memories[0], banks, styles, timing, columns,
                                 contextual, direct, inheritance, read(paths['routes']), working_path=working_path,
                                 working_sha=working_sha, seed_sha=expected[paths['banks']], inherited_router=previous,
                                 gate_cutoff=None if gate_result is None else gate_result['cutoffs']['tail'],
                                 addresses=addresses, filled=filled, pages=pages, saved_page_size=page_size,
                                 bank_digests=tracked, bank_specs={key: (bank.shape, bank.dtype) for key, bank in seed_banks.items()})
+    chat.organism = organism
+    chat.awake_individual = dict(model_sha256=expected[MODEL / 'model.safetensors'], source_sha256=expected[SOURCE],
+                                 memory_path=str(working_path), seed_sha256=expected[paths['banks']])
+    return chat
 
 
 def import_checkpoint(source, destination):
@@ -487,6 +492,7 @@ def main():
     parser.add_argument('--expand', action='store_true', help='Allocate one memory page when registration reaches capacity')
     parser.add_argument('--memory-file', type=Path, default=WORKING_BANKS)
     parser.add_argument('--history', help='Preceding user turn')
+    parser.add_argument('--awake-state', type=Path, help='Persist the experimental awake core during stdin chat')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
@@ -495,6 +501,9 @@ def main():
     if args.expand and args.register is None:
         parser.error('--expand requires --register')
     observation = args.observe if args.observe is not None else args.preview_observation
+    if args.awake_state is not None and (args.question is not None or observation is not None or args.remember
+                                         or args.register is not None or args.import_checkpoint is not None):
+        parser.error('--awake-state is available during stdin chat')
     if not 0 <= args.back <= 2**63 - 1 or (args.back and (
             args.version != 1 or not uses_database(args.memory_file) or observation is not None
             or args.remember or args.register is not None or args.import_checkpoint is not None)):
@@ -552,19 +561,37 @@ def main():
     if args.remember:
         print(json.dumps(chat.remember(args.entity, *args.remember), ensure_ascii=False))
         return
-    history = args.history
     timing_threshold = EARLY_TIMING_THRESHOLD if args.earlier_readout else THRESHOLD
-    lines = sys.stdin if args.question is None else (args.question,)
-    if args.question is None and sys.stdin.isatty():
-        print('Enter one question per line. Ctrl+Z then Enter exits on Windows.', file=sys.stderr, flush=True)
-    for line in lines:
-        question = line.strip()
-        if not question:
-            continue
-        result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold,
-                             back=args.back, as_of=args.as_of)
-        print(json.dumps(result, ensure_ascii=False) if args.json else result['response'], flush=True)
-        history = question
+
+    def answer_lines(lines):
+        history = args.history
+        for line in lines:
+            question = line.strip()
+            if not question:
+                continue
+            result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold,
+                                 back=args.back, as_of=args.as_of)
+            print(json.dumps(result, ensure_ascii=False) if args.json else result['response'], flush=True)
+            history = question
+
+    if args.question is not None:
+        answer_lines((args.question,))
+    elif args.awake_state is not None:
+        state_path = args.awake_state.resolve()
+        trained = SOURCE.parents[1] / 'p24-awake' / 'core-seed7.pt'
+        if state_path in (chat.working_path, trained.resolve()) or state_path.suffix.lower() != '.pt':
+            parser.error('--awake-state needs a separate .pt path')
+
+        def report(status):
+            print(json.dumps(dict(awake=status), ensure_ascii=False), flush=True)
+
+        print('Awake controls: /status /relax /focus /sleep /wake', file=sys.stderr, flush=True)
+        with awake_chat_lines(chat.organism, sys.stdin, state_path, trained, chat.awake_individual, report) as lines:
+            answer_lines(lines)
+    else:
+        if sys.stdin.isatty():
+            print('Enter one question per line. Ctrl+Z then Enter exits on Windows.', file=sys.stderr, flush=True)
+        answer_lines(sys.stdin)
 
 
 if __name__ == '__main__':
