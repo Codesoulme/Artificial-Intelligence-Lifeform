@@ -74,3 +74,28 @@ class MemoryOutputLogitsProcessor(LogitsProcessor):
         self._applied = True
         bias = self.bias if self.bias.shape[0] == scores.shape[0] else self.bias.expand(scores.shape[0], -1)
         return scores + self.gain * bias.to(device=scores.device, dtype=scores.dtype)
+
+
+class MemorySequenceLogitsProcessor(LogitsProcessor):
+    """Apply a continuous memory read one slot at a time after the supplied prefix."""
+
+    def __init__(self, slot_bias, prefix_length):
+        if (not isinstance(slot_bias, torch.Tensor) or slot_bias.ndim != 2 or not slot_bias.numel()
+                or not slot_bias.is_floating_point() or not bool(torch.isfinite(slot_bias).all())):
+            raise ValueError('Expected finite slot-by-vocabulary scores')
+        if type(prefix_length) is not int or prefix_length < 1:
+            raise ValueError('Expected a positive prefix length')
+        self.slot_bias = slot_bias.detach().clone()
+        self.prefix_length = prefix_length
+
+    def __call__(self, input_ids, scores):
+        if (input_ids.ndim != 2 or scores.ndim != 2 or input_ids.shape[0] != scores.shape[0]
+                or scores.shape[1] != self.slot_bias.shape[1]):
+            raise ValueError('Generation inputs and memory scores do not align')
+        offset = input_ids.shape[1] - self.prefix_length
+        if offset < 0:
+            raise ValueError('Generation inputs are shorter than the memory prefix')
+        if offset >= len(self.slot_bias):
+            return scores
+        bias = self.slot_bias[offset].to(device=scores.device, dtype=scores.dtype)
+        return scores + bias

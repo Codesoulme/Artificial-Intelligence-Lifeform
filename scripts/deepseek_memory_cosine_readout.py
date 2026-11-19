@@ -15,8 +15,10 @@ from deepseek_memory_turn_priority import OUT as PRIORITY_RUN
 from deepseek_output_aligned_memory import (
     GAIN, MODEL, ROOT, SEED, SOURCE, encode, fingerprint, fresh, load_integrated, read, read_bank, sha, torch, write,
 )
+from spora.memory_output import MemorySequenceLogitsProcessor
 
 OUT = ROOT / 'runs/deepseek-memory-cosine-readout'
+GENERATE_OUT = ROOT / 'runs/deepseek-memory-cosine-generate'
 
 
 @torch.inference_mode()
@@ -38,7 +40,17 @@ def cosine_bias(site, bank, address, codes, scale):
     return scores * scale
 
 
-def main(out):
+def replay_generate(decoder, tokenizer, prompt, tokens, start, bias):
+    prefix = prompt + tokens[:start]
+    ids = torch.tensor([prefix], device=bias.device)
+    processor = MemorySequenceLogitsProcessor(2 * bias, len(prefix))
+    generation = decoder.generate(input_ids=ids, attention_mask=torch.ones_like(ids), logits_processor=[processor],
+                                  do_sample=False, max_new_tokens=32 - start, use_cache=True,
+                                  pad_token_id=tokenizer.pad_token_id, eos_token_id=tokenizer.eos_token_id)
+    return generation[0, len(prefix):].tolist()
+
+
+def main(out, verify_generate=False):
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     if out.exists():
@@ -64,7 +76,8 @@ def main(out):
         **{TRANSFER_RUN / name: transfer_result['artifact_sha256'][name] for name in ('banks.pt', 'plan.json', 'routes.json')},
         PRIORITY_RUN / 'routes.json': read(PRIORITY_RUN / 'result.json')['artifact_sha256']['routes.json'],
     }
-    protected = (Path(__file__), SOURCE, FIELD_RUN / 'result.json', TRANSFER_RUN / 'result.json', *expected_digests,
+    protected = (Path(__file__), ROOT / 'spora/memory_output.py', SOURCE, FIELD_RUN / 'result.json',
+                 TRANSFER_RUN / 'result.json', *expected_digests,
                  *(MODEL / name for name in ('model.safetensors', 'config.json', 'tokenizer.json', 'tokenizer_config.json')))
     hashes = fingerprint(protected)
     if any(hashes[str(path)] != expected for path, expected in expected_digests.items()):
@@ -95,7 +108,8 @@ def main(out):
     basis = torch.linalg.qr(torch.randn(width, RANK, generator=torch.Generator().manual_seed(SEED))).Q.to('cuda')
     codes, scale = projected_codebook(head.weight, basis)
     banks = {name: torch.load(path, weights_only=True) for name, path in bank_paths.items()}
-    write(out / 'plan.json', dict(protected=hashes, cohorts=cohorts, scale=scale, gain_multiplier=2., rank=RANK))
+    write(out / 'plan.json', dict(protected=hashes, cohorts=cohorts, scale=scale, gain_multiplier=2., rank=RANK,
+                                 verify_generate=verify_generate))
     empty = torch.zeros_like(next(iter(banks['transfer'].values())))
     if cosine_bias(site, empty, site.current_basis[26:27], codes, scale) is not None:
         raise ValueError('Empty bank accepted')
@@ -136,6 +150,10 @@ def main(out):
                                response=response, tokens=tokens, memory_token_ranks=target_ranks)
                     row['strict'] = score(row, values)
                     row['stored_values_in_response'] = sorted(value for value in values if value in response)
+                    if verify_generate and mode == 'cosine' and start is not None:
+                        standard = replay_generate(decoder, tokenizer, prompt, tokens, start, bias)
+                        row['generate_tokens'] = standard
+                        row['generate_matches'] = standard == tokens[start:]
                     results.append(row)
                     stream.write(json.dumps(row, ensure_ascii=False) + '\n')
                 stream.flush()
@@ -148,5 +166,7 @@ def main(out):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--out', type=Path, default=OUT)
-    main(parser.parse_args().out)
+    parser.add_argument('--out', type=Path)
+    parser.add_argument('--verify-generate', action='store_true')
+    args = parser.parse_args()
+    main(args.out or (GENERATE_OUT if args.verify_generate else OUT), args.verify_generate)

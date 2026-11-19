@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from spora.memory_output import MemoryOutputAdapter, MemoryOutputLogitsProcessor
+from spora.memory_output import MemoryOutputAdapter, MemoryOutputLogitsProcessor, MemorySequenceLogitsProcessor
 
 
 class MemoryOutputTests(unittest.TestCase):
@@ -36,6 +36,27 @@ class MemoryOutputTests(unittest.TestCase):
         adapter = MemoryOutputAdapter(7, 13, rank=5, max_scale=3.)
         self.assertEqual(adapter.config_dict(), {'value_count': 7, 'vocab_size': 13,
                                                   'rank': 5, 'max_scale': 3.})
+
+    def test_sequence_bias_uses_prefix_offset_and_leaves_later_tokens_unchanged(self):
+        bias = torch.tensor([[0., 2., 0.], [3., 0., 0.]])
+        processor = MemorySequenceLogitsProcessor(bias, prefix_length=4)
+        bias.zero_()
+        scores = torch.ones(2, 3, dtype=torch.float16)
+        for length, expected in ((4, [1., 3., 1.]), (5, [4., 1., 1.]), (6, [1., 1., 1.]), (4, [1., 3., 1.])):
+            with self.subTest(length=length):
+                result = processor(torch.zeros(2, length, dtype=torch.long), scores)
+                torch.testing.assert_close(result, scores.new_tensor([expected, expected]))
+
+    def test_sequence_bias_rejects_invalid_inputs(self):
+        with self.assertRaises(ValueError):
+            MemorySequenceLogitsProcessor(torch.tensor([[float('inf')]]), prefix_length=1)
+        with self.assertRaises(ValueError):
+            MemorySequenceLogitsProcessor(torch.zeros(1, 3), prefix_length=0)
+        processor = MemorySequenceLogitsProcessor(torch.zeros(1, 3), prefix_length=2)
+        with self.assertRaises(ValueError):
+            processor(torch.zeros(1, 1, dtype=torch.long), torch.zeros(1, 3))
+        with self.assertRaises(ValueError):
+            processor(torch.zeros(1, 2, dtype=torch.long), torch.zeros(1, 4))
 
 
 if __name__ == '__main__':
