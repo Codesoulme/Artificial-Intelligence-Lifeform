@@ -13,6 +13,7 @@ from deepseek_memory_cosine_readout import cosine_bias, projected_codebook
 from deepseek_memory_dialogue_context import OUT as DIALOGUE_RUN, features_for, route
 from deepseek_memory_field_decoding import FIELDS, OUT as FIELD_RUN
 from deepseek_memory_field_transfer import OUT as TRANSFER_RUN
+from deepseek_memory_inheritance_gate import OUT as INHERITANCE_GATE_RUN
 from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
@@ -47,12 +48,12 @@ def load_working_banks(path, seed_banks, seed_sha):
 
 class ContinuousMemoryChat:
     def __init__(self, decoder, tokenizer, site, banks, styles, timing, columns, contextual, direct, inheritance, setup,
-                 *, working_path, working_sha, seed_sha, inherited_router=None):
+                 *, working_path, working_sha, seed_sha, inherited_router=None, gate_cutoff=None):
         self.decoder, self.tokenizer, self.site, self.banks = decoder, tokenizer, site, banks
         self.styles, self.timing, self.columns = styles, timing, columns
         self.contextual, self.direct, self.inheritance = contextual, direct, inheritance
         self.inherited_router = inherited_router
-        self.gate_cutoff = setup['gate_cutoff']
+        self.gate_cutoff = setup['gate_cutoff'] if gate_cutoff is None else gate_cutoff
         self.cutoff = setup['cutoffs']['priority']
         self.working_path, self.working_sha, self.seed_sha = working_path, working_sha, seed_sha
         weight = decoder.base.lm_head.weight
@@ -140,9 +141,11 @@ class ContinuousMemoryChat:
                     inherits=inherits, memory_start=start, entity=entity, version=version)
 
 
-def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False):
+def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_retrained_gate=False):
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
+    if use_retrained_gate and not use_inherited_router:
+        raise ValueError('The retrained gate requires the inherited field router')
     paths = dict(adapter=ADAPTER_RUN / 'candidate.pt', styles=FIELD_RUN / 'field-adapters.pt',
                  context=DIALOGUE_RUN / 'router.pt', priority=PRIORITY_RUN / 'routing.pt',
                  routes=PRIORITY_RUN / 'routes.json', banks=TRANSFER_RUN / 'banks.pt')
@@ -158,6 +161,13 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False):
             raise ValueError('Inherited router plan digest mismatch')
         expected[previous_plan] = previous_digests[previous_plan.name]
         expected[paths['previous']] = previous_digests[paths['previous'].name]
+    gate_result = None
+    if use_retrained_gate:
+        paths['gate'] = INHERITANCE_GATE_RUN / 'gates.pt'
+        gate_plan = INHERITANCE_GATE_RUN / 'plan.json'
+        gate_result = read(INHERITANCE_GATE_RUN / 'result.json')
+        digests = gate_result['artifact_sha256']
+        expected.update({path: digests[path.name] for path in (paths['gate'], gate_plan)})
     model_files = (SOURCE, *(MODEL / name for name in ('model.safetensors', 'config.json', 'tokenizer.json', 'tokenizer_config.json')))
     plan_path = TRANSFER_RUN / 'plan.json'
     if sha(plan_path) != read(TRANSFER_RUN / 'result.json')['artifact_sha256'][plan_path.name]:
@@ -171,6 +181,10 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False):
     for path, digest in expected.items():
         if sha(path) != digest:
             raise ValueError(f'Artifact digest mismatch: {path}')
+    if use_retrained_gate:
+        sources = read(gate_plan)['sources']
+        if any(sources.get(str(path)) != expected[path] for path in (*model_files, paths['previous'], paths['priority'])):
+            raise ValueError('Retrained gate uses incompatible model or router files')
     working_path = Path(working_path).resolve()
     if working_path in {path.resolve() for path in (*expected, plan_path)}:
         raise ValueError('Working memory requires its own checkpoint path')
@@ -196,14 +210,16 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False):
     direct = Route(width, localized=True).eval()
     direct.load_state_dict(priority['direct'])
     inheritance = torch.nn.Linear(width, 1).eval()
-    inheritance.load_state_dict(priority['inheritance'])
+    gate_state = (torch.load(paths['gate'], weights_only=True)['tail'] if use_retrained_gate else priority['inheritance'])
+    inheritance.load_state_dict(gate_state)
     previous = None
     if use_inherited_router:
         previous = Route(width, localized=True).eval()
         previous.load_state_dict(torch.load(paths['previous'], weights_only=True))
     return ContinuousMemoryChat(decoder, tokenizer, organism.memories[0], banks, styles, timing, columns,
                                 contextual, direct, inheritance, read(paths['routes']), working_path=working_path,
-                                working_sha=working_sha, seed_sha=expected[paths['banks']], inherited_router=previous)
+                                working_sha=working_sha, seed_sha=expected[paths['banks']], inherited_router=previous,
+                                gate_cutoff=None if gate_result is None else gate_result['cutoffs']['tail'])
 
 
 def main():
@@ -216,11 +232,14 @@ def main():
     parser.add_argument('--memory-file', type=Path, default=WORKING_BANKS)
     parser.add_argument('--history', help='Preceding user turn')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
+    parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--json', action='store_true', help='Include routing and read diagnostics')
     args = parser.parse_args()
     if args.remember and (args.version != 1 or args.remember[0] not in FIELDS):
         parser.error('--remember updates version 1 and requires drink, work, or place')
-    chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router)
+    if args.retrained_gate and not args.inherited_router:
+        parser.error('--retrained-gate requires --inherited-router')
+    chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router, use_retrained_gate=args.retrained_gate)
     if args.remember:
         print(json.dumps(chat.remember(args.entity, *args.remember), ensure_ascii=False))
         return
