@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import torch
 
-from spora.continuous_bank_store import bank_revision, commit_banks, read_bank_tensor, read_banks
+from spora.continuous_bank_store import bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks
 from spora.durable import RevisionConflict
 
 
@@ -18,6 +18,36 @@ class ContinuousBankStoreTests(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.path = Path(self.directory.name) / 'banks.sqlite3'
         self.payload = dict(banks={('drink', 1): torch.ones(2, 3)}, pages=[{}], addresses={'one': 0})
+
+    def test_history_is_ordered_by_field_and_committed_with_the_update(self):
+        key = (0, 'drink', 1)
+        revision, digests, _ = commit_banks(self.path, self.payload, None, {})
+        self.assertIsNone(read_archived_slots(self.path, 0, 'drink', revision, 1))
+        for entity, value in ((0, 2), (1, 3), (0, 4)):
+            previous = self.payload['banks']['drink', 1]
+            self.payload['banks']['drink', 1] = torch.full_like(previous, value)
+            revision, digests, _ = commit_banks(self.path, self.payload, revision, digests, changed=(key,),
+                                                archive=(entity, 'drink', previous))
+        for entity, back, value in ((0, 1, 3), (0, 2, 1), (1, 1, 2)):
+            record = read_archived_slots(self.path, entity, 'drink', revision, back)
+            torch.testing.assert_close(record, torch.full((2, 3), float(value)))
+        self.assertIsNone(read_archived_slots(self.path, 0, 'drink', revision, 3))
+        self.assertIsNone(read_archived_slots(self.path, 0, 'work', revision, 1))
+        with self.assertRaises(RevisionConflict):
+            read_archived_slots(self.path, 0, 'drink', revision - 1, 1)
+
+        def interrupt():
+            raise OSError('interrupted')
+
+        previous = self.payload['banks']['drink', 1]
+        self.payload['banks']['drink', 1] = torch.full_like(previous, 5)
+        with self.assertRaises(OSError):
+            commit_banks(self.path, self.payload, revision, digests, changed=(key,),
+                         archive=(0, 'drink', previous), hook=interrupt)
+        self.assertEqual(bank_revision(self.path), revision)
+        torch.testing.assert_close(read_bank_tensor(self.path, key, revision, digests[key]), previous)
+        record = read_archived_slots(self.path, 0, 'drink', revision, 1)
+        torch.testing.assert_close(record, torch.full((2, 3), 3.0))
 
     def test_only_changed_tensor_is_written_and_stale_commit_is_rejected(self):
         revision, digests, size = commit_banks(self.path, self.payload, None, {})

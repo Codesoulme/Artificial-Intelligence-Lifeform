@@ -9,7 +9,7 @@ from deepseek_aligned_memory_calibration import load_adapter
 from deepseek_aligned_memory_dialogue import EARLY_TIMING_THRESHOLD, OUT as ADAPTER_RUN, RANK, THRESHOLD, generate_with_memory
 from deepseek_memory_attribute_router import CLARIFY, MISSING
 from deepseek_memory_attribute_span import Route, route_action
-from deepseek_memory_cosine_readout import cosine_bias, projected_codebook
+from deepseek_memory_cosine_readout import cosine_bias, cosine_slot_bias, projected_codebook
 from deepseek_memory_dialogue_context import OUT as DIALOGUE_RUN, features_for, route
 from deepseek_memory_field_decoding import FIELDS, OUT as FIELD_RUN
 from deepseek_memory_field_transfer import OUT as TRANSFER_RUN
@@ -17,7 +17,7 @@ from deepseek_memory_inheritance_gate import OUT as INHERITANCE_GATE_RUN
 from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
-from spora.continuous_bank_store import bank_revision, commit_banks, read_bank_tensor, read_banks
+from spora.continuous_bank_store import bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks
 from spora.durable import RevisionConflict, pack
 from spora.language_training import atomic_save
 from spora.research_continuous_observation import ADDRESSES, can_register, inherited_query_subject, parse_observation, query_subject
@@ -173,11 +173,11 @@ class ContinuousMemoryChat:
         if current != self.working_sha:
             raise RevisionConflict('Continuous memory changed; reload before writing')
 
-    def _save(self, banks, addresses, filled, pages, *, changed=()):
+    def _save(self, banks, addresses, filled, pages, *, changed=(), archive=None):
         payload = bank_payload(banks, self.seed_sha, addresses, filled, pages, self.page_size)
         if uses_database(self.working_path):
             self.working_sha, self.bank_digests, _ = commit_banks(
-                self.working_path, payload, self.working_sha, self.bank_digests, changed=changed)
+                self.working_path, payload, self.working_sha, self.bank_digests, changed=changed, archive=archive)
             banks = dict.fromkeys(banks)
             pages = tuple(dict.fromkeys(page) for page in pages)
         else:
@@ -239,13 +239,20 @@ class ContinuousMemoryChat:
                 updated[field, 1] = candidate
             else:
                 pages[page - 1] = {**pages[page - 1], field: candidate}
-            self._save(updated, self.addresses, self.filled | {record}, tuple(pages), changed=((page, field, 1),))
+            archive = None
+            if record in self.filled and uses_database(self.working_path):
+                previous = read_bank(self.site, bank, self._local_address(entity))[:, :RANK]
+                archive = entity, field, previous
+            self._save(updated, self.addresses, self.filled | {record}, tuple(pages),
+                       changed=((page, field, 1),), archive=archive)
         return dict(action='stored', entity=entity, field=field)
 
     @torch.inference_mode()
-    def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD):
+    def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD, back=0):
         if (entity is not None and entity not in self.addresses.values()) or version not in (0, 1):
             raise ValueError('Unknown experimental address or snapshot')
+        if type(back) is not int or not 0 <= back <= 2**63 - 1 or (back and (version != 1 or not uses_database(self.working_path))):
+            raise ValueError('Historical recall requires a SQLite checkpoint and version 1')
         row = dict(key='input', question=question, history=history, target_turn=0)
         features = features_for(self.decoder, self.tokenizer, row, False)
         probability, = gate_probabilities(self.inheritance, [row], {'input': features})
@@ -278,10 +285,19 @@ class ContinuousMemoryChat:
         elif action == 'read' and (entity, selected, version) not in self.filled:
             action, reason, response = 'missing', 'unwritten_field', MISSING
         elif action == 'read':
-            bias = cosine_bias(self.site, self.bank_for(entity, selected, version), self._local_address(entity),
-                               self.codes, self.scale)
+            missing_reason = 'empty_matrix'
+            if back:
+                archive = (read_archived_slots(self.working_path, entity, selected, self.working_sha, back)
+                           if self.working_sha is not None else None)
+                if archive is not None and (archive.shape != (SLOTS, RANK) or archive.dtype != self.bank_specs[selected, 1][1]):
+                    raise ValueError('Archived memory shape or dtype differs from the model layout')
+                bias = cosine_slot_bias(archive, self.codes, self.scale) if archive is not None else None
+                missing_reason = 'history_unavailable'
+            else:
+                bias = cosine_bias(self.site, self.bank_for(entity, selected, version), self._local_address(entity),
+                                   self.codes, self.scale)
             if bias is None:
-                action, reason, response = 'missing', 'empty_matrix', MISSING
+                action, reason, response = 'missing', missing_reason, MISSING
             else:
                 tokens, start = generate_with_memory(self.decoder, self.tokenizer, features[3], self.styles[selected],
                                                       self.columns, self.timing, 2 * bias,
@@ -298,8 +314,11 @@ class ContinuousMemoryChat:
             response = self.tokenizer.decode(tokens[0, ids.shape[1]:], skip_special_tokens=True).strip()
         else:
             response = MISSING if action == 'missing' else CLARIFY
-        return dict(response=response, action=action, reason=reason, field=selected, confidence=predicted['confidence'],
-                    inherits=inherits, memory_start=start, entity=entity, version=version, subject_reason=subject_reason)
+        result = dict(response=response, action=action, reason=reason, field=selected, confidence=predicted['confidence'],
+                      inherits=inherits, memory_start=start, entity=entity, version=version, subject_reason=subject_reason)
+        if back:
+            result['corrections_back'] = back
+        return result
 
 
 def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_retrained_gate=False):
@@ -406,6 +425,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--entity', type=int)
     parser.add_argument('--version', type=int, choices=(0, 1), default=1)
+    parser.add_argument('--back', type=int, default=0, help='Read this many SQLite corrections back for the selected field')
     operation = parser.add_mutually_exclusive_group()
     operation.add_argument('--question')
     operation.add_argument('--remember', nargs=2, metavar=('FIELD', 'VALUE'))
@@ -424,6 +444,10 @@ def main():
     if args.expand and args.register is None:
         parser.error('--expand requires --register')
     observation = args.observe if args.observe is not None else args.preview_observation
+    if not 0 <= args.back <= 2**63 - 1 or (args.back and (
+            args.version != 1 or not uses_database(args.memory_file) or observation is not None
+            or args.remember or args.register is not None or args.import_checkpoint is not None)):
+        parser.error('--back requires a version-1 SQLite query')
     if args.remember and args.entity is None:
         parser.error('--entity is required for field-based writes')
     if args.observe is not None and args.version != 1:
@@ -482,7 +506,7 @@ def main():
         question = line.strip()
         if not question:
             continue
-        result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold)
+        result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold, back=args.back)
         print(json.dumps(result, ensure_ascii=False) if args.json else result['response'], flush=True)
         history = question
 

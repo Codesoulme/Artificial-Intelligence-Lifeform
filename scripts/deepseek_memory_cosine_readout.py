@@ -33,7 +33,12 @@ def projected_codebook(weight, basis):
 
 @torch.inference_mode()
 def cosine_bias(site, bank, address, codes, scale):
-    slots = read_bank(site, bank, address).to(codes.device)[:, :RANK]
+    return cosine_slot_bias(read_bank(site, bank, address)[:, :RANK], codes, scale)
+
+
+@torch.inference_mode()
+def cosine_slot_bias(slots, codes, scale):
+    slots = slots.to(codes.device)
     if slots[0].norm() < .2:
         return None
     scores = torch.nn.functional.normalize(slots, dim=-1, eps=1e-4) @ codes.T

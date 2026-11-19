@@ -71,7 +71,22 @@ def read_bank_tensor(path, key, revision, digest):
         return unpack(*record)
 
 
-def commit_banks(path, payload, revision, digests, *, changed=(), hook=None):
+def read_archived_slots(path, entity, field, revision, back):
+    if type(back) is not int or not 1 <= back <= 2**63 - 1:
+        raise ValueError('History offset must be a positive SQLite integer')
+    with closing(sqlite3.connect(path.as_uri() + '?mode=rw', uri=True)) as conn, conn:
+        conn.execute('BEGIN')
+        found = conn.execute('SELECT revision FROM bank_head WHERE id=1').fetchone()
+        if found is None or found[0] != revision:
+            raise RevisionConflict('Continuous memory changed; reload before reading history')
+        if conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='bank_history'").fetchone() is None:
+            return None
+        record = conn.execute('SELECT dtype, shape, body, digest FROM bank_history WHERE entity=? AND field=? '
+                              'ORDER BY replaced_at DESC LIMIT 1 OFFSET ?', (entity, field, back - 1)).fetchone()
+        return unpack(*record) if record is not None else None
+
+
+def commit_banks(path, payload, revision, digests, *, changed=(), archive=None, hook=None):
     tensors = _tensors(payload)
     if not set(digests) <= tensors.keys():
         raise ValueError('Bank tensor removal is unsupported')
@@ -86,21 +101,22 @@ def commit_banks(path, payload, revision, digests, *, changed=(), hook=None):
     if 'pages' in payload:
         metadata['page_count'] = len(payload['pages'])
     manifest = canonical(dict(metadata=metadata, digests=[[*key, next_digests[key]] for key in sorted(tensors)]))
+    previous = None if archive is None else (archive[0], archive[1], *pack(archive[2]))
     if revision is None:
         path.parent.mkdir(parents=True, exist_ok=True)
         with TemporaryDirectory(dir=path.parent, prefix='.bank-init-') as folder:
             temporary = Path(folder) / 'banks.sqlite3'
-            next_revision = _commit(temporary, manifest, staged, revision, hook)
+            next_revision = _commit(temporary, manifest, staged, revision, previous, hook)
             try:
                 os.link(temporary, path)
             except FileExistsError as error:
                 raise RevisionConflict('Continuous memory was created by another writer') from error
     else:
-        next_revision = _commit(path, manifest, staged, revision, hook)
+        next_revision = _commit(path, manifest, staged, revision, previous, hook)
     return next_revision, next_digests, sum(len(record[2]) for record in staged.values())
 
 
-def _commit(path, manifest, staged, revision, hook):
+def _commit(path, manifest, staged, revision, previous, hook):
     mode = 'rwc' if revision is None else 'rw'
     with closing(sqlite3.connect(path.as_uri() + '?mode=' + mode, uri=True, timeout=5)) as conn, conn:
         conn.execute('PRAGMA synchronous=FULL')
@@ -116,6 +132,11 @@ def _commit(path, manifest, staged, revision, hook):
         conn.executemany('INSERT OR REPLACE INTO bank_tensors VALUES (?,?,?,?,?,?,?)',
                          [(*key, *record) for key, record in staged.items()])
         next_revision = 0 if revision is None else revision + 1
+        if previous is not None:
+            conn.execute('CREATE TABLE IF NOT EXISTS bank_history (entity INTEGER NOT NULL, field TEXT NOT NULL, '
+                         'replaced_at INTEGER NOT NULL, dtype TEXT NOT NULL, shape TEXT NOT NULL, body BLOB NOT NULL, '
+                         'digest TEXT NOT NULL, PRIMARY KEY(entity, field, replaced_at))')
+            conn.execute('INSERT INTO bank_history VALUES (?,?,?,?,?,?,?)', (*previous[:2], next_revision, *previous[2:]))
         conn.execute('INSERT OR REPLACE INTO bank_head VALUES (1,?,?,?)',
                      (next_revision, manifest, sha(manifest.encode())))
         if hook is not None:
