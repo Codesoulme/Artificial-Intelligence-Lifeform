@@ -116,3 +116,20 @@ cd D:/SPORA
 ```powershell
 .venv/Scripts/python.exe scripts/audit_awake_recall_crosswoz.py runs/crosswoz-awake-recall-val.zip runs/recall-intent.pt --output runs/awake-recall-crosswoz-v1.json
 ```
+
+## 沿用人物并改问字段的初步对照
+
+给定上一轮已核验的人物，比较当前句的字段分类、代词规则，以及从 DeepSeek 隐状态学习的「仍指同一人且查询当前字段」判定。先测 30 条训练句和 12 条校准句，再看 13 条探测句与 20 条留出句。无需提供上一轮原文。正确放行要求人物延续条件和字段均正确。
+
+| 条件 | 探测正确 6 条 | 探测错放 7 条 | 留出正确 10 条 | 留出错放 10 条 |
+|---|---:|---:|---:|---:|
+| 单用当前字段分类 | 6 | 4 | 9 | 5 |
+| 字段分类加代词规则 | 6 | 1 | 2 | 0 |
+| 字段分类加同人判定 | 0 | 0 | 0 | 0 |
+| 同人判定再排除历史、日期与换人线索 | 6 | 0 | 4 | 0 |
+
+单用同人判定时，校准集的历史反例分数与正例接近，按优先减少误放的校准准则选到了 1.00，拒绝了全部样本。加入范围线索后，校准阈值为 0.90。留出集的六条漏判中，五条在同人判定被拒，一条在字段分类被拒。本阶段在离线对照中测试路由，无实机生成结论。
+
+```powershell
+.venv/Scripts/python.exe scripts/deepseek_awake_subject_switch.py --output runs/deepseek-awake-subject-switch-guarded.json
+```
