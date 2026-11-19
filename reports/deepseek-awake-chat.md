@@ -152,3 +152,9 @@ cd D:/SPORA
 ```powershell
 .venv/Scripts/python.exe scripts/verify_awake_memory_reload.py --recall-head runs/recall-intent.pt --subject-head runs/subject-intent.pt
 ```
+
+## 同一聊天进程接收更正
+
+聊天标准输入支持 `/observe` 和 `/记住`。例如输入 `/记住 齐宁最喜欢喝米香玄米茶。`。解析使用已登记姓名和已有的显式观察语法。当前版本的事务写入会核对记忆矩阵和同页邻居。处理记录命令时会消费上一轮短时人物绑定，后续查询需要重新点名。历史查询模式只读。文件被另一个进程修改时，命令会报告需要重新加载。
+
+在临时 SQLite 副本上，实机从「青杏冰茶」改为「米香玄米茶」，同一进程读出了新值，随后隐式改问职业返回「织机检修师」。带「可能」的观察返回暂缓。重复明确记录返回已存在，历史查询仍读出「青杏冰茶」。源检查点摘要及 24 项相关单元测试通过。

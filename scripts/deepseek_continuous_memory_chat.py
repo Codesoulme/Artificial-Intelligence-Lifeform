@@ -57,6 +57,10 @@ class InvalidMemoryValue(ValueError):
     """The submitted value cannot fit the continuous-memory slots."""
 
 
+class MemoryUpdateRejected(ValueError):
+    """A candidate failed verification before the memory transaction."""
+
+
 def uses_database(path):
     return path.suffix.lower() == '.sqlite3'
 
@@ -258,11 +262,11 @@ class ContinuousMemoryChat:
             target[:len(tokens), :RANK] = self.codes[tokens].cpu()
             candidate = write_bank(self.site, bank, self._local_address(entity), target)
             if self._read_tokens(candidate, entity) != expected:
-                raise ValueError('Candidate matrix did not reproduce the written value')
+                raise MemoryUpdateRejected('Candidate matrix did not reproduce the written value')
             neighbors = sorted(other for other, other_field, version in self.filled
                                if other != entity and other_field == field and version == 1 and other // self.page_size == page)
             if self._read_address_tokens(candidate, neighbors) != self._read_address_tokens(bank, neighbors):
-                raise ValueError('Candidate matrix changed another occupied address')
+                raise MemoryUpdateRejected('Candidate matrix changed another occupied address')
             updated = dict(self.banks)
             pages = list(self.pages)
             if page == 0:
@@ -279,6 +283,20 @@ class ContinuousMemoryChat:
             self._save(updated, self.addresses, self.filled | {record}, tuple(pages),
                        changed=((page, field, 1),), archive=archive, recorded=recorded)
         return dict(action='stored', entity=entity, field=field)
+
+    def observe(self, statement, *, entity=None):
+        candidate = parse_observation(statement, self.addresses)
+        if candidate is None:
+            return dict(action='defer', reason='unsupported_or_ambiguous_statement')
+        subject, field, value = candidate
+        if entity is not None and entity != subject:
+            return dict(action='defer', reason='subject_mismatch')
+        try:
+            return self.remember(subject, field, value)
+        except InvalidMemoryValue:
+            return dict(action='defer', reason='value_does_not_fit')
+        except MemoryUpdateRejected:
+            return dict(action='defer', reason='matrix_verification_failed')
 
     @torch.inference_mode()
     def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD, back=0, as_of=None,
@@ -623,10 +641,7 @@ def main():
     if args.observe is not None:
         if chat.addresses.get(next(name for name, key in addresses.items() if key == entity)) != entity:
             raise RevisionConflict('Subject registry changed during observation')
-        try:
-            result = chat.remember(entity, field, value)
-        except InvalidMemoryValue:
-            result = dict(action='defer', reason='value_does_not_fit')
+        result = chat.observe(observation, entity=args.entity)
         print(json.dumps(result, ensure_ascii=False))
         return
     if args.entity is not None and args.entity not in chat.addresses.values():
@@ -641,6 +656,31 @@ def main():
         for line in lines:
             question = line.strip()
             if not question:
+                continue
+            command = question.split(maxsplit=1)
+            if args.question is None and command[0] in ('/observe', '/记住'):
+                if consume_topic is not None:
+                    consume_topic()
+                history = None
+                try:
+                    if args.version != 1 or args.back or args.as_of is not None:
+                        result = dict(action='defer', reason='read_only_query_mode')
+                    else:
+                        result = chat.observe(command[1] if len(command) == 2 else '', entity=args.entity)
+                except RevisionConflict:
+                    result = dict(action='defer', reason='reload_required')
+                text = {
+                    'stored': '已更新这项记录。',
+                    'already_stored': '这项记录已经存在。',
+                    'defer': '未写入，请用已登记姓名说明一项明确的记录。',
+                }[result['action']]
+                if result.get('reason') == 'reload_required':
+                    text = '记忆文件已被其他进程更新，请重启聊天后重试。'
+                elif result.get('reason') == 'read_only_query_mode':
+                    text = '当前是历史查询模式，请重新启动当前版本会话后写入。'
+                elif result.get('reason') == 'matrix_verification_failed':
+                    text = '写入候选未通过记忆校验，本次未保存。'
+                print(json.dumps(result, ensure_ascii=False) if args.json else text, flush=True)
                 continue
             result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold,
                                  back=args.back, as_of=args.as_of, topic_observer=topic_observer,
@@ -672,7 +712,7 @@ def main():
         def report(status):
             print(json.dumps(dict(awake=status), ensure_ascii=False), flush=True)
 
-        print('Awake controls: /status /relax /focus /sleep /wake', file=sys.stderr, flush=True)
+        print('Awake controls: /status /relax /focus /sleep /wake /observe', file=sys.stderr, flush=True)
         with awake_chat_lines(
             chat.organism, sys.stdin, state_path, trained, chat.awake_individual, report,
             topic_labels=KEYS, clear_topics_on_sleep=args.awake_topic_recall,
