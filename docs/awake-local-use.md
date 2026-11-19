@@ -19,3 +19,27 @@
 ```
 
 此阶段的输入是有限数字环境，持续运行和已学规划不等于中文理解、人类意识或完整做梦。原个体与语言检查点保留。[设计和验证](P24-awake-design.md)。
+
+## 开始与 DeepSeek 版孢子聊天
+
+在当前电脑双击 `D:\SPORA\spora_chat.cmd`，或在 PowerShell 执行：
+
+```powershell
+cd D:/SPORA
+.\spora_chat.cmd
+```
+
+启动后输入「你叫什么名字？」。若要记录事实，可输入 `/记住 齐宁最喜欢喝米香玄米茶。`，再问「齐宁平常最爱喝什么？」和「那他的职业是什么？」。当前入口支持饮品、职业和到访地点，示例使用已登记的测试人物。按 `Ctrl+Z` 再按回车可正常退出。
+
+记忆保存在 `runs/spora-awake-local/memory.sqlite3`，首次记录时创建。在线状态文件 `awake.pt` 与名称张量及记忆路径绑定。`/status` 查看状态，`/relax` 放松，`/focus` 专注，`/sleep` 暂停更新，`/wake` 恢复。此入口允许最多三轮经过核验的连续改问。
+
+在另一份本地检出中，如果已具备当前分支的底座与实验检查点，可以按下列步骤重建缺少的三个本地文件。脚本会拒绝覆盖已有输出。
+
+```powershell
+New-Item -ItemType Directory -Force runs/spora-awake-local
+.venv/Scripts/python.exe scripts/deepseek_awake_recall_intent.py --output runs/spora-awake-local/recall-eval.json --head runs/spora-awake-local/recall-intent.pt
+.venv/Scripts/python.exe scripts/deepseek_awake_subject_switch.py --output runs/spora-awake-local/subject-eval.json --head runs/spora-awake-local/subject-intent.pt
+.venv/Scripts/python.exe scripts/deepseek_awake_self_name.py --output runs/spora-awake-local/name-eval.json --identity runs/spora-awake-local/self-name.pt --name '孢子'
+```
+
+实机通过名称读取、连续改问、更正和新进程重载。自由聊天和自然指代仍在评测。详细样本与限制见 [DeepSeek 在线状态实验](../reports/deepseek-awake-chat.md)。
