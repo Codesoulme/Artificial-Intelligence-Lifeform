@@ -8,7 +8,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from deepseek_aligned_memory_calibration import load_adapter
-from deepseek_aligned_memory_dialogue import EARLY_TIMING_THRESHOLD, OUT as ADAPTER_RUN, RANK, THRESHOLD, generate_with_memory
+from deepseek_aligned_memory_dialogue import (
+    EARLY_TIMING_THRESHOLD, OUT as ADAPTER_RUN, RANK, THRESHOLD, generate_memory_suffix, generate_with_memory,
+)
 from deepseek_memory_attribute_router import CLARIFY, MISSING
 from deepseek_memory_attribute_span import KEYS, Route, route_action
 from deepseek_memory_cosine_readout import cosine_bias, cosine_slot_bias, projected_codebook
@@ -20,13 +22,14 @@ from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
 from spora.awake_chat import awake_chat_lines
+from spora.awake_topics import supports_field
 from spora.continuous_bank_store import (
     bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_slots_as_of,
 )
 from spora.durable import RevisionConflict, pack
 from spora.language_training import atomic_save
 from spora.research_continuous_observation import (
-    ADDRESSES, can_register, inherited_query_subject, parse_observation, query_subject, split_history_query,
+    ADDRESSES, ELLIPTICAL_QUERY, can_register, inherited_query_subject, parse_observation, query_subject, split_history_query,
 )
 from spora.working_checkpoint_lock import lock_working_checkpoint
 
@@ -56,6 +59,11 @@ class InvalidMemoryValue(ValueError):
 
 def uses_database(path):
     return path.suffix.lower() == '.sqlite3'
+
+
+def matches_memory_suffix(tokens, bias, eos):
+    return (1 < len(tokens) <= len(bias) and tokens[-1] == eos
+            and bias[:len(tokens)].argmax(dim=-1).tolist() == tokens)
 
 
 def bank_payload(banks, seed_sha, addresses, filled, pages, page_size):
@@ -271,7 +279,7 @@ class ContinuousMemoryChat:
 
     @torch.inference_mode()
     def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD, back=0, as_of=None,
-               topic_observer=None):
+               topic_observer=None, recent_read=None, topic_activity=None):
         if (entity is not None and entity not in self.addresses.values()) or version not in (0, 1):
             raise ValueError('Unknown experimental address or snapshot')
         if type(back) is not int or not 0 <= back <= 2**63 - 1 or (back and (version != 1 or not uses_database(self.working_path))):
@@ -303,26 +311,40 @@ class ContinuousMemoryChat:
                 previous, _ = query_subject(history, self.addresses)
                 if previous != entity:
                     inherits = False
-            elif subject_reason == 'no_subject' and inherits:
+        elliptical = (topic_activity is not None and subject_reason == 'no_subject'
+                      and ELLIPTICAL_QUERY.fullmatch(question.strip()) is not None)
+        use_topic = (elliptical and recent_read is not None and version == 1 and not back and as_of is None
+                     and history_issue is None and probability >= self.gate_cutoff
+                     and supports_field(topic_activity, recent_read[1]))
+        if use_topic:
+            entity, selected = recent_read
+            subject_reason = 'awake_recent_read'
+            inherits = False
+            predicted = dict(selected=selected, confidence=topic_activity[selected] / sum(topic_activity.values()))
+        else:
+            if subject_reason == 'no_subject' and inherits:
                 entity = inherited_query_subject(question, history, self.addresses)
                 if entity is not None:
                     subject_reason = 'inherited_subject'
-        router = self.contextual if inherits else self.direct
-        if inherits:
-            features = features_for(self.decoder, self.tokenizer, row, True)
-        route_features = features
-        if inherits and self.inherited_router is not None:
-            router = self.inherited_router
-            route_features = features_for(self.decoder, self.tokenizer, dict(question=history), False)
-        predicted, = route(router, [row], {'input': route_features})
-        if topic_observer is not None:
-            topic_observer(predicted['probabilities'])
+            router = self.contextual if inherits else self.direct
+            if inherits:
+                features = features_for(self.decoder, self.tokenizer, row, True)
+            route_features = features
+            if inherits and self.inherited_router is not None:
+                router = self.inherited_router
+                route_features = features_for(self.decoder, self.tokenizer, dict(question=history), False)
+            predicted, = route(router, [row], {'input': route_features})
+            if topic_observer is not None and not elliptical:
+                topic_observer(predicted['probabilities'])
         selected = predicted['selected']
         action = route_action(predicted, self.cutoff)
         start = None
+        confirmed = False
         reason = action
         if history_issue is not None:
             action, reason, response = 'clarify', history_issue, CLARIFY
+        elif elliptical and entity is None:
+            action, reason, response = 'clarify', 'awake_topic_unavailable', ASK_SUBJECT
         elif entity is None and (requested_back or as_of is not None or action in ('read', 'missing') or subject_reason != 'no_subject'):
             action, reason, response = 'clarify', subject_reason, ASK_SUBJECT
         elif (requested_back or as_of is not None) and action == 'ordinary':
@@ -347,6 +369,14 @@ class ContinuousMemoryChat:
                                    self.codes, self.scale)
             if bias is None:
                 action, reason, response = 'missing', missing_reason, MISSING
+            elif use_topic:
+                ids = torch.tensor([features[3]], device=bias.device)
+                tokens = generate_memory_suffix(self.decoder, self.tokenizer, ids, 2 * bias, SLOTS)
+                if matches_memory_suffix(tokens, bias, self.tokenizer.eos_token_id):
+                    start = 0
+                    response = self.tokenizer.decode(tokens, skip_special_tokens=True).strip()
+                else:
+                    action, reason, response = 'clarify', 'awake_read_unconfirmed', CLARIFY
             else:
                 tokens, start = generate_with_memory(self.decoder, self.tokenizer, features[3], self.styles[selected],
                                                       self.columns, self.timing, 2 * bias,
@@ -354,6 +384,8 @@ class ContinuousMemoryChat:
                 if start is None:
                     action, reason, response = 'clarify', 'injection_not_triggered', CLARIFY
                 else:
+                    if topic_activity and subject_reason == 'named_subject' and version == 1 and not back and as_of is None:
+                        confirmed = matches_memory_suffix(tokens[start:], bias, self.tokenizer.eos_token_id)
                     response = self.tokenizer.decode(tokens, skip_special_tokens=True).strip()
                     if requested_back:
                         response = f'{requested_back} 次更正前的记录是「{response}」。'
@@ -373,6 +405,8 @@ class ContinuousMemoryChat:
             result['corrections_back'] = back
         if as_of_utc is not None:
             result['as_of_utc'] = as_of_utc
+        if topic_activity is not None:
+            result['confirmed_recent_read'] = confirmed
         return result
 
 
@@ -499,6 +533,7 @@ def main():
     parser.add_argument('--memory-file', type=Path, default=WORKING_BANKS)
     parser.add_argument('--history', help='Preceding user turn')
     parser.add_argument('--awake-state', type=Path, help='Persist the experimental awake core during stdin chat')
+    parser.add_argument('--awake-topic-recall', action='store_true', help='Use verified recent reads for bounded follow-ups')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
@@ -510,6 +545,8 @@ def main():
     if args.awake_state is not None and (args.question is not None or observation is not None or args.remember
                                          or args.register is not None or args.import_checkpoint is not None):
         parser.error('--awake-state is available during stdin chat')
+    if args.awake_topic_recall and args.awake_state is None:
+        parser.error('--awake-topic-recall requires --awake-state')
     if not 0 <= args.back <= 2**63 - 1 or (args.back and (
             args.version != 1 or not uses_database(args.memory_file) or observation is not None
             or args.remember or args.register is not None or args.import_checkpoint is not None)):
@@ -569,16 +606,19 @@ def main():
         return
     timing_threshold = EARLY_TIMING_THRESHOLD if args.earlier_readout else THRESHOLD
 
-    def answer_lines(lines, topic_observer=None):
+    def answer_lines(lines, topic_observer=None, topic_snapshot=None):
         history = args.history
+        recent_read = None
         for line in lines:
             question = line.strip()
             if not question:
                 continue
             result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold,
-                                 back=args.back, as_of=args.as_of, topic_observer=topic_observer)
+                                 back=args.back, as_of=args.as_of, topic_observer=topic_observer, recent_read=recent_read,
+                                 topic_activity=(topic_snapshot() or {}) if topic_snapshot is not None else None)
             print(json.dumps(result, ensure_ascii=False) if args.json else result['response'], flush=True)
-            history = question
+            recent_read = ((result['entity'], result['field']) if result.get('confirmed_recent_read') else None)
+            history = None if args.awake_topic_recall else question
 
     if args.question is not None:
         answer_lines((args.question,))
@@ -592,9 +632,11 @@ def main():
             print(json.dumps(dict(awake=status), ensure_ascii=False), flush=True)
 
         print('Awake controls: /status /relax /focus /sleep /wake', file=sys.stderr, flush=True)
-        with awake_chat_lines(chat.organism, sys.stdin, state_path, trained, chat.awake_individual, report,
-                              topic_labels=KEYS) as (lines, observe_topic):
-            answer_lines(lines, observe_topic)
+        with awake_chat_lines(
+            chat.organism, sys.stdin, state_path, trained, chat.awake_individual, report,
+            topic_labels=KEYS, clear_topics_on_sleep=args.awake_topic_recall,
+        ) as (lines, observe_topic, topic_snapshot):
+            answer_lines(lines, observe_topic, topic_snapshot if args.awake_topic_recall else None)
     else:
         if sys.stdin.isatty():
             print('Enter one question per line. Ctrl+Z then Enter exits on Windows.', file=sys.stderr, flush=True)

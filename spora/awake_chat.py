@@ -21,7 +21,7 @@ SAVE_INTERVAL_NS = 5_000_000_000
 
 
 @contextmanager
-def awake_chat_lines(model, lines, path, trained_core, individual, report, *, topic_labels=()):
+def awake_chat_lines(model, lines, path, trained_core, individual, report, *, topic_labels=(), clear_topics_on_sleep=False):
     core_data = trained_core.read_bytes()
     core_digest = hashlib.sha256(core_data).hexdigest()
     provenance = dict(format=FORMAT, individual=individual, core_sha256=core_digest)
@@ -74,6 +74,12 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report, *, to
             with state_changed:
                 if topics is not None and int(core.mode) != 2 and not stop.is_set():
                     topics.observe(probabilities)
+
+        def topic_activity():
+            with state_changed:
+                if topics is not None and int(core.mode) != 2 and not stop.is_set():
+                    return topics.status()['activity']
+            return None
 
         def run_clock():
             with state_changed:
@@ -135,6 +141,8 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report, *, to
                         status = core.status()
                         if mode is not None and status['mode'] != mode:
                             tick()
+                            if clear_topics_on_sleep and topics is not None and mode == 'sleep':
+                                topics.invalidate()
                             session.set_mode(mode)
                             state_changed.notify()
                             status = core.status()
@@ -148,7 +156,7 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report, *, to
         threading.Thread(target=read_input, daemon=True).start()
         worker.start()
         try:
-            yield active_lines(), observe
+            yield active_lines(), observe, topic_activity
         finally:
             stop.set()
             with state_changed:

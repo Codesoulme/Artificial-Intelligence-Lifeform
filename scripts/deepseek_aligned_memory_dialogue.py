@@ -117,11 +117,22 @@ def answer(decoder, tokenizer, prompt, style=None, columns=None, gate=None, bias
 
 
 @torch.inference_mode()
+def generate_memory_suffix(decoder, tokenizer, ids, slot_bias, max_new_tokens):
+    from spora.memory_output import MemorySequenceLogitsProcessor
+
+    prefix_length = ids.shape[1]
+    processor = MemorySequenceLogitsProcessor(slot_bias, prefix_length)
+    generation = decoder.generate(input_ids=ids, attention_mask=torch.ones_like(ids),
+                                  logits_processor=[processor], do_sample=False, use_cache=True,
+                                  max_new_tokens=max_new_tokens, pad_token_id=tokenizer.pad_token_id,
+                                  eos_token_id=tokenizer.eos_token_id)
+    return generation[0, prefix_length:].tolist()
+
+
+@torch.inference_mode()
 def generate_with_memory(decoder, tokenizer, prompt, style, columns, gate, slot_bias, max_new_tokens=32,
                          *, timing_threshold=THRESHOLD):
     """Generate the opening, then hand off at the learned injection boundary."""
-    from spora.memory_output import MemorySequenceLogitsProcessor
-
     ids = torch.tensor([prompt], device=slot_bias.device)
     generated = []
     for index in range(max_new_tokens):
@@ -129,13 +140,8 @@ def generate_with_memory(decoder, tokenizer, prompt, style, columns, gate, slot_
         hidden = torch.nn.functional.normalize(output.hidden_states[-1][0, -1].float(), dim=-1)
         probability = float(gate(hidden).sigmoid())
         if index > 0 and probability >= timing_threshold:
-            prefix_length = ids.shape[1]
-            processor = MemorySequenceLogitsProcessor(slot_bias, prefix_length)
-            generation = decoder.generate(input_ids=ids, attention_mask=torch.ones_like(ids),
-                                          logits_processor=[processor], do_sample=False, use_cache=True,
-                                          max_new_tokens=max_new_tokens - index, pad_token_id=tokenizer.pad_token_id,
-                                          eos_token_id=tokenizer.eos_token_id)
-            return generated + generation[0, prefix_length:].tolist(), index
+            suffix = generate_memory_suffix(decoder, tokenizer, ids, slot_bias, max_new_tokens - index)
+            return generated + suffix, index
         scores = output.logits[0, -1].float()
         scores[columns] += style(hidden)
         token = int(scores.argmax())

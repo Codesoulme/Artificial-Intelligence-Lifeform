@@ -6,6 +6,13 @@ import torch
 from torch import nn
 
 
+def supports_field(activity, field):
+    if not activity or field not in activity:
+        return False
+    mass = sum(activity.values())
+    return (mass >= .2 and max(activity, key=activity.get) == field and activity[field] / mass >= .65)
+
+
 class AwakeTopics(nn.Module):
     def __init__(self, labels):
         super().__init__()

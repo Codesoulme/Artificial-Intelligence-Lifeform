@@ -6,7 +6,7 @@ import torch
 from spora.awake import AwakeConfig,AwakeCore,attach_awake
 from spora.awake_chat import awake_chat_lines
 from spora.awake_session import AwakeSession
-from spora.awake_topics import AwakeTopics
+from spora.awake_topics import AwakeTopics, supports_field
 from spora.language_training import atomic_save
 from spora.temporal import TemporalSPORA,TemporalConfig
 from spora.growing import new_state,save,load,grow
@@ -15,6 +15,13 @@ from spora.durable import TensorStore
 
 
 class AwakeChatTests(unittest.TestCase):
+    def test_topic_support_requires_active_and_matching_prior(self):
+        self.assertTrue(supports_field({'drink': .6, 'work': .1}, 'drink'))
+        self.assertFalse(supports_field({'drink': .1, 'work': .6}, 'drink'))
+        self.assertFalse(supports_field({'drink': .12, 'work': .1}, 'drink'))
+        self.assertFalse(supports_field({'drink': .1, 'work': .01}, 'drink'))
+        self.assertFalse(supports_field(None, 'drink'))
+
     def test_topic_posterior_changes_recurrence_and_expires_with_elapsed_time(self):
         drink, work, no_input = (AwakeTopics(('drink', 'work')) for _ in range(3))
         drink.observe([.9, .1])
@@ -48,7 +55,7 @@ class AwakeChatTests(unittest.TestCase):
             with (patch('spora.awake_chat.SAVE_INTERVAL_NS', 100_000_000),
                   patch('spora.awake_chat.atomic_save', side_effect=observe_save),
                   awake_chat_lines(model, ['question'], saved, trained, {}, lambda status: None,
-                                   topic_labels=('drink', 'work')) as (lines, observe)):
+                                   topic_labels=('drink', 'work')) as (lines, observe, _)):
                 self.assertEqual(next(lines), 'question')
                 observe([.1, .9])
                 self.assertTrue(checkpointed.wait(timeout=5))
