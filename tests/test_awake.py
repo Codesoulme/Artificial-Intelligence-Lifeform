@@ -1,12 +1,42 @@
 import copy,tempfile,unittest
 from pathlib import Path
+from threading import Event
+from unittest.mock import patch
 import torch
-from spora.awake import AwakeCore,attach_awake
+from spora.awake import AwakeConfig,AwakeCore,attach_awake
+from spora.awake_chat import awake_chat_lines
 from spora.awake_session import AwakeSession
+from spora.language_training import atomic_save
 from spora.temporal import TemporalSPORA,TemporalConfig
 from spora.growing import new_state,save,load,grow
 from spora.state_codec import flatten
 from spora.durable import TensorStore
+
+
+class AwakeChatTests(unittest.TestCase):
+    def test_clock_and_periodic_save_continue_while_chat_processes_a_line(self):
+        model = torch.nn.Linear(1, 1)
+        core = AwakeCore(AwakeConfig(relax_seconds=.03, focus_seconds=.01))
+        checkpointed = Event()
+
+        def observe_save(payload, path):
+            atomic_save(payload, path)
+            checkpointed.set()
+
+        with tempfile.TemporaryDirectory() as directory:
+            trained, saved = (Path(directory) / name for name in ('trained.pt', 'awake.pt'))
+            torch.save(dict(config=core.config_dict(), state=core.state_dict()), trained)
+            with (patch('spora.awake_chat.SAVE_INTERVAL_NS', 100_000_000),
+                  patch('spora.awake_chat.atomic_save', side_effect=observe_save),
+                  awake_chat_lines(model, ['question'], saved, trained, {}, lambda status: None) as lines):
+                self.assertEqual(next(lines), 'question')
+                self.assertTrue(checkpointed.wait(timeout=5))
+                state = torch.load(saved, weights_only=True)['core']['state']
+                self.assertGreater(int(state['neural_steps']), 0)
+                self.assertEqual(int(state['gap_ns']), 0)
+                self.assertEqual(list(lines), [])
+            final = torch.load(saved, weights_only=True)['core']['state']
+            self.assertGreaterEqual(int(final['neural_steps']), int(state['neural_steps']))
 
 
 class AwakeTests(unittest.TestCase):

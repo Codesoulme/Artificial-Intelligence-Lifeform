@@ -1,10 +1,10 @@
-"""Drive a model's finite awake module while a chat waits for input."""
+"""Drive a model's finite awake module independently of chat decoding."""
 
 import hashlib
 import queue
 import threading
-import time
 from contextlib import contextmanager
+from io import BytesIO
 
 import torch
 
@@ -16,6 +16,7 @@ from .working_checkpoint_lock import lock_working_checkpoint
 
 FORMAT = 'spora-awake-chat-v1'
 CONTROLS = {'/relax': 'relax', '/focus': 'focus', '/sleep': 'sleep', '/wake': 'relax'}
+SAVE_INTERVAL_NS = 5_000_000_000
 
 
 @contextmanager
@@ -30,7 +31,6 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report):
                 raise ValueError('Awake state belongs to a different chat individual or core')
             payload = saved['core']
         else:
-            from io import BytesIO
             payload = torch.load(BytesIO(core_data), map_location='cpu', weights_only=True)
         core = AwakeCore(AwakeConfig(**payload['config']))
         core.load_state_dict(payload['state'])
@@ -43,6 +43,30 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report):
 
         inbox = queue.Queue(maxsize=16)
         stop = threading.Event()
+        state_changed = threading.Condition()
+        failures = []
+
+        def run_clock():
+            with state_changed:
+                next_save = session.clock() + SAVE_INTERVAL_NS
+                try:
+                    while not stop.is_set():
+                        next_tick = session.anchor + int(core.interval() * 1e9)
+                        now = session.clock()
+                        delay = min(next_tick, next_save) - now
+                        if delay > 0:
+                            state_changed.wait(delay / 1e9)
+                            continue
+                        if now >= next_tick:
+                            session.tick()
+                        if now >= next_save:
+                            save()
+                            next_save = session.clock() + SAVE_INTERVAL_NS
+                    session.tick()
+                    save()
+                except Exception as error:
+                    failures.append(error)
+                    stop.set()
 
         def enqueue(item):
             while not stop.is_set():
@@ -64,32 +88,40 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report):
                 enqueue(None)
 
         def active_lines():
-            saved_at = time.monotonic()
             while True:
+                if stop.is_set():
+                    return
                 try:
-                    line = inbox.get(timeout=core.interval())
+                    line = inbox.get(timeout=.25)
                 except queue.Empty:
-                    line = ''
-                session.tick()
+                    continue
                 if line is None:
                     return
                 if isinstance(line, Exception):
                     raise line
                 command = line.strip()
-                if command in CONTROLS:
-                    session.set_mode(CONTROLS[command])
                 if command == '/status' or command in CONTROLS:
-                    report(core.status())
+                    with state_changed:
+                        mode = CONTROLS.get(command)
+                        status = core.status()
+                        if mode is not None and status['mode'] != mode:
+                            session.tick()
+                            session.set_mode(mode)
+                            state_changed.notify()
+                            status = core.status()
+                    report(status)
                 elif command:
                     yield line
-                now = time.monotonic()
-                if now - saved_at >= 5:
-                    save()
-                    saved_at = now
 
+        worker = threading.Thread(target=run_clock, name='spora-awake-clock')
         threading.Thread(target=read_input, daemon=True).start()
+        worker.start()
         try:
             yield active_lines()
         finally:
             stop.set()
-            save()
+            with state_changed:
+                state_changed.notify()
+            worker.join()
+        if failures:
+            raise failures[0]

@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -424,8 +425,10 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_ret
         working_path, seed_banks, expected[paths['banks']], lazy=uses_database(working_path))
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
+    load_device = 'cpu' if os.name == 'nt' else 'cuda'
     base = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False,
-              dtype=torch.float16, attn_implementation='sdpa', device_map={'': 'cuda'}, low_cpu_mem_usage=True).eval()
+              dtype=torch.float16, attn_implementation='sdpa', device_map={'': load_device}, low_cpu_mem_usage=True)
+    base = base.to('cuda').eval()
     decoder, organism, _ = load_integrated(SOURCE, base, MODEL, individual_device='cpu')
     decoder.eval().requires_grad_(False)
     width = base.lm_head.weight.shape[1]
