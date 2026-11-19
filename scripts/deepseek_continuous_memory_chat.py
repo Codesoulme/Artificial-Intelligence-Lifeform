@@ -19,11 +19,16 @@ from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilitie
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
 from spora.durable import RevisionConflict
 from spora.language_training import atomic_save
+from spora.research_continuous_observation import ADDRESSES, parse_observation
 from spora.working_checkpoint_lock import lock_working_checkpoint
 
-ENTITIES = (26, 47)
+ENTITIES = tuple(ADDRESSES.values())
 WORKING_BANKS = TRANSFER_RUN / 'working-banks.pt'
 WORKING_FORMAT = 'spora-continuous-chat-banks-v1'
+
+
+class InvalidMemoryValue(ValueError):
+    """The submitted value cannot fit the continuous-memory slots."""
 
 
 def load_working_banks(path, seed_banks, seed_sha):
@@ -72,7 +77,7 @@ class ContinuousMemoryChat:
             raise ValueError('Unknown experimental address or field')
         tokens = encode(self.tokenizer, value.strip())
         if not 1 <= len(tokens) < SLOTS or set(tokens) & set(self.tokenizer.all_special_ids):
-            raise ValueError(f'Value must have 1 to {SLOTS - 1} non-special tokens')
+            raise InvalidMemoryValue(f'Value must have 1 to {SLOTS - 1} non-special tokens')
         tokens.append(self.tokenizer.eos_token_id)
         bank = self.banks[field, 1]
         other, = (key for key in ENTITIES if key != entity)
@@ -225,11 +230,13 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_ret
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--entity', type=int, choices=ENTITIES, required=True)
+    parser.add_argument('--entity', type=int, choices=ENTITIES)
     parser.add_argument('--version', type=int, choices=(0, 1), default=1)
     operation = parser.add_mutually_exclusive_group()
     operation.add_argument('--question')
     operation.add_argument('--remember', nargs=2, metavar=('FIELD', 'VALUE'))
+    operation.add_argument('--observe', metavar='STATEMENT')
+    operation.add_argument('--preview-observation', metavar='STATEMENT')
     parser.add_argument('--memory-file', type=Path, default=WORKING_BANKS)
     parser.add_argument('--history', help='Preceding user turn')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
@@ -237,11 +244,35 @@ def main():
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
     parser.add_argument('--json', action='store_true', help='Include routing and read diagnostics')
     args = parser.parse_args()
+    observation = args.observe if args.observe is not None else args.preview_observation
+    if observation is None and args.entity is None:
+        parser.error('--entity is required for queries and field-based writes')
+    if args.observe is not None and args.version != 1:
+        parser.error('--observe updates version 1')
     if args.remember and (args.version != 1 or args.remember[0] not in FIELDS):
         parser.error('--remember updates version 1 and requires drink, work, or place')
     if args.retrained_gate and not args.inherited_router:
         parser.error('--retrained-gate requires --inherited-router')
+    if observation is not None:
+        candidate = parse_observation(observation)
+        if candidate is None:
+            print(json.dumps(dict(action='defer', reason='unsupported_or_ambiguous_statement')))
+            return
+        entity, field, value = candidate
+        if args.entity is not None and args.entity != entity:
+            print(json.dumps(dict(action='defer', reason='subject_mismatch')))
+            return
+        if args.preview_observation is not None:
+            print(json.dumps(dict(action='preview', entity=entity, field=field, value=value), ensure_ascii=False))
+            return
     chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router, use_retrained_gate=args.retrained_gate)
+    if args.observe is not None:
+        try:
+            result = chat.remember(entity, field, value)
+        except InvalidMemoryValue:
+            result = dict(action='defer', reason='value_does_not_fit')
+        print(json.dumps(result, ensure_ascii=False))
+        return
     if args.remember:
         print(json.dumps(chat.remember(args.entity, *args.remember), ensure_ascii=False))
         return

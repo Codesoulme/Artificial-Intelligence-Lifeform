@@ -60,3 +60,15 @@ cd D:/SPORA
 每次提交后的检查点均为 1,557,512 字节。当前机器上的提交平均耗时约 58 毫秒，范围为 50 至 71 毫秒，包括校验和原子写盘。新进程重新载入后通过全部 12 条矩阵核对，并逐条复现重启前的聊天结果。自动路由完整回答了 8/12 个原值或当前值组合。剩余四个组合来自两条追问，一条饮品题置信度不足，一条地点题被分到普通聊天。
 
 本轮覆盖两个固定地址、三个字段和循环更正。检查点只保留初始值和当前值，文件大小结论适用于这个存储布局。更大容量、较长值和保留中间历史需要分别验证。复现脚本为 `scripts/deepseek_continuous_memory_stress.py`，使用 `--reload` 可在独立进程核对已有结果。
+
+## 显式中文观察
+
+`--observe` 接受实验对象齐宁和何程的单句陈述，用句式提取姓名、饮品、职业或地点及其值。它沿用显式矩阵写入的词元容量检查、读回校验、写入锁和原子替换。`--preview-observation` 只展示提取结果，词元容量在提交时校验。问句、超出句式范围的输入和与 `--entity` 冲突的姓名会暂缓。普通对话仍按查询入口处理。
+
+```powershell
+.venv/Scripts/python.exe scripts/deepseek_continuous_memory_chat.py --preview-observation '何程现在最喜欢喝菠萝花茶。'
+.venv/Scripts/python.exe scripts/deepseek_continuous_memory_chat.py --observe '何程现在最喜欢喝菠萝花茶。'
+.venv/Scripts/python.exe scripts/deepseek_continuous_memory_chat.py --entity 47 --question '行程先放一边，何程平常点单最偏爱喝哪样？' --json
+```
+
+24 个解析用例通过。隔离实机验证中，预览提取了对象 47 和饮品字段，错误指定对象 26 时未创建检查点。提交后，转述试例未改变检查点摘要。独立进程用查询读出了“菠萝花茶”，初始矩阵摘要一致。这里的实体和句式由规则限定，尚未验证对新实体、自由表达或隐含更正的识别能力。
