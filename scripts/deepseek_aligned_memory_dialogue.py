@@ -115,6 +115,35 @@ def answer(decoder, tokenizer, prompt, style=None, columns=None, gate=None, bias
     return tokenizer.decode(generated, skip_special_tokens=True).strip(), trace
 
 
+@torch.inference_mode()
+def generate_with_memory(decoder, tokenizer, prompt, style, columns, gate, slot_bias, max_new_tokens=32):
+    """Generate the opening, then hand off at the learned injection boundary."""
+    from spora.memory_output import MemorySequenceLogitsProcessor
+
+    ids = torch.tensor([prompt], device=slot_bias.device)
+    generated = []
+    for index in range(max_new_tokens):
+        output = decoder(input_ids=ids, use_cache=False, output_hidden_states=True)
+        hidden = torch.nn.functional.normalize(output.hidden_states[-1][0, -1].float(), dim=-1)
+        probability = float(gate(hidden).sigmoid())
+        if index > 0 and probability >= THRESHOLD:
+            prefix_length = ids.shape[1]
+            processor = MemorySequenceLogitsProcessor(slot_bias, prefix_length)
+            generation = decoder.generate(input_ids=ids, attention_mask=torch.ones_like(ids),
+                                          logits_processor=[processor], do_sample=False, use_cache=True,
+                                          max_new_tokens=max_new_tokens - index, pad_token_id=tokenizer.pad_token_id,
+                                          eos_token_id=tokenizer.eos_token_id)
+            return generated + generation[0, prefix_length:].tolist(), index
+        scores = output.logits[0, -1].float()
+        scores[columns] += style(hidden)
+        token = int(scores.argmax())
+        generated.append(token)
+        if token == tokenizer.eos_token_id:
+            break
+        ids = torch.cat((ids, ids.new_tensor([[token]])), dim=1)
+    return generated, None
+
+
 def score(row, all_values):
     if row['expected'] is None or row['start'] is None or row['read_relation'] != row['relation']:
         return False

@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 
 from deepseek_aligned_memory_calibration import load_adapter
-from deepseek_aligned_memory_dialogue import OUT as ADAPTER_RUN, RANK, answer, matrix_bias, score
+from deepseek_aligned_memory_dialogue import OUT as ADAPTER_RUN, RANK, answer, generate_with_memory, matrix_bias, score
 from deepseek_factored_relation_router import BANK_RUN
 from deepseek_memory_dialogue_context import features_for
 from deepseek_memory_field_decoding import FIELDS, OUT as FIELD_RUN
@@ -19,6 +19,7 @@ from spora.memory_output import MemorySequenceLogitsProcessor
 
 OUT = ROOT / 'runs/deepseek-memory-cosine-readout'
 GENERATE_OUT = ROOT / 'runs/deepseek-memory-cosine-generate'
+LIVE_OUT = ROOT / 'runs/deepseek-memory-cosine-live'
 
 
 @torch.inference_mode()
@@ -50,7 +51,7 @@ def replay_generate(decoder, tokenizer, prompt, tokens, start, bias):
     return generation[0, len(prefix):].tolist()
 
 
-def main(out, verify_generate=False):
+def main(out, verify_generate=False, verify_live=False):
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     if out.exists():
@@ -76,7 +77,8 @@ def main(out, verify_generate=False):
         **{TRANSFER_RUN / name: transfer_result['artifact_sha256'][name] for name in ('banks.pt', 'plan.json', 'routes.json')},
         PRIORITY_RUN / 'routes.json': read(PRIORITY_RUN / 'result.json')['artifact_sha256']['routes.json'],
     }
-    protected = (Path(__file__), ROOT / 'spora/memory_output.py', SOURCE, FIELD_RUN / 'result.json',
+    protected = (Path(__file__), ROOT / 'scripts/deepseek_aligned_memory_dialogue.py',
+                 ROOT / 'spora/memory_output.py', SOURCE, FIELD_RUN / 'result.json',
                  TRANSFER_RUN / 'result.json', *expected_digests,
                  *(MODEL / name for name in ('model.safetensors', 'config.json', 'tokenizer.json', 'tokenizer_config.json')))
     hashes = fingerprint(protected)
@@ -109,7 +111,7 @@ def main(out, verify_generate=False):
     codes, scale = projected_codebook(head.weight, basis)
     banks = {name: torch.load(path, weights_only=True) for name, path in bank_paths.items()}
     write(out / 'plan.json', dict(protected=hashes, cohorts=cohorts, scale=scale, gain_multiplier=2., rank=RANK,
-                                 verify_generate=verify_generate))
+                                 verify_generate=verify_generate, verify_live=verify_live))
     empty = torch.zeros_like(next(iter(banks['transfer'].values())))
     if cosine_bias(site, empty, site.current_basis[26:27], codes, scale) is not None:
         raise ValueError('Empty bank accepted')
@@ -154,6 +156,11 @@ def main(out, verify_generate=False):
                         standard = replay_generate(decoder, tokenizer, prompt, tokens, start, bias)
                         row['generate_tokens'] = standard
                         row['generate_matches'] = standard == tokens[start:]
+                    if verify_live and mode == 'cosine':
+                        live_tokens, live_start = generate_with_memory(decoder, tokenizer, prompt, styles[field],
+                                                                      columns, timing, 2 * bias)
+                        row.update(live_tokens=live_tokens, live_start=live_start,
+                                   live_matches=live_tokens == tokens and live_start == start)
                     results.append(row)
                     stream.write(json.dumps(row, ensure_ascii=False) + '\n')
                 stream.flush()
@@ -167,6 +174,9 @@ def main(out, verify_generate=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--out', type=Path)
-    parser.add_argument('--verify-generate', action='store_true')
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--verify-generate', action='store_true')
+    modes.add_argument('--verify-live', action='store_true')
     args = parser.parse_args()
-    main(args.out or (GENERATE_OUT if args.verify_generate else OUT), args.verify_generate)
+    default_out = LIVE_OUT if args.verify_live else GENERATE_OUT if args.verify_generate else OUT
+    main(args.out or default_out, args.verify_generate, args.verify_live)
