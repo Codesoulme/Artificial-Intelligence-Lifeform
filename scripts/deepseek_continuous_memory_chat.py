@@ -13,6 +13,7 @@ from deepseek_memory_cosine_readout import cosine_bias, projected_codebook
 from deepseek_memory_dialogue_context import OUT as DIALOGUE_RUN, features_for, route
 from deepseek_memory_field_decoding import FIELDS, OUT as FIELD_RUN
 from deepseek_memory_field_transfer import OUT as TRANSFER_RUN
+from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
 from spora.durable import RevisionConflict
@@ -46,10 +47,11 @@ def load_working_banks(path, seed_banks, seed_sha):
 
 class ContinuousMemoryChat:
     def __init__(self, decoder, tokenizer, site, banks, styles, timing, columns, contextual, direct, inheritance, setup,
-                 *, working_path, working_sha, seed_sha):
+                 *, working_path, working_sha, seed_sha, inherited_router=None):
         self.decoder, self.tokenizer, self.site, self.banks = decoder, tokenizer, site, banks
         self.styles, self.timing, self.columns = styles, timing, columns
         self.contextual, self.direct, self.inheritance = contextual, direct, inheritance
+        self.inherited_router = inherited_router
         self.gate_cutoff = setup['gate_cutoff']
         self.cutoff = setup['cutoffs']['priority']
         self.working_path, self.working_sha, self.seed_sha = working_path, working_sha, seed_sha
@@ -105,7 +107,11 @@ class ContinuousMemoryChat:
         router = self.contextual if inherits else self.direct
         if inherits:
             features = features_for(self.decoder, self.tokenizer, row, True)
-        predicted, = route(router, [row], {'input': features})
+        route_features = features
+        if inherits and self.inherited_router is not None:
+            router = self.inherited_router
+            route_features = features_for(self.decoder, self.tokenizer, dict(question=history), False)
+        predicted, = route(router, [row], {'input': route_features})
         selected = predicted['selected']
         action = route_action(predicted, self.cutoff)
         start = None
@@ -134,7 +140,7 @@ class ContinuousMemoryChat:
                     inherits=inherits, memory_start=start, entity=entity, version=version)
 
 
-def load_chat(working_path=WORKING_BANKS):
+def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False):
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     paths = dict(adapter=ADAPTER_RUN / 'candidate.pt', styles=FIELD_RUN / 'field-adapters.pt',
@@ -144,12 +150,24 @@ def load_chat(working_path=WORKING_BANKS):
     for name in ('styles', 'context', 'priority', 'routes', 'banks'):
         path = paths[name]
         expected[path] = read(path.parent / 'result.json')['artifact_sha256'][path.name]
+    if use_inherited_router:
+        paths['previous'] = INHERITED_RUN / 'previous-router.pt'
+        previous_digests = read(INHERITED_RUN / 'result.json')['artifact_sha256']
+        previous_plan = INHERITED_RUN / 'plan.json'
+        if sha(previous_plan) != previous_digests[previous_plan.name]:
+            raise ValueError('Inherited router plan digest mismatch')
+        expected[previous_plan] = previous_digests[previous_plan.name]
+        expected[paths['previous']] = previous_digests[paths['previous'].name]
     model_files = (SOURCE, *(MODEL / name for name in ('model.safetensors', 'config.json', 'tokenizer.json', 'tokenizer_config.json')))
     plan_path = TRANSFER_RUN / 'plan.json'
     if sha(plan_path) != read(TRANSFER_RUN / 'result.json')['artifact_sha256'][plan_path.name]:
         raise ValueError(f'Artifact digest mismatch: {plan_path}')
     provenance = read(plan_path)['protected']
     expected.update({path: provenance[str(path)] for path in model_files})
+    if use_inherited_router:
+        sources = read(previous_plan)['sources']
+        if any(sources.get(str(path)) != expected[path] for path in model_files):
+            raise ValueError('Inherited router uses incompatible model files')
     for path, digest in expected.items():
         if sha(path) != digest:
             raise ValueError(f'Artifact digest mismatch: {path}')
@@ -179,9 +197,13 @@ def load_chat(working_path=WORKING_BANKS):
     direct.load_state_dict(priority['direct'])
     inheritance = torch.nn.Linear(width, 1).eval()
     inheritance.load_state_dict(priority['inheritance'])
+    previous = None
+    if use_inherited_router:
+        previous = Route(width, localized=True).eval()
+        previous.load_state_dict(torch.load(paths['previous'], weights_only=True))
     return ContinuousMemoryChat(decoder, tokenizer, organism.memories[0], banks, styles, timing, columns,
                                 contextual, direct, inheritance, read(paths['routes']), working_path=working_path,
-                                working_sha=working_sha, seed_sha=expected[paths['banks']])
+                                working_sha=working_sha, seed_sha=expected[paths['banks']], inherited_router=previous)
 
 
 def main():
@@ -193,11 +215,12 @@ def main():
     operation.add_argument('--remember', nargs=2, metavar=('FIELD', 'VALUE'))
     parser.add_argument('--memory-file', type=Path, default=WORKING_BANKS)
     parser.add_argument('--history', help='Preceding user turn')
+    parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--json', action='store_true', help='Include routing and read diagnostics')
     args = parser.parse_args()
     if args.remember and (args.version != 1 or args.remember[0] not in FIELDS):
         parser.error('--remember updates version 1 and requires drink, work, or place')
-    chat = load_chat(args.memory_file)
+    chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router)
     if args.remember:
         print(json.dumps(chat.remember(args.entity, *args.remember), ensure_ascii=False))
         return
