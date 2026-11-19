@@ -17,7 +17,7 @@ for %%F in (self-name.pt recall-intent.pt subject-intent.pt) do (
 )
 ".venv\Scripts\python.exe" -X utf8 scripts\deepseek_continuous_memory_chat.py ^
   --memory-file "%SPORA_PROFILE%\memory.sqlite3" ^
-  --awake-state "%SPORA_PROFILE%\awake.pt" --awake-topic-recall ^
+  --awake-state "%SPORA_PROFILE%\awake.pt" --awake-topic-recall --sleep-replay 16 ^
   --awake-recall-intent-head "%SPORA_PROFILE%\recall-intent.pt" ^
   --awake-subject-intent-head "%SPORA_PROFILE%\subject-intent.pt" --awake-subject-hops 3 ^
   --self-name-state "%SPORA_PROFILE%\self-name.pt" --inherited-router --retrained-gate --earlier-readout %*

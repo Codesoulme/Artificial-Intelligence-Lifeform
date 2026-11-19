@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import sys
+from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -208,12 +209,12 @@ class ContinuousMemoryChat:
         if current != self.working_sha:
             raise RevisionConflict('Continuous memory changed; reload before writing')
 
-    def _save(self, banks, addresses, filled, pages, *, changed=(), archive=None, recorded=None):
+    def _save(self, banks, addresses, filled, pages, *, changed=(), archive=None, recorded=None, repairs=()):
         payload = bank_payload(banks, self.seed_sha, addresses, filled, pages, self.page_size)
         if uses_database(self.working_path):
             self.working_sha, self.bank_digests, _ = commit_banks(
                 self.working_path, payload, self.working_sha, self.bank_digests, changed=changed, archive=archive,
-                recorded=recorded)
+                recorded=recorded, repairs=repairs)
             banks = dict.fromkeys(banks)
             pages = tuple(dict.fromkeys(page) for page in pages)
         else:
@@ -301,14 +302,19 @@ class ContinuousMemoryChat:
             return dict(action='defer', reason='matrix_verification_failed')
 
     @torch.inference_mode()
-    def verify_recent_memory(self, limit):
+    def verify_recent_memory(self, limit, *, repair=False):
         if not uses_database(self.working_path):
             raise ValueError('Replay verification requires a SQLite memory file')
+        with lock_working_checkpoint(self.working_path) if repair else nullcontext():
+            return self._verify_recent_memory(limit, repair)
+
+    def _verify_recent_memory(self, limit, repair):
         if self.working_sha is None:
             self._check_revision()
             return dict(action='replay_verified', checked=0, mismatches=[], revision=None)
         snapshots = read_recent_snapshots(self.working_path, self.working_sha, limit)
         mismatches = []
+        targets = {}
         eos = self.tokenizer.eos_token_id
         for entity, field, revision, slots in snapshots:
             evidence = dict(entity=entity, field=field, write_revision=revision)
@@ -322,18 +328,59 @@ class ContinuousMemoryChat:
                 mismatches.append(dict(evidence, reason='snapshot_not_finite'))
                 continue
             bias = cosine_slot_bias(slots, self.codes, self.scale)
-            reference = bias.argmax(dim=-1).tolist() if bias is not None else []
-            if eos not in reference or reference.index(eos) == 0:
+            present = slots.norm(dim=-1) >= .2
+            reference = bias.argmax(dim=-1).masked_fill(~present.to(bias.device), -1).tolist() if bias is not None else []
+            end = reference.index(eos) + 1 if eos in reference else 0
+            special = set(self.tokenizer.all_special_ids)
+            if (end < 2 or any(token < 0 or token in special for token in reference[:end - 1])
+                    or any(token != -1 for token in reference[end:])):
                 mismatches.append(dict(evidence, reason='snapshot_missing_value'))
                 continue
-            end = reference.index(eos) + 1
             bank = self.bank_for(entity, field, 1)
             actual = self._read_tokens(bank, entity) if bank is not None else []
-            if actual[:end] != reference[:end]:
+            if actual != reference:
                 mismatches.append(dict(evidence, reason='current_value_differs'))
+                if repair and bank is not None and bool(torch.isfinite(bank).all()):
+                    targets[entity, field] = (revision, slots, reference)
         self._check_revision()
-        return dict(action='replay_mismatch' if mismatches else 'replay_verified', checked=len(snapshots),
-                    mismatches=mismatches, revision=self.working_sha)
+        outcome = dict(action='replay_mismatch' if mismatches else 'replay_verified', checked=len(snapshots),
+                       mismatches=mismatches, revision=self.working_sha)
+        if not repair or not mismatches:
+            return outcome
+        if len(targets) != len(mismatches):
+            return dict(outcome, action='defer', reason='unusable_replay_evidence')
+        try:
+            self._repair_replayed_memory(targets)
+        except MemoryUpdateRejected:
+            return dict(outcome, action='defer', reason='repair_verification_failed')
+        return dict(outcome, action='replay_repaired', repaired=len(targets), revision=self.working_sha)
+
+    def _repair_replayed_memory(self, targets):
+        groups = {}
+        for (entity, field), item in targets.items():
+            groups.setdefault((entity // self.page_size, field), {})[entity] = item
+        banks = dict(self.banks)
+        pages = [dict(page) for page in self.pages]
+        for (page, field), records in groups.items():
+            original = self.bank_for(next(iter(records)), field, 1)
+            repaired = original
+            for entity, (_, slots, _) in records.items():
+                target = torch.zeros_like(original[:, :, 0])
+                target[:, :RANK] = slots
+                repaired = write_bank(self.site, repaired, self._local_address(entity), target)
+            neighbors = sorted(entity for entity, relation, version in self.filled
+                               if relation == field and version == 1 and entity // self.page_size == page
+                               and entity not in records)
+            if (any(self._read_tokens(repaired, entity) != record[2] for entity, record in records.items())
+                    or self._read_address_tokens(repaired, neighbors) != self._read_address_tokens(original, neighbors)):
+                raise MemoryUpdateRejected('Replay repair did not preserve the bank values')
+            if page == 0:
+                banks[field, 1] = repaired
+            else:
+                pages[page - 1][field] = repaired
+        changed = tuple((page, field, 1) for page, field in groups)
+        repairs = tuple((entity, field, item[0]) for (entity, field), item in targets.items())
+        self._save(banks, self.addresses, self.filled, tuple(pages), changed=changed, repairs=repairs)
 
     def _answer_self_name(self, prompt, confirm_recent_read):
         bias = cosine_bias(self.site, self.self_name.name_bank, self._local_address(0), self.codes, self.scale)
@@ -627,6 +674,7 @@ def main():
     operation.add_argument('--register', metavar='NAME')
     operation.add_argument('--import-checkpoint', type=Path, metavar='SOURCE_PT')
     operation.add_argument('--verify-replay', type=int, metavar='WRITES', help='Check a bounded suffix of SQLite memory writes')
+    operation.add_argument('--repair-replay', type=int, metavar='WRITES', help='Repair verified discrepancies from SQLite snapshots')
     parser.add_argument('--expand', action='store_true', help='Allocate one memory page when registration reaches capacity')
     parser.add_argument('--memory-file', type=Path, default=WORKING_BANKS)
     parser.add_argument('--history', help='Preceding user turn')
@@ -646,15 +694,18 @@ def main():
     args = parser.parse_args()
     if args.expand and args.register is None:
         parser.error('--expand requires --register')
-    if args.verify_replay is not None and (not 1 <= args.verify_replay <= 256 or not uses_database(args.memory_file)):
-        parser.error('--verify-replay requires a SQLite file and a budget from 1 to 256 writes')
+    replay_budget = args.repair_replay if args.repair_replay is not None else args.verify_replay
+    if replay_budget is not None and (not 1 <= replay_budget <= 256 or not uses_database(args.memory_file)):
+        parser.error('Replay requires a SQLite file and a budget from 1 to 256 writes')
+    if args.repair_replay is not None and (args.version != 1 or args.back or args.as_of is not None):
+        parser.error('--repair-replay requires the current memory version')
     if args.sleep_replay is not None and (args.awake_state is None or not uses_database(args.memory_file)
                                           or not 1 <= args.sleep_replay <= 256):
         parser.error('--sleep-replay requires --awake-state, a SQLite file and a budget from 1 to 256 writes')
     observation = args.observe if args.observe is not None else args.preview_observation
     if args.awake_state is not None and (args.question is not None or observation is not None or args.remember
                                          or args.register is not None or args.import_checkpoint is not None
-                                         or args.verify_replay is not None):
+                                         or replay_budget is not None):
         parser.error('--awake-state is available during stdin chat')
     if args.awake_topic_recall and args.awake_state is None:
         parser.error('--awake-topic-recall requires --awake-state')
@@ -704,8 +755,8 @@ def main():
             print(json.dumps(dict(action='preview', entity=entity, field=field, value=value), ensure_ascii=False))
             return
     chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router, use_retrained_gate=args.retrained_gate)
-    if args.verify_replay is not None:
-        result = chat.verify_recent_memory(args.verify_replay)
+    if replay_budget is not None:
+        result = chat.verify_recent_memory(replay_budget, repair=args.repair_replay is not None)
         print(json.dumps(result, ensure_ascii=False))
         return
     if args.register is not None:

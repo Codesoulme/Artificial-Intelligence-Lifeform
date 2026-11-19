@@ -122,7 +122,7 @@ def read_recent_snapshots(path, revision, limit):
     return list(latest.values())
 
 
-def commit_banks(path, payload, revision, digests, *, changed=(), archive=None, recorded=None, hook=None):
+def commit_banks(path, payload, revision, digests, *, changed=(), archive=None, recorded=None, repairs=(), hook=None):
     tensors = _tensors(payload)
     if not set(digests) <= tensors.keys():
         raise ValueError('Bank tensor removal is unsupported')
@@ -139,21 +139,23 @@ def commit_banks(path, payload, revision, digests, *, changed=(), archive=None, 
     manifest = canonical(dict(metadata=metadata, digests=[[*key, next_digests[key]] for key in sorted(tensors)]))
     previous = None if archive is None else (archive[0], archive[1], *pack(archive[2]))
     snapshot = None if recorded is None else (recorded[0], recorded[1], *pack(recorded[2]))
+    if repairs and (revision is None or not staged or previous is not None or snapshot is not None):
+        raise ValueError('Repairs require an existing revision, changed tensors and no new fact')
     if revision is None:
         path.parent.mkdir(parents=True, exist_ok=True)
         with TemporaryDirectory(dir=path.parent, prefix='.bank-init-') as folder:
             temporary = Path(folder) / 'banks.sqlite3'
-            next_revision = _commit(temporary, manifest, staged, revision, previous, snapshot, hook)
+            next_revision = _commit(temporary, manifest, staged, revision, previous, snapshot, repairs, hook)
             try:
                 os.link(temporary, path)
             except FileExistsError as error:
                 raise RevisionConflict('Continuous memory was created by another writer') from error
     else:
-        next_revision = _commit(path, manifest, staged, revision, previous, snapshot, hook)
+        next_revision = _commit(path, manifest, staged, revision, previous, snapshot, repairs, hook)
     return next_revision, next_digests, sum(len(record[2]) for record in staged.values())
 
 
-def _commit(path, manifest, staged, revision, previous, snapshot, hook):
+def _commit(path, manifest, staged, revision, previous, snapshot, repairs, hook):
     mode = 'rwc' if revision is None else 'rw'
     with closing(sqlite3.connect(path.as_uri() + '?mode=' + mode, uri=True, timeout=5)) as conn, conn:
         conn.execute('PRAGMA synchronous=FULL')
@@ -184,6 +186,16 @@ def _commit(path, manifest, staged, revision, previous, snapshot, hook):
                 raise ValueError('System clock moved behind this record’s previous write time')
             conn.execute('INSERT INTO bank_timeline VALUES (?,?,?,?,?,?,?,?)',
                          (*snapshot[:2], recorded_us, next_revision, *snapshot[2:]))
+        if repairs:
+            conn.execute('CREATE TABLE IF NOT EXISTS bank_repairs (entity INTEGER NOT NULL, field TEXT NOT NULL, '
+                         'revision INTEGER NOT NULL, source_revision INTEGER NOT NULL, '
+                         'PRIMARY KEY(entity, field, revision))')
+            for entity, field, source_revision in repairs:
+                latest = conn.execute('SELECT MAX(revision) FROM bank_timeline WHERE entity=? AND field=?',
+                                      (entity, field)).fetchone()[0]
+                if latest is None or latest != source_revision or source_revision > revision:
+                    raise ValueError('Repair source is not the newest recorded value')
+                conn.execute('INSERT INTO bank_repairs VALUES (?,?,?,?)', (entity, field, next_revision, source_revision))
         conn.execute('INSERT OR REPLACE INTO bank_head VALUES (1,?,?,?)',
                      (next_revision, manifest, sha(manifest.encode())))
         if hook is not None:

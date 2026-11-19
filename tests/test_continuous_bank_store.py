@@ -3,6 +3,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -34,6 +35,24 @@ class ContinuousBankStoreTests(unittest.TestCase):
         torch.testing.assert_close(rows[0][3], torch.full((2, 3), 5.))
         with self.assertRaises(RevisionConflict):
             read_recent_snapshots(self.path, revision - 1, 3)
+
+    def test_repair_log_is_atomic_and_does_not_extend_fact_history(self):
+        key = (0, 'drink', 1)
+        original = self.payload['banks']['drink', 1]
+        revision, digests, _ = commit_banks(self.path, self.payload, None, {}, recorded=(0, 'drink', original))
+        damaged = torch.zeros_like(original)
+        self.payload['banks']['drink', 1] = damaged
+        revision, digests, _ = commit_banks(self.path, self.payload, revision, digests, changed=(key,))
+        self.payload['banks']['drink', 1] = original
+        with self.assertRaisesRegex(ValueError, 'newest recorded value'):
+            commit_banks(self.path, self.payload, revision, digests, changed=(key,), repairs=((0, 'drink', 1),))
+        torch.testing.assert_close(read_bank_tensor(self.path, key, revision, digests[key]), damaged)
+        fixed, _, _ = commit_banks(self.path, self.payload, revision, digests, changed=(key,), repairs=((0, 'drink', 0),))
+        self.assertEqual(fixed, revision + 1)
+        self.assertIsNone(read_archived_slots(self.path, 0, 'drink', fixed, 1))
+        self.assertEqual(read_recent_snapshots(self.path, fixed, 4)[0][:3], (0, 'drink', 0))
+        with closing(sqlite3.connect(self.path)) as lookup:
+            self.assertEqual(lookup.execute('SELECT * FROM bank_repairs').fetchall(), [(0, 'drink', fixed, 0)])
 
     def test_as_of_uses_commit_time_and_revision_to_break_ties(self):
         key = (0, 'drink', 1)
