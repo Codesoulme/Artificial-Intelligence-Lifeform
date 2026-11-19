@@ -19,13 +19,15 @@ from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilitie
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
 from spora.durable import RevisionConflict
 from spora.language_training import atomic_save
-from spora.research_continuous_observation import ADDRESSES, inherited_query_subject, parse_observation, query_subject
+from spora.research_continuous_observation import ADDRESSES, can_register, inherited_query_subject, parse_observation, query_subject
 from spora.working_checkpoint_lock import lock_working_checkpoint
 
 ENTITIES = tuple(ADDRESSES.values())
 ASK_SUBJECT = '请明确你想查询谁的记录。'
 WORKING_BANKS = TRANSFER_RUN / 'working-banks.pt'
-WORKING_FORMAT = 'spora-continuous-chat-banks-v1'
+LEGACY_WORKING_FORMAT = 'spora-continuous-chat-banks-v1'
+WORKING_FORMAT = 'spora-continuous-chat-banks-v2'
+SEED_FILLED = frozenset((entity, field, version) for entity in ENTITIES for field in FIELDS for version in (0, 1))
 
 
 class InvalidMemoryValue(ValueError):
@@ -34,12 +36,12 @@ class InvalidMemoryValue(ValueError):
 
 def load_working_banks(path, seed_banks, seed_sha):
     if not path.exists():
-        return seed_banks, None
+        return seed_banks, None, dict(ADDRESSES), SEED_FILLED
     digest = sha(path)
     payload = torch.load(path, map_location='cpu', weights_only=True)
     if sha(path) != digest:
         raise RevisionConflict('Continuous memory changed during load; retry')
-    if payload.get('format') != WORKING_FORMAT or payload.get('seed_sha256') != seed_sha:
+    if payload.get('format') not in (LEGACY_WORKING_FORMAT, WORKING_FORMAT) or payload.get('seed_sha256') != seed_sha:
         raise ValueError('Working banks have incompatible provenance')
     banks = payload['banks']
     if set(banks) != set(seed_banks):
@@ -49,12 +51,27 @@ def load_working_banks(path, seed_banks, seed_sha):
         if (bank.shape != original.shape or bank.dtype != original.dtype or not bool(torch.isfinite(bank).all())
                 or (key[1] == 0 and not torch.equal(bank, original))):
             raise ValueError('Invalid working bank')
-    return banks, digest
+    addresses, filled = dict(ADDRESSES), SEED_FILLED
+    if payload['format'] == WORKING_FORMAT:
+        registered = payload['addresses']
+        if any(registered.get(name) != key for name, key in ADDRESSES.items()):
+            raise ValueError('Seed subjects cannot change address')
+        for name, key in registered.items():
+            if name in ADDRESSES:
+                continue
+            if not can_register(name, addresses) or type(key) is not int or key < 0 or key in addresses.values():
+                raise ValueError('Invalid registered subject')
+            addresses[name] = key
+        filled = frozenset(map(tuple, payload['filled']))
+        allowed = SEED_FILLED | {(entity, field, 1) for entity in addresses.values() for field in FIELDS}
+        if not SEED_FILLED <= filled <= allowed:
+            raise ValueError('Invalid field availability')
+    return banks, digest, addresses, filled
 
 
 class ContinuousMemoryChat:
     def __init__(self, decoder, tokenizer, site, banks, styles, timing, columns, contextual, direct, inheritance, setup,
-                 *, working_path, working_sha, seed_sha, inherited_router=None, gate_cutoff=None):
+                 *, working_path, working_sha, seed_sha, addresses, filled, inherited_router=None, gate_cutoff=None):
         self.decoder, self.tokenizer, self.site, self.banks = decoder, tokenizer, site, banks
         self.styles, self.timing, self.columns = styles, timing, columns
         self.contextual, self.direct, self.inheritance = contextual, direct, inheritance
@@ -62,6 +79,9 @@ class ContinuousMemoryChat:
         self.gate_cutoff = setup['gate_cutoff'] if gate_cutoff is None else gate_cutoff
         self.cutoff = setup['cutoffs']['priority']
         self.working_path, self.working_sha, self.seed_sha = working_path, working_sha, seed_sha
+        if max(addresses.values()) >= site.current_basis.shape[0]:
+            raise ValueError('Registered subject is outside the address basis')
+        self.addresses, self.filled = addresses, filled
         weight = decoder.base.lm_head.weight
         basis = torch.linalg.qr(torch.randn(weight.shape[1], RANK, generator=torch.Generator().manual_seed(SEED))).Q
         self.codes, self.scale = projected_codebook(weight, basis.to(weight.device))
@@ -72,40 +92,64 @@ class ContinuousMemoryChat:
         scores = torch.nn.functional.normalize(slots, dim=-1) @ self.codes.T
         return scores.argmax(dim=-1).masked_fill(slots.norm(dim=-1) < .2, -1).tolist()
 
+    def _check_revision(self):
+        current = sha(self.working_path) if self.working_path.exists() else None
+        if current != self.working_sha:
+            raise RevisionConflict('Continuous memory changed; reload before writing')
+
+    def _save(self, banks, addresses, filled):
+        atomic_save(dict(format=WORKING_FORMAT, seed_sha256=self.seed_sha, banks=banks,
+                         addresses=addresses, filled=sorted(filled)), self.working_path)
+        self.working_sha = sha(self.working_path)
+        self.banks, self.addresses, self.filled = banks, addresses, filled
+
+    def register(self, name):
+        name = name.strip()
+        with lock_working_checkpoint(self.working_path):
+            self._check_revision()
+            if name in self.addresses:
+                return dict(action='already_registered', entity=self.addresses[name], name=name)
+            if not can_register(name, self.addresses):
+                return dict(action='defer', reason='invalid_or_overlapping_name')
+            used = set(self.addresses.values())
+            entity = next((key for key in range(self.site.current_basis.shape[0]) if key not in used), None)
+            if entity is None:
+                return dict(action='defer', reason='no_free_address')
+            self._save(self.banks, {**self.addresses, name: entity}, self.filled)
+        return dict(action='registered', entity=entity, name=name)
+
     @torch.inference_mode()
     def remember(self, entity, field, value):
-        if entity not in ENTITIES or field not in FIELDS:
+        if entity not in self.addresses.values() or field not in FIELDS:
             raise ValueError('Unknown experimental address or field')
         tokens = encode(self.tokenizer, value.strip())
         if not 1 <= len(tokens) < SLOTS or set(tokens) & set(self.tokenizer.all_special_ids):
             raise InvalidMemoryValue(f'Value must have 1 to {SLOTS - 1} non-special tokens')
         tokens.append(self.tokenizer.eos_token_id)
         bank = self.banks[field, 1]
-        other, = (key for key in ENTITIES if key != entity)
+        record = entity, field, 1
         expected = tokens + [-1] * (SLOTS - len(tokens))
         with lock_working_checkpoint(self.working_path):
-            current = sha(self.working_path) if self.working_path.exists() else None
-            if current != self.working_sha:
-                raise RevisionConflict('Continuous memory changed; reload before writing')
-            if self._read_tokens(bank, entity) == expected:
+            self._check_revision()
+            if record in self.filled and self._read_tokens(bank, entity) == expected:
                 return dict(action='already_stored', entity=entity, field=field)
             target = torch.zeros_like(bank[:, :, 0])
             target[:len(tokens), :RANK] = self.codes[tokens].cpu()
             candidate = write_bank(self.site, bank, self.site.current_basis[entity:entity + 1], target)
             if self._read_tokens(candidate, entity) != expected:
                 raise ValueError('Candidate matrix did not reproduce the written value')
-            if self._read_tokens(candidate, other) != self._read_tokens(bank, other):
-                raise ValueError('Candidate matrix changed the other address')
+            for other, other_field, version in self.filled:
+                if other != entity and other_field == field and version == 1:
+                    if self._read_tokens(candidate, other) != self._read_tokens(bank, other):
+                        raise ValueError('Candidate matrix changed another occupied address')
             updated = dict(self.banks)
             updated[field, 1] = candidate
-            atomic_save(dict(format=WORKING_FORMAT, seed_sha256=self.seed_sha, banks=updated), self.working_path)
-            self.working_sha = sha(self.working_path)
-            self.banks = updated
+            self._save(updated, self.addresses, self.filled | {record})
         return dict(action='stored', entity=entity, field=field)
 
     @torch.inference_mode()
     def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD):
-        if (entity is not None and entity not in ENTITIES) or version not in (0, 1):
+        if (entity is not None and entity not in self.addresses.values()) or version not in (0, 1):
             raise ValueError('Unknown experimental address or snapshot')
         row = dict(key='input', question=question, history=history, target_turn=0)
         features = features_for(self.decoder, self.tokenizer, row, False)
@@ -113,13 +157,13 @@ class ContinuousMemoryChat:
         inherits = bool(history) and probability >= self.gate_cutoff
         subject_reason = 'specified_subject'
         if entity is None:
-            entity, subject_reason = query_subject(question)
+            entity, subject_reason = query_subject(question, self.addresses)
             if entity is not None and history:
-                previous, _ = query_subject(history)
+                previous, _ = query_subject(history, self.addresses)
                 if previous != entity:
                     inherits = False
             elif subject_reason == 'no_subject' and inherits:
-                entity = inherited_query_subject(question, history)
+                entity = inherited_query_subject(question, history, self.addresses)
                 if entity is not None:
                     subject_reason = 'inherited_subject'
         router = self.contextual if inherits else self.direct
@@ -136,6 +180,8 @@ class ContinuousMemoryChat:
         reason = action
         if entity is None and (action in ('read', 'missing') or subject_reason != 'no_subject'):
             action, reason, response = 'clarify', subject_reason, ASK_SUBJECT
+        elif action == 'read' and (entity, selected, version) not in self.filled:
+            action, reason, response = 'missing', 'unwritten_field', MISSING
         elif action == 'read':
             address = self.site.current_basis[entity:entity + 1]
             bias = cosine_bias(self.site, self.banks[selected, version], address, self.codes, self.scale)
@@ -209,7 +255,7 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_ret
     if working_path in {path.resolve() for path in (*expected, plan_path)}:
         raise ValueError('Working memory requires its own checkpoint path')
     seed_banks = torch.load(paths['banks'], weights_only=True)
-    banks, working_sha = load_working_banks(working_path, seed_banks, expected[paths['banks']])
+    banks, working_sha, addresses, filled = load_working_banks(working_path, seed_banks, expected[paths['banks']])
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     base = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False,
@@ -239,18 +285,20 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_ret
     return ContinuousMemoryChat(decoder, tokenizer, organism.memories[0], banks, styles, timing, columns,
                                 contextual, direct, inheritance, read(paths['routes']), working_path=working_path,
                                 working_sha=working_sha, seed_sha=expected[paths['banks']], inherited_router=previous,
-                                gate_cutoff=None if gate_result is None else gate_result['cutoffs']['tail'])
+                                gate_cutoff=None if gate_result is None else gate_result['cutoffs']['tail'],
+                                addresses=addresses, filled=filled)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--entity', type=int, choices=ENTITIES)
+    parser.add_argument('--entity', type=int)
     parser.add_argument('--version', type=int, choices=(0, 1), default=1)
     operation = parser.add_mutually_exclusive_group()
     operation.add_argument('--question')
     operation.add_argument('--remember', nargs=2, metavar=('FIELD', 'VALUE'))
     operation.add_argument('--observe', metavar='STATEMENT')
     operation.add_argument('--preview-observation', metavar='STATEMENT')
+    operation.add_argument('--register', metavar='NAME')
     parser.add_argument('--memory-file', type=Path, default=WORKING_BANKS)
     parser.add_argument('--history', help='Preceding user turn')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
@@ -268,7 +316,14 @@ def main():
     if args.retrained_gate and not args.inherited_router:
         parser.error('--retrained-gate requires --inherited-router')
     if observation is not None:
-        candidate = parse_observation(observation)
+        addresses = ADDRESSES
+        if args.memory_file.exists():
+            seed = TRANSFER_RUN / 'banks.pt'
+            digest = read(TRANSFER_RUN / 'result.json')['artifact_sha256'][seed.name]
+            if sha(seed) != digest:
+                raise ValueError('Seed bank digest mismatch')
+            _, _, addresses, _ = load_working_banks(args.memory_file, torch.load(seed, weights_only=True), digest)
+        candidate = parse_observation(observation, addresses)
         if candidate is None:
             print(json.dumps(dict(action='defer', reason='unsupported_or_ambiguous_statement')))
             return
@@ -280,13 +335,20 @@ def main():
             print(json.dumps(dict(action='preview', entity=entity, field=field, value=value), ensure_ascii=False))
             return
     chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router, use_retrained_gate=args.retrained_gate)
+    if args.register is not None:
+        print(json.dumps(chat.register(args.register), ensure_ascii=False))
+        return
     if args.observe is not None:
+        if chat.addresses.get(next(name for name, key in addresses.items() if key == entity)) != entity:
+            raise RevisionConflict('Subject registry changed during observation')
         try:
             result = chat.remember(entity, field, value)
         except InvalidMemoryValue:
             result = dict(action='defer', reason='value_does_not_fit')
         print(json.dumps(result, ensure_ascii=False))
         return
+    if args.entity is not None and args.entity not in chat.addresses.values():
+        parser.error('--entity must refer to a registered subject')
     if args.remember:
         print(json.dumps(chat.remember(args.entity, *args.remember), ensure_ascii=False))
         return

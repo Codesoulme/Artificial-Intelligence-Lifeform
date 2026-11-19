@@ -1,9 +1,23 @@
 import unittest
 
-from spora.research_continuous_observation import inherited_query_subject, parse_observation, query_subject
+from spora.research_continuous_observation import ADDRESSES, can_register, inherited_query_subject, parse_observation, query_subject
 
 
 class ContinuousObservationTests(unittest.TestCase):
+    def test_registered_subjects_are_scoped_to_the_supplied_registry(self):
+        addresses = {**ADDRESSES, '周岚': 0}
+        observation = '周岚最喜欢喝杏仁茶。'
+        self.assertIsNone(parse_observation(observation))
+        self.assertEqual(parse_observation(observation, addresses), (0, 'drink', '杏仁茶'))
+        self.assertEqual(query_subject('周岚平常最爱喝什么？', addresses), (0, 'named_subject'))
+        self.assertEqual(query_subject('周岚远平常最爱喝什么？', addresses), (None, 'unresolved_subject'))
+        self.assertEqual(query_subject('周岚和何程各自爱喝什么？', addresses), (None, 'ambiguous_subject'))
+        self.assertEqual(inherited_query_subject('查到了就说一下。', '周岚的职业有记录。', addresses), 0)
+        self.assertTrue(can_register('宋文', addresses))
+        self.assertFalse(can_register('周岚', addresses))
+        self.assertFalse(can_register('周岚远', addresses))
+        self.assertFalse(can_register('Li Lei', addresses))
+
     def test_query_subject_requires_one_bounded_mention(self):
         for text, expected in (
             ('何程平常最爱喝什么？', (47, 'named_subject')),
