@@ -5,7 +5,7 @@ from unittest.mock import patch
 import torch
 from spora.awake import AwakeConfig,AwakeCore,attach_awake
 from spora.awake_chat import awake_chat_lines
-from spora.awake_recall_intent import FORMAT as RECALL_INTENT_FORMAT, RecallIntent, SameSubjectIntent
+from spora.awake_recall_intent import FORMAT as RECALL_INTENT_FORMAT, RecallIntent, SameSubjectIntent, SelfNameIntent
 from spora.awake_session import AwakeSession
 from spora.awake_topics import AwakeTopics, supports_field
 from spora.language_training import atomic_save
@@ -36,6 +36,23 @@ class AwakeChatTests(unittest.TestCase):
             torch.save(dict(payload, cutoff=float('nan')), path)
             with self.assertRaisesRegex(ValueError, 'cutoff'):
                 RecallIntent.load(path, 2, fingerprint)
+
+    def test_self_name_matrix_has_its_own_format_and_scope(self):
+        self.assertTrue(SelfNameIntent.targets_self('有人叫你小白。你实际叫什么名字？'))
+        self.assertFalse(SelfNameIntent.targets_self('请报出我的实际姓名。'))
+        self.assertFalse(SelfNameIntent.targets_self('你本来的底座叫啥？'))
+        source = SelfNameIntent(2, .8)
+        fingerprint = {'model.safetensors': 'model-a'}
+        matrix = torch.zeros(8, 4, 3)
+        matrix[0, 1, 2] = 1
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'self.pt'
+            torch.save(dict(format=SelfNameIntent.format, fingerprint=fingerprint, cutoff=.8,
+                            state=source.head.state_dict(), name_bank=matrix), path)
+            loaded = SelfNameIntent.load_name(path, 2, fingerprint, (matrix.shape, matrix.dtype))
+            torch.testing.assert_close(loaded.name_bank, matrix)
+            with self.assertRaisesRegex(ValueError, 'memory layout'):
+                SelfNameIntent.load_name(path, 2, fingerprint, (matrix.shape, torch.float16))
 
     def test_read_binding_requires_matching_activity_and_is_consumed_once(self):
         topics = AwakeTopics(('drink', 'work'))

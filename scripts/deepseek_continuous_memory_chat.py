@@ -22,7 +22,7 @@ from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
 from spora.awake_chat import awake_chat_lines
-from spora.awake_recall_intent import SUBJECT_SCOPE_CONFLICT, RecallIntent, SameSubjectIntent
+from spora.awake_recall_intent import SUBJECT_SCOPE_CONFLICT, RecallIntent, SameSubjectIntent, SelfNameIntent
 from spora.continuous_bank_store import (
     bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_slots_as_of,
 )
@@ -150,6 +150,7 @@ class ContinuousMemoryChat:
         self.recall_intent = None
         self.same_subject_intent = None
         self.subject_hops = 1
+        self.self_name = None
         self.gate_cutoff = setup['gate_cutoff'] if gate_cutoff is None else gate_cutoff
         self.cutoff = setup['cutoffs']['priority']
         self.working_path, self.working_sha, self.seed_sha = working_path, working_sha, seed_sha
@@ -298,6 +299,21 @@ class ContinuousMemoryChat:
         except MemoryUpdateRejected:
             return dict(action='defer', reason='matrix_verification_failed')
 
+    def _answer_self_name(self, prompt, confirm_recent_read):
+        bias = cosine_bias(self.site, self.self_name.name_bank, self._local_address(0), self.codes, self.scale)
+        result = dict(response=CLARIFY, action='clarify', reason='self_name_unconfirmed', field='self_name',
+                      confidence=None, inherits=False, memory_start=None, entity=None, version=1,
+                      subject_reason='self_name')
+        if confirm_recent_read:
+            result['confirmed_recent_read'] = False
+        if bias is not None:
+            ids = torch.tensor([prompt], device=bias.device)
+            tokens = generate_memory_suffix(self.decoder, self.tokenizer, ids, 2 * bias, SLOTS)
+            if matches_memory_suffix(tokens, bias, self.tokenizer.eos_token_id):
+                result.update(response=self.tokenizer.decode(tokens, skip_special_tokens=True).strip(),
+                              action='read', reason='read', memory_start=0)
+        return result
+
     @torch.inference_mode()
     def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD, back=0, as_of=None,
                topic_observer=None, consume_topic=None, bind_topic=None):
@@ -324,6 +340,9 @@ class ContinuousMemoryChat:
             history, _ = split_history_query(history)
         row = dict(key='input', question=question, history=history, target_turn=0)
         features = features_for(self.decoder, self.tokenizer, row, False)
+        if (self.self_name is not None and entity is None and version == 1 and not back and as_of is None
+                and history_issue is None and self.self_name.targets_self(question) and self.self_name(*features[:2])):
+            return self._answer_self_name(features[3], consume_topic is not None)
         probability, = gate_probabilities(self.inheritance, [row], {'input': features})
         inherits = bool(history) and probability >= self.gate_cutoff
         subject_reason = 'specified_subject'
@@ -576,6 +595,7 @@ def main():
     parser.add_argument('--awake-subject-intent-head', type=Path, help='Load the experimental same-person classifier')
     parser.add_argument('--awake-subject-hops', type=int, choices=(1, 2, 3), default=1,
                         help='Maximum consecutive verified same-person reads')
+    parser.add_argument('--self-name-state', type=Path, help='Load an experimental self-name matrix for chat')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
@@ -650,6 +670,14 @@ def main():
         print(json.dumps(chat.remember(args.entity, *args.remember), ensure_ascii=False))
         return
     timing_threshold = EARLY_TIMING_THRESHOLD if args.earlier_readout else THRESHOLD
+    if args.self_name_state is not None:
+        name_path = args.self_name_state.resolve()
+        if name_path == chat.working_path or (args.awake_state is not None and name_path == args.awake_state.resolve()):
+            parser.error('--self-name-state needs a separate file from memory and awake state')
+        width = chat.decoder.base.lm_head.weight.shape[1]
+        chat.self_name = SelfNameIntent.load_name(name_path, width, chat.recall_fingerprint, chat.bank_specs['drink', 1])
+        chat.organism.self_name = chat.self_name
+        chat.awake_individual['self_name_sha256'] = sha(name_path)
 
     def answer_lines(lines, topic_observer=None, consume_topic=None, bind_topic=None):
         history = args.history
