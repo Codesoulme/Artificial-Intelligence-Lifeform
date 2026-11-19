@@ -25,17 +25,22 @@ def bank_revision(path):
         return row[0] if row else None
 
 
-def read_banks(path):
+def _read_head(conn):
+    row = conn.execute('SELECT revision, manifest, digest FROM bank_head WHERE id=1').fetchone()
+    if row is None or sha(row[1].encode()) != row[2]:
+        raise ValueError('Bank manifest is missing or damaged')
+    return row[0], json.loads(row[1])
+
+
+def read_banks(path, *, load_tensors=True):
     # Opening read-write allows SQLite to recover an interrupted transaction on load.
     with closing(sqlite3.connect(path.as_uri() + '?mode=rw', uri=True)) as conn, conn:
         conn.execute('BEGIN')
-        row = conn.execute('SELECT revision, manifest, digest FROM bank_head WHERE id=1').fetchone()
-        if row is None or sha(row[1].encode()) != row[2]:
-            raise ValueError('Bank manifest is missing or damaged')
-        revision, manifest, _ = row
-        data = json.loads(manifest)
-        records = conn.execute('SELECT page, field, version, dtype, shape, body, digest FROM bank_tensors').fetchall()
-        actual = [[*record[:3], record[-1]] for record in sorted(records, key=lambda record: record[:3])]
+        revision, data = _read_head(conn)
+        selection = 'dtype, shape, body, digest' if load_tensors else 'digest'
+        records = conn.execute(f'SELECT page, field, version, {selection} FROM bank_tensors '
+                               'ORDER BY page, field, version').fetchall()
+        actual = [[*record[:3], record[-1]] for record in records]
         if data['digests'] != actual:
             raise ValueError('Bank tensors differ from the manifest')
         payload = data['metadata']
@@ -43,7 +48,7 @@ def read_banks(path):
         if 'page_count' in payload:
             payload['pages'] = [{} for _ in range(payload.pop('page_count'))]
         for page, field, version, *record in records:
-            bank = unpack(*record)
+            bank = unpack(*record) if load_tensors else None
             if page == 0:
                 payload['banks'][field, version] = bank
             elif 0 < page <= len(payload.get('pages', ())) and version == 1:
@@ -51,6 +56,19 @@ def read_banks(path):
             else:
                 raise ValueError('Bank tensor is outside its page layout')
     return payload, revision, {tuple(row[:3]): row[3] for row in actual}
+
+
+def read_bank_tensor(path, key, revision, digest):
+    with closing(sqlite3.connect(path.as_uri() + '?mode=rw', uri=True)) as conn, conn:
+        conn.execute('BEGIN')
+        found = conn.execute('SELECT revision FROM bank_head WHERE id=1').fetchone()
+        if found is None or found[0] != revision:
+            raise RevisionConflict('Continuous memory changed; reload before reading')
+        record = conn.execute('SELECT dtype, shape, body, digest FROM bank_tensors '
+                              'WHERE page=? AND field=? AND version=?', key).fetchone()
+        if record is None or record[-1] != digest:
+            raise ValueError('Bank tensor differs from the session manifest')
+        return unpack(*record)
 
 
 def commit_banks(path, payload, revision, digests, *, changed=(), hook=None):

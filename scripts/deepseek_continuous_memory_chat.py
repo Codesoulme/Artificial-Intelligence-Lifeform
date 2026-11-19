@@ -17,8 +17,8 @@ from deepseek_memory_inheritance_gate import OUT as INHERITANCE_GATE_RUN
 from deepseek_memory_inherited_turn import OUT as INHERITED_RUN
 from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilities
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
-from spora.continuous_bank_store import bank_revision, commit_banks, read_banks
-from spora.durable import RevisionConflict
+from spora.continuous_bank_store import bank_revision, commit_banks, read_bank_tensor, read_banks
+from spora.durable import RevisionConflict, pack
 from spora.language_training import atomic_save
 from spora.research_continuous_observation import ADDRESSES, can_register, inherited_query_subject, parse_observation, query_subject
 from spora.working_checkpoint_lock import lock_working_checkpoint
@@ -48,12 +48,12 @@ def bank_payload(banks, seed_sha, addresses, filled, pages, page_size):
     return payload
 
 
-def load_working_banks(path, seed_banks, seed_sha):
+def load_working_banks(path, seed_banks, seed_sha, *, lazy=False):
     tracked = {}
     if not path.exists():
         return seed_banks, None, dict(ADDRESSES), SEED_FILLED, (), None, tracked
     if uses_database(path):
-        payload, digest, tracked = read_banks(path.resolve())
+        payload, digest, tracked = read_banks(path.resolve(), load_tensors=not lazy)
     else:
         digest = sha(path)
         payload = torch.load(path, map_location='cpu', weights_only=True)
@@ -67,8 +67,11 @@ def load_working_banks(path, seed_banks, seed_sha):
         raise ValueError('Working banks have incompatible fields or versions')
     for key, original in seed_banks.items():
         bank = banks[key]
-        if (bank.shape != original.shape or bank.dtype != original.dtype or not bool(torch.isfinite(bank).all())
-                or (key[1] == 0 and not torch.equal(bank, original))):
+        if bank is None and lazy and tracked:
+            if key[1] == 0 and tracked[0, *key] != pack(original)[-1]:
+                raise ValueError('Invalid original bank digest')
+        elif (bank.shape != original.shape or bank.dtype != original.dtype or not bool(torch.isfinite(bank).all())
+              or (key[1] == 0 and not torch.equal(bank, original))):
             raise ValueError('Invalid working bank')
     addresses, filled = dict(ADDRESSES), SEED_FILLED
     pages, page_size = (), None
@@ -98,6 +101,8 @@ def load_working_banks(path, seed_banks, seed_sha):
             if set(page) != fields:
                 raise ValueError('Paged memory fields and occupancy do not match')
             for field, bank in page.items():
+                if bank is None and lazy and tracked:
+                    continue
                 template = seed_banks[field, 1]
                 if bank.shape != template.shape or bank.dtype != template.dtype or not bool(torch.isfinite(bank).all()):
                     raise ValueError('Invalid paged bank')
@@ -107,7 +112,7 @@ def load_working_banks(path, seed_banks, seed_sha):
 class ContinuousMemoryChat:
     def __init__(self, decoder, tokenizer, site, banks, styles, timing, columns, contextual, direct, inheritance, setup,
                  *, working_path, working_sha, seed_sha, addresses, filled, pages=(), saved_page_size=None,
-                 inherited_router=None, gate_cutoff=None, bank_digests=None):
+                 inherited_router=None, gate_cutoff=None, bank_digests=None, bank_specs=None):
         self.decoder, self.tokenizer, self.site, self.banks = decoder, tokenizer, site, banks
         self.styles, self.timing, self.columns = styles, timing, columns
         self.contextual, self.direct, self.inheritance = contextual, direct, inheritance
@@ -116,6 +121,7 @@ class ContinuousMemoryChat:
         self.cutoff = setup['cutoffs']['priority']
         self.working_path, self.working_sha, self.seed_sha = working_path, working_sha, seed_sha
         self.bank_digests = bank_digests if bank_digests is not None else {}
+        self.bank_specs = bank_specs
         self.page_size = site.current_basis.shape[0]
         if saved_page_size is not None and saved_page_size != self.page_size:
             raise ValueError('Saved page size does not match the address basis')
@@ -137,8 +143,15 @@ class ContinuousMemoryChat:
     def bank_for(self, entity, field, version):
         page = entity // self.page_size
         if page == 0:
-            return self.banks.get((field, version))
-        return self.pages[page - 1].get(field) if version == 1 else None
+            bank = self.banks.get((field, version))
+        else:
+            bank = self.pages[page - 1].get(field) if version == 1 else None
+        key = page, field, version
+        if bank is None and key in self.bank_digests:
+            bank = read_bank_tensor(self.working_path, key, self.working_sha, self.bank_digests[key])
+            if (bank.shape, bank.dtype) != self.bank_specs[field, version]:
+                raise ValueError('Stored bank does not match the model layout')
+        return bank
 
     def _read_address_tokens(self, bank, entities):
         results = []
@@ -165,6 +178,8 @@ class ContinuousMemoryChat:
         if uses_database(self.working_path):
             self.working_sha, self.bank_digests, _ = commit_banks(
                 self.working_path, payload, self.working_sha, self.bank_digests, changed=changed)
+            banks = dict.fromkeys(banks)
+            pages = tuple(dict.fromkeys(page) for page in pages)
         else:
             atomic_save(payload, self.working_path)
             self.working_sha = sha(self.working_path)
@@ -205,7 +220,8 @@ class ContinuousMemoryChat:
             self._check_revision()
             bank = self.bank_for(entity, field, 1)
             if bank is None:
-                bank = torch.zeros_like(self.banks[field, 1])
+                shape, dtype = self.bank_specs[field, 1]
+                bank = torch.zeros(shape, dtype=dtype)
             if record in self.filled and self._read_tokens(bank, entity) == expected:
                 return dict(action='already_stored', entity=entity, field=field)
             target = torch.zeros_like(bank[:, :, 0])
@@ -335,7 +351,7 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_ret
         raise ValueError('Working memory requires its own checkpoint path')
     seed_banks = torch.load(paths['banks'], weights_only=True)
     banks, working_sha, addresses, filled, pages, page_size, tracked = load_working_banks(
-        working_path, seed_banks, expected[paths['banks']])
+        working_path, seed_banks, expected[paths['banks']], lazy=uses_database(working_path))
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     base = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False,
@@ -366,7 +382,8 @@ def load_chat(working_path=WORKING_BANKS, *, use_inherited_router=False, use_ret
                                 contextual, direct, inheritance, read(paths['routes']), working_path=working_path,
                                 working_sha=working_sha, seed_sha=expected[paths['banks']], inherited_router=previous,
                                 gate_cutoff=None if gate_result is None else gate_result['cutoffs']['tail'],
-                                addresses=addresses, filled=filled, pages=pages, saved_page_size=page_size, bank_digests=tracked)
+                                addresses=addresses, filled=filled, pages=pages, saved_page_size=page_size,
+                                bank_digests=tracked, bank_specs={key: (bank.shape, bank.dtype) for key, bank in seed_banks.items()})
 
 
 def import_checkpoint(source, destination):
@@ -425,7 +442,8 @@ def main():
             digest = read(TRANSFER_RUN / 'result.json')['artifact_sha256'][seed.name]
             if sha(seed) != digest:
                 raise ValueError('Seed bank digest mismatch')
-            _, _, addresses, _, _, _, _ = load_working_banks(args.memory_file, torch.load(seed, weights_only=True), digest)
+            _, _, addresses, _, _, _, _ = load_working_banks(
+                args.memory_file, torch.load(seed, weights_only=True), digest, lazy=uses_database(args.memory_file))
         candidate = parse_observation(observation, addresses)
         if candidate is None:
             print(json.dumps(dict(action='defer', reason='unsupported_or_ambiguous_statement')))

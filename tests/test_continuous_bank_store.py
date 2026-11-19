@@ -4,10 +4,11 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import torch
 
-from spora.continuous_bank_store import bank_revision, commit_banks, read_banks
+from spora.continuous_bank_store import bank_revision, commit_banks, read_bank_tensor, read_banks
 from spora.durable import RevisionConflict
 
 
@@ -84,3 +85,25 @@ commit_banks(path, payload, revision, digests, changed=((0, 'drink', 1),), hook=
             connection.close()
         with self.assertRaisesRegex(ValueError, 'Tensor integrity mismatch'):
             read_banks(self.path)
+        _, revision, digests = read_banks(self.path, load_tensors=False)
+        key = (0, 'drink', 1)
+        with self.assertRaisesRegex(ValueError, 'Tensor integrity mismatch'):
+            read_bank_tensor(self.path, key, revision, digests[key])
+
+    def test_lazy_reads_only_the_requested_matrix_at_the_session_revision(self):
+        key = (1, 'drink', 1)
+        self.payload['pages'][0]['drink'] = torch.full((2, 3), 2.0)
+        commit_banks(self.path, self.payload, None, {})
+        with patch('spora.continuous_bank_store.unpack', side_effect=AssertionError('Unexpected decode')):
+            lazy, revision, digests = read_banks(self.path, load_tensors=False)
+        self.assertEqual(lazy['banks'], {('drink', 1): None})
+        self.assertEqual(lazy['pages'], [{'drink': None}])
+        torch.testing.assert_close(read_bank_tensor(self.path, key, revision, digests[key]),
+                                   self.payload['pages'][0]['drink'])
+        lazy['pages'][0]['drink'] = torch.full((2, 3), 3.0)
+        next_revision, next_digests, size = commit_banks(self.path, lazy, revision, digests, changed=(key,))
+        self.assertEqual(size, 24)
+        with self.assertRaises(RevisionConflict):
+            read_bank_tensor(self.path, key, revision, digests[key])
+        torch.testing.assert_close(read_bank_tensor(self.path, key, next_revision, next_digests[key]),
+                                   lazy['pages'][0]['drink'])
