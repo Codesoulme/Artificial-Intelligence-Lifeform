@@ -18,6 +18,7 @@ OUT = ROOT / 'runs/deepseek-aligned-memory-dialogue'
 RANK = 90
 RELATIONS = ('drink', 'work', 'place', 'ordinary')
 THRESHOLD = .8
+EARLY_TIMING_THRESHOLD = .65
 TRAIN = {
     'drink': (
         ('请用完整句子说明记录里的人喜欢什么饮料。', '这位当事人喜欢喝'),
@@ -116,7 +117,8 @@ def answer(decoder, tokenizer, prompt, style=None, columns=None, gate=None, bias
 
 
 @torch.inference_mode()
-def generate_with_memory(decoder, tokenizer, prompt, style, columns, gate, slot_bias, max_new_tokens=32):
+def generate_with_memory(decoder, tokenizer, prompt, style, columns, gate, slot_bias, max_new_tokens=32,
+                         *, timing_threshold=THRESHOLD):
     """Generate the opening, then hand off at the learned injection boundary."""
     from spora.memory_output import MemorySequenceLogitsProcessor
 
@@ -126,7 +128,7 @@ def generate_with_memory(decoder, tokenizer, prompt, style, columns, gate, slot_
         output = decoder(input_ids=ids, use_cache=False, output_hidden_states=True)
         hidden = torch.nn.functional.normalize(output.hidden_states[-1][0, -1].float(), dim=-1)
         probability = float(gate(hidden).sigmoid())
-        if index > 0 and probability >= THRESHOLD:
+        if index > 0 and probability >= timing_threshold:
             prefix_length = ids.shape[1]
             processor = MemorySequenceLogitsProcessor(slot_bias, prefix_length)
             generation = decoder.generate(input_ids=ids, attention_mask=torch.ones_like(ids),

@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from deepseek_aligned_memory_calibration import load_adapter
-from deepseek_aligned_memory_dialogue import OUT as ADAPTER_RUN, RANK, generate_with_memory
+from deepseek_aligned_memory_dialogue import EARLY_TIMING_THRESHOLD, OUT as ADAPTER_RUN, RANK, THRESHOLD, generate_with_memory
 from deepseek_memory_attribute_router import CLARIFY, MISSING
 from deepseek_memory_attribute_span import Route, route_action
 from deepseek_memory_cosine_readout import cosine_bias, projected_codebook
@@ -98,7 +98,7 @@ class ContinuousMemoryChat:
         return dict(action='stored', entity=entity, field=field)
 
     @torch.inference_mode()
-    def answer(self, question, entity, version, history=None):
+    def answer(self, question, entity, version, history=None, *, timing_threshold=THRESHOLD):
         if entity not in ENTITIES or version not in (0, 1):
             raise ValueError('Unknown experimental address or snapshot')
         row = dict(key='input', question=question, history=history, target_turn=0)
@@ -124,7 +124,8 @@ class ContinuousMemoryChat:
                 action, reason, response = 'missing', 'empty_matrix', MISSING
             else:
                 tokens, start = generate_with_memory(self.decoder, self.tokenizer, features[3], self.styles[selected],
-                                                      self.columns, self.timing, 2 * bias)
+                                                      self.columns, self.timing, 2 * bias,
+                                                      timing_threshold=timing_threshold)
                 if start is None:
                     action, reason, response = 'clarify', 'injection_not_triggered', CLARIFY
                 else:
@@ -233,6 +234,7 @@ def main():
     parser.add_argument('--history', help='Preceding user turn')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
+    parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
     parser.add_argument('--json', action='store_true', help='Include routing and read diagnostics')
     args = parser.parse_args()
     if args.remember and (args.version != 1 or args.remember[0] not in FIELDS):
@@ -244,6 +246,7 @@ def main():
         print(json.dumps(chat.remember(args.entity, *args.remember), ensure_ascii=False))
         return
     history = args.history
+    timing_threshold = EARLY_TIMING_THRESHOLD if args.earlier_readout else THRESHOLD
     lines = sys.stdin if args.question is None else (args.question,)
     if args.question is None and sys.stdin.isatty():
         print('Enter one question per line. Ctrl+Z then Enter exits on Windows.', file=sys.stderr, flush=True)
@@ -251,7 +254,7 @@ def main():
         question = line.strip()
         if not question:
             continue
-        result = chat.answer(question, args.entity, args.version, history)
+        result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold)
         print(json.dumps(result, ensure_ascii=False) if args.json else result['response'], flush=True)
         history = question
 
