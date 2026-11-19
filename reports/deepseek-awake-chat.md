@@ -106,3 +106,13 @@ cd D:/SPORA
 .venv/Scripts/python.exe scripts/deepseek_awake_recall_intent.py --output runs/recall-intent.json --head runs/recall-intent.pt
 .venv/Scripts/python.exe scripts/deepseek_continuous_memory_chat.py --awake-state runs/awake-topic-recall.pt --awake-topic-recall --awake-recall-intent-head runs/recall-intent.pt --memory-file runs/deepseek-continuous-memory-capacity-batched/timeline-smoke.sqlite3 --inherited-router --retrained-gate --earlier-readout --json
 ```
+
+## 独立来源的中文对话抽查
+
+固定 CrossWOZ 官方验证集修订 `df82c9fdff91b9b130f2d6b89110d3870ba6260e`，按对话和轮次的固定哈希抽样。每类取 32 个不同对话中紧接系统回复的用户回合。按原始行为标签抽取致谢或告别、选择其他选项、请求信息三类。使用同一阈值 0.70 的成对训练分类器直接评分。原承接分类器把 27/32 条致谢或告别判成可以承接，成对训练分类器在 96 条对照中放行 0 条，现有承接分类器配合句式规则也放行 0 条。[CrossWOZ 验证集](https://github.com/thu-coai/CrossWOZ/blob/df82c9fdff91b9b130f2d6b89110d3870ba6260e/data/crosswoz/val.json.zip)
+
+这个任务对话集没有专门标注复述最近的事实，本轮用来探测自然对话中的误触发。样本来自三个行为类别，评分仅使用当前用户句子。结果文件保存在 `runs/awake-recall-crosswoz-v1.json`，包含样本的对话编号、轮次和分流结果。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_recall_crosswoz.py runs/crosswoz-awake-recall-val.zip runs/recall-intent.pt --output runs/awake-recall-crosswoz-v1.json
+```
