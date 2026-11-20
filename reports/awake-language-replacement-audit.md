@@ -405,3 +405,36 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 .venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-native-transfer-617524a --layer12-candidate runs/awake-layer12-output-v1/layer-12.pt --combine-at-18 --layer12-components --output runs/awake-layer12-components-holdout-v1.json
 .venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-native-transfer-617524a --layer12-candidate runs/awake-layer12-output-v1/layer-12.pt --combine-at-18 --fit-layer12-norms --output runs/awake-layer12-fitted-norms-holdout-v1.json
 ```
+
+## 重新拟合的归一化与其他组件组合
+
+沿用同一批四科题、两套记忆及第 6、18 层。将重新拟合的两处 LayerNorm 与校正块的注意力、前馈分别组合，保持预训练层接口。
+
+| 第 12 层配置 | C-Eval | 固定状态读取 | 同题换值 |
+|---|---:|---:|---:|
+| 仅重新拟合的 LayerNorm | 25/83 | 10/12 | 8/12 |
+| 加绝对位置注意力 | 25/83 | 11/12 | 7/12 |
+| 加 GELU 前馈 | 23/83 | 10/12 | 6/12 |
+| 两项都加 | 20/83 | 10/12 | 6/12 |
+| 完整校正块 | 21/83 | 12/12 | 11/12 |
+
+原层、仅拟合归一化及完整块的结果与上一轮重复一致。拟合后的归一化与来自联合训练块的注意力和前馈直接组合，记忆换值仍低于完整块。GPU 评测约 298 秒，峰值显存 4.01 GiB。逐题记录位于 `runs/awake-layer12-fitted-combinations-v1.json`。复现时在上一节归一化命令中加 `--combine-fitted-components` 并指定新输出路径。
+
+## 固定第 6、18 层，再校正完整第 12 层
+
+从已有校正候选训练 96 步。两套教师均固定完整第 6、18 层。中文目标来自原始第 12 层在 83 个项目对话上的输出，记忆目标由起始三层版为 48 个受控现值和旧值生成。沿用归一化、位置和两个输出投影的训练范围，共 12,985,344 个参数。训练与重载复验约 199 秒，峰值显存 4.00 GiB。
+
+| 题组 | C-Eval 校正前后 | 严格短答校正前后 | 固定状态读取 | 同题换值 |
+|---|---:|---:|---:|---:|
+| 开发题 | 15/57 → 18/57 | 4/16 → 3/16 | 7/8 → 7/8 | 6/8 → 6/8 |
+| 四科对照 | 21/83 → 21/83 | 0/16 → 0/16 | 12/12 → 11/12 | 11/12 → 9/12 |
+| 新三科 | 16/51 → 18/51 | 0/16 → 0/16 | 12/12 → 11/12 | 11/12 → 9/12 |
+
+新三科使用同一 C-Eval 固定修订的高中生物、初中地理和高中历史。原版 DeepSeek 在相同条件下为 21/51，严格短答 0/16。新三科仅更换公开题，沿用四科对照的短答和记忆用例，所以两行的记忆分数是同一组样例的复测。这轮候选保留在实验目录，三层入口继续使用起始权重。下一轮需要在训练时约束同一问题的两种记忆状态的输出差异，再用不同地址和事实检验保持效果。
+
+逐题记录位于 `runs/awake-layer12-three-block-replay-v1/result.json`、`runs/awake-layer12-three-block-replay-holdout-v1.json`、`runs/awake-layer12-three-block-replay-fresh-v1.json` 和同目录的 `awake-layer12-three-block-replay-fresh-deepseek-v1.json`。输入摘要通过核对。18 项结构迁移测试通过。
+
+```powershell
+.venv/Scripts/python.exe scripts/train_awake_native_outputs.py --layer 12 --start runs/awake-layer12-output-v1/layer-12.pt --fixed-layer18 runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-validation-617524a --output runs/awake-layer12-three-block-replay-v1
+.venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --layer12-reference runs/awake-layer12-output-v1/layer-12.pt --layer12-candidate runs/awake-layer12-three-block-replay-v1/layer-12.pt --combine-at-18 --output runs/awake-layer12-three-block-replay-fresh-v1.json
+```
