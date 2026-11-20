@@ -71,6 +71,10 @@ class IntegratedOpenBaseTests(unittest.TestCase):
 
         self.assertEqual(model.migrate_pretrained_blocks(), (0, 1, 2))
         self.assertEqual(model.migrate_pretrained_blocks(), ())
+        table = model.migrate_position_encoder(48)
+        self.assertIs(model.migrate_position_encoder(48), table)
+        with self.assertRaisesRegex(ValueError, 'different limit'):
+            model.migrate_position_encoder(24)
         migrated = model(tokens, output_hidden_states=True, use_cache=False, **memory)
         torch.testing.assert_close(migrated.hidden_states[-1], original.hidden_states[-1])
         torch.testing.assert_close(migrated.logits, original.logits)

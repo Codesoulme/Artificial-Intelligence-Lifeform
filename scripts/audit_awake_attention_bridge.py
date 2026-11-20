@@ -13,7 +13,7 @@ from spora.pretrained_attention import SPORAFusedAttention, load_absolute_attent
 
 
 @torch.inference_mode()
-def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None, absolute=None):
+def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None, absolute=None, position_table=False):
     before_digests = {path: sha(path) for path in (SOURCE, MODEL / 'model.safetensors')}
     start = time.perf_counter()
     decoder, tokenizer, _, replacements, organism, _ = load_layer_pair()
@@ -31,6 +31,7 @@ def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None, a
         fused_mlp = SPORAGatedFeedForward(mlp).eval() if fuse_feedforward else mlp
     _, memory = history_cases(organism)
     prompts = [encode(tokenizer, [dict(role='user', content=case[0])]) for case in CASES]
+    position_limit = min(layer.max_length for layer in replacements.values())
     if ceval is not None:
         from audit_awake_multiturn_layers import CEVAL_SUBJECTS
 
@@ -38,12 +39,12 @@ def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None, a
             source = ceval / f'{subject}.parquet'
             before_digests[source] = sha(source)
         questions = list(ceval_questions(ceval, tokenizer))
-        position_limit = min(layer.max_length for layer in replacements.values())
         if absolute is not None:
             position_limit = min(position_limit, bridge.max_position)
     results = {}
     ceval_results = {}
     migrated = ()
+    position_parameters = 0
     old_count = sum(parameter.numel() for parameter in decoder.parameters())
     for name in ('original', 'fused'):
         if name == 'fused':
@@ -52,6 +53,9 @@ def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None, a
             else:
                 layer.self_attn = bridge
                 layer.mlp = fused_mlp
+            if position_table:
+                table = decoder.migrate_position_encoder(position_limit)
+                position_parameters = table.coefficients.weight.numel()
         rows = []
         for case, prompt in zip(CASES, prompts, strict=True):
             inputs = torch.tensor([prompt], device='cuda')
@@ -76,6 +80,7 @@ def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None, a
         old_count = sum(parameter.numel() for parameter in origin.parameters())
         new_count = sum(parameter.numel() for parameter in bridge.parameters())
     write(output, dict(layer=index, migrated=migrated, keep_groups=keep_groups, fuse_feedforward=fuse_feedforward,
+                       position_parameters=position_parameters,
                        ordinary=ordinary, memory={name: rows[1] for name, rows in results.items()},
                        ceval=ceval_results, original_parameters=old_count, fused_parameters=new_count,
                        sources={str(path): digest for path, digest in before_digests.items()},
@@ -93,10 +98,11 @@ if __name__ == '__main__':
     parser.add_argument('--fuse-feedforward', action='store_true', help='Also fuse the pretrained feed-forward input projections')
     parser.add_argument('--ceval', type=Path, help='Include local C-Eval validation shards')
     parser.add_argument('--absolute', type=Path, help='Test a saved absolute-position attention candidate')
+    parser.add_argument('--position-table', action='store_true', help='Also convert the shared position encoder')
     args = parser.parse_args()
     if args.output.exists():
         parser.error('Choose an unused output path')
     if args.absolute is not None and (args.all or args.keep_groups):
         parser.error('--absolute evaluates one attention module with ungrouped heads')
     main(args.output, None if args.all else args.layer, args.keep_groups or args.all,
-         args.fuse_feedforward or args.all, args.ceval, args.absolute)
+         args.fuse_feedforward or args.all, args.ceval, args.absolute, args.position_table)

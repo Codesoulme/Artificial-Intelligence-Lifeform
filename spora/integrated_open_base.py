@@ -274,6 +274,18 @@ class IntegratedOpenBase(nn.Module):
                 layers[index] = SPORAPretrainedBlock(layer).eval()
         return indices
 
+    def migrate_position_encoder(self, max_position):
+        """Move shared position coefficients into an editable model parameter table."""
+        from .pretrained_attention import SPORAPositionTable
+
+        backbone = self.base.model
+        if isinstance(backbone.rotary_emb, SPORAPositionTable):
+            if backbone.rotary_emb.max_position != max_position:
+                raise ValueError('Position encoder already migrated with a different limit')
+        else:
+            backbone.rotary_emb = SPORAPositionTable(backbone.rotary_emb, max_position)
+        return backbone.rotary_emb
+
     def use_feedforward_memory(self, layer_index, *, fraction=1.):
         """Move a fraction of one configured reader into its feed-forward input."""
         if type(layer_index) is not int or layer_index not in self.layer_indices:

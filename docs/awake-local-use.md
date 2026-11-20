@@ -35,6 +35,12 @@ cd D:/SPORA
 .\spora_chat.cmd --migrate-backbone
 ```
 
+加上 `--position-table` 可启用从底座位置系数初始化的参数表。为这一候选指定独立清醒状态文件，重启时使用同一组参数：
+
+```powershell
+.\spora_chat.cmd --migrate-backbone --position-table --awake-state runs/spora-awake-local/position-table-awake.pt
+```
+
 该入口加载个体后在内存中改造语言骨干，保留原来的分组注意力、旋转位置编码、归一化与 SwiGLU 计算。名称、明确记录、同人物追问、跨进程读回和睡眠核对均已实机验证。与现行双层改造版的公开题结果一致，自由聊天能力仍待独立评测。[改造对照](../reports/awake-language-replacement-audit.md)
 
 连续的普通问答会在当前会话里带入最多四轮实际对话，达到位置上限时优先保留最近的轮次。写入记录或转入事实查询时清除这段对话。退出后，普通对话窗口随进程结束，已写入的个体记忆仍可读取。过长的单条消息会提示分段发送。

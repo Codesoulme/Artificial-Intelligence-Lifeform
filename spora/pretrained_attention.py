@@ -10,6 +10,30 @@ from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer, apply_ro
 from .integrated_open_base import SPORAGatedFeedForward
 
 
+class SPORAPositionTable(nn.Module):
+    """Trainable per-position mixing coefficients initialized from a static rotary encoder."""
+
+    def __init__(self, source, max_position):
+        super().__init__()
+        if source.rope_type != 'default' or not 0 < max_position <= source.config.max_position_embeddings:
+            raise ValueError('Expected a bounded position table from a static rotary encoder')
+        positions = torch.arange(max_position, device=source.inv_freq.device).unsqueeze(0)
+        prototype = torch.empty((1, 1, 1), dtype=torch.float32, device=positions.device)
+        cosine, sine = source(prototype, positions)
+        half = cosine.shape[-1] // 2
+        self.coefficients = nn.Embedding.from_pretrained(
+            torch.cat((cosine[0, :, :half], sine[0, :, :half]), dim=-1), freeze=False,
+        )
+
+    @property
+    def max_position(self):
+        return self.coefficients.num_embeddings
+
+    def forward(self, hidden_states, position_ids):
+        cosine, sine = self.coefficients(position_ids).to(hidden_states.dtype).chunk(2, dim=-1)
+        return torch.cat((cosine, cosine), dim=-1), torch.cat((sine, sine), dim=-1)
+
+
 class SPORAFusedAttention(nn.Module):
     """Use one input projection while preserving rotary positions and attention weights."""
 

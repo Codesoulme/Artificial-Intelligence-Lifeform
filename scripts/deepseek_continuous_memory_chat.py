@@ -735,6 +735,7 @@ def main():
     parser.add_argument('--self-name-state', type=Path, help='Load an experimental self-name matrix for chat')
     parser.add_argument('--ordinary-intent-head', type=Path, help='Load the experimental ordinary-request classifier')
     parser.add_argument('--migrate-backbone', action='store_true', help='Use fused SPORA blocks for the remaining Qwen2 layers')
+    parser.add_argument('--position-table', action='store_true', help='Use the SPORA position table initialized from the pretrained model')
     parser.add_argument('--absolute-attention', type=Path, help='Load a verified SPORA attention candidate for layer 18')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
@@ -821,6 +822,9 @@ def main():
     if args.migrate_backbone:
         migrated = chat.decoder.migrate_pretrained_blocks()
         print(f'Migrated {len(migrated)} pretrained blocks to fused SPORA projections.', file=sys.stderr, flush=True)
+    if args.position_table:
+        chat.decoder.migrate_position_encoder(chat.position_limit).requires_grad_(False)
+        chat.awake_individual['position_table_size'] = chat.position_limit
     if replay_budget is not None:
         result = chat.verify_recent_memory(replay_budget, repair=args.repair_replay is not None)
         print(json.dumps(result, ensure_ascii=False))
