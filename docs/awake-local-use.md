@@ -39,6 +39,14 @@ cd D:/SPORA
 
 连续的普通问答会在当前会话里带入最多四轮实际对话，达到位置上限时优先保留最近的轮次。写入记录或转入事实查询时清除这段对话。退出后，普通对话窗口随进程结束，已写入的个体记忆仍可读取。过长的单条消息会提示分段发送。
 
+本机候选还支持把第 18 层换成学习型绝对位置注意力。使用独立的运行文件启动：
+
+```powershell
+.\spora_chat.cmd --migrate-backbone --absolute-attention runs/awake-absolute-attention-memory-v1/attention.pt --memory-file runs/spora-awake-local/absolute-memory.sqlite3 --awake-state runs/spora-awake-local/absolute-awake.pt --ordinary-intent-head runs/deepseek-awake-ordinary-intent.pt
+```
+
+该版本的位置上限为 256 词元。更正后可用「齐宁上一次记录里最爱喝什么？」查旧值。运行状态会绑定候选权重摘要，重启需加载同一候选。
+
 启动后输入「你叫什么名字？」。若要记录事实，可输入 `/记住 齐宁最喜欢喝米香玄米茶。`，再问「齐宁平常最爱喝什么？」和「那他的职业是什么？」。当前入口支持饮品、职业和到访地点，示例使用已登记的测试人物。按 `Ctrl+Z` 再按回车可正常退出。
 
 记忆保存在 `runs/spora-awake-local/memory.sqlite3`，首次记录时创建。在线状态文件 `awake.pt` 与名称张量及记忆路径绑定。`/status` 查看状态，`/relax` 放松，`/focus` 专注，`/sleep` 暂停更新，`/wake` 恢复。此入口允许最多三轮经过核验的连续改问。

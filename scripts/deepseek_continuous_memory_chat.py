@@ -437,7 +437,7 @@ class ContinuousMemoryChat:
             raise ValueError('Timestamp recall requires a version-1 SQLite query without --back')
         recent_read = consume_topic() if consume_topic is not None else None
         as_of_utc = (UTC_EPOCH + timedelta(microseconds=as_of)).isoformat() if as_of is not None else None
-        question, requested_back = split_history_query(question)
+        question, requested_back = split_history_query(question, self.addresses)
         history_issue = None
         if requested_back is None:
             history_issue = 'invalid_history_query'
@@ -449,7 +449,7 @@ class ContinuousMemoryChat:
             else:
                 back = requested_back
         if history:
-            history, _ = split_history_query(history)
+            history, _ = split_history_query(history, self.addresses)
         row = dict(key='input', question=question, history=history, target_turn=0)
         try:
             features = features_for(self.decoder, self.tokenizer, row, False, position_limit=self.position_limit - 1)
@@ -735,6 +735,7 @@ def main():
     parser.add_argument('--self-name-state', type=Path, help='Load an experimental self-name matrix for chat')
     parser.add_argument('--ordinary-intent-head', type=Path, help='Load the experimental ordinary-request classifier')
     parser.add_argument('--migrate-backbone', action='store_true', help='Use fused SPORA blocks for the remaining Qwen2 layers')
+    parser.add_argument('--absolute-attention', type=Path, help='Load a verified SPORA attention candidate for layer 18')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
@@ -807,6 +808,16 @@ def main():
             print(json.dumps(dict(action='preview', entity=entity, field=field, value=value), ensure_ascii=False))
             return
     chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router, use_retrained_gate=args.retrained_gate)
+    if args.absolute_attention is not None:
+        from spora.pretrained_attention import load_absolute_attention
+
+        path = args.absolute_attention.resolve()
+        digest = read(path.parent / 'result.json')['candidate_sha256']
+        layer = chat.decoder.base.model.layers[18]
+        source = layer.self_attn
+        layer.self_attn = load_absolute_attention(path, source, chat.awake_individual['source_sha256'], digest)
+        chat.position_limit = min(chat.position_limit, layer.self_attn.max_position)
+        chat.awake_individual['absolute_attention_sha256'] = digest
     if args.migrate_backbone:
         migrated = chat.decoder.migrate_pretrained_blocks()
         print(f'Migrated {len(migrated)} pretrained blocks to fused SPORA projections.', file=sys.stderr, flush=True)

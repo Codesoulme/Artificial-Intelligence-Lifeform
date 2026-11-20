@@ -6,10 +6,10 @@ from pathlib import Path
 
 from audit_awake_multiturn_layers import CASES, ceval_questions, encode, load_layer_pair, score_ceval, score_memory
 from audit_awake_feedforward_memory import history_cases
-from deepseek_output_aligned_memory import MODEL, SOURCE, sha, torch, write
+from deepseek_output_aligned_memory import MODEL, SOURCE, read, sha, torch, write
 from spora.integrated_open_base import SPORAGatedFeedForward
 from train_awake_replacement_replay import generate
-from spora.pretrained_attention import SPORAFusedAttention
+from spora.pretrained_attention import SPORAFusedAttention, load_absolute_attention
 
 
 @torch.inference_mode()
@@ -26,10 +26,8 @@ def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None, a
         if absolute is None:
             bridge = SPORAFusedAttention(origin, keep_groups=keep_groups).eval()
         else:
-            from train_awake_absolute_attention import MAX_POSITION, load_absolute_attention
-
-            before_digests[absolute] = sha(absolute)
-            bridge = load_absolute_attention(absolute, origin)
+            before_digests[absolute] = read(absolute.parent / 'result.json')['candidate_sha256']
+            bridge = load_absolute_attention(absolute, origin, before_digests[SOURCE], before_digests[absolute])
         fused_mlp = SPORAGatedFeedForward(mlp).eval() if fuse_feedforward else mlp
     _, memory = history_cases(organism)
     prompts = [encode(tokenizer, [dict(role='user', content=case[0])]) for case in CASES]
@@ -42,7 +40,7 @@ def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None, a
         questions = list(ceval_questions(ceval, tokenizer))
         position_limit = min(layer.max_length for layer in replacements.values())
         if absolute is not None:
-            position_limit = min(position_limit, MAX_POSITION)
+            position_limit = min(position_limit, bridge.max_position)
     results = {}
     ceval_results = {}
     migrated = ()

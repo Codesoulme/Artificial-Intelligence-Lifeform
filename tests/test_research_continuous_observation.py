@@ -16,6 +16,11 @@ class ContinuousObservationTests(unittest.TestCase):
             self.assertEqual(split_history_query(message), (message, 0))
         for message in ('上一次记录，', '零次更正前，' + question, '100次更正前，' + question):
             self.assertEqual(split_history_query(message), (message, None))
+        self.assertEqual(split_history_query('齐宁上一次记录里最爱喝什么？'), ('齐宁最爱喝什么？', 1))
+        self.assertEqual(split_history_query('齐宁两次更正前，职业是什么？'), ('齐宁职业是什么？', 2))
+        self.assertEqual(split_history_query('齐宁上一次去哪里？'), ('齐宁上一次去哪里？', 0))
+        self.assertEqual(split_history_query('齐宁远上一次记录里最爱喝什么？'),
+                         ('齐宁远上一次记录里最爱喝什么？', 0))
 
     def test_registered_subjects_are_scoped_to_the_supplied_registry(self):
         addresses = {**ADDRESSES, '周岚': 0}

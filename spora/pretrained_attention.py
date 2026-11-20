@@ -1,5 +1,7 @@
 """Fuse pretrained Qwen2 attention projections for SPORA inference."""
 
+import copy
+
 import torch
 from torch import nn
 from transformers.integrations.sdpa_attention import sdpa_attention_forward
@@ -71,7 +73,53 @@ class SPORAPretrainedBlock(Qwen2DecoderLayer):
         self.hidden_size = source.hidden_size
         self.attention_type = source.attention_type
         self.input_layernorm = source.input_layernorm
-        self.self_attn = SPORAFusedAttention(source.self_attn, keep_groups=True)
+        self.self_attn = (source.self_attn if isinstance(source.self_attn, SPORAFusedAttention)
+                          else SPORAFusedAttention(source.self_attn, keep_groups=True))
         self.post_attention_layernorm = source.post_attention_layernorm
         self.mlp = (source.mlp if isinstance(source.mlp, SPORAGatedFeedForward)
                     else SPORAGatedFeedForward(source.mlp, read_memory))
+
+
+class AbsoluteAttention(SPORAFusedAttention):
+    def __init__(self, source, max_position):
+        super().__init__(source)
+        self.out = copy.deepcopy(self.out)
+        self.max_position = max_position
+        self.position = torch.nn.Embedding(self.max_position, source.q_proj.in_features,
+                                           device=source.q_proj.weight.device, dtype=torch.float32)
+        torch.nn.init.zeros_(self.position.weight)
+        self.rotary_fraction = 0.
+
+    def project(self, hidden_states, position_embeddings, position_ids):
+        if position_ids is None or bool(((position_ids < 0) | (position_ids >= self.max_position)).any()):
+            raise ValueError('Position is outside the learned table')
+        values = hidden_states + (1 - self.rotary_fraction) * self.position(position_ids)
+        shape = values.shape[:-1]
+        qkv = self.qkv(values).reshape(*shape, 3, -1, self.head_dim)
+        query, key, value = qkv.permute(2, 0, 3, 1, 4).unbind(0)
+        if self.rotary_fraction:
+            cos, sin = (component.to(query.dtype) for component in position_embeddings)
+            q_rotated, k_rotated = apply_rotary_pos_emb(query, key, cos, sin)
+            query = query.lerp(q_rotated, self.rotary_fraction)
+            key = key.lerp(k_rotated, self.rotary_fraction)
+        return query, key, value
+
+
+def load_absolute_attention(path, source, expected_source_sha256, expected_candidate_sha256):
+    from hashlib import sha256
+    from io import BytesIO
+
+    raw = path.read_bytes()
+    if sha256(raw).hexdigest() != expected_candidate_sha256:
+        raise ValueError('Absolute attention candidate digest mismatch')
+    payload = torch.load(BytesIO(raw), map_location='cpu', weights_only=True)
+    max_position = payload['max_position']
+    if (payload['format'] != 'spora-absolute-attention-v1' or payload['source'] != expected_source_sha256
+            or payload['layer'] != source.layer_idx or type(max_position) is not int or not 0 < max_position <= 65536):
+        raise ValueError('Absolute attention candidate belongs to a different layer or base checkpoint')
+    state = payload['state']
+    if any(not isinstance(value, torch.Tensor) or not bool(torch.isfinite(value).all()) for value in state.values()):
+        raise ValueError('Absolute attention requires finite parameter tensors')
+    candidate = AbsoluteAttention(source, max_position).to(source.q_proj.weight.dtype).requires_grad_(False).eval()
+    candidate.load_state_dict(state, strict=True)
+    return candidate

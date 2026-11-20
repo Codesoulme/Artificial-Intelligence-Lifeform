@@ -59,27 +59,71 @@ HOLDOUT = {
 }
 
 
-def main(database, output, head_path=None):
+CONVERSATION_TRAIN = {
+    'follow': ('您好呀。', '初次见面，很高兴认识你。', '午安，今天还顺利吗？', '晚安，明天见。',
+               '把刚写的祝福改得活泼点。', '沿用刚刚的格式，再写一个。', '刚才那段介绍请压成一句。',
+               '换个对象，改写成给邻居的。', '上一条太正式了，语气随意些。', '请接着讲下一段。'),
+    'memory': ('我问候的那个人在做什么工作？', '刚才登记的人叫什么名字？', '你还记得那位客人吗？',
+               '别改文字，复述刚才读到的那条记录。', '把上次存的那份职业记录再说一次。',
+               '上一版登记的地点还能找到吗？', '刚才还提到了哪段经历？', '换个当事人，查同一件事。',
+               '我刚刚更新的是谁的记录？', '我们接着查第一版。'),
+}
+CONVERSATION_CALIBRATION = {
+    'follow': ('中午好，吃过饭了吗？', '早，今天感觉怎么样？', '第二句也按刚才的节奏写。',
+               '能把这个说明写得像口头介绍吗？'),
+    'memory': ('刚才核对的那份资料里当事人是谁？', '把最早登记的到访地点念一下。',
+               '说的是更正前那项工作吗？', '除了当前那条还能看到哪一条记录？'),
+}
+CONVERSATION_HOLDOUT = {
+    'follow': ('你好。', '嗨呀，见到你真好。', '上午好！', '回头聊，先去忙了。',
+               '再来一句，还是四个字。', '把刚才说的重写成给同事的留言。',
+               '上一段太长，砍掉一半。', '刚才的开头留着，给它补两句。'),
+    'memory': ('你好，能查下那个人的职业吗？', '上午好，记得他去哪儿了吗？', '你刚才查的记录是谁的？',
+               '再来一次，把当事人的旧名字读出来。', '那份登记改过了吗？', '刚才的饮品上回也是这个吗？',
+               '我要查相同的字段，换另一个人。', '把第一次存下来的那项再告诉我。'),
+}
+
+
+def main(database, output, head_path=None, conversation=False):
     digest = sha(database)
     chat = load_chat(database, use_inherited_router=True, use_retrained_gate=True)
     train, calibration, holdout = (rows_for(group) for group in (TRAIN, CALIBRATION, HOLDOUT))
-    prompts = [row['question'] for row in (*train, *calibration, *holdout)]
+    extra_train, extra_calibration, extra_holdout = (rows_for(group) for group in (
+        CONVERSATION_TRAIN, CONVERSATION_CALIBRATION, CONVERSATION_HOLDOUT,
+    )) if conversation else ([], [], [])
+    prompts = [row['question'] for row in (*train, *calibration, *holdout, *extra_train, *extra_calibration, *extra_holdout)]
     if len(prompts) != len(set(prompts)):
         raise ValueError('Ordinary-route prompts must be disjoint')
     features = {prompt: features_for(chat.decoder, chat.tokenizer, dict(question=prompt), False) for prompt in prompts}
     pooled = {prompt: (intent_features(*value[:2]), *value[1:]) for prompt, value in features.items()}
     head = train_inheritance(train, pooled)
     cutoff = choose_cutoff(calibration, gate_probabilities(head, calibration, pooled))
-    candidates = gate_probabilities(head, holdout, pooled)
+    original_head, original_cutoff = head, cutoff
+    if conversation:
+        train += extra_train
+        calibration += extra_calibration
+        head = train_inheritance(train, pooled)
+        cutoff = choose_cutoff(calibration, gate_probabilities(head, calibration, pooled))
+    evaluation = holdout + extra_holdout
+    candidates = gate_probabilities(head, evaluation, pooled)
+    original_scores = gate_probabilities(original_head, evaluation, pooled)
     details = []
-    for row, old, probability in zip(holdout, route(chat.direct, holdout, features), candidates, strict=True):
+    for row, old, probability, original in zip(evaluation, route(chat.direct, evaluation, features), candidates,
+                                                original_scores, strict=True):
         baseline = route_action(old, chat.cutoff) == 'ordinary'
         details.append(dict(row, baseline=baseline, candidate=baseline or probability >= cutoff,
+                            original_head=baseline or original >= original_cutoff,
                             field=old['selected'], ordinary_score=probability))
-    ordinary = [row for row in details if row['kind'] == 'follow']
-    memory = [row for row in details if row['kind'] == 'memory']
-    summary = {mode: dict(correct=sum(row[mode] for row in ordinary), false=sum(row[mode] for row in memory))
-               for mode in ('baseline', 'candidate')}
+
+    def summarize(rows):
+        ordinary = [row for row in rows if row['kind'] == 'follow']
+        memory = [row for row in rows if row['kind'] == 'memory']
+        return {mode: dict(correct=sum(row[mode] for row in ordinary), false=sum(row[mode] for row in memory))
+                for mode in ('baseline', 'original_head', 'candidate')}
+
+    summary = summarize(details[:len(holdout)])
+    if conversation:
+        summary['conversation_holdout'] = summarize(details[len(holdout):])
     if sha(database) != digest:
         raise ValueError('Source memory database changed during audit')
     print(summary, flush=True)
@@ -94,10 +138,11 @@ if __name__ == '__main__':
     parser.add_argument('--database', type=Path, default=DEFAULT_DATABASE)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--head', type=Path, help='Export the ordinary-intent head for opt-in chat')
+    parser.add_argument('--conversation', action='store_true', help='Include greeting and revision intent examples')
     args = parser.parse_args()
     for path in (args.output, args.head):
         if path is not None and path.exists():
             raise FileExistsError(path)
     if args.head is not None and args.head.resolve() == args.output.resolve():
         parser.error('--output and --head require separate paths')
-    main(args.database, args.output, args.head)
+    main(args.database, args.output, args.head, args.conversation)

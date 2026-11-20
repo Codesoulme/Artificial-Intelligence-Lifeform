@@ -20,19 +20,23 @@ ELLIPTICAL_QUERY = re.compile(
     r'(?:那|那么)?(?:查到了就说一下|说来听听|这项具体写了什么|具体内容呢|那一项的答案是什么|'
     r'你能说出那款的名字吗|能再告诉我这个细节吗|请把这个细节说给我|具体是什么|那项是什么)[。？！.!?]?'
 )
-HISTORY_PREFIX = re.compile(
-    r'^(?:请)?(?:查(?:一下)?|回看)?(?:上一次记录(?:里|中)?|'
-    r'(?P<count>[0-9零一二两三四五六七八九十]+)次更正前)(?=[，,：:\s]|$)'
-)
+HISTORY_MARKER = r'(?:上一次记录(?:里|中)?|(?P<count>[0-9零一二两三四五六七八九十]+)次更正前)'
+HISTORY_PREFIX = re.compile(r'^(?:请)?(?:查(?:一下)?|回看)?' + HISTORY_MARKER + r'(?=[，,：:\s]|$)')
+NAMED_HISTORY_MARKER = re.compile(HISTORY_MARKER)
 CHINESE_DIGITS = '零一二三四五六七八九'
 
 
-def split_history_query(text):
-    """Remove an explicit history prefix and return its correction offset."""
-    match = HISTORY_PREFIX.match(text.strip())
+def split_history_query(text, addresses=ADDRESSES):
+    """Extract a correction offset while retaining an explicitly named subject."""
+    cleaned = text.strip()
+    match = HISTORY_PREFIX.match(cleaned)
+    subject = ''
+    if match is None:
+        subject, match = named_history_prefix(tuple(addresses), cleaned)
     if match is None:
         return text, 0
-    question = text.strip()[match.end():].lstrip('，,：: \t\n\r')
+    body = cleaned[len(subject):][match.end():].lstrip('，,：: \t\n\r')
+    question = subject + body
     count = (match['count'] or '一').replace('两', '二')
     if count.isascii() and len(count) <= 2:
         offset = int(count)
@@ -43,7 +47,19 @@ def split_history_query(text):
         offset = 10 * CHINESE_DIGITS.index(tens or '一') + CHINESE_DIGITS.index(units or '零')
     else:
         offset = 0
-    return (question, offset) if question and offset else (text, None)
+    return (question, offset) if body and offset else (text, None)
+
+
+def named_history_prefix(names, text):
+    for name in names:
+        if text.startswith(name):
+            marker = NAMED_HISTORY_MARKER.match(text[len(name):])
+            if marker is not None:
+                _, query = subject_patterns(names)
+                body = text[len(name) + marker.end():].lstrip('，,：: \t\n\r')
+                if body and query.match(name + body):
+                    return name, marker
+    return '', None
 
 
 @lru_cache(maxsize=16)
@@ -56,7 +72,7 @@ def subject_patterns(names):
         r'(?:^|[^\u4e00-\u9fff]|关于|想查|查一下|确认|想问|知道|提到|翻了|说说|看看|问问|'
         r'改问|问的是|告诉我|线索是|谈的是|说的是|记录里)' + subject
         + r'(?=$|[^\u4e00-\u9fff]|的|现在|目前|平常|当时|以前|平时|曾经|那次|那回|那天|在座谈|'
-        r'最|偏爱|爱喝|喜欢|做|去了|到访|担任|从事)'
+        r'最|偏爱|爱喝|喜欢|做|去了|到访|担任|从事|职业|工作|岗位|饮品|饮料)'
     )
     return clause, query
 

@@ -1,7 +1,6 @@
 """Fit SPORA-style learned positions inside a pretrained attention transplant."""
 
 import argparse
-import copy
 import random
 import time
 from pathlib import Path
@@ -9,57 +8,19 @@ from pathlib import Path
 from audit_awake_feedforward_memory import history_cases
 from audit_awake_multiturn_layers import CASES, conversation, encode, score_memory
 from audit_awake_language_layers import load_layer_pair
-from deepseek_output_aligned_memory import MODEL, SOURCE, read, sha, torch, write
+from deepseek_output_aligned_memory import MODEL, SOURCE, sha, torch, write
 from scripts.deepseek_spora_memory_answer_distill import _memory_args
 from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.growing import grow
 from spora.internal_memory import observe_sourced
 from spora.language_training import atomic_save
-from spora.pretrained_attention import SPORAFusedAttention
+from spora.pretrained_attention import AbsoluteAttention
 from train_awake_partial_layer import TRAIN_FILES, corpus
-from transformers.models.qwen2.modeling_qwen2 import apply_rotary_pos_emb
 
 
 LAYER = 18
 MAX_POSITION = 256
 SEED = 316201
-
-
-class AbsoluteAttention(SPORAFusedAttention):
-    def __init__(self, source):
-        super().__init__(source)
-        self.out = copy.deepcopy(self.out)
-        self.position = torch.nn.Embedding(MAX_POSITION, source.q_proj.in_features,
-                                           device=source.q_proj.weight.device, dtype=torch.float32)
-        torch.nn.init.zeros_(self.position.weight)
-        self.rotary_fraction = 0.
-
-    def project(self, hidden_states, position_embeddings, position_ids):
-        if position_ids is None or bool(((position_ids < 0) | (position_ids >= MAX_POSITION)).any()):
-            raise ValueError('Position is outside the learned table')
-        values = hidden_states + (1 - self.rotary_fraction) * self.position(position_ids)
-        shape = values.shape[:-1]
-        qkv = self.qkv(values).reshape(*shape, 3, -1, self.head_dim)
-        query, key, value = qkv.permute(2, 0, 3, 1, 4).unbind(0)
-        if self.rotary_fraction:
-            cos, sin = (component.to(query.dtype) for component in position_embeddings)
-            q_rotated, k_rotated = apply_rotary_pos_emb(query, key, cos, sin)
-            query = query.lerp(q_rotated, self.rotary_fraction)
-            key = key.lerp(k_rotated, self.rotary_fraction)
-        return query, key, value
-
-
-def load_absolute_attention(path, source):
-    report = read(path.parent / 'result.json')
-    if report['candidate_sha256'] != sha(path):
-        raise ValueError('Absolute attention candidate digest mismatch')
-    payload = torch.load(path, map_location='cpu', weights_only=True)
-    if (payload['format'] != 'spora-absolute-attention-v1' or payload['source'] != sha(SOURCE)
-            or payload['layer'] != source.layer_idx or payload['max_position'] != MAX_POSITION):
-        raise ValueError('Absolute attention candidate belongs to a different layer or base checkpoint')
-    candidate = AbsoluteAttention(source).half().requires_grad_(False).eval()
-    candidate.load_state_dict(payload['state'], strict=True)
-    return candidate
 
 
 @torch.no_grad()
@@ -149,7 +110,7 @@ def main(output, steps, memory_replay=False):
                     eos=sum(turn['eos'] for group in dialogues for turn in group),
                     memory_correct=sum(row['correct'] for row in memory))
 
-    candidate = AbsoluteAttention(source).float().eval()
+    candidate = AbsoluteAttention(source, MAX_POSITION).float().eval()
     candidate.requires_grad_(False)
     candidate.position.requires_grad_(True)
     candidate.out.requires_grad_(True)
