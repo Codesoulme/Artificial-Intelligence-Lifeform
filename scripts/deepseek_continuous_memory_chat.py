@@ -4,9 +4,12 @@ import argparse
 import json
 import os
 import sys
-from contextlib import nullcontext
+from contextlib import ExitStack, nullcontext
 from datetime import datetime, timedelta, timezone
+from hashlib import sha256
+from io import BytesIO
 from pathlib import Path
+from uuid import uuid4
 
 from deepseek_aligned_memory_calibration import load_adapter
 from deepseek_aligned_memory_dialogue import (
@@ -28,6 +31,7 @@ from spora.continuous_bank_store import (
     bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_recent_snapshots, read_slots_as_of,
 )
 from spora.durable import RevisionConflict, pack
+from spora.event_ledger import EventLedger
 from spora.language_training import atomic_save
 from spora.online_time import OnlineSession, OnlineState
 from spora.research_continuous_observation import (
@@ -684,6 +688,7 @@ def main():
     parser.add_argument('--awake-state', type=Path, help='Persist the experimental awake core during stdin chat')
     parser.add_argument('--sleep-replay', type=int, metavar='WRITES', help='Verify recent writes when entering sleep')
     parser.add_argument('--sleep-world', type=Path, help='Load a bounded P11 world model for synthetic sleep simulations')
+    parser.add_argument('--sleep-ledger', type=Path, help='Save sleep replay and simulation evidence in a local event ledger')
     parser.add_argument('--awake-topic-recall', action='store_true', help='Use verified recent reads for bounded follow-ups')
     parser.add_argument('--awake-recall-intent-head', type=Path, help='Load the experimental repeat-intent classifier')
     parser.add_argument('--awake-subject-intent-head', type=Path, help='Load the experimental same-person classifier')
@@ -708,6 +713,8 @@ def main():
         parser.error('--sleep-replay requires --awake-state, a SQLite file and a budget from 1 to 256 writes')
     if args.sleep_world is not None and args.awake_state is None:
         parser.error('--sleep-world requires --awake-state')
+    if args.sleep_ledger is not None and (args.sleep_replay is None and args.sleep_world is None):
+        parser.error('--sleep-ledger needs a sleep replay or world model')
     observation = args.observe if args.observe is not None else args.preview_observation
     if args.awake_state is not None and (args.question is not None or observation is not None or args.remember
                                          or args.register is not None or args.import_checkpoint is not None
@@ -781,11 +788,16 @@ def main():
         return
     timing_threshold = EARLY_TIMING_THRESHOLD if args.earlier_readout else THRESHOLD
     world_session = None
+    world_digest = None
+    ledger = None
+    world_observation_event = None
     if args.sleep_world is not None:
         world_path = args.sleep_world.resolve()
         if world_path in (chat.working_path, args.awake_state.resolve()):
             parser.error('--sleep-world requires a separate model file')
-        chat.organism.time_world, _ = TimeWorld.load(world_path)
+        world_bytes = world_path.read_bytes()
+        chat.organism.time_world, _ = TimeWorld.load(BytesIO(world_bytes))
+        world_digest = sha256(world_bytes).hexdigest()
         world_session = OnlineSession(chat.organism.time_world, OnlineState())
     if args.ordinary_intent_head is not None:
         ordinary_path = args.ordinary_intent_head.resolve()
@@ -802,7 +814,14 @@ def main():
         chat.organism.self_name = chat.self_name
         chat.awake_individual['self_name_sha256'] = sha(name_path)
 
+    def record_sleep_event(kind, payload, source, event_id=None):
+        if ledger is not None:
+            revision = chat.working_sha
+            ledger.append(kind, dict(payload, memory_revision=revision), event_id=event_id or uuid4().hex,
+                          source=source, state_version=revision if isinstance(revision, int) else 0)
+
     def answer_lines(lines, topic_observer=None, consume_topic=None, bind_topic=None):
+        nonlocal world_observation_event
         history = args.history
         for line in lines:
             question = line.strip()
@@ -820,6 +839,10 @@ def main():
                     world = dict(action='defer', reason='expected_supported_world_observation')
                 else:
                     world = dict(action='world_observed', source='synthetic', count=world_session.state.world_count)
+                    if ledger is not None:
+                        world_observation_event = uuid4().hex
+                        record_sleep_event('world.observation', dict(values=numbers, count=world['count'], world_sha256=world_digest),
+                                           'synthetic_input', world_observation_event)
                 print(json.dumps(world, ensure_ascii=False), flush=True)
                 continue
             if args.question is None and command[0] in ('/observe', '/记住'):
@@ -882,19 +905,37 @@ def main():
                 result['imagination'] = world_session.imagine([[action] * 4 for action in DEMO_WORLD_ACTIONS], [.25] * 4)
                 if result['imagination']['kind'] == 'simulation':
                     result['imagination']['actions'] = DEMO_WORLD_ACTIONS
+                    record_sleep_event('world.imagination', dict(result['imagination'], evidence_event=world_observation_event,
+                                                                  world_sha256=world_digest), 'model_simulation')
             if args.sleep_replay is not None:
                 try:
                     result['replay'] = chat.verify_recent_memory(args.sleep_replay)
                 except RevisionConflict:
                     result['replay'] = dict(action='defer', reason='reload_required')
+                record_sleep_event('memory.replay', result['replay'], 'snapshot_verification')
             return result
 
         print('Awake controls: /status /relax /focus /sleep /wake /observe', file=sys.stderr, flush=True)
-        with awake_chat_lines(
-            chat.organism, sys.stdin, state_path, trained, chat.awake_individual, report,
-            topic_labels=KEYS, clear_topics_on_sleep=args.awake_topic_recall,
-            on_sleep=replay_on_sleep if args.sleep_replay is not None or world_session is not None else None,
-        ) as (lines, observe_topic, consume_topic, bind_topic):
+        with ExitStack() as resources:
+            if args.sleep_ledger is not None:
+                ledger_path = args.sleep_ledger.resolve()
+                if ledger_path.suffix.lower() not in ('.sqlite', '.sqlite3') or ledger_path == chat.working_path:
+                    parser.error('--sleep-ledger needs a separate SQLite file')
+                resources.enter_context(lock_working_checkpoint(ledger_path))
+                opener = EventLedger.open if ledger_path.exists() else EventLedger.create
+                ledger = resources.enter_context(opener(ledger_path))
+                ledger.verify()
+                individual = dict(chat.awake_individual, awake_path=str(state_path))
+                first = ledger.connection.execute('SELECT kind, payload FROM events ORDER BY seq LIMIT 1').fetchone()
+                if first is None:
+                    ledger.append('sleep.individual', individual, event_id=uuid4().hex)
+                elif first[0] != 'sleep.individual' or json.loads(first[1]) != individual:
+                    raise ValueError('Sleep ledger belongs to a different chat individual')
+            lines, observe_topic, consume_topic, bind_topic = resources.enter_context(awake_chat_lines(
+                chat.organism, sys.stdin, state_path, trained, chat.awake_individual, report,
+                topic_labels=KEYS, clear_topics_on_sleep=args.awake_topic_recall,
+                on_sleep=replay_on_sleep if args.sleep_replay is not None or world_session is not None else None,
+            ))
             if args.awake_topic_recall:
                 answer_lines(lines, observe_topic, consume_topic, bind_topic)
             else:
