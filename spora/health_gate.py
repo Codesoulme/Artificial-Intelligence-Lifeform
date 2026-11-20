@@ -2,6 +2,7 @@
 from __future__ import annotations
 import hashlib
 import json
+import math
 
 
 def cases_digest(cases):
@@ -17,6 +18,8 @@ def promotion_decision(baseline, candidate, *, expected_cases_digest,
     for name in baseline:
         if name not in candidate:
             return {'promote': False, 'reason': 'metric_missing:'+name}
+        if not all(type(value) in (int, float) and math.isfinite(value) for value in (baseline[name], candidate[name])):
+            return {'promote': False, 'reason': 'metric_nonfinite:'+name}
         if name in lower_is_better and candidate[name] > baseline[name]:
             regressions.append(name)
         elif name not in lower_is_better and candidate[name] < baseline[name]:

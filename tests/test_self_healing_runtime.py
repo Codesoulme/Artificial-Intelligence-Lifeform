@@ -54,6 +54,17 @@ class SelfHealingRuntimeTests(unittest.TestCase):
                                     lower_is_better={'loss'})
         self.assertFalse(result['promote'])
         self.assertEqual(result['regressions'], ['loss'])
+        self.assertFalse(promotion_decision({'loss': 1.}, {'loss': float('nan')},
+                                            expected_cases_digest=digest, candidate_cases_digest=digest,
+                                            lower_is_better={'loss'})['promote'])
+
+    def test_verified_damage_mask_does_not_treat_legitimate_zero_as_damage(self):
+        shadow = DnaShadow({'weight': torch.ones(3)})
+        active = {'weight': torch.tensor([0., 0., 4.])}
+        restored, repaired = shadow.repair_damaged(active, damage_masks={'weight': torch.tensor([False, True, False])})
+        self.assertEqual(repaired, {'weight': 1})
+        torch.testing.assert_close(restored['weight'], torch.tensor([0., 1., 4.]))
+        torch.testing.assert_close(active['weight'], torch.tensor([0., 0., 4.]))
 
     def test_awake_ticks_are_written_to_ledger(self):
         torch.manual_seed(19)

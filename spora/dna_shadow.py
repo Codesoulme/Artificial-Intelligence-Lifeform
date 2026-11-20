@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import torch
 
+from .language_training import atomic_save
+
 
 def state_digest(state):
     digest = hashlib.sha256()
@@ -45,17 +47,21 @@ class DnaShadow:
             self.tensors[name].mul_(self.alpha).add_(value, alpha=1-self.alpha)
         self.steps += 1
 
-    def repair_damaged(self, active, threshold=1e-6):
+    def repair_damaged(self, active, threshold=1e-6, *, damage_masks=None):
         if threshold <= 0 or not torch.isfinite(torch.tensor(threshold)):
             raise ValueError('Positive finite damage threshold required')
         if set(active) != set(self.tensors):
             raise ValueError('DNA and active tensor names differ')
+        if damage_masks is not None and set(damage_masks) != set(active):
+            raise ValueError('Damage mask must cover the active tensor names')
         repaired = {}
         damaged = {}
         for name, value in active.items():
             if value.shape != self.tensors[name].shape or value.dtype != self.tensors[name].dtype:
                 raise ValueError('DNA tensor shape or dtype changed: '+name)
-            mask = value.detach().abs() < threshold
+            mask = value.detach().abs() < threshold if damage_masks is None else damage_masks[name]
+            if mask.shape != value.shape or mask.dtype != torch.bool:
+                raise ValueError('Damage mask shape or dtype differs: '+name)
             repaired[name] = torch.where(mask.cpu(), self.tensors[name], value.detach().cpu())
             damaged[name] = int(mask.sum())
         return repaired, damaged
@@ -66,10 +72,9 @@ class DnaShadow:
                 'digest': state_digest(self.tensors)}
 
     def save(self, path):
-        path = Path(path); path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_suffix(path.suffix+'.tmp')
-        torch.save(self.snapshot(), temporary)
-        temporary.replace(path)
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        atomic_save(self.snapshot(), path)
 
     @classmethod
     def load(cls, path):
