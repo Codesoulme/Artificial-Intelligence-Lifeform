@@ -44,7 +44,7 @@ def memory_batches(memory, contrast_weight):
     return batches
 
 
-def train(decoder, block, language, memory, steps, contrast_weight=0.):
+def train(decoder, block, language, memory, steps, contrast_weight=0., *, reference_weight=.25):
     modules = (block.position, block.block.norm1, block.block.norm2, block.block.out, block.block.ff[2])
     parameters = [parameter.requires_grad_(True) for module in modules for parameter in module.parameters()]
     optimizer = torch.optim.AdamW(parameters, lr=2e-5, weight_decay=0.)
@@ -59,7 +59,7 @@ def train(decoder, block, language, memory, steps, contrast_weight=0.):
         logits = answer_logits(decoder, prompt, tail)
         language_loss = divergence(logits, teacher)
         reference_loss = torch.nn.functional.cross_entropy(logits, torch.tensor(tail, device=logits.device))
-        (language_loss + .25 * reference_loss).backward()
+        (language_loss + reference_weight * reference_loss).backward()
 
         batch = batches[index % len(batches)]
         metrics = dict(language_kl=language_loss.item(), reference_ce=reference_loss.item(),

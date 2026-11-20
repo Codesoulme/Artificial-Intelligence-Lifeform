@@ -503,3 +503,20 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 9 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --output runs/awake-layer9-fifth-block-v1
 .venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --unmodified-control --output runs/awake-layer9-fifth-block-original-v1.json
 ```
+
+## 第 9 层的教师分布对照
+
+复用同一批样本、初始化和训练步数，仅将整网阶段的人工答案损失权重从 0.25 降到 0。语言训练仍使用人工答案作为前缀，语言损失只拟合四层教师的输出分布。记忆分布、事实现值监督和成对损失保持原设定。局部阶段的残差相对平方误差与前轮一致，为 0.68197。
+
+| 第 9 层配置 | 三科 C-Eval | 初中政治 | 严格短答 | 已有及新地址换值 |
+|---|---:|---:|---:|---:|
+| 四层起点 | 16/69 | 9/21 | 0/16 | 12/12、12/12 |
+| 五层，局部对齐 | 14/69 | 6/21 | 0/16 | 12/12、11/12 |
+| 五层，教师分布加人工答案 | 12/69 | 4/21 | 0/16 | 12/12、12/12 |
+| 五层，仅教师分布 | 14/69 | 6/21 | 0/16 | 12/12、12/12 |
+
+去掉人工答案损失后，整网阶段的换值增益保留，初中政治恢复到局部阶段水平。与四层起点相比，最终仍少答对两道公开题。本轮复用同一批公开题作开发对照，五层权重留作实验候选，尚未进入本机聊天验收。训练和重载复验约 281 秒，峰值显存约 3.99 GiB。重载后的逐项结果一致，输入摘要通过核对。逐题记录见 `runs/awake-layer9-teacher-only-v1/result.json`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 9 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --output runs/awake-layer9-teacher-only-v1
+```

@@ -1,6 +1,7 @@
 """Fit a native block with the existing migrated layers frozen."""
 
 import argparse
+import math
 import time
 from pathlib import Path
 
@@ -97,7 +98,8 @@ def main(args):
     memory = paired_targets(decoder, tokenizer, organism)
     layers[args.layer] = block
     score('local_alignment')
-    losses, trained_parameters = train(decoder, block, language, memory, args.output_steps, contrast_weight=.5)
+    losses, trained_parameters = train(decoder, block, language, memory, args.output_steps, contrast_weight=.5,
+                                      reference_weight=args.reference_weight)
     score('output_alignment')
 
     if any(sha(path) != digest for path, digest in protected.items()):
@@ -116,6 +118,7 @@ def main(args):
                                             fixed_layers={index: protected[path] for index, path in fixed.items()},
                                             subjects=args.subjects, position_limit=limit, local_steps=args.local_steps,
                                             output_steps=args.output_steps, trained_parameters=trained_parameters,
+                                            reference_weight=args.reference_weight,
                                             local_error=dict(initial=before, aligned=after), losses=losses,
                                             seconds=time.perf_counter() - started,
                                             peak_gpu_bytes=torch.cuda.max_memory_allocated(),
@@ -133,9 +136,13 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--local-steps', type=int, default=64)
     parser.add_argument('--output-steps', type=int, default=96)
+    parser.add_argument('--reference-weight', type=float, default=.25,
+                        help='Weight on reference answers in addition to teacher distribution matching')
     args = parser.parse_args()
     if min(args.local_steps, args.output_steps) < 1:
         parser.error('Training steps must be positive')
+    if not math.isfinite(args.reference_weight) or args.reference_weight < 0.:
+        parser.error('Reference weight must be finite and nonnegative')
     if (args.layer == 9) != (args.layer24 is not None):
         parser.error('Layer 9 requires --layer24, which is the training target in the default mode')
     args.output.mkdir()
