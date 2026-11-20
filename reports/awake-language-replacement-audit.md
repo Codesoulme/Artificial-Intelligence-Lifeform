@@ -520,3 +520,20 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 ```powershell
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 9 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --output runs/awake-layer9-teacher-only-v1
 ```
+
+## 第 9 层的学生前缀蒸馏
+
+参考 GKD 对学生生成序列打分的做法，在局部对齐后让五层学生对相同的 83 个中文提示生成续写。单条最多 24 词元，且不超过原参考答案长度及位置上限，合计生成 705 个词元，39 条以结束符收尾。恢复四层教师后，缓存其在这些前缀上的下一词元分布。整网阶段保留前向 KL、96 步及原记忆损失，续写在训练前生成一次。这个实验同时改变了前缀内容和实际长度。[GKD 论文](https://arxiv.org/abs/2306.13649)
+
+| 配置 | C-Eval | 严格短答 | 已有地址换值 | 新人物地址换值 |
+|---|---:|---:|---:|---:|
+| 四层起点 | 16/69 | 0/16 | 12/12 | 12/12 |
+| 五层，局部对齐 | 14/69 | 0/16 | 12/12 | 11/12 |
+| 五层，人工前缀，仅教师分布 | 14/69 | 0/16 | 12/12 | 12/12 |
+| 五层，学生前缀，仅教师分布 | 12/69 | 0/16 | 12/12 | 11/12 |
+
+学生前缀组少答对的两道都来自初中政治的净分变化。由于仅收集一次贪心续写，本轮结果覆盖这一固定前缀配置。完整实验约 329 秒，峰值显存约 3.99 GiB，重载复现逐题输出。权重留作实验，逐题记录见 `runs/awake-layer9-student-prefix-v1/result.json`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 9 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --student-rollout-tokens 24 --output runs/awake-layer9-student-prefix-v1
+```

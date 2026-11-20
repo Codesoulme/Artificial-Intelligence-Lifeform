@@ -20,7 +20,7 @@ from train_awake_dialogue_recovery import CORPUS, dialogue_cases
 from train_awake_feedforward_replay import collect_replay, paired_targets
 from train_awake_native_outputs import cache_language_targets, train
 from train_awake_partial_layer import TRAIN_FILES, collect, corpus
-from train_awake_replacement_replay import load_layer_pair
+from train_awake_replacement_replay import generate, load_layer_pair
 
 
 INDEX = 24
@@ -94,7 +94,21 @@ def main(args):
     after = local_error(block, held)
     print('Held block residual error', before, after, flush=True)
 
-    language = cache_language_targets(decoder, dialogue_cases(tokenizer)[::2])
+    examples = dialogue_cases(tokenizer)[::2]
+    rollout_stats = None
+    if args.student_rollout_tokens:
+        layers[args.layer] = block
+        continuations = []
+        for question, prompt, reference in examples:
+            budget = min(args.student_rollout_tokens, len(reference), limit - len(prompt))
+            tail = generate(decoder, tokenizer, prompt, budget)
+            continuations.append((question, prompt, tail))
+        layers[args.layer] = teacher
+        rollout_stats = dict(tokens=sum(len(tail) for _, _, tail in continuations),
+                             eos=sum(tail[-1] == tokenizer.eos_token_id for _, _, tail in continuations))
+        print('Student continuations', rollout_stats, flush=True)
+        examples = continuations
+    language = cache_language_targets(decoder, examples)
     memory = paired_targets(decoder, tokenizer, organism)
     layers[args.layer] = block
     score('local_alignment')
@@ -119,6 +133,8 @@ def main(args):
                                             subjects=args.subjects, position_limit=limit, local_steps=args.local_steps,
                                             output_steps=args.output_steps, trained_parameters=trained_parameters,
                                             reference_weight=args.reference_weight,
+                                            student_rollout_tokens=args.student_rollout_tokens,
+                                            rollout_stats=rollout_stats,
                                             local_error=dict(initial=before, aligned=after), losses=losses,
                                             seconds=time.perf_counter() - started,
                                             peak_gpu_bytes=torch.cuda.max_memory_allocated(),
@@ -138,11 +154,15 @@ if __name__ == '__main__':
     parser.add_argument('--output-steps', type=int, default=96)
     parser.add_argument('--reference-weight', type=float, default=.25,
                         help='Weight on reference answers in addition to teacher distribution matching')
+    parser.add_argument('--student-rollout-tokens', type=int, default=0,
+                        help='Collect fixed student continuations up to this many tokens instead of reference answers')
     args = parser.parse_args()
     if min(args.local_steps, args.output_steps) < 1:
         parser.error('Training steps must be positive')
     if not math.isfinite(args.reference_weight) or args.reference_weight < 0.:
         parser.error('Reference weight must be finite and nonnegative')
+    if args.student_rollout_tokens < 0 or (args.student_rollout_tokens and args.reference_weight):
+        parser.error('Student continuations require a positive token cap and --reference-weight 0')
     if (args.layer == 9) != (args.layer24 is not None):
         parser.error('Layer 9 requires --layer24, which is the training target in the default mode')
     args.output.mkdir()
