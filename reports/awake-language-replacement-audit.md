@@ -483,3 +483,23 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 ```powershell
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --output runs/awake-layer24-fourth-block-v1
 ```
+
+## 第 9 层第五块实验
+
+在已迁移的第 6、12、18、24 层固定时，将第 9 层也替换为完整孢子块。复用第 24 层的初始化、64 步局部对齐和 96 步整网对齐流程。中文评测使用固定修订中新加入的高中化学、初中政治和教育学共 69 道验证题。严格短答和两组受控记忆用例沿用前一轮。
+
+| 配置 | C-Eval | 严格短答 | 已有地址换值 | 新人物地址换值 |
+|---|---:|---:|---:|---:|
+| 原版 DeepSeek | 27/69 | 0/16 | — | — |
+| 四层起点 | 16/69 | 0/16 | 12/12 | 12/12 |
+| 五层，局部对齐后 | 14/69 | 0/16 | 12/12 | 11/12 |
+| 五层，整网对齐后及重载 | 12/69 | 0/16 | 12/12 | 12/12 |
+
+四层与最终五层相比，高中化学从 2/19 到 3/19，教育学保持 5/29，初中政治从 9/21 到 4/21。局部对齐在八段留出文本上将残差相对平方误差从 0.70233 降到 0.68197。完整训练与重载耗时约 293 秒，峰值显存约 3.99 GiB。模型权重从文件重载后逐题结果一致，训练输入摘要通过核对。两组记忆的地址和版本由评测提供，五层版保留为实验权重，尚未进入本机聊天验收。四层版继续作为本机候选。
+
+权重和逐题结果见 `runs/awake-layer9-fifth-block-v1/`，原版对照见 `runs/awake-layer9-fifth-block-original-v1.json`。同场对照只能归因到本轮第 9 层的整体替换，层位、初始化与对齐方案的影响仍需逐项比较。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 9 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --output runs/awake-layer9-fifth-block-v1
+.venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --unmodified-control --output runs/awake-layer9-fifth-block-original-v1.json
+```

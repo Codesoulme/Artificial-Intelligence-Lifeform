@@ -1,4 +1,4 @@
-"""Fit a fourth native block with the existing three-block backbone frozen."""
+"""Fit a native block with the existing migrated layers frozen."""
 
 import argparse
 import time
@@ -25,7 +25,7 @@ from train_awake_replacement_replay import load_layer_pair
 INDEX = 24
 
 
-def initialize(decoder, tokenizer, teacher, texts, replay, limit):
+def initialize(decoder, tokenizer, teacher, texts, replay, limit, index):
     norms = []
     for reference in (teacher.input_layernorm, teacher.post_attention_layernorm):
         features, targets = collect(decoder, tokenizer, texts, reference)
@@ -37,12 +37,15 @@ def initialize(decoder, tokenizer, teacher, texts, replay, limit):
     fit_readout(feedforward, torch.cat((features, replay_features)), torch.cat((targets, replay_targets)),
                 None, None, regularization=.08)
     attention = AbsoluteAttention(teacher.self_attn, limit)
-    return assemble(decoder.base, attention, norms, feedforward, INDEX)
+    return assemble(decoder.base, attention, norms, feedforward, index)
 
 
 def main(args):
+    fixed = {12: args.layer12, 18: args.layer18}
+    if args.layer24 is not None:
+        fixed[24] = args.layer24
     paths = (SOURCE, MODEL / 'model.safetensors', MODEL / 'tokenizer.json', MODEL / 'tokenizer_config.json',
-             args.layer12, args.layer18, CORPUS, *TRAIN_FILES,
+             *fixed.values(), CORPUS, *TRAIN_FILES,
              *(args.ceval / f'{subject}.parquet' for subject in args.subjects))
     protected = {path: sha(path) for path in paths}
     provenance = dict(checkpoint_digest=protected[SOURCE], base_digest=protected[MODEL / 'model.safetensors'])
@@ -50,10 +53,10 @@ def main(args):
     torch.manual_seed(42117)
     decoder, tokenizer, _, _, organism, _ = load_layer_pair()
     layers = decoder.base.model.layers
-    for index, path in ((12, args.layer12), (18, args.layer18)):
+    for index, path in fixed.items():
         digest = read(path.parent / 'result.json')['candidate_sha256']
         layers[index] = load_native_block(path, decoder.base, index, candidate_digest=digest, **provenance)
-    limit = min(layers[index].max_length for index in (6, 12, 18))
+    limit = min(layers[index].max_length for index in (6, *fixed))
     questions = list(ceval_questions(args.ceval, tokenizer, args.subjects))
     memory_suites = {'earlier': paired_states(organism, MEMORY),
                      'fresh': paired_states(organism, FRESH_MEMORY, offset=5)}
@@ -76,12 +79,12 @@ def main(args):
         results[name] = dict(summary=summary, ceval=choices, dialogue=dialogues, memory=memory)
         print(name, summary, flush=True)
 
-    score('three_blocks')
-    teacher = layers[INDEX]
+    score('four_blocks' if args.layer24 is not None else 'three_blocks')
+    teacher = layers[args.layer]
     texts = corpus()
     requests = [(tokenizer.encode(text, add_special_tokens=False)[:192], {}) for text in texts]
     replay = replay_requests(organism, tokenizer) + replay_requests(organism, tokenizer, value_offset=2)
-    block = initialize(decoder, tokenizer, teacher, texts[8:], replay, limit)
+    block = initialize(decoder, tokenizer, teacher, texts[8:], replay, limit, args.layer)
     samples = capture(decoder, teacher, requests)
     held, ordinary = samples[:8], samples[8:]
     remembered = capture(decoder, teacher, replay)
@@ -92,24 +95,25 @@ def main(args):
 
     language = cache_language_targets(decoder, dialogue_cases(tokenizer)[::2])
     memory = paired_targets(decoder, tokenizer, organism)
-    layers[INDEX] = block
+    layers[args.layer] = block
     score('local_alignment')
     losses, trained_parameters = train(decoder, block, language, memory, args.output_steps, contrast_weight=.5)
     score('output_alignment')
 
     if any(sha(path) != digest for path, digest in protected.items()):
         raise ValueError('A protected input changed')
-    path = args.output / f'layer-{INDEX}.pt'
-    metadata = dict(format='spora-qwen-layer-replacement-candidate-v1', layer=INDEX, width=block.width,
+    path = args.output / f'layer-{args.layer}.pt'
+    metadata = dict(format='spora-qwen-layer-replacement-candidate-v1', layer=args.layer, width=block.width,
                     heads=block.block.heads, max_length=limit, base_weight_sha256=provenance['base_digest'],
                     source_sha256=provenance['checkpoint_digest'])
     atomic_save(dict(metadata=metadata, state={key: value.cpu() for key, value in block.state_dict().items()}), path)
     digest = sha(path)
-    layers[INDEX] = load_native_block(path, decoder.base, INDEX, candidate_digest=digest, **provenance)
+    layers[args.layer] = load_native_block(path, decoder.base, args.layer, candidate_digest=digest, **provenance)
     score('reloaded')
     if results['reloaded'] != results['output_alignment']:
         raise ValueError('Reloaded block changed evaluation results')
-    write(args.output / 'result.json', dict(results=results, candidate_sha256=digest, layer=INDEX,
+    write(args.output / 'result.json', dict(results=results, candidate_sha256=digest, layer=args.layer,
+                                            fixed_layers={index: protected[path] for index, path in fixed.items()},
                                             subjects=args.subjects, position_limit=limit, local_steps=args.local_steps,
                                             output_steps=args.output_steps, trained_parameters=trained_parameters,
                                             local_error=dict(initial=before, aligned=after), losses=losses,
@@ -122,6 +126,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--layer12', type=Path, required=True)
     parser.add_argument('--layer18', type=Path, required=True)
+    parser.add_argument('--layer24', type=Path, help='Freeze the verified native block at layer 24')
+    parser.add_argument('--layer', type=int, choices=(9, INDEX), default=INDEX)
     parser.add_argument('--ceval', type=Path, required=True)
     parser.add_argument('--subjects', nargs='+', default=SUBJECTS)
     parser.add_argument('--output', type=Path, required=True)
@@ -130,5 +136,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if min(args.local_steps, args.output_steps) < 1:
         parser.error('Training steps must be positive')
+    if (args.layer == 9) != (args.layer24 is not None):
+        parser.error('Layer 9 requires --layer24, which is the training target in the default mode')
     args.output.mkdir()
     main(args)
