@@ -79,3 +79,60 @@
 ```powershell
 .venv/Scripts/python.exe scripts/audit_awake_dna_recovery.py --delta runs/replay/delta.pt --profile runs/spora-awake-local --output runs/dna-recovery
 ```
+
+## 单层和多层替换的中文对照
+
+在同一个推理实例里依次切换原版、第 6 层、第 12 层、双层和第 18 层完整替换候选。关闭记忆读入。八组新增手写对话每组两轮，第二轮输入第一轮的真实生成，统一使用贪心解码，每轮最多 24 词元。严格评分要求内容和指定的短答格式一起正确。另用 C-Eval 官方验证集的高中语文、逻辑与初中数学作为外部对照。给模型题干和选项，从 A、B、C、D 的下一词元分数中选择最高分。
+
+| 骨干 | 首轮严格正确 / 8 | 两轮严格正确 / 8 | 答到结束词元 / 16 | 三门公开题 | 所有骨干共有的短题 |
+|---|---:|---:|---:|---:|---:|
+| 原版 | 2 | 1 | 8 | 24/60 | 8/19 |
+| 第 6 层 | 1 | 1 | 10 | 22/60 | 8/19 |
+| 第 12 层 | 0 | 0 | 14 | 20/60 | 6/19 |
+| 第 6、12 层 | 0 | 0 | 10 | 18/60 | 8/19 |
+| 第 6、12、18 层 | 0 | 0 | 13 | 6/19 | 6/19 |
+| 第 6 层仅替换前馈，第 12 层完整替换 | — | — | — | 19/60 | 7/19 |
+
+双层相对原版改对 9 道公开题，也改错了 15 道。第 18 层候选最多接收 128 词元，只覆盖 19 道短题，其中 15 道是数学。在完全相同的 19 道题上，加入该层后由 8 道降到 6 道。短对话的格式与截断都会影响严格命中数，例如原版回答对了纽扣所在的盒子，多写了内容而失分。第 12 层有 14 次自然结束，两轮严格正确依然为零。两组实验都使用预先结束推理标记的提示方式，覆盖闭卷选择题和有固定答案的短对话。自由生成、开推理模式及记忆保持仍需直接验证。
+
+公开题固定使用修订 `617524a00b307ff6f9933702f724131fe12ca7ce`。复现时取三个科目的 `val-00000-of-00001.parquet`，分别命名为 `high_school_chinese.parquet`、`logic.parquet` 和 `middle_school_mathematics.parquet`。需要 `pyarrow` 读取本地文件。逐题答案、输入长度和来源摘要保存在 `runs/awake-multiturn-layers-v1.json` 和 `runs/awake-ceval-layers-v2.json`。两轮运行分别耗时约 143 秒、109 秒，峰值显存分别约 3.95 GB、4.05 GB。[C-Eval 验证集](https://huggingface.co/datasets/ceval/ceval-exam/tree/617524a00b307ff6f9933702f724131fe12ca7ce)
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_multiturn_layers.py --output runs/awake-multiturn-layers-v1.json
+.venv/Scripts/python.exe scripts/audit_awake_multiturn_layers.py --ceval runs/ceval-validation-617524a --partial runs/awake-partial-layer-v1/partial-layer.pt --output runs/awake-ceval-layers-v2.json
+```
+
+## 保留第 12 层注意力，只蒸馏前馈网络
+
+第 6 层仍用完整孢子块，用第 12 层已有的孢子前馈权重初始化，在 3,483 个教师激活上训练 128 步。369 个留出激活上的相对平方误差从 0.952 降到 0.663。用同一批公开题和八项受控的现值、旧值查询，比较仅有第 6 层改造、现行双层改造和新的局部替换。
+
+| 配置 | C-Eval | 记忆查询含预期值 |
+|---|---:|---:|
+| 第 6 层完整替换，第 12 层原版 | 22/60 | 8/8 |
+| 第 6、12 层完整替换 | 18/60 | 7/8 |
+| 第 6 层完整替换，第 12 层只改前馈 | 17/60 | 2/8 |
+
+记忆来自预先写入的四个人物，各查询一个现值和一个旧值。实验指定地址和版本，统计回答是否含预期饮品。局部拟合误差和六道开发题的教师 KL 都下降，仍出现明显的事实生成退化。该候选保存在本地实验路径。逐题结果保存在 `runs/awake-ceval-layer12-partial-v1.json`，联合评测耗时约 120 秒。回归应同时覆盖语言、事实和历史值。
+
+```powershell
+.venv/Scripts/python.exe scripts/train_awake_partial_layer.py --layer 12 --steps 128 --output runs/awake-partial-layer12-v1
+.venv/Scripts/python.exe scripts/audit_awake_multiturn_layers.py --ceval runs/ceval-validation-617524a --partial runs/awake-partial-layer12-v1/partial-layer.pt --output runs/awake-ceval-layer12-partial-v1.json
+```
+
+## 第 18 层从预训练权重开始变更结构
+
+将原先分立的 Q、K、V 投影合成孢子用的单个 QKV 投影。等宽候选将每个 K、V 头复制到原来与之配对的六个 Q 头，保留原始旋转位置编码、归一化及输出投影。复用权重后无需训练即可运行。另一个候选保留原来的分组尺寸，同时合并前馈的两个输入投影。这一版保持原注意力的参数量，适合继续作为迁移起点。
+
+| 第 18 层候选 | 普通题生成逐词元一致 | 八项记忆生成含预期值 | 注意力参数 | 首步分数的最大绝对差 |
+|---|---:|---:|---:|---:|
+| 等宽 QKV | 8/8 | 7/8，基线也是 7/8 | 9,441,792 | 0.02051 |
+| 分组 QKV 与合并前馈 | 8/8 | 7/8，基线也是 7/8 | 5,507,072 | 0.02100 |
+
+八道普通题取两轮评测中的首轮，生成上限 32 词元，比较前缀分数及带生成缓存的输出。记忆查询沿用四个人物的受控地址与版本。两种候选仍使用原有 SwiGLU 和旋转位置编码。脚本在临时推理实例上执行改造，检查源模型和个体检查点的文件摘要。逐题结果保存在 `runs/awake-attention-bridge-layer18-v1.json` 和 `runs/awake-attention-feedforward-layer18-v1.json`。
+
+MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异最大的组件入手。这为从复制投影继续迁移位置与注意力计算提供了参照。保留原结构的分组候选提供起始对照，后续需要同场测量绝对位置替换的代价和事实保持。[MOHAWK 论文](https://arxiv.org/abs/2408.10189)
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_attention_bridge.py --output runs/awake-attention-bridge-layer18-v1.json
+.venv/Scripts/python.exe scripts/audit_awake_attention_bridge.py --keep-groups --fuse-feedforward --output runs/awake-attention-feedforward-layer18-v1.json
+```

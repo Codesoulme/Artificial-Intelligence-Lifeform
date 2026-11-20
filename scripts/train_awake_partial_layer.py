@@ -1,4 +1,4 @@
-"""Try a native SPORA feed-forward replacement while retaining Qwen attention."""
+"""Distill a native SPORA feed-forward replacement while retaining Qwen attention."""
 
 import argparse
 import copy
@@ -11,7 +11,6 @@ from spora.language_training import atomic_save
 from train_awake_replacement_replay import answer_logits, divergence, encode_cases, evaluate, switch, teacher_targets
 
 
-LAYER = 6
 TRAIN_FILES = (ROOT / 'data/chinese-foundations.json', ROOT / 'data/chinese-pilot/source.json')
 SEED = 41562
 
@@ -57,7 +56,9 @@ def relative_mse(model, features, labels):
     return errors / labels.square().sum().item()
 
 
-def refine_output(decoder, tokenizer, student, original, teacher, teacher_layers, replacements, texts, steps):
+def refine_output(decoder, tokenizer, student, layer, teacher_layers, replacements, texts, steps):
+    original = teacher_layers[layer]
+    teacher = original.mlp
     cases = []
     for text in texts[:24]:
         tokens = tokenizer.encode(text, add_special_tokens=False)[:80]
@@ -67,7 +68,7 @@ def refine_output(decoder, tokenizer, student, original, teacher, teacher_layers
     switch(decoder, teacher_layers)
     original.mlp = teacher
     targets = teacher_targets(decoder, cases)
-    switch(decoder, {**replacements, LAYER: original})
+    switch(decoder, {**replacements, layer: original})
     original.mlp = student
     optimizer = torch.optim.AdamW(student.parameters(), lr=3e-5, weight_decay=.01)
     for index in range(steps):
@@ -87,18 +88,20 @@ def refine_output(decoder, tokenizer, student, original, teacher, teacher_layers
     switch(decoder, teacher_layers)
 
 
-def main(output, steps, output_steps, start):
+def main(output, steps, output_steps, start, layer):
     sources = {path: sha(path) for path in (SOURCE, MODEL/'model.safetensors', *TRAIN_FILES)}
     torch.manual_seed(SEED)
     decoder, tokenizer, originals, replacements, _, _ = load_layer_pair()
-    original = originals[LAYER]
+    if layer not in replacements:
+        raise ValueError(f'Layer {layer} is absent from the integrated replacement checkpoint')
+    original = originals[layer]
     teacher = original.mlp
-    student = SPORAFeedForward(copy.deepcopy(replacements[LAYER].block.ff)).requires_grad_(True)
+    student = SPORAFeedForward(copy.deepcopy(replacements[layer].block.ff)).requires_grad_(True)
     if start is not None:
         if read(start.parent/'result.json')['candidate_sha256'] != sha(start):
             raise ValueError('Incorrect starting candidate digest')
         payload = torch.load(start, map_location='cpu', weights_only=True)
-        if payload['layer'] != LAYER or payload['source_sha256'] != sources[SOURCE]:
+        if payload['layer'] != layer or payload['source_sha256'] != sources[SOURCE]:
             raise ValueError('Incorrect starting candidate source')
         student.load_state_dict(payload['state'], strict=True)
         sources[start] = sha(start)
@@ -120,7 +123,7 @@ def main(output, steps, output_steps, start):
         if (index + 1) % 32 == 0:
             print('Local distillation step', index + 1, 'loss', round(loss.item(), 4), flush=True)
     if output_steps:
-        refine_output(decoder, tokenizer, student, original, teacher, originals, replacements, texts[8:], output_steps)
+        refine_output(decoder, tokenizer, student, layer, originals, replacements, texts[8:], output_steps)
     after_local = relative_mse(student, held_x, held_y)
     student.requires_grad_(False).eval()
     cases = encode_cases(tokenizer, tuple(zip(QUESTIONS, REFERENCES, strict=True)))
@@ -128,20 +131,20 @@ def main(output, steps, output_steps, start):
     switch(decoder, replacements)
     integrated = evaluate(decoder, tokenizer, cases, targets)
     original.mlp = student
-    switch(decoder, {LAYER: original})
+    switch(decoder, {layer: original})
     partial = evaluate(decoder, tokenizer, cases, targets)
     original.mlp = teacher
-    switch(decoder, {LAYER: original})
+    switch(decoder, {layer: original})
     no_replacement = evaluate(decoder, tokenizer, cases, targets)
     if any(sha(path) != digest for path, digest in sources.items()):
         raise ValueError('Source data or checkpoint changed')
-    atomic_save(dict(layer=LAYER, source_sha256=sources[SOURCE], state=student.state_dict()), output/'partial-layer.pt')
-    rows = dict(integrated=integrated, partial=partial, original_at_6=no_replacement)
+    atomic_save(dict(layer=layer, source_sha256=sources[SOURCE], state=student.state_dict()), output/'partial-layer.pt')
+    rows = {'integrated': integrated, 'partial': partial, f'original_at_{layer}': no_replacement}
     summary = {name: dict(nll=sum(row['nll'] for row in group) / len(group),
                           kl=sum(row['kl'] for row in group) / len(group), eos=sum(row['eos'] for row in group))
                for name, group in rows.items()}
     local = dict(train_tokens=len(train_x), held_tokens=len(held_x), before=before_local, after=after_local)
-    write(output/'result.json', dict(rows=rows, summary=summary, local=local, layer=LAYER, steps=steps,
+    write(output/'result.json', dict(rows=rows, summary=summary, local=local, layer=layer, steps=steps,
                                      output_steps=output_steps,
                                      sources={str(path): digest for path, digest in sources.items()},
                                      candidate_sha256=sha(output/'partial-layer.pt')))
@@ -154,8 +157,9 @@ if __name__ == '__main__':
     parser.add_argument('--steps', type=int, default=128)
     parser.add_argument('--output-steps', type=int, default=0)
     parser.add_argument('--start', type=Path)
+    parser.add_argument('--layer', type=int, default=6)
     args = parser.parse_args()
     if args.steps < 0 or args.output_steps < 0 or args.steps + args.output_steps < 1:
         parser.error('At least one training step is required')
     args.output.mkdir()
-    main(args.output, args.steps, args.output_steps, args.start)
+    main(args.output, args.steps, args.output_steps, args.start, args.layer)
