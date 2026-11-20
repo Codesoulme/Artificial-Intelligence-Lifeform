@@ -18,9 +18,9 @@ FRESH = ((11, '\u6587\u821f', 0, 5), (12, '\u82b3\u534e', 3, 1),
          (13, '\u5c0f\u82b8', 4, 6), (14, '\u9a86\u79be', 7, 2))
 
 
-def paired_states(organism, facts):
+def paired_states(organism, facts, offset=2):
     _, first = history_cases(organism, facts)
-    shifted = [(key, name, (earlier + 2) % 8, (current + 2) % 8)
+    shifted = [(key, name, (earlier + offset) % 8, (current + offset) % 8)
                for key, name, earlier, current in facts]
     _, second = history_cases(organism, shifted)
     return first, second

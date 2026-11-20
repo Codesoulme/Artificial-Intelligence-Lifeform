@@ -438,3 +438,22 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 .venv/Scripts/python.exe scripts/train_awake_native_outputs.py --layer 12 --start runs/awake-layer12-output-v1/layer-12.pt --fixed-layer18 runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-validation-617524a --output runs/awake-layer12-three-block-replay-v1
 .venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --layer12-reference runs/awake-layer12-output-v1/layer-12.pt --layer12-candidate runs/awake-layer12-three-block-replay-v1/layer-12.pt --combine-at-18 --output runs/awake-layer12-three-block-replay-fresh-v1.json
 ```
+
+## 同一问题的成对记忆训练
+
+固定第 6、18 层，从原三层校正版训练 96 步。训练继续使用原始第 12 层的中文目标和三层起点的记忆目标。每步同时重放同一问句的两种记忆状态。在答案首次出现不同词元的位置加一个权重为 0.5 的软间隔损失，鼓励当前状态对应的答案领先另一答案。该轮同时改变了取样顺序和每步记忆样本数，现有对照无法分离成对取样与额外损失各自的作用。
+
+| 题组 | C-Eval 起点与成对训练后 | 严格短答 | 固定状态读取 | 同题换值 |
+|---|---:|---:|---:|---:|
+| 开发题 | 15/57 → 15/57 | 4/16 → 4/16 | 7/8 → 8/8 | 6/8 → 8/8 |
+| 已有四科与记忆组 | 21/83 → 21/83 | 0/16 → 0/16 | 12/12 → 12/12 | 11/12 → 11/12 |
+| 三科与六个新人物地址 | 16/51 → 17/51 | 0/16 → 0/16 | 11/12 → 11/12 | 10/12 → 10/12 |
+
+新人物地址未用于本轮记忆训练。两套记忆分别写入不同的现值和旧值，沿用已支持的八类饮品。受控评测直接提供地址和版本。权重从磁盘重载后复现开发题逐项结果。训练与复验约 210 秒，峰值显存约 4.00 GiB，输入文件摘要一致。
+
+另用独立 SQLite 个体进行实机验证。名字、两次明确写入、现值、同人物追问和睡眠核对均通过。询问「齐宁上一次记录里最爱喝什么？」在本进程及重启后均返回澄清，诊断原因为 `injection_not_triggered`。用起始三层权重读取同一数据库，正确答出旧值「蜜桃乌龙茶」。两次重启读取前后数据库摘要一致。由于实机历史读取退化，启动示例继续使用起始权重。逐题结果位于 `runs/awake-layer12-paired-contrast-v1/result.json`、`runs/awake-layer12-paired-contrast-holdout-v1.json` 和 `runs/awake-layer12-paired-contrast-fresh-v1.json`。实机记录位于 `runs/native-layer12-paired-contrast-chat-v1/`。
+
+```powershell
+.venv/Scripts/python.exe scripts/train_awake_native_outputs.py --layer 12 --start runs/awake-layer12-output-v1/layer-12.pt --fixed-layer18 runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-validation-617524a --memory-contrast-weight 0.5 --output runs/awake-layer12-paired-contrast-v1
+.venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --layer12-reference runs/awake-layer12-output-v1/layer-12.pt --layer12-candidate runs/awake-layer12-paired-contrast-v1/layer-12.pt --combine-at-18 --fresh-memory --output runs/awake-layer12-paired-contrast-fresh-v1.json
+```

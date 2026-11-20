@@ -36,6 +36,8 @@ CASES = (
 )
 MEMORY = ((17, '时雨', 1, 6), (18, '徐岩', 2, 5), (19, '关晓', 7, 0),
           (20, '尹宁', 4, 3), (21, '叶川', 6, 1), (22, '白雁', 5, 2))
+FRESH_MEMORY = ((23, '陆澄', 0, 4), (24, '顾岑', 3, 7), (25, '柳汀', 6, 2),
+                (26, '陶芷', 5, 1), (27, '周沐', 4, 0), (28, '林颂', 2, 6))
 
 
 def layer_components(original, native):
@@ -57,7 +59,7 @@ def layer_components(original, native):
 
 def main(output, native_path, candidate_path, ceval, unmodified_control, single_layer_controls, layer12_candidate,
          combine_at_18=False, layer12_components=False, fit_layer12_norms=False,
-         combine_fitted_components=False, layer12_reference=None, subjects=SUBJECTS):
+         combine_fitted_components=False, layer12_reference=None, subjects=SUBJECTS, fresh_memory=False):
     base_weights = MODEL / 'model.safetensors'
     paths = (SOURCE, base_weights, MODEL / 'tokenizer.json', MODEL / 'tokenizer_config.json',
              native_path, candidate_path, *(ceval / f'{subject}.parquet' for subject in subjects))
@@ -79,7 +81,7 @@ def main(output, native_path, candidate_path, ceval, unmodified_control, single_
                                            base_digest=sources[base_weights], candidate_digest=digest)
     limit = min(variants[name].max_length for name in ('native', 'interpolated'))
     questions = list(ceval_questions(ceval, tokenizer, subjects))
-    first, second = paired_states(organism, MEMORY)
+    first, second = paired_states(organism, FRESH_MEMORY, offset=5) if fresh_memory else paired_states(organism, MEMORY)
     results = {}
     norm_errors = {}
     conditions = {'unmodified': variants['pretrained_at_18']} if unmodified_control else variants
@@ -170,6 +172,7 @@ def main(output, native_path, candidate_path, ceval, unmodified_control, single_
                        combine_at_18=combine_at_18, layer12_components=layer12_components,
                        combine_fitted_components=combine_fitted_components,
                        fitted_norm_errors=norm_errors,
+                       memory_suite='fresh' if fresh_memory else 'original',
                        memory_cases=0 if unmodified_control else len(first),
                        seconds=time.perf_counter()-started, peak_gpu_bytes=torch.cuda.max_memory_allocated(),
                        sources={str(path): digest for path, digest in sources.items()}))
@@ -183,6 +186,8 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--subjects', nargs='+', default=SUBJECTS,
                         help='C-Eval subjects with local parquet files')
+    parser.add_argument('--fresh-memory', action='store_true',
+                        help='Use new subject addresses and a different write schedule')
     controls = parser.add_mutually_exclusive_group()
     controls.add_argument('--unmodified-control', action='store_true',
                           help='Score original DeepSeek on language only with the same position limit')
@@ -215,4 +220,4 @@ if __name__ == '__main__':
         parser.error('--layer12-reference requires --layer12-candidate without component diagnostics')
     main(args.output, args.native, args.candidate, args.ceval, args.unmodified_control, args.single_layer_controls,
          args.layer12_candidate, args.combine_at_18, args.layer12_components, args.fit_layer12_norms,
-         args.combine_fitted_components, args.layer12_reference, args.subjects)
+         args.combine_fitted_components, args.layer12_reference, args.subjects, args.fresh_memory)
