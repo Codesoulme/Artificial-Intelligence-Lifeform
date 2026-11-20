@@ -25,6 +25,7 @@ from train_awake_replacement_replay import generate, load_layer_pair
 
 
 INDEX = 24
+SIXTH_BLOCK_LAYERS = (15, 25, 27)
 
 
 def initialize(decoder, tokenizer, teacher, texts, replay, feedforward_steps):
@@ -47,6 +48,17 @@ def initialize(decoder, tokenizer, teacher, texts, replay, feedforward_steps):
         errors['feedforward_fitted'] = relative_mse(feedforward, held_x, held_y)
         print('Held feed-forward errors', errors, flush=True)
     return norms, feedforward.requires_grad_(False).eval(), errors
+
+
+def align_block(decoder, teacher, block, requests, replay, steps):
+    samples = capture(decoder, teacher, requests)
+    held, ordinary = samples[:8], samples[8:]
+    remembered = capture(decoder, teacher, replay)
+    before = local_error(block, held)
+    fit(block, ordinary, remembered, steps)
+    after = local_error(block, held)
+    print('Held block residual error', before, after, flush=True)
+    return dict(initial=before, aligned=after)
 
 
 def main(args):
@@ -101,7 +113,7 @@ def main(args):
     if args.compare_candidates:
         candidates = {}
         fixed_digests = {str(index): protected[path] for index, path in fixed.items()}
-        allowed_layers = (15,) if args.layer21 is not None else (9, 21)
+        allowed_layers = SIXTH_BLOCK_LAYERS if args.layer21 is not None else (9, 21)
         for path in args.compare_candidates:
             report = read(path.parent / 'result.json')
             index = report['layer']
@@ -127,10 +139,32 @@ def main(args):
                                                 peak_gpu_bytes=torch.cuda.max_memory_allocated(),
                                                 sources={str(path): digest for path, digest in protected.items()}))
         return
-    teacher = layers[args.layer]
     texts = corpus()
     requests = [(tokenizer.encode(text, add_special_tokens=False)[:192], {}) for text in texts]
     replay = replay_requests(organism, tokenizer) + replay_requests(organism, tokenizer, value_offset=2)
+    if args.screen_layers:
+        errors = {}
+        for index in args.screen_layers:
+            torch.manual_seed(42117)
+            teacher = layers[index]
+            norms, feedforward, _ = initialize(decoder, tokenizer, teacher, texts, replay, 0)
+            attention = AbsoluteAttention(teacher.self_attn, limit).requires_grad_(False).eval()
+            block = assemble(decoder.base, attention, norms, feedforward, index)
+            errors[index] = align_block(decoder, teacher, block, requests, replay, args.local_steps)
+            layers[index] = block
+            try:
+                score(f'layer_{index}')
+            finally:
+                layers[index] = teacher
+        if any(sha(path) != digest for path, digest in protected.items()):
+            raise ValueError('A protected input changed')
+        write(args.output / 'result.json', dict(results=results, local_error=errors, local_steps=args.local_steps,
+                                                fixed_layers=loaded, subjects=args.subjects, position_limit=limit,
+                                                seconds=time.perf_counter() - started,
+                                                peak_gpu_bytes=torch.cuda.max_memory_allocated(),
+                                                sources={str(path): digest for path, digest in protected.items()}))
+        return
+    teacher = layers[args.layer]
     norms, feedforward, component_errors = initialize(decoder, tokenizer, teacher, texts, replay,
                                                       args.feedforward_steps)
     attention = AbsoluteAttention(teacher.self_attn, limit).requires_grad_(False).eval()
@@ -160,13 +194,7 @@ def main(args):
         finally:
             teacher.mlp = source_mlp
     block = assemble(decoder.base, attention, norms, feedforward, args.layer)
-    samples = capture(decoder, teacher, requests)
-    held, ordinary = samples[:8], samples[8:]
-    remembered = capture(decoder, teacher, replay)
-    before = local_error(block, held)
-    fit(block, ordinary, remembered, args.local_steps)
-    after = local_error(block, held)
-    print('Held block residual error', before, after, flush=True)
+    block_error = align_block(decoder, teacher, block, requests, replay, args.local_steps)
 
     examples = dialogue_cases(tokenizer)[::2]
     rollout_stats = None
@@ -211,7 +239,7 @@ def main(args):
                                             feedforward_steps=args.feedforward_steps,
                                             student_rollout_tokens=args.student_rollout_tokens,
                                             rollout_stats=rollout_stats,
-                                            local_error=dict(initial=before, aligned=after), losses=losses,
+                                            local_error=block_error, losses=losses,
                                             seconds=time.perf_counter() - started,
                                             peak_gpu_bytes=torch.cuda.max_memory_allocated(),
                                             sources={str(path): digest for path, digest in protected.items()}))
@@ -222,10 +250,13 @@ if __name__ == '__main__':
     parser.add_argument('--layer12', type=Path, required=True)
     parser.add_argument('--layer18', type=Path, required=True)
     parser.add_argument('--layer24', type=Path, help='Freeze the verified native block at layer 24')
-    parser.add_argument('--layer21', type=Path, help='Freeze the verified native block at layer 21 for layer 15 training')
-    parser.add_argument('--layer', type=int, choices=(9, 15, 21, INDEX), default=INDEX)
-    parser.add_argument('--compare-candidates', type=Path, nargs='+', default=(),
+    parser.add_argument('--layer21', type=Path, help='Freeze layer 21 when fitting a sixth block')
+    parser.add_argument('--layer', type=int, choices=(9, 21, INDEX, *SIXTH_BLOCK_LAYERS), default=INDEX)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--compare-candidates', type=Path, nargs='+', default=(),
                         help='Score frozen checkpoints independently against the selected backbone')
+    mode.add_argument('--screen-layers', type=int, choices=SIXTH_BLOCK_LAYERS, nargs='+',
+                      help='Compare these layers after local alignment without output distillation')
     parser.add_argument('--ceval', type=Path, required=True)
     parser.add_argument('--subjects', nargs='+', default=SUBJECTS)
     parser.add_argument('--output', type=Path, required=True)
@@ -250,11 +281,14 @@ if __name__ == '__main__':
         parser.error('Reference weight must be finite and nonnegative')
     if args.student_rollout_tokens < 0 or (args.student_rollout_tokens and args.reference_weight):
         parser.error('Student continuations require a positive token cap and --reference-weight 0')
-    if args.compare_candidates:
+    if args.screen_layers:
+        if args.layer21 is None or args.layer24 is None or len(set(args.screen_layers)) != len(args.screen_layers):
+            parser.error('--screen-layers requires a five-block backbone and distinct layer numbers')
+    elif args.compare_candidates:
         if args.layer24 is None:
             parser.error('--compare-candidates requires --layer24')
     elif ((args.layer != INDEX) != (args.layer24 is not None)
-          or (args.layer == 15) != (args.layer21 is not None)):
-        parser.error('Layers 9 and 21 require --layer24. Layer 15 requires --layer24 and --layer21.')
+          or (args.layer in SIXTH_BLOCK_LAYERS) != (args.layer21 is not None)):
+        parser.error('Fifth blocks require --layer24. Sixth blocks require --layer24 and --layer21.')
     args.output.mkdir()
     main(args)

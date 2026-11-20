@@ -613,3 +613,30 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 15 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --output runs/awake-layer15-sixth-block-v1
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --compare-candidates runs/awake-layer15-sixth-block-v1/layer-15.pt --output runs/awake-layer15-sixth-block-held-v1
 ```
+
+## 第六块层位筛选与第 25 层复验
+
+固定第 6、12、18、21、24 层。每次只替换第 15、25、27 层中的一层，使用相同样本、初始化流程和 64 步局部对齐。评测后恢复该层的原始模块，再测试下一个位置。
+
+| 配置 | 留出块残差相对平方误差 | 三科 C-Eval | 已有地址换值 | 新人物地址换值 |
+|---|---:|---:|---:|---:|
+| 五层起点 | — | 19/51 | 12/12 | 12/12 |
+| 第 15 层 | 0.52577 | 13/51 | 12/12 | 11/12 |
+| 第 25 层 | 0.17927 | 17/51 | 12/12 | 12/12 |
+| 第 27 层 | 0.03214 | 18/51 | 11/12 | 11/12 |
+
+三种层位的误差排序与这批中文分数排序一致，记忆结果的排序不同。误差以各层原始残差的能量归一化，仅用于本轮比较。根据两组换值的表现，选择第 25 层进入 96 步整网对齐，保留前向 KL、受控记忆监督与成对损失。
+
+| 冻结配置 | 筛选的 51 道题 | 另组 69 道题 | 已有及新人物地址换值 |
+|---|---:|---:|---:|
+| 五层起点 | 19/51 | 14/69 | 12/12、12/12 |
+| 第 15 层整网对齐 | 11/51 | 12/69 | 12/12、12/12 |
+| 第 25 层整网对齐 | 16/51 | 12/69 | 12/12、12/12 |
+
+第 25 层整网对齐后，比局部对齐少答对一道筛选题。69 道题用于过其他层位实验，此前未用于第 25 层选点。各配置严格多轮短答均为 0/16。第 25 层重载复现筛选组逐题结果，未进入本机聊天验收。筛选、训练与冻结权重复验分别约 302、274、143 秒，峰值显存分别约 4.21、4.01、3.59 GiB。三轮的输入摘要均通过核对。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --screen-layers 15 25 27 --output runs/awake-sixth-block-screen-v1
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --layer 25 --reference-weight 0 --output runs/awake-layer25-sixth-block-v1
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --compare-candidates runs/awake-layer15-sixth-block-v1/layer-15.pt runs/awake-layer25-sixth-block-v1/layer-25.pt --output runs/awake-sixth-block-held-v2
+```
