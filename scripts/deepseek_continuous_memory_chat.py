@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import sys
+from collections import deque
 from contextlib import ExitStack, nullcontext
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
@@ -18,7 +19,7 @@ from deepseek_aligned_memory_dialogue import (
 from deepseek_memory_attribute_router import CLARIFY, MISSING
 from deepseek_memory_attribute_span import KEYS, Route, route_action
 from deepseek_memory_cosine_readout import cosine_bias, cosine_slot_bias, projected_codebook
-from deepseek_memory_dialogue_context import OUT as DIALOGUE_RUN, features_for, route
+from deepseek_memory_dialogue_context import OUT as DIALOGUE_RUN, PromptPositionLimit, features_for, route
 from deepseek_memory_field_decoding import FIELDS, OUT as FIELD_RUN
 from deepseek_memory_field_transfer import OUT as TRANSFER_RUN
 from deepseek_memory_inheritance_gate import OUT as INHERITANCE_GATE_RUN
@@ -37,6 +38,7 @@ from spora.online_time import OnlineSession, OnlineState
 from spora.research_continuous_observation import (
     ADDRESSES, ELLIPTICAL_QUERY, can_register, inherited_query_subject, parse_observation, query_subject, split_history_query,
 )
+from spora.structure_transfer import SPORALayerReplacement
 from spora.working_checkpoint_lock import lock_working_checkpoint
 from spora.world_time import TimeWorld
 
@@ -49,6 +51,22 @@ PAGED_FORMAT = 'spora-continuous-chat-banks-v3'
 SEED_FILLED = frozenset((entity, field, version) for entity in ENTITIES for field in FIELDS for version in (0, 1))
 UTC_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 DEMO_WORLD_ACTIONS = ((0., 0.), (.5, 0.), (-.5, 0.), (0., .5), (0., -.5))
+ORDINARY_TURNS = 4
+ORDINARY_NEW_TOKENS = 64
+
+
+def ordinary_context_ids(tokenizer, history, question, cap, current_ids):
+    turns = list(history)[-ORDINARY_TURNS:]
+    while turns:
+        messages = [dict(role=role, content=content) for user, answer in turns
+                    for role, content in (('user', user), ('assistant', answer))]
+        messages.append(dict(role='user', content=question))
+        prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        ids = tokenizer.encode(prompt + '</think>\n\n', add_special_tokens=False)
+        if len(ids) <= cap:
+            return ids, len(turns)
+        turns.pop(0)
+    return current_ids, 0
 
 
 def parse_as_of(text):
@@ -172,6 +190,9 @@ class ContinuousMemoryChat:
             raise ValueError('Registered subject is outside the address basis')
         self.addresses, self.filled = addresses, filled
         self.pages = pages
+        layers = decoder.base.model.layers
+        self.position_limit = min((layer.max_length for layer in layers if isinstance(layer, SPORALayerReplacement)),
+                                  default=decoder.base.config.max_position_embeddings)
         weight = decoder.base.lm_head.weight
         basis = torch.linalg.qr(torch.randn(weight.shape[1], RANK, generator=torch.Generator().manual_seed(SEED))).Q
         self.codes, self.scale = projected_codebook(weight, basis.to(weight.device))
@@ -398,7 +419,8 @@ class ContinuousMemoryChat:
             result['confirmed_recent_read'] = False
         if bias is not None:
             ids = torch.tensor([prompt], device=bias.device)
-            tokens = generate_memory_suffix(self.decoder, self.tokenizer, ids, 2 * bias, SLOTS)
+            available = self.position_limit - len(prompt)
+            tokens = generate_memory_suffix(self.decoder, self.tokenizer, ids, 2 * bias, min(SLOTS, available))
             if matches_memory_suffix(tokens, bias, self.tokenizer.eos_token_id):
                 result.update(response=self.tokenizer.decode(tokens, skip_special_tokens=True).strip(),
                               action='read', reason='read', memory_start=0)
@@ -406,7 +428,7 @@ class ContinuousMemoryChat:
 
     @torch.inference_mode()
     def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD, back=0, as_of=None,
-               topic_observer=None, consume_topic=None, bind_topic=None):
+               topic_observer=None, consume_topic=None, bind_topic=None, ordinary_history=()):
         if (entity is not None and entity not in self.addresses.values()) or version not in (0, 1):
             raise ValueError('Unknown experimental address or snapshot')
         if type(back) is not int or not 0 <= back <= 2**63 - 1 or (back and (version != 1 or not uses_database(self.working_path))):
@@ -429,7 +451,12 @@ class ContinuousMemoryChat:
         if history:
             history, _ = split_history_query(history)
         row = dict(key='input', question=question, history=history, target_turn=0)
-        features = features_for(self.decoder, self.tokenizer, row, False)
+        try:
+            features = features_for(self.decoder, self.tokenizer, row, False, position_limit=self.position_limit - 1)
+        except PromptPositionLimit:
+            return dict(response='这条消息太长，请拆成几段发给我。', action='clarify', reason='position_limit', field=None,
+                        confidence=None, inherits=False, memory_start=None, entity=entity, version=version,
+                        subject_reason='no_subject')
         if (self.self_name is not None and entity is None and version == 1 and not back and as_of is None
                 and history_issue is None and self.self_name.targets_self(question) and self.self_name(*features[:2])):
             return self._answer_self_name(features[3], consume_topic is not None)
@@ -459,13 +486,16 @@ class ContinuousMemoryChat:
             inherits = False
             predicted = dict(selected=selected, confidence=confidence)
         else:
+            if inherits:
+                try:
+                    features = features_for(self.decoder, self.tokenizer, row, True, position_limit=self.position_limit - 1)
+                except PromptPositionLimit:
+                    inherits = False
             if subject_reason == 'no_subject' and inherits:
                 entity = inherited_query_subject(question, history, self.addresses)
                 if entity is not None:
                     subject_reason = 'inherited_subject'
             router = self.contextual if inherits else self.direct
-            if inherits:
-                features = features_for(self.decoder, self.tokenizer, row, True)
             route_features = features
             if inherits and self.inherited_router is not None:
                 router = self.inherited_router
@@ -486,6 +516,7 @@ class ContinuousMemoryChat:
             selected, action = 'ordinary', 'ordinary'
         start = None
         confirmed = False
+        context_turns = 0
         reason = action
         if history_issue is not None:
             action, reason, response = 'clarify', history_issue, CLARIFY
@@ -517,7 +548,8 @@ class ContinuousMemoryChat:
                 action, reason, response = 'missing', missing_reason, MISSING
             elif use_topic or use_subject:
                 ids = torch.tensor([features[3]], device=bias.device)
-                tokens = generate_memory_suffix(self.decoder, self.tokenizer, ids, 2 * bias, SLOTS)
+                available = self.position_limit - len(features[3])
+                tokens = generate_memory_suffix(self.decoder, self.tokenizer, ids, 2 * bias, min(SLOTS, available))
                 if matches_memory_suffix(tokens, bias, self.tokenizer.eos_token_id):
                     start = 0
                     response = self.tokenizer.decode(tokens, skip_special_tokens=True).strip()
@@ -529,6 +561,7 @@ class ContinuousMemoryChat:
             else:
                 tokens, start = generate_with_memory(self.decoder, self.tokenizer, features[3], self.styles[selected],
                                                       self.columns, self.timing, 2 * bias,
+                                                      max_new_tokens=min(32, self.position_limit - len(features[3])),
                                                       timing_threshold=timing_threshold)
                 if start is None:
                     action, reason, response = 'clarify', 'injection_not_triggered', CLARIFY
@@ -542,10 +575,13 @@ class ContinuousMemoryChat:
                     elif as_of_utc is not None:
                         response = f'截至 {as_of_utc} 的记录是「{response}」。'
         elif action == 'ordinary':
-            ids = torch.tensor([features[3]], device=self.codes.device)
+            prompt, context_turns = ordinary_context_ids(self.tokenizer, ordinary_history, question,
+                                                        self.position_limit - ORDINARY_NEW_TOKENS, features[3])
+            available = self.position_limit - len(prompt)
+            ids = torch.tensor([prompt], device=self.codes.device)
             tokens = self.decoder.generate(input_ids=ids, attention_mask=torch.ones_like(ids), do_sample=False,
-                                           max_new_tokens=64, pad_token_id=self.tokenizer.pad_token_id,
-                                           eos_token_id=self.tokenizer.eos_token_id)
+                                           max_new_tokens=min(ORDINARY_NEW_TOKENS, available),
+                                           pad_token_id=self.tokenizer.pad_token_id, eos_token_id=self.tokenizer.eos_token_id)
             response = self.tokenizer.decode(tokens[0, ids.shape[1]:], skip_special_tokens=True).strip()
         else:
             response = MISSING if action == 'missing' else CLARIFY
@@ -557,6 +593,8 @@ class ContinuousMemoryChat:
             result['as_of_utc'] = as_of_utc
         if consume_topic is not None:
             result['confirmed_recent_read'] = confirmed
+        if action == 'ordinary':
+            result['context_turns'] = context_turns
         return result
 
 
@@ -829,6 +867,7 @@ def main():
     def answer_lines(lines, topic_observer=None, consume_topic=None, bind_topic=None):
         nonlocal world_observation_event
         history = args.history
+        ordinary_history = deque(maxlen=ORDINARY_TURNS)
         for line in lines:
             question = line.strip()
             if not question:
@@ -862,6 +901,7 @@ def main():
                 if consume_topic is not None:
                     consume_topic()
                 history = None
+                ordinary_history.clear()
                 try:
                     numbers = [float(token) for token in command[1].split()] if len(command) == 2 else []
                     world_session.observe_world(numbers[:3], numbers[3:5], numbers[5:], 'synthetic')
@@ -879,6 +919,7 @@ def main():
                 if consume_topic is not None:
                     consume_topic()
                 history = None
+                ordinary_history.clear()
                 try:
                     if args.version != 1 or args.back or args.as_of is not None:
                         result = dict(action='defer', reason='read_only_query_mode')
@@ -901,7 +942,11 @@ def main():
                 continue
             result = chat.answer(question, args.entity, args.version, history, timing_threshold=timing_threshold,
                                  back=args.back, as_of=args.as_of, topic_observer=topic_observer,
-                                 consume_topic=consume_topic, bind_topic=bind_topic)
+                                 consume_topic=consume_topic, bind_topic=bind_topic, ordinary_history=ordinary_history)
+            if result['action'] == 'ordinary':
+                ordinary_history.append((question, result['response']))
+            else:
+                ordinary_history.clear()
             print(json.dumps(result, ensure_ascii=False) if args.json else result['response'], flush=True)
             history = None if args.awake_topic_recall else question
 

@@ -9,7 +9,7 @@ from pathlib import Path
 from audit_awake_feedforward_memory import history_cases
 from audit_awake_multiturn_layers import CASES, conversation, encode, score_memory
 from audit_awake_language_layers import load_layer_pair
-from deepseek_output_aligned_memory import MODEL, SOURCE, sha, torch, write
+from deepseek_output_aligned_memory import MODEL, SOURCE, read, sha, torch, write
 from scripts.deepseek_spora_memory_answer_distill import _memory_args
 from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.growing import grow
@@ -47,6 +47,19 @@ class AbsoluteAttention(SPORAFusedAttention):
             query = query.lerp(q_rotated, self.rotary_fraction)
             key = key.lerp(k_rotated, self.rotary_fraction)
         return query, key, value
+
+
+def load_absolute_attention(path, source):
+    report = read(path.parent / 'result.json')
+    if report['candidate_sha256'] != sha(path):
+        raise ValueError('Absolute attention candidate digest mismatch')
+    payload = torch.load(path, map_location='cpu', weights_only=True)
+    if (payload['format'] != 'spora-absolute-attention-v1' or payload['source'] != sha(SOURCE)
+            or payload['layer'] != source.layer_idx or payload['max_position'] != MAX_POSITION):
+        raise ValueError('Absolute attention candidate belongs to a different layer or base checkpoint')
+    candidate = AbsoluteAttention(source).half().requires_grad_(False).eval()
+    candidate.load_state_dict(payload['state'], strict=True)
+    return candidate
 
 
 @torch.no_grad()

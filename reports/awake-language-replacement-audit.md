@@ -165,3 +165,15 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 ```powershell
 .venv/Scripts/python.exe scripts/train_awake_absolute_attention.py --memory-replay --output runs/awake-absolute-attention-memory-v1
 ```
+
+从新进程读取带记忆回放的候选，核对了文件、底座和层号。C-Eval 共 57 题落在 256 词元范围内，原第 18 层答对 17 题，换成绝对位置候选后答对 16 题。八项受控记忆均为 7/8，八道普通题中有三道生成逐词元一致。结果见 `runs/awake-absolute-attention-reload-v1.json`。
+
+## 会话承接与解码对照
+
+本地普通对话分支现在把真实生成的上轮回答带入下一轮，最多保留四轮。超长输入会提示分段。事实查询仍通过个体记忆分支。实机输入「写一句早安问候」后再要求改成简短的晚安，第二轮确认带入了一轮会话，但生成继续重复早安内容。相同测试中，身份、明确写入、点名读回、隐式改问职业和睡眠回放均通过。单独测试「你好」时，现有分流仍会询问用户想查哪条记录。
+
+在 26 层合并投影的版本上，比较同一批八组短对话的解码策略。贪心解码给每轮 64 词元时有 16/16 回合自然结束。禁止重复四元组后为 15/16。打开推理并采样，每轮给 192 词元时为 14/16，两个回合在预算内没有给出最终回答。三组按短答格式严格计分均为 0/16，个别回答含有正确内容但仍违反格式。生成时保留了每组自己的真实上轮回答，结果保存在 `runs/awake-migrated-decoding-v1.json`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_multiturn_layers.py --decoding --output runs/awake-migrated-decoding-v1.json
+```

@@ -77,8 +77,12 @@ def samples(groups, switches):
     return rows
 
 
+class PromptPositionLimit(ValueError):
+    """A rendered prompt exceeds the supported positions of the decoder."""
+
+
 @torch.no_grad()
-def features_for(decoder, tokenizer, row, include_history):
+def features_for(decoder, tokenizer, row, include_history, *, position_limit=None):
     users = [row['history'], row['question']] if include_history else [row['question']]
     messages = [{'role': 'user', 'content': users[0]}]
     if include_history:
@@ -89,6 +93,8 @@ def features_for(decoder, tokenizer, row, include_history):
     rendered += '</think>\n\n'
     encoded = tokenizer(rendered, add_special_tokens=False, return_offsets_mapping=True)
     ids = encoded['input_ids']
+    if position_limit is not None and len(ids) > position_limit:
+        raise PromptPositionLimit('Chat prompt exceeds decoder position limit')
     result = decoder(input_ids=torch.tensor([ids], device='cuda'), use_cache=False, output_hidden_states=True)
     hidden = torch.nn.functional.normalize(result.hidden_states[-1][0].float(), dim=-1).cpu()
     positions, labels, turns = [], [], []

@@ -13,7 +13,7 @@ from spora.pretrained_attention import SPORAFusedAttention
 
 
 @torch.inference_mode()
-def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None):
+def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None, absolute=None):
     before_digests = {path: sha(path) for path in (SOURCE, MODEL / 'model.safetensors')}
     start = time.perf_counter()
     decoder, tokenizer, _, replacements, organism, _ = load_layer_pair()
@@ -23,7 +23,13 @@ def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None):
         layer = decoder.base.model.layers[index]
         origin = layer.self_attn
         mlp = layer.mlp
-        bridge = SPORAFusedAttention(origin, keep_groups=keep_groups).eval()
+        if absolute is None:
+            bridge = SPORAFusedAttention(origin, keep_groups=keep_groups).eval()
+        else:
+            from train_awake_absolute_attention import MAX_POSITION, load_absolute_attention
+
+            before_digests[absolute] = sha(absolute)
+            bridge = load_absolute_attention(absolute, origin)
         fused_mlp = SPORAGatedFeedForward(mlp).eval() if fuse_feedforward else mlp
     _, memory = history_cases(organism)
     prompts = [encode(tokenizer, [dict(role='user', content=case[0])]) for case in CASES]
@@ -35,6 +41,8 @@ def main(output, index, keep_groups=False, fuse_feedforward=False, ceval=None):
             before_digests[source] = sha(source)
         questions = list(ceval_questions(ceval, tokenizer))
         position_limit = min(layer.max_length for layer in replacements.values())
+        if absolute is not None:
+            position_limit = min(position_limit, MAX_POSITION)
     results = {}
     ceval_results = {}
     migrated = ()
@@ -86,8 +94,11 @@ if __name__ == '__main__':
     parser.add_argument('--keep-groups', action='store_true', help='Preserve grouped key and value dimensions')
     parser.add_argument('--fuse-feedforward', action='store_true', help='Also fuse the pretrained feed-forward input projections')
     parser.add_argument('--ceval', type=Path, help='Include local C-Eval validation shards')
+    parser.add_argument('--absolute', type=Path, help='Test a saved absolute-position attention candidate')
     args = parser.parse_args()
     if args.output.exists():
         parser.error('Choose an unused output path')
+    if args.absolute is not None and (args.all or args.keep_groups):
+        parser.error('--absolute evaluates one attention module with ungrouped heads')
     main(args.output, None if args.all else args.layer, args.keep_groups or args.all,
-         args.fuse_feedforward or args.all, args.ceval)
+         args.fuse_feedforward or args.all, args.ceval, args.absolute)

@@ -48,20 +48,64 @@ def answer_matches(answer, expected):
 
 
 @torch.inference_mode()
-def conversation(decoder, tokenizer, case, position_limit):
+def conversation(decoder, tokenizer, case, position_limit, *, decoding=None):
     history, turns = [], []
+    settings = {} if decoding is None else decoding
+    reasoning = settings.get('reasoning', False)
+    limit = settings.get('limit', LIMIT)
     for question, expected in zip(case[::2], case[1::2], strict=True):
         history.append(dict(role='user', content=question))
-        prompt = encode(tokenizer, history)
-        if len(prompt) + LIMIT > position_limit:
+        if reasoning:
+            text = tokenizer.apply_chat_template(history, tokenize=False, add_generation_prompt=True)
+            prompt = tokenizer.encode(text + '\n', add_special_tokens=False)
+        else:
+            prompt = encode(tokenizer, history)
+        if len(prompt) + limit > position_limit:
             raise ValueError(f'Conversation exceeds candidate position limit: {question}')
-        tokens = generate(decoder, tokenizer, prompt, LIMIT)
-        answer = tokenizer.decode(tokens, skip_special_tokens=True).strip()
+        if decoding is None:
+            tokens = generate(decoder, tokenizer, prompt, limit)
+        else:
+            inputs = torch.tensor([prompt], device='cuda')
+            generated = decoder.generate(input_ids=inputs, attention_mask=torch.ones_like(inputs), do_sample=reasoning,
+                                         temperature=.6 if reasoning else None, top_p=.95 if reasoning else None,
+                                         no_repeat_ngram_size=settings.get('no_repeat_ngram_size', 0),
+                                         pad_token_id=tokenizer.pad_token_id, eos_token_id=tokenizer.eos_token_id,
+                                         max_new_tokens=limit, use_cache=True)
+            tokens = generated[0, len(prompt):].tolist()
+        answer = tokenizer.decode(tokens, skip_special_tokens=True)
+        if reasoning:
+            answer = answer.partition('</think>')[2]
+        answer = answer.strip()
         history.append(dict(role='assistant', content=answer))
         turns.append(dict(question=question, expected=expected, answer=answer,
                           correct=answer_matches(answer, expected), eos=tokens[-1] == tokenizer.eos_token_id,
                           prompt_tokens=len(prompt), tokens=tokens))
     return turns
+
+
+def compare_decoding(output):
+    sources = {source: sha(source) for source in (SOURCE, MODEL / 'model.safetensors')}
+    started = time.perf_counter()
+    decoder, tokenizer, _, replacements, _, _ = load_layer_pair()
+    migrated = decoder.migrate_pretrained_blocks()
+    position_limit = min(layer.max_length for layer in replacements.values())
+    settings = {
+        'closed_64': dict(limit=64),
+        'closed_64_repeat_guard': dict(limit=64, no_repeat_ngram_size=4),
+        'open_192': dict(reasoning=True, limit=192),
+    }
+    results = {}
+    for name, configuration in settings.items():
+        rows = []
+        for index, case in enumerate(CASES):
+            torch.manual_seed(70393 + index)
+            rows.append(conversation(decoder, tokenizer, case, position_limit, decoding=configuration))
+        results[name] = rows
+        print(name, [(row[0]['answer'], row[1]['answer']) for row in rows], flush=True)
+    if any(sha(source) != digest for source, digest in sources.items()):
+        raise ValueError('A source changed during the audit')
+    write(output, dict(settings=settings, results=results, migrated=migrated, seconds=time.perf_counter()-started,
+                       sources={str(path): digest for path, digest in sources.items()}))
 
 
 def ceval_questions(directory, tokenizer):
@@ -210,9 +254,15 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--ceval', type=Path, help='Score local C-Eval validation shards')
     parser.add_argument('--partial', type=Path, help='Include a saved feed-forward transplant in C-Eval')
+    parser.add_argument('--decoding', action='store_true', help='Compare decoding options in the migrated backbone')
     args = parser.parse_args()
     if args.output.exists():
         parser.error('Choose an unused output path')
     if args.partial is not None and args.ceval is None:
         parser.error('--partial requires --ceval')
-    main(args.output, args.ceval, args.partial)
+    if args.decoding:
+        if args.ceval is not None:
+            parser.error('--decoding and --ceval are separate comparisons')
+        compare_decoding(args.output)
+    else:
+        main(args.output, args.ceval, args.partial)
