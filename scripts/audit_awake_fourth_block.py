@@ -18,7 +18,7 @@ from spora.structure_transfer import load_native_block
 from train_awake_absolute_attention import capture as capture_attention
 from train_awake_absolute_attention import fit_attention, relative_error as attention_error, replay_requests
 from train_awake_dialogue_recovery import CORPUS, dialogue_cases
-from train_awake_feedforward_replay import collect_replay, paired_targets
+from train_awake_feedforward_replay import collect_replay, fit as fit_feedforward, paired_targets
 from train_awake_native_outputs import cache_language_targets, train
 from train_awake_partial_layer import TRAIN_FILES, collect, corpus, relative_mse
 from train_awake_replacement_replay import generate, load_layer_pair
@@ -27,18 +27,26 @@ from train_awake_replacement_replay import generate, load_layer_pair
 INDEX = 24
 
 
-def initialize(decoder, tokenizer, teacher, texts, replay):
+def initialize(decoder, tokenizer, teacher, texts, replay, feedforward_steps):
+    training, held = texts[8:], texts[:8]
     norms = []
     for reference in (teacher.input_layernorm, teacher.post_attention_layernorm):
-        features, targets = collect(decoder, tokenizer, texts, reference)
+        features, targets = collect(decoder, tokenizer, training, reference)
         norms.append(fit_norm(reference, features, targets))
-    features, targets = collect(decoder, tokenizer, texts, teacher.mlp)
+    features, targets = collect(decoder, tokenizer, training, teacher.mlp)
     replay_rows = [(ids, [tokenizer.eos_token_id], kwargs, None) for ids, kwargs in replay]
     replay_features, replay_targets = collect_replay(decoder, teacher.mlp, replay_rows)
     feedforward = initialize_from_projections(teacher.mlp, features)
     fit_readout(feedforward, torch.cat((features, replay_features)), torch.cat((targets, replay_targets)),
                 None, None, regularization=.08)
-    return norms, feedforward.requires_grad_(False).eval()
+    errors = {}
+    if feedforward_steps:
+        held_x, held_y = collect(decoder, tokenizer, held, teacher.mlp)
+        errors['feedforward_initial'] = relative_mse(feedforward, held_x, held_y)
+        fit_feedforward(feedforward, (features, targets), (replay_features, replay_targets), feedforward_steps)
+        errors['feedforward_fitted'] = relative_mse(feedforward, held_x, held_y)
+        print('Held feed-forward errors', errors, flush=True)
+    return norms, feedforward.requires_grad_(False).eval(), errors
 
 
 def main(args):
@@ -85,9 +93,9 @@ def main(args):
     texts = corpus()
     requests = [(tokenizer.encode(text, add_special_tokens=False)[:192], {}) for text in texts]
     replay = replay_requests(organism, tokenizer) + replay_requests(organism, tokenizer, value_offset=2)
-    norms, feedforward = initialize(decoder, tokenizer, teacher, texts[8:], replay)
+    norms, feedforward, component_errors = initialize(decoder, tokenizer, teacher, texts, replay,
+                                                      args.feedforward_steps)
     attention = AbsoluteAttention(teacher.self_attn, limit).requires_grad_(False).eval()
-    component_errors = None
     if args.attention_steps:
         source_attention = teacher.self_attn
         attention_rows = capture_attention(decoder, source_attention, requests)
@@ -95,16 +103,18 @@ def main(args):
         attention.float()
         untrained = attention_error(attention, attention_rows[:8])
         fit_attention(attention, attention_rows[8:], replay_rows, args.attention_steps)
-        held_x, held_y = collect(decoder, tokenizer, texts[:8], teacher.mlp)
-        component_errors = dict(attention_initial=untrained,
-                                attention_fitted=attention_error(attention, attention_rows[:8]),
-                                feedforward=relative_mse(feedforward, held_x, held_y))
+        component_errors.update(attention_initial=untrained,
+                                attention_fitted=attention_error(attention, attention_rows[:8]))
+        if not args.feedforward_steps:
+            held_x, held_y = collect(decoder, tokenizer, texts[:8], teacher.mlp)
+            component_errors['feedforward'] = relative_mse(feedforward, held_x, held_y)
         print('Held component errors', component_errors, flush=True)
         teacher.self_attn = attention
         try:
             score('attention_only')
         finally:
             teacher.self_attn = source_attention
+    if args.attention_steps or args.feedforward_steps:
         source_mlp = teacher.mlp
         teacher.mlp = feedforward
         try:
@@ -160,6 +170,7 @@ def main(args):
                                             output_steps=args.output_steps, trained_parameters=trained_parameters,
                                             reference_weight=args.reference_weight,
                                             attention_steps=args.attention_steps, component_errors=component_errors,
+                                            feedforward_steps=args.feedforward_steps,
                                             student_rollout_tokens=args.student_rollout_tokens,
                                             rollout_stats=rollout_stats,
                                             local_error=dict(initial=before, aligned=after), losses=losses,
@@ -181,6 +192,8 @@ if __name__ == '__main__':
     parser.add_argument('--output-steps', type=int, default=96)
     parser.add_argument('--attention-steps', type=int, default=0,
                         help='Fit attention before whole-block alignment and score individual transplants')
+    parser.add_argument('--feedforward-steps', type=int, default=0,
+                        help='Refine the initialized GELU weights on ordinary and memory activations')
     parser.add_argument('--reference-weight', type=float, default=.25,
                         help='Weight on reference answers in addition to teacher distribution matching')
     parser.add_argument('--student-rollout-tokens', type=int, default=0,
@@ -190,6 +203,8 @@ if __name__ == '__main__':
         parser.error('Training steps must be positive')
     if args.attention_steps < 0 or args.attention_steps == 1:
         parser.error('Use zero or at least two attention steps')
+    if args.feedforward_steps < 0:
+        parser.error('Feed-forward steps must be nonnegative')
     if not math.isfinite(args.reference_weight) or args.reference_weight < 0.:
         parser.error('Reference weight must be finite and nonnegative')
     if args.student_rollout_tokens < 0 or (args.student_rollout_tokens and args.reference_weight):

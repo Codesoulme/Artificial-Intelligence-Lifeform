@@ -557,3 +557,21 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 ```powershell
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 9 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --attention-steps 64 --output runs/awake-layer9-attention-first-v1
 ```
+
+## 第 9 层额外前馈拟合
+
+沿用上一节的初始化、64 步注意力拟合、64 步块对齐和 96 步整网对齐。唯一增加的训练阶段是初始化后的 192 步 GELU 前馈拟合，每步抽取 64 个普通文本位置和 32 个记忆回放位置，更新前馈的两个线性映射。八段留出文本的前馈相对平方误差从 0.59157 升至 0.61481。只换注意力的对照复现 17/69 和两组 12/12。
+
+| 对照 | 上一轮 C-Eval | 加前馈拟合后的 C-Eval | 已有及新人物换值 |
+|---|---:|---:|---:|
+| 只换 GELU 前馈 | 12/69 | 12/69 | 12/12、12/12 |
+| 完整块局部对齐 | 14/69 | 13/69 | 12/12、11/12 |
+| 完整块整网对齐 | 11/69 | 11/69 | 12/12、11/12 |
+
+三组的严格短答均为 0/16。本轮完整块局部对齐后的留出残差相对平方误差为 0.67848，上轮为 0.65900。这组固定学习率和步数的额外拟合未改善当前初始化。下一项可比较保留预训练前馈输出的初始化方法，或在固定四层基线上测试另一层位，检验问题是否集中在第 9 层。
+
+实验约 350 秒，峰值显存约 4.05 GiB。重载复现逐题结果，输入摘要通过核对。逐题结果与实验权重位于 `runs/awake-layer9-feedforward-fit-v1/`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 9 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --attention-steps 64 --feedforward-steps 192 --output runs/awake-layer9-feedforward-fit-v1
+```
