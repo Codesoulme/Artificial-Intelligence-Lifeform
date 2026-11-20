@@ -93,6 +93,17 @@ def fit(native, ordinary, memory, steps):
     native.requires_grad_(False)
 
 
+def evaluate_with_value_switches(decoder, tokenizer, memory, alternate, questions, limit):
+    result = evaluate(decoder, tokenizer, memory, questions, position_limit=limit)
+    other = score_memory(decoder, tokenizer, alternate)
+    result['summary']['memory_switches'] = sum(
+        a['correct'] and b['correct'] and a['expected'] not in b['answer'] and b['expected'] not in a['answer']
+        for a, b in zip(result['memory'], other, strict=True)
+    )
+    result['alternate_memory'] = other
+    return result
+
+
 def main(output, ceval, steps):
     paths = (SOURCE, MODEL / 'model.safetensors', MODEL / 'tokenizer.json', MODEL / 'tokenizer_config.json',
              ATTENTION, NORMS, FEEDFORWARD, *TRAIN_FILES, *(ceval / f'{name}.parquet' for name in CEVAL_SUBJECTS))
@@ -116,13 +127,7 @@ def main(output, ceval, steps):
     results = {}
 
     def score(name):
-        result = evaluate(decoder, tokenizer, memory, questions, position_limit=native.max_length)
-        other = score_memory(decoder, tokenizer, alternate)
-        result['summary']['memory_switches'] = sum(
-            a['correct'] and b['correct'] and a['expected'] not in b['answer'] and b['expected'] not in a['answer']
-            for a, b in zip(result['memory'], other, strict=True)
-        )
-        result['alternate_memory'] = other
+        result = evaluate_with_value_switches(decoder, tokenizer, memory, alternate, questions, native.max_length)
         results[name] = result
         print(name, result['summary'], flush=True)
 

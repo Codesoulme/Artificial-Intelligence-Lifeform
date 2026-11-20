@@ -287,3 +287,18 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 ```powershell
 .venv/Scripts/python.exe scripts/audit_awake_native_block.py --ceval runs/ceval-validation-617524a --output runs/awake-native-block-v2
 ```
+
+## 第 18 层的整网输出蒸馏
+
+从完整孢子块出发，使用原预训练第 18 层提供整网输出分布，第 6、12 层在教师和学生中均采用相同的孢子块。训练使用 83 个项目自编对话回合和 48 组受控的现值、旧值目标。每步各抽取一个对话样本和一个记忆样本，合并分布蒸馏与参考答案监督。只更新第 18 层的位置参数、两处归一化、注意力输出和前馈输出投影，共 12,198,912 个参数。
+
+| 第 18 层 | C-Eval | 短对话严格正确 | 自然结束 | 固定状态读取 | 同题换值 |
+|---|---:|---:|---:|---:|---:|
+| 起始孢子块 | 14/57 | 1/16 | 16/16 | 7/8 | 7/8 |
+| 整网蒸馏 96 步 | 14/57 | 2/16 | 15/16 | 6/8 | 5/8 |
+
+校正后读出了原先遗漏的阿宁旧值「果汁」，但丢失了阿宁当前值和小杨旧值中的「豆浆」。公开题正确数持平，尚未补回完整孢子块与预训练层之间的三题差距。此组同时使用教师分布和明确答案，无法区分两项损失各自的影响。训练及复验约 209 秒，峰值显存 3.93 GB。原模型和起始权重摘要一致，候选从磁盘重载后逐题复现。校正版保留为实验权重，现有可选聊天命令仍使用原完整块。逐题结果在 `runs/awake-native-output-v1/result.json`。
+
+```powershell
+.venv/Scripts/python.exe scripts/train_awake_native_outputs.py --start runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-validation-617524a --output runs/awake-native-output-v1
+```
