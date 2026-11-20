@@ -88,6 +88,28 @@ def relative_error(model, rows):
     return error / energy
 
 
+def fit_attention(candidate, training, replay, steps):
+    candidate.position.requires_grad_(True)
+    candidate.out.requires_grad_(True)
+    parameters = [*candidate.position.parameters(), *candidate.out.parameters()]
+    optimizer = torch.optim.AdamW(parameters, lr=2e-4)
+    rng = random.Random(SEED)
+    for iteration in range(steps):
+        candidate.rotary_fraction = .75 * max(0., 1. - 2. * iteration / steps)
+        pool = replay if replay and iteration % 3 == 0 else training
+        actual, expected = prediction(candidate, rng.choice(pool))
+        loss = (actual - expected).square().mean() / expected.square().mean().clamp_min(1e-8)
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(parameters, 1., error_if_nonfinite=True)
+        optimizer.step()
+        if (iteration + 1) % 16 == 0:
+            print('Attention step', iteration + 1, 'rotary fraction', round(candidate.rotary_fraction, 3),
+                  'relative error', round(loss.item(), 6), flush=True)
+    candidate.rotary_fraction = 0.
+    candidate.requires_grad_(False)
+
+
 def main(output, steps, memory_replay=False):
     protected = {path: sha(path) for path in (SOURCE, MODEL / 'model.safetensors', *TRAIN_FILES)}
     started = time.perf_counter()
@@ -116,26 +138,9 @@ def main(output, steps, memory_replay=False):
 
     candidate = AbsoluteAttention(source, MAX_POSITION).float().eval()
     candidate.requires_grad_(False)
-    candidate.position.requires_grad_(True)
-    candidate.out.requires_grad_(True)
     untrained_error = relative_error(candidate, held)
     before = score(source)
-    optimizer = torch.optim.AdamW([*candidate.position.parameters(), *candidate.out.parameters()], lr=2e-4)
-    rng = random.Random(SEED)
-    for iteration in range(steps):
-        candidate.rotary_fraction = .75 * max(0., 1. - 2. * iteration / steps)
-        pool = replay if replay and iteration % 3 == 0 else training
-        actual, expected = prediction(candidate, rng.choice(pool))
-        loss = (actual - expected).square().mean() / expected.square().mean().clamp_min(1e-8)
-        optimizer.zero_grad(set_to_none=True)
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_([*candidate.position.parameters(), *candidate.out.parameters()], 1.,
-                                      error_if_nonfinite=True)
-        optimizer.step()
-        if (iteration + 1) % 16 == 0:
-            print('Step', iteration + 1, 'rotary fraction', round(candidate.rotary_fraction, 3),
-                  'relative error', round(loss.item(), 6), flush=True)
-    candidate.rotary_fraction = 0.
+    fit_attention(candidate, training, replay, steps)
     trained_error = relative_error(candidate, held)
     after = score(candidate.requires_grad_(False).half())
     if any(sha(path) != digest for path, digest in protected.items()):

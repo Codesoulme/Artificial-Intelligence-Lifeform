@@ -15,18 +15,19 @@ from deepseek_output_aligned_memory import MODEL, SOURCE, read, sha, torch, writ
 from spora.language_training import atomic_save
 from spora.pretrained_attention import AbsoluteAttention
 from spora.structure_transfer import load_native_block
-from train_awake_absolute_attention import replay_requests
+from train_awake_absolute_attention import capture as capture_attention
+from train_awake_absolute_attention import fit_attention, relative_error as attention_error, replay_requests
 from train_awake_dialogue_recovery import CORPUS, dialogue_cases
 from train_awake_feedforward_replay import collect_replay, paired_targets
 from train_awake_native_outputs import cache_language_targets, train
-from train_awake_partial_layer import TRAIN_FILES, collect, corpus
+from train_awake_partial_layer import TRAIN_FILES, collect, corpus, relative_mse
 from train_awake_replacement_replay import generate, load_layer_pair
 
 
 INDEX = 24
 
 
-def initialize(decoder, tokenizer, teacher, texts, replay, limit, index):
+def initialize(decoder, tokenizer, teacher, texts, replay):
     norms = []
     for reference in (teacher.input_layernorm, teacher.post_attention_layernorm):
         features, targets = collect(decoder, tokenizer, texts, reference)
@@ -37,8 +38,7 @@ def initialize(decoder, tokenizer, teacher, texts, replay, limit, index):
     feedforward = initialize_from_projections(teacher.mlp, features)
     fit_readout(feedforward, torch.cat((features, replay_features)), torch.cat((targets, replay_targets)),
                 None, None, regularization=.08)
-    attention = AbsoluteAttention(teacher.self_attn, limit)
-    return assemble(decoder.base, attention, norms, feedforward, index)
+    return norms, feedforward.requires_grad_(False).eval()
 
 
 def main(args):
@@ -85,7 +85,33 @@ def main(args):
     texts = corpus()
     requests = [(tokenizer.encode(text, add_special_tokens=False)[:192], {}) for text in texts]
     replay = replay_requests(organism, tokenizer) + replay_requests(organism, tokenizer, value_offset=2)
-    block = initialize(decoder, tokenizer, teacher, texts[8:], replay, limit, args.layer)
+    norms, feedforward = initialize(decoder, tokenizer, teacher, texts[8:], replay)
+    attention = AbsoluteAttention(teacher.self_attn, limit).requires_grad_(False).eval()
+    component_errors = None
+    if args.attention_steps:
+        source_attention = teacher.self_attn
+        attention_rows = capture_attention(decoder, source_attention, requests)
+        replay_rows = capture_attention(decoder, source_attention, replay)
+        attention.float()
+        untrained = attention_error(attention, attention_rows[:8])
+        fit_attention(attention, attention_rows[8:], replay_rows, args.attention_steps)
+        held_x, held_y = collect(decoder, tokenizer, texts[:8], teacher.mlp)
+        component_errors = dict(attention_initial=untrained,
+                                attention_fitted=attention_error(attention, attention_rows[:8]),
+                                feedforward=relative_mse(feedforward, held_x, held_y))
+        print('Held component errors', component_errors, flush=True)
+        teacher.self_attn = attention
+        try:
+            score('attention_only')
+        finally:
+            teacher.self_attn = source_attention
+        source_mlp = teacher.mlp
+        teacher.mlp = feedforward
+        try:
+            score('feedforward_only')
+        finally:
+            teacher.mlp = source_mlp
+    block = assemble(decoder.base, attention, norms, feedforward, args.layer)
     samples = capture(decoder, teacher, requests)
     held, ordinary = samples[:8], samples[8:]
     remembered = capture(decoder, teacher, replay)
@@ -133,6 +159,7 @@ def main(args):
                                             subjects=args.subjects, position_limit=limit, local_steps=args.local_steps,
                                             output_steps=args.output_steps, trained_parameters=trained_parameters,
                                             reference_weight=args.reference_weight,
+                                            attention_steps=args.attention_steps, component_errors=component_errors,
                                             student_rollout_tokens=args.student_rollout_tokens,
                                             rollout_stats=rollout_stats,
                                             local_error=dict(initial=before, aligned=after), losses=losses,
@@ -152,6 +179,8 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--local-steps', type=int, default=64)
     parser.add_argument('--output-steps', type=int, default=96)
+    parser.add_argument('--attention-steps', type=int, default=0,
+                        help='Fit attention before whole-block alignment and score individual transplants')
     parser.add_argument('--reference-weight', type=float, default=.25,
                         help='Weight on reference answers in addition to teacher distribution matching')
     parser.add_argument('--student-rollout-tokens', type=int, default=0,
@@ -159,6 +188,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if min(args.local_steps, args.output_steps) < 1:
         parser.error('Training steps must be positive')
+    if args.attention_steps < 0 or args.attention_steps == 1:
+        parser.error('Use zero or at least two attention steps')
     if not math.isfinite(args.reference_weight) or args.reference_weight < 0.:
         parser.error('Reference weight must be finite and nonnegative')
     if args.student_rollout_tokens < 0 or (args.student_rollout_tokens and args.reference_weight):

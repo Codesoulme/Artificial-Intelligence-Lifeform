@@ -537,3 +537,23 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 ```powershell
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 9 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --student-rollout-tokens 24 --output runs/awake-layer9-student-prefix-v1
 ```
+
+## 第 9 层的注意力与前馈对照
+
+固定四层基线，在原层接口中分别换入拟合后的绝对位置注意力和借助原投影初始化的 GELU 前馈。注意力先训练 64 步，逐步去除旋转位置分量，训练中回放两套记忆状态。随后装配完整孢子块，继续原有的 64 步局部对齐和 96 步教师分布对齐。只换注意力时，位置向量进入注意力投影。完整块在归一化前加位置向量，并让它随残差传递。
+
+| 第 9 层配置 | C-Eval | 严格短答 | 已有地址换值 | 新人物地址换值 |
+|---|---:|---:|---:|---:|
+| 四层起点 | 16/69 | 0/16 | 12/12 | 12/12 |
+| 只换拟合后的绝对位置注意力 | 17/69 | 0/16 | 12/12 | 12/12 |
+| 只换 GELU 前馈 | 12/69 | 0/16 | 12/12 | 12/12 |
+| 完整块局部对齐 | 14/69 | 0/16 | 12/12 | 11/12 |
+| 完整块整网对齐及重载 | 11/69 | 0/16 | 12/12 | 11/12 |
+
+在八段留出文本上，注意力相对平方误差从 0.49045 降到 0.36931，GELU 前馈相对平方误差为 0.59157，完整块局部对齐后的残差相对平方误差为 0.65900。只换前馈已产生明显的中文退化。完整块整网对齐后的 11/69 也低于前一轮未经注意力单独拟合的 14/69。后续应先改前馈初始化并用相同模块接口比较，再检查完整块的相互影响。上述中文题为已有开发对照，部件结果还需用新题复验。
+
+实验约 368 秒，峰值显存约 3.99 GiB。完整块重载后逐题结果一致，输入摘要通过核对。逐题记录和实验权重位于 `runs/awake-layer9-attention-first-v1/`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 9 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --attention-steps 64 --output runs/awake-layer9-attention-first-v1
+```
