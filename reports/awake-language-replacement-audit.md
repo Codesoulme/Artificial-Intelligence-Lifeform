@@ -189,3 +189,23 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 把运行时计算的旋转位置系数预先初始化为 768 个位置的可训练参数表。查询与键沿用预训练的旋转计算，参数表替代实时三角函数，共新增 98,304 个参数。聊天推理时冻结该表。与现行双层版相比，合并其余 26 层并启用参数表后，60 道 C-Eval 的选项全相同，8 道普通生成逐词元一致，受控记忆仍为 7/8。实机验证了名称、写入、读回、追问、旧值和睡眠核对。18 项集成测试通过。
 
 逐题记录在 `runs/awake-migrated-position-table-v1.json`。本轮验证了位置系数从公式迁入模型参数的初始行为，尚未验证参数表经训练后的能力变化。
+
+## 两个完整孢子块的多轮输出校正
+
+固定第 6、12 层的孢子结构，只更新归一化参数与前馈输出偏置，共 15,360 个参数。使用项目中文教材的 166 个目标回合，保留每个回合原有的对话前文。训练同时拟合参考回答和原始 DeepSeek 在相同前缀上的分布。每三步加一次记忆回放，24 个候选前缀来自独立的六个人物地址及其当前、历史状态。回放目标取未经校正的双层版实际生成，用于保持现有行为。两轮各训练 72 步，采样顺序固定，唯一改变的是教师分布损失权重。
+
+| 条件 | C-Eval | 短对话严格正确 | 短对话自然结束 | 受控记忆 |
+|---|---:|---:|---:|---:|
+| 校正前 | 18/60 | 0/16 | 14/16 | 7/8 |
+| 教师权重 0.5 | 16/60 | 2/16 | 15/16 | 7/8 |
+| 教师权重 2 | 17/60 | 2/16 | 14/16 | 7/8 |
+
+短对话每轮最多生成 48 词元，评分要求答案与指定短答格式同时正确。受控记忆由评测指定人物地址和版本。两份增量权重在独立进程中重新加载，再通过正常的事实路由查询固定数据库。两个候选均保住七项持久记忆，教师权重 2 的版本七项完整回答均与校正前一致，权重 0.5 的版本有四项一致。独立进程中六道普通题的自然结束数从 6/6 降到 5/6。数据库摘要通过核对。
+
+两轮含评测分别用时约 153 秒和 157 秒，峰值显存约 4.11 GB。两个候选均保留为实验权重，正式入口仍加载已验证的原权重。结果表明小范围输出校正能改变部分短答行为，恢复更广的中文能力仍需后续实验。逐题结果和增量分别位于 `runs/awake-dialogue-recovery-v1/`、`runs/awake-dialogue-recovery-v2/` 及各自的 `-runtime.json`。
+
+```powershell
+.venv/Scripts/python.exe scripts/train_awake_dialogue_recovery.py --ceval runs/ceval-validation-617524a --output runs/awake-dialogue-recovery-v1
+.venv/Scripts/python.exe scripts/train_awake_dialogue_recovery.py --teacher-weight 2 --ceval runs/ceval-validation-617524a --output runs/awake-dialogue-recovery-v2
+.venv/Scripts/python.exe scripts/audit_awake_replacement_memory.py runs/awake-dialogue-recovery-v2/delta.pt --profile runs/spora-awake-local --ordinary-head runs/deepseek-awake-ordinary-intent.pt --output runs/awake-dialogue-recovery-v2-runtime.json
+```
