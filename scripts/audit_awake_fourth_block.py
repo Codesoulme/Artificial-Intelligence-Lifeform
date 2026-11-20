@@ -53,6 +53,8 @@ def main(args):
     fixed = {12: args.layer12, 18: args.layer18}
     if args.layer24 is not None:
         fixed[24] = args.layer24
+    if args.layer21 is not None:
+        fixed[21] = args.layer21
     paths = (SOURCE, MODEL / 'model.safetensors', MODEL / 'tokenizer.json', MODEL / 'tokenizer_config.json',
              *fixed.values(), *args.compare_candidates,
              *(args.ceval / f'{subject}.parquet' for subject in args.subjects))
@@ -64,9 +66,14 @@ def main(args):
     torch.manual_seed(42117)
     decoder, tokenizer, _, _, organism, _ = load_layer_pair()
     layers = decoder.base.model.layers
+    loaded = {}
     for index, path in fixed.items():
-        digest = read(path.parent / 'result.json')['candidate_sha256']
+        report = read(path.parent / 'result.json')
+        if index == 21 and report.get('fixed_layers') != loaded:
+            raise ValueError('Layer 21 requires its training backbone')
+        digest = report['candidate_sha256']
         layers[index] = load_native_block(path, decoder.base, index, candidate_digest=digest, **provenance)
+        loaded[str(index)] = digest
     limit = min(layers[index].max_length for index in (6, *fixed))
     questions = list(ceval_questions(args.ceval, tokenizer, args.subjects))
     memory_suites = {'earlier': paired_states(organism, MEMORY),
@@ -90,15 +97,16 @@ def main(args):
         results[name] = dict(summary=summary, ceval=choices, dialogue=dialogues, memory=memory)
         print(name, summary, flush=True)
 
-    score('four_blocks' if args.layer24 is not None else 'three_blocks')
+    score({2: 'three_blocks', 3: 'four_blocks', 4: 'five_blocks'}[len(fixed)])
     if args.compare_candidates:
         candidates = {}
         fixed_digests = {str(index): protected[path] for index, path in fixed.items()}
+        allowed_layers = (15,) if args.layer21 is not None else (9, 21)
         for path in args.compare_candidates:
             report = read(path.parent / 'result.json')
             index = report['layer']
-            if index not in (9, 21) or index in candidates or report['fixed_layers'] != fixed_digests:
-                raise ValueError('Expected distinct fifth blocks trained on the selected four-block backbone')
+            if index not in allowed_layers or index in candidates or report['fixed_layers'] != fixed_digests:
+                raise ValueError('Expected distinct replacements trained on the selected backbone')
             candidate = load_native_block(path, decoder.base, index, candidate_digest=report['candidate_sha256'],
                                           **provenance)
             if candidate.max_length < limit:
@@ -214,9 +222,10 @@ if __name__ == '__main__':
     parser.add_argument('--layer12', type=Path, required=True)
     parser.add_argument('--layer18', type=Path, required=True)
     parser.add_argument('--layer24', type=Path, help='Freeze the verified native block at layer 24')
-    parser.add_argument('--layer', type=int, choices=(9, 21, INDEX), default=INDEX)
+    parser.add_argument('--layer21', type=Path, help='Freeze the verified native block at layer 21 for layer 15 training')
+    parser.add_argument('--layer', type=int, choices=(9, 15, 21, INDEX), default=INDEX)
     parser.add_argument('--compare-candidates', type=Path, nargs='+', default=(),
-                        help='Score frozen fifth-block checkpoints independently of each other')
+                        help='Score frozen checkpoints independently against the selected backbone')
     parser.add_argument('--ceval', type=Path, required=True)
     parser.add_argument('--subjects', nargs='+', default=SUBJECTS)
     parser.add_argument('--output', type=Path, required=True)
@@ -244,7 +253,8 @@ if __name__ == '__main__':
     if args.compare_candidates:
         if args.layer24 is None:
             parser.error('--compare-candidates requires --layer24')
-    elif (args.layer != INDEX) != (args.layer24 is not None):
-        parser.error('Layers 9 and 21 require --layer24. Layer 24 is the training target in the default mode.')
+    elif ((args.layer != INDEX) != (args.layer24 is not None)
+          or (args.layer == 15) != (args.layer21 is not None)):
+        parser.error('Layers 9 and 21 require --layer24. Layer 15 requires --layer24 and --layer21.')
     args.output.mkdir()
     main(args)

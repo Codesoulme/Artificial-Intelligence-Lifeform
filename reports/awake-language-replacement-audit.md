@@ -594,3 +594,22 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 21 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --output runs/awake-layer21-fifth-block-v1
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --compare-candidates runs/awake-layer9-teacher-only-v1/layer-9.pt runs/awake-layer21-fifth-block-v1/layer-21.pt --output runs/awake-fifth-layer-position-held-v1
 ```
+
+## 第 15 层第六块实验
+
+固定已通过本机验证的第 6、12、18、21、24 层，将第 15 层替换为完整孢子块。沿用 64 步局部对齐、96 步教师分布对齐和成对记忆训练。局部对齐在八段留出文本上的残差相对平方误差从 0.53617 降到 0.52577。
+
+| 配置 | 化学、政治和教育学 | 生物、地理和历史 | 严格短答 | 已有及新人物地址换值 |
+|---|---:|---:|---:|---:|
+| 五层起点 | 14/69 | 19/51 | 0/16 | 12/12、12/12 |
+| 第六块局部对齐 | 12/69 | — | 0/16 | 12/12、11/12 |
+| 第六块整网对齐及重载 | 12/69 | 11/51 | 0/16 | 12/12、12/12 |
+
+第二组选择题曾用于第五块选型，本轮首次用于比较冻结的第 15 层候选。两次运行沿用相同短答和受控记忆用例。整网对齐恢复了一项新人物换值。两组选择题的正确题数均低于五层起点，第 15 层权重留作实验，尚未进行实机聊天验证。第六块训练及重载约 295 秒，峰值显存约 4.01 GiB。冻结权重复验约 102 秒，峰值显存约 3.58 GiB。输入文件摘要通过核对，重载后同组评测结果逐项一致。
+
+训练和复验记录分别位于 `runs/awake-layer15-sixth-block-v1/` 和 `runs/awake-layer15-sixth-block-held-v1/`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 15 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --output runs/awake-layer15-sixth-block-v1
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --compare-candidates runs/awake-layer15-sixth-block-v1/layer-15.pt --output runs/awake-layer15-sixth-block-held-v1
+```
