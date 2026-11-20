@@ -108,7 +108,7 @@ def compare_decoding(output):
                        sources={str(path): digest for path, digest in sources.items()}))
 
 
-def ceval_questions(directory, tokenizer):
+def ceval_questions(directory, tokenizer, subjects=CEVAL_SUBJECTS):
     import pyarrow.parquet as parquet
 
     labels = 'ABCD'
@@ -116,7 +116,7 @@ def ceval_questions(directory, tokenizer):
     if any(len(ids) != 1 for ids in answer_ids):
         raise ValueError('Expected one token per option label')
     answer_ids = [ids[0] for ids in answer_ids]
-    for subject in CEVAL_SUBJECTS:
+    for subject in subjects:
         path = directory / f'{subject}.parquet'
         for row in parquet.read_table(path, columns=['id', 'question', *labels, 'answer']).to_pylist():
             question = '\n'.join([row['question'], *(f'{label}. {row[label]}' for label in labels),

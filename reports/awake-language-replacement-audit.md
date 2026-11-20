@@ -320,3 +320,28 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 ```powershell
 .venv/Scripts/python.exe scripts/audit_awake_native_interpolation.py --start runs/awake-native-block-v2/layer-18.pt --end runs/awake-native-output-v1/layer-18.pt --ceval runs/ceval-validation-617524a --output runs/awake-native-interpolation-v1
 ```
+
+## 第 18 层插值候选的新题复验
+
+冻结原完整孢子块和 25% 插值块。对照包括完全未改造的 DeepSeek，以及在第 6、12 层分别替换和同时替换、保留原始第 18 层的配置。语言测试均限制到 256 词元。使用此前三科选点题之外的四科验证集，共 83 道高中地理、初中历史、初中物理和中国近现代史题。另编写八组两轮短答，每轮最多 48 词元，使用真实首轮输出继续对话。受控记忆使用第 18 层蒸馏和插值选点时均未使用的六个地址，每个地址分别查询现值与旧值，再用同样的问题查询另一套已写入的值。[C-Eval 固定修订](https://huggingface.co/datasets/ceval/ceval-exam/tree/617524a00b307ff6f9933702f724131fe12ca7ce)
+
+| 骨干 | C-Eval | 短答严格正确 | 自然结束 | 固定状态读取 | 同题换值 |
+|---|---:|---:|---:|---:|---:|
+| 原始 DeepSeek | 24/83 | 0/16 | 15/16 | — | — |
+| 仅第 6 层孢子块 | 26/83 | 0/16 | 14/16 | 11/12 | 9/12 |
+| 仅第 12 层孢子块 | 17/83 | 0/16 | 13/16 | 9/12 | 6/12 |
+| 第 6、12 层孢子块 | 17/83 | 0/16 | 16/16 | 12/12 | 11/12 |
+| 加入第 18 层完整孢子块 | 17/83 | 0/16 | 15/16 | 12/12 | 11/12 |
+| 第 18 层保留 25% 蒸馏改动 | 17/83 | 0/16 | 14/16 | 12/12 | 11/12 |
+
+在仅第 6 层已替换的条件下加入第 12 层，三道题由错变对，十二道由对变错，同时受控换值从 9/12 升到 11/12。单独替换第 12 层也出现相似的语言降幅。下一轮优先校正第 12 层，并保留换值验证。相比双层版，加入第 18 层后有 23 道题改变选项，三题由错变对、另三题由对变错。插值版本只改变五道题的选项，这五题依然答错。
+
+短答严格分会把内容正确、格式多写的答案计为错误。例如三种孢子配置都在首轮算出每盒四颗珠子，却都在第二轮复述首轮信息，漏掉剩余总数。原始版同样在该追问中答错。这里验证了指定地址下的新旧值读取，未覆盖自然语言地址解析、开放记忆或自由中文聊天。整轮没有训练，也未基于这批题重新选权重。保留 25% 候选用于实验，其选点题上的公开分数改善在本轮没有复现。
+
+逐题输出和输入摘要位于 `runs/awake-native-holdout-v1.json`、`runs/awake-native-holdout-unmodified-v1.json` 和 `runs/awake-native-holdout-single-layers-v1.json`。复现时从固定修订下载四个科目的 `val-00000-of-00001.parquet`，按科目目录名命名为 `<subject>.parquet`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-interpolation-v1/layer-18.pt --ceval runs/ceval-native-transfer-617524a --output runs/awake-native-holdout-v1.json
+.venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-interpolation-v1/layer-18.pt --ceval runs/ceval-native-transfer-617524a --unmodified-control --output runs/awake-native-holdout-unmodified-v1.json
+.venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-interpolation-v1/layer-18.pt --ceval runs/ceval-native-transfer-617524a --single-layer-controls --output runs/awake-native-holdout-single-layers-v1.json
+```
