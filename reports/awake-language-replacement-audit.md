@@ -302,3 +302,21 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 ```powershell
 .venv/Scripts/python.exe scripts/train_awake_native_outputs.py --start runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-validation-617524a --output runs/awake-native-output-v1
 ```
+
+## 第 18 层蒸馏权重插值
+
+对同一个完整孢子块的起始权重与 96 步蒸馏权重逐张量线性插值。每档沿用相同的 57 道 C-Eval、16 回合短对话和八组已有换值题，并新增四个训练未用地址，各查当前值和旧值。换值通过要求同一句在两套内部状态下分别答对，且两边均未输出另一套的预期值。
+
+| 蒸馏改动保留比例 | C-Eval | 短对话严格正确 | 自然结束 | 固定状态读取 | 已有地址换值 | 新地址换值 |
+|---|---:|---:|---:|---:|---:|---:|
+| 0% | 14/57 | 1/16 | 16/16 | 7/8 | 7/8 | 8/8 |
+| 25% | 15/57 | 1/16 | 15/16 | 8/8 | 8/8 | 8/8 |
+| 50% | 16/57 | 1/16 | 15/16 | 7/8 | 6/8 | 7/8 |
+| 75% | 14/57 | 2/16 | 14/16 | 6/8 | 5/8 | 7/8 |
+| 100% | 14/57 | 2/16 | 15/16 | 6/8 | 5/8 | 6/8 |
+
+25% 候选在保持两组换值表现的同时多答对一道公开题，短对话少一次自然结束。候选选择使用了表中题目，因此仍需新题验证。校验底座和两份源权重摘要后保存候选，重载逐题输出一致。两个独立聊天进程验证了问候、名字、记忆写入、同人物追问、旧值和睡眠核对，重启后读回姓名和新旧值，数据库摘要一致。GPU 实验约 285 秒，峰值显存 4.04 GB。逐题结果与权重位于 `runs/awake-native-interpolation-v1/`，实机记录位于 `runs/native-interpolation-chat-v1/`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_native_interpolation.py --start runs/awake-native-block-v2/layer-18.pt --end runs/awake-native-output-v1/layer-18.pt --ceval runs/ceval-validation-617524a --output runs/awake-native-interpolation-v1
+```
