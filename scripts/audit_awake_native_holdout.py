@@ -4,11 +4,14 @@ import argparse
 import time
 from pathlib import Path
 
+from audit_awake_block_components import fit_norm
 from audit_awake_multiturn_layers import ceval_questions, conversation, score_ceval, score_memory
 from audit_awake_native_block import INDEX
 from audit_awake_native_interpolation import count_switches, paired_states
 from deepseek_output_aligned_memory import MODEL, SOURCE, read, sha, torch, write
+from spora.pretrained_attention import AbsoluteAttention
 from spora.structure_transfer import load_native_block
+from train_awake_partial_layer import SPORAFeedForward, TRAIN_FILES, collect, corpus, relative_mse
 from train_awake_replacement_replay import load_layer_pair, switch
 
 
@@ -35,13 +38,32 @@ MEMORY = ((17, '时雨', 1, 6), (18, '徐岩', 2, 5), (19, '关晓', 7, 0),
           (20, '尹宁', 4, 3), (21, '叶川', 6, 1), (22, '白雁', 5, 2))
 
 
+def layer_components(original, native):
+    attention = AbsoluteAttention(original.self_attn, native.max_length)
+    attention.qkv = native.block.qkv
+    attention.out = native.block.out
+    attention.position = native.position
+    attention.eval().requires_grad_(False)
+    norms = []
+    for norm, reference in ((native.block.norm1, original.input_layernorm),
+                            (native.block.norm2, original.post_attention_layernorm)):
+        fitted = torch.nn.LayerNorm(norm.normalized_shape, eps=norm.eps).to(reference.weight)
+        fitted.load_state_dict(norm.state_dict())
+        norms.append(fitted.eval().requires_grad_(False))
+    feedforward = SPORAFeedForward(native.block.ff).eval().requires_grad_(False)
+    return dict(input_layernorm=norms[0], post_attention_layernorm=norms[1],
+                self_attn=attention, mlp=feedforward)
+
+
 def main(output, native_path, candidate_path, ceval, unmodified_control, single_layer_controls, layer12_candidate,
-         combine_at_18=False):
+         combine_at_18=False, layer12_components=False, fit_layer12_norms=False):
     base_weights = MODEL / 'model.safetensors'
     paths = (SOURCE, base_weights, MODEL / 'tokenizer.json', MODEL / 'tokenizer_config.json',
              native_path, candidate_path, *(ceval / f'{subject}.parquet' for subject in SUBJECTS))
     if layer12_candidate is not None:
         paths = (*paths, layer12_candidate)
+    if fit_layer12_norms:
+        paths = (*paths, *TRAIN_FILES)
     sources = {path: sha(path) for path in paths}
     started = time.perf_counter()
     decoder, tokenizer, original_layers, replacements, organism, _ = load_layer_pair()
@@ -56,9 +78,11 @@ def main(output, native_path, candidate_path, ceval, unmodified_control, single_
     questions = list(ceval_questions(ceval, tokenizer, SUBJECTS))
     first, second = paired_states(organism, MEMORY)
     results = {}
+    norm_errors = {}
     conditions = {'unmodified': variants['pretrained_at_18']} if unmodified_control else variants
     if single_layer_controls:
-        conditions = {f'native_at_{index}': variants['pretrained_at_18'] for index in replacements}
+        layer18 = variants['native' if combine_at_18 else 'pretrained_at_18']
+        conditions = {f'native_at_{index}': layer18 for index in replacements}
     if layer12_candidate is not None:
         digest = read(layer12_candidate.parent / 'result.json')['candidate_sha256']
         calibrated = load_native_block(layer12_candidate, base, 12, checkpoint_digest=sources[SOURCE],
@@ -66,6 +90,34 @@ def main(output, native_path, candidate_path, ceval, unmodified_control, single_
         limit = min(limit, calibrated.max_length)
         layer18 = variants['native' if combine_at_18 else 'pretrained_at_18']
         conditions = {name: layer18 for name in ('baseline_at_12', 'calibrated_at_12')}
+        if layer12_components or fit_layer12_norms:
+            original = original_layers[12]
+            components = layer_components(original, calibrated)
+            originals = {key: getattr(original, key) for key in components}
+            swaps = {
+                'pretrained_at_12': (),
+                'norms_at_12': ('input_layernorm', 'post_attention_layernorm'),
+                'attention_at_12': ('self_attn',),
+                'feedforward_at_12': ('mlp',),
+                'hybrid_at_12': tuple(components),
+            }
+            if fit_layer12_norms:
+                layers[12] = original
+                layers[INDEX] = layer18
+                texts = corpus()
+                for key in ('input_layernorm', 'post_attention_layernorm'):
+                    reference = originals[key]
+                    features, targets = collect(decoder, tokenizer, texts[8:], reference)
+                    held, expected = collect(decoder, tokenizer, texts[:8], reference)
+                    fitted = fit_norm(reference, features, targets)
+                    norm_errors[key] = {}
+                    for name, norm in (('transplanted', components[key]), ('fitted', fitted)):
+                        norm_errors[key][name] = relative_mse(lambda x: norm(x.to(norm.weight)).float(),
+                                                              held, expected)
+                    components[key] = fitted
+                    print(key, norm_errors[key], flush=True)
+                swaps = {'pretrained_at_12': (), 'fitted_norms_at_12': swaps['norms_at_12']}
+            conditions = {name: layer18 for name in (*swaps, 'calibrated_at_12')}
     if unmodified_control:
         switch(decoder, original_layers)
     for name, block in conditions.items():
@@ -74,6 +126,10 @@ def main(output, native_path, candidate_path, ceval, unmodified_control, single_
             switch(decoder, {**original_layers, index: replacements[index]})
         if name == 'calibrated_at_12':
             layers[12] = calibrated
+        elif layer12_components or fit_layer12_norms:
+            for key, module in originals.items():
+                setattr(original, key, components[key] if key in swaps[name] else module)
+            layers[12] = original
         layers[INDEX] = block
         choices = score_ceval(decoder, questions, limit)
         dialogues = [conversation(decoder, tokenizer, case, limit, decoding=dict(limit=48)) for case in CASES]
@@ -95,7 +151,8 @@ def main(output, native_path, candidate_path, ceval, unmodified_control, single_
     if any(sha(path) != digest for path, digest in sources.items()):
         raise ValueError('A protected input changed during evaluation')
     write(output, dict(results=results, position_limit=limit, dialogue_cases=len(CASES),
-                       combine_at_18=combine_at_18,
+                       combine_at_18=combine_at_18, layer12_components=layer12_components,
+                       fitted_norm_errors=norm_errors,
                        memory_cases=0 if unmodified_control else len(first),
                        seconds=time.perf_counter()-started, peak_gpu_bytes=torch.cuda.max_memory_allocated(),
                        sources={str(path): digest for path, digest in sources.items()}))
@@ -115,11 +172,18 @@ if __name__ == '__main__':
     controls.add_argument('--layer12-candidate', type=Path,
                           help='Compare a calibrated layer 12 to the integrated block with layer 6 fixed')
     parser.add_argument('--combine-at-18', action='store_true',
-                        help='Keep the complete SPORA layer 18 installed during the layer 12 comparison')
+                        help='Keep the complete SPORA layer 18 installed during the selected comparison')
+    diagnostics = parser.add_mutually_exclusive_group()
+    diagnostics.add_argument('--layer12-components', action='store_true',
+                             help='Isolate the components of the supplied layer 12 inside the pretrained interface')
+    diagnostics.add_argument('--fit-layer12-norms', action='store_true',
+                             help='Compare LayerNorm fitted on the original layer 12 input activations')
     args = parser.parse_args()
     if args.output.exists():
         parser.error('Choose an unused output path')
-    if args.combine_at_18 and args.layer12_candidate is None:
-        parser.error('--combine-at-18 requires --layer12-candidate')
+    if args.combine_at_18 and not (args.single_layer_controls or args.layer12_candidate is not None):
+        parser.error('--combine-at-18 requires --single-layer-controls or --layer12-candidate')
+    if (args.layer12_components or args.fit_layer12_norms) and args.layer12_candidate is None:
+        parser.error('Layer 12 diagnostics require --layer12-candidate')
     main(args.output, args.native, args.candidate, args.ceval, args.unmodified_control, args.single_layer_controls,
-         args.layer12_candidate, args.combine_at_18)
+         args.layer12_candidate, args.combine_at_18, args.layer12_components, args.fit_layer12_norms)

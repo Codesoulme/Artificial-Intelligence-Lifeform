@@ -364,3 +364,44 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 .venv/Scripts/python.exe scripts/train_awake_native_outputs.py --layer 12 --ceval runs/ceval-validation-617524a --output runs/awake-layer12-output-v1
 .venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-native-transfer-617524a --layer12-candidate runs/awake-layer12-output-v1/layer-12.pt --combine-at-18 --output runs/awake-layer12-output-combined-reproduction.json
 ```
+
+## 固定第 18 层的双层对照
+
+保留同一份完整第 18 层权重，分别还原第 12 层和第 6 层。其余评测配置沿用四科独立题，包括 256 词元上限、同一组短对话和同一对记忆状态。两组均未重新训练。
+
+| 完整孢子块位置 | C-Eval | 短答严格正确 | 自然结束 | 固定状态读取 | 同题换值 |
+|---|---:|---:|---:|---:|---:|
+| 第 6、18 层 | 24/83 | 0/16 | 14/16 | 10/12 | 8/12 |
+| 第 12、18 层 | 22/83 | 0/16 | 16/16 | 11/12 | 7/12 |
+| 第 6、12、18 层（第 12 层校正后） | 21/83 | 0/16 | 16/16 | 12/12 | 11/12 |
+
+第 6、18 层在公开题上与原版 DeepSeek 的总分相同。相对未校正的三层组合，恢复第 12 层的预训练块后多答对七道公开题，少通过三项同题换值。两种双层组合的换值均低于三层版。下一轮结构改造可用第 6、18 层作为语言对照，保留校正后的三层版作为记忆对照。这组数据比较的是整层搭配，归一化、注意力和前馈各自的影响仍需逐项对照。
+
+GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通过核对。逐题输出见 `runs/awake-native-holdout-layer18-controls-v1.json`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-native-transfer-617524a --single-layer-controls --combine-at-18 --output runs/awake-native-holdout-layer18-controls-v1.json
+```
+
+## 第 12 层逐组件验证
+
+固定第 6、18 层的完整孢子块。将校正后第 12 层的部件分别放入预训练解码层的接口，使用相同四科题、短对话和两套记忆状态。绝对位置向量在混合接口中只进入注意力投影，完整孢子块则在归一化前加入，并随残差传递。归一化分为两组，一组复制完整块权重，另一组用项目教材的 81 段文本拟合原层两处 RMSNorm 的激活，并用独立的 8 段教材检查拟合误差。
+
+| 第 12 层配置 | C-Eval | 自然结束 | 固定状态读取 | 同题换值 |
+|---|---:|---:|---:|---:|
+| 原预训练层 | 24/83 | 14/16 | 10/12 | 8/12 |
+| 仅移植两处 LayerNorm | 12/83 | 0/16 | 0/12 | 0/12 |
+| 仅换绝对位置注意力 | 24/83 | 14/16 | 10/12 | 6/12 |
+| 仅换 GELU 前馈 | 23/83 | 16/16 | 10/12 | 6/12 |
+| 三组组件放在预训练接口内 | 19/83 | 16/16 | 11/12 | 10/12 |
+| 完整校正块 | 21/83 | 16/16 | 12/12 | 11/12 |
+| 仅换重新拟合的两处 LayerNorm | 25/83 | 14/16 | 10/12 | 8/12 |
+
+直接移植的两处 LayerNorm 在留出文本上的相对平方误差分别为 1.932 和 3.494。按原层输入重新拟合后降至 0.00111 和 0.00151，整网记忆得分恢复到原层水平。单独换注意力或前馈各通过 6 项换值，三组部件一起换通过 10 项，显示部件效果取决于组合。重新拟合的归一化在这批公开题多答对一道，仍比完整块少通过三项换值。各配置的严格短答均为 0/16。这批公开题已用于多轮结构比较，候选定型需另用未参与决策的新题检验。
+
+两轮分别耗时约 382 秒和 166 秒，显存峰值约 3.91 GiB 和 4.01 GiB。输入文件摘要通过核对。逐题记录见 `runs/awake-layer12-components-holdout-v1.json` 和 `runs/awake-layer12-fitted-norms-holdout-v1.json`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-native-transfer-617524a --layer12-candidate runs/awake-layer12-output-v1/layer-12.pt --combine-at-18 --layer12-components --output runs/awake-layer12-components-holdout-v1.json
+.venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-native-transfer-617524a --layer12-candidate runs/awake-layer12-output-v1/layer-12.pt --combine-at-18 --fit-layer12-norms --output runs/awake-layer12-fitted-norms-holdout-v1.json
+```
