@@ -640,3 +640,23 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --layer 25 --reference-weight 0 --output runs/awake-layer25-sixth-block-v1
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --compare-candidates runs/awake-layer15-sixth-block-v1/layer-15.pt runs/awake-layer25-sixth-block-v1/layer-25.pt --output runs/awake-sixth-block-held-v2
 ```
+
+## 第 27 层第六块与历史值生成
+
+固定五层基线，复用第 25 层的训练配置，在第 27 层执行 64 步局部对齐和 96 步整网对齐。八段留出文本的块残差相对平方误差从 0.03209 到 0.03214。整网阶段以五层基线为教师，语言部分拟合教师分布，记忆部分保留受控答案监督和成对损失。
+
+| 配置 | 生物、地理和历史 | 化学、政治和教育学 | 已有及新人物地址换值 |
+|---|---:|---:|---:|
+| 五层起点 | 19/51 | 14/69 | 12/12、12/12 |
+| 第 25 层整网对齐 | 16/51 | 12/69 | 12/12、12/12 |
+| 第 27 层局部对齐 | 18/51 | — | 11/12、11/12 |
+| 第 27 层整网对齐及重载 | 17/51 | 15/69 | 11/12、11/12 |
+
+两组失分都发生在换值后的历史查询，期望值都是「果汁」。针对这两条问句，单独查询同一份受控记忆张量，两条的最高分值均为「果汁」。在整网生成的首词元上，五层版把「果汁」排在第一。第 27 层候选把「我」排在第一，「果汁」排在第二，分别低 0.6875 和 0.1875 分。随后两条回答都未给出记录值。这次诊断覆盖了评测提供地址和版本的受控路径。两组语言对照复用同一批记忆用例，均未观察到严格多轮短答改善。
+
+训练及重载约 260 秒，峰值显存约 4.01 GiB。冻结权重复验约 130 秒，峰值显存约 3.59 GiB。权重重载后逐项输出一致，输入摘要通过核对。第 27 层保留作实验。逐题结果及首词元诊断分别位于 `runs/awake-layer27-sixth-block-v1/`、`runs/awake-layer27-sixth-block-held-v1/` 与 `runs/awake-layer27-history-logits-v1.json`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --layer 27 --reference-weight 0 --output runs/awake-layer27-sixth-block-v1
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --compare-candidates runs/awake-layer25-sixth-block-v1/layer-25.pt runs/awake-layer27-sixth-block-v1/layer-27.pt --output runs/awake-layer27-sixth-block-held-v1
+```
