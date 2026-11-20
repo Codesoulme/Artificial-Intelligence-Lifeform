@@ -26,6 +26,7 @@ from train_awake_replacement_replay import generate, load_layer_pair
 
 INDEX = 24
 SIXTH_BLOCK_LAYERS = (15, 25, 27)
+SEVENTH_BLOCK_LAYERS = (25, 26)
 ADDITIONAL_MEMORY = ((29, '许洲', 3, 0), (30, '苏苒', 0, 5), (31, '夏宜', 6, 2))
 TRAIN_HISTORY = ((5, '明珂', 3, 6), (6, '茹川', 2, 0), (7, '洛源', 3, 7), (8, '青洵', 2, 5))
 
@@ -78,6 +79,8 @@ def main(args):
         fixed[24] = args.layer24
     if args.layer21 is not None:
         fixed[21] = args.layer21
+    if args.layer27 is not None:
+        fixed[27] = args.layer27
     paths = (SOURCE, MODEL / 'model.safetensors', MODEL / 'tokenizer.json', MODEL / 'tokenizer_config.json',
              *fixed.values(), *args.compare_candidates,
              *(args.ceval / f'{subject}.parquet' for subject in args.subjects))
@@ -94,8 +97,8 @@ def main(args):
     loaded = {}
     for index, path in fixed.items():
         report = read(path.parent / 'result.json')
-        if index == 21 and report.get('fixed_layers') != loaded:
-            raise ValueError('Layer 21 requires its training backbone')
+        if index in (21, 27) and report.get('fixed_layers') != loaded:
+            raise ValueError(f'Layer {index} requires its training backbone')
         digest = report['candidate_sha256']
         layers[index] = load_native_block(path, decoder.base, index, candidate_digest=digest, **provenance)
         loaded[str(index)] = digest
@@ -103,7 +106,7 @@ def main(args):
     questions = list(ceval_questions(args.ceval, tokenizer, args.subjects))
     memory_suites = {'earlier': paired_states(organism, MEMORY),
                      'fresh': paired_states(organism, FRESH_MEMORY, offset=5)}
-    if args.resume_block is not None:
+    if args.resume_block is not None or args.layer27 is not None:
         memory_suites['additional'] = paired_states(organism, ADDITIONAL_MEMORY, offset=3)
     results = {}
 
@@ -124,11 +127,16 @@ def main(args):
         results[name] = dict(summary=summary, ceval=choices, dialogue=dialogues, memory=memory)
         print(name, summary, flush=True)
 
-    score({2: 'three_blocks', 3: 'four_blocks', 4: 'five_blocks'}[len(fixed)])
+    score({2: 'three_blocks', 3: 'four_blocks', 4: 'five_blocks', 5: 'six_blocks'}[len(fixed)])
     if args.compare_candidates:
         candidates = {}
         fixed_digests = {str(index): protected[path] for index, path in fixed.items()}
-        allowed_layers = SIXTH_BLOCK_LAYERS if args.layer21 is not None else (9, 21)
+        if args.layer27 is not None:
+            allowed_layers = SEVENTH_BLOCK_LAYERS
+        elif args.layer21 is not None:
+            allowed_layers = SIXTH_BLOCK_LAYERS
+        else:
+            allowed_layers = (9, 21)
         for path in args.compare_candidates:
             report = read(path.parent / 'result.json')
             index = report['layer']
@@ -284,11 +292,12 @@ if __name__ == '__main__':
     parser.add_argument('--layer18', type=Path, required=True)
     parser.add_argument('--layer24', type=Path, help='Freeze the verified native block at layer 24')
     parser.add_argument('--layer21', type=Path, help='Freeze layer 21 when fitting a sixth block')
-    parser.add_argument('--layer', type=int, choices=(9, 21, INDEX, *SIXTH_BLOCK_LAYERS), default=INDEX)
+    parser.add_argument('--layer27', type=Path, help='Freeze layer 27 when fitting a seventh block')
+    parser.add_argument('--layer', type=int, choices=(9, 15, 21, INDEX, 25, 26, 27), default=INDEX)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--compare-candidates', type=Path, nargs='+', default=(),
                         help='Score frozen checkpoints independently against the selected backbone')
-    mode.add_argument('--screen-layers', type=int, choices=SIXTH_BLOCK_LAYERS, nargs='+',
+    mode.add_argument('--screen-layers', type=int, choices=(15, 25, 26, 27), nargs='+',
                       help='Compare these layers after local alignment without output distillation')
     mode.add_argument('--resume-block', type=Path, help='Continue output alignment from an existing native block')
     parser.add_argument('--ceval', type=Path, required=True)
@@ -319,20 +328,30 @@ if __name__ == '__main__':
         parser.error('Reference weight must be finite and nonnegative')
     if not math.isfinite(args.first_token_weight) or args.first_token_weight < 0.:
         parser.error('First-token weight must be finite and nonnegative')
-    if (args.first_token_weight or args.history_replay) and args.resume_block is None:
-        parser.error('--first-token-weight and --history-replay require --resume-block')
+    if (args.first_token_weight or args.history_replay) and (
+            args.compare_candidates or args.screen_layers or (args.resume_block is None and args.layer27 is None)):
+        parser.error('--first-token-weight and --history-replay require resumed or seventh-block training')
     if args.resume_block is not None and (args.layer != 27 or args.attention_steps or args.feedforward_steps):
         parser.error('--resume-block requires layer 27 without component pretraining')
     if args.student_rollout_tokens < 0 or (args.student_rollout_tokens and args.reference_weight):
         parser.error('Student continuations require a positive token cap and --reference-weight 0')
+    if args.layer27 is not None and (args.layer21 is None or args.layer24 is None):
+        parser.error('--layer27 requires --layer21 and --layer24')
     if args.screen_layers:
-        if args.layer21 is None or args.layer24 is None or len(set(args.screen_layers)) != len(args.screen_layers):
-            parser.error('--screen-layers requires a five-block backbone and distinct layer numbers')
+        screen_layers = SEVENTH_BLOCK_LAYERS if args.layer27 is not None else SIXTH_BLOCK_LAYERS
+        if (args.layer21 is None or args.layer24 is None
+                or len(set(args.screen_layers)) != len(args.screen_layers)
+                or any(index not in screen_layers for index in args.screen_layers)):
+            parser.error('--screen-layers requires distinct replacement layers for the selected backbone')
     elif args.compare_candidates:
         if args.layer24 is None:
             parser.error('--compare-candidates requires --layer24')
-    elif ((args.layer != INDEX) != (args.layer24 is not None)
-          or (args.layer in SIXTH_BLOCK_LAYERS) != (args.layer21 is not None)):
-        parser.error('Fifth blocks require --layer24. Sixth blocks require --layer24 and --layer21.')
+    else:
+        if ((args.layer != INDEX) != (args.layer24 is not None)
+                or (args.layer in (15, 25, 26, 27)) != (args.layer21 is not None)):
+            parser.error('Fifth and later blocks require --layer24. Sixth and later blocks also require --layer21.')
+        if (args.layer27 is not None and args.layer not in SEVENTH_BLOCK_LAYERS
+                or args.layer == 26 and args.layer27 is None):
+            parser.error('The seven-block experiment fits layer 25 or 26 with --layer27.')
     args.output.mkdir()
     main(args)

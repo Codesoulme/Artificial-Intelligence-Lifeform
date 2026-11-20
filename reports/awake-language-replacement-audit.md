@@ -683,3 +683,26 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 ```
 
 复现首词元组时移除 `--history-replay` 并使用输出目录 `runs/awake-layer27-first-token-v1`。再移除 `--first-token-weight 0.5`，使用 `runs/awake-layer27-first-token-control-v1`，即可复现直接续训对照。
+
+## 第七块层位筛选与本机验收
+
+固定已通过本机验证的第 6、12、18、21、24、27 层。分别在第 25、26 层做 64 步局部对齐。第 25 层在筛选题上保持六层基线分数，选作整网对齐候选。整网阶段训练 96 步，保留第 27 层实验使用的四对历史回放及权重 0.5 的首词元间隔损失。
+
+| 配置 | 局部对齐留出残差误差 | C-Eval 51 题 | C-Eval 69 题 | 三组受控换值 |
+|---|---:|---:|---:|---:|
+| 六层基线 | — | 18/51 | 14/69 | 12/12、12/12、6/6 |
+| 第 25 层局部对齐 | 0.17927 | 18/51 | — | 12/12、12/12、6/6 |
+| 第 26 层局部对齐 | 0.02321 | 14/51 | — | 12/12、12/12、6/6 |
+| 第 25 层整网对齐及重载 | — | 17/51 | 15/69 | 12/12、12/12、6/6 |
+
+第 26 层的局部误差更低，选择题表现也更低。两组选择题均沿用已有开发题。三组记忆测试由评测提供地址与版本，严格多轮短答仍为 0/16。筛选、训练及冻结权重复验分别约 229、286、162 秒，峰值显存分别约 4.23、4.03、3.61 GiB。权重重载复现逐题结果，受保护输入摘要通过核对。
+
+通过临时 Windows 启动参数在独立个体上测试了七层权重。两次写入、点名读回现值和旧值、睡眠核对及重启后的点名查询成功。名字查询在重启前后均要求澄清。省略名字改问职业也要求澄清。只读重启前后数据库摘要一致。记录位于 `runs/native-layer25-seventh-block-chat-v1/`。
+
+对照同一数据库的意图输出时，名字实机问句从 0.871 降至 0.609，低于 0.8 的阈值。原判别器在 32 条名字留出正例上由 9 条降至 3 条，两版均无误触。用七层版的隐藏状态重新拟合，留出正例通过 21 条，同时出现 3 次误触。职业追问的原判别器分数在两版均约 0.998，独立探针均选中预期字段。实机的追问仍失败，尚未隔离短时话题状态与生成耗时的影响。意图诊断记录位于 `runs/awake-layer25-seventh-block-intent-audit-v1.json`。七层版保留为实验，本机试用入口使用六层版。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --layer27 runs/awake-layer27-history-replay-v1/layer-27.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --screen-layers 25 26 --output runs/awake-seventh-block-screen-v1
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --layer27 runs/awake-layer27-history-replay-v1/layer-27.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --layer 25 --reference-weight 0 --history-replay --first-token-weight 0.5 --output runs/awake-layer25-seventh-block-v1
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --layer27 runs/awake-layer27-history-replay-v1/layer-27.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --compare-candidates runs/awake-layer25-seventh-block-v1/layer-25.pt --output runs/awake-layer25-seventh-block-held-v1
+```
