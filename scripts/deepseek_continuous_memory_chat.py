@@ -747,6 +747,7 @@ def main():
     parser.add_argument('--layer18-layernorm', type=Path, help='Load the fitted LayerNorm pair for layer 18')
     parser.add_argument('--layer12-native', type=Path, help='Load a calibrated complete SPORA block for layer 12')
     parser.add_argument('--layer18-native', type=Path, help='Load a verified complete SPORA block for layer 18')
+    parser.add_argument('--layer24-native', type=Path, help='Load layer 24 trained with the selected layers 12 and 18')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
@@ -754,6 +755,8 @@ def main():
     args = parser.parse_args()
     if args.layer18_native is not None and (args.absolute_attention is not None or args.layer18_layernorm is not None):
         parser.error('--layer18-native already includes attention and normalization')
+    if args.layer24_native is not None and (args.layer12_native is None or args.layer18_native is None):
+        parser.error('--layer24-native requires --layer12-native and --layer18-native')
     if args.expand and args.register is None:
         parser.error('--expand requires --register')
     replay_budget = args.repair_replay if args.repair_replay is not None else args.verify_replay
@@ -821,11 +824,18 @@ def main():
             print(json.dumps(dict(action='preview', entity=entity, field=field, value=value), ensure_ascii=False))
             return
     chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router, use_retrained_gate=args.retrained_gate)
-    for index, candidate in ((12, args.layer12_native), (18, args.layer18_native)):
+    for index, candidate in ((12, args.layer12_native), (18, args.layer18_native), (24, args.layer24_native)):
         if candidate is None:
             continue
         path = candidate.resolve()
-        digest = read(path.parent / 'result.json')['candidate_sha256']
+        report = read(path.parent / 'result.json')
+        digest = report['candidate_sha256']
+        if index == 24:
+            for required in (12, 18):
+                expected = {value for source, value in report['sources'].items()
+                            if Path(source.replace('\\', '/')).name == f'layer-{required}.pt'}
+                if expected != {chat.awake_individual[f'layer{required}_native_sha256']}:
+                    parser.error(f'Layer 24 requires the layer {required} weights used during training')
         base = chat.decoder.base
         block = load_native_block(path, base, index, checkpoint_digest=chat.awake_individual['source_sha256'],
                                   base_digest=chat.awake_individual['model_sha256'], candidate_digest=digest)

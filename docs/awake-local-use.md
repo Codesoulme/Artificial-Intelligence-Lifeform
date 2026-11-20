@@ -87,6 +87,12 @@ cd D:/SPORA
 .\spora_chat.cmd --layer12-native runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18-native runs/awake-native-block-v2/layer-18.pt --memory-file runs/spora-awake-local/paired12-memory.sqlite3 --awake-state runs/spora-awake-local/paired12-awake.pt --ordinary-intent-head runs/deepseek-awake-ordinary-intent.pt
 ```
 
+第 24 层也可加载为完整孢子块。以下命令使用四层候选和单独的个体文件。启动时会核对第 12、18 层是否与该候选训练时使用的权重一致。
+
+```powershell
+.\spora_chat.cmd --layer12-native runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18-native runs/awake-native-block-v2/layer-18.pt --layer24-native runs/awake-layer24-fourth-block-v1/layer-24.pt --memory-file runs/spora-awake-local/native24-memory.sqlite3 --awake-state runs/spora-awake-local/native24-awake.pt --ordinary-intent-head runs/deepseek-awake-ordinary-intent.pt
+```
+
 启动后输入「你叫什么名字？」。若要记录事实，可输入 `/记住 齐宁最喜欢喝米香玄米茶。`，再问「齐宁平常最爱喝什么？」和「那他的职业是什么？」。当前入口支持饮品、职业和到访地点，示例使用已登记的测试人物。按 `Ctrl+Z` 再按回车可正常退出。
 
 记忆保存在 `runs/spora-awake-local/memory.sqlite3`，首次记录时创建。在线状态文件 `awake.pt` 与名称张量及记忆路径绑定。`/status` 查看状态，`/relax` 放松，`/focus` 专注，`/sleep` 暂停更新，`/wake` 恢复。此入口允许最多三轮经过核验的连续改问。

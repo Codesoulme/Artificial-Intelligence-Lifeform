@@ -24,9 +24,9 @@ NORMS = ROOT / 'runs/awake-block-components-v1/components.pt'
 FEEDFORWARD = ROOT / 'runs/awake-gelu-projection-v1/projected_gelu.pt'
 
 
-def assemble(base, attention, norms, feedforward):
+def assemble(base, attention, norms, feedforward, index=INDEX):
     native = SPORALayerReplacement(base.config.hidden_size, base.config.num_attention_heads,
-                                   attention.max_position, INDEX).to(attention.qkv.weight.device)
+                                   attention.max_position, index).to(attention.qkv.weight.device)
     native.position.load_state_dict(attention.position.state_dict())
     for target, source in ((native.block.norm1, norms[0]), (native.block.norm2, norms[1]),
                            (native.block.qkv, attention.qkv), (native.block.ff, feedforward.network)):
