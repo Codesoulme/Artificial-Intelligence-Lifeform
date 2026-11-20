@@ -136,3 +136,32 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 .venv/Scripts/python.exe scripts/audit_awake_attention_bridge.py --output runs/awake-attention-bridge-layer18-v1.json
 .venv/Scripts/python.exe scripts/audit_awake_attention_bridge.py --keep-groups --fuse-feedforward --output runs/awake-attention-feedforward-layer18-v1.json
 ```
+
+## 将合并投影扩展到其余 26 层
+
+26 个原生 Qwen2 块都换成孢子的合并投影实现。第 6、12 层仍使用已经蒸馏过的孢子块，记忆读取层则继续使用原来的矩阵和读取接口。整个模型的参数数量保持一致。这一步保留 Qwen2 的分组、旋转位置编码、归一化和 SwiGLU 算法，启动时从已校验的原始权重重建投影。
+
+与现行双层版相比，八道普通题的生成全都逐词元一致，八项事实输出均一致且七项答对，C-Eval 60 道题的选项均一致且答对 18 题。首步分数最大绝对差为 0.05225。首次聊天验证发现 Transformers 按解码层类型采集路由需要的隐藏表示，替换后该字段缺失。新块保留 Qwen2 的输出采集接口，修复后再次完成 GPU 对照及聊天验证。18 项集成单元测试通过，其中新增一项检查隐藏表示、有记忆的生成和重复加载。
+
+实机用独立个体副本验证了名字「孢子」、用 `/记住` 写入米香玄米茶、点名读回饮品、追问职业和睡眠回放。重新启动后，个体名称与新事实仍能读回，睡眠核对一致，记忆文件摘要通过校验。一个把历史短语放在句首的问法仍要求明确对象。逐题结果位于 `runs/awake-migrated-backbone-v2.json`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_attention_bridge.py --all --ceval runs/ceval-validation-617524a --output runs/awake-migrated-backbone-v2.json
+.\spora_chat.cmd --migrate-backbone
+```
+
+## 第 18 层迁移到学习型绝对位置
+
+从预训练 QKV 开始，逐步降低旋转位置分量，学习一个 256 位置的绝对嵌入表和注意力输出投影。部署候选的旋转位置分量为零。两轮各训练 64 步，第二轮加入 24 条由其他六个地址和写入版本构造的记忆激活。下表的注意力误差来自八段留出文本。普通题仍是开发用的八组两轮短问答。记忆核对使用独立的四个地址。
+
+| 第 18 层 | 留出注意力相对平方误差 | 严格答对的回合 / 16 | 八项记忆正确 |
+|---|---:|---:|---:|
+| 原始第 18 层 | — | 0 | 7/8 |
+| 仅普通文本蒸馏 | 0.397 | 1 | 6/8 |
+| 加入受控记忆回放 | 0.407 | 1 | 7/8 |
+
+零初始化且直接停用旋转位置时，留出注意力误差是 0.440。局部误差较低的候选在查询中反而少答对一项。两轮的采样顺序有差异，结果仍需更多独立查询和更长位置验证。带回放的候选训练及验证耗时约 106 秒，本机产物和分题输出位于 `runs/awake-absolute-attention-memory-v1/`。
+
+```powershell
+.venv/Scripts/python.exe scripts/train_awake_absolute_attention.py --memory-replay --output runs/awake-absolute-attention-memory-v1
+```

@@ -47,6 +47,35 @@ def make_reader():
 
 
 class IntegratedOpenBaseTests(unittest.TestCase):
+    @torch.no_grad()
+    def test_qwen_migration_keeps_routing_features_and_generation_with_memory(self):
+        try:
+            from transformers import Qwen2Config, Qwen2ForCausalLM
+        except ModuleNotFoundError as error:
+            if error.name != 'transformers':
+                raise
+            self.skipTest('Qwen2 inference dependencies are optional')
+
+        torch.manual_seed(47)
+        config = Qwen2Config(vocab_size=32, hidden_size=32, intermediate_size=48, num_hidden_layers=3,
+                             num_attention_heads=4, num_key_value_heads=2, max_position_embeddings=48,
+                             pad_token_id=0, eos_token_id=2)
+        config._attn_implementation = 'sdpa'
+        base = Qwen2ForCausalLM(config)
+        model = IntegratedOpenBase(base, OpenBaseMemory(32, 3), (0, 2)).eval()
+        model.use_feedforward_memory(0, fraction=.15)
+        tokens = torch.tensor([[3, 7, 11, 16]])
+        memory = dict(memory_state=make_state(1.), current_only=True)
+        original = model(tokens, output_hidden_states=True, use_cache=False, **memory)
+        expected = model.generate(tokens, max_new_tokens=3, use_cache=True, **memory)
+
+        self.assertEqual(model.migrate_pretrained_blocks(), (0, 1, 2))
+        self.assertEqual(model.migrate_pretrained_blocks(), ())
+        migrated = model(tokens, output_hidden_states=True, use_cache=False, **memory)
+        torch.testing.assert_close(migrated.hidden_states[-1], original.hidden_states[-1])
+        torch.testing.assert_close(migrated.logits, original.logits)
+        torch.testing.assert_close(model.generate(tokens, max_new_tokens=3, use_cache=True, **memory), expected)
+
     def test_native_reader_matches_tokenwise_reads_with_distinct_batch_pages(self):
         torch.manual_seed(29)
         reader = NativeSPORAMemoryReader(6, 3, .6).eval()

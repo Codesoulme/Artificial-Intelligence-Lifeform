@@ -256,6 +256,24 @@ class IntegratedOpenBase(nn.Module):
         for site, index in enumerate(self.layer_indices):
             layers[index] = _MemoryDecoderLayer(layers[index], reader, site, self._memory_context)
 
+    def migrate_pretrained_blocks(self):
+        """Convert original Qwen2 blocks in an inference instance and retain native memory sites."""
+        from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer
+        from .pretrained_attention import SPORAPretrainedBlock
+
+        if self.training:
+            raise ValueError('Pretrained block migration requires an evaluation model')
+        layers = self.base.model.layers
+        indices = tuple(index for index, layer in enumerate(layers)
+                        if type(layer.layer if isinstance(layer, _MemoryDecoderLayer) else layer) is Qwen2DecoderLayer)
+        for index in indices:
+            layer = layers[index]
+            if isinstance(layer, _MemoryDecoderLayer):
+                layer.layer = SPORAPretrainedBlock(layer.layer, layer.read_feedforward_memory).eval()
+            else:
+                layers[index] = SPORAPretrainedBlock(layer).eval()
+        return indices
+
     def use_feedforward_memory(self, layer_index, *, fraction=1.):
         """Move a fraction of one configured reader into its feed-forward input."""
         if type(layer_index) is not int or layer_index not in self.layer_indices:
