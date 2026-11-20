@@ -94,12 +94,15 @@ def align_outputs(decoder, student, language, replay, *, paired_targets=False):
 
 
 @torch.no_grad()
-def paired_targets(decoder, tokenizer, organism):
+def paired_targets(decoder, tokenizer, organism, *, history_pairs=()):
     rows = []
-    for offset in (0, 2):
+    for side, offset in enumerate((0, 2)):
         requests = replay_requests(organism, tokenizer, value_offset=offset, with_answers=True)
+        requests = [(prompt, kwargs, WORDS[value]) for prompt, kwargs, value in requests]
+        if history_pairs:
+            requests.extend(history_pairs[side])
         for prompt, kwargs, value in requests:
-            tail = tokenizer.encode(WORDS[value], add_special_tokens=False) + [tokenizer.eos_token_id]
+            tail = tokenizer.encode(value, add_special_tokens=False) + [tokenizer.eos_token_id]
             teacher = memory_logits(decoder, prompt, tail, kwargs).log_softmax(-1).cpu()
             rows.append((prompt, tail, kwargs, teacher))
     return rows

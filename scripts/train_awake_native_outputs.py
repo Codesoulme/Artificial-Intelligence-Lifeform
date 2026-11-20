@@ -44,7 +44,8 @@ def memory_batches(memory, contrast_weight):
     return batches
 
 
-def train(decoder, block, language, memory, steps, contrast_weight=0., *, reference_weight=.25):
+def train(decoder, block, language, memory, steps, contrast_weight=0., *, reference_weight=.25,
+          first_token_weight=0.):
     modules = (block.position, block.block.norm1, block.block.norm2, block.block.out, block.block.ff[2])
     parameters = [parameter.requires_grad_(True) for module in modules for parameter in module.parameters()]
     optimizer = torch.optim.AdamW(parameters, lr=2e-5, weight_decay=0.)
@@ -63,7 +64,7 @@ def train(decoder, block, language, memory, steps, contrast_weight=0., *, refere
 
         batch = batches[index % len(batches)]
         metrics = dict(language_kl=language_loss.item(), reference_ce=reference_loss.item(),
-                       memory_kl=0., value_ce=0., memory_contrast=0.)
+                       memory_kl=0., value_ce=0., memory_contrast=0., first_token_margin=0.)
         for (prompt, tail, kwargs, teacher), contrast in batch:
             logits = memory_logits(decoder, prompt, tail, kwargs)
             memory_loss = divergence(logits, teacher)
@@ -73,10 +74,17 @@ def train(decoder, block, language, memory, steps, contrast_weight=0., *, refere
                 position, expected, alternative = contrast
                 contrast_loss = torch.nn.functional.softplus(1. - (logits[position, expected]
                                                                    - logits[position, alternative]))
-            ((memory_loss + .25 * value_loss + contrast_weight * contrast_loss) / len(batch)).backward()
+            first_loss = logits.new_zeros(())
+            if first_token_weight:
+                best, indices = logits[0].topk(2)
+                rival = torch.where(indices[0] == tail[0], best[1], best[0])
+                first_loss = torch.nn.functional.relu(1. + rival - logits[0, tail[0]])
+            loss = memory_loss + .25 * value_loss + contrast_weight * contrast_loss + first_token_weight * first_loss
+            (loss / len(batch)).backward()
             metrics['memory_kl'] += memory_loss.item() / len(batch)
             metrics['value_ce'] += value_loss.item() / len(batch)
             metrics['memory_contrast'] += contrast_loss.item() / len(batch)
+            metrics['first_token_margin'] += first_loss.item() / len(batch)
         torch.nn.utils.clip_grad_norm_(parameters, 1., error_if_nonfinite=True)
         optimizer.step()
         losses.append(metrics)

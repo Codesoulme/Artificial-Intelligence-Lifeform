@@ -7,7 +7,7 @@ from pathlib import Path
 
 from audit_awake_block_components import fit_norm
 from audit_awake_gelu_initialization import fit_readout, initialize_from_projections
-from audit_awake_multiturn_layers import ceval_questions, conversation, score_ceval, score_memory
+from audit_awake_multiturn_layers import ceval_questions, conversation, encode, score_ceval, score_memory
 from audit_awake_native_block import assemble, capture, fit, local_error
 from audit_awake_native_holdout import CASES, FRESH_MEMORY, MEMORY, SUBJECTS
 from audit_awake_native_interpolation import count_switches, paired_states
@@ -26,6 +26,17 @@ from train_awake_replacement_replay import generate, load_layer_pair
 
 INDEX = 24
 SIXTH_BLOCK_LAYERS = (15, 25, 27)
+ADDITIONAL_MEMORY = ((29, '许洲', 3, 0), (30, '苏苒', 0, 5), (31, '夏宜', 6, 2))
+TRAIN_HISTORY = ((5, '明珂', 3, 6), (6, '茹川', 2, 0), (7, '洛源', 3, 7), (8, '青洵', 2, 5))
+
+
+def history_training_pairs(organism, tokenizer):
+    states = paired_states(organism, TRAIN_HISTORY, offset=1)
+    prompts = [encode(tokenizer, [dict(role='user', content=f'更正以前，{name}选的饮品是什么？')])
+               for _, name, _, _ in TRAIN_HISTORY]
+    return tuple([(prompt, kwargs, value)
+                  for prompt, (_, value, kwargs, _) in zip(prompts, state[1::2], strict=True)]
+                 for state in states)
 
 
 def initialize(decoder, tokenizer, teacher, texts, replay, feedforward_steps):
@@ -72,6 +83,8 @@ def main(args):
              *(args.ceval / f'{subject}.parquet' for subject in args.subjects))
     if not args.compare_candidates:
         paths = (*paths, CORPUS, *TRAIN_FILES)
+    if args.resume_block is not None:
+        paths = (*paths, args.resume_block)
     protected = {path: sha(path) for path in paths}
     provenance = dict(checkpoint_digest=protected[SOURCE], base_digest=protected[MODEL / 'model.safetensors'])
     started = time.perf_counter()
@@ -90,6 +103,8 @@ def main(args):
     questions = list(ceval_questions(args.ceval, tokenizer, args.subjects))
     memory_suites = {'earlier': paired_states(organism, MEMORY),
                      'fresh': paired_states(organism, FRESH_MEMORY, offset=5)}
+    if args.resume_block is not None:
+        memory_suites['additional'] = paired_states(organism, ADDITIONAL_MEMORY, offset=3)
     results = {}
 
     def score(name):
@@ -165,9 +180,11 @@ def main(args):
                                                 sources={str(path): digest for path, digest in protected.items()}))
         return
     teacher = layers[args.layer]
-    norms, feedforward, component_errors = initialize(decoder, tokenizer, teacher, texts, replay,
-                                                      args.feedforward_steps)
-    attention = AbsoluteAttention(teacher.self_attn, limit).requires_grad_(False).eval()
+    component_errors = {}
+    if args.resume_block is None:
+        norms, feedforward, component_errors = initialize(decoder, tokenizer, teacher, texts, replay,
+                                                          args.feedforward_steps)
+        attention = AbsoluteAttention(teacher.self_attn, limit).requires_grad_(False).eval()
     if args.attention_steps:
         source_attention = teacher.self_attn
         attention_rows = capture_attention(decoder, source_attention, requests)
@@ -193,8 +210,18 @@ def main(args):
             score('feedforward_only')
         finally:
             teacher.mlp = source_mlp
-    block = assemble(decoder.base, attention, norms, feedforward, args.layer)
-    block_error = align_block(decoder, teacher, block, requests, replay, args.local_steps)
+    block_error = None
+    if args.resume_block is None:
+        block = assemble(decoder.base, attention, norms, feedforward, args.layer)
+        block_error = align_block(decoder, teacher, block, requests, replay, args.local_steps)
+    else:
+        report = read(args.resume_block.parent / 'result.json')
+        if report['fixed_layers'] != loaded:
+            raise ValueError('The starting block requires its training backbone')
+        block = load_native_block(args.resume_block, decoder.base, args.layer,
+                                  candidate_digest=report['candidate_sha256'], **provenance)
+        if block.max_length != limit:
+            raise ValueError('Starting block position range differs from the backbone limit')
 
     examples = dialogue_cases(tokenizer)[::2]
     rollout_stats = None
@@ -211,11 +238,13 @@ def main(args):
         print('Student continuations', rollout_stats, flush=True)
         examples = continuations
     language = cache_language_targets(decoder, examples)
-    memory = paired_targets(decoder, tokenizer, organism)
+    history_pairs = history_training_pairs(organism, tokenizer) if args.history_replay else ()
+    memory = paired_targets(decoder, tokenizer, organism, history_pairs=history_pairs)
     layers[args.layer] = block
-    score('local_alignment')
+    score('local_alignment' if args.resume_block is None else 'starting_candidate')
     losses, trained_parameters = train(decoder, block, language, memory, args.output_steps, contrast_weight=.5,
-                                      reference_weight=args.reference_weight)
+                                      reference_weight=args.reference_weight,
+                                      first_token_weight=args.first_token_weight)
     score('output_alignment')
 
     if any(sha(path) != digest for path, digest in protected.items()):
@@ -232,9 +261,13 @@ def main(args):
         raise ValueError('Reloaded block changed evaluation results')
     write(args.output / 'result.json', dict(results=results, candidate_sha256=digest, layer=args.layer,
                                             fixed_layers={index: protected[path] for index, path in fixed.items()},
-                                            subjects=args.subjects, position_limit=limit, local_steps=args.local_steps,
+                                            subjects=args.subjects, position_limit=limit,
+                                            local_steps=args.local_steps if args.resume_block is None else 0,
                                             output_steps=args.output_steps, trained_parameters=trained_parameters,
                                             reference_weight=args.reference_weight,
+                                            resume_block_sha256=protected.get(args.resume_block),
+                                            first_token_weight=args.first_token_weight,
+                                            history_replay_pairs=len(history_pairs[0]) if history_pairs else 0,
                                             attention_steps=args.attention_steps, component_errors=component_errors,
                                             feedforward_steps=args.feedforward_steps,
                                             student_rollout_tokens=args.student_rollout_tokens,
@@ -257,11 +290,16 @@ if __name__ == '__main__':
                         help='Score frozen checkpoints independently against the selected backbone')
     mode.add_argument('--screen-layers', type=int, choices=SIXTH_BLOCK_LAYERS, nargs='+',
                       help='Compare these layers after local alignment without output distillation')
+    mode.add_argument('--resume-block', type=Path, help='Continue output alignment from an existing native block')
     parser.add_argument('--ceval', type=Path, required=True)
     parser.add_argument('--subjects', nargs='+', default=SUBJECTS)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--local-steps', type=int, default=64)
     parser.add_argument('--output-steps', type=int, default=96)
+    parser.add_argument('--first-token-weight', type=float, default=0.,
+                        help='Weight on the memory first-token margin during resumed training')
+    parser.add_argument('--history-replay', action='store_true',
+                        help='Add paired historical values on training-only addresses')
     parser.add_argument('--attention-steps', type=int, default=0,
                         help='Fit attention before whole-block alignment and score individual transplants')
     parser.add_argument('--feedforward-steps', type=int, default=0,
@@ -279,6 +317,12 @@ if __name__ == '__main__':
         parser.error('Feed-forward steps must be nonnegative')
     if not math.isfinite(args.reference_weight) or args.reference_weight < 0.:
         parser.error('Reference weight must be finite and nonnegative')
+    if not math.isfinite(args.first_token_weight) or args.first_token_weight < 0.:
+        parser.error('First-token weight must be finite and nonnegative')
+    if (args.first_token_weight or args.history_replay) and args.resume_block is None:
+        parser.error('--first-token-weight and --history-replay require --resume-block')
+    if args.resume_block is not None and (args.layer != 27 or args.attention_steps or args.feedforward_steps):
+        parser.error('--resume-block requires layer 27 without component pretraining')
     if args.student_rollout_tokens < 0 or (args.student_rollout_tokens and args.reference_weight):
         parser.error('Student continuations require a positive token cap and --reference-weight 0')
     if args.screen_layers:

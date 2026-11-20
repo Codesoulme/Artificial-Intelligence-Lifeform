@@ -660,3 +660,26 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --layer 27 --reference-weight 0 --output runs/awake-layer27-sixth-block-v1
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --compare-candidates runs/awake-layer25-sixth-block-v1/layer-25.pt runs/awake-layer27-sixth-block-v1/layer-27.pt --output runs/awake-layer27-sixth-block-held-v1
 ```
+
+## 第 27 层的首词元与历史回放校准
+
+从已有第 27 层权重续训 72 步，只更新这一层的 12,198,912 个参数。第一组沿用原损失，第二组加入权重 0.5 的首词元间隔损失，要求正确词元比最高分竞争词元至少高 1 分。第三组沿用第二组损失，在原回放中加入四对历史查询。新增训练样本使用地址 5 至 8，覆盖两套不同的历史饮品写入，原失败问句和评测地址均留在评测侧。新增评测使用地址 29 至 31，包含现值及旧值换值。
+
+| 配置 | C-Eval 51 题 | C-Eval 69 题 | 已有地址换值 | 新人物地址换值 | 新增地址换值 |
+|---|---:|---:|---:|---:|---:|
+| 五层起点 | 19/51 | 14/69 | 12/12 | 12/12 | 6/6 |
+| 第 27 层续训起点 | 17/51 | 15/69 | 11/12 | 11/12 | 6/6 |
+| 直接续训 | 19/51 | — | 11/12 | 11/12 | 6/6 |
+| 加首词元间隔 | 19/51 | — | 11/12 | 11/12 | 6/6 |
+| 加首词元间隔及历史回放 | 18/51 | 14/69 | 12/12 | 12/12 | 6/6 |
+
+前两组 51 道题的选项完全一致，均漏掉相同的两条「果汁」历史记录。加入四对历史回放后，两条记录均恢复。该组同时改变了回放覆盖和抽样顺序，尚未单独测量历史回放与首词元损失的交互影响。严格短答仍为 0/16。受控记忆提供地址和版本，69 题冻结复验沿用前两组记忆用例。
+
+三轮训练和重载分别约 235、228、234 秒，峰值显存约 3.76 GiB。重载后逐项结果一致，输入摘要通过核对。历史回放版通过 Windows 启动入口的问候、名称、写入、更正、同人物追问、旧值读取、睡眠核对和重启读回。只读重启前后数据库摘要一致。实机记录见 `runs/native-layer27-history-replay-chat-v1/`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --layer 27 --resume-block runs/awake-layer27-sixth-block-v1/layer-27.pt --reference-weight 0 --output-steps 72 --first-token-weight 0.5 --history-replay --output runs/awake-layer27-history-replay-v1
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --layer21 runs/awake-layer21-fifth-block-v1/layer-21.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --compare-candidates runs/awake-layer27-history-replay-v1/layer-27.pt --output runs/awake-layer27-history-replay-held-v1
+```
+
+复现首词元组时移除 `--history-replay` 并使用输出目录 `runs/awake-layer27-first-token-v1`。再移除 `--first-token-weight 0.5`，使用 `runs/awake-layer27-first-token-control-v1`，即可复现直接续训对照。

@@ -749,6 +749,7 @@ def main():
     parser.add_argument('--layer18-native', type=Path, help='Load a verified complete SPORA block for layer 18')
     parser.add_argument('--layer24-native', type=Path, help='Load layer 24 trained with the selected layers 12 and 18')
     parser.add_argument('--layer21-native', type=Path, help='Load layer 21 trained with the selected four-block backbone')
+    parser.add_argument('--layer27-native', type=Path, help='Load layer 27 trained with the selected five-block backbone')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
@@ -760,6 +761,8 @@ def main():
         parser.error('--layer24-native requires --layer12-native and --layer18-native')
     if args.layer21_native is not None and args.layer24_native is None:
         parser.error('--layer21-native requires --layer24-native')
+    if args.layer27_native is not None and args.layer21_native is None:
+        parser.error('--layer27-native requires --layer21-native')
     if args.expand and args.register is None:
         parser.error('--expand requires --register')
     replay_budget = args.repair_replay if args.repair_replay is not None else args.verify_replay
@@ -827,8 +830,10 @@ def main():
             print(json.dumps(dict(action='preview', entity=entity, field=field, value=value), ensure_ascii=False))
             return
     chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router, use_retrained_gate=args.retrained_gate)
-    for index, candidate in ((12, args.layer12_native), (18, args.layer18_native), (24, args.layer24_native),
-                             (21, args.layer21_native)):
+    native_layers = ((12, args.layer12_native), (18, args.layer18_native), (24, args.layer24_native),
+                     (21, args.layer21_native), (27, args.layer27_native))
+    loaded = {}
+    for index, candidate in native_layers:
         if candidate is None:
             continue
         path = candidate.resolve()
@@ -840,17 +845,15 @@ def main():
                             if Path(source.replace('\\', '/')).name == f'layer-{required}.pt'}
                 if expected != {chat.awake_individual[f'layer{required}_native_sha256']}:
                     parser.error(f'Layer 24 requires the layer {required} weights used during training')
-        if index == 21:
-            loaded = {str(required): chat.awake_individual[f'layer{required}_native_sha256']
-                      for required in (12, 18, 24)}
-            if report.get('fixed_layers') != loaded:
-                parser.error('Layer 21 requires the layers 12, 18, and 24 used during training')
+        if index in (21, 27) and report.get('fixed_layers') != loaded:
+            parser.error(f'Layer {index} requires the other native weights used during training')
         base = chat.decoder.base
         block = load_native_block(path, base, index, checkpoint_digest=chat.awake_individual['source_sha256'],
                                   base_digest=chat.awake_individual['model_sha256'], candidate_digest=digest)
         base.model.layers[index] = block
         chat.position_limit = min(chat.position_limit, block.max_length)
         chat.awake_individual[f'layer{index}_native_sha256'] = digest
+        loaded[str(index)] = digest
     if args.absolute_attention is not None:
         from spora.pretrained_attention import load_absolute_attention
 
