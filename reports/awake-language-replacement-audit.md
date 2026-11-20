@@ -250,3 +250,21 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 .venv/Scripts/python.exe scripts/train_awake_feedforward_replay.py --paired-targets --start runs/awake-block-components-v1/components.pt --ceval runs/ceval-validation-617524a --output runs/awake-gelu-replay-paired-v1
 .venv/Scripts/python.exe scripts/train_awake_feedforward_replay.py --verify --start runs/awake-gelu-replay-paired-v1/memory_replay.pt --ceval runs/ceval-validation-617524a --output runs/awake-gelu-replay-reload-v1
 ```
+
+## 用预训练投影初始化完整 GELU 前馈
+
+将第 18 层的 SwiGLU 换成孢子的两层线性映射与 GELU。先按预训练通道在普通文本上的输出能量选取 1,536 组门控与上投影，再用两者的和、差及对应负向投影构造 6,144 个 GELU 特征。固定输入投影，通过带正则的最小二乘拟合输出。对照组从现有 GELU 回放权重提取特征，使用相同宽度、样本与输出拟合。第三组在投影初始化的基础上额外拟合两套记忆状态间的输出差。普通训练集有 3,483 个位置，两套回放状态各有 396 个位置，普通文本留出集有 369 个位置。
+
+| 第 18 层配置 | 留出前馈相对平方误差 | C-Eval | 短对话严格正确 | 固定状态读取 | 同题换值 |
+|---|---:|---:|---:|---:|---:|
+| 预训练 SwiGLU | — | 18/60 | 0/16 | 7/8 | 7/8 |
+| 现有 GELU 特征重新拟合 | 0.594 | 15/60 | 1/16 | 6/8 | 5/8 |
+| 预训练投影初始化 | 0.491 | 15/60 | 1/16 | 7/8 | 7/8 |
+| 预训练投影初始化加记忆差分 | 0.497 | 15/60 | 1/16 | 7/8 | 7/8 |
+
+投影初始化在受控读取和换值上达到 SwiGLU 的分数。公开题仍低三道，短对话仅通过一回合。记忆题沿用固定字段，地址和版本由评测提供。正式聊天入口继续使用预训练前馈。实验中的第 18 层仍使用预训练注意力及归一化。本轮约 208 秒，峰值显存约 4.37 GB。逐题结果及权重保存在 `runs/awake-gelu-projection-v1/`。独立进程重载投影初始化权重后，公开题、短对话和两套记忆状态的逐项结果一致。复验见 `runs/awake-gelu-projection-reload-v1/`。18 项集成测试通过。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_gelu_initialization.py --start runs/awake-gelu-replay-paired-v1/memory_replay.pt --ceval runs/ceval-validation-617524a --output runs/awake-gelu-projection-v1
+.venv/Scripts/python.exe scripts/train_awake_feedforward_replay.py --verify --start runs/awake-gelu-projection-v1/projected_gelu.pt --ceval runs/ceval-validation-617524a --output runs/awake-gelu-projection-reload-v1
+```
