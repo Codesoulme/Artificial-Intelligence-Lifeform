@@ -20,15 +20,15 @@ MEMORY = ('记录里这个人最喜欢喝什么饮料？', '这个人的饮料�
 HISTORY = ((1, '小林', 2, 5), (2, '阿宁', 3, 4), (3, '小陈', 1, 7), (4, '小杨', 4, 0))
 
 
-def history_cases(organism):
+def history_cases(organism, history=HISTORY):
     state = fresh_controlled_state(organism)
-    for key, _, earlier, current in HISTORY:
+    for key, _, earlier, current in history:
         for value in (earlier, current):
             state, event = observe_sourced(organism, state, key, value, 'direct', 1.)
             if not event['current_write']:
                 raise ValueError('Controlled history write rejected')
     rows = []
-    for index, (key, person, earlier, current) in enumerate(HISTORY):
+    for index, (key, person, earlier, current) in enumerate(history):
         for intent, question, expected in (
             ('current', f'{person}现在最喜欢喝什么饮料？', current),
             ('past', f'{person}最早那次偏爱喝什么？', earlier),

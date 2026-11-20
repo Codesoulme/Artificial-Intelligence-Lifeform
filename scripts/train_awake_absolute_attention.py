@@ -45,12 +45,13 @@ def capture(decoder, source, requests):
     return rows
 
 
-def replay_requests(organism, tokenizer):
+def replay_requests(organism, tokenizer, *, value_offset=0, with_answers=False):
     state = fresh_controlled_state(organism)
     requests = []
     for index, name in enumerate(('明珂', '茹川', '洛源', '青洵', '江禾', '孟亭'), start=5):
         event_time = state.cursor
-        for value in (index % 8, (index + 3) % 8):
+        earlier, current = (index + value_offset) % 8, (index + value_offset + 3) % 8
+        for value in (earlier, current):
             if state.cursor >= len(state.pages) * organism.config.time_count:
                 state = grow(organism, state)
             state, event = observe_sourced(organism, state, index, value, 'direct', 1.)
@@ -63,8 +64,11 @@ def replay_requests(organism, tokenizer):
             ('past', f'最早那条记录里{name}喜欢喝什么？'),
         ):
             prompt = encode(tokenizer, [dict(role='user', content=question)])
-            requests.append((prompt, dict(key=index, intent=intent, event_time=event_time)))
-    return [(prompt, _memory_args(organism, state, row)) for prompt, row in requests]
+            row = dict(key=index, intent=intent, event_time=event_time)
+            requests.append((prompt, row, earlier if intent == 'past' else current))
+    if with_answers:
+        return [(prompt, _memory_args(organism, state, row), value) for prompt, row, value in requests]
+    return [(prompt, _memory_args(organism, state, row)) for prompt, row, _ in requests]
 
 
 def prediction(model, row):

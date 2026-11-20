@@ -228,3 +228,25 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 ```powershell
 .venv/Scripts/python.exe scripts/audit_awake_block_components.py --ceval runs/ceval-validation-617524a --output runs/awake-block-components-v1
 ```
+
+## 完整 GELU 前馈的记忆回放
+
+从第 18 层上一轮的 GELU 权重开始继续训练。两组都更新 256 步，每步抽取 64 个普通文本位置，再加入 32 个普通文本或记忆回放位置。回放取六个训练地址的 24 个查询，记录原预训练前馈在模型读取现值或旧值时的输入与输出。评测使用另外四个地址，并为每道题准备两套不同的张量。换值通过要求同一句话在两套张量下分别读对，且都没有输出另一套的预期值。
+
+| 第 18 层配置 | C-Eval | 短对话严格正确 | 固定状态读取 | 同题换值 |
+|---|---:|---:|---:|---:|
+| 预训练 SwiGLU | 18/60 | 0/16 | 7/8 | 7/8 |
+| GELU 继续普通文本拟合 | 17/60 | 0/16 | 2/8 | 0/8 |
+| GELU 加入记忆激活回放 | 14/60 | 1/16 | 6/8 | 4/8 |
+| 回放后再对齐 72 步输出分布 | 15/60 | 1/16 | 4/8 | 1/8 |
+| 回放后用两套新旧值做 72 步监督 | 14/60 | 1/16 | 6/8 | 3/8 |
+
+记忆回放组在普通留出文本上的相对平方误差为 0.587，普通文本组为 0.577，前者却多保住四组同题换值。这次对照只覆盖固定字段、指定地址和版本，读取评分要求包含预期事实。两个输出校正实验都从同一局部回放阶段开始。显式监督组改变了目标序列、样本和损失，无法单独归因到其中一项。用独立进程重载局部回放权重，重现 6/8 固定读取、4/8 换值和 14/60 公开题。原始底座和个体检查点摘要保持一致。正式入口继续用预训练前馈。
+
+两轮耗时约 281 秒和 207 秒，峰值显存约 4.23 GB。逐题结果和候选权重保存在 `runs/awake-gelu-replay-v1/`、`runs/awake-gelu-replay-paired-v1/` 和 `runs/awake-gelu-replay-reload-v1/`。
+
+```powershell
+.venv/Scripts/python.exe scripts/train_awake_feedforward_replay.py --start runs/awake-block-components-v1/components.pt --ceval runs/ceval-validation-617524a --output runs/awake-gelu-replay-v1
+.venv/Scripts/python.exe scripts/train_awake_feedforward_replay.py --paired-targets --start runs/awake-block-components-v1/components.pt --ceval runs/ceval-validation-617524a --output runs/awake-gelu-replay-paired-v1
+.venv/Scripts/python.exe scripts/train_awake_feedforward_replay.py --verify --start runs/awake-gelu-replay-paired-v1/memory_replay.pt --ceval runs/ceval-validation-617524a --output runs/awake-gelu-replay-reload-v1
+```
