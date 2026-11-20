@@ -144,6 +144,26 @@ class OnlineSession:
                     elapsed_seconds=sum(simulation['durations'][:step]), predicted=prediction.tolist(),
                     observed=target.tolist(), absolute_error=error.abs().tolist(), rmse=float(error.square().mean().sqrt()))
 
+    def choose_imagined_plan(self, simulation, goal):
+        if (simulation is None or simulation['kind'] != 'simulation'
+                or simulation['observation'] != self.state.world_count):
+            return dict(kind='needs_simulation')
+        target = torch.as_tensor(goal, dtype=torch.float32)
+        bounds = target.new_tensor([3., 2.])
+        if target.shape != (2,) or not bool(torch.isfinite(target).all()) or bool((target.abs() > bounds).any()):
+            raise ValueError('Expected a target position and temperature within the training domain')
+        states = torch.as_tensor(simulation['states'])
+        domain = torch.as_tensor(simulation['in_domain'])
+        terminal = states[:, -1, :][:, (0, 2)]
+        distance = ((terminal - target) / bounds).square().sum(dim=1).sqrt()
+        eligible = domain[:, -1]
+        if not bool(eligible.any()):
+            return dict(kind='no_supported_plan')
+        choice = int(distance.masked_fill(~eligible, float('inf')).argmin())
+        return dict(kind='plan_suggestion', observation=simulation['observation'], plan=choice + 1,
+                    target=target.tolist(), terminal=terminal[choice].tolist(), distance=float(distance[choice]),
+                    supported_plans=int(eligible.sum()))
+
     def pulse(self, source):
         if source not in ('synthetic', 'sensor'):
             raise ValueError('Label the source of actual input')

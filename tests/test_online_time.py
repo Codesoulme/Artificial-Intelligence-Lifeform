@@ -68,6 +68,16 @@ class OnlineTests(unittest.TestCase):
         self.observation()
         self.assertEqual(self.session.compare_imagination(simulation, 1, 1, expected), {'kind': 'needs_simulation'})
 
+    def test_plan_selection_respects_domain_and_keeps_original_plan_number(self):
+        self.observation()
+        simulation = dict(kind='simulation', observation=1,
+                          states=[[[1., 0., 1.]], [[.5, 0., .5]], [[0., 0., 0.]]],
+                          in_domain=[[False], [True], [True]])
+        recommendation = self.session.choose_imagined_plan(simulation, [1., 1.])
+        self.assertEqual((recommendation['plan'], recommendation['supported_plans']), (2, 2))
+        simulation['in_domain'] = [[False], [False], [False]]
+        self.assertEqual(self.session.choose_imagined_plan(simulation, [1., 1.]), {'kind': 'no_supported_plan'})
+
     def model_state(self):
         model = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=16,
             expert_rank=4, memory_layers=(0, 1), history_writer='rls'))

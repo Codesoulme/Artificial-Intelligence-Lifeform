@@ -830,6 +830,18 @@ def main():
             if not question:
                 continue
             command = question.split(maxsplit=1)
+            if world_session is not None and command[0] == '/world-plan':
+                try:
+                    values = [float(value) for value in command[1].split()] if len(command) == 2 else []
+                    suggestion = world_session.choose_imagined_plan(last_simulation, values)
+                except ValueError:
+                    suggestion = dict(kind='invalid_world_goal')
+                if suggestion['kind'] == 'plan_suggestion':
+                    suggestion['action'] = DEMO_WORLD_ACTIONS[suggestion['plan'] - 1]
+                    record_sleep_event('world.plan_suggestion', dict(suggestion, simulation_event=simulation_event,
+                                                                     world_sha256=world_digest), 'model_simulation')
+                print(json.dumps(dict(world_plan=suggestion), ensure_ascii=False), flush=True)
+                continue
             if world_session is not None and command[0] == '/world-check':
                 try:
                     plan, step, *values = command[1].split() if len(command) == 2 else ()
