@@ -62,10 +62,12 @@ class SelfNameIntent(RecallIntent):
     format = 'spora-awake-self-name-v1'
     other_target = re.compile(r'(?:称呼|叫)我(?:[^叫]|$)|我的(?:实际|真实|常用)?(?:名字|姓名|名称|称呼)|我一直叫什么')
     model_target = re.compile(r'底座(?:型号|名称|叫|有)|基[础座]模型|哪个模型|开发者|哪家(?:机构|公司)')
+    bare_greeting = re.compile(r'(?:你好|您好|大家好|早上好|中午好|下午好|晚上好|嗨|哈喽)(?:呀|啊)?[。！!，,~～]*')
 
     @classmethod
     def targets_self(cls, question):
-        return cls.other_target.search(question) is None and cls.model_target.search(question) is None
+        return (cls.bare_greeting.fullmatch(question.strip()) is None
+                and cls.other_target.search(question) is None and cls.model_target.search(question) is None)
 
     @classmethod
     def load_name(cls, path, width, fingerprint, bank_spec):

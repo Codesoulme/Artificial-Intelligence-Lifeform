@@ -39,6 +39,9 @@ class AwakeChatTests(unittest.TestCase):
 
     def test_self_name_matrix_has_its_own_format_and_scope(self):
         self.assertTrue(SelfNameIntent.targets_self('有人叫你小白。你实际叫什么名字？'))
+        self.assertTrue(SelfNameIntent.targets_self('你好，请问你叫什么名字？'))
+        self.assertFalse(SelfNameIntent.targets_self('你好。'))
+        self.assertFalse(SelfNameIntent.targets_self('您好呀！'))
         self.assertFalse(SelfNameIntent.targets_self('请报出我的实际姓名。'))
         self.assertFalse(SelfNameIntent.targets_self('你本来的底座叫啥？'))
         source = SelfNameIntent(2, .8)

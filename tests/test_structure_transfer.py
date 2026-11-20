@@ -1,11 +1,39 @@
+import tempfile
 import unittest
+from hashlib import sha256
+from pathlib import Path
+from types import SimpleNamespace
 
 import torch
 
-from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement, apply_position_tails
+from spora.structure_transfer import SPORALayerBlend, SPORALayerReplacement, apply_position_tails, load_native_block
 
 
 class StructureTransferTests(unittest.TestCase):
+    def test_native_block_load_checks_provenance_and_digest(self):
+        base = SimpleNamespace(config=SimpleNamespace(hidden_size=16, num_attention_heads=4,
+                                                      max_position_embeddings=32),
+                               lm_head=torch.nn.Linear(16, 8))
+        block = SPORALayerReplacement(16, 4, max_length=8, layer_idx=2).eval()
+        metadata = dict(format='spora-qwen-layer-replacement-candidate-v1', base_weight_sha256='base',
+                        source_sha256='source', layer=2, width=16, heads=4, max_length=8)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'layer-2.pt'
+            torch.save(dict(metadata=metadata, state=block.state_dict()), path)
+            digest = sha256(path.read_bytes()).hexdigest()
+            restored = load_native_block(path, base, 2, checkpoint_digest='source', base_digest='base',
+                                         candidate_digest=digest)
+            self.assertFalse(restored.training)
+            self.assertFalse(any(parameter.requires_grad for parameter in restored.parameters()))
+            values = torch.randn(2, 3, 16)
+            torch.testing.assert_close(restored(values), block(values))
+            with self.assertRaisesRegex(ValueError, 'provenance mismatch'):
+                load_native_block(path, base, 2, checkpoint_digest='other', base_digest='base',
+                                  candidate_digest=digest)
+            with self.assertRaisesRegex(ValueError, 'digest mismatch'):
+                load_native_block(path, base, 2, checkpoint_digest='source', base_digest='base',
+                                  candidate_digest='other')
+
     class Cache:
         def __init__(self):
             self.values = {}

@@ -38,7 +38,7 @@ from spora.online_time import OnlineSession, OnlineState
 from spora.research_continuous_observation import (
     ADDRESSES, ELLIPTICAL_QUERY, can_register, inherited_query_subject, parse_observation, query_subject, split_history_query,
 )
-from spora.structure_transfer import SPORALayerReplacement
+from spora.structure_transfer import SPORALayerReplacement, load_native_block
 from spora.working_checkpoint_lock import lock_working_checkpoint
 from spora.world_time import TimeWorld
 
@@ -738,11 +738,14 @@ def main():
     parser.add_argument('--position-table', action='store_true', help='Use the SPORA position table initialized from the pretrained model')
     parser.add_argument('--absolute-attention', type=Path, help='Load a verified SPORA attention candidate for layer 18')
     parser.add_argument('--layer18-layernorm', type=Path, help='Load the fitted LayerNorm pair for layer 18')
+    parser.add_argument('--layer18-native', type=Path, help='Load a verified complete SPORA block for layer 18')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
     parser.add_argument('--json', action='store_true', help='Include routing and read diagnostics')
     args = parser.parse_args()
+    if args.layer18_native is not None and (args.absolute_attention is not None or args.layer18_layernorm is not None):
+        parser.error('--layer18-native already includes attention and normalization')
     if args.expand and args.register is None:
         parser.error('--expand requires --register')
     replay_budget = args.repair_replay if args.repair_replay is not None else args.verify_replay
@@ -810,6 +813,15 @@ def main():
             print(json.dumps(dict(action='preview', entity=entity, field=field, value=value), ensure_ascii=False))
             return
     chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router, use_retrained_gate=args.retrained_gate)
+    if args.layer18_native is not None:
+        path = args.layer18_native.resolve()
+        digest = read(path.parent / 'result.json')['candidate_sha256']
+        base = chat.decoder.base
+        block = load_native_block(path, base, 18, checkpoint_digest=chat.awake_individual['source_sha256'],
+                                  base_digest=chat.awake_individual['model_sha256'], candidate_digest=digest)
+        base.model.layers[18] = block
+        chat.position_limit = min(chat.position_limit, block.max_length)
+        chat.awake_individual['layer18_native_sha256'] = digest
     if args.absolute_attention is not None:
         from spora.pretrained_attention import load_absolute_attention
 

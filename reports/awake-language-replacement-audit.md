@@ -268,3 +268,22 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 .venv/Scripts/python.exe scripts/audit_awake_gelu_initialization.py --start runs/awake-gelu-replay-paired-v1/memory_replay.pt --ceval runs/ceval-validation-617524a --output runs/awake-gelu-projection-v1
 .venv/Scripts/python.exe scripts/train_awake_feedforward_replay.py --verify --start runs/awake-gelu-projection-v1/projected_gelu.pt --ceval runs/ceval-validation-617524a --output runs/awake-gelu-projection-reload-v1
 ```
+
+## 第 18 层完整迁入孢子解码块
+
+用已拟合的绝对位置注意力、两处 LayerNorm 及 GELU 前馈初始化标准 `SPORALayerReplacement`。标准块在归一化前加入位置向量，并让该向量随残差传递。对照方案把同一组参数放入原有解码层接口，位置向量只进入注意力投影。整块校正使用 81 段普通文本及 24 个读入记忆的查询，训练 64 步，仅更新位置向量、归一化和注意力输出偏置。8 段留出文本上的相对残差误差从 0.506 降到 0.499。
+
+| 第 18 层配置 | C-Eval | 短对话严格正确 | 自然结束 | 固定状态读取 | 同题换值 |
+|---|---:|---:|---:|---:|---:|
+| 原预训练层 | 17/57 | 0/16 | 14/16 | 7/8 | 7/8 |
+| 三个组件拼合 | 14/57 | 1/16 | 16/16 | 7/8 | 7/8 |
+| 标准孢子块 | 14/57 | 1/16 | 16/16 | 7/8 | 7/8 |
+| 标准块校正后 | 14/57 | 1/16 | 16/16 | 7/8 | 7/8 |
+
+各组共用 256 词元位置上限，因长度排除 3 道 C-Eval 题。读取与换值使用受控人物和版本。校正版从磁盘重载后逐项输出一致。实机测试一度将「你好」路由为身份查询。排除纯问候触发身份读取后，「你好」进入普通生成，「你叫什么名字」仍读回「孢子」。独立个体验证了新事实写入、同人物追问、历史值、超长提示和睡眠核对。第二个进程读回姓名和新旧值，数据库摘要一致。
+
+相关结构、清醒及集成测试合计 50 项通过。评测约 255 秒，峰值显存 4.01 GB。权重和逐题结果位于 `runs/awake-native-block-v2/`，实机输出位于 `runs/native-block-chat-v3/`。此版本保留为可选候选，普通中文仍需进一步验证。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_native_block.py --ceval runs/ceval-validation-617524a --output runs/awake-native-block-v2
+```

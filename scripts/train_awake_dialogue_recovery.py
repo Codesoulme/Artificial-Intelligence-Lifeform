@@ -60,11 +60,12 @@ def memory_targets(decoder, tokenizer, organism):
 
 
 @torch.no_grad()
-def evaluate(decoder, tokenizer, memory, questions):
-    turns = [conversation(decoder, tokenizer, case, LIMIT, decoding=dict(limit=48)) for case in CASES]
+def evaluate(decoder, tokenizer, memory, questions, *, position_limit=None):
+    model_limit = min(layer.max_length for layer in decoder.base.model.layers if hasattr(layer, 'max_length'))
+    limit = model_limit if position_limit is None else min(model_limit, position_limit)
+    turns = [conversation(decoder, tokenizer, case, min(LIMIT, limit), decoding=dict(limit=48)) for case in CASES]
     recalled = score_memory(decoder, tokenizer, memory)
-    choices = score_ceval(decoder, questions, min(layer.max_length for layer in decoder.base.model.layers
-                                                 if hasattr(layer, 'max_length')))
+    choices = score_ceval(decoder, questions, limit)
     summary = dict(ceval=sum(row['choice'] == row['expected'] for row in choices),
                    ceval_total=sum(row['choice'] is not None for row in choices),
                    dialogue_correct=sum(row['correct'] for group in turns for row in group),

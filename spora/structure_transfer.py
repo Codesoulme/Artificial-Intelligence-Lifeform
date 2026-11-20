@@ -1,4 +1,7 @@
 """SPORA-native causal block for layer-by-layer teacher distillation."""
+from hashlib import sha256
+from io import BytesIO
+
 import torch
 from torch import nn
 
@@ -151,6 +154,29 @@ class SPORALayerReplacement(nn.Module):
         values = values + self.block.out(attended)
         values = values + self.block.ff(self.block.norm2(values))
         return values.to(device=hidden_states.device, dtype=hidden_states.dtype)
+
+
+def load_native_block(path, base, index, *, checkpoint_digest, base_digest, candidate_digest):
+    """Load a complete replacement bound to the exact integrated checkpoint."""
+    raw = path.read_bytes()
+    if sha256(raw).hexdigest() != candidate_digest:
+        raise ValueError('Native decoder block digest mismatch')
+    payload = torch.load(BytesIO(raw), map_location='cpu', weights_only=True)
+    metadata = payload['metadata']
+    length = metadata['max_length']
+    if (metadata['format'] != 'spora-qwen-layer-replacement-candidate-v1'
+            or metadata['base_weight_sha256'] != base_digest or metadata['source_sha256'] != checkpoint_digest
+            or metadata['layer'] != index or metadata['width'] != base.config.hidden_size
+            or metadata['heads'] != base.config.num_attention_heads
+            or type(length) is not int or not 0 < length <= base.config.max_position_embeddings):
+        raise ValueError('Native decoder block provenance mismatch')
+    state = payload['state']
+    if any(not isinstance(tensor, torch.Tensor) or not tensor.is_floating_point()
+           or not bool(torch.isfinite(tensor).all()) for tensor in state.values()):
+        raise ValueError('Native decoder block requires finite floating-point tensors')
+    candidate = SPORALayerReplacement(metadata['width'], metadata['heads'], length, index)
+    candidate.load_state_dict(state, strict=True)
+    return candidate.to(base.lm_head.weight.device).requires_grad_(False).eval()
 
 
 class SPORALayerBlend(nn.Module):
