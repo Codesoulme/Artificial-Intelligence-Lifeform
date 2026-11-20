@@ -1,4 +1,4 @@
-"""Fit a native block with the existing migrated layers frozen."""
+"""Fit or compare native blocks with the existing migrated layers frozen."""
 
 import argparse
 import math
@@ -54,8 +54,10 @@ def main(args):
     if args.layer24 is not None:
         fixed[24] = args.layer24
     paths = (SOURCE, MODEL / 'model.safetensors', MODEL / 'tokenizer.json', MODEL / 'tokenizer_config.json',
-             *fixed.values(), CORPUS, *TRAIN_FILES,
+             *fixed.values(), *args.compare_candidates,
              *(args.ceval / f'{subject}.parquet' for subject in args.subjects))
+    if not args.compare_candidates:
+        paths = (*paths, CORPUS, *TRAIN_FILES)
     protected = {path: sha(path) for path in paths}
     provenance = dict(checkpoint_digest=protected[SOURCE], base_digest=protected[MODEL / 'model.safetensors'])
     started = time.perf_counter()
@@ -89,6 +91,34 @@ def main(args):
         print(name, summary, flush=True)
 
     score('four_blocks' if args.layer24 is not None else 'three_blocks')
+    if args.compare_candidates:
+        candidates = {}
+        fixed_digests = {str(index): protected[path] for index, path in fixed.items()}
+        for path in args.compare_candidates:
+            report = read(path.parent / 'result.json')
+            index = report['layer']
+            if index not in (9, 21) or index in candidates or report['fixed_layers'] != fixed_digests:
+                raise ValueError('Expected distinct fifth blocks trained on the selected four-block backbone')
+            candidate = load_native_block(path, decoder.base, index, candidate_digest=report['candidate_sha256'],
+                                          **provenance)
+            if candidate.max_length < limit:
+                raise ValueError('Candidate does not cover the baseline position range')
+            original = layers[index]
+            layers[index] = candidate
+            try:
+                score(f'layer_{index}')
+            finally:
+                layers[index] = original
+            candidates[index] = protected[path]
+            del candidate
+        if any(sha(path) != digest for path, digest in protected.items()):
+            raise ValueError('A protected input changed')
+        write(args.output / 'result.json', dict(results=results, candidates=candidates,
+                                                fixed_layers=fixed_digests, subjects=args.subjects,
+                                                position_limit=limit, seconds=time.perf_counter() - started,
+                                                peak_gpu_bytes=torch.cuda.max_memory_allocated(),
+                                                sources={str(path): digest for path, digest in protected.items()}))
+        return
     teacher = layers[args.layer]
     texts = corpus()
     requests = [(tokenizer.encode(text, add_special_tokens=False)[:192], {}) for text in texts]
@@ -184,7 +214,9 @@ if __name__ == '__main__':
     parser.add_argument('--layer12', type=Path, required=True)
     parser.add_argument('--layer18', type=Path, required=True)
     parser.add_argument('--layer24', type=Path, help='Freeze the verified native block at layer 24')
-    parser.add_argument('--layer', type=int, choices=(9, INDEX), default=INDEX)
+    parser.add_argument('--layer', type=int, choices=(9, 21, INDEX), default=INDEX)
+    parser.add_argument('--compare-candidates', type=Path, nargs='+', default=(),
+                        help='Score frozen fifth-block checkpoints independently of each other')
     parser.add_argument('--ceval', type=Path, required=True)
     parser.add_argument('--subjects', nargs='+', default=SUBJECTS)
     parser.add_argument('--output', type=Path, required=True)
@@ -209,7 +241,10 @@ if __name__ == '__main__':
         parser.error('Reference weight must be finite and nonnegative')
     if args.student_rollout_tokens < 0 or (args.student_rollout_tokens and args.reference_weight):
         parser.error('Student continuations require a positive token cap and --reference-weight 0')
-    if (args.layer == 9) != (args.layer24 is not None):
-        parser.error('Layer 9 requires --layer24, which is the training target in the default mode')
+    if args.compare_candidates:
+        if args.layer24 is None:
+            parser.error('--compare-candidates requires --layer24')
+    elif (args.layer != INDEX) != (args.layer24 is not None):
+        parser.error('Layers 9 and 21 require --layer24. Layer 24 is the training target in the default mode.')
     args.output.mkdir()
     main(args)

@@ -575,3 +575,22 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 ```powershell
 .venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 9 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --attention-steps 64 --feedforward-steps 192 --output runs/awake-layer9-feedforward-fit-v1
 ```
+
+## 第 21 层第五块实验
+
+固定第 6、12、18、24 层，将第 21 层替换为完整孢子块。训练设置与第 9 层教师分布对照一致，包括 64 步局部对齐、96 步整网对齐和原记忆损失。局部对齐在八段留出文本上的残差相对平方误差为 0.24724，同流程的第 9 层为 0.68197。第 21 层局部对齐后在 69 道题上答对 15 道，整网对齐修复了一项受控换值，同时少答对一道选择题。
+
+| 配置 | 化学、政治和教育学 | 生物、地理和历史 | 严格短答 | 已有及新人物地址换值 |
+|---|---:|---:|---:|---:|
+| 四层起点 | 16/69 | 16/51 | 0/16 | 12/12、12/12 |
+| 第五块放在第 9 层 | 14/69 | 16/51 | 0/16 | 12/12、12/12 |
+| 第五块放在第 21 层 | 14/69 | 19/51 | 0/16 | 12/12、12/12 |
+
+51 道题曾用于第 24 层实验，首次用于比较这两个冻结的第五块。两次运行复用同一批短答和受控记忆用例。第 21 层使用约 277 秒，峰值显存约 3.99 GiB，权重重载后逐题结果一致。冻结权重复验约 132 秒，峰值显存约 3.56 GiB。输入摘要通过核对。训练及复验记录位于 `runs/awake-layer21-fifth-block-v1/` 和 `runs/awake-fifth-layer-position-held-v1/`。
+
+第 21 层候选通过本机问候、名字、两次写入、同人物追问、历史读取、睡眠核对和独立进程重启。重启前后数据库摘要一致。记录见 `runs/native-layer21-fifth-block-chat-v1/`。本机提供五层可选入口，严格短答仍未验证出改善。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer 21 --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer9-holdout-617524a --subjects high_school_chemistry middle_school_politics education_science --reference-weight 0 --output runs/awake-layer21-fifth-block-v1
+.venv/Scripts/python.exe scripts/audit_awake_fourth_block.py --layer12 runs/awake-layer12-paired-contrast-v1/layer-12.pt --layer18 runs/awake-native-block-v2/layer-18.pt --layer24 runs/awake-layer24-fourth-block-v1/layer-24.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --compare-candidates runs/awake-layer9-teacher-only-v1/layer-9.pt runs/awake-layer21-fifth-block-v1/layer-21.pt --output runs/awake-fifth-layer-position-held-v1
+```
