@@ -457,3 +457,11 @@ GPU 实验用时约 117 秒，峰值显存约 3.80 GiB，输入文件摘要通�
 .venv/Scripts/python.exe scripts/train_awake_native_outputs.py --layer 12 --start runs/awake-layer12-output-v1/layer-12.pt --fixed-layer18 runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-validation-617524a --memory-contrast-weight 0.5 --output runs/awake-layer12-paired-contrast-v1
 .venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-layer12-fresh-617524a --subjects high_school_biology middle_school_geography high_school_history --layer12-reference runs/awake-layer12-output-v1/layer-12.pt --layer12-candidate runs/awake-layer12-paired-contrast-v1/layer-12.pt --combine-at-18 --fresh-memory --output runs/awake-layer12-paired-contrast-fresh-v1.json
 ```
+
+## 迁移后的历史记录读取
+
+在同一进程切换第 12 层权重，使用同一个数据库和历史问句。起始权重在生成开头的第 5 个词元后触发读入，概率为 0.992。成对训练权重在生成开头的最高读入概率为 0.406，低于 0.65 的阈值。直接用已有的记忆解码器处理同一个归档张量时，两组都生成了正确的旧值及结束符。
+
+已定位到人物、字段和归档版本的历史查询，在原读入时机未触发时尝试一次直接解码。生成结果必须逐词元匹配归档张量读数并正常结束。回归测试覆盖更正前读取、按时间读取、错误值、未结束输出、缺少归档和现值读取。
+
+独立 SQLite 个体用成对训练候选通过两次写入、现值、同人物追问、旧值、睡眠核对和重启读回。旧值是「蜜桃乌龙茶」，现值是「米香玄米茶」。重启读取未改变数据库摘要。实机记录位于 `runs/native-layer12-archived-read-v1/`。按时间读取由自动测试覆盖。此次更改作用于历史记录的回答路径，成对训练权重及中文评测成绩沿用上节。

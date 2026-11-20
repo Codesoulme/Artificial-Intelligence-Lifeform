@@ -563,6 +563,13 @@ class ContinuousMemoryChat:
                                                       self.columns, self.timing, 2 * bias,
                                                       max_new_tokens=min(32, self.position_limit - len(features[3])),
                                                       timing_threshold=timing_threshold)
+                if start is None and (back or as_of is not None):
+                    ids = torch.tensor([features[3]], device=bias.device)
+                    available = self.position_limit - len(features[3])
+                    archived_tokens = generate_memory_suffix(self.decoder, self.tokenizer, ids, 2 * bias,
+                                                             min(SLOTS, available))
+                    if matches_memory_suffix(archived_tokens, bias, self.tokenizer.eos_token_id):
+                        tokens, start = archived_tokens, 0
                 if start is None:
                     action, reason, response = 'clarify', 'injection_not_triggered', CLARIFY
                 else:
