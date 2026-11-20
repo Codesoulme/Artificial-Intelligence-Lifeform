@@ -738,6 +738,7 @@ def main():
     parser.add_argument('--position-table', action='store_true', help='Use the SPORA position table initialized from the pretrained model')
     parser.add_argument('--absolute-attention', type=Path, help='Load a verified SPORA attention candidate for layer 18')
     parser.add_argument('--layer18-layernorm', type=Path, help='Load the fitted LayerNorm pair for layer 18')
+    parser.add_argument('--layer12-native', type=Path, help='Load a calibrated complete SPORA block for layer 12')
     parser.add_argument('--layer18-native', type=Path, help='Load a verified complete SPORA block for layer 18')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
@@ -813,15 +814,17 @@ def main():
             print(json.dumps(dict(action='preview', entity=entity, field=field, value=value), ensure_ascii=False))
             return
     chat = load_chat(args.memory_file, use_inherited_router=args.inherited_router, use_retrained_gate=args.retrained_gate)
-    if args.layer18_native is not None:
-        path = args.layer18_native.resolve()
+    for index, candidate in ((12, args.layer12_native), (18, args.layer18_native)):
+        if candidate is None:
+            continue
+        path = candidate.resolve()
         digest = read(path.parent / 'result.json')['candidate_sha256']
         base = chat.decoder.base
-        block = load_native_block(path, base, 18, checkpoint_digest=chat.awake_individual['source_sha256'],
+        block = load_native_block(path, base, index, checkpoint_digest=chat.awake_individual['source_sha256'],
                                   base_digest=chat.awake_individual['model_sha256'], candidate_digest=digest)
-        base.model.layers[18] = block
+        base.model.layers[index] = block
         chat.position_limit = min(chat.position_limit, block.max_length)
-        chat.awake_individual['layer18_native_sha256'] = digest
+        chat.awake_individual[f'layer{index}_native_sha256'] = digest
     if args.absolute_attention is not None:
         from spora.pretrained_attention import load_absolute_attention
 

@@ -57,20 +57,30 @@ def train(decoder, block, language, memory, steps):
     return losses, sum(parameter.numel() for parameter in parameters)
 
 
-def main(output, start, ceval, steps):
+def main(output, start, ceval, steps, index):
     paths = (SOURCE, MODEL / 'model.safetensors', MODEL / 'tokenizer.json', MODEL / 'tokenizer_config.json',
-             start, CORPUS, *(ceval / f'{subject}.parquet' for subject in CEVAL_SUBJECTS))
+             CORPUS, *(ceval / f'{subject}.parquet' for subject in CEVAL_SUBJECTS))
+    if start is not None:
+        paths = (*paths, start)
     protected = {path: sha(path) for path in paths}
     base_digest = protected[MODEL / 'model.safetensors']
     source_digest = protected[SOURCE]
-    if protected[start] != read(start.parent / 'result.json')['candidate_sha256']:
+    if start is not None and protected[start] != read(start.parent / 'result.json')['candidate_sha256']:
         raise ValueError('Unexpected starting checkpoint digest')
     started = time.perf_counter()
-    decoder, tokenizer, _, _, organism, _ = load_layer_pair()
+    decoder, tokenizer, originals, replacements, organism, _ = load_layer_pair()
     base = decoder.base
     layers = base.model.layers
-    block = load_native_block(start, base, INDEX, checkpoint_digest=source_digest, base_digest=base_digest,
-                              candidate_digest=protected[start])
+    if start is None:
+        if index not in replacements:
+            raise ValueError(f'No integrated replacement at layer {index}')
+        block = replacements[index]
+        memory = paired_targets(decoder, tokenizer, organism)
+        layers[index] = originals[index]
+    else:
+        block = load_native_block(start, base, index, checkpoint_digest=source_digest, base_digest=base_digest,
+                                  candidate_digest=protected[start])
+        memory = paired_targets(decoder, tokenizer, organism)
     questions = list(ceval_questions(ceval, tokenizer))
     _, held_memory = history_cases(organism)
     changed = [(key, name, (earlier + 2) % 8, (current + 2) % 8) for key, name, earlier, current in HISTORY]
@@ -83,26 +93,27 @@ def main(output, start, ceval, steps):
         print(name, row['summary'], flush=True)
 
     language = cache_language_targets(decoder, dialogue_cases(tokenizer)[::2])
-    memory = paired_targets(decoder, tokenizer, organism)
     print(f'Captured {len(language)} dialogue targets and {len(memory)} memory targets', flush=True)
-    layers[INDEX] = block
+    layers[index] = block
     score('before')
     losses, trained_parameters = train(decoder, block, language, memory, steps)
     score('after')
     if any(sha(path) != digest for path, digest in protected.items()):
         raise ValueError('A protected source changed during training')
-    path = output / f'layer-{INDEX}.pt'
-    metadata = dict(format='spora-qwen-layer-replacement-candidate-v1', layer=INDEX, width=block.width,
+    path = output / f'layer-{index}.pt'
+    metadata = dict(format='spora-qwen-layer-replacement-candidate-v1', layer=index, width=block.width,
                     heads=block.block.heads, max_length=block.max_length,
                     base_weight_sha256=base_digest, source_sha256=source_digest)
     atomic_save(dict(metadata=metadata, state={key: value.cpu() for key, value in block.state_dict().items()}), path)
     digest = sha(path)
-    layers[INDEX] = load_native_block(path, base, INDEX, checkpoint_digest=source_digest, base_digest=base_digest,
+    layers[index] = load_native_block(path, base, index, checkpoint_digest=source_digest, base_digest=base_digest,
                                      candidate_digest=digest)
     score('reloaded')
     if results['after'] != results['reloaded']:
         raise ValueError('The reloaded decoder block changed evaluation results')
-    write(output / 'result.json', dict(results=results, steps=steps, losses=losses, trained_parameters=trained_parameters,
+    write(output / 'result.json', dict(results=results, layer=index, steps=steps, losses=losses,
+                                     memory_teacher='integrated' if start is None else 'pretrained_at_target_layer',
+                                     trained_parameters=trained_parameters,
                                      dialogue_sequences=len(language), memory_sequences=len(memory),
                                      candidate_sha256=digest, seconds=time.perf_counter()-started,
                                      peak_gpu_bytes=torch.cuda.max_memory_allocated(),
@@ -111,12 +122,15 @@ def main(output, start, ceval, steps):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--start', type=Path, required=True)
+    parser.add_argument('--start', type=Path, help='Start from an external block checkpoint')
+    parser.add_argument('--layer', type=int, choices=(6, 12, 18), default=INDEX)
     parser.add_argument('--ceval', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--steps', type=int, default=96)
     args = parser.parse_args()
     if args.steps < 1:
         parser.error('Expected at least one update')
+    if args.start is None and args.layer == INDEX:
+        parser.error('Layer 18 requires --start')
     args.output.mkdir()
-    main(args.output, args.start, args.ceval, args.steps)
+    main(args.output, args.start, args.ceval, args.steps, args.layer)

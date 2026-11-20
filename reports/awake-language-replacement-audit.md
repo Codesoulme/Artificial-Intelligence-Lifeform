@@ -345,3 +345,22 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 .venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-interpolation-v1/layer-18.pt --ceval runs/ceval-native-transfer-617524a --unmodified-control --output runs/awake-native-holdout-unmodified-v1.json
 .venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-interpolation-v1/layer-18.pt --ceval runs/ceval-native-transfer-617524a --single-layer-controls --output runs/awake-native-holdout-single-layers-v1.json
 ```
+
+## 第 12 层校正与三层组合验证
+
+从检查点中的完整第 12 层孢子块出发，固定第 6 层。83 个对话目标使用原始第 12 层的预测分布与自编参考答案，48 个受控现值和旧值目标使用双层孢子版的分布和明确值。更新位置表、两处归一化及两个输出投影，共 12,985,344 个参数。训练 96 步，重载后逐题结果一致。训练和复验约 213 秒，峰值显存 4.15 GB。
+
+| 对照 | C-Eval 起点与校正后 | 短答严格正确 | 自然结束 | 同题换值 |
+|---|---:|---:|---:|---:|
+| 开发题，第 6、12 层 | 18/60 → 16/60 | 0/16 → 4/16 | 14/16 → 15/16 | 7/8 → 7/8 |
+| 四科独立题，第 6、12 层 | 17/83 → 20/83 | 0/16 → 0/16 | 16/16 → 16/16 | 11/12 → 11/12 |
+| 同一四科题，第 6、12、18 层 | 17/83 → 21/83 | 0/16 → 0/16 | 15/16 → 16/16 | 11/12 → 11/12 |
+
+两组独立题的固定状态读取均保持 12/12。三层对照使用完整的原孢子第 18 层候选，所有输入共用 256 词元上限。三层评测首次运行在返回结果前退出，终端没有异常信息，故障原因未确认。重跑得到完整结果。开发集公开题退化，独立短答仍未改善，校正版权重保留为可选试验。逐题结果见 `runs/awake-layer12-output-v1/result.json`、`runs/awake-layer12-output-holdout-v1.json` 和 `runs/awake-layer12-output-combined-retry-v1.json`。
+
+两个独立聊天进程使用校正后的第 12 层与完整第 18 层，验证了问候、名称、记忆写入、同人物追问、旧值查询和睡眠核对。重启后再次读回名称和新旧值，数据库摘要一致。实机记录位于 `runs/native-layer12-calibrated-chat-v1/`。
+
+```powershell
+.venv/Scripts/python.exe scripts/train_awake_native_outputs.py --layer 12 --ceval runs/ceval-validation-617524a --output runs/awake-layer12-output-v1
+.venv/Scripts/python.exe scripts/audit_awake_native_holdout.py --native runs/awake-native-block-v2/layer-18.pt --candidate runs/awake-native-block-v2/layer-18.pt --ceval runs/ceval-native-transfer-617524a --layer12-candidate runs/awake-layer12-output-v1/layer-12.pt --combine-at-18 --output runs/awake-layer12-output-combined-reproduction.json
+```

@@ -35,10 +35,13 @@ MEMORY = ((17, '时雨', 1, 6), (18, '徐岩', 2, 5), (19, '关晓', 7, 0),
           (20, '尹宁', 4, 3), (21, '叶川', 6, 1), (22, '白雁', 5, 2))
 
 
-def main(output, native_path, candidate_path, ceval, unmodified_control, single_layer_controls):
+def main(output, native_path, candidate_path, ceval, unmodified_control, single_layer_controls, layer12_candidate,
+         combine_at_18=False):
     base_weights = MODEL / 'model.safetensors'
     paths = (SOURCE, base_weights, MODEL / 'tokenizer.json', MODEL / 'tokenizer_config.json',
              native_path, candidate_path, *(ceval / f'{subject}.parquet' for subject in SUBJECTS))
+    if layer12_candidate is not None:
+        paths = (*paths, layer12_candidate)
     sources = {path: sha(path) for path in paths}
     started = time.perf_counter()
     decoder, tokenizer, original_layers, replacements, organism, _ = load_layer_pair()
@@ -56,12 +59,21 @@ def main(output, native_path, candidate_path, ceval, unmodified_control, single_
     conditions = {'unmodified': variants['pretrained_at_18']} if unmodified_control else variants
     if single_layer_controls:
         conditions = {f'native_at_{index}': variants['pretrained_at_18'] for index in replacements}
+    if layer12_candidate is not None:
+        digest = read(layer12_candidate.parent / 'result.json')['candidate_sha256']
+        calibrated = load_native_block(layer12_candidate, base, 12, checkpoint_digest=sources[SOURCE],
+                                       base_digest=sources[base_weights], candidate_digest=digest)
+        limit = min(limit, calibrated.max_length)
+        layer18 = variants['native' if combine_at_18 else 'pretrained_at_18']
+        conditions = {name: layer18 for name in ('baseline_at_12', 'calibrated_at_12')}
     if unmodified_control:
         switch(decoder, original_layers)
     for name, block in conditions.items():
         if single_layer_controls:
             index = int(name.rsplit('_', 1)[1])
             switch(decoder, {**original_layers, index: replacements[index]})
+        if name == 'calibrated_at_12':
+            layers[12] = calibrated
         layers[INDEX] = block
         choices = score_ceval(decoder, questions, limit)
         dialogues = [conversation(decoder, tokenizer, case, limit, decoding=dict(limit=48)) for case in CASES]
@@ -83,6 +95,7 @@ def main(output, native_path, candidate_path, ceval, unmodified_control, single_
     if any(sha(path) != digest for path, digest in sources.items()):
         raise ValueError('A protected input changed during evaluation')
     write(output, dict(results=results, position_limit=limit, dialogue_cases=len(CASES),
+                       combine_at_18=combine_at_18,
                        memory_cases=0 if unmodified_control else len(first),
                        seconds=time.perf_counter()-started, peak_gpu_bytes=torch.cuda.max_memory_allocated(),
                        sources={str(path): digest for path, digest in sources.items()}))
@@ -99,7 +112,14 @@ if __name__ == '__main__':
                           help='Score original DeepSeek on language only with the same position limit')
     controls.add_argument('--single-layer-controls', action='store_true',
                           help='Evaluate each existing replacement independently with the original layer 18')
+    controls.add_argument('--layer12-candidate', type=Path,
+                          help='Compare a calibrated layer 12 to the integrated block with layer 6 fixed')
+    parser.add_argument('--combine-at-18', action='store_true',
+                        help='Keep the complete SPORA layer 18 installed during the layer 12 comparison')
     args = parser.parse_args()
     if args.output.exists():
         parser.error('Choose an unused output path')
-    main(args.output, args.native, args.candidate, args.ceval, args.unmodified_control, args.single_layer_controls)
+    if args.combine_at_18 and args.layer12_candidate is None:
+        parser.error('--combine-at-18 requires --layer12-candidate')
+    main(args.output, args.native, args.candidate, args.ceval, args.unmodified_control, args.single_layer_controls,
+         args.layer12_candidate, args.combine_at_18)
