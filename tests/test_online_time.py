@@ -53,6 +53,21 @@ class OnlineTests(unittest.TestCase):
         self.clock.advance(2_000_000_001)
         self.assertEqual(self.session.imagine(actions, [.25, .25]), {'kind': 'needs_observation'})
 
+    def test_outcome_checks_reference_the_correct_simulation_without_mutating_observations(self):
+        self.observation()
+        simulation = self.session.imagine([[[0., 0.]]], [.25])
+        expected = simulation['states'][0][0]
+        result = self.session.compare_imagination(simulation, 1, 1, expected)
+        self.assertEqual(result['rmse'], 0.)
+        self.assertEqual(self.state.world_count, 1)
+        self.assertEqual(self.session.compare_imagination(simulation, 1, 1, [4., 0., 0.]),
+                         {'kind': 'outside_observation_domain'})
+        simulation['in_domain'][0][0] = False
+        self.assertEqual(self.session.compare_imagination(simulation, 1, 1, expected),
+                         {'kind': 'outside_prediction_domain'})
+        self.observation()
+        self.assertEqual(self.session.compare_imagination(simulation, 1, 1, expected), {'kind': 'needs_simulation'})
+
     def model_state(self):
         model = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=16,
             expert_rank=4, memory_layers=(0, 1), history_writer='rls'))

@@ -791,6 +791,8 @@ def main():
     world_digest = None
     ledger = None
     world_observation_event = None
+    last_simulation = None
+    simulation_event = None
     if args.sleep_world is not None:
         world_path = args.sleep_world.resolve()
         if world_path in (chat.working_path, args.awake_state.resolve()):
@@ -828,6 +830,18 @@ def main():
             if not question:
                 continue
             command = question.split(maxsplit=1)
+            if world_session is not None and command[0] == '/world-check':
+                try:
+                    plan, step, *values = command[1].split() if len(command) == 2 else ()
+                    comparison = world_session.compare_imagination(last_simulation, int(plan), int(step),
+                                                                    [float(value) for value in values])
+                except ValueError:
+                    comparison = dict(kind='invalid_world_outcome')
+                if comparison['kind'] == 'comparison':
+                    record_sleep_event('world.outcome_check', dict(comparison, simulation_event=simulation_event,
+                                                                  world_sha256=world_digest), 'synthetic_outcome_input')
+                print(json.dumps(dict(world_check=comparison), ensure_ascii=False), flush=True)
+                continue
             if world_session is not None and command[0] == '/world':
                 if consume_topic is not None:
                     consume_topic()
@@ -900,13 +914,16 @@ def main():
             print(json.dumps(dict(awake=status), ensure_ascii=False), flush=True)
 
         def replay_on_sleep():
+            nonlocal last_simulation, simulation_event
             result = {}
             if world_session is not None:
                 result['imagination'] = world_session.imagine([[action] * 4 for action in DEMO_WORLD_ACTIONS], [.25] * 4)
                 if result['imagination']['kind'] == 'simulation':
                     result['imagination']['actions'] = DEMO_WORLD_ACTIONS
-                    record_sleep_event('world.imagination', dict(result['imagination'], evidence_event=world_observation_event,
-                                                                  world_sha256=world_digest), 'model_simulation')
+                    last_simulation = result['imagination']
+                    simulation_event = uuid4().hex
+                    record_sleep_event('world.imagination', dict(last_simulation, evidence_event=world_observation_event,
+                                                                  world_sha256=world_digest), 'model_simulation', simulation_event)
             if args.sleep_replay is not None:
                 try:
                     result['replay'] = chat.verify_recent_memory(args.sleep_replay)

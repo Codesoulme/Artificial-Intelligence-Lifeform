@@ -121,7 +121,28 @@ class OnlineSession:
         steps = torch.as_tensor(durations, device=observed.device, dtype=observed.dtype)
         states, in_domain = self.module.imagine(observed, plans, environment, steps)
         return dict(kind='simulation', observation=state.world_count, source=state.world_source,
-                    states=states.tolist(), in_domain=in_domain.tolist())
+                    states=states.tolist(), in_domain=in_domain.tolist(), durations=steps.tolist())
+
+    def compare_imagination(self, simulation, plan, step, observed):
+        if (simulation is None or simulation['kind'] != 'simulation'
+                or simulation['observation'] != self.state.world_count):
+            return dict(kind='needs_simulation')
+        states = simulation['states']
+        if (type(plan) is not int or not 1 <= plan <= len(states) or type(step) is not int
+                or not 1 <= step <= len(states[plan - 1])):
+            raise ValueError('Plan and step must select an imagined state')
+        target = torch.as_tensor(observed, dtype=torch.float32)
+        if target.shape != (3,) or not bool(torch.isfinite(target).all()):
+            raise ValueError('Outcome must contain three finite values')
+        if not simulation['in_domain'][plan - 1][step - 1]:
+            return dict(kind='outside_prediction_domain')
+        if bool((target.abs() > target.new_tensor([3., 2., 2.])).any()):
+            return dict(kind='outside_observation_domain')
+        prediction = target.new_tensor(states[plan - 1][step - 1])
+        error = prediction - target
+        return dict(kind='comparison', observation=simulation['observation'], plan=plan, step=step,
+                    elapsed_seconds=sum(simulation['durations'][:step]), predicted=prediction.tolist(),
+                    observed=target.tolist(), absolute_error=error.abs().tolist(), rmse=float(error.square().mean().sqrt()))
 
     def pulse(self, source):
         if source not in ('synthetic', 'sensor'):
