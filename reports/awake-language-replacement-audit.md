@@ -209,3 +209,22 @@ MOHAWK 分别对齐序列混合、块输出和模型预测，先从计算差异�
 .venv/Scripts/python.exe scripts/train_awake_dialogue_recovery.py --teacher-weight 2 --ceval runs/ceval-validation-617524a --output runs/awake-dialogue-recovery-v2
 .venv/Scripts/python.exe scripts/audit_awake_replacement_memory.py runs/awake-dialogue-recovery-v2/delta.pt --profile runs/spora-awake-local --ordinary-head runs/deepseek-awake-ordinary-intent.pt --output runs/awake-dialogue-recovery-v2-runtime.json
 ```
+
+## 第 18 层的归一化与前馈迁移
+
+固定现行第 6、12 层和第 18 层的预训练注意力，依次替换第 18 层的两个归一化模块与前馈网络。用 81 段项目教材的激活拟合，在另外 8 段留出文本报告局部误差。LayerNorm 逐通道拟合缩放与偏置，两个位置的留出相对平方误差分别为 0.00097 和 0.00108。GELU 前馈复用旧第 18 层孢子实验的初始化，训练 256 步后，同一指标从 1.023 降到 0.609。
+
+| 第 18 层配置 | C-Eval | 两轮短对话严格正确 | 自然结束 | 受控记忆 |
+|---|---:|---:|---:|---:|
+| 原预训练配置 | 18/60 | 0/16 | 14/16 | 7/8 |
+| 仅注意力前换 LayerNorm | 17/60 | 0/16 | 14/16 | 7/8 |
+| 仅前馈前换 LayerNorm | 19/60 | 0/16 | 14/16 | 7/8 |
+| 两处 LayerNorm | 19/60 | 0/16 | 14/16 | 7/8 |
+| 仅 GELU 前馈 | 15/60 | 0/16 | 13/16 | 0/8 |
+| 两处 LayerNorm 与 GELU 前馈 | 15/60 | 0/16 | 13/16 | 0/8 |
+
+公开题使用同一批题及解码规则。短对话每轮最多 48 词元。记忆实验直接指定地址和版本，统计八项现值与旧值中，答案包含预期值的项数。GELU 的局部拟合改善未转化为整网记忆保持。两处 LayerNorm 作为可选分支接入实机，与合并投影和位置参数表共同跑通了个体名称、写入、追问、旧值与睡眠核对。独立进程重载后读出同一个名称、新旧饮品值，数据库摘要一致。18 项集成测试通过。此轮耗时约 376 秒，峰值显存约 4.19 GB。逐题结果在 `runs/awake-block-components-v1/result.json`。
+
+```powershell
+.venv/Scripts/python.exe scripts/audit_awake_block_components.py --ceval runs/ceval-validation-617524a --output runs/awake-block-components-v1
+```

@@ -147,3 +147,26 @@ def load_absolute_attention(path, source, expected_source_sha256, expected_candi
     candidate = AbsoluteAttention(source, max_position).to(source.q_proj.weight.dtype).requires_grad_(False).eval()
     candidate.load_state_dict(state, strict=True)
     return candidate
+
+
+def load_layer_norms(path, layer, expected_source_sha256, expected_candidate_sha256):
+    from hashlib import sha256
+    from io import BytesIO
+
+    raw = path.read_bytes()
+    if sha256(raw).hexdigest() != expected_candidate_sha256:
+        raise ValueError('LayerNorm candidate digest mismatch')
+    payload = torch.load(BytesIO(raw), map_location='cpu', weights_only=True)
+    if payload['source_sha256'] != expected_source_sha256 or payload['layer'] != layer.self_attn.layer_idx:
+        raise ValueError('LayerNorm candidate belongs to a different layer or base checkpoint')
+    modules = []
+    for key, reference in (('pre_attention', layer.input_layernorm),
+                           ('pre_feedforward', layer.post_attention_layernorm)):
+        state = payload[key]
+        if any(not isinstance(value, torch.Tensor) or not bool(torch.isfinite(value).all())
+               for value in state.values()):
+            raise ValueError('LayerNorm candidate requires finite parameter tensors')
+        norm = nn.LayerNorm(reference.weight.numel()).to(reference.weight)
+        norm.load_state_dict(state, strict=True)
+        modules.append(norm.requires_grad_(False).eval())
+    return tuple(modules)

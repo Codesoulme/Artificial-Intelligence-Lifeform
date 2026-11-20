@@ -737,6 +737,7 @@ def main():
     parser.add_argument('--migrate-backbone', action='store_true', help='Use fused SPORA blocks for the remaining Qwen2 layers')
     parser.add_argument('--position-table', action='store_true', help='Use the SPORA position table initialized from the pretrained model')
     parser.add_argument('--absolute-attention', type=Path, help='Load a verified SPORA attention candidate for layer 18')
+    parser.add_argument('--layer18-layernorm', type=Path, help='Load the fitted LayerNorm pair for layer 18')
     parser.add_argument('--inherited-router', action='store_true', help='Use the experimental previous-turn field classifier')
     parser.add_argument('--retrained-gate', action='store_true', help='Use the retrained inheritance decision')
     parser.add_argument('--earlier-readout', action='store_true', help='Use the experimental earlier memory handoff')
@@ -819,6 +820,16 @@ def main():
         layer.self_attn = load_absolute_attention(path, source, chat.awake_individual['source_sha256'], digest)
         chat.position_limit = min(chat.position_limit, layer.self_attn.max_position)
         chat.awake_individual['absolute_attention_sha256'] = digest
+    if args.layer18_layernorm is not None:
+        from spora.pretrained_attention import load_layer_norms
+
+        path = args.layer18_layernorm.resolve()
+        digest = read(path.parent / 'result.json')['candidate_sha256']
+        layer = chat.decoder.base.model.layers[18]
+        layer.input_layernorm, layer.post_attention_layernorm = load_layer_norms(
+            path, layer, chat.awake_individual['source_sha256'], digest,
+        )
+        chat.awake_individual['layer18_layernorm_sha256'] = digest
     if args.migrate_backbone:
         migrated = chat.decoder.migrate_pretrained_blocks()
         print(f'Migrated {len(migrated)} pretrained blocks to fused SPORA projections.', file=sys.stderr, flush=True)
