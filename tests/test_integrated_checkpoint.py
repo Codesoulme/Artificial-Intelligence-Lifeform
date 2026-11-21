@@ -136,6 +136,43 @@ class IntegratedCheckpointTests(unittest.TestCase):
         actual = model(x, memory_state=state, memory_addresses=addresses, current_only=True)
         self.assertTrue(torch.equal(actual, expected))
 
+    @torch.no_grad()
+    def test_gelu_gate_checkpoint_restores_memory_and_plain_layers(self):
+        try:
+            from transformers import Qwen2Config, Qwen2ForCausalLM
+        except ModuleNotFoundError as error:
+            if error.name != 'transformers':
+                raise
+            self.skipTest('Qwen2 inference dependencies are optional')
+        from spora.pretrained_attention import SPORAGeluGate
+
+        config = Qwen2Config(vocab_size=9, hidden_size=8, intermediate_size=16,
+                             num_hidden_layers=3, num_attention_heads=2, num_key_value_heads=1,
+                             max_position_embeddings=32, pad_token_id=0, eos_token_id=2)
+        config._attn_implementation = 'sdpa'
+        config.to_json_file(self.root / 'config.json')
+        del self.organism.named_address_binding
+        base = Qwen2ForCausalLM(config).eval()
+        copy = Qwen2ForCausalLM(config).eval()
+        copy.load_state_dict(base.state_dict())
+        reader = NativeSPORAMemoryReader(8, 64, .5)
+        model = IntegratedOpenBase(base, reader, (0, 2)).eval()
+        model.migrate_pretrained_blocks()
+        base.model.layers[0].layer.mlp.activation = SPORAGeluGate().eval()
+        base.model.layers[1].mlp.activation = SPORAGeluGate().eval()
+        save_integrated(self.path, self.organism, self.state, reader, self.root, (0, 2),
+                        compatible_layers=(0, 1, 2), gelu_gate_layers=(0, 1))
+
+        restored, _, state = load_integrated(self.path, copy, self.root)
+        self.assertIsInstance(copy.model.layers[0].layer.mlp.activation, SPORAGeluGate)
+        self.assertIsInstance(copy.model.layers[1].mlp.activation, SPORAGeluGate)
+        self.assertIs(type(copy.model.layers[2].layer.mlp.activation),
+                      type(base.model.layers[2].layer.mlp.activation))
+        tokens = torch.tensor([[3, 5, 6, 4]])
+        expected = model(tokens, memory_state=self.state, use_cache=False).logits
+        actual = restored(tokens, memory_state=state, use_cache=False).logits
+        torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+
     def test_output_adapter_roundtrip_is_persisted_and_attached(self):
         adapter = MemoryOutputAdapter(17, 9, rank=4, max_scale=2.)
         with torch.no_grad():

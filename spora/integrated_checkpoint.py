@@ -99,6 +99,7 @@ class IntegratedSPORARuntime:
                             output_adapter=self.decoder.output_adapter,
                             feedforward_fractions=self._feedforward_fractions(),
                             feedforward_output_layers=self._feedforward_output_layers(),
+                            gelu_gate_layers=self._gelu_gate_layers(),
                             compatible_layers=self.decoder.compatible_block_indices,
                             position_table_max_position=self.decoder.position_table_max_position,
                             position_coefficients=self._position_coefficients())
@@ -115,6 +116,7 @@ class IntegratedSPORARuntime:
                         output_adapter=self.decoder.output_adapter,
                         feedforward_fractions=self._feedforward_fractions(),
                         feedforward_output_layers=self._feedforward_output_layers(),
+                        gelu_gate_layers=self._gelu_gate_layers(),
                         compatible_layers=self.decoder.compatible_block_indices,
                         position_table_max_position=self.decoder.position_table_max_position,
                         position_coefficients=self._position_coefficients())
@@ -166,6 +168,24 @@ class IntegratedSPORARuntime:
             return None
         return self.decoder.base.model.rotary_emb.learned_coefficients()
 
+    def _gelu_gate_layers(self):
+        if not self.decoder.compatible_block_indices:
+            return []
+        from .pretrained_attention import SPORAGeluGate
+
+        return [index for index, block in _compatible_blocks(self.decoder)
+                if isinstance(block.mlp.activation, SPORAGeluGate)]
+
+
+def _compatible_blocks(decoder):
+    from .pretrained_attention import SPORAResidualBlock
+
+    layers = decoder.base.model.layers
+    for index in decoder.compatible_block_indices:
+        block = layers[index]
+        if index in decoder.layer_indices:
+            block = block.layer
+        yield index, block.base if isinstance(block, SPORAResidualBlock) else block
 
 def _file_sha256(path):
     digest = hashlib.sha256()
@@ -295,7 +315,8 @@ def _validate_base_config(directory, hidden_width, layers):
 
 def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, replacements=None,
                     residuals=None, output_adapter=None, feedforward_fractions=None, compatible_layers=None,
-                    feedforward_output_layers=(), position_table_max_position=None, position_coefficients=None):
+                    feedforward_output_layers=(), gelu_gate_layers=(), position_table_max_position=None,
+                    position_coefficients=None):
     if type(reader) not in (ScaledOpenBaseMemory, NativeSPORAMemoryReader):
         raise ValueError('Expected a supported scaled SPORA memory reader')
     if (not isinstance(layer_indices, (tuple, list)) or len(layer_indices) != 2
@@ -337,6 +358,7 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         raise ValueError('A layer cannot be both compatible and fully replaced')
     if not residual_indices <= set(compatible_layers):
         raise ValueError('Structural residuals require compatible Qwen blocks')
+    _validate_gelu_gate_layers(gelu_gate_layers, compatible_layers)
     if (position_table_max_position is not None
             and (type(position_table_max_position) is not int
                  or not 0 < position_table_max_position <= base_config.get('max_position_embeddings', 0))):
@@ -385,6 +407,8 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         metadata['residuals'] = residual_specs
     if compatible_layers:
         metadata['compatible_layers'] = list(compatible_layers)
+    if gelu_gate_layers:
+        metadata['gelu_gate_layers'] = sorted(gelu_gate_layers)
     if position_table_max_position is not None:
         metadata['position_table_max_position'] = position_table_max_position
     if position_coefficients is not None:
@@ -399,6 +423,13 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         metadata['feedforward_output_layers'] = sorted(feedforward_output_layers)
     integrity = _digest(metadata, tensors)
     atomic_save({'metadata': metadata, 'tensors': tensors, 'integrity_sha256': integrity}, path)
+
+
+def _validate_gelu_gate_layers(indices, compatible):
+    if (not isinstance(indices, (list, tuple))
+            or any(type(index) is not int or index not in compatible for index in indices)
+            or len(indices) != len(set(indices))):
+        raise ValueError('GELU activation requires unique compatible decoder layers')
 
 
 def _validate_position_coefficients(tensor, length, config):
@@ -540,6 +571,8 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         raise ValueError('A layer cannot be both compatible and fully replaced')
     if not set(loaded_residuals) <= set(compatible_layers):
         raise ValueError('Structural residuals require compatible Qwen blocks')
+    gelu_gate_layers = metadata.get('gelu_gate_layers', [])
+    _validate_gelu_gate_layers(gelu_gate_layers, compatible_layers)
     position_table_max_position = metadata.get('position_table_max_position')
     if (position_table_max_position is not None
             and (type(position_table_max_position) is not int
@@ -641,6 +674,12 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         if has_position:
             with torch.no_grad():
                 table.coefficients.weight.copy_(position_coefficients)
+        if gelu_gate_layers:
+            from .pretrained_attention import SPORAGeluGate
+
+            for index, block in _compatible_blocks(integrated):
+                if index in gelu_gate_layers:
+                    block.mlp.activation = SPORAGeluGate().eval()
     except Exception:
         for index, layer in previous.items():
             layers[index] = layer

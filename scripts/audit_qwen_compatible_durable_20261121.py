@@ -21,6 +21,7 @@ from spora.durable import TensorStore
 from spora.growing import query
 from spora.integrated_durable import create_integrated_durable, load_integrated_durable
 from spora.internal_memory import observe_sourced
+from spora.pretrained_attention import SPORAGeluGate, SPORAResidualBlock
 from transformers import AutoTokenizer
 
 
@@ -52,6 +53,14 @@ def require_metadata(runtime):
         wrapper = layers[index]
         if wrapper.feedforward_fraction != 1. or not wrapper.layer.mlp.read_memory_at_output:
             raise ValueError('A migrated reader was lost on load')
+    gelu_layers = []
+    for index, layer in enumerate(layers):
+        block = layer.layer if index in decoder.layer_indices else layer
+        if isinstance(block, SPORAResidualBlock):
+            block = block.base
+        if isinstance(block.mlp.activation, SPORAGeluGate):
+            gelu_layers.append(index)
+    return gelu_layers
 
 
 @torch.inference_mode()
@@ -85,12 +94,13 @@ def create(bootstrap, database, initial):
     database.parent.mkdir(parents=True, exist_ok=True)
     digest = sha(bootstrap)
     with create_integrated_durable(database, bootstrap, load_full_streamed(), MODEL) as runtime:
-        require_metadata(runtime)
+        gelu_layers = require_metadata(runtime)
         event = runtime.state.cursor
         decision, stats = runtime.observe_sourced(KEY, EARLIER, 'direct', 1.)
         if not decision['current_write'] or stats['revision'] != 1:
             raise ValueError('Controlled initial write did not commit')
-        data = {'bootstrap_sha256': digest, 'earlier_event': event, 'first_write': stats}
+        data = {'bootstrap_sha256': digest, 'earlier_event': event, 'first_write': stats,
+                'gelu_layers': gelu_layers}
     initial.write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
     print(data, flush=True)
 
@@ -110,7 +120,9 @@ def verify(bootstrap, database, initial, output):
             crash_revisions[stage] = revision
 
     with load_integrated_durable(database, bootstrap, load_full_streamed(), MODEL) as runtime:
-        require_metadata(runtime)
+        gelu_layers = require_metadata(runtime)
+        if gelu_layers != data.get('gelu_layers', []):
+            raise ValueError('GELU layer selection changed after restart')
         values = measure(runtime, data['earlier_event'])
     if sha(bootstrap) != data['bootstrap_sha256']:
         raise ValueError('Protected structural bootstrap changed')

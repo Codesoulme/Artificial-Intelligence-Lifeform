@@ -6,7 +6,8 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from transformers.integrations.sdpa_attention import sdpa_attention_forward
-from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer, apply_rotary_pos_emb
+from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer, Qwen2RMSNorm, apply_rotary_pos_emb
+from transformers.utils.deprecation import deprecate_kwarg
 
 from .integrated_open_base import SPORAGatedFeedForward
 
@@ -94,6 +95,29 @@ class SPORAFusedAttention(nn.Module):
         return self.out(hidden.reshape(*shape, -1).contiguous()).to(dtype), weights
 
 
+class SPORAPretrainedNorm(nn.Module):
+    """Normalize the residual stream with the pretrained RMS scale."""
+
+    def __init__(self, source):
+        super().__init__()
+        self.weight = source.weight
+        self.variance_epsilon = source.variance_epsilon
+
+    def forward(self, hidden_states):
+        values = hidden_states.float()
+        variance = values.square().mean(dim=-1, keepdim=True)
+        normalized = values * torch.rsqrt(variance + self.variance_epsilon)
+        return self.weight * normalized.to(hidden_states.dtype)
+
+
+class SPORAGeluGate(nn.Module):
+    """Match the first nonlinear term of SiLU with scaled GELU."""
+
+    def forward(self, gate):
+        scale = (2. * torch.pi) ** .5 / 4.
+        return (F.gelu(gate.float() * scale) / scale).to(gate.dtype)
+
+
 class SPORAPretrainedBlock(Qwen2DecoderLayer):
     """Fused SPORA projections with the Qwen2 inference and feature capture interface."""
 
@@ -101,12 +125,27 @@ class SPORAPretrainedBlock(Qwen2DecoderLayer):
         nn.Module.__init__(self)
         self.hidden_size = source.hidden_size
         self.attention_type = source.attention_type
-        self.input_layernorm = source.input_layernorm
+        self.input_layernorm = self._migrate_norm(source.input_layernorm)
         self.self_attn = (source.self_attn if isinstance(source.self_attn, SPORAFusedAttention)
                           else SPORAFusedAttention(source.self_attn, keep_groups=True))
-        self.post_attention_layernorm = source.post_attention_layernorm
+        self.post_attention_layernorm = self._migrate_norm(source.post_attention_layernorm)
         self.mlp = (source.mlp if isinstance(source.mlp, SPORAGatedFeedForward)
                     else SPORAGatedFeedForward(source.mlp, read_memory))
+
+    @staticmethod
+    def _migrate_norm(source):
+        return SPORAPretrainedNorm(source) if type(source) is Qwen2RMSNorm else source
+
+    @deprecate_kwarg('past_key_value', new_name='past_key_values', version='4.58')
+    def forward(self, hidden_states, attention_mask=None, position_ids=None, past_key_values=None,
+                use_cache=False, cache_position=None, position_embeddings=None, **kwargs):
+        attention, _ = self.self_attn(
+            hidden_states=self.input_layernorm(hidden_states), attention_mask=attention_mask,
+            position_ids=position_ids, past_key_values=past_key_values, use_cache=use_cache,
+            cache_position=cache_position, position_embeddings=position_embeddings, **kwargs,
+        )
+        hidden_states = hidden_states + attention
+        return hidden_states + self.mlp(self.post_attention_layernorm(hidden_states))
 
 
 class SPORAResidualBlock(nn.Module):

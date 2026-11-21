@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,7 +17,7 @@ from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.growing import grow
 from spora.integrated_checkpoint import load_integrated
 from spora.internal_memory import observe_sourced
-from spora.pretrained_attention import SPORAResidualBlock
+from spora.pretrained_attention import SPORAGeluGate, SPORAResidualBlock
 from transformers import AutoTokenizer
 
 
@@ -44,8 +45,37 @@ def memory_cases(organism, offset):
             for question, key, mode, event, value in rows]
 
 
+@contextmanager
+def silu_control(decoder, layer_index):
+    if layer_index not in decoder.compatible_block_indices:
+        raise ValueError('The SiLU control requires a compatible layer')
+    layer = decoder.base.model.layers[layer_index]
+    if layer_index in decoder.layer_indices:
+        layer = layer.layer
+    if isinstance(layer, SPORAResidualBlock):
+        layer = layer.base
+    original = layer.mlp.activation
+    if not isinstance(original, SPORAGeluGate):
+        raise ValueError('The selected layer must already use the SPORA GELU gate')
+    layer.mlp.activation = torch.nn.SiLU().eval()
+    try:
+        yield
+    finally:
+        layer.mlp.activation = original
+
+
+def score_state_pair(decoder, tokenizer, original, changed):
+    first = score_memory(decoder, tokenizer, original)
+    second = score_memory(decoder, tokenizer, changed)
+    summary = {'questions': len(first), 'answers_correct': sum(row['correct'] for row in first + second),
+               'switches_correct': sum(a['correct'] and b['correct'] and a['expected'] not in b['answer']
+                                       and b['expected'] not in a['answer']
+                                       for a, b in zip(first, second, strict=True))}
+    return {'first': first, 'second': second, 'summary': summary}
+
+
 @torch.inference_mode()
-def main(checkpoint, output):
+def main(checkpoint, output, silu_layer=None):
     if output.exists():
         raise FileExistsError(output)
     digest = sha(checkpoint)
@@ -56,28 +86,29 @@ def main(checkpoint, output):
     residuals = [block for block in decoder.modules() if isinstance(block, SPORAResidualBlock)]
     if not residuals:
         raise ValueError('Expected a residual candidate')
-    results = {}
-    for condition in ('trained', 'disabled'):
-        if condition == 'disabled':
-            for block in residuals:
-                block.up.weight.zero_()
-        first = score_memory(decoder, tokenizer, original)
-        second = score_memory(decoder, tokenizer, changed)
-        summary = {'questions': len(first), 'answers_correct': sum(row['correct'] for row in first + second),
-                   'switches_correct': sum(a['correct'] and b['correct'] and a['expected'] not in b['answer']
-                                           and b['expected'] not in a['answer']
-                                           for a, b in zip(first, second, strict=True))}
-        results[condition] = {'first': first, 'second': second, 'summary': summary}
-        print(condition, summary, flush=True)
+    results = {'trained': score_state_pair(decoder, tokenizer, original, changed)}
+    if silu_layer is not None:
+        with silu_control(decoder, silu_layer):
+            results['silu'] = score_state_pair(decoder, tokenizer, original, changed)
+    else:
+        for block in residuals:
+            block.up.weight.zero_()
+        results['disabled'] = score_state_pair(decoder, tokenizer, original, changed)
+    for condition, result in results.items():
+        print(condition, result['summary'], flush=True)
     if sha(checkpoint) != digest:
         raise ValueError('The source checkpoint changed during evaluation')
     output.parent.mkdir(parents=True, exist_ok=True)
-    write(output, {'checkpoint_sha256': digest, 'results': results})
+    report = {'checkpoint_sha256': digest, 'results': results}
+    if silu_layer is not None:
+        report['silu_control_layer'] = silu_layer
+    write(output, report)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--checkpoint', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--silu-layer', type=int, help='Restore one GELU gate to SiLU with residuals held fixed')
     args = parser.parse_args()
-    main(args.checkpoint, args.output)
+    main(args.checkpoint, args.output, args.silu_layer)
