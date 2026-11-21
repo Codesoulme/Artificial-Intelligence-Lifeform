@@ -164,27 +164,35 @@ def main(args):
     controls = compare_generation_cache(runtime, tokenizer, prompts[1])
     results = {}
     key_heads = source.sizes[1] // source.head_dim
-    variants = [(f'group_{group}', (group,)) for group in range(key_heads)]
+    variants = [(f'group_{group}', (group,), (group,)) for group in range(key_heads)]
     calibration = None
     if args.calibrate_from is not None:
         previous = json.loads(args.calibrate_from.read_text(encoding='utf-8'))
         for path in (args.checkpoint, args.attention, DATA):
             if previous['sources'].get(str(path)) != protected[path]:
                 raise ValueError(f'Calibration uses different input: {path}')
-        best, groups = min(variants, key=lambda choice: previous['results'][choice[0]]['mean_vocabulary_kl'])
+        best, groups, _ = min(variants, key=lambda choice: previous['results'][choice[0]]['mean_vocabulary_kl'])
         candidate = SplitPositionAttention(source, absolute, groups).eval().requires_grad_(False)
         calibration = calibrate(runtime, tokenizer, layer, source, candidate, args.steps)
         calibration['source_variant'] = best
-        variants = [('calibrated', groups)]
+        variants = [('calibrated', groups, groups)]
+    elif args.components:
+        if not 0 <= args.group < key_heads:
+            raise ValueError('Component experiment group is out of range')
+        selected = (args.group,)
+        variants = [('query_key_only', selected, ()), ('value_only', (), selected)]
     else:
-        variants.append(('all_groups', tuple(range(key_heads))))
+        all_groups = tuple(range(key_heads))
+        variants.append(('all_groups', all_groups, all_groups))
     try:
-        for name, groups in variants:
-            layer.self_attn = SplitPositionAttention(source, absolute, groups).eval().requires_grad_(False)
+        for name, groups, value_groups in variants:
+            layer.self_attn = SplitPositionAttention(
+                source, absolute, groups, value_groups=value_groups,
+            ).eval().requires_grad_(False)
             distributions = last_token_distributions(decoder, prompts)
             distances = F.kl_div(distributions, teacher, reduction='none', log_target=True).sum(dim=-1)
             print(name, 'vocabulary KL', float(distances.mean()), flush=True)
-            result = {'groups': groups, 'vocabulary_kl': distances.tolist(),
+            result = {'groups': groups, 'value_groups': value_groups, 'vocabulary_kl': distances.tolist(),
                       'mean_vocabulary_kl': float(distances.mean())}
             if name != 'all_groups':
                 result.update(evaluate_candidate(runtime, tokenizer, args.ceval, baseline))
@@ -217,7 +225,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('checkpoint', 'attention', 'baseline', 'reload-report', 'ceval', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
-    parser.add_argument('--calibrate-from', type=Path, help='Select a group from a completed split-position audit')
+    experiment = parser.add_mutually_exclusive_group()
+    experiment.add_argument('--calibrate-from', type=Path, help='Select a group from a completed split-position audit')
+    experiment.add_argument('--components', action='store_true', help='Isolate query/key and value for one group')
+    parser.add_argument('--group', type=int, default=0)
     parser.add_argument('--steps', type=int, default=40)
     args = parser.parse_args()
     if args.steps < 8:

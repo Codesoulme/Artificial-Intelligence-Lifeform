@@ -228,19 +228,23 @@ class AbsoluteAttention(SPORAFusedAttention):
 
 
 class SplitPositionAttention(SPORAFusedAttention):
-    """Apply absolute positions to complete KV groups in a single attention/cache."""
+    """Select query/key and value position paths in a single attention/cache."""
 
-    def __init__(self, rotary, absolute, groups):
+    def __init__(self, rotary, absolute, groups, *, value_groups=None):
         nn.Module.__init__(self)
         if (rotary.layer_idx != absolute.layer_idx or rotary.sizes != absolute.sizes
                 or rotary.num_key_value_groups != absolute.num_key_value_groups
                 or rotary.head_dim != absolute.head_dim or absolute.rotary_fraction != 0.):
             raise ValueError('Expected paired rotary and absolute attention with identical grouping')
         key_heads = rotary.sizes[1] // rotary.head_dim
-        if not isinstance(groups, (tuple, list)) or not groups or any(
-            type(group) is not int or not 0 <= group < key_heads for group in groups
-        ) or len(set(groups)) != len(groups):
-            raise ValueError('Invalid absolute-position KV groups')
+        value_groups = groups if value_groups is None else value_groups
+        for selected in (groups, value_groups):
+            if (not isinstance(selected, (tuple, list))
+                    or any(type(group) is not int or not 0 <= group < key_heads for group in selected)
+                    or len(set(selected)) != len(selected)):
+                raise ValueError('Invalid absolute-position KV groups')
+        if not groups and not value_groups:
+            raise ValueError('Select at least one absolute-position group')
         self.rotary = rotary
         self.absolute = absolute
         self.layer_idx = rotary.layer_idx
@@ -253,6 +257,9 @@ class SplitPositionAttention(SPORAFusedAttention):
         self.register_buffer('_key_mask', mask[None, :, None, None], persistent=False)
         query_mask = mask.repeat_interleave(self.num_key_value_groups)
         self.register_buffer('_query_mask', query_mask[None, :, None, None], persistent=False)
+        values = torch.zeros_like(mask)
+        values[list(value_groups)] = True
+        self.register_buffer('_value_mask', values[None, :, None, None], persistent=False)
 
     @property
     def qkv(self):
@@ -269,7 +276,68 @@ class SplitPositionAttention(SPORAFusedAttention):
         )
         return (torch.where(self._query_mask, absolute_query.to(queries.dtype), queries),
                 torch.where(self._key_mask, absolute_key.to(keys.dtype), keys),
-                torch.where(self._key_mask, absolute_value.to(values.dtype), values))
+                torch.where(self._value_mask, absolute_value.to(values.dtype), values))
+
+
+class ValuePositionAttention(SPORAFusedAttention):
+    """Add absolute positions to one value head without a second QKV projection."""
+
+    def __init__(self, rotary, group, position, weight, bias):
+        nn.Module.__init__(self)
+        reference = rotary.qkv.weight
+        if type(group) is not int or not 0 <= group < rotary.sizes[2] // rotary.head_dim:
+            raise ValueError('Invalid absolute-position value head')
+        if (position.ndim != 2 or position.shape[1] != rotary.qkv.in_features
+                or not 0 < position.shape[0] <= 65536
+                or weight.shape != (rotary.head_dim, rotary.qkv.in_features)
+                or bias.shape != (rotary.head_dim,)):
+            raise ValueError('Invalid position table or value projection shape')
+        if any(not tensor.is_floating_point() or not bool(torch.isfinite(tensor).all())
+               for tensor in (position, weight, bias)):
+            raise ValueError('Position and value parameters must be finite floats')
+        self.rotary = rotary
+        self.group = group
+        self.position = nn.Embedding.from_pretrained(position.detach().to(reference), freeze=True)
+        self.weight = nn.Parameter(weight.detach().to(reference), requires_grad=False)
+        self.bias = nn.Parameter(bias.detach().to(reference), requires_grad=False)
+        self.layer_idx = rotary.layer_idx
+        self.head_dim = rotary.head_dim
+        self.scaling = rotary.scaling
+        self.is_causal = rotary.is_causal
+        self.num_key_value_groups = rotary.num_key_value_groups
+
+    @property
+    def qkv(self):
+        return self.rotary.qkv
+
+    @property
+    def out(self):
+        return self.rotary.out
+
+    def project(self, hidden_states, position_embeddings, position_ids):
+        if position_ids is None or bool(((position_ids < 0) | (position_ids >= self.position.num_embeddings)).any()):
+            raise ValueError('Position is outside the learned value table')
+        query, key, value = self.rotary.project(hidden_states, position_embeddings, position_ids)
+        selected = F.linear(hidden_states + self.position(position_ids), self.weight, self.bias)
+        value = torch.cat((value[:, :self.group], selected.unsqueeze(1), value[:, self.group + 1:]), dim=1)
+        return query, key, value
+
+
+def load_value_position_attention(path, rotary, *, checkpoint_digest, component_digest):
+    from hashlib import sha256
+    from io import BytesIO
+
+    raw = path.read_bytes()
+    if sha256(raw).hexdigest() != component_digest:
+        raise ValueError('Value position component digest mismatch')
+    payload = torch.load(BytesIO(raw), map_location='cpu', weights_only=True)
+    if (not isinstance(payload, dict) or payload.get('format') != 'spora-value-position-component-v1'
+            or payload.get('layer') != rotary.layer_idx or payload.get('source_sha256') != checkpoint_digest):
+        raise ValueError('Value position component belongs to a different layer or checkpoint')
+    tensors = tuple(payload.get(key) for key in ('position', 'weight', 'bias'))
+    if any(not isinstance(value, torch.Tensor) for value in tensors):
+        raise ValueError('Value position component has missing parameters')
+    return ValuePositionAttention(rotary, payload.get('group'), *tensors).eval()
 
 
 def load_absolute_attention(path, source, expected_source_sha256, expected_candidate_sha256):

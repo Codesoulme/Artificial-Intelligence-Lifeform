@@ -1,4 +1,7 @@
+import tempfile
 import unittest
+from hashlib import sha256
+from pathlib import Path
 
 import torch
 
@@ -11,7 +14,8 @@ if transformers is not None:
     from transformers.cache_utils import DynamicCache
     from transformers.models.qwen2.modeling_qwen2 import Qwen2Attention, Qwen2Config, Qwen2RotaryEmbedding
 
-    from spora.pretrained_attention import AbsoluteAttention, SPORAFusedAttention, SplitPositionAttention
+    from spora.pretrained_attention import (AbsoluteAttention, SPORAFusedAttention, SplitPositionAttention,
+                                            load_value_position_attention)
 
 
 @unittest.skipIf(transformers is None, 'requires the optional Transformers runtime')
@@ -58,3 +62,37 @@ class SplitPositionAttentionTests(unittest.TestCase):
         torch.testing.assert_close(actual[:, -1], expected, rtol=1e-5, atol=1e-6)
         self.assertEqual(cache.layers[0].keys.shape, (1, 2, 5, 4))
         self.assertEqual(cache.layers[0].values.shape, (1, 2, 5, 4))
+
+    def test_query_key_only_and_value_only_change_disjoint_projections(self):
+        args = self.hidden, self.embeddings, self.positions
+        expected = self.rotary.project(*args)
+        both = SplitPositionAttention(self.rotary, self.absolute, (0,)).project(*args)
+        key_only = SplitPositionAttention(self.rotary, self.absolute, (0,), value_groups=()).project(*args)
+        value_only = SplitPositionAttention(self.rotary, self.absolute, (), value_groups=(0,)).project(*args)
+        for projections, reference in (
+            (key_only, (*both[:2], expected[2])),
+            (value_only, (*expected[:2], both[2])),
+        ):
+            for actual, wanted in zip(projections, reference, strict=True):
+                torch.testing.assert_close(actual, wanted, rtol=0, atol=0)
+
+    def test_saved_value_component_restores_only_one_head(self):
+        args = self.hidden, self.embeddings, self.positions
+        group = 1
+        start = sum(self.absolute.sizes[:2]) + group * self.absolute.head_dim
+        stop = start + self.absolute.head_dim
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'value-position.pt'
+            torch.save(dict(format='spora-value-position-component-v1', layer=0, group=group,
+                            source_sha256='base', position=self.absolute.position.weight.detach(),
+                            weight=self.absolute.qkv.weight[start:stop].detach(),
+                            bias=self.absolute.qkv.bias[start:stop].detach()), path)
+            digest = sha256(path.read_bytes()).hexdigest()
+            component = load_value_position_attention(path, self.rotary, checkpoint_digest='base',
+                                                      component_digest=digest)
+            with self.assertRaisesRegex(ValueError, 'different layer or checkpoint'):
+                load_value_position_attention(path, self.rotary, checkpoint_digest='other',
+                                              component_digest=digest)
+        expected = SplitPositionAttention(self.rotary, self.absolute, (), value_groups=(group,)).project(*args)
+        for actual, wanted in zip(component.project(*args), expected, strict=True):
+            torch.testing.assert_close(actual, wanted)
