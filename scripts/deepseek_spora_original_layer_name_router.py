@@ -157,7 +157,9 @@ def unpad_selection(selected, single_length):
 def main(*, checkpoint=None, output=None, include_following_tokens=False,
          diverse_boundaries=False, fresh_boundary_holdout=False, diverse_query_context=False,
          sequence_locator=False, span_locator=False, contrast_query_nouns=False,
-         cluener_replay=False, role_prompt=False):
+         cluener_replay=False, role_prompt=False, rank_name_tokens=False):
+    if rank_name_tokens and (sequence_locator or span_locator):
+        raise ValueError('Name token ranking requires the linear locator')
     output = OUT if output is None else output
     user_prefix = LOCATOR_PROMPT if role_prompt else ''
     if output.exists():
@@ -290,6 +292,12 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
             locator = nn.Linear(x.shape[-1], 1)
         optimizer = torch.optim.AdamW(locator.parameters(), lr=0.0005, weight_decay=0.01)
         positive_weight = (y.numel() - y.sum()) / y.sum()
+        if rank_name_tokens:
+            positive = truth[:n_train]
+            negative = allowed[:n_train] & ~positive
+            rank_rows = positive.any(1) & negative.any(1)
+            rank_features = vector[:n_train][rank_rows]
+            positive, negative = positive[rank_rows], negative[rank_rows]
         if span_locator:
             positive_widths = truth[:n_train].sum(1)
             if bool((positive_widths > 8).any()):
@@ -310,6 +318,11 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
                 logits, labels = locator(x).squeeze(-1), y
             if not span_locator:
                 loss = F.binary_cross_entropy_with_logits(logits, labels, pos_weight=positive_weight)
+            if rank_name_tokens:
+                scores = locator(rank_features).squeeze(-1)
+                weakest_name = scores.masked_fill(~positive, torch.inf).amin(1)
+                strongest_other = scores.masked_fill(~negative, -torch.inf).amax(1)
+                loss = loss + .25 * F.softplus(2. + strongest_other - weakest_name).mean()
             if not bool(torch.isfinite(loss)):
                 raise ValueError('Nonfinite locator loss')
             loss.backward()
@@ -388,6 +401,7 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
               'locator_only_train_count': sum(row['group'] == 'train_locator_only' for row in training),
               'threshold': threshold, 'locator_following_tokens': 2 if include_following_tokens else 0,
               'locator_architecture': architecture,
+              'rank_name_tokens': rank_name_tokens,
               'user_prefix': user_prefix,
               'training_groups': {group: sum(r['group'] == group for r in training)
                                   for group in sorted({r['group'] for r in training})},
@@ -420,12 +434,13 @@ def cli():
     parser.add_argument('--contrast-query-nouns', action='store_true')
     parser.add_argument('--cluener-replay', action='store_true')
     parser.add_argument('--role-prompt', action='store_true')
+    parser.add_argument('--rank-name-tokens', action='store_true')
     args = parser.parse_args()
     main(checkpoint=args.checkpoint, output=args.output, include_following_tokens=args.include_following_tokens,
          diverse_boundaries=args.diverse_boundaries, fresh_boundary_holdout=args.fresh_boundary_holdout,
          diverse_query_context=args.diverse_query_context, sequence_locator=args.sequence_locator,
          span_locator=args.span_locator, contrast_query_nouns=args.contrast_query_nouns,
-         cluener_replay=args.cluener_replay, role_prompt=args.role_prompt)
+         cluener_replay=args.cluener_replay, role_prompt=args.role_prompt, rank_name_tokens=args.rank_name_tokens)
 
 
 if __name__ == '__main__':
