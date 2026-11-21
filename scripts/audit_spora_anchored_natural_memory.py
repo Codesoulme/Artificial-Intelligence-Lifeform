@@ -39,8 +39,11 @@ def benchmark_questions(filler, *, heldout=False):
 def main(args):
     if args.output.exists():
         raise FileExistsError(args.output)
+    temporal_source = args.temporal_source or args.route_source
     paths = (args.checkpoint, args.route_source, args.router / 'router.pt', args.temporal / 'temporal.pt',
-             ROOT / 'data/chinese-pilot/source.json')
+             temporal_source, ROOT / 'data/chinese-pilot/source.json')
+    if args.version_selector is not None:
+        paths = (args.version_selector, args.version_selector.with_name('result.json'), *paths)
     sources = {str(path): sha(path) for path in paths}
     torch.set_num_threads(2)
     torch.cuda.reset_peak_memory_stats()
@@ -57,7 +60,16 @@ def main(args):
         raise ValueError('The loaded checkpoint does not contain the expected bounded attention layout')
     training_base = sources[str(args.route_source)]
     router, _ = load_head(args.router, 'router.pt', 'router_sha256', training_base)
-    temporal, _ = load_head(args.temporal, 'temporal.pt', 'temporal_sha256', training_base)
+    temporal, time_sha = load_head(args.temporal, 'temporal.pt', 'temporal_sha256', sources[str(temporal_source)])
+    if args.version_selector is not None:
+        candidate = torch.load(args.version_selector, map_location='cpu', weights_only=True)
+        manifest = json.loads(args.version_selector.with_name('result.json').read_text(encoding='utf-8'))
+        if (candidate['format'] != 'spora-guarded-version-selector-v1'
+                or candidate['checkpoint_sha256'] != sources[str(args.checkpoint)]
+                or candidate['temporal_sha256'] != time_sha
+                or manifest['selector_sha256'] != sources[str(args.version_selector)]):
+            raise ValueError('Version selector belongs to a different model or report')
+        temporal = dict(temporal, version_selector={**candidate, 'char_width': candidate.get('char_width', 0)})
     prose = json.loads(paths[-1].read_text(encoding='utf-8'))
     filler = '\n'.join(prose['development'] + prose['test'])
     if args.heldout:
@@ -67,6 +79,10 @@ def main(args):
     suites = [('short', short, None), ('long', long, None)]
     if args.route_current_turn:
         suites = [('long_with_separate_question', long, [question for question, _, _ in short])]
+    if args.broad_versions:
+        from scripts.train_spora_revision_contrast import held_questions
+
+        suites = [('previous_contrast_holdout', held_questions(), None)]
     results = {}
     for name in (('bounded',) if args.reload_only else ('full', 'bounded')):
         scope, generation = nullcontext(), nullcontext()
@@ -113,11 +129,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('checkpoint', 'route-source', 'router', 'temporal', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--temporal-source', type=Path, help='Training checkpoint for an independently trained time head')
+    parser.add_argument('--version-selector', type=Path, help='Evaluate an independently fitted version selector')
     parser.add_argument('--route-current-turn', action='store_true',
                         help='Use a separately provided user turn for query recognition and the full text for answering')
     parser.add_argument('--output-gains', type=float, nargs='+', choices=(1., 1.5, 2.), default=[1.],
                         help='Compare the strength of the existing neural memory output adapter')
     parser.add_argument('--heldout', action='store_true', help='Change names, query phrasing, and prose filler')
+    parser.add_argument('--broad-versions', action='store_true', help='Evaluate the 128-query version contrast suite')
     io_mode = parser.add_mutually_exclusive_group()
     io_mode.add_argument('--pack-to', type=Path, help='Write an isolated anchored checkpoint and compare its layout')
     io_mode.add_argument('--reload-only', action='store_true', help='Evaluate the bounded layout restored from the checkpoint')

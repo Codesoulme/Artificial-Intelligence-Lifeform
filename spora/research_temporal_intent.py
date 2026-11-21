@@ -69,6 +69,9 @@ def temporal_logits(payload, features, mask, *, texts=None):
     classes = len(payload['classes'])
     architecture = payload.get('architecture', 'mean')
     residual = payload.get('version_residual')
+    selector = payload.get('version_selector')
+    if selector is not None and (architecture != 'factorized' or residual is not None):
+        raise ValueError('Version selector requires an unmodified factorized head')
     if residual is not None and (architecture != 'factorized' or not isinstance(residual, dict)):
         raise ValueError('Version residual requires a factorized temporal head')
     if architecture == 'mean':
@@ -103,6 +106,26 @@ def temporal_logits(payload, features, mask, *, texts=None):
         raise ValueError('Unknown temporal intent architecture')
     head.load_state_dict(payload['state'], strict=True)
     logits = head.eval()(*args)
+    if selector is not None:
+        char_width = selector['char_width']
+        confidence = selector['threshold']
+        if (type(char_width) is not int or not 0 <= char_width <= 4096
+                or type(confidence) not in (int, float) or not .5 <= confidence <= .95):
+            raise ValueError('Invalid guarded version selector configuration')
+        inputs = vectors
+        if char_width:
+            if texts is None or len(texts) != len(vectors):
+                raise ValueError('Version selector requires one question per feature row')
+            inputs = torch.cat((vectors, temporal_character_features(texts, char_width).to(vectors)), dim=-1)
+        weight = selector['weight']
+        if (not isinstance(weight, torch.Tensor) or weight.shape != (3, inputs.shape[-1])
+                or not weight.is_floating_point() or not bool(torch.isfinite(weight).all())):
+            raise ValueError('Invalid guarded version selector weights')
+        delta = F.linear(inputs, weight.to(vectors))
+        adjusted = head(vectors, delta)
+        applies = ((time_selection(logits.softmax(-1), payload['threshold'], factorized=True) != 3)
+                   & ((head.version(vectors) + delta).softmax(-1).amax(-1) >= confidence))
+        return torch.where(applies[:, None], adjusted, logits)
     override = None if residual is None else residual.get('past_override')
     if override is not None:
         if type(override) not in (int, float) or not .55 <= override <= .95:
