@@ -227,6 +227,51 @@ class AbsoluteAttention(SPORAFusedAttention):
         return query, key, value
 
 
+class SplitPositionAttention(SPORAFusedAttention):
+    """Apply absolute positions to complete KV groups in a single attention/cache."""
+
+    def __init__(self, rotary, absolute, groups):
+        nn.Module.__init__(self)
+        if (rotary.layer_idx != absolute.layer_idx or rotary.sizes != absolute.sizes
+                or rotary.num_key_value_groups != absolute.num_key_value_groups
+                or rotary.head_dim != absolute.head_dim or absolute.rotary_fraction != 0.):
+            raise ValueError('Expected paired rotary and absolute attention with identical grouping')
+        key_heads = rotary.sizes[1] // rotary.head_dim
+        if not isinstance(groups, (tuple, list)) or not groups or any(
+            type(group) is not int or not 0 <= group < key_heads for group in groups
+        ) or len(set(groups)) != len(groups):
+            raise ValueError('Invalid absolute-position KV groups')
+        self.rotary = rotary
+        self.absolute = absolute
+        self.layer_idx = rotary.layer_idx
+        self.head_dim = rotary.head_dim
+        self.scaling = rotary.scaling
+        self.is_causal = rotary.is_causal
+        self.num_key_value_groups = rotary.num_key_value_groups
+        mask = torch.zeros(key_heads, dtype=torch.bool, device=rotary.qkv.weight.device)
+        mask[list(groups)] = True
+        self.register_buffer('_key_mask', mask[None, :, None, None], persistent=False)
+        query_mask = mask.repeat_interleave(self.num_key_value_groups)
+        self.register_buffer('_query_mask', query_mask[None, :, None, None], persistent=False)
+
+    @property
+    def qkv(self):
+        return self.rotary.qkv
+
+    @property
+    def out(self):
+        return self.rotary.out
+
+    def project(self, hidden_states, position_embeddings, position_ids):
+        queries, keys, values = self.rotary.project(hidden_states, position_embeddings, position_ids)
+        absolute_query, absolute_key, absolute_value = self.absolute.project(
+            hidden_states.to(self.absolute.qkv.weight.dtype), position_embeddings, position_ids,
+        )
+        return (torch.where(self._query_mask, absolute_query.to(queries.dtype), queries),
+                torch.where(self._key_mask, absolute_key.to(keys.dtype), keys),
+                torch.where(self._key_mask, absolute_value.to(values.dtype), values))
+
+
 def load_absolute_attention(path, source, expected_source_sha256, expected_candidate_sha256):
     from hashlib import sha256
     from io import BytesIO
