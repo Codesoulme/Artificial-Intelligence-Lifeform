@@ -18,7 +18,6 @@ from transformers import AutoTokenizer
 from scripts.deepseek_addressed_read import closed_think_inputs
 from scripts.deepseek_local_baseline import MODEL, WEIGHT_SHA, sha
 from scripts.deepseek_named_binding_probe import KEYS, NAMES, pooled, predict
-from scripts.deepseek_observation_value_probe import pool
 from scripts.deepseek_pooled_address import extract
 from scripts.deepseek_semantic_value_pilot import WORDS
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
@@ -34,6 +33,7 @@ from spora.internal_memory import observe_sourced
 from spora.language_training import atomic_save, frozen_digest
 from spora.memory_output import MemoryOutputAdapter
 from spora.named_address import address_basis_sha256, feature_files_sha256
+from spora.research_temporal_intent import temporal_logits, time_selection
 
 
 def controlled(organism, offset):
@@ -104,6 +104,16 @@ def fresh_cases():
                   ('只帮我给阿哲写生日贺词。', None, None),
                   ('别读小林的个人记录，推荐三种夏天饮料。', None, None),
                   ('牛奶和豆浆在配料上有什么不同？', None, None)]
+    return questions
+
+
+def fresh_version_cases():
+    from scripts.spora_temporal_contrast_cases import ABSTAIN, HELD_NON_READ, HELD_TRIPLES, temporal_rows
+
+    questions = []
+    for index, person in enumerate(NAMES):
+        for question, mode in temporal_rows((person,), ('饮品',), HELD_TRIPLES, HELD_NON_READ):
+            questions.append((question, index, mode) if mode != ABSTAIN else (question, None, None))
     return questions
 
 
@@ -179,8 +189,9 @@ def fit_output(decoder, tokenizer, organism):
 
 @torch.inference_mode()
 def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_address=False,
-          oracle_diagnostic=False, trim_punctuation=False, fresh=False):
-    questions = fresh_cases() if fresh else cases()
+          oracle_diagnostic=False, trim_punctuation=False, fresh=False, fresh_v2=False,
+          oracle_address_only=False):
+    questions = fresh_version_cases() if fresh_v2 else fresh_cases() if fresh else cases()
     calibration = calibration_cases() if calibrate_address else []
     texts = [question[0] for question in questions] + [question for question, _ in calibration]
     if len(set(texts)) != len(texts):
@@ -214,10 +225,9 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
                      else locator(vectors).squeeze(-1).sigmoid())
     time_features, time_masks = (extract(decoder.base, tokenizer, texts[:len(questions)], batch_size=1,
                                          hidden_indices=hidden_indices) if user_prefix else (features, masks))
-    pooled_questions = pool(time_features, time_masks)
-    temporal = nn.Linear(pooled_questions.shape[-1], len(time_head['classes'])).eval()
-    temporal.load_state_dict(time_head['state'], strict=True)
-    temporal_probs = temporal(pooled_questions).softmax(-1)
+    temporal_probs = temporal_logits(time_head, time_features, time_masks).softmax(-1)
+    time_decisions = time_selection(temporal_probs, time_head['threshold'],
+                                    factorized=time_head.get('architecture') == 'factorized')
     fingerprints = IdentityFingerprints(organism.config.key_count)
     for name, key in zip(NAMES, KEYS, strict=True):
         fingerprints.bind(key, name)
@@ -282,9 +292,7 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
     outcomes = []
     for i, (question, expected_index, expected_mode) in enumerate(questions):
         expected_key = None if expected_index is None else KEYS[expected_index]
-        mode = int(temporal_probs[i].argmax())
-        if mode != 3 and float(temporal_probs[i, mode]) < time_head['threshold']:
-            mode = 3
+        mode = int(time_decisions[i])
         outcome = {'question': question, 'expected_key': expected_key, 'expected_mode': expected_mode,
                    'mode': mode, 'key': None, 'answers': [], 'correct_pair': False}
         outcomes.append(outcome)
@@ -315,6 +323,14 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
             ]
             outcome['oracle_answers'] = oracle
             outcome['oracle_correct_pair'] = correct_pair(oracle)
+        if oracle_address_only and expected_key is not None:
+            outcome['oracle_address_correct_pair'] = False
+            if mode == expected_mode:
+                addressed = outcome['answers'] if outcome['key'] == expected_key else [
+                    answer(decoder, tokenizer, organism, question, state, expected_key, mode) for state in states
+                ]
+                outcome['oracle_address_answers'] = addressed
+                outcome['oracle_address_correct_pair'] = correct_pair(addressed)
     return outcomes, {'threshold': threshold, 'previous_threshold': router['address_threshold'],
                       'locator_threshold': locator_threshold, 'calibration_rows': calibration_rows}
 
@@ -360,7 +376,8 @@ def main(args):
         decoder.output_adapter = adapter.eval().requires_grad_(False).to(next(decoder.parameters()).device)
     rows, address_fit = score(decoder, tokenizer, organism, router, temporal, states,
                               calibrate_address=args.calibrate_address, oracle_diagnostic=args.oracle_diagnostic,
-                              trim_punctuation=args.trim_punctuation, fresh=args.fresh)
+                              trim_punctuation=args.trim_punctuation, fresh=args.fresh, fresh_v2=args.fresh_v2,
+                              oracle_address_only=args.oracle_address_only)
     if (original_digest != frozen_digest(organism, original) or sha(args.checkpoint) != checkpoint_sha
             or state_digests != [frozen_digest(organism, state) for state in states]):
         raise ValueError('Evaluation changed memory')
@@ -372,12 +389,14 @@ def main(args):
                'unsupported_routed': sum(r['key'] is not None for r in unsupported)}
     if args.oracle_diagnostic:
         summary['oracle_correct_pairs'] = sum(r['oracle_correct_pair'] for r in known)
+    if args.oracle_address_only:
+        summary['oracle_address_correct_pairs'] = sum(r['oracle_address_correct_pair'] for r in known)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open('x', encoding='utf-8') as stream:
         json.dump({'summary': summary, 'rows': rows, 'checkpoint_sha256': checkpoint_sha,
                    'router_sha256': router_sha, 'temporal_sha256': temporal_sha,
                    'output_fit': output_fit, 'address_fit': address_fit,
-                   'question_suite': 'fresh' if args.fresh else 'original'}, stream,
+                   'question_suite': 'fresh_v2' if args.fresh_v2 else 'fresh' if args.fresh else 'original'}, stream,
                   ensure_ascii=False, indent=2)
         stream.write('\n')
     print(summary, flush=True)
@@ -392,6 +411,9 @@ if __name__ == '__main__':
     output.add_argument('--output-adapter', type=Path)
     parser.add_argument('--calibrate-address', action='store_true')
     parser.add_argument('--oracle-diagnostic', action='store_true')
+    parser.add_argument('--oracle-address-only', action='store_true')
     parser.add_argument('--trim-punctuation', action='store_true')
-    parser.add_argument('--fresh', action='store_true')
+    questions = parser.add_mutually_exclusive_group()
+    questions.add_argument('--fresh', action='store_true')
+    questions.add_argument('--fresh-v2', action='store_true')
     main(parser.parse_args())
