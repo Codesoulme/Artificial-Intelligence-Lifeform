@@ -21,7 +21,10 @@ def load_candidate(candidate_dir, adapters):
     report = read(candidate_dir / 'result.json')
     if report.get('format') not in (
             'spora-original-multilayer-dialogue-residual-diagnostic-v1',
-            'spora-original-natural-dialogue-residual-diagnostic-v1'):
+            'spora-original-natural-dialogue-residual-diagnostic-v1',
+            'spora-original-reviewed-dialogue-residual-diagnostic-v1',
+            'spora-original-closed-reviewed-dialogue-residual-diagnostic-v1',
+            'spora-original-closed-reviewed-dialogue-ceval-guard-diagnostic-v1'):
         raise ValueError('Unexpected candidate format')
     if tuple(report.get('layers', ())) != tuple(LAYERS):
         raise ValueError('Candidate layer list does not match the loader')
@@ -30,7 +33,10 @@ def load_candidate(candidate_dir, adapters):
         payload = torch.load(path, map_location='cpu', weights_only=True)
         if (payload.get('format') not in (
                 'spora-original-multilayer-dialogue-residual-v1',
-                'spora-original-natural-dialogue-residual-v1')
+                'spora-original-natural-dialogue-residual-v1',
+                'spora-original-reviewed-dialogue-residual-v1',
+                'spora-original-closed-reviewed-dialogue-residual-v1',
+                'spora-original-closed-reviewed-dialogue-ceval-guard-residual-v1')
                 or payload.get('layer') != index or payload.get('rank') != 8
                 or payload.get('source_sha256') != sha(SOURCE)
                 or payload.get('base_sha256') != sha(MODEL / 'model.safetensors')):
