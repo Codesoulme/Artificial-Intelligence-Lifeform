@@ -67,8 +67,8 @@ class PartialQueryKeyPositionAttention(SPORAFusedAttention):
     def project(self, hidden_states, position_embeddings, position_ids):
         query, key, value = self.parent.project(hidden_states, position_embeddings, position_ids)
         width = self._coordinates.numel()
-        position = self.position(position_ids)
-        projected = F.linear(hidden_states + position, self.weight, self.bias)
+        features = hidden_states + self.position(position_ids)
+        projected = F.linear(features, self.weight.to(features.dtype), self.bias.to(features.dtype))
         query_abs, key_abs = projected.split((width * self.query_heads, width), dim=-1)
         query_abs = query_abs.unflatten(-1, (self.query_heads, width)).transpose(1, 2)
         first = self.group * self.query_heads

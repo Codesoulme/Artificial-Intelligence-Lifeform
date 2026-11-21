@@ -26,6 +26,7 @@ from spora.integrated_checkpoint import load_integrated_runtime, query_key_posit
 from spora.language_training import atomic_save, frozen_digest
 from spora.research_partial_query_key import PartialQueryKeyPositionAttention, select_query_key_rows
 from train_spora_grouped_absolute_attention import LAYER, MAX_POSITION
+from train_spora_query_key_dialogue import fit_dialogue_predictions
 from train_spora_query_key_group import TRAIN_FILES, fit_query_key_group
 
 
@@ -93,6 +94,8 @@ def main(args):
     half = native.head_dim // 2
     scenarios = load_scenarios()
     prompts = [closed_think_inputs(tokenizer, scenario['turns'][0], 'cuda') for scenario in scenarios]
+    excluded_questions = {question for scenario in scenarios for question in scenario['turns']}
+    excluded_questions.update(question for turns in FRESH_DIALOGUES.values() for question in turns)
     plans = {'extend_first_group': (values, 0, tuple(range(half - 32, half))),
              'add_second_group': (native, 1, native.pairs)}
     if args.second_group_pairs:
@@ -111,7 +114,7 @@ def main(args):
     prior_correct = sum(row['choice'] == row['expected'] for row in prior)
     teacher = last_token_distributions(runtime.decoder, prompts)
     results = {}
-    selected = selected_module = None
+    selected = selected_module = dialogue_module = None
     try:
         for name, (parent, group, pairs) in plans.items():
             weight, bias = select_query_key_rows(values, pairs, projection['state'], group=group)
@@ -121,7 +124,14 @@ def main(args):
                 weight, bias, calibration = fit_query_key_group(runtime, tokenizer, native, group, pairs,
                                                                  weight, bias, args.calibration_steps)
                 print('Calibration', name, calibration, flush=True)
-            layer.self_attn = PartialQueryKeyPositionAttention(parent, pairs, weight, bias, group=group).eval()
+            candidate = PartialQueryKeyPositionAttention(parent, pairs, weight, bias, group=group).eval()
+            whole_decoder = None
+            if args.dialogue_steps:
+                whole_decoder = fit_dialogue_predictions(runtime, tokenizer, layer, native, candidate,
+                                                         args.dialogue_steps, excluded_questions)
+                dialogue_module = candidate
+                print('Whole-decoder validation', name, whole_decoder, flush=True)
+            layer.self_attn = candidate
             distributions = last_token_distributions(runtime.decoder, prompts)
             distance = F.kl_div(distributions, teacher, reduction='none', log_target=True).sum(dim=-1)
             choices = score_ceval(runtime.decoder, academic, MAX_POSITION)
@@ -131,6 +141,8 @@ def main(args):
                        left == right for left, right in zip(choices, prior, strict=True)), 'ceval': choices}
             if calibration is not None:
                 row['calibration'] = calibration
+            if whole_decoder is not None:
+                row['whole_decoder_calibration'] = whole_decoder
             print('Screen', name, {key: value for key, value in row.items() if key != 'ceval'}, flush=True)
             results[name] = row
             if correct < prior_correct:
@@ -151,9 +163,11 @@ def main(args):
         layer.self_attn = native
 
     fresh = {}
-    if selected is not None:
+    research_module = selected_module if selected_module is not None else dialogue_module
+    if research_module is not None:
+        label = 'selected' if selected is not None else 'whole_decoder'
         try:
-            for label, module in (('parent', native), ('selected', selected_module)):
+            for label, module in (('parent', native), (label, research_module)):
                 layer.self_attn = module
                 fresh[label] = {name: dialogue(runtime.decoder, tokenizer, turns, open_reasoning=False,
                                                 limit=64, seed=84521)
@@ -169,14 +183,14 @@ def main(args):
               'selected_for_fresh_dialogue': selected, 'fresh_dialogue': fresh,
               'seconds': time.perf_counter() - started, 'peak_gpu_bytes': torch.cuda.max_memory_allocated()}
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    if selected_module is not None and args.calibration_steps:
+    if research_module is not None and args.calibration_steps:
         artifact = args.output.with_suffix('.pt')
         if artifact.exists():
             raise FileExistsError(artifact)
         atomic_save({'format': 'spora-second-query-key-group-v1', 'layer': LAYER,
-                     'parent_sha256': sources[str(args.checkpoint)], 'group': selected_module.group,
-                     'pairs': selected_module.pairs, 'weight': selected_module.weight.detach().cpu(),
-                     'bias': selected_module.bias.detach().cpu()}, artifact)
+                     'parent_sha256': sources[str(args.checkpoint)], 'group': research_module.group,
+                     'pairs': research_module.pairs, 'weight': research_module.weight.detach().cpu(),
+                     'bias': research_module.bias.detach().cpu()}, artifact)
         report['research_component_sha256'] = sha(artifact)
     with args.output.open('x', encoding='utf-8') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
@@ -192,9 +206,13 @@ if __name__ == '__main__':
                         metavar='PAIRS', help='Screen narrower second groups, widest first')
     parser.add_argument('--calibration-steps', type=int, default=0,
                         help='Fit one specified second-group candidate before screening')
+    parser.add_argument('--dialogue-steps', type=int, default=0,
+                        help='Further fit the same projection using whole-decoder predictions')
     args = parser.parse_args()
     if args.second_group_pairs and len(args.second_group_pairs) != len(set(args.second_group_pairs)):
         parser.error('Second-group pair counts must be unique')
     if args.calibration_steps and (args.calibration_steps < 8 or len(args.second_group_pairs or ()) != 1):
         parser.error('Calibration requires at least 8 steps and one second-group pair count')
+    if args.dialogue_steps and (args.dialogue_steps < 8 or not args.calibration_steps):
+        parser.error('Dialogue calibration requires local calibration and at least 8 dialogue steps')
     main(args)
