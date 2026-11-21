@@ -8,7 +8,7 @@ import torch
 from .internal_memory import read_provenance_batch
 
 
-_ORDINAL = re.compile(r'第([0-9一二两三四五六七八九十零〇百千]+)次\s*(?:更正|修改|修订|更新|调整)')
+_ORDINAL = re.compile(r'第([0-9０-９一二两三四五六七八九十零〇百千]+)次\s*(?:更正|修改|修订|更新|调整)')
 _BEFORE = re.compile(r'\s*(?:发生)?(?:之前|以前|前)')
 _AFTER = re.compile(r'\s*(?:完成后|生效后|之后|以后|后)')
 _BOTH = re.compile(r'\s*(?:发生)?(?:前后|前(?:和|与|及|、)后)')
@@ -27,11 +27,10 @@ def _ordinal_number(text):
     return None
 
 
-def parse_revision_reference(question):
+def parse_revision_reference(question, *, include_span=False):
     """Return an explicit ordinal and side, or abstain on an ambiguous reference."""
     if not isinstance(question, str):
         raise ValueError('Expected a question string')
-    question = unicodedata.normalize('NFKC', question)
     anchors = list(_ORDINAL.finditer(question))
     if not anchors:
         return None
@@ -43,19 +42,23 @@ def parse_revision_reference(question):
             question.find(right, anchor.end()) >= 0
         ):
             return {'status': 'abstain', 'reason': 'quoted_correction_reference'}
-    number = _ordinal_number(anchor[1])
+    number = _ordinal_number(unicodedata.normalize('NFKC', anchor[1]))
     if number is None or number < 1:
         return {'status': 'abstain', 'reason': 'invalid_correction_ordinal'}
     suffix = question[anchor.end():]
     if _BOTH.match(suffix):
         return {'status': 'abstain', 'reason': 'ambiguous_correction_side'}
-    if _BEFORE.match(suffix):
+    direction = _BEFORE.match(suffix)
+    if direction is not None:
         side = 'before'
-    elif _AFTER.match(suffix):
+    elif (direction := _AFTER.match(suffix)) is not None:
         side = 'after'
     else:
         return {'status': 'abstain', 'reason': 'missing_correction_side'}
-    return {'status': 'anchored', 'number': number, 'side': side}
+    result = {'status': 'anchored', 'number': number, 'side': side}
+    if include_span:
+        result['span'] = anchor.start(), anchor.end() + direction.end()
+    return result
 
 
 def select_numbered_revision(model, state, key, number, side, *, max_scan=4096):

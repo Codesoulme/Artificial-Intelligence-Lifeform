@@ -27,6 +27,7 @@ from spora.internal_memory import enable_event_key_index, enable_independent_pro
 from spora.language_training import frozen_digest
 from spora.research_temporal_intent import temporal_logits, time_selection
 from spora.revision_routing import parse_revision_reference, select_numbered_revision
+from spora.revision_subject import revision_subject
 
 
 PATTERNS = (
@@ -42,17 +43,38 @@ PATTERNS = (
     ('{name}第2次更正的饮品是什么，前后不用区分？', None),
     ('把「{name}第一次更正前的饮品是什么」译成英文，不用查记录。', None),
 )
+HELD_PATTERNS = (
+    ('麻烦查{name}第1次调整发生前登记的饮品。', 0),
+    ('第1次调整生效后，为{name}登记的饮品是哪种？', 1),
+    ('想知道{name}在第2次修改以前采用的饮品。', 1),
+    ('第二次修改完成后，{name}采用的是哪款饮品？', 2),
+    ('核对{name}第三次修订前的饮品资料。', 2),
+    ('第三次修订之后，替{name}记录的饮品是什么？', 3),
+    ('说说{name}现行记录的饮品。', 3),
+    ('核对{name}璇第1次调整发生前登记的饮品。', None),
+    ('第2次修改完成后，{name}雯登记的饮品是哪款？', None),
+    ('想知道{name}和夏兰在第2次修改以前采用的饮品。', None),
+    ('第三次修订前后，{name}有什么两样饮品？', None),
+    ('第4次修订之后，替{name}登记的饮品是什么？', None),
+    ('请翻成英文：「第2次修改完成后，{name}采用的是哪款饮品？」', None),
+)
 
 
-def cases():
+def cases(patterns=PATTERNS):
     return [(phrase.format(name=name), key if index is not None else None, index)
-            for name, key in zip(NAMES, KEYS, strict=True) for phrase, index in PATTERNS]
+            for name, key in zip(NAMES, KEYS, strict=True) for phrase, index in patterns]
 
 
-def fixture(organism, offset):
+def fixture(organism, offset, *, cross_page=False):
     state = enable_independent_provenance(organism, enable_event_key_index(organism, fresh_controlled_state(organism)))
     expected = {key: [] for key in KEYS}
     for step in range(4):
+        if cross_page and step == 3:
+            noise = [key for key in range(organism.config.key_count) if key not in KEYS]
+            while state.cursor < capacity(organism, state):
+                event = state.cursor
+                state, _ = observe_sourced(organism, state, noise[event % len(noise)],
+                                          (event + offset) % len(WORDS), 'direct', 1., valid_at=event)
         for index, key in enumerate(KEYS):
             if state.cursor == capacity(organism, state):
                 state = grow(organism, state)
@@ -88,8 +110,10 @@ def current_or_historical(runtime, tokenizer, text, state, key, mode, anchor):
 
 
 @torch.no_grad()
-def audit(runtime, tokenizer, router, temporal, states, expected):
-    questions = cases()
+def audit(runtime, tokenizer, router, temporal, states, expected, *, questions=None):
+    recover_subject = questions is not None
+    if questions is None:
+        questions = cases()
     texts = [row[0] for row in questions]
     fingerprints = IdentityFingerprints(runtime.organism.config.key_count)
     for name, key in zip(NAMES, KEYS, strict=True):
@@ -99,24 +123,43 @@ def audit(runtime, tokenizer, router, temporal, states, expected):
                              hidden_indices=tuple(temporal['hidden_indices']))
     modes = time_selection(temporal_logits(temporal, features, mask, texts=texts).softmax(-1),
                            temporal['threshold'], factorized=True).tolist()
+    variants = ('indexed_ordinal', 'bounded_subject') if recover_subject else ('latest_only', 'indexed_ordinal')
     rows = []
     for i, ((text, expected_key, version), mode) in enumerate(zip(questions, modes, strict=True)):
         chosen, _, address_reason, selected_name = propose(i, text, None)
         anchor = parse_revision_reference(text)
         row = {'question': text, 'expected_key': expected_key, 'expected_version': version,
                'selected_key': chosen, 'selected_name': selected_name, 'mode': mode, 'anchor': anchor}
-        for variant, reference in (('latest_only', None), ('indexed_ordinal', anchor)):
+        recovery = None
+        if recover_subject and anchor is not None and anchor['status'] == 'anchored':
+            recovery = revision_subject(fingerprints, text)
+        recent = {}
+        for variant in variants:
+            reference = None if variant == 'latest_only' else anchor
+            key = chosen
+            reason = address_reason
+            if variant == 'bounded_subject' and recovery is not None:
+                if recovery['key'] is not None:
+                    if key is None:
+                        key, reason = recovery['key'], None
+                    elif key != recovery['key']:
+                        key, reason = None, 'revision_subject_disagreement'
+                elif recovery['reason'] in ('explicit_name_not_enrolled', 'ambiguous_revision_subject'):
+                    key, reason = None, recovery['reason']
             answers, reasons = [], []
-            for state in states:
-                if chosen is None or mode == 3:
-                    result, reason = None, address_reason if chosen is None else 'read_intent_abstained'
+            for state_index, state in enumerate(states):
+                if key is None or mode == 3:
+                    result, attempt_reason = None, reason if key is None else 'read_intent_abstained'
                 else:
-                    result, reason = current_or_historical(runtime, tokenizer, text, state, chosen, mode, reference)
+                    cache_key = state_index, key, reference is not None
+                    if cache_key not in recent:
+                        recent[cache_key] = current_or_historical(runtime, tokenizer, text, state, key, mode, reference)
+                    result, attempt_reason = recent[cache_key]
                 answers.append(result)
-                reasons.append(reason)
+                reasons.append(attempt_reason)
             event_pair = False
             passed = expected_key is None and all(result is None for result in answers)
-            if expected_key is not None and chosen == expected_key and all(result is not None for result in answers):
+            if expected_key is not None and key == expected_key and all(result is not None for result in answers):
                 expected_values = [mapping[expected_key][version] for mapping in expected]
                 events = [oracle['event'] if anchor is not None else None for oracle in expected_values]
                 event_pair = all(result['event_time'] == event for result, event in zip(answers, events, strict=True))
@@ -126,6 +169,10 @@ def audit(runtime, tokenizer, router, temporal, states, expected):
                     for result, oracle in zip(answers, expected_values, strict=True)
                 )
             row[variant] = {'answers': answers, 'reasons': reasons, 'correct_events': event_pair, 'passed': passed}
+            if recover_subject:
+                row[variant]['key'] = key
+        if recover_subject:
+            row['subject_recovery'] = recovery
         if expected_key is not None and anchor is not None:
             row['oracle_key_events'] = all(
                 select_numbered_revision(runtime.organism, state, expected_key, anchor['number'], anchor['side']).get(
@@ -139,11 +186,13 @@ def audit(runtime, tokenizer, router, temporal, states, expected):
     summary = {'known': len(positives), 'anchored': len(anchored), 'unsupported': len(negatives),
                'correct_name': sum(r['selected_key'] == r['expected_key'] for r in positives),
                'oracle_key_events': sum(r['oracle_key_events'] for r in anchored)}
-    for name in ('latest_only', 'indexed_ordinal'):
+    for name in variants:
         summary[name] = {'answers': sum(row[name]['passed'] for row in positives),
                          'anchored_answers': sum(row[name]['passed'] for row in anchored),
                          'anchored_events': sum(row[name]['correct_events'] for row in anchored),
                          'unsupported_read': sum(not row[name]['passed'] for row in negatives)}
+        if recover_subject:
+            summary[name]['correct_name'] = sum(row[name]['key'] == row['expected_key'] for row in positives)
     return {'summary': summary, 'rows': rows}
 
 
@@ -167,14 +216,14 @@ def main(args):
     individual = frozen_digest(runtime.organism, runtime.state)
     if args.reopen:
         baseline = json.loads((output / 'result.json').read_text(encoding='utf-8'))
-        if fingerprints != baseline['sources']:
+        if fingerprints != baseline['sources'] or baseline.get('extended', False) != args.extended:
             raise ValueError('Checkpoint or classifiers changed')
         expected = [{int(key): history for key, history in phase.items()} for phase in baseline['fixture']]
     else:
         output.mkdir(parents=True, exist_ok=False)
         expected = []
         for offset in (0, 2):
-            state, values = fixture(runtime.organism, offset)
+            state, values = fixture(runtime.organism, offset, cross_page=args.extended)
             save(output / f'state-{offset}.pt', runtime.organism, state)
             expected.append(values)
     states = []
@@ -189,13 +238,21 @@ def main(args):
     del restored
     gc.collect()
     torch.cuda.empty_cache()
-    report = audit(runtime, tokenizer, router, temporal, states, expected)
+    if args.extended:
+        suites = {}
+        for label, questions in (('original', cases()), ('new', cases(HELD_PATTERNS))):
+            suites[label] = audit(runtime, tokenizer, router, temporal, states, expected, questions=questions)
+            print(label, suites[label]['summary'], flush=True)
+        report = {'extended': True, 'suites': suites}
+    else:
+        report = audit(runtime, tokenizer, router, temporal, states, expected)
     if (frozen_digest(runtime.organism, runtime.state) != individual
             or [frozen_digest(runtime.organism, state) for state in states] != digests
             or sha(args.checkpoint) != source_sha):
         raise ValueError('Numbered-memory query changed a protected model or state')
     if args.reopen:
-        if digests != baseline['state_sha256'] or report['rows'] != baseline['rows']:
+        root = 'suites' if args.extended else 'rows'
+        if digests != baseline['state_sha256'] or report[root] != baseline[root]:
             raise ValueError('Independent reload did not reproduce the numbered-history evaluation')
         report['exact_reopen'] = True
     report.update({'sources': fingerprints, 'state_sha256': digests, 'fixture': expected,
@@ -205,7 +262,8 @@ def main(args):
     with result_path.open('x', encoding='utf-8') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
-    print(report['summary'], flush=True)
+    if not args.extended:
+        print(report['summary'], flush=True)
 
 
 if __name__ == '__main__':
@@ -213,4 +271,5 @@ if __name__ == '__main__':
     for name in ('checkpoint', 'route-source', 'router', 'temporal', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--reopen', action='store_true')
+    parser.add_argument('--extended', action='store_true', help='Compare subject recovery on two-page histories')
     main(parser.parse_args())
