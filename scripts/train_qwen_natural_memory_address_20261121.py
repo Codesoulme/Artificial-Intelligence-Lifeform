@@ -49,6 +49,43 @@ class AddressHead(nn.Module):
         return self.tens(hidden), self.ones(hidden)
 
 
+class TokenAddressHead(nn.Module):
+    format = 'spora-qwen-natural-memory-token-address-v1'
+
+    def __init__(self, feature_width):
+        super().__init__()
+        self.score = nn.Sequential(
+            nn.LayerNorm(feature_width + 2),
+            nn.Linear(feature_width + 2, 128),
+            nn.GELU(),
+            nn.Linear(128, 1),
+        )
+        self.trunk = nn.Sequential(
+            nn.LayerNorm(feature_width * 3),
+            nn.Linear(feature_width * 3, 256),
+            nn.GELU(),
+        )
+        self.tens = nn.Linear(256, 10)
+        self.ones = nn.Linear(256, 10)
+
+    def forward(self, token_features, mask):
+        batch, length, width = token_features.shape
+        positions = torch.arange(length, device=token_features.device,
+                                 dtype=token_features.dtype).view(1, length, 1)
+        lengths = mask.sum(dim=1, keepdim=True).clamp_min(1).to(token_features.dtype)
+        relative = positions / lengths.unsqueeze(-1)
+        position_features = torch.cat((relative, 1. - relative), dim=-1)
+        scores = self.score(torch.cat((token_features, position_features), dim=-1)).squeeze(-1)
+        scores = scores.masked_fill(~mask, torch.finfo(scores.dtype).min)
+        weights = scores.softmax(dim=-1)
+        pooled = (weights.unsqueeze(-1) * token_features).sum(dim=1)
+        last_indices = mask.sum(dim=1).long().clamp_min(1) - 1
+        last = token_features[torch.arange(batch, device=token_features.device), last_indices]
+        masked_mean = (token_features * mask.unsqueeze(-1)).sum(dim=1) / lengths
+        hidden = self.trunk(torch.cat((pooled, last, masked_mean), dim=-1))
+        return self.tens(hidden), self.ones(hidden), weights
+
+
 def questions(keys, templates):
     return [(template.format(key=key), key) for key in keys for template in templates]
 
@@ -63,6 +100,18 @@ def final_features(model, tokenizer, items):
         hidden = model(**inputs, use_cache=False, output_hidden_states=True).hidden_states[-1][0].float()
         rows.append(torch.cat((hidden[-1], hidden.mean(dim=0)), dim=0) / 2**.5)
     return torch.stack(rows).cuda()
+
+
+@torch.inference_mode()
+def final_token_features(model, tokenizer, items):
+    rows = []
+    for question in items:
+        rendered = tokenizer.apply_chat_template(
+            [{'role': 'user', 'content': question}], tokenize=False, add_generation_prompt=True)
+        inputs = tokenizer(rendered, return_tensors='pt', add_special_tokens=False).to('cuda')
+        hidden = model(**inputs, use_cache=False, output_hidden_states=True).hidden_states[-1][0].float()
+        rows.append(hidden)
+    return rows
 
 
 def train_address(features, targets, steps, learning_rate):
@@ -81,6 +130,37 @@ def train_address(features, targets, steps, learning_rate):
         if step == 0 or (step + 1) % 100 == 0 or step + 1 == steps:
             losses.append({'step': step + 1, 'loss': float(loss.detach())})
     return head.eval().requires_grad_(False), losses
+
+
+def pad_token_features(rows):
+    width = rows[0].shape[-1]
+    length = max(row.shape[0] for row in rows)
+    features = torch.zeros(len(rows), length, width, device='cuda')
+    mask = torch.zeros(len(rows), length, device='cuda', dtype=torch.bool)
+    for index, row in enumerate(rows):
+        size = row.shape[0]
+        features[index, :size] = row
+        mask[index, :size] = True
+    return features, mask
+
+
+def train_token_address(rows, targets, steps, learning_rate):
+    features, mask = pad_token_features(rows)
+    head = TokenAddressHead(features.shape[-1]).cuda()
+    optimizer = torch.optim.AdamW(head.parameters(), lr=learning_rate, weight_decay=0.)
+    target = torch.tensor(targets, device='cuda', dtype=torch.long)
+    losses = []
+    for step in range(steps):
+        tens, ones, _ = head(features, mask)
+        loss = (nn.functional.cross_entropy(tens, target // 10)
+                + nn.functional.cross_entropy(ones, target % 10))
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(head.parameters(), 1., error_if_nonfinite=True)
+        optimizer.step()
+        if step == 0 or (step + 1) % 100 == 0 or step + 1 == steps:
+            losses.append({'step': step + 1, 'loss': float(loss.detach())})
+    return head.eval().requires_grad_(False), losses, features, mask
 
 
 def address_for(organism, key):
@@ -126,9 +206,16 @@ def main(output, steps, learning_rate):
         model, tokenizer, [question for question, _ in train_rows]).clone()
     address_head, losses = train_address(
         train_features, [key for _, key in train_rows], steps, learning_rate)
+    train_token_rows = final_token_features(
+        model, tokenizer, [question for question, _ in train_rows])
+    token_head, token_losses, train_token_features, train_token_mask = train_token_address(
+        train_token_rows, [key for _, key in train_rows], steps, learning_rate)
     held_rows = questions(range(12), HELD_TEMPLATES)
     held_features = final_features(
         model, tokenizer, [question for question, _ in held_rows])
+    held_token_rows = final_token_features(
+        model, tokenizer, [question for question, _ in held_rows])
+    held_token_features, held_token_mask = pad_token_features(held_token_rows)
     held_gate_features = gate_module.hidden_features(
         model, tokenizer, [question for question, _ in held_rows])
     with torch.inference_mode():
@@ -136,13 +223,26 @@ def main(output, steps, learning_rate):
         train_predicted = train_tens.argmax(-1) * 10 + train_ones.argmax(-1)
         train_accuracy = int((train_predicted
                               == torch.tensor([key for _, key in train_rows], device='cuda')).sum())
+        train_token_tens, train_token_ones, _ = token_head(
+            train_token_features, train_token_mask)
+        train_token_predicted = train_token_tens.argmax(-1) * 10 + train_token_ones.argmax(-1)
+        train_token_accuracy = int((train_token_predicted
+                                    == torch.tensor([key for _, key in train_rows], device='cuda')).sum())
     with torch.inference_mode():
         held_tens, held_ones = address_head(held_features)
         tens_scores = held_tens.softmax(-1)
         ones_scores = held_ones.softmax(-1)
-        predicted = (held_tens.argmax(-1) * 10 + held_ones.argmax(-1)).cpu().tolist()
-        confidence = torch.minimum(tens_scores.max(-1).values,
-                                   ones_scores.max(-1).values).cpu().tolist()
+        baseline_predicted = (held_tens.argmax(-1) * 10 + held_ones.argmax(-1)).cpu().tolist()
+        baseline_confidence = torch.minimum(tens_scores.max(-1).values,
+                                            ones_scores.max(-1).values).cpu().tolist()
+        token_tens, token_ones, token_weights = token_head(
+            held_token_features, held_token_mask)
+        token_tens_scores = token_tens.softmax(-1)
+        token_ones_scores = token_ones.softmax(-1)
+        predicted = (token_tens.argmax(-1) * 10 + token_ones.argmax(-1)).cpu().tolist()
+        confidence = torch.minimum(token_tens_scores.max(-1).values,
+                                   token_ones_scores.max(-1).values).cpu().tolist()
+        token_focus = token_weights.argmax(-1).cpu().tolist()
 
     gate_payload = torch.load(gate_path, map_location='cpu', weights_only=True)
     if gate_payload.get('format') != gate_module.IntentGate.format:
@@ -153,8 +253,9 @@ def main(output, steps, learning_rate):
     runtime_gate = gate_module.make_runtime_gate(intent_gate, gate_payload['cutoff'])
 
     rows = []
-    for index, ((question, expected), predicted_key, score) in enumerate(
-            zip(held_rows, predicted, confidence, strict=True)):
+    for index, ((question, expected), predicted_key, score, baseline_key, baseline_score) in enumerate(
+            zip(held_rows, predicted, confidence, baseline_predicted, baseline_confidence,
+                strict=True)):
         pair = next(pair for pair in (*TRAIN_PAIRS, *HELD_PAIRS) if expected in pair)
         state = states[pair][0]
         generated, eos = gate_module.generate(
@@ -166,6 +267,9 @@ def main(output, steps, learning_rate):
         rows.append({
             'question': question, 'expected_key': expected, 'predicted_key': predicted_key,
             'address_confidence': score, 'memory_score': gate_score,
+            'baseline_predicted_key': baseline_key,
+            'baseline_address_confidence': baseline_score,
+            'token_focus_index': token_focus[index],
             'memory_enabled': gate_score >= gate_payload['cutoff'],
             'answer': generated, 'eos': eos,
             'value_correct': generated.strip().strip('。') in ('1', '2') and
@@ -181,16 +285,22 @@ def main(output, steps, learning_rate):
         'format': AddressHead.format, 'model_weight_sha256': WEIGHT_SHA,
         'gate_sha256': protected[gate_path], 'state': address_head.state_dict(),
     }, output / 'address_head.pt')
+    torch.save({
+        'format': TokenAddressHead.format, 'model_weight_sha256': WEIGHT_SHA,
+        'gate_sha256': protected[gate_path], 'state': token_head.state_dict(),
+    }, output / 'token_address_head.pt')
     with (output / 'result.json').open('w', encoding='utf-8', newline='\n') as stream:
         json.dump({
             'format': 'spora-qwen-natural-memory-address-diagnostic-v1',
             'steps': steps, 'learning_rate': learning_rate,
             'train_rows': len(train_rows), 'held_rows': len(held_rows),
             'train_accuracy': train_accuracy,
+            'train_token_accuracy': train_token_accuracy,
+            'baseline_address_correct': sum(row['baseline_predicted_key'] == row['expected_key'] for row in rows),
             'address_correct': sum(row['predicted_key'] == row['expected_key'] for row in rows),
             'memory_enabled': sum(row['memory_enabled'] for row in rows),
             'value_correct': sum(row['value_correct'] for row in rows),
-            'losses': losses, 'rows': rows,
+            'losses': losses, 'token_losses': token_losses, 'rows': rows,
             'sources': {str(path): digest for path, digest in protected.items()},
             'seconds': time.perf_counter() - started,
             'peak_gpu_bytes': torch.cuda.max_memory_allocated(),
@@ -201,7 +311,8 @@ def main(output, steps, learning_rate):
             ],
         }, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
-    print({'address_correct': sum(row['predicted_key'] == row['expected_key'] for row in rows),
+    print({'baseline_address_correct': sum(row['baseline_predicted_key'] == row['expected_key'] for row in rows),
+           'address_correct': sum(row['predicted_key'] == row['expected_key'] for row in rows),
            'memory_enabled': sum(row['memory_enabled'] for row in rows),
            'value_correct': sum(row['value_correct'] for row in rows)}, flush=True)
 
