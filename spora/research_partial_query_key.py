@@ -8,10 +8,19 @@ from .pretrained_attention import SPORAFusedAttention, ValuePositionAttention
 
 
 class PartialQueryKeyPositionAttention(SPORAFusedAttention):
-    def __init__(self, parent, pairs, weight, bias):
+    def __init__(self, parent, pairs, weight, bias, *, group=None):
         nn.Module.__init__(self)
-        if not isinstance(parent, ValuePositionAttention):
+        if not isinstance(parent, (ValuePositionAttention, PartialQueryKeyPositionAttention)):
             raise ValueError('Partial query/key positions require the migrated value module')
+        if group is None:
+            group = parent.group
+        value_attention = parent
+        while isinstance(value_attention, PartialQueryKeyPositionAttention):
+            if group == value_attention.group:
+                raise ValueError('A query/key group can only be migrated once')
+            value_attention = value_attention.parent
+        if type(group) is not int or not 0 <= group < value_attention.rotary.sizes[1] // parent.head_dim:
+            raise ValueError('Invalid query/key group')
         half = parent.head_dim // 2
         if (not isinstance(pairs, (list, tuple)) or not pairs or parent.head_dim % 2
                 or any(type(pair) is not int or not 0 <= pair < half for pair in pairs)
@@ -30,7 +39,7 @@ class PartialQueryKeyPositionAttention(SPORAFusedAttention):
         self.bias = nn.Parameter(bias.detach().to(reference), requires_grad=False)
         self.parent = parent
         self.pairs = tuple(pairs)
-        self.group = parent.group
+        self.group = group
         self.layer_idx = parent.layer_idx
         self.head_dim = parent.head_dim
         self.scaling = parent.scaling
@@ -45,10 +54,14 @@ class PartialQueryKeyPositionAttention(SPORAFusedAttention):
     def out(self):
         return self.parent.out
 
+    @property
+    def position(self):
+        return self.parent.position
+
     def project(self, hidden_states, position_embeddings, position_ids):
         query, key, value = self.parent.project(hidden_states, position_embeddings, position_ids)
         width = self._coordinates.numel()
-        position = self.parent.position(position_ids)
+        position = self.position(position_ids)
         projected = F.linear(hidden_states + position, self.weight, self.bias)
         query_abs, key_abs = projected.split((width * self.query_heads, width), dim=-1)
         query_abs = query_abs.unflatten(-1, (self.query_heads, width)).transpose(1, 2)
@@ -61,16 +74,20 @@ class PartialQueryKeyPositionAttention(SPORAFusedAttention):
         return query, key, value
 
 
-def select_query_key_rows(parent, pairs, state):
-    """Copy this group's query/key projection rows in half-rotation pair order."""
+def select_query_key_rows(parent, pairs, state, *, group=None):
+    """Copy one group's query/key projection rows in half-rotation pair order."""
     if not torch.equal(parent.position.weight.detach().cpu(), state['position.weight']):
         raise ValueError('Value and query/key modules must share the same learned position table')
     width = parent.head_dim
+    if group is None:
+        group = parent.group
+    if type(group) is not int or not 0 <= group < parent.rotary.sizes[1] // width:
+        raise ValueError('Invalid query/key group')
     half = width // 2
     coordinates = [*pairs, *(pair + half for pair in pairs)]
-    first = parent.group * parent.num_key_value_groups
+    first = group * parent.num_key_value_groups
     stop = first + parent.num_key_value_groups
     rows = [head * width + coordinate for head in range(first, stop) for coordinate in coordinates]
-    start = parent.rotary.sizes[0] + parent.group * width
+    start = parent.rotary.sizes[0] + group * width
     rows.extend(start + coordinate for coordinate in coordinates)
     return state['qkv.weight'][rows], state['qkv.bias'][rows]

@@ -75,8 +75,9 @@ def query_key_position_bundle(components, values, config):
 
     if any(type(index) is not int or not isinstance(component, PartialQueryKeyPositionAttention)
            or component.layer_idx != index or component.parent is not values.get(index)
+           or component.group != component.parent.group
            for index, component in components.items()):
-        raise ValueError('Query/key positions require the same layer and value position table')
+        raise ValueError('Query/key positions require the same layer and group as the value position table')
     specs = {str(index): list(component.pairs) for index, component in sorted(components.items())}
     tensors = {}
     for index, component in components.items():

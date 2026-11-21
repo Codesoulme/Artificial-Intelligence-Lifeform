@@ -17,6 +17,7 @@ if transformers is not None:
     from spora.pretrained_attention import (AbsoluteAttention, SPORAFusedAttention, SplitPositionAttention,
                                             ValuePositionAttention, load_value_position_attention)
     from spora.research_partial_query_key import PartialQueryKeyPositionAttention, select_query_key_rows
+    from spora.value_position_checkpoint import query_key_position_bundle
 
 
 @unittest.skipIf(transformers is None, 'requires the optional Transformers runtime')
@@ -127,3 +128,27 @@ class SplitPositionAttentionTests(unittest.TestCase):
                               None, past_key_values=cache, position_ids=pos, cache_position=pos[0])[0]
         torch.testing.assert_close(chunk[:, -1], full, rtol=1e-5, atol=1e-6)
         self.assertEqual(cache.layers[0].keys.shape, (1, 2, 5, 4))
+
+    def test_partial_query_key_groups_compose_without_overwriting_each_other(self):
+        state = self.absolute.state_dict()
+        start = sum(self.absolute.sizes[:2])
+        stop = start + self.absolute.head_dim
+        values = ValuePositionAttention(self.rotary, 0, state['position.weight'],
+                                        state['qkv.weight'][start:stop], state['qkv.bias'][start:stop])
+        first_weight, first_bias = select_query_key_rows(values, (1,), state)
+        second_weight, second_bias = select_query_key_rows(values, (0,), state, group=1)
+        first = PartialQueryKeyPositionAttention(values, (1,), first_weight, first_bias)
+        combined = PartialQueryKeyPositionAttention(first, (0,), second_weight, second_bias, group=1)
+        second = PartialQueryKeyPositionAttention(values, (0,), second_weight, second_bias, group=1)
+        args = self.hidden, self.embeddings, self.positions
+        first_q, first_k, first_v = first.project(*args)
+        second_q, second_k, _ = second.project(*args)
+        query, key, value = combined.project(*args)
+        torch.testing.assert_close(query, torch.cat((first_q[:, :3], second_q[:, 3:]), dim=1))
+        torch.testing.assert_close(key, torch.cat((first_k[:, :1], second_k[:, 1:]), dim=1))
+        torch.testing.assert_close(value, first_v)
+        with self.assertRaisesRegex(ValueError, 'only be migrated once'):
+            PartialQueryKeyPositionAttention(first, (1,), first_weight, first_bias)
+        for candidate in (second, combined):
+            with self.assertRaisesRegex(ValueError, 'same layer and group'):
+                query_key_position_bundle({0: candidate}, {0: values}, self.config.to_dict())
