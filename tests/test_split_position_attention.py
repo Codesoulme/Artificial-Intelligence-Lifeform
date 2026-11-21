@@ -15,7 +15,8 @@ if transformers is not None:
     from transformers.models.qwen2.modeling_qwen2 import Qwen2Attention, Qwen2Config, Qwen2RotaryEmbedding
 
     from spora.pretrained_attention import (AbsoluteAttention, SPORAFusedAttention, SplitPositionAttention,
-                                            load_value_position_attention)
+                                            ValuePositionAttention, load_value_position_attention)
+    from spora.research_partial_query_key import PartialQueryKeyPositionAttention, select_query_key_rows
 
 
 @unittest.skipIf(transformers is None, 'requires the optional Transformers runtime')
@@ -96,3 +97,33 @@ class SplitPositionAttentionTests(unittest.TestCase):
         expected = SplitPositionAttention(self.rotary, self.absolute, (), value_groups=(group,)).project(*args)
         for actual, wanted in zip(component.project(*args), expected, strict=True):
             torch.testing.assert_close(actual, wanted)
+
+    def test_partial_query_key_uses_both_halves_and_keeps_the_value(self):
+        state = self.absolute.state_dict()
+        group = 1
+        start = sum(self.absolute.sizes[:2]) + group * self.absolute.head_dim
+        stop = start + self.absolute.head_dim
+        value = ValuePositionAttention(self.rotary, group, state['position.weight'],
+                                       state['qkv.weight'][start:stop], state['qkv.bias'][start:stop])
+        pairs = (1,)
+        weight, bias = select_query_key_rows(value, pairs, state)
+        mixed = PartialQueryKeyPositionAttention(value, pairs, weight, bias).eval()
+        args = self.hidden, self.embeddings, self.positions
+        expected = list(value.project(*args))
+        projected = self.absolute.project(*args)
+        for index, (head_start, width) in enumerate(((3, 3), (1, 1))):
+            expected[index] = expected[index].clone()
+            section = slice(head_start, head_start + width)
+            for coordinate in (1, 3):
+                expected[index][:, section, :, coordinate] = projected[index][:, section, :, coordinate]
+        for actual, wanted in zip(mixed.project(*args), expected, strict=True):
+            torch.testing.assert_close(actual, wanted)
+        cache = DynamicCache(config=self.config)
+        with torch.inference_mode():
+            full = mixed(*args[:2], None, position_ids=self.positions)[0][:, -1]
+            for start, stop in ((0, 4), (4, 5)):
+                pos = self.positions[:, start:stop]
+                chunk = mixed(self.hidden[:, start:stop], tuple(x[:, start:stop] for x in self.embeddings),
+                              None, past_key_values=cache, position_ids=pos, cache_position=pos[0])[0]
+        torch.testing.assert_close(chunk[:, -1], full, rtol=1e-5, atol=1e-6)
+        self.assertEqual(cache.layers[0].keys.shape, (1, 2, 5, 4))
