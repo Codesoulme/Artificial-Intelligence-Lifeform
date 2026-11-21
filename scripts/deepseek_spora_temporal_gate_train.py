@@ -1,4 +1,5 @@
 """Train a bounded temporal router with an explicit abstention class."""
+import argparse
 import json
 import sys
 import time
@@ -18,10 +19,11 @@ from scripts.deepseek_observation_value_probe import pool
 from scripts.deepseek_pooled_address import extract
 from scripts.deepseek_spora_composed_router_answer_eval import NEGATIVE
 from scripts.deepseek_spora_gate_fresh_intent_audit import KNOWN
+from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.deepseek_spora_memory_answer_distill import _load_candidate
 from scripts.deepseek_spora_recalibrate_name_router import SOURCE, OUTPUT as ROUTER
 from scripts.deepseek_temporal_intent_router import TRAIN, HELD, examples
-from spora.integrated_checkpoint import replacement_feature_variant_sha256
+from spora.integrated_checkpoint import load_integrated, replacement_feature_variant_sha256
 from spora.language_training import atomic_save
 from spora.named_address import feature_files_sha256
 from spora.temporal_routing import CURRENT, PAST, LATER
@@ -62,18 +64,21 @@ def by_name(templates, names):
             for name in names for label, choices in templates.items() for t in choices]
 
 
-def run():
-    if OUTPUT.exists():
-        raise FileExistsError(OUTPUT)
+def run(*, candidate=None, output=None):
+    output = OUTPUT if output is None else output
+    if output.exists():
+        raise FileExistsError(output)
     if sha(MODEL/'model.safetensors') != WEIGHT_SHA:
         raise ValueError('Protected base model mismatch')
-    router_report = json.loads((ROUTER/'result.json').read_text(encoding='utf-8'))
-    if sha(ROUTER/'router.pt') != router_report['router_sha256']:
-        raise ValueError('Name router digest mismatch')
-    router = torch.load(ROUTER/'router.pt', map_location='cpu', weights_only=True)
     config_hash = feature_files_sha256(MODEL)
-    if router['base_sha256'] != WEIGHT_SHA or router['feature_config_sha256'] != config_hash:
-        raise ValueError('Router feature provenance mismatch')
+    candidate_sha = sha(candidate) if candidate is not None else None
+    if candidate is None:
+        router_report = json.loads((ROUTER/'result.json').read_text(encoding='utf-8'))
+        if sha(ROUTER/'router.pt') != router_report['router_sha256']:
+            raise ValueError('Name router digest mismatch')
+        router = torch.load(ROUTER/'router.pt', map_location='cpu', weights_only=True)
+        if router['base_sha256'] != WEIGHT_SHA or router['feature_config_sha256'] != config_hash:
+            raise ValueError('Router feature provenance mismatch')
     train_names, cal_names = NAMES[:6], NAMES[6:]+UNKNOWN[:2]
     train = []
     for name in train_names:
@@ -106,14 +111,23 @@ def run():
     started = time.perf_counter()
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     tokenizer.padding_side = 'right'
-    base = AutoModelForCausalLM.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False,
-                                                torch_dtype=torch.float16, attn_implementation='sdpa').to('cuda').eval()
-    base.requires_grad_(False)
-    blocks = {i: _load_candidate(SOURCE/f'layer-{i}.pt', i, base).eval() for i in (6, 12)}
-    if replacement_feature_variant_sha256(MODEL, blocks) != router['feature_variant_sha256']:
-        raise ValueError('Structural variant mismatch')
-    for i, block in blocks.items():
-        base.model.layers[i] = block
+    if candidate is None:
+        base = AutoModelForCausalLM.from_pretrained(
+            MODEL, local_files_only=True, trust_remote_code=False,
+            torch_dtype=torch.float16, attn_implementation='sdpa').to('cuda').eval()
+        base.requires_grad_(False)
+        blocks = {i: _load_candidate(SOURCE/f'layer-{i}.pt', i, base).eval() for i in (6, 12)}
+        variant = replacement_feature_variant_sha256(MODEL, blocks)
+        if variant != router['feature_variant_sha256']:
+            raise ValueError('Structural variant mismatch')
+        for i, block in blocks.items():
+            base.model.layers[i] = block
+    else:
+        base = load_full_streamed()
+        decoder, _, _ = load_integrated(candidate, base, MODEL)
+        if not decoder.compatible_block_indices:
+            raise ValueError('Expected a compatible candidate checkpoint')
+        variant = None
     features, masks = extract(base, tokenizer, [r['question'] for r in rows], batch_size=4)
     vectors = pool(features, masks).float()
     n_train, n_cal = len(train), len(calibration)
@@ -152,13 +166,19 @@ def run():
         groups[group] = {'total': len(subset), 'correct': sum(r['correct'] for r in subset),
                          'false_read': sum(r['label'] == ABSTAIN and r['predicted'] != ABSTAIN for r in subset),
                          'false_abstain': sum(r['label'] != ABSTAIN and r['predicted'] == ABSTAIN for r in subset)}
-    OUTPUT.mkdir(parents=False, exist_ok=False)
-    checkpoint = OUTPUT/'temporal.pt'
+    if candidate is not None and sha(candidate) != candidate_sha:
+        raise ValueError('Candidate checkpoint changed during training')
+    output.mkdir(parents=True, exist_ok=False)
+    checkpoint = output/'temporal.pt'
+    provenance = {'feature_variant_sha256': variant}
+    if candidate is not None:
+        provenance.update(checkpoint_sha256=candidate_sha, feature_config_sha256=config_hash,
+                          hidden_indices=[6, 18])
     atomic_save({'format': 'spora-bounded-temporal-gate-v1', 'base_sha256': WEIGHT_SHA,
-                 'feature_variant_sha256': router['feature_variant_sha256'], 'threshold': threshold,
+                 **provenance, 'threshold': threshold,
                  'state': model.state_dict(), 'classes': ['current', 'past', 'later', 'abstain']}, checkpoint)
     report = {'groups': groups, 'rows': outcomes, 'base_sha256': WEIGHT_SHA,
-              'feature_variant_sha256': router['feature_variant_sha256'], 'temporal_sha256': sha(checkpoint),
+              **provenance, 'temporal_sha256': sha(checkpoint),
               'threshold': threshold, 'calibration_false_read_before_threshold': len(negative_scores),
               'train_count': n_train, 'calibration_count': n_cal, 'held_count': len(held), 'trace': trace,
               'elapsed_seconds': time.perf_counter()-started, 'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
@@ -167,11 +187,15 @@ def run():
                               'Labels past/later assume a two-event experiment; no arbitrary timeline resolution.',
                               'No memory reads, state writes, or actual answer generation in this probe.',
                               'No identity, unrestricted names or open-world safety guarantees.']}
-    with (OUTPUT/'result.json').open('x', encoding='utf-8', newline='\n') as stream:
+    with (output/'result.json').open('x', encoding='utf-8', newline='\n') as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
     print(json.dumps({'threshold': threshold, 'groups': groups}, ensure_ascii=False), flush=True)
 
 
 if __name__ == '__main__':
-    run()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--checkpoint', type=Path)
+    parser.add_argument('--output', type=Path, default=OUTPUT)
+    args = parser.parse_args()
+    run(candidate=args.checkpoint, output=args.output)

@@ -16,4 +16,4 @@ pilot.NEAR += tuple(name + '晨' for name in pilot.NAMES)
 
 
 if __name__ == '__main__':
-    pilot.main()
+    pilot.cli()

@@ -23,4 +23,4 @@ pilot.HELD += (
 
 
 if __name__ == '__main__':
-    pilot.main()
+    pilot.cli()
