@@ -5,6 +5,7 @@ import json
 import sys
 import time
 from contextlib import nullcontext
+from itertools import combinations
 from pathlib import Path
 from unittest.mock import patch
 
@@ -88,6 +89,31 @@ def placed_facts(decoder, tokenizer, source_tokens, held_tokens):
     return rows
 
 
+@torch.inference_mode()
+def select_eight_layers(runtime, tokenizer, tail, source_tokens, fixture):
+    decoder = runtime.decoder
+    passage = tokenizer.decode(source_tokens[90:465])
+    query = '通知开头写着借用的箱子是绿色。\n' + passage + '\n请回答箱子是什么颜色。'
+    text, controls, _, _ = fixture
+    inputs = (closed_think_inputs(tokenizer, query, 'cuda'),
+              dict(closed_think_inputs(tokenizer, f'{passage}\n\n{text}', 'cuda'), **controls))
+
+    def predictions():
+        return [decoder(**dict(row, use_cache=False), logits_to_keep=1).logits[0, -1].float().log_softmax(-1)
+                for row in inputs]
+
+    teacher = predictions()
+    evaluations = []
+    for layers in combinations(tail, 8):
+        with anchor_attention(decoder, layers, 256, 64):
+            distance = [float(F.kl_div(predicted, reference, reduction='sum', log_target=True))
+                        for predicted, reference in zip(predictions(), teacher, strict=True)]
+        evaluations.append({'layers': layers, 'language_kl': distance[0], 'memory_kl': distance[1]})
+    selected = min(evaluations, key=lambda row: row['language_kl'] + row['memory_kl'])
+    print('Selected eight layers', selected, flush=True)
+    return selected['layers'], evaluations
+
+
 def main(checkpoint, output, layout):
     if output.exists():
         raise FileExistsError(output)
@@ -107,6 +133,7 @@ def main(checkpoint, output, layout):
     fixtures = records(runtime.organism, HELD)
     memory_fixtures = [prepare(runtime.organism, fixtures[i]) for i in (0, 1, 6, 7, 16, 17, 22, 23)]
     compatible = decoder.compatible_block_indices
+    calibration = None
     variants = {'full': (), 'alternating': tuple(i for i in compatible if i % 4 != 0), 'all_local': compatible}
     if layout == 'readers':
         readers = set(decoder.layer_indices)
@@ -122,7 +149,7 @@ def main(checkpoint, output, layout):
         if len(tail) < 8:
             raise ValueError('Expected at least eight compatible layers after the last memory site')
         variants = {'full': (), 'last_four_local': tail[-4:], 'last_eight_local': tail[-8:]}
-    elif layout in ('anchors', 'bounded_anchors', 'placements', 'wider_prefix', 'deeper'):
+    elif layout in ('anchors', 'bounded_anchors', 'placements', 'wider_prefix', 'deeper', 'search_eight'):
         tail = tuple(i for i in compatible if i > max(decoder.layer_indices))
         if len(tail) < 8:
             raise ValueError('Expected eight compatible layers past the final memory reader')
@@ -134,6 +161,10 @@ def main(checkpoint, output, layout):
         variants = {name: layers[-4:] for name, layers in variants.items()}
         if layout == 'deeper':
             variants = {'full': (), 'prefix_sixty_four': tail[-4:], 'prefix_sixty_four_deep': tail[-8:]}
+        elif layout == 'search_eight':
+            calibration_fixture = prepare(runtime.organism, fixtures[12])
+            selected, calibration = select_eight_layers(runtime, tokenizer, tail, source_tokens, calibration_fixture)
+            variants = {'full': (), 'prefix_sixty_four_selected': selected}
     if layout != 'original':
         held_tokens = tokenizer.encode('\n'.join(corpus['development'] + corpus['test']), add_special_tokens=False)
         if len(held_tokens) <= 256:
@@ -143,7 +174,8 @@ def main(checkpoint, output, layout):
     results = {}
     for variant, layers in variants.items():
         prefix = {'prefix_four': 4, 'prefix_sixteen': 16, 'prefix_sixty_four': 64,
-                  'prefix_sixty_four_deep': 64, 'prefix_one_twenty_eight': 128}.get(variant)
+                  'prefix_sixty_four_deep': 64, 'prefix_one_twenty_eight': 128,
+                  'prefix_sixty_four_selected': 64}.get(variant)
         scope = nullcontext()
         if prefix is not None:
             scope = anchor_attention(decoder, layers, 256, prefix)
@@ -151,7 +183,7 @@ def main(checkpoint, output, layout):
             scope = local_attention(decoder, layers, 256)
         make_cache = lambda: DynamicCache(config=decoder.base.config)
         binder = nullcontext()
-        if layout in ('bounded_anchors', 'placements', 'wider_prefix', 'deeper') and prefix is not None:
+        if layout in ('bounded_anchors', 'placements', 'wider_prefix', 'deeper', 'search_eight') and prefix is not None:
             make_cache = lambda: anchored_cache(decoder.base.config, layers, 256, prefix)
             binder = bounded_generation(decoder, make_cache)
         with scope, binder:
@@ -179,7 +211,7 @@ def main(checkpoint, output, layout):
                     'late_fact': answer(decoder, tokenizer, f'{held_filler}\n{heading}\n{question}'),
                     'memory': memory_answers(decoder, tokenizer, held_filler, memory_fixtures),
                 }
-            if layout in ('placements', 'wider_prefix', 'deeper'):
+            if layout in ('placements', 'wider_prefix', 'deeper', 'search_eight'):
                 row['placed_facts'] = placed_facts(decoder, tokenizer, source_tokens, held_tokens)
             results[variant] = row
             print(variant, 'cache bytes at 512', probes[-1]['cache_bytes'],
@@ -192,6 +224,8 @@ def main(checkpoint, output, layout):
               'results': results, 'seconds': time.perf_counter() - started,
               'peak_gpu_bytes': torch.cuda.max_memory_allocated(),
               'sources': {str(path): digest for path, digest in sources.items()}}
+    if calibration is not None:
+        record['layer_calibration'] = calibration
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open('x', encoding='utf-8') as stream:
         json.dump(record, stream, ensure_ascii=False, indent=2)
@@ -217,6 +251,8 @@ if __name__ == '__main__':
                           help='Compare wider prefixes at the same total storage limit')
     variants.add_argument('--compare-deeper', action='store_const', dest='layout', const='deeper',
                           help='Compare four and eight bounded layers with the same prefix and window')
+    variants.add_argument('--search-eight', action='store_const', dest='layout', const='search_eight',
+                          help='Select eight layers on separate calibration prompts before evaluating')
     parser.set_defaults(layout='original')
     params = parser.parse_args()
     main(params.checkpoint, params.output, params.layout)

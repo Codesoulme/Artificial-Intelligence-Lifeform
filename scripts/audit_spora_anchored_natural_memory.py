@@ -52,9 +52,11 @@ def main(args):
     runtime = load_integrated_runtime(args.checkpoint, load_full_streamed(), MODEL)
     decoder = runtime.decoder.eval().requires_grad_(False)
     individual = frozen_digest(runtime.organism, runtime.state)
-    layer_ids = decoder.compatible_block_indices[-4:]
-    if len(layer_ids) != 4 or min(layer_ids) <= max(decoder.layer_indices):
-        raise ValueError('The diagnostic needs four compatible layers after memory reading')
+    layer_ids = tuple(args.bounded_layers or decoder.compatible_block_indices[-4:])
+    if (not layer_ids or min(layer_ids) <= max(decoder.layer_indices)
+            or not set(layer_ids) <= set(decoder.compatible_block_indices)
+            or sorted(set(layer_ids)) != list(layer_ids)):
+        raise ValueError('Provide distinct compatible layers after the final memory reader, in order')
     layout = {'layers': list(layer_ids), 'window': 256, 'prefix': 64}
     if args.reload_only and decoder.anchored_attention_layout != layout:
         raise ValueError('The loaded checkpoint does not contain the expected bounded attention layout')
@@ -131,6 +133,7 @@ if __name__ == '__main__':
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--temporal-source', type=Path, help='Training checkpoint for an independently trained time head')
     parser.add_argument('--version-selector', type=Path, help='Evaluate an independently fitted version selector')
+    parser.add_argument('--bounded-layers', nargs='+', type=int, help='Choose compatible layers for the bounded window')
     parser.add_argument('--route-current-turn', action='store_true',
                         help='Use a separately provided user turn for query recognition and the full text for answering')
     parser.add_argument('--output-gains', type=float, nargs='+', choices=(1., 1.5, 2.), default=[1.],

@@ -35,6 +35,12 @@
 
 将 64／256 窗口从末端四层扩到末端八层，512 词元的键值张量从约 13.00 MiB 降至 11.99 MiB。八道站名位置题的正误逐题一致。第二组记忆少答对一条，更正前查询内部期望值为「果汁」，生成改成数字 4。各布局自身的分段续算均复现整段运行的下一词元首选。保留四层为当前标准候选。实验约 178 秒，逐题证据在 `runs/spora-local-attention-deeper-v1/result.json`。
 
+随后用一道普通长提示和一道单独的带记忆提示，比较最后十层中选择八层的 45 种布局。按与全局模型的末位置词表分布差异总和选择第 18、19、20、21、22、23、24、26 层。选择阶段没有使用站名题和原有 16 条换值题。实际裁剪到 11.99 MiB 后，两组受控记忆为 6/8 和 7/8，恢复连续八层布局丢掉的答案。八道站名题逐题复现全局的正误。选择和评测总计约 217 秒。结果在 `runs/spora-local-attention-search-eight-v1/result.json`。
+
+把该布局保存为独立检查点 `runs/spora-anchored-native-eight-v1/bootstrap.pt`。所有原有张量逐元素一致。以调用方单独提供问句的长文本开发题测试，八层、全局和独立重载后的 20 条记录逐项相等。12 条问句中的 6 条在两份内部状态下都答对，八条应拒绝项均未读取。候选 SHA-256 为 `c56112947582dc8559672e31891cef6fe188f8a106c06cc63e146fda7128c9c9`，打包和重载分别约 147 秒和 94 秒。四层与八层的长多轮指令能力仍待对照。
+
+另写四个三轮场景，将 365 词元的无关短文放在第一轮，后续每个模型保留自己的生成历史。原始全局、四层、八层的严格短答均为 0/12，自然结束都是 5/12。四层和八层分别有 10/12 和 11/12 轮与全局模型逐词元一致。八层在人物交换首轮给出了目标物品，但仍带解释，并在后续错判归还后的状态。三种布局都能在寄存更正后给出东门，但未按要求只写地点。多轮数据覆盖窄，实验将每轮限制为 24 词元。逐题输出在 `runs/spora-anchored-dialogue-v1/`。
+
 ## 复现
 
 ```powershell
@@ -48,4 +54,8 @@ $checkpoint = 'runs/spora-native-query-key-v1/bootstrap.pt'
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-fact-placements --output runs/spora-local-attention-placements-v1/result.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-wider-prefix --output runs/spora-local-attention-wider-prefix-v1/result.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-deeper --output runs/spora-local-attention-deeper-v1/result.json
+.\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --search-eight --output runs/spora-local-attention-search-eight-v1/result.json
+.\.venv\Scripts\python.exe -u scripts/audit_spora_anchored_dialogue.py --checkpoint $checkpoint --output runs/spora-anchored-dialogue-v1/full.json
+.\.venv\Scripts\python.exe -u scripts/audit_spora_anchored_dialogue.py --checkpoint runs/spora-anchored-native-candidate-v1/bootstrap.pt --output runs/spora-anchored-dialogue-v1/four.json
+.\.venv\Scripts\python.exe -u scripts/audit_spora_anchored_dialogue.py --checkpoint runs/spora-anchored-native-eight-v1/bootstrap.pt --output runs/spora-anchored-dialogue-v1/eight.json
 ```
