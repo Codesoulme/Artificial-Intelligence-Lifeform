@@ -71,6 +71,21 @@ def bounded_generation(decoder, make_cache):
     return patch.object(decoder.base, '_prepare_cache_for_generation', prepare)
 
 
+def placed_facts(decoder, tokenizer, source_tokens, held_tokens):
+    rows = []
+    for corpus, tokens, name in (('first', source_tokens[:480], '鹭汀站'),
+                                 ('second', held_tokens, '松川站')):
+        for offset in (0, 32, 96, len(tokens) - 32):
+            text = (f'{tokenizer.decode(tokens[:offset])}\n\n'
+                    f'蓝色通知写着接驳车的站点是{name}。\n\n'
+                    f'{tokenizer.decode(tokens[offset:])}\n\n'
+                    '蓝色通知写的是哪个接驳车站点？只回答站名。')
+            response = answer(decoder, tokenizer, text)
+            rows.append(dict(response, corpus=corpus, filler_offset=offset,
+                             expected=name, contains_expected=name in response['text']))
+    return rows
+
+
 def main(checkpoint, output, layout):
     if output.exists():
         raise FileExistsError(output)
@@ -105,11 +120,13 @@ def main(checkpoint, output, layout):
         if len(tail) < 8:
             raise ValueError('Expected at least eight compatible layers after the last memory site')
         variants = {'full': (), 'last_four_local': tail[-4:], 'last_eight_local': tail[-8:]}
-    elif layout in ('anchors', 'bounded_anchors'):
+    elif layout in ('anchors', 'bounded_anchors', 'placements', 'wider_prefix'):
         tail = tuple(i for i in compatible if i > max(decoder.layer_indices))[-4:]
         variants = {'full': (), 'prefix_sixteen': tail}
         if layout == 'anchors':
             variants = {'full': (), 'prefix_four': tail, 'prefix_sixteen': tail}
+        elif layout == 'wider_prefix':
+            variants = {'full': (), 'prefix_sixty_four': tail, 'prefix_one_twenty_eight': tail}
     if layout != 'original':
         held_tokens = tokenizer.encode('\n'.join(corpus['development'] + corpus['test']), add_special_tokens=False)
         if len(held_tokens) <= 256:
@@ -118,7 +135,8 @@ def main(checkpoint, output, layout):
     baseline = {}
     results = {}
     for variant, layers in variants.items():
-        prefix = {'prefix_four': 4, 'prefix_sixteen': 16}.get(variant)
+        prefix = {'prefix_four': 4, 'prefix_sixteen': 16, 'prefix_sixty_four': 64,
+                  'prefix_one_twenty_eight': 128}.get(variant)
         scope = nullcontext()
         if prefix is not None:
             scope = anchor_attention(decoder, layers, 256, prefix)
@@ -126,7 +144,7 @@ def main(checkpoint, output, layout):
             scope = local_attention(decoder, layers, 256)
         make_cache = lambda: DynamicCache(config=decoder.base.config)
         binder = nullcontext()
-        if layout == 'bounded_anchors' and prefix is not None:
+        if layout in ('bounded_anchors', 'placements', 'wider_prefix') and prefix is not None:
             make_cache = lambda: anchored_cache(decoder.base.config, layers, 256, prefix)
             binder = bounded_generation(decoder, make_cache)
         with scope, binder:
@@ -154,6 +172,8 @@ def main(checkpoint, output, layout):
                     'late_fact': answer(decoder, tokenizer, f'{held_filler}\n{heading}\n{question}'),
                     'memory': memory_answers(decoder, tokenizer, held_filler, memory_fixtures),
                 }
+            if layout in ('placements', 'wider_prefix'):
+                row['placed_facts'] = placed_facts(decoder, tokenizer, source_tokens, held_tokens)
             results[variant] = row
             print(variant, 'cache bytes at 512', probes[-1]['cache_bytes'],
                   'long memory exact', sum(row['text'] == row['expected'] for row in memory), flush=True)
@@ -183,7 +203,11 @@ if __name__ == '__main__':
     variants.add_argument('--compare-anchors', action='store_const', dest='layout', const='anchors',
                           help='Keep a small prefix in the final four layers while masking distant tokens')
     variants.add_argument('--compare-bounded-anchors', action='store_const', dest='layout', const='bounded_anchors',
-                          help='Measure an actual bounded prefix-and-recent cache for ordinary generation')
+                          help='Measure an actual bounded prefix-and-recent cache during generation')
+    variants.add_argument('--compare-fact-placements', action='store_const', dest='layout', const='placements',
+                          help='Measure bounded attention on facts at different positions')
+    variants.add_argument('--compare-wider-prefix', action='store_const', dest='layout', const='wider_prefix',
+                          help='Compare wider prefixes at the same total storage limit')
     parser.set_defaults(layout='original')
     params = parser.parse_args()
     main(params.checkpoint, params.output, params.layout)

@@ -18,6 +18,19 @@
 
 小型 CPU 对照验证多段输入的连续位置、受限层的存储上限、全局层的完整存储和临时布局退出后的恢复。共 7 项注意力测试通过。实际裁剪在隔离的本机推理入口运行，支持单序列追加式生成。权重摘要与神经记忆状态摘要通过核对。四轮分别用时约 155、157、154、128 秒。当前候选仍需覆盖落在前缀之外的早期事实、真实多轮对话与自然寻址，并验证标准检查点重载。
 
+## 改变事实位置与前缀长度
+
+在两段填充文本中分别植入一条新接驳车站名，逐次移到开头、第 32 与第 96 个填充词元之后、末段前 32 个词元处。每种布局在同一条输入上对照。生成上限仍为 12 词元，站名出现在可见回答里计为找到。全局基线两轮均为 5/8，逐题通过位置一致。
+
+| 末端四层的前缀长度 | 8 条位置题 | 第一组受控记忆 | 第二组受控记忆 |
+|---|---:|---:|---:|
+| 全局基线 | 5/8 | 5/8 | 7/8 |
+| 16 词元 | 4/8 | 5/8 | 7/8 |
+| 64 词元 | 5/8 | 6/8 | 7/8 |
+| 128 词元 | 5/8 | 5/8 | 7/8 |
+
+16 词元版丢掉了全局基线在两个第 32 位置找对的站名，并在第一段末端多答对一条。64 和 128 词元版逐题复现基线的正误，两版在第 96 位置的题上都失败。三种前缀都与最近词元共用同样的 256 词元预算，因此末端四层的存储尺寸相同。64 词元版还在一条长提示里恢复了第二个人的历史饮品，其余 15 条记忆生成与全局基线逐词元一致。本轮将 64 词元版选作下一阶段的结构候选，按同等存储预算下的逐题表现选择。新的位置题用时约 144 秒，更宽前缀的对照约 183 秒。
+
 ## 复现
 
 ```powershell
@@ -28,4 +41,6 @@ $checkpoint = 'runs/spora-native-query-key-v1/bootstrap.pt'
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-tail --output runs/spora-local-attention-tail-v1/result.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-anchors --output runs/spora-local-attention-anchors-v1/result.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-bounded-anchors --output runs/spora-local-attention-bounded-anchors-v1/result.json
+.\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-fact-placements --output runs/spora-local-attention-placements-v1/result.json
+.\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-wider-prefix --output runs/spora-local-attention-wider-prefix-v1/result.json
 ```
