@@ -1,7 +1,7 @@
 """Experimental incremental individual state bound to a structural bootstrap.
 
-The immutable v3/v4 checkpoint holds the reader and replacement layers; TensorStore
-holds the evolving neural individual. The large DeepSeek base remains separate.
+The immutable checkpoint holds the reader and the layer migration settings.
+TensorStore holds the evolving neural individual and the base weights are loaded separately.
 Only a single writer with explicit revision checks is supported. Bootstrap hashes
 are verified on open; a cheap file-stat guard and tensor version counters detect
 ordinary in-session changes but are not an authentication or tamper boundary.
@@ -12,7 +12,7 @@ from dataclasses import replace
 import torch
 
 from .durable import TensorStore
-from .integrated_checkpoint import (STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT, _file_sha256, _validate_binding,
+from .integrated_checkpoint import (FORMAT, STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT, _file_sha256, _validate_binding,
                                     load_integrated)
 from .integrated_open_base import NativeSPORAMemoryReader
 from .internal_memory import observe_sourced
@@ -32,8 +32,9 @@ def _bootstrap_metadata(path):
     if not isinstance(payload, dict) or not isinstance(payload.get('metadata'), dict):
         raise ValueError('Invalid structural bootstrap')
     meta = payload['metadata']
-    if meta.get('format') not in (STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT) or not meta.get('replacements'):
-        raise ValueError('A structural v3 or v4 bootstrap is required')
+    if (meta.get('format') not in (FORMAT, STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT)
+            or not (meta.get('replacements') or meta.get('compatible_layers'))):
+        raise ValueError('A structural bootstrap with migrated decoder layers is required')
     return {'format': STORE_FORMAT, 'bootstrap_sha256': _file_sha256(path),
             'base_sha256': meta.get('base_sha256'), 'feature_config_sha256': meta.get('feature_config_sha256'),
             'feature_variant_sha256': meta.get('feature_variant_sha256')}
@@ -46,9 +47,13 @@ def _decoder_signature(decoder):
     layers = decoder.base.model.layers
     adapter = decoder.output_adapter
     shape = tuple((i, id(layer), getattr(layer, 'max_length', None),
-                   getattr(layer, 'layer_idx', None), layer.training) for i, layer in enumerate(layers))
+                   getattr(layer, 'layer_idx', None), getattr(layer, 'feedforward_fraction', None),
+                   layer.training) for i, layer in enumerate(layers))
+    placement = tuple((name, module.read_memory_at_output) for name, module in decoder.base.named_modules()
+                      if hasattr(module, 'read_memory_at_output'))
     return (id(decoder.base), decoder.base.training, id(decoder.reader), decoder.reader.training,
             getattr(decoder.reader, 'strength', None), tuple(decoder.layer_indices), shape,
+            tuple(decoder.compatible_block_indices), decoder.position_table_max_position, placement,
             tensors(decoder.base), tensors(decoder.reader),
             None if adapter is None else (id(adapter), adapter.training,
                                           tuple(sorted(adapter.config_dict().items())), tensors(adapter)))
@@ -194,6 +199,7 @@ def create_integrated_durable(database, bootstrap, base, model_dir, *, individua
     before = _stat(bootstrap)
     metadata = _bootstrap_metadata(bootstrap)
     previous_layers = list(base.model.layers)
+    previous_rotary = getattr(base.model, 'rotary_emb', None)
     store = None
     try:
         decoder, organism, state = load_integrated(bootstrap, base, model_dir, individual_device=individual_device)
@@ -207,6 +213,8 @@ def create_integrated_durable(database, bootstrap, base, model_dir, *, individua
             store.close()
         for index, layer in enumerate(previous_layers):
             base.model.layers[index] = layer
+        if previous_rotary is not None:
+            base.model.rotary_emb = previous_rotary
         raise
 
 
@@ -215,6 +223,7 @@ def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_
     before = _stat(bootstrap)
     expected = _bootstrap_metadata(bootstrap)
     previous_layers = list(base.model.layers)
+    previous_rotary = getattr(base.model, 'rotary_emb', None)
     store = TensorStore(database)
     try:
         organism, state, metadata, _ = store.read(device=individual_device)
@@ -233,4 +242,6 @@ def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_
         store.close()
         for index, layer in enumerate(previous_layers):
             base.model.layers[index] = layer
+        if previous_rotary is not None:
+            base.model.rotary_emb = previous_rotary
         raise

@@ -100,7 +100,8 @@ class IntegratedSPORARuntime:
                             feedforward_fractions=self._feedforward_fractions(),
                             feedforward_output_layers=self._feedforward_output_layers(),
                             compatible_layers=self.decoder.compatible_block_indices,
-                            position_table_max_position=self.decoder.position_table_max_position)
+                            position_table_max_position=self.decoder.position_table_max_position,
+                            position_coefficients=self._position_coefficients())
         self.state = candidate
         return decision
 
@@ -115,7 +116,8 @@ class IntegratedSPORARuntime:
                         feedforward_fractions=self._feedforward_fractions(),
                         feedforward_output_layers=self._feedforward_output_layers(),
                         compatible_layers=self.decoder.compatible_block_indices,
-                        position_table_max_position=self.decoder.position_table_max_position)
+                        position_table_max_position=self.decoder.position_table_max_position,
+                        position_coefficients=self._position_coefficients())
         self.checkpoint_path = destination
         return destination
 
@@ -158,6 +160,11 @@ class IntegratedSPORARuntime:
             if block.mlp.read_memory_at_output:
                 output_layers.append(index)
         return output_layers
+
+    def _position_coefficients(self):
+        if self.decoder.position_table_max_position is None:
+            return None
+        return self.decoder.base.model.rotary_emb.learned_coefficients()
 
 
 def _file_sha256(path):
@@ -286,7 +293,7 @@ def _validate_base_config(directory, hidden_width, layers):
 
 def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, replacements=None,
                     residuals=None, output_adapter=None, feedforward_fractions=None, compatible_layers=None,
-                    feedforward_output_layers=(), position_table_max_position=None):
+                    feedforward_output_layers=(), position_table_max_position=None, position_coefficients=None):
     if type(reader) not in (ScaledOpenBaseMemory, NativeSPORAMemoryReader):
         raise ValueError('Expected a supported scaled SPORA memory reader')
     if (not isinstance(layer_indices, (tuple, list)) or len(layer_indices) != 2
@@ -332,6 +339,8 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
             and (type(position_table_max_position) is not int
                  or not 0 < position_table_max_position <= base_config.get('max_position_embeddings', 0))):
         raise ValueError('Invalid position table length')
+    if position_coefficients is not None:
+        _validate_position_coefficients(position_coefficients, position_table_max_position, base_config)
     variant = (structural_feature_sha256(base_sha, config_sha, {x['index']: x['sha256'] for x in specs},
                                          {x['index']: x['max_length'] for x in specs}) if specs else None)
     _validate_binding(organism, base_sha, config_sha, variant)
@@ -376,6 +385,8 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         metadata['compatible_layers'] = list(compatible_layers)
     if position_table_max_position is not None:
         metadata['position_table_max_position'] = position_table_max_position
+    if position_coefficients is not None:
+        tensors['position/coefficients'] = position_coefficients.detach().cpu().clone()
     if output_config is not None:
         metadata['output_adapter'] = output_config
     if feedforward_fractions:
@@ -386,6 +397,17 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         metadata['feedforward_output_layers'] = sorted(feedforward_output_layers)
     integrity = _digest(metadata, tensors)
     atomic_save({'metadata': metadata, 'tensors': tensors, 'integrity_sha256': integrity}, path)
+
+
+def _validate_position_coefficients(tensor, length, config):
+    heads = config.get('num_attention_heads')
+    width = config.get('head_dim')
+    if width is None and type(heads) is int and heads > 0:
+        width = config['hidden_size'] // heads
+    if (length is None or type(width) is not int or width < 2 or width % 2
+            or not isinstance(tensor, torch.Tensor) or tensor.dtype != torch.float32
+            or tensor.shape != (length, width) or not bool(torch.isfinite(tensor).all())):
+        raise ValueError('Invalid learned position coefficients')
 
 
 def load_integrated(path, base, model_dir, *, individual_device='cpu'):
@@ -418,8 +440,10 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     replacement_tensors = {k: v for k, v in tensors.items() if k.startswith('replacement/')}
     residual_tensors = {k: v for k, v in tensors.items() if k.startswith('residual/')}
     output_tensors = {k[len('output/'):]: v for k, v in tensors.items() if k.startswith('output/')}
+    has_position = 'position/coefficients' in tensors
+    position_coefficients = tensors.get('position/coefficients')
     if (len(individual_tensors) + len(reader_tensors) + len(replacement_tensors)
-            + len(residual_tensors) + len(output_tensors) != len(tensors)):
+            + len(residual_tensors) + len(output_tensors) + has_position != len(tensors)):
         raise ValueError('Unexpected integrated checkpoint tensor')
     format_name = metadata['format']
     if format_name in (LEGACY_FORMAT, FORMAT):
@@ -514,6 +538,8 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
             and (type(position_table_max_position) is not int
                  or not 0 < position_table_max_position <= base_config.get('max_position_embeddings', 0))):
         raise ValueError('Invalid position table metadata')
+    if has_position:
+        _validate_position_coefficients(position_coefficients, position_table_max_position, base_config)
     output_config = metadata.get('output_adapter')
     if output_config is None:
         if output_tensors:
@@ -572,6 +598,7 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         block.to(device).eval()
     previous = {index: layers[index] for index in
                 set(loaded_replacements) | set(config['layers']) | set(compatible_layers)}
+    prior_rotary = getattr(base.model, 'rotary_emb', None)
     try:
         for index, block in loaded_replacements.items():
             layers[index] = block
@@ -580,7 +607,7 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         integrated = IntegratedOpenBase(base, reader, config['layers'], output_adapter=output_adapter)
         if position_table_max_position is not None:
             integrated.eval()
-            integrated.migrate_position_encoder(position_table_max_position)
+            table = integrated.migrate_position_encoder(position_table_max_position)
         if compatible_layers:
             integrated.eval()
             integrated.migrate_pretrained_blocks(compatible_layers)
@@ -603,9 +630,14 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
                 container.layer = block
             else:
                 layers[index] = block
+        if has_position:
+            with torch.no_grad():
+                table.coefficients.weight.copy_(position_coefficients)
     except Exception:
         for index, layer in previous.items():
             layers[index] = layer
+        if prior_rotary is not None:
+            base.model.rotary_emb = prior_rotary
         raise
     return integrated, organism, state
 

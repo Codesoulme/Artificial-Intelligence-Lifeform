@@ -22,9 +22,13 @@ class SPORAPositionTable(nn.Module):
         prototype = torch.empty((1, 1, 1), dtype=torch.float32, device=positions.device)
         cosine, sine = source(prototype, positions)
         half = cosine.shape[-1] // 2
-        self.coefficients = nn.Embedding.from_pretrained(
-            torch.cat((cosine[0, :, :half], sine[0, :, :half]), dim=-1), freeze=False,
-        )
+        initial = torch.cat((cosine[0, :, :half], sine[0, :, :half]), dim=-1)
+        self.coefficients = nn.Embedding.from_pretrained(initial.clone(), freeze=False)
+        self.register_buffer('_initial_coefficients', initial, persistent=False)
+
+    def learned_coefficients(self):
+        weights = self.coefficients.weight.detach()
+        return None if torch.equal(weights, self._initial_coefficients) else weights
 
     @property
     def max_position(self):
