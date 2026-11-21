@@ -25,6 +25,8 @@ from scripts.deepseek_spora_original_layer_name_router import LOCATOR_PROMPT, Se
 from scripts.deepseek_spora_runtime_chat import _prepare_memory_read
 from scripts.spora_event_scan_selector import select_event
 from scripts.spora_unknown_state_probe import fresh_controlled_state
+from scripts.train_qwen_character_name_span_20261122 import USER_PREFIX as CHARACTER_PROMPT, character_inputs, select
+from spora.explicit_span_address import explicit_span_address
 from spora.growing import grow
 from spora.identity_fingerprints import IdentityFingerprints
 from spora.identity_read_guard import IdentityReadGuard
@@ -34,6 +36,7 @@ from spora.language_training import atomic_save, frozen_digest
 from spora.memory_output import MemoryOutputAdapter
 from spora.named_address import address_basis_sha256, feature_files_sha256
 from spora.research_temporal_intent import temporal_logits, time_selection
+from spora.research_name_span import CharacterNameSpan
 
 
 def controlled(organism, offset):
@@ -187,23 +190,8 @@ def fit_output(decoder, tokenizer, organism):
     return adapter, stats
 
 
-@torch.inference_mode()
-def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_address=False,
-          oracle_diagnostic=False, trim_punctuation=False, fresh=False, fresh_v2=False,
-          oracle_address_only=False):
-    questions = fresh_version_cases() if fresh_v2 else fresh_cases() if fresh else cases()
-    calibration = calibration_cases() if calibrate_address else []
-    texts = [question[0] for question in questions] + [question for question, _ in calibration]
-    if len(set(texts)) != len(texts):
-        raise ValueError('Calibration and evaluation questions must be distinct')
-    hidden_indices = tuple(router['hidden_indices'])
-    if hidden_indices != tuple(time_head['hidden_indices']):
-        raise ValueError('Router heads require different features')
+def token_proposer(tokenizer, organism, fingerprints, router, features, masks, trim_punctuation):
     user_prefix = router.get('user_prefix', '')
-    if user_prefix not in ('', LOCATOR_PROMPT):
-        raise ValueError('Unsupported locate prompt')
-    features, masks = extract(decoder.base, tokenizer, texts, batch_size=1, hidden_indices=hidden_indices,
-                              user_prefix=user_prefix)
     bases = torch.stack([F.normalize(site.current_basis.detach().cpu().float(), dim=-1)
                          for site in organism.memories])
     vectors = torch.cat([F.layer_norm(features[:, site].float(), (features.shape[-1],)) for site in range(2)], dim=-1)
@@ -223,14 +211,6 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
     locator.load_state_dict(router['locator_state'], strict=True)
     locator_probs = (locator(vectors, masks) if architecture == 'span'
                      else locator(vectors).squeeze(-1).sigmoid())
-    time_features, time_masks = (extract(decoder.base, tokenizer, texts[:len(questions)], batch_size=1,
-                                         hidden_indices=hidden_indices) if user_prefix else (features, masks))
-    temporal_probs = temporal_logits(time_head, time_features, time_masks).softmax(-1)
-    time_decisions = time_selection(temporal_probs, time_head['threshold'],
-                                    factorized=time_head.get('architecture') == 'factorized')
-    fingerprints = IdentityFingerprints(organism.config.key_count)
-    for name, key in zip(NAMES, KEYS, strict=True):
-        fingerprints.bind(key, name)
     guard = IdentityReadGuard(fingerprints, tokenizer)
 
     def propose(i, question, locator_threshold):
@@ -265,7 +245,63 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
             return None, None, 'identity_mismatch', selected_text
         return key, float(similarity.min()), None, selected_text
 
-    threshold, locator_threshold = router['address_threshold'], router['locator_threshold']
+    return propose
+
+
+def character_proposer(tokenizer, fingerprints, router, features, texts):
+    model = CharacterNameSpan(router['feature_width']).eval()
+    model.load_state_dict(router['state'], strict=True)
+    vectors, mask = character_inputs(tokenizer, texts, features, router['user_prefix'])
+    selection = select(model, vectors, mask, router['margin'])
+
+    def propose(i, question, _):
+        span, margin = selection[i]
+        if span is None:
+            return None, None, 'no_single_span', None
+        name = question[slice(*span)]
+        address = explicit_span_address(fingerprints, question, span, name)
+        if address['key'] is None:
+            return None, None, address['reason'], name
+        return address['key'], margin, None, name
+
+    return propose
+
+
+@torch.inference_mode()
+def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_address=False,
+          oracle_diagnostic=False, trim_punctuation=False, fresh=False, fresh_v2=False,
+          oracle_address_only=False):
+    questions = fresh_version_cases() if fresh_v2 else fresh_cases() if fresh else cases()
+    is_character = router.get('format') == 'spora-character-name-span-v1'
+    if is_character and (calibrate_address or trim_punctuation):
+        raise ValueError('Character span calibration is learned during training')
+    calibration = calibration_cases() if calibrate_address else []
+    texts = [question[0] for question in questions] + [question for question, _ in calibration]
+    if len(set(texts)) != len(texts):
+        raise ValueError('Calibration and evaluation questions must be distinct')
+    hidden_indices = tuple(router['hidden_indices'])
+    if hidden_indices != tuple(time_head['hidden_indices']):
+        raise ValueError('Router heads require different features')
+    user_prefix = router.get('user_prefix', '')
+    if user_prefix not in ((CHARACTER_PROMPT,) if is_character else ('', LOCATOR_PROMPT)):
+        raise ValueError('Unsupported locate prompt')
+    features, masks = extract(decoder.base, tokenizer, texts, batch_size=1, hidden_indices=hidden_indices,
+                              user_prefix=user_prefix, last_logit_only=is_character)
+    fingerprints = IdentityFingerprints(organism.config.key_count)
+    for name, key in zip(NAMES, KEYS, strict=True):
+        fingerprints.bind(key, name)
+    if is_character:
+        propose = character_proposer(tokenizer, fingerprints, router, features, texts)
+    else:
+        propose = token_proposer(tokenizer, organism, fingerprints, router, features, masks, trim_punctuation)
+    time_features, time_masks = (extract(decoder.base, tokenizer, texts[:len(questions)], batch_size=1,
+                                         hidden_indices=hidden_indices) if user_prefix else (features, masks))
+    temporal_probs = temporal_logits(time_head, time_features, time_masks).softmax(-1)
+    time_decisions = time_selection(temporal_probs, time_head['threshold'],
+                                    factorized=time_head.get('architecture') == 'factorized')
+
+    threshold = router.get('address_threshold', 0.)
+    locator_threshold = router.get('locator_threshold', router.get('margin'))
     calibration_rows = []
     if calibration:
         best = (-1, -1, -1.)
@@ -331,7 +367,7 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
                 ]
                 outcome['oracle_address_answers'] = addressed
                 outcome['oracle_address_correct_pair'] = correct_pair(addressed)
-    return outcomes, {'threshold': threshold, 'previous_threshold': router['address_threshold'],
+    return outcomes, {'threshold': threshold, 'previous_threshold': router.get('address_threshold'),
                       'locator_threshold': locator_threshold, 'calibration_rows': calibration_rows}
 
 
@@ -341,9 +377,12 @@ def main(args):
     checkpoint_sha = sha(args.checkpoint)
     router, router_sha = load_head(args.router, 'router.pt', 'router_sha256', checkpoint_sha)
     temporal, temporal_sha = load_head(args.temporal, 'temporal.pt', 'temporal_sha256', checkpoint_sha)
+    if router.get('format') == 'spora-character-name-span-v1':
+        torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     decoder, organism, original = load_integrated(args.checkpoint, load_full_streamed(), MODEL)
-    if address_basis_sha256(organism) != router['address_basis_sha256']:
+    if (router.get('format') != 'spora-character-name-span-v1'
+            and address_basis_sha256(organism) != router['address_basis_sha256']):
         raise ValueError('Name router belongs to different address weights')
     decoder.eval().requires_grad_(False)
     original_digest = frozen_digest(organism, original)
