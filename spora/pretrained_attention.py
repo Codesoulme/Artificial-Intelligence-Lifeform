@@ -203,8 +203,8 @@ class SPORAResidualBlock(nn.Module):
 
 
 class AbsoluteAttention(SPORAFusedAttention):
-    def __init__(self, source, max_position):
-        super().__init__(source)
+    def __init__(self, source, max_position, *, keep_groups=False):
+        super().__init__(source, keep_groups=keep_groups)
         self.out = copy.deepcopy(self.out)
         self.max_position = max_position
         self.position = torch.nn.Embedding(self.max_position, source.q_proj.in_features,
@@ -217,8 +217,8 @@ class AbsoluteAttention(SPORAFusedAttention):
             raise ValueError('Position is outside the learned table')
         values = hidden_states + (1 - self.rotary_fraction) * self.position(position_ids)
         shape = values.shape[:-1]
-        qkv = self.qkv(values).reshape(*shape, 3, -1, self.head_dim)
-        query, key, value = qkv.permute(2, 0, 3, 1, 4).unbind(0)
+        query, key, value = (projection.reshape(*shape, -1, self.head_dim).transpose(1, 2)
+                             for projection in self.qkv(values).split(self.sizes, dim=-1))
         if self.rotary_fraction:
             cos, sin = (component.to(query.dtype) for component in position_embeddings)
             q_rotated, k_rotated = apply_rotary_pos_emb(query, key, cos, sin)
