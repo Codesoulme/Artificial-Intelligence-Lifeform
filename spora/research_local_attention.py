@@ -41,9 +41,8 @@ def local_attention(decoder, indices, window):
         config.sliding_window = previous_window
 
 
-@contextmanager
-def anchor_attention(decoder, indices, window, prefix):
-    """Test a causal prefix and recent-token mask with fixed absolute positions."""
+def install_anchor_mask(decoder, indices, window, prefix):
+    """Install causal prefix and recent-token masks on selected decoder layers."""
     from .integrated_checkpoint import _compatible_blocks
 
     blocks = dict(_compatible_blocks(decoder))
@@ -54,6 +53,9 @@ def anchor_attention(decoder, indices, window, prefix):
         positions = kwargs['cache_position']
         cache = kwargs['past_key_values']
         layer = None if cache is None else cache.layers[module.layer_idx]
+        past = 0 if layer is None else layer.get_seq_length()
+        if past + positions.numel() <= window:
+            return None
         retained = getattr(layer, 'retained_positions', None)
         if retained is None:
             keys = torch.arange(positions[-1] + 1, device=positions.device)
@@ -71,13 +73,34 @@ def anchor_attention(decoder, indices, window, prefix):
                 mask = original.masked_fill(~mask, torch.finfo(original.dtype).min)
         return args, dict(kwargs, attention_mask=mask)
 
-    handles = [blocks[index].self_attn.register_forward_pre_hook(mask_positions, with_kwargs=True)
-               for index in indices]
+    return [blocks[index].self_attn.register_forward_pre_hook(mask_positions, with_kwargs=True)
+            for index in indices]
+
+
+@contextmanager
+def anchor_attention(decoder, indices, window, prefix):
+    """Apply the anchor mask for an isolated experiment."""
+    handles = install_anchor_mask(decoder, indices, window, prefix)
     try:
         yield
     finally:
         for handle in handles:
             handle.remove()
+
+
+def validate_anchor_layout(layout, compatible, position_limit):
+    if layout is None:
+        return None
+    if not isinstance(layout, dict) or set(layout) != {'layers', 'window', 'prefix'}:
+        raise ValueError('Invalid anchored attention layout')
+    layers, window, prefix = (layout[key] for key in ('layers', 'window', 'prefix'))
+    if (type(window) is not int or type(prefix) is not int or type(position_limit) is not int
+            or not 0 < prefix < window - 1 or window >= position_limit
+            or not isinstance(layers, (tuple, list)) or not layers
+            or any(type(index) is not int or index <= 0 or index not in compatible for index in layers)
+            or len(set(layers)) != len(layers)):
+        raise ValueError('Anchored attention needs compatible layers and a valid context window')
+    return tuple(sorted(layers)), window, prefix
 
 
 def anchored_cache(config, indices, window, prefix):

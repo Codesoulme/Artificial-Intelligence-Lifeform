@@ -94,12 +94,22 @@ class IntegratedDurableTests(unittest.TestCase):
         first = PartialQueryKeyPositionAttention(value, (1,), torch.randn(6, 16), torch.randn(6))
         layer.self_attn = PartialQueryKeyPositionAttention(first, (0,), torch.randn(6, 16), torch.randn(6),
                                                           group=1).eval()
+        layout = {'layers': [1], 'window': 4, 'prefix': 1}
+        decoder.configure_anchored_attention(layout)
         IntegratedSPORARuntime(decoder, organism, state, self.root).save(self.bootstrap)
-        tokens = torch.tensor([[3, 5, 6, 4]])
+        tokens = torch.tensor([[3, 5, 6, 4, 7, 8]])
         expected = decoder(tokens, memory_state=state, use_cache=False).logits
+        generated = decoder.generate(tokens, memory_state=state, use_cache=True, max_new_tokens=3,
+                                     pad_token_id=0, eos_token_id=None, return_dict_in_generate=True)
+        self.assertEqual(generated.past_key_values.layers[1].keys.shape[-2], 3)
         with create_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root) as runtime:
             actual = runtime.decoder(tokens, memory_state=runtime.state, use_cache=False).logits
             torch.testing.assert_close(actual, expected, atol=0, rtol=0)
+            self.assertEqual(runtime.decoder.anchored_attention_layout, layout)
+            restored = runtime.generate(tokens, use_cache=True, max_new_tokens=3, pad_token_id=0,
+                                        eos_token_id=None, return_dict_in_generate=True)
+            self.assertTrue(torch.equal(restored.sequences, generated.sequences))
+            self.assertEqual(restored.past_key_values.layers[1].keys.shape[-2], 3)
             runtime.observe_sourced(4, 2, 'direct', 1.0)
             digest = frozen_digest(runtime.organism, runtime.state)
         with load_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root) as runtime:

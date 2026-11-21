@@ -63,6 +63,7 @@ def _decoder_signature(decoder):
     return (id(decoder.base), decoder.base.training, id(decoder.reader), decoder.reader.training,
             getattr(decoder.reader, 'strength', None), tuple(decoder.layer_indices), shape,
             tuple(decoder.compatible_block_indices), decoder.position_table_max_position,
+            decoder.anchored_attention_layout,
             placement, residual_modes, activations, value_groups, query_key_pairs,
             tensors(decoder.base), tensors(decoder.reader),
             None if adapter is None else (id(adapter), adapter.training,

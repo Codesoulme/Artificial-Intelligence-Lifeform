@@ -262,9 +262,28 @@ class IntegratedOpenBase(nn.Module):
         self.layer_indices = tuple(layer_indices)
         self.compatible_block_indices = ()
         self.position_table_max_position = None
+        self._anchor_layout = None
         self._memory_context = ContextVar('spora_integrated_memory', default=None)
         for site, index in enumerate(self.layer_indices):
             layers[index] = _MemoryDecoderLayer(layers[index], reader, site, self._memory_context)
+
+    @property
+    def anchored_attention_layout(self):
+        if self._anchor_layout is None:
+            return None
+        layers, window, prefix = self._anchor_layout
+        return {'layers': list(layers), 'window': window, 'prefix': prefix}
+
+    def configure_anchored_attention(self, layout):
+        """Bind bounded attention to the migrated decoder's generation path."""
+        from .research_local_attention import install_anchor_mask, validate_anchor_layout
+
+        if self._anchor_layout is not None:
+            raise ValueError('Anchored attention is already configured')
+        spec = validate_anchor_layout(layout, self.compatible_block_indices, self.position_table_max_position)
+        if spec is not None:
+            install_anchor_mask(self, *spec)
+            self._anchor_layout = spec
 
     def migrate_pretrained_blocks(self, indices=None):
         """Convert selected Qwen2 blocks while retaining their native functions.
@@ -399,6 +418,12 @@ class IntegratedOpenBase(nn.Module):
             raise ValueError('Memory calls accept at most one positional base argument')
         if memory_state is not None and kwargs.get('past_key_values') is not None:
             raise ValueError('External key-value caches are not supported with memory state')
+        if self._anchor_layout is not None:
+            from .research_local_attention import anchored_cache
+
+            settings = kwargs.get('generation_config') or self.base.generation_config
+            if kwargs.get('use_cache', settings.use_cache) and kwargs.get('past_key_values') is None:
+                kwargs['past_key_values'] = anchored_cache(self.base.config, *self._anchor_layout)
         if memory_output_logits is not None:
             if self.output_adapter is None:
                 raise ValueError('Memory output adapter is not attached')

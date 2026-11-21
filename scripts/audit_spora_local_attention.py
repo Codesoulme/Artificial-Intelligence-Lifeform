@@ -64,7 +64,9 @@ def memory_answers(decoder, tokenizer, filler, fixtures):
 
 
 def bounded_generation(decoder, make_cache):
-    def prepare(_generation_config, model_kwargs, _generation_mode, batch_size, _max_length):
+    def prepare(generation_config, model_kwargs, _generation_mode, batch_size, _max_length):
+        if not generation_config.use_cache:
+            return
         if batch_size != 1 or model_kwargs.get('past_key_values') is not None:
             raise ValueError('Expected fresh bounded storage for a single evaluation sequence')
         model_kwargs['past_key_values'] = make_cache()

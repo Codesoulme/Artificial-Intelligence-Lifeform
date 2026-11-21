@@ -27,10 +27,13 @@ def write(path, data):
         stream.write('\n')
 
 
-def assess(runtime, tokenizer, router, temporal):
+def assess(runtime, tokenizer, router, temporal, *, questions=None, use_cache=None, routing_questions=None,
+           output_gain=1.):
     states = [controlled(runtime.organism, offset) for offset in (0, 2)]
     digests = [frozen_digest(runtime.organism, state) for state in states]
-    rows, _ = score(runtime.decoder, tokenizer, runtime.organism, router, temporal, states, fresh_v2=True)
+    rows, _ = score(runtime.decoder, tokenizer, runtime.organism, router, temporal, states,
+                    fresh_v2=True, evaluation_questions=questions, generation_use_cache=use_cache,
+                    routing_questions=routing_questions, output_gain=output_gain)
     if digests != [frozen_digest(runtime.organism, state) for state in states]:
         raise ValueError('Natural evaluation changed its controlled memory')
     positive = [row for row in rows if row['expected_key'] is not None]

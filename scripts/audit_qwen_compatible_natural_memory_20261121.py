@@ -120,7 +120,8 @@ def fresh_version_cases():
     return questions
 
 
-def answer(decoder, tokenizer, organism, question, state, key, mode, reply=None, *, event=None):
+def answer(decoder, tokenizer, organism, question, state, key, mode, reply=None, *, event=None,
+           use_cache=None, output_gain=1.):
     if event is not None and (mode not in (1, 2) or type(event) is not int or not 0 <= event < state.cursor):
         raise ValueError('Explicit observation event requires a valid historical read')
     if mode != 0 and event is None:
@@ -130,13 +131,15 @@ def answer(decoder, tokenizer, organism, question, state, key, mode, reply=None,
             return {'reason': selection['reason'], 'answer': None}
         event = selection['event_time']
     memory, evidence = _prepare_memory_read(organism, state, key, ('current', 'past', 'later')[mode], event)
+    if use_cache is not None:
+        memory = dict(memory, use_cache=use_cache)
     index = int(evidence.argmax(-1)[0])
     if index >= len(WORDS):
         return {'reason': 'unknown_value', 'answer': None}
     inputs = closed_think_inputs(tokenizer, question, 'cuda')
     length = inputs['input_ids'].shape[1]
     if reply is None:
-        output_args = {'memory_output_logits': evidence}
+        output_args = {'memory_output_logits': evidence, 'memory_output_gain': output_gain}
     else:
         from scripts.train_qwen_counterfactual_reply_20261122 import sequence_processor
         output_args = {'logits_processor': [sequence_processor(reply, evidence, length)]}
@@ -300,17 +303,21 @@ def entity_query_proposer(decoder, tokenizer, fingerprints, router, texts):
 @torch.inference_mode()
 def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_address=False,
           oracle_diagnostic=False, trim_punctuation=False, fresh=False, fresh_v2=False,
-          oracle_address_only=False, route_only=False, reply=None, evaluation_questions=None):
+          oracle_address_only=False, route_only=False, reply=None, evaluation_questions=None,
+          generation_use_cache=None, routing_questions=None, output_gain=1.):
     questions = evaluation_questions
     if questions is None:
         questions = fresh_version_cases() if fresh_v2 else fresh_cases() if fresh else cases()
+    route_texts = [question[0] for question in questions] if routing_questions is None else list(routing_questions)
+    if len(route_texts) != len(questions):
+        raise ValueError('Expected one routing question per generation question')
     format_name = router.get('format')
     is_character = format_name == 'spora-character-name-span-v1'
     is_factorized = format_name == 'spora-factorized-name-query-v1'
     if (is_character or is_factorized) and (calibrate_address or trim_punctuation):
         raise ValueError('Character span calibration is learned during training')
     calibration = calibration_cases() if calibrate_address else []
-    texts = [question[0] for question in questions] + [question for question, _ in calibration]
+    texts = route_texts + [question for question, _ in calibration]
     if len(set(texts)) != len(texts):
         raise ValueError('Calibration and evaluation questions must be distinct')
     hidden_indices = tuple(router['hidden_indices'])
@@ -383,9 +390,10 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
                        and expected[1 - j] not in item['answer'] for j, item in enumerate(answers))
 
         def read_pair(address, when):
-            return [answer(decoder, tokenizer, organism, question, state, address, when, reply) for state in states]
+            return [answer(decoder, tokenizer, organism, question, state, address, when, reply,
+                           use_cache=generation_use_cache, output_gain=output_gain) for state in states]
 
-        key, similarity, reason, selected_text = propose(i, question, locator_threshold)
+        key, similarity, reason, selected_text = propose(i, route_texts[i], locator_threshold)
         if reason is None and mode == 3:
             reason = 'temporal_abstain'
         if reason is None and similarity < threshold:

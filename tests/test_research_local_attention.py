@@ -41,6 +41,7 @@ class LocalAttentionTests(unittest.TestCase):
         left = tokens.clone()
         left[0, 0] = 10
         with anchor_attention(decoder, (1,), 4, 1):
+            torch.testing.assert_close(decoder(tokens[:, :3], use_cache=False).logits, short, rtol=0, atol=0)
             anchored = decoder(tokens, use_cache=False).logits
             changed = decoder(left, use_cache=False).logits
             self.assertFalse(torch.equal(anchored[:, -1], changed[:, -1]))

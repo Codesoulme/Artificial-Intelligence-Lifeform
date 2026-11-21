@@ -108,7 +108,8 @@ class IntegratedSPORARuntime:
                             gelu_gate_layers=self._gelu_gate_layers(),
                             compatible_layers=self.decoder.compatible_block_indices,
                             position_table_max_position=self.decoder.position_table_max_position,
-                            position_coefficients=self._position_coefficients())
+                            position_coefficients=self._position_coefficients(),
+                            anchored_attention=self.decoder.anchored_attention_layout)
         self.state = candidate
         return decision
 
@@ -127,7 +128,8 @@ class IntegratedSPORARuntime:
                         gelu_gate_layers=self._gelu_gate_layers(),
                         compatible_layers=self.decoder.compatible_block_indices,
                         position_table_max_position=self.decoder.position_table_max_position,
-                        position_coefficients=self._position_coefficients())
+                        position_coefficients=self._position_coefficients(),
+                        anchored_attention=self.decoder.anchored_attention_layout)
         self.checkpoint_path = destination
         return destination
 
@@ -350,7 +352,7 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
                     residuals=None, value_positions=None, query_key_positions=None, output_adapter=None,
                     feedforward_fractions=None, compatible_layers=None,
                     feedforward_output_layers=(), gelu_gate_layers=(), position_table_max_position=None,
-                    position_coefficients=None):
+                    position_coefficients=None, anchored_attention=None):
     if type(reader) not in (ScaledOpenBaseMemory, NativeSPORAMemoryReader):
         raise ValueError('Expected a supported scaled SPORA memory reader')
     if (not isinstance(layer_indices, (tuple, list)) or len(layer_indices) != 2
@@ -393,6 +395,9 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
     if not residual_indices <= set(compatible_layers):
         raise ValueError('Structural residuals require compatible Qwen blocks')
     _validate_gelu_gate_layers(gelu_gate_layers, compatible_layers)
+    from .research_local_attention import validate_anchor_layout
+
+    anchor_spec = validate_anchor_layout(anchored_attention, compatible_layers, position_table_max_position)
     if (position_table_max_position is not None
             and (type(position_table_max_position) is not int
                  or not 0 < position_table_max_position <= base_config.get('max_position_embeddings', 0))):
@@ -463,6 +468,9 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         }
     if feedforward_output_layers:
         metadata['feedforward_output_layers'] = sorted(feedforward_output_layers)
+    if anchor_spec is not None:
+        layers, window, prefix = anchor_spec
+        metadata['anchored_attention'] = {'layers': list(layers), 'window': window, 'prefix': prefix}
     integrity = _digest(metadata, tensors)
     atomic_save({'metadata': metadata, 'tensors': tensors, 'integrity_sha256': integrity}, path)
 
@@ -632,6 +640,11 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     loaded_query_key_positions = decode_query_key_positions(
         metadata.get('query_key_position_layers', {}), query_key_tensors, loaded_value_positions, base_config,
     )
+    anchored_attention = metadata.get('anchored_attention')
+    if anchored_attention is not None:
+        from .research_local_attention import validate_anchor_layout
+
+        validate_anchor_layout(anchored_attention, compatible_layers, position_table_max_position)
     output_config = metadata.get('output_adapter')
     if output_config is None:
         if output_tensors:
@@ -746,6 +759,8 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
                     for group, pairs, weight, bias in loaded_query_key_positions.get(index, ()):
                         attention = PartialQueryKeyPositionAttention(attention, pairs, weight, bias, group=group)
                     block.self_attn = attention.eval()
+        if anchored_attention is not None:
+            integrated.configure_anchored_attention(anchored_attention)
     except Exception:
         for index, layer in previous.items():
             layers[index] = layer
