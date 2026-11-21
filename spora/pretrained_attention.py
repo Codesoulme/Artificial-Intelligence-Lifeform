@@ -4,6 +4,7 @@ import copy
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 from transformers.integrations.sdpa_attention import sdpa_attention_forward
 from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer, apply_rotary_pos_emb
 
@@ -102,6 +103,47 @@ class SPORAPretrainedBlock(Qwen2DecoderLayer):
         self.post_attention_layernorm = source.post_attention_layernorm
         self.mlp = (source.mlp if isinstance(source.mlp, SPORAGatedFeedForward)
                     else SPORAGatedFeedForward(source.mlp, read_memory))
+
+
+class SPORAResidualBlock(nn.Module):
+    """A cache-safe Qwen block with a zero-initialized SPORA residual path.
+
+    The frozen native block remains the identity-preserving carrier while the
+    small path learns a new structural contribution. It does not introduce a
+    second attention cache, so the native cache protocol remains authoritative.
+    """
+
+    attention_type = 'full_attention'
+
+    def __init__(self, source, rank=16):
+        super().__init__()
+        if not isinstance(source, SPORAPretrainedBlock):
+            raise ValueError('Expected a Qwen-compatible SPORA block')
+        if type(rank) is not int or not 1 <= rank <= source.hidden_size:
+            raise ValueError('Residual rank is outside the hidden width')
+        self.base = source.requires_grad_(False).eval()
+        self.hidden_size = source.hidden_size
+        self.rank = rank
+        reference = source.self_attn.qkv.weight
+        self.down = nn.Linear(self.hidden_size, rank, bias=False,
+                              device=reference.device, dtype=torch.float32)
+        self.up = nn.Linear(rank, self.hidden_size, bias=False,
+                            device=reference.device, dtype=torch.float32)
+        nn.init.normal_(self.down.weight, mean=0., std=0.02)
+        nn.init.zeros_(self.up.weight)
+
+    def forward(self, *args, **kwargs):
+        output = self.base(*args, **kwargs)
+        hidden = output[0] if isinstance(output, tuple) else output
+        residual = self.up(F.gelu(self.down(hidden.to(self.down.weight.dtype))))
+        updated = hidden + residual.to(dtype=hidden.dtype)
+        if isinstance(output, tuple):
+            return (updated, *output[1:])
+        return updated
+
+    def residual_norm(self):
+        return float((self.down.weight.detach().float().norm()
+                      * self.up.weight.detach().float().norm()).item())
 
 
 class AbsoluteAttention(SPORAFusedAttention):

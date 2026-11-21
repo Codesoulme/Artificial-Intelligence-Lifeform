@@ -8,6 +8,7 @@ it does not serialize unsupported blends or the full frozen base.
 """
 import hashlib
 import json
+import math
 from pathlib import Path
 
 import torch
@@ -94,7 +95,11 @@ class IntegratedSPORARuntime:
         if destination is not None:
             save_integrated(destination, self.organism, candidate, self.decoder.reader,
                             self.model_dir, self.decoder.layer_indices, replacements=self._replacements(),
-                            output_adapter=self.decoder.output_adapter)
+                            residuals=self._residuals(),
+                            output_adapter=self.decoder.output_adapter,
+                            feedforward_fractions=self._feedforward_fractions(),
+                            compatible_layers=self.decoder.compatible_block_indices,
+                            position_table_max_position=self.decoder.position_table_max_position)
         self.state = candidate
         return decision
 
@@ -104,7 +109,11 @@ class IntegratedSPORARuntime:
             raise ValueError('A checkpoint destination is required')
         save_integrated(destination, self.organism, self.state, self.decoder.reader,
                         self.model_dir, self.decoder.layer_indices, replacements=self._replacements(),
-                        output_adapter=self.decoder.output_adapter)
+                        residuals=self._residuals(),
+                        output_adapter=self.decoder.output_adapter,
+                        feedforward_fractions=self._feedforward_fractions(),
+                        compatible_layers=self.decoder.compatible_block_indices,
+                        position_table_max_position=self.decoder.position_table_max_position)
         self.checkpoint_path = destination
         return destination
 
@@ -113,6 +122,28 @@ class IntegratedSPORARuntime:
         if any(isinstance(layer, SPORALayerBlend) for layer in layers):
             raise ValueError('Cannot persist an unsupported blended structural layer')
         return {index: layer for index, layer in enumerate(layers) if isinstance(layer, SPORALayerReplacement)}
+
+    def _residuals(self):
+        if not self.decoder.compatible_block_indices:
+            return {}
+        from .pretrained_attention import SPORAResidualBlock
+
+        layers = self.decoder.base.model.layers
+        residuals = {}
+        for index in self.decoder.compatible_block_indices:
+            layer = layers[index]
+            candidate = layer.layer if index in self.decoder.layer_indices else layer
+            if isinstance(candidate, SPORAResidualBlock):
+                residuals[index] = candidate
+        return residuals
+
+    def _feedforward_fractions(self):
+        """Return nonzero in-layer memory strengths for durable checkpoints."""
+        layers = self.decoder.base.model.layers
+        return {index: float(layer.feedforward_fraction)
+                for index, layer in enumerate(layers)
+                if index in self.decoder.layer_indices
+                and float(getattr(layer, 'feedforward_fraction', 0.)) != 0.}
 
 
 def _file_sha256(path):
@@ -177,6 +208,32 @@ def _replacement_bundle(replacements):
     return specs, tensors
 
 
+def _residual_bundle(residuals):
+    if not isinstance(residuals, dict):
+        raise ValueError('Structural residuals must be an indexed mapping')
+    specs, tensors = [], {}
+    if not residuals:
+        return specs, tensors
+    from .pretrained_attention import SPORAResidualBlock
+
+    for index, block in sorted(residuals.items()):
+        if (type(index) is not int or index < 0 or type(block) is not SPORAResidualBlock
+                or type(block.rank) is not int or block.rank < 1):
+            raise ValueError('Invalid structural residual')
+        state = {'down': block.down.weight.detach(), 'up': block.up.weight.detach()}
+        if (state['down'].shape != (block.rank, block.hidden_size)
+                or state['up'].shape != (block.hidden_size, block.rank)
+                or any(not value.is_floating_point() or not bool(torch.isfinite(value).all())
+                       for value in state.values())):
+            raise ValueError('Invalid structural residual tensors')
+        spec = {'index': index, 'rank': block.rank}
+        spec['sha256'] = _digest(spec, state)
+        specs.append(spec)
+        tensors.update({f'residual/{index}/{name}': value.detach().cpu().clone()
+                        for name, value in state.items()})
+    return specs, tensors
+
+
 def _output_adapter_bundle(adapter, expected_vocab_size):
     if adapter is None:
         return None, {}
@@ -214,7 +271,8 @@ def _validate_base_config(directory, hidden_width, layers):
 
 
 def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, replacements=None,
-                    output_adapter=None):
+                    residuals=None, output_adapter=None, feedforward_fractions=None, compatible_layers=None,
+                    position_table_max_position=None):
     if type(reader) not in (ScaledOpenBaseMemory, NativeSPORAMemoryReader):
         raise ValueError('Expected a supported scaled SPORA memory reader')
     if (not isinstance(layer_indices, (tuple, list)) or len(layer_indices) != 2
@@ -232,16 +290,46 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
     config_sha = feature_files_sha256(directory)
     replacements = {} if replacements is None else replacements
     specs, replacement_tensors = _replacement_bundle(replacements)
+    residuals = {} if residuals is None else residuals
+    residual_specs, residual_tensors = _residual_bundle(residuals)
     with (directory/'config.json').open(encoding='utf-8') as stream:
         base_config = json.load(stream)
+    replacement_indices = {spec['index'] for spec in specs}
+    residual_indices = {spec['index'] for spec in residual_specs}
     if any(spec['index'] >= base_config['num_hidden_layers'] or spec['index'] in layer_indices
            or spec['width'] != base_config['hidden_size'] or spec['heads'] != base_config.get('num_attention_heads')
            for spec in specs):
         raise ValueError('Structural replacement does not match base configuration')
+    if any(spec['index'] >= base_config['num_hidden_layers']
+           or spec['index'] in replacement_indices for spec in residual_specs):
+        raise ValueError('Structural residual does not match base configuration')
+    if compatible_layers is None:
+        compatible_layers = ()
+    if (not isinstance(compatible_layers, (tuple, list, set))
+            or any(type(index) is not int or not 0 <= index < base_config['num_hidden_layers']
+                   for index in compatible_layers)):
+        raise ValueError('Invalid compatible Qwen block indices')
+    compatible_layers = tuple(sorted(set(compatible_layers)))
+    if set(compatible_layers) & replacement_indices:
+        raise ValueError('A layer cannot be both compatible and fully replaced')
+    if not residual_indices <= set(compatible_layers):
+        raise ValueError('Structural residuals require compatible Qwen blocks')
+    if (position_table_max_position is not None
+            and (type(position_table_max_position) is not int
+                 or not 0 < position_table_max_position <= base_config.get('max_position_embeddings', 0))):
+        raise ValueError('Invalid position table length')
     variant = (structural_feature_sha256(base_sha, config_sha, {x['index']: x['sha256'] for x in specs},
                                          {x['index']: x['max_length'] for x in specs}) if specs else None)
     _validate_binding(organism, base_sha, config_sha, variant)
     output_config, output_tensors = _output_adapter_bundle(output_adapter, base_config.get('vocab_size'))
+    if feedforward_fractions is None:
+        feedforward_fractions = {}
+    if (not isinstance(feedforward_fractions, dict)
+            or any(type(index) is not int or index not in layer_indices
+                   or type(value) not in (int, float) or not math.isfinite(value)
+                   or not 0. <= value <= 1.
+                   for index, value in feedforward_fractions.items())):
+        raise ValueError('Invalid feed-forward memory fractions')
     schema, individual = flatten(organism, state)
     reader_tensors = reader.state_dict()
     with torch.random.fork_rng(devices=[]):
@@ -253,7 +341,7 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         raise ValueError('Invalid reader tensor set, shape or dtype')
     tensors = {**{'individual/' + k: v.detach().cpu().clone() for k, v in individual.items()},
                **{'reader/' + k: v.detach().cpu().clone() for k, v in reader_tensors.items()},
-               **replacement_tensors, **output_tensors}
+               **replacement_tensors, **residual_tensors, **output_tensors}
     metadata = {'format': (OUTPUT_ADAPTER_FORMAT if output_config is not None
                            else STRUCTURAL_FORMAT if specs else FORMAT),
                 'base_sha256': base_sha, 'feature_config_sha256': config_sha,
@@ -263,8 +351,18 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
     if specs:
         metadata['replacements'] = specs
         metadata['feature_variant_sha256'] = variant
+    if residual_specs:
+        metadata['residuals'] = residual_specs
+    if compatible_layers:
+        metadata['compatible_layers'] = list(compatible_layers)
+    if position_table_max_position is not None:
+        metadata['position_table_max_position'] = position_table_max_position
     if output_config is not None:
         metadata['output_adapter'] = output_config
+    if feedforward_fractions:
+        metadata['feedforward_fractions'] = {
+            str(index): float(value) for index, value in sorted(feedforward_fractions.items())
+        }
     integrity = _digest(metadata, tensors)
     atomic_save({'metadata': metadata, 'tensors': tensors, 'integrity_sha256': integrity}, path)
 
@@ -297,8 +395,10 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     individual_tensors = {k[len('individual/'):]: v for k, v in tensors.items() if k.startswith('individual/')}
     reader_tensors = {k[len('reader/'):]: v for k, v in tensors.items() if k.startswith('reader/')}
     replacement_tensors = {k: v for k, v in tensors.items() if k.startswith('replacement/')}
+    residual_tensors = {k: v for k, v in tensors.items() if k.startswith('residual/')}
     output_tensors = {k[len('output/'):]: v for k, v in tensors.items() if k.startswith('output/')}
-    if len(individual_tensors) + len(reader_tensors) + len(replacement_tensors) + len(output_tensors) != len(tensors):
+    if (len(individual_tensors) + len(reader_tensors) + len(replacement_tensors)
+            + len(residual_tensors) + len(output_tensors) != len(tensors)):
         raise ValueError('Unexpected integrated checkpoint tensor')
     format_name = metadata['format']
     if format_name in (LEGACY_FORMAT, FORMAT):
@@ -350,6 +450,49 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         if replacement_tensors or 'feature_variant_sha256' in metadata:
             raise ValueError('Structural replacements require a structural checkpoint')
         variant = None
+    residual_specs = metadata.get('residuals', [])
+    if not isinstance(residual_specs, list):
+        raise ValueError('Invalid structural residual metadata')
+    loaded_residuals = {}
+    consumed_residuals = set()
+    for spec in residual_specs:
+        if not isinstance(spec, dict) or set(spec) != {'index', 'rank', 'sha256'}:
+            raise ValueError('Invalid structural residual metadata')
+        index, rank = spec['index'], spec['rank']
+        if (type(index) is not int or index < 0 or index >= len(layers)
+                or index in loaded_replacements or type(rank) is not int or not 1 <= rank <= base.config.hidden_size):
+            raise ValueError('Invalid structural residual configuration')
+        prefix = f'residual/{index}/'
+        state = {key[len(prefix):]: value for key, value in residual_tensors.items() if key.startswith(prefix)}
+        consumed_residuals.update(key for key in residual_tensors if key.startswith(prefix))
+        if set(state) != {'down', 'up'}:
+            raise ValueError('Invalid structural residual tensor set')
+        identity = {'index': index, 'rank': rank}
+        if _digest(identity, state) != spec['sha256']:
+            raise ValueError('Structural residual digest mismatch')
+        if (state['down'].shape != (rank, base.config.hidden_size)
+                or state['up'].shape != (base.config.hidden_size, rank)
+                or any(not value.is_floating_point() or not bool(torch.isfinite(value).all())
+                       for value in state.values())):
+            raise ValueError('Invalid structural residual tensor shapes')
+        loaded_residuals[index] = (rank, state)
+    if consumed_residuals != set(residual_tensors):
+        raise ValueError('Unexpected structural residual tensor')
+    compatible_layers = metadata.get('compatible_layers', [])
+    if (not isinstance(compatible_layers, list)
+            or any(type(index) is not int or not 0 <= index < len(layers)
+                   for index in compatible_layers)
+            or len(set(compatible_layers)) != len(compatible_layers)):
+        raise ValueError('Invalid compatible Qwen block metadata')
+    if set(compatible_layers) & set(loaded_replacements):
+        raise ValueError('A layer cannot be both compatible and fully replaced')
+    if not set(loaded_residuals) <= set(compatible_layers):
+        raise ValueError('Structural residuals require compatible Qwen blocks')
+    position_table_max_position = metadata.get('position_table_max_position')
+    if (position_table_max_position is not None
+            and (type(position_table_max_position) is not int
+                 or not 0 < position_table_max_position <= base_config.get('max_position_embeddings', 0))):
+        raise ValueError('Invalid position table metadata')
     output_config = metadata.get('output_adapter')
     if output_config is None:
         if output_tensors:
@@ -367,6 +510,13 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
                        for k, v in expected_output.items())):
             raise ValueError('Invalid memory output adapter tensors')
         output_adapter.load_state_dict(output_tensors, strict=True)
+    fractions = metadata.get('feedforward_fractions', {})
+    if (not isinstance(fractions, dict)
+            or any((not isinstance(key, str) or not key.isdigit()
+                    or int(key) not in config['layers']
+                    or type(value) not in (int, float) or not math.isfinite(value)
+                    or not 0. <= value <= 1.) for key, value in fractions.items())):
+        raise ValueError('Invalid feed-forward memory fraction metadata')
     organism, state = restore(metadata['individual_schema'], individual_tensors, individual_device)
     if organism.config.memory_width != config['memory_width']:
         raise ValueError('Reader and individual memory widths differ')
@@ -393,13 +543,38 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     reader.to(device)
     for block in loaded_replacements.values():
         block.to(device).eval()
-    previous = {index: layers[index] for index in set(loaded_replacements) | set(config['layers'])}
+    previous = {index: layers[index] for index in
+                set(loaded_replacements) | set(config['layers']) | set(compatible_layers)}
     try:
         for index, block in loaded_replacements.items():
             layers[index] = block
         if output_adapter is not None:
             output_adapter.to(device).eval()
         integrated = IntegratedOpenBase(base, reader, config['layers'], output_adapter=output_adapter)
+        if position_table_max_position is not None:
+            integrated.eval()
+            integrated.migrate_position_encoder(position_table_max_position)
+        if compatible_layers:
+            integrated.eval()
+            integrated.migrate_pretrained_blocks(compatible_layers)
+        if loaded_residuals:
+            from .pretrained_attention import SPORAPretrainedBlock, SPORAResidualBlock
+        for index, fraction in ((int(key), value) for key, value in fractions.items()):
+            integrated.use_feedforward_memory(index, fraction=fraction)
+        for index, (rank, state) in loaded_residuals.items():
+            container = layers[index]
+            on_memory_layer = index in integrated.layer_indices
+            source = container.layer if on_memory_layer else container
+            if not isinstance(source, SPORAPretrainedBlock):
+                raise ValueError('Structural residual requires a Qwen-compatible block')
+            block = SPORAResidualBlock(source, rank=rank).to(device).eval()
+            with torch.no_grad():
+                block.down.weight.copy_(state['down'].to(device=device, dtype=block.down.weight.dtype))
+                block.up.weight.copy_(state['up'].to(device=device, dtype=block.up.weight.dtype))
+            if on_memory_layer:
+                container.layer = block
+            else:
+                layers[index] = block
     except Exception:
         for index, layer in previous.items():
             layers[index] = layer

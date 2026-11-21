@@ -252,27 +252,51 @@ class IntegratedOpenBase(nn.Module):
             raise ValueError('Expected a memory output adapter')
         self.output_adapter = output_adapter
         self.layer_indices = tuple(layer_indices)
+        self.compatible_block_indices = ()
+        self.position_table_max_position = None
         self._memory_context = ContextVar('spora_integrated_memory', default=None)
         for site, index in enumerate(self.layer_indices):
             layers[index] = _MemoryDecoderLayer(layers[index], reader, site, self._memory_context)
 
-    def migrate_pretrained_blocks(self):
-        """Convert original Qwen2 blocks in an inference instance and retain native memory sites."""
+    def migrate_pretrained_blocks(self, indices=None):
+        """Convert selected Qwen2 blocks while retaining their native functions.
+
+        The migrated module is a SPORA-owned wrapper around the original Qwen2
+        attention, position, normalization, and feed-forward computations. It
+        is therefore a structural transition step: ordinary forwards remain
+        function-preserving, while later experiments may add state pathways.
+        """
         from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer
         from .pretrained_attention import SPORAPretrainedBlock
 
         if self.training:
             raise ValueError('Pretrained block migration requires an evaluation model')
         layers = self.base.model.layers
-        indices = tuple(index for index, layer in enumerate(layers)
-                        if type(layer.layer if isinstance(layer, _MemoryDecoderLayer) else layer) is Qwen2DecoderLayer)
-        for index in indices:
+        if indices is None:
+            selected = tuple(index for index, layer in enumerate(layers)
+                             if type(layer.layer if isinstance(layer, _MemoryDecoderLayer) else layer)
+                             is Qwen2DecoderLayer)
+        elif (not isinstance(indices, (tuple, list, set))
+              or any(type(index) is not int or not 0 <= index < len(layers) for index in indices)):
+            raise ValueError('Compatible block indices must be valid layer integers')
+        else:
+            selected = tuple(sorted(set(indices)))
+        migrated = []
+        for index in selected:
             layer = layers[index]
-            if isinstance(layer, _MemoryDecoderLayer):
-                layer.layer = SPORAPretrainedBlock(layer.layer, layer.read_feedforward_memory).eval()
+            source = layer.layer if isinstance(layer, _MemoryDecoderLayer) else layer
+            if isinstance(source, SPORAPretrainedBlock):
+                migrated.append(index)
+            elif type(source) is Qwen2DecoderLayer:
+                if isinstance(layer, _MemoryDecoderLayer):
+                    layer.layer = SPORAPretrainedBlock(layer.layer, layer.read_feedforward_memory).eval()
+                else:
+                    layers[index] = SPORAPretrainedBlock(layer).eval()
+                migrated.append(index)
             else:
-                layers[index] = SPORAPretrainedBlock(layer).eval()
-        return indices
+                raise ValueError(f'Layer {index} is not an original Qwen2 decoder layer')
+        self.compatible_block_indices = tuple(sorted(set(self.compatible_block_indices) | set(migrated)))
+        return tuple(migrated)
 
     def migrate_position_encoder(self, max_position):
         """Move shared position coefficients into an editable model parameter table."""
@@ -284,6 +308,7 @@ class IntegratedOpenBase(nn.Module):
                 raise ValueError('Position encoder already migrated with a different limit')
         else:
             backbone.rotary_emb = SPORAPositionTable(backbone.rotary_emb, max_position)
+        self.position_table_max_position = max_position
         return backbone.rotary_emb
 
     def use_feedforward_memory(self, layer_index, *, fraction=1.):
