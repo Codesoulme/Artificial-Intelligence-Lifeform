@@ -37,6 +37,22 @@ HELD_NEGATIVE = ('讲一个关于饮料的故事。', '我想知道现在几点�
                  '小梅和阿远分别喜欢什么饮料？', '阿明和小岚爱喝什么？')
 LOCATOR_ONLY = ()
 LOCATOR_PROMPT = '识别下列提问中要查询的人的姓名。如果没有姓名或有多个对象，请跳过。\n提问：'
+FIELD_CONTRASTS = (
+    '请根据新便签回答，{name}常点的是什么饮品？',
+    '看目前这页，{name}选的是哪一种茶水？',
+    '上回改掉之前，清单上给{name}写的是什么饮料？',
+    '哪一项是{name}在最新清单里点的茶水？',
+    '若只看刚修订的版本，给{name}买哪类饮料？',
+    '关于饮品的那条备忘，能说说{name}旧时的选项吗？',
+    '眼下登记为首选饮料的是哪项，查的是{name}。',
+    '想看看{name}早先登记的首选饮品。',
+)
+FIELD_NEGATIVES = (
+    '便签的字段名称是「饮品」，请翻译这个词。',
+    '只讨论菜单里有哪些饮品，别查个人记录。',
+    '清单上记录了哪些饮料类别？',
+    '有人留下了新便签吗？',
+)
 
 
 class SequenceLocator(nn.Module):
@@ -157,7 +173,7 @@ def unpad_selection(selected, single_length):
 def main(*, checkpoint=None, output=None, include_following_tokens=False,
          diverse_boundaries=False, fresh_boundary_holdout=False, diverse_query_context=False,
          sequence_locator=False, span_locator=False, contrast_query_nouns=False,
-         cluener_replay=False, role_prompt=False, rank_name_tokens=False):
+         cluener_replay=False, role_prompt=False, rank_name_tokens=False, field_contrasts=False):
     if rank_name_tokens and (sequence_locator or span_locator):
         raise ValueError('Name token ranking requires the linear locator')
     output = OUT if output is None else output
@@ -184,6 +200,8 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
             '记下的饮料里，哪款是{name}的首选饮品？',
             '对于上次的饮品记录，请说出{name}当初爱喝的饮品。',
         )
+    if field_contrasts:
+        known_templates += FIELD_CONTRASTS
     training = [{'group': 'train_known', 'name': name, 'key': key, 'text': t.format(name=name)}
                 for name, key in zip(NAMES, KEYS, strict=True) for t in known_templates]
     boundary_examples = LOCATOR_ONLY
@@ -197,6 +215,16 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
     training += locator_only_rows(boundary_examples)
     training += [{'group': 'train_negative', 'name': None, 'key': None, 'text': text}
                  for text in TRAIN_NEGATIVE]
+    if field_contrasts:
+        training += locator_only_rows(tuple(
+            (name + suffix, template.format(name=name + suffix))
+            for name, suffix in zip(NAMES, ('甫', '澈', '越', '霖', '庭', '竹', '钧', '灿'), strict=True)
+            for template in FIELD_CONTRASTS[:4]))
+        non_queries = FIELD_NEGATIVES + tuple(
+            f'请给{name}和{other}各写一句问候，内容和饮品无关。'
+            for name, other in zip(NAMES, NAMES[1:] + NAMES[:1], strict=True))
+        training += [{'group': 'train_field_negative', 'name': None, 'key': None, 'text': text}
+                     for text in non_queries]
     extra_sources = {}
     if cluener_replay:
         news, extra_sources = annotated_name_rows()
@@ -277,12 +305,17 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
         if {row['key'] for row in training if row['key'] is not None} != set(KEYS):
             raise ValueError('Dropping spans removed a registered training identity')
         features, allowed = extract(base, tokenizer, [r['text'] for r in rows],
-                                    batch_size=2 if cluener_replay else 1, user_prefix=user_prefix)
+                                    batch_size=2 if cluener_replay else 1, user_prefix=user_prefix,
+                                    last_logit_only=True)
         if truth.shape != allowed.shape or bool((truth & ~allowed).any()):
             raise ValueError('Feature mask mismatch')
         vector = torch.cat([F.layer_norm(features[:, i].float(), (features.shape[-1],)) for i in range(2)], dim=-1)
         if include_following_tokens:
-            vector = torch.stack([lookahead(row) for row in vector.masked_fill(~allowed[..., None], 0.)])
+            extended = torch.empty((*vector.shape[:2], 3 * vector.shape[-1]), dtype=vector.dtype)
+            for i, (row, mask) in enumerate(zip(vector, allowed, strict=True)):
+                extended[i] = lookahead(row.masked_fill(~mask[..., None], 0.))
+            vector = extended
+            del extended
         n_train = len(training)
         x, y = vector[:n_train][allowed[:n_train]], truth[:n_train][allowed[:n_train]].float()
         if sequence_locator or span_locator:
@@ -296,7 +329,8 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
             positive = truth[:n_train]
             negative = allowed[:n_train] & ~positive
             rank_rows = positive.any(1) & negative.any(1)
-            rank_features = vector[:n_train][rank_rows]
+            if not bool(rank_rows.any()):
+                raise ValueError('Name ranking requires a labeled name and another token in the same question')
             positive, negative = positive[rank_rows], negative[rank_rows]
         if span_locator:
             positive_widths = truth[:n_train].sum(1)
@@ -314,12 +348,15 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
                 mask = allowed[indices]
                 logits = locator(vector[indices]).squeeze(-1)[mask]
                 labels = truth[indices][mask].float()
+            elif rank_name_tokens:
+                train_scores = locator(vector[:n_train]).squeeze(-1)
+                logits, labels = train_scores[allowed[:n_train]], y
             else:
                 logits, labels = locator(x).squeeze(-1), y
             if not span_locator:
                 loss = F.binary_cross_entropy_with_logits(logits, labels, pos_weight=positive_weight)
             if rank_name_tokens:
-                scores = locator(rank_features).squeeze(-1)
+                scores = train_scores[rank_rows]
                 weakest_name = scores.masked_fill(~positive, torch.inf).amin(1)
                 strongest_other = scores.masked_fill(~negative, -torch.inf).amax(1)
                 loss = loss + .25 * F.softplus(2. + strongest_other - weakest_name).mean()
@@ -402,6 +439,7 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
               'threshold': threshold, 'locator_following_tokens': 2 if include_following_tokens else 0,
               'locator_architecture': architecture,
               'rank_name_tokens': rank_name_tokens,
+              'field_contrasts': field_contrasts,
               'user_prefix': user_prefix,
               'training_groups': {group: sum(r['group'] == group for r in training)
                                   for group in sorted({r['group'] for r in training})},
@@ -435,12 +473,14 @@ def cli():
     parser.add_argument('--cluener-replay', action='store_true')
     parser.add_argument('--role-prompt', action='store_true')
     parser.add_argument('--rank-name-tokens', action='store_true')
+    parser.add_argument('--field-contrasts', action='store_true')
     args = parser.parse_args()
     main(checkpoint=args.checkpoint, output=args.output, include_following_tokens=args.include_following_tokens,
          diverse_boundaries=args.diverse_boundaries, fresh_boundary_holdout=args.fresh_boundary_holdout,
          diverse_query_context=args.diverse_query_context, sequence_locator=args.sequence_locator,
          span_locator=args.span_locator, contrast_query_nouns=args.contrast_query_nouns,
-         cluener_replay=args.cluener_replay, role_prompt=args.role_prompt, rank_name_tokens=args.rank_name_tokens)
+         cluener_replay=args.cluener_replay, role_prompt=args.role_prompt, rank_name_tokens=args.rank_name_tokens,
+         field_contrasts=args.field_contrasts)
 
 
 if __name__ == '__main__':

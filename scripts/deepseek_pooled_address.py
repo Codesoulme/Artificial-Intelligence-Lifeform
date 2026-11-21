@@ -66,7 +66,8 @@ def question_mask(offsets, attention_mask, texts, questions):
 
 
 @torch.no_grad()
-def extract(model, tokenizer, questions, batch_size=8, question_only=True, hidden_indices=(6, 18), *, user_prefix=''):
+def extract(model, tokenizer, questions, batch_size=8, question_only=True, hidden_indices=(6, 18), *,
+            user_prefix='', last_logit_only=False):
     if (len(hidden_indices) != 2 or any(type(index) is not int or index < 1 for index in hidden_indices)
             or hidden_indices[0] == hidden_indices[1]):
         raise ValueError('Two distinct positive hidden-state indices are required')
@@ -79,19 +80,23 @@ def extract(model, tokenizer, questions, batch_size=8, question_only=True, hidde
     offsets = encoded.pop('offset_mapping')
     masks = (question_mask(offsets, encoded['attention_mask'], texts, questions) if question_only else
              encoded['attention_mask'].bool())
-    features = []
+    features = None
+    forward_args = {'logits_to_keep': 1} if last_logit_only else {}
     for offset in range(0, len(texts), batch_size):
         inputs = {k: v[offset:offset + batch_size].to('cuda') for k, v in encoded.items()}
-        output = model(**inputs, use_cache=False, output_hidden_states=True)
+        output = model(**inputs, use_cache=False, output_hidden_states=True, **forward_args)
         if max(hidden_indices) >= len(output.hidden_states):
             raise ValueError('Hidden-state index outside model')
         batch = torch.stack([output.hidden_states[index] for index in hidden_indices], dim=1)
         if not bool(torch.isfinite(batch).all()):
             raise ValueError('Nonfinite model features')
-        features.append(batch.cpu())
+        if features is None:
+            features = torch.empty((len(texts), *batch.shape[1:]), dtype=batch.dtype, device='cpu')
+        features[offset:offset + len(batch)].copy_(batch)
+        del output, batch
         if (offset // batch_size + 1) % 16 == 0:
             print(f'extracted {min(offset + batch_size, len(texts))}/{len(texts)}', flush=True)
-    return torch.cat(features), masks
+    return features, masks
 
 
 @torch.no_grad()

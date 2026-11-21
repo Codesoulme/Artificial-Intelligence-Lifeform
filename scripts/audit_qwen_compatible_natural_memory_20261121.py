@@ -85,6 +85,28 @@ def calibration_cases():
             + [('阿哲和小梅之前分别爱喝什么？', None)])
 
 
+def fresh_cases():
+    """Held-out language families, with current/history balanced by person."""
+    templates = (
+        (0, '照今早那次更正，给{name}倒什么喝才对？'),
+        (0, '{name}目前那份资料写着哪样喝的？'),
+        (1, '别用新的答案。起初登记给{name}的是什么喝的？'),
+        (1, '{name}头一回登记时选了哪种饮料？'),
+    )
+    questions = [(template.format(name=name), index, mode)
+                 for index, name in enumerate(NAMES) for mode, template in templates]
+    suffixes = ('远', '铭', '舟', '诚', '洁', '越', '汐', '瑜')
+    questions += [(f'照今早那次更正，给{name + suffix}倒什么喝才对？', None, None)
+                  for name, suffix in zip(NAMES, suffixes, strict=True)]
+    questions += [(f'查一下{name}和{other}各自的原始饮料偏好。', None, None)
+                  for name, other in zip(NAMES[::2], NAMES[1::2], strict=True)]
+    questions += [('把「你喜欢什么饮料？」译成英文。', None, None),
+                  ('只帮我给阿哲写生日贺词。', None, None),
+                  ('别读小林的个人记录，推荐三种夏天饮料。', None, None),
+                  ('牛奶和豆浆在配料上有什么不同？', None, None)]
+    return questions
+
+
 def answer(decoder, tokenizer, organism, question, state, key, mode):
     event = None
     if mode != 0:
@@ -157,8 +179,8 @@ def fit_output(decoder, tokenizer, organism):
 
 @torch.inference_mode()
 def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_address=False,
-          oracle_diagnostic=False, trim_punctuation=False):
-    questions = cases()
+          oracle_diagnostic=False, trim_punctuation=False, fresh=False):
+    questions = fresh_cases() if fresh else cases()
     calibration = calibration_cases() if calibrate_address else []
     texts = [question[0] for question in questions] + [question for question, _ in calibration]
     if len(set(texts)) != len(texts):
@@ -338,7 +360,7 @@ def main(args):
         decoder.output_adapter = adapter.eval().requires_grad_(False).to(next(decoder.parameters()).device)
     rows, address_fit = score(decoder, tokenizer, organism, router, temporal, states,
                               calibrate_address=args.calibrate_address, oracle_diagnostic=args.oracle_diagnostic,
-                              trim_punctuation=args.trim_punctuation)
+                              trim_punctuation=args.trim_punctuation, fresh=args.fresh)
     if (original_digest != frozen_digest(organism, original) or sha(args.checkpoint) != checkpoint_sha
             or state_digests != [frozen_digest(organism, state) for state in states]):
         raise ValueError('Evaluation changed memory')
@@ -354,7 +376,8 @@ def main(args):
     with args.output.open('x', encoding='utf-8') as stream:
         json.dump({'summary': summary, 'rows': rows, 'checkpoint_sha256': checkpoint_sha,
                    'router_sha256': router_sha, 'temporal_sha256': temporal_sha,
-                   'output_fit': output_fit, 'address_fit': address_fit}, stream,
+                   'output_fit': output_fit, 'address_fit': address_fit,
+                   'question_suite': 'fresh' if args.fresh else 'original'}, stream,
                   ensure_ascii=False, indent=2)
         stream.write('\n')
     print(summary, flush=True)
@@ -370,4 +393,5 @@ if __name__ == '__main__':
     parser.add_argument('--calibrate-address', action='store_true')
     parser.add_argument('--oracle-diagnostic', action='store_true')
     parser.add_argument('--trim-punctuation', action='store_true')
+    parser.add_argument('--fresh', action='store_true')
     main(parser.parse_args())
