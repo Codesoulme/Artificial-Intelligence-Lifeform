@@ -16,6 +16,7 @@ from spora.internal_memory import (WriteControl, attach, enable_event_key_index,
 from spora.identity_fingerprints import IdentityFingerprints
 from spora.historical_resolutions import HistoricalResolutions
 from spora.memory_output import MemoryOutputAdapter
+from spora.memory_reply import MemoryReplyAdapter
 from spora.language_training import frozen_digest
 from spora.named_address import NamedAddressBinding, address_basis_sha256, feature_files_sha256
 from spora.temporal import TemporalConfig, TemporalSPORA
@@ -210,6 +211,34 @@ class IntegratedCheckpointTests(unittest.TestCase):
         with patch('spora.growing.query', return_value=unknown):
             with self.assertRaisesRegex(ValueError, 'unknown memory'):
                 runtime.generate(memory_key=3, memory_output=True)
+
+    def test_memory_reply_checkpoint_controls_batched_generation_steps(self):
+        adapter = MemoryReplyAdapter(17, 9, steps=2, rank=4)
+        with torch.no_grad():
+            for step, head in enumerate(adapter.heads):
+                head.value_to_rank.weight[0, 0] = 1
+                head.rank_to_vocab.weight[step, 0] = 1
+        save_integrated(self.path, self.organism, self.state, self.reader, self.root, (0, 2), output_adapter=adapter)
+        base = self.base()
+        restored, _, _ = load_integrated(self.path, base, self.root)
+        self.assertEqual(restored.output_adapter.config_dict(), adapter.config_dict())
+
+        evidence = torch.zeros(2, 17)
+        evidence[0, 0] = 4
+        evidence[1, 3] = 4
+        expected = adapter(evidence).detach().repeat_interleave(2, dim=0)
+        tokens = torch.ones(4, 5, dtype=torch.long)
+        scores = torch.zeros(4, 9)
+        with patch.object(base, 'generate') as generate:
+            restored.generate(tokens)
+            self.assertNotIn('logits_processor', generate.call_args.kwargs)
+            restored.generate(tokens, memory_output_logits=evidence)
+            processor, = generate.call_args.kwargs['logits_processor']
+        torch.testing.assert_close(processor(tokens, scores), expected[:, 0])
+        tokens = torch.cat((tokens, tokens[:, :1]), dim=1)
+        torch.testing.assert_close(processor(tokens, scores), expected[:, 1])
+        tokens = torch.cat((tokens, tokens[:, :1]), dim=1)
+        self.assertIs(processor(tokens, scores), scores)
 
     def test_v4_rejects_missing_adapter_even_when_integrity_is_recomputed(self):
         adapter = MemoryOutputAdapter(17, 9, rank=4)

@@ -120,7 +120,7 @@ def fresh_version_cases():
     return questions
 
 
-def answer(decoder, tokenizer, organism, question, state, key, mode):
+def answer(decoder, tokenizer, organism, question, state, key, mode, reply=None):
     event = None
     if mode != 0:
         selection = select_event(organism, state, key, 'effective_previous' if mode == 1 else 'effective_latest',
@@ -133,10 +133,16 @@ def answer(decoder, tokenizer, organism, question, state, key, mode):
     if index >= len(WORDS):
         return {'reason': 'unknown_value', 'answer': None}
     inputs = closed_think_inputs(tokenizer, question, 'cuda')
-    generated = decoder.generate(**inputs, **memory, memory_output_logits=evidence,
+    length = inputs['input_ids'].shape[1]
+    if reply is None:
+        output_args = {'memory_output_logits': evidence}
+    else:
+        from scripts.train_qwen_counterfactual_reply_20261122 import sequence_processor
+        output_args = {'logits_processor': [sequence_processor(reply, evidence, length)]}
+    generated = decoder.generate(**inputs, **memory, **output_args,
                                  max_new_tokens=32, do_sample=False, top_p=None, temperature=None,
                                  pad_token_id=tokenizer.pad_token_id, eos_token_id=tokenizer.eos_token_id)
-    text = tokenizer.decode(generated[0, inputs['input_ids'].shape[1]:], skip_special_tokens=True).strip()
+    text = tokenizer.decode(generated[0, length:], skip_special_tokens=True).strip()
     return {'reason': 'generated', 'answer': text, 'matrix_value': WORDS[index], 'event_time': event}
 
 
@@ -293,7 +299,7 @@ def entity_query_proposer(decoder, tokenizer, fingerprints, router, texts):
 @torch.inference_mode()
 def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_address=False,
           oracle_diagnostic=False, trim_punctuation=False, fresh=False, fresh_v2=False,
-          oracle_address_only=False, route_only=False):
+          oracle_address_only=False, route_only=False, reply=None):
     questions = fresh_version_cases() if fresh_v2 else fresh_cases() if fresh else cases()
     format_name = router.get('format')
     is_character = format_name == 'spora-character-name-span-v1'
@@ -373,6 +379,9 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
             return all(item['answer'] is not None and expected[j] in item['answer']
                        and expected[1 - j] not in item['answer'] for j, item in enumerate(answers))
 
+        def read_pair(address, when):
+            return [answer(decoder, tokenizer, organism, question, state, address, when, reply) for state in states]
+
         key, similarity, reason, selected_text = propose(i, question, locator_threshold)
         if reason is None and mode == 3:
             reason = 'temporal_abstain'
@@ -382,21 +391,18 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
         if reason is None:
             outcome['key'] = key
             if not route_only:
-                outcome['answers'] = [answer(decoder, tokenizer, organism, question, state, key, mode) for state in states]
+                outcome['answers'] = read_pair(key, mode)
                 if key == expected_key and mode == expected_mode:
                     outcome['correct_pair'] = correct_pair(outcome['answers'])
         if oracle_diagnostic and expected_key is not None:
-            oracle = outcome['answers'] if outcome['key'] == expected_key and mode == expected_mode else [
-                answer(decoder, tokenizer, organism, question, state, expected_key, expected_mode) for state in states
-            ]
+            oracle = (outcome['answers'] if outcome['key'] == expected_key and mode == expected_mode else
+                      read_pair(expected_key, expected_mode))
             outcome['oracle_answers'] = oracle
             outcome['oracle_correct_pair'] = correct_pair(oracle)
         if oracle_address_only and expected_key is not None:
             outcome['oracle_address_correct_pair'] = False
             if mode == expected_mode:
-                addressed = outcome['answers'] if outcome['key'] == expected_key else [
-                    answer(decoder, tokenizer, organism, question, state, expected_key, mode) for state in states
-                ]
+                addressed = outcome['answers'] if outcome['key'] == expected_key else read_pair(expected_key, mode)
                 outcome['oracle_address_answers'] = addressed
                 outcome['oracle_address_correct_pair'] = correct_pair(addressed)
     return outcomes, {'threshold': threshold, 'previous_threshold': router.get('address_threshold'),
@@ -425,6 +431,7 @@ def main(args):
     states = [controlled(organism, offset) for offset in (0, 2)]
     state_digests = [frozen_digest(organism, state) for state in states]
     output_fit = None
+    reply, reply_sha = None, None
     if args.calibrate_output:
         torch.set_num_threads(2)
         adapter, output_fit = fit_output(decoder, tokenizer, organism)
@@ -449,10 +456,13 @@ def main(args):
         adapter = MemoryOutputAdapter(**payload['config'])
         adapter.load_state_dict(payload['state'], strict=True)
         decoder.output_adapter = adapter.eval().requires_grad_(False).to(next(decoder.parameters()).device)
+    elif args.reply_head is not None:
+        from scripts.train_qwen_counterfactual_reply_20261122 import load_reply_head
+        reply, reply_sha = load_reply_head(args.reply_head, checkpoint_sha, 'cuda')
     rows, address_fit = score(decoder, tokenizer, organism, router, temporal, states,
                               calibrate_address=args.calibrate_address, oracle_diagnostic=args.oracle_diagnostic,
                               trim_punctuation=args.trim_punctuation, fresh=args.fresh, fresh_v2=args.fresh_v2,
-                              oracle_address_only=args.oracle_address_only, route_only=args.route_only)
+                              oracle_address_only=args.oracle_address_only, route_only=args.route_only, reply=reply)
     if (original_digest != frozen_digest(organism, original) or sha(args.checkpoint) != checkpoint_sha
             or state_digests != [frozen_digest(organism, state) for state in states]):
         raise ValueError('Evaluation changed memory')
@@ -473,6 +483,7 @@ def main(args):
         json.dump({'summary': summary, 'rows': rows, 'checkpoint_sha256': checkpoint_sha,
                    'router_sha256': router_sha, 'temporal_sha256': temporal_sha,
                    'output_fit': output_fit, 'address_fit': address_fit,
+                   'reply_sha256': reply_sha,
                    'route_only': args.route_only, 'query_margin_override': args.query_margin,
                    'question_suite': 'fresh_v2' if args.fresh_v2 else 'fresh' if args.fresh else 'original'}, stream,
                   ensure_ascii=False, indent=2)
@@ -487,6 +498,7 @@ if __name__ == '__main__':
     output = parser.add_mutually_exclusive_group()
     output.add_argument('--calibrate-output', action='store_true')
     output.add_argument('--output-adapter', type=Path)
+    output.add_argument('--reply-head', type=Path)
     parser.add_argument('--calibrate-address', action='store_true')
     parser.add_argument('--oracle-diagnostic', action='store_true')
     parser.add_argument('--oracle-address-only', action='store_true')
@@ -497,7 +509,7 @@ if __name__ == '__main__':
     questions.add_argument('--fresh', action='store_true')
     questions.add_argument('--fresh-v2', action='store_true')
     args = parser.parse_args()
-    if args.route_only and (args.oracle_diagnostic or args.oracle_address_only or args.calibrate_output):
+    if args.route_only and (args.oracle_diagnostic or args.oracle_address_only or args.calibrate_output or args.reply_head):
         parser.error('Routing-only evaluation cannot generate or calibrate answers')
     if args.query_margin is not None and not 0. <= args.query_margin < float('inf'):
         parser.error('--query-margin must be finite and nonnegative')

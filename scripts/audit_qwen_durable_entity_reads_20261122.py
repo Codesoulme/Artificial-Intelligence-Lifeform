@@ -11,6 +11,7 @@ from scripts.audit_qwen_compatible_natural_memory_20261121 import (
 from scripts.deepseek_pooled_address import extract
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.spora_unknown_state_probe import fresh_controlled_state
+from scripts.train_qwen_counterfactual_reply_20261122 import load_reply_head, sequence_processor
 from spora.identity_fingerprints import IdentityFingerprints
 from spora.integrated_durable import create_integrated_durable, load_integrated_durable
 from spora.growing import query
@@ -54,7 +55,7 @@ def storage_control(runtime):
     return {'values': [WORDS[value] for value in values], 'history_event': selection['event_time']}
 
 
-def read_value(runtime, tokenizer, question, key, mode):
+def read_value(runtime, tokenizer, question, key, mode, reply=None):
     event = None
     if mode:
         intent = 'effective_previous' if mode == 1 else 'effective_latest'
@@ -70,16 +71,19 @@ def read_value(runtime, tokenizer, question, key, mode):
     del controls['memory_state']
     controls['use_cache'] = True
     inputs = closed_think_inputs(tokenizer, question, 'cuda')
-    output = runtime.generate(**inputs, **controls, memory_output_logits=evidence, max_new_tokens=24, do_sample=False,
+    length = inputs['input_ids'].shape[1]
+    output_args = ({'memory_output_logits': evidence} if reply is None else
+                   {'logits_processor': [sequence_processor(reply, evidence, length)]})
+    output = runtime.generate(**inputs, **controls, **output_args, max_new_tokens=24, do_sample=False,
                               top_p=None, temperature=None, pad_token_id=tokenizer.pad_token_id,
                               eos_token_id=tokenizer.eos_token_id)
-    tokens = output[0, inputs['input_ids'].shape[1]:].tolist()
+    tokens = output[0, length:].tolist()
     return {'event': event, 'value': WORDS[value], 'tokens': tokens,
             'text': tokenizer.decode(tokens, skip_special_tokens=True).strip(), 'reason': 'generated'}
 
 
 @torch.no_grad()
-def evaluate(runtime, tokenizer, router, temporal, *, corrected):
+def evaluate(runtime, tokenizer, router, temporal, *, corrected, reply=None):
     cases = QUESTIONS if corrected else QUESTIONS[:2]
     questions = [question for question, _, _ in cases]
     fingerprints = runtime.organism.identity_fingerprints
@@ -98,7 +102,7 @@ def evaluate(runtime, tokenizer, router, temporal, *, corrected):
         key, confidence, reason, name = propose(i, text, None)
         actual = None
         if key is not None and mode != 3:
-            actual = read_value(runtime, tokenizer, text, key, mode)
+            actual = read_value(runtime, tokenizer, text, key, mode, reply)
         if expected_key is None:
             passed = actual is None
         else:
@@ -125,6 +129,9 @@ def main(args):
     if target.exists() or (not args.reopen and database.exists()):
         raise FileExistsError('Expected a new destination for this phase')
     sources = {'checkpoint_sha256': digest, 'router_sha256': router_sha, 'temporal_sha256': temporal_sha}
+    reply = None
+    if args.reply_head is not None:
+        reply, sources['reply_sha256'] = load_reply_head(args.reply_head, digest, 'cuda')
     if args.reopen:
         initial = json.loads(initial_path.read_text(encoding='utf-8'))
         if initial['sources'] != sources:
@@ -141,9 +148,9 @@ def main(args):
             runtime.organism.identity_fingerprints = fingerprints
             for (_, key), value in zip(PEOPLE, (FIRST, SECOND), strict=True):
                 write_fact(runtime, key, value)
-            before = evaluate(runtime, tokenizer, router, temporal, corrected=False)
+            before = evaluate(runtime, tokenizer, router, temporal, corrected=False, reply=reply)
             write_fact(runtime, PEOPLE[0][1], CORRECTED)
-        after = evaluate(runtime, tokenizer, router, temporal, corrected=True)
+        after = evaluate(runtime, tokenizer, router, temporal, corrected=True, reply=reply)
         control = storage_control(runtime)
         revision = runtime.store.revision
     if revision != 3 or sha(args.checkpoint) != digest:
@@ -164,5 +171,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     for option in ('checkpoint', 'router', 'temporal', 'output'):
         parser.add_argument('--' + option, type=Path, required=True)
+    parser.add_argument('--reply-head', type=Path)
     parser.add_argument('--reopen', action='store_true')
     main(parser.parse_args())

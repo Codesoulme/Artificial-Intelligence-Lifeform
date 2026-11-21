@@ -14,6 +14,7 @@ from torch import nn
 
 from .model import DeltaMemorySite, ModelConfig
 from .memory_output import MemoryOutputAdapter, MemoryOutputLogitsProcessor
+from .memory_reply import MemoryReplyAdapter, MemoryReplyLogitsProcessor
 from .open_base_memory import OpenBaseMemory
 from .sleep_memory import history_site
 
@@ -255,7 +256,7 @@ class IntegratedOpenBase(nn.Module):
             raise ValueError('Layers must be unwrapped tensor-output decoder layers')
         self.base = base
         self.reader = reader
-        if output_adapter is not None and not isinstance(output_adapter, MemoryOutputAdapter):
+        if output_adapter is not None and not isinstance(output_adapter, (MemoryOutputAdapter, MemoryReplyAdapter)):
             raise ValueError('Expected a memory output adapter')
         self.output_adapter = output_adapter
         self.layer_indices = tuple(layer_indices)
@@ -401,7 +402,9 @@ class IntegratedOpenBase(nn.Module):
         if memory_output_logits is not None:
             if self.output_adapter is None:
                 raise ValueError('Memory output adapter is not attached')
-            processor = MemoryOutputLogitsProcessor(self.output_adapter, memory_output_logits, memory_output_gain)
+            processor_type = (MemoryReplyLogitsProcessor if isinstance(self.output_adapter, MemoryReplyAdapter)
+                              else MemoryOutputLogitsProcessor)
+            processor = processor_type(self.output_adapter, memory_output_logits, memory_output_gain)
             existing = kwargs.get('logits_processor')
             kwargs['logits_processor'] = ([processor] if existing is None else [processor] + list(existing))
         with self._snapshot(memory_state, memory_addresses, current_only, memory_read_mask, memory_slots,

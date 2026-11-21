@@ -16,6 +16,7 @@ import torch
 from .integrated_open_base import (IntegratedOpenBase, NativeSPORAMemoryReader,
                                    ScaledOpenBaseMemory)
 from .memory_output import MemoryOutputAdapter
+from .memory_reply import MemoryReplyAdapter
 from .language_training import atomic_save
 from .named_address import feature_files_sha256, structural_feature_sha256
 from .structure_transfer import SPORALayerReplacement, SPORALayerBlend
@@ -280,7 +281,7 @@ def _residual_bundle(residuals):
 def _output_adapter_bundle(adapter, expected_vocab_size):
     if adapter is None:
         return None, {}
-    if not isinstance(adapter, MemoryOutputAdapter):
+    if not isinstance(adapter, (MemoryOutputAdapter, MemoryReplyAdapter)):
         raise ValueError('Expected a supported memory output adapter')
     config = adapter.config_dict()
     if config['vocab_size'] != expected_vocab_size:
@@ -586,11 +587,15 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
             raise ValueError('Output adapter tensors require output adapter metadata')
         output_adapter = None
     else:
-        if (not isinstance(output_config, dict)
-                or set(output_config) != {'value_count', 'vocab_size', 'rank', 'max_scale'}
-                or output_config.get('vocab_size') != base_config.get('vocab_size')):
+        if not isinstance(output_config, dict) or output_config.get('vocab_size') != base_config.get('vocab_size'):
             raise ValueError('Invalid memory output adapter configuration')
-        output_adapter = MemoryOutputAdapter(**output_config)
+        keys = {'value_count', 'vocab_size', 'rank', 'max_scale'}
+        if set(output_config) == keys:
+            output_adapter = MemoryOutputAdapter(**output_config)
+        elif set(output_config) == keys | {'format', 'steps'} and output_config['format'] == MemoryReplyAdapter.format:
+            output_adapter = MemoryReplyAdapter(**{key: value for key, value in output_config.items() if key != 'format'})
+        else:
+            raise ValueError('Invalid memory output adapter configuration')
         expected_output = output_adapter.state_dict()
         if (set(expected_output) != set(output_tensors)
                 or any(output_tensors[k].shape != v.shape or output_tensors[k].dtype != v.dtype
