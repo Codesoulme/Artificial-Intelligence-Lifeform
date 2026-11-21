@@ -14,11 +14,10 @@ class PartialQueryKeyPositionAttention(SPORAFusedAttention):
             raise ValueError('Partial query/key positions require the migrated value module')
         if group is None:
             group = parent.group
-        value_attention = parent
-        while isinstance(value_attention, PartialQueryKeyPositionAttention):
-            if group == value_attention.group:
-                raise ValueError('A query/key group can only be migrated once')
-            value_attention = value_attention.parent
+        previous = parent.migrated_groups() if isinstance(parent, PartialQueryKeyPositionAttention) else ()
+        if any(group == component.group for component in previous):
+            raise ValueError('A query/key group can only be migrated once')
+        value_attention = previous[0].parent if previous else parent
         if type(group) is not int or not 0 <= group < value_attention.rotary.sizes[1] // parent.head_dim:
             raise ValueError('Invalid query/key group')
         half = parent.head_dim // 2
@@ -57,6 +56,13 @@ class PartialQueryKeyPositionAttention(SPORAFusedAttention):
     @property
     def position(self):
         return self.parent.position
+
+    def migrated_groups(self):
+        """Return the query/key components in projection order."""
+        components = [self]
+        while isinstance(components[-1].parent, PartialQueryKeyPositionAttention):
+            components.append(components[-1].parent)
+        return tuple(reversed(components))
 
     def project(self, hidden_states, position_embeddings, position_ids):
         query, key, value = self.parent.project(hidden_states, position_embeddings, position_ids)

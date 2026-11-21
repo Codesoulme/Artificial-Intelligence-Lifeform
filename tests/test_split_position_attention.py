@@ -17,7 +17,7 @@ if transformers is not None:
     from spora.pretrained_attention import (AbsoluteAttention, SPORAFusedAttention, SplitPositionAttention,
                                             ValuePositionAttention, load_value_position_attention)
     from spora.research_partial_query_key import PartialQueryKeyPositionAttention, select_query_key_rows
-    from spora.value_position_checkpoint import query_key_position_bundle
+    from spora.value_position_checkpoint import decode_query_key_positions, query_key_position_bundle
 
 
 @unittest.skipIf(transformers is None, 'requires the optional Transformers runtime')
@@ -149,6 +149,20 @@ class SplitPositionAttentionTests(unittest.TestCase):
         torch.testing.assert_close(value, first_v)
         with self.assertRaisesRegex(ValueError, 'only be migrated once'):
             PartialQueryKeyPositionAttention(first, (1,), first_weight, first_bias)
-        for candidate in (second, combined):
-            with self.assertRaisesRegex(ValueError, 'same layer and group'):
-                query_key_position_bundle({0: candidate}, {0: values}, self.config.to_dict())
+        config = self.config.to_dict()
+        specs, tensors = query_key_position_bundle({0: combined}, {0: values}, config)
+        self.assertEqual(specs, {'0': {'0': [1], '1': [0]}})
+        decoded_values = {0: (values.group, values.position.weight, values.weight, values.bias)}
+        decoded = decode_query_key_positions(specs, tensors, decoded_values, config)
+        self.assertEqual([(group, pairs) for group, pairs, _, _ in decoded[0]], [(0, [1]), (1, [0])])
+        restored = values
+        for group, pairs, weight, bias in decoded[0]:
+            restored = PartialQueryKeyPositionAttention(restored, pairs, weight, bias, group=group)
+        for actual, expected in zip(restored.project(*args), (query, key, value), strict=True):
+            torch.testing.assert_close(actual, expected, atol=0, rtol=0)
+        with self.assertRaisesRegex(ValueError, 'group metadata'):
+            decode_query_key_positions({'0': {'2': [0]}}, tensors, decoded_values, config)
+        broken = dict(tensors)
+        del broken['query_key_position/0/1/bias']
+        with self.assertRaisesRegex(ValueError, 'Missing or unexpected'):
+            decode_query_key_positions(specs, broken, decoded_values, config)

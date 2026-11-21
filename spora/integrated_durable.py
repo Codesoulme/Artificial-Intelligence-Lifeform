@@ -56,9 +56,10 @@ def _decoder_signature(decoder):
     activations = tuple((name, id(module.activation)) for name, module in decoder.base.named_modules()
                         if hasattr(module, 'read_memory_at_output'))
     value_groups = tuple((index, id(module), module.group) for index, module in value_position_modules(decoder).items())
-    query_key_pairs = tuple((index, id(module), module.group, module.pairs,
-                             id(module._coordinates), module._coordinates._version)
-                            for index, module in query_key_position_modules(decoder).items())
+    query_key_pairs = tuple((index, id(component), component.group, component.pairs,
+                             id(component._coordinates), component._coordinates._version)
+                            for index, module in query_key_position_modules(decoder).items()
+                            for component in module.migrated_groups())
     return (id(decoder.base), decoder.base.training, id(decoder.reader), decoder.reader.training,
             getattr(decoder.reader, 'strength', None), tuple(decoder.layer_indices), shape,
             tuple(decoder.compatible_block_indices), decoder.position_table_max_position,

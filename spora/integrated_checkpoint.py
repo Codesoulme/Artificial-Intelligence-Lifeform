@@ -205,7 +205,7 @@ def value_position_modules(decoder):
     for index, block in _compatible_blocks(decoder):
         attention = block.self_attn
         if isinstance(attention, PartialQueryKeyPositionAttention):
-            attention = attention.parent
+            attention = attention.migrated_groups()[0].parent
         if isinstance(attention, ValuePositionAttention):
             result[index] = attention
     return result
@@ -743,8 +743,8 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
             for index, block in _compatible_blocks(integrated):
                 if index in loaded_value_positions:
                     attention = ValuePositionAttention(block.self_attn, *loaded_value_positions[index])
-                    if index in loaded_query_key_positions:
-                        attention = PartialQueryKeyPositionAttention(attention, *loaded_query_key_positions[index])
+                    for group, pairs, weight, bias in loaded_query_key_positions.get(index, ()):
+                        attention = PartialQueryKeyPositionAttention(attention, pairs, weight, bias, group=group)
                     block.self_attn = attention.eval()
     except Exception:
         for index, layer in previous.items():

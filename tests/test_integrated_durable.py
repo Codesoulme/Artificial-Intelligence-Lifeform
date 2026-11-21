@@ -58,6 +58,59 @@ class IntegratedDurableTests(unittest.TestCase):
     def open(self):
         return load_integrated_durable(self.database, self.bootstrap, self.base(), self.root)
 
+    @torch.no_grad()
+    def test_multiple_query_key_groups_survive_reopen_and_remain_bound(self):
+        try:
+            from transformers import Qwen2Config, Qwen2ForCausalLM
+        except ModuleNotFoundError as error:
+            if error.name != 'transformers':
+                raise
+            self.skipTest('Qwen2 inference dependencies are optional')
+        from spora.integrated_checkpoint import IntegratedSPORARuntime, load_integrated
+        from spora.integrated_open_base import IntegratedOpenBase
+        from spora.pretrained_attention import ValuePositionAttention
+        from spora.research_partial_query_key import PartialQueryKeyPositionAttention
+
+        _, organism, state = load_integrated(self.bootstrap, self.base(), self.root)
+        config = Qwen2Config(vocab_size=9, hidden_size=16, intermediate_size=24,
+                             num_hidden_layers=3, num_attention_heads=4, num_key_value_heads=2,
+                             max_position_embeddings=32, pad_token_id=0, eos_token_id=2)
+        config._attn_implementation = 'sdpa'
+        config.to_json_file(self.root / 'config.json')
+        base = Qwen2ForCausalLM(config).eval()
+        weights = {name: value.clone() for name, value in base.state_dict().items()}
+
+        def fresh_base():
+            restored = Qwen2ForCausalLM(config).eval()
+            restored.load_state_dict(weights)
+            return restored
+
+        decoder = IntegratedOpenBase(base, NativeSPORAMemoryReader(16, 64, .5), (0, 2)).eval()
+        decoder.migrate_pretrained_blocks()
+        decoder.migrate_position_encoder(16)
+        layer = base.model.layers[1]
+        value = ValuePositionAttention(layer.self_attn, 0, torch.randn(16, 16),
+                                       torch.randn(4, 16), torch.randn(4))
+        first = PartialQueryKeyPositionAttention(value, (1,), torch.randn(6, 16), torch.randn(6))
+        layer.self_attn = PartialQueryKeyPositionAttention(first, (0,), torch.randn(6, 16), torch.randn(6),
+                                                          group=1).eval()
+        IntegratedSPORARuntime(decoder, organism, state, self.root).save(self.bootstrap)
+        tokens = torch.tensor([[3, 5, 6, 4]])
+        expected = decoder(tokens, memory_state=state, use_cache=False).logits
+        with create_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root) as runtime:
+            actual = runtime.decoder(tokens, memory_state=runtime.state, use_cache=False).logits
+            torch.testing.assert_close(actual, expected, atol=0, rtol=0)
+            runtime.observe_sourced(4, 2, 'direct', 1.0)
+            digest = frozen_digest(runtime.organism, runtime.state)
+        with load_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root) as runtime:
+            self.assertEqual(frozen_digest(runtime.organism, runtime.state), digest)
+            attention = runtime.decoder.base.model.layers[1].self_attn
+            self.assertEqual([(group.group, group.pairs) for group in attention.migrated_groups()],
+                             [(0, (1,)), (1, (0,))])
+            attention.parent._coordinates[0] = 0
+            with self.assertRaisesRegex(ValueError, 'Decoder changed'):
+                runtime.observe_sourced(4, 3, 'direct', 1.0)
+
     def test_incremental_write_and_reopen_preserve_structure_and_state(self):
         with self.create() as runtime:
             decision, stats = runtime.observe_sourced(4, 2, 'direct', 1.0)
