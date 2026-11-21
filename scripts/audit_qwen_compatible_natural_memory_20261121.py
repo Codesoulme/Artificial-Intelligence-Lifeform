@@ -272,16 +272,17 @@ def selected_span_proposer(fingerprints, selection):
 
 def entity_query_proposer(decoder, tokenizer, fingerprints, router, texts):
     from scripts.train_qwen_entity_query_20261122 import (
-        MENTION_PREFIX, ROLE_PREFIX, detected_spans, features_for, selected_targets,
+        ROLE_PREFIX, detected_spans, features_for, mention_features, selected_targets,
     )
     from spora.research_entity_query import MentionTagger, QueryTargetSelector
 
-    tagger = MentionTagger(router['width']).eval()
+    tagger = MentionTagger(router.get('mention_width', router['width']),
+                          bidirectional=router.get('mention_bidirectional', False)).eval()
     selector = QueryTargetSelector(router['width']).eval()
     tagger.load_state_dict(router['tagger'], strict=True)
     selector.load_state_dict(router['selector'], strict=True)
     rows = [(text,) for text in texts]
-    features, mask = features_for(decoder, tokenizer, rows, MENTION_PREFIX)
+    features, mask = mention_features(decoder, tokenizer, rows, router.get('mention_features', 'context'))
     spans = detected_spans(tagger, features, mask)
     del features, mask
     features, mask = features_for(decoder, tokenizer, rows, ROLE_PREFIX)
@@ -292,7 +293,7 @@ def entity_query_proposer(decoder, tokenizer, fingerprints, router, texts):
 @torch.inference_mode()
 def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_address=False,
           oracle_diagnostic=False, trim_punctuation=False, fresh=False, fresh_v2=False,
-          oracle_address_only=False):
+          oracle_address_only=False, route_only=False):
     questions = fresh_version_cases() if fresh_v2 else fresh_cases() if fresh else cases()
     format_name = router.get('format')
     is_character = format_name == 'spora-character-name-span-v1'
@@ -380,9 +381,10 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
         outcome.update(proposed_key=key, similarity=similarity, routing_reason=reason, selected_text=selected_text)
         if reason is None:
             outcome['key'] = key
-            outcome['answers'] = [answer(decoder, tokenizer, organism, question, state, key, mode) for state in states]
-            if key == expected_key and mode == expected_mode:
-                outcome['correct_pair'] = correct_pair(outcome['answers'])
+            if not route_only:
+                outcome['answers'] = [answer(decoder, tokenizer, organism, question, state, key, mode) for state in states]
+                if key == expected_key and mode == expected_mode:
+                    outcome['correct_pair'] = correct_pair(outcome['answers'])
         if oracle_diagnostic and expected_key is not None:
             oracle = outcome['answers'] if outcome['key'] == expected_key and mode == expected_mode else [
                 answer(decoder, tokenizer, organism, question, state, expected_key, expected_mode) for state in states
@@ -407,6 +409,10 @@ def main(args):
     checkpoint_sha = sha(args.checkpoint)
     router, router_sha = load_head(args.router, 'router.pt', 'router_sha256', checkpoint_sha)
     temporal, temporal_sha = load_head(args.temporal, 'temporal.pt', 'temporal_sha256', checkpoint_sha)
+    if args.query_margin is not None:
+        if router.get('format') != 'spora-factorized-name-query-v1' or not args.route_only:
+            raise ValueError('An alternate query margin requires a routing-only factorized name audit')
+        router = dict(router, margin=args.query_margin)
     uses_spans = router.get('format') in ('spora-character-name-span-v1', 'spora-factorized-name-query-v1')
     if uses_spans:
         torch.set_num_threads(2)
@@ -446,7 +452,7 @@ def main(args):
     rows, address_fit = score(decoder, tokenizer, organism, router, temporal, states,
                               calibrate_address=args.calibrate_address, oracle_diagnostic=args.oracle_diagnostic,
                               trim_punctuation=args.trim_punctuation, fresh=args.fresh, fresh_v2=args.fresh_v2,
-                              oracle_address_only=args.oracle_address_only)
+                              oracle_address_only=args.oracle_address_only, route_only=args.route_only)
     if (original_digest != frozen_digest(organism, original) or sha(args.checkpoint) != checkpoint_sha
             or state_digests != [frozen_digest(organism, state) for state in states]):
         raise ValueError('Evaluation changed memory')
@@ -456,6 +462,8 @@ def main(args):
                'correct_time': sum(r['expected_mode'] == r['mode'] for r in known),
                'correct_pairs': sum(r['correct_pair'] for r in known), 'unsupported': len(unsupported),
                'unsupported_routed': sum(r['key'] is not None for r in unsupported)}
+    if args.route_only:
+        del summary['correct_pairs']
     if args.oracle_diagnostic:
         summary['oracle_correct_pairs'] = sum(r['oracle_correct_pair'] for r in known)
     if args.oracle_address_only:
@@ -465,6 +473,7 @@ def main(args):
         json.dump({'summary': summary, 'rows': rows, 'checkpoint_sha256': checkpoint_sha,
                    'router_sha256': router_sha, 'temporal_sha256': temporal_sha,
                    'output_fit': output_fit, 'address_fit': address_fit,
+                   'route_only': args.route_only, 'query_margin_override': args.query_margin,
                    'question_suite': 'fresh_v2' if args.fresh_v2 else 'fresh' if args.fresh else 'original'}, stream,
                   ensure_ascii=False, indent=2)
         stream.write('\n')
@@ -482,7 +491,14 @@ if __name__ == '__main__':
     parser.add_argument('--oracle-diagnostic', action='store_true')
     parser.add_argument('--oracle-address-only', action='store_true')
     parser.add_argument('--trim-punctuation', action='store_true')
+    parser.add_argument('--route-only', action='store_true')
+    parser.add_argument('--query-margin', type=float)
     questions = parser.add_mutually_exclusive_group()
     questions.add_argument('--fresh', action='store_true')
     questions.add_argument('--fresh-v2', action='store_true')
-    main(parser.parse_args())
+    args = parser.parse_args()
+    if args.route_only and (args.oracle_diagnostic or args.oracle_address_only or args.calibrate_output):
+        parser.error('Routing-only evaluation cannot generate or calibrate answers')
+    if args.query_margin is not None and not 0. <= args.query_margin < float('inf'):
+        parser.error('--query-margin must be finite and nonnegative')
+    main(args)

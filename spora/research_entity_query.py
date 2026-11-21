@@ -6,15 +6,23 @@ from torch.nn import functional as F
 
 
 class MentionTagger(nn.Module):
-    def __init__(self, width):
+    def __init__(self, width, *, bidirectional=False):
         super().__init__()
         self.project = nn.Linear(width, 64)
         self.context = nn.Conv1d(64, 64, 5, padding=2)
+        self.sequence = nn.GRU(64, 32, batch_first=True, bidirectional=True) if bidirectional else None
         self.tags = nn.Linear(64, 3)
 
     def forward(self, features, mask):
         hidden = F.gelu(self.project(features.float())).masked_fill(~mask[..., None], 0.)
-        return self.tags(hidden + F.gelu(self.context(hidden.transpose(1, 2)).transpose(1, 2)))
+        hidden = hidden + F.gelu(self.context(hidden.transpose(1, 2)).transpose(1, 2))
+        if self.sequence is not None:
+            packed = nn.utils.rnn.pack_padded_sequence(hidden, mask.sum(1).cpu(), batch_first=True,
+                                                       enforce_sorted=False)
+            encoded, _ = self.sequence(packed)
+            context, _ = nn.utils.rnn.pad_packed_sequence(encoded, batch_first=True, total_length=hidden.shape[1])
+            hidden = hidden + context
+        return self.tags(hidden)
 
 
 def mention_spans(tags):

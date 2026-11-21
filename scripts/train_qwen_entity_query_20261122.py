@@ -115,6 +115,41 @@ def features_for(decoder, tokenizer, rows, prefix):
     return character_inputs(tokenizer, questions, hidden, prefix)
 
 
+def lexical_character_features(decoder, tokenizer, rows):
+    """Preserve character identity when several characters share a contextual token."""
+    texts = [row[0] for row in rows]
+    characters = sorted(set(''.join(texts)))
+    character_index = {char: i for i, char in enumerate(characters)}
+    encoding = tokenizer(characters, add_special_tokens=False, padding=True, return_tensors='pt')
+    embedding = decoder.base.get_input_embeddings()
+    device = embedding.weight.device
+    with torch.no_grad():
+        tokens = encoding['input_ids'].to(device)
+        active = encoding['attention_mask'].to(device)[..., None].bool()
+        pooled = embedding(tokens).float().masked_fill(~active, 0.).sum(1) / active.sum(1).clamp_min(1)
+        vectors = F.layer_norm(pooled, (pooled.shape[-1],)).cpu().to(embedding.weight.dtype)
+    width = max(map(len, texts))
+    result = torch.zeros(len(texts), width, vectors.shape[-1], dtype=vectors.dtype)
+    mask = torch.arange(width)[None, :] < torch.tensor([len(text) for text in texts])[:, None]
+    for i, text in enumerate(texts):
+        result[i, :len(text)] = vectors[[character_index[char] for char in text]]
+    return result, mask
+
+
+def mention_features(decoder, tokenizer, rows, variant='context'):
+    if variant == 'context':
+        return features_for(decoder, tokenizer, rows, MENTION_PREFIX)
+    lexical, mask = lexical_character_features(decoder, tokenizer, rows)
+    if variant == 'lexical':
+        return lexical, mask
+    if variant == 'hybrid':
+        context, context_mask = features_for(decoder, tokenizer, rows, MENTION_PREFIX)
+        if not torch.equal(mask, context_mask):
+            raise ValueError('Lexical and contextual character offsets differ')
+        return torch.cat((context, lexical), dim=-1), mask
+    raise ValueError('Unknown name mention feature variant')
+
+
 def tag_targets(rows, width):
     targets = torch.zeros((len(rows), width), dtype=torch.long)
     for i, (_, spans, _) in enumerate(rows):
@@ -133,8 +168,8 @@ def candidate_masks(spans, width):
     return masks
 
 
-def fit_tagger(features, mask, rows):
-    model = MentionTagger(features.shape[-1])
+def fit_tagger(features, mask, rows, *, bidirectional=False):
+    model = MentionTagger(features.shape[-1], bidirectional=bidirectional)
     targets = tag_targets(rows, features.shape[1])
     weights = torch.tensor([1., 3., 3.])
     train(model, len(rows), 14,
@@ -221,12 +256,15 @@ def main(checkpoint, output, *, selector_baseline=None):
     decoder, _, _ = load_integrated(checkpoint, load_full_streamed(), MODEL)
     decoder.eval().requires_grad_(False)
     mention_training = train_rows + news_train if baseline is None else []
-    x, mask = features_for(decoder, tokenizer, mention_training + news_held + all_held, MENTION_PREFIX)
+    variant = 'context' if baseline is None else baseline.get('mention_features', 'context')
+    x, mask = mention_features(decoder, tokenizer, mention_training + news_held + all_held, variant)
+    mention_width = x.shape[-1]
     count = len(mention_training)
     if baseline is None:
         tagger = fit_tagger(x[:count], mask[:count], mention_training)
     else:
-        tagger = MentionTagger(baseline['width']).eval()
+        tagger = MentionTagger(baseline.get('mention_width', baseline['width']),
+                              bidirectional=baseline.get('mention_bidirectional', False)).eval()
         tagger.load_state_dict(baseline['tagger'], strict=True)
     predicted = detected_spans(tagger, x[count:], mask[count:])
     del x, mask
@@ -250,6 +288,8 @@ def main(checkpoint, output, *, selector_baseline=None):
     weights = output / 'router.pt'
     atomic_save({'format': FORMAT, 'checkpoint_sha256': checkpoint_sha, 'base_sha256': WEIGHT_SHA,
                  'feature_config_sha256': feature_files_sha256(MODEL), 'hidden_indices': list(INDICES),
+                 'mention_features': variant, 'mention_width': mention_width,
+                 'mention_bidirectional': baseline is not None and baseline.get('mention_bidirectional', False),
                  'width': x.shape[-1], 'margin': margin, 'tagger': tagger.state_dict(), 'selector': selector.state_dict()},
                 weights)
     def scores(rows, spans, chosen=None, provided=None):
