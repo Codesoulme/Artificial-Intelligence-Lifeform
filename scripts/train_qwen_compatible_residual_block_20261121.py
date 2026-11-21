@@ -13,9 +13,15 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from audit_qwen_compatible_raw_control_20261121 import evaluate
+from audit_awake_multiturn_layers import encode
 from deepseek_output_aligned_memory import MODEL, sha, torch, write
+from scripts.deepseek_semantic_value_pilot import WORDS
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
+from scripts.deepseek_spora_memory_answer_distill import _memory_args
+from scripts.spora_unknown_state_probe import fresh_controlled_state
+from spora.growing import grow
 from spora.integrated_checkpoint import load_integrated_runtime
+from spora.internal_memory import observe_sourced
 from spora.language_training import atomic_save
 from spora.pretrained_attention import SPORAResidualBlock, SPORAPretrainedBlock
 from train_awake_dialogue_recovery import dialogue_cases, memory_logits
@@ -68,6 +74,50 @@ def dialogue_replay(path, tokenizer, limit):
     return rows
 
 
+def expanded_memory_cases(organism, tokenizer):
+    names = ("杜桐", "蔡乔", "顾河", "方晗", "周芸", "吴鸣", "沈泉", "丁青",
+             "胡南", "齐飞", "柯禾", "安秋", "程木", "许圆", "孟欢", "马平")
+    current = ("请核对最新一条，{name}习惯点什么饮料？", "记着{name}现在想喝哪样吗？",
+               "查一下{name}眼下的饮料选择。", "目前留档的是{name}偏爱喝什么？")
+    past = ("改过那条之前，{name}通常选什么喝？", "哪种饮料是{name}以前那条偏好？",
+            "能查一下更新之前{name}爱喝什么吗？", "回到更早的备注，{name}选的饮品是什么？")
+    rows = []
+    for offset in (0, 2):
+        state = fresh_controlled_state(organism)
+        pending = []
+        for i, name in enumerate(names):
+            key = 12 + i
+            event = state.cursor
+            earlier, latest = (i + offset) % len(WORDS), (i + offset + 3) % len(WORDS)
+            for value in (earlier, latest):
+                if state.cursor >= len(state.pages) * organism.config.time_count:
+                    state = grow(organism, state)
+                state, decision = observe_sourced(organism, state, key, value, "direct", 1.)
+                if not decision["current_write"]:
+                    raise ValueError("Expanded replay observation was rejected")
+            pending.extend((
+                (current[i % len(current)].format(name=name), key, "current", event, latest),
+                (past[i % len(past)].format(name=name), key, "past", event, earlier),
+            ))
+        for question, key, mode, event, value in pending:
+            prompt = encode(tokenizer, [{"role": "user", "content": question}])
+            tail = tokenizer.encode(WORDS[value], add_special_tokens=False) + [tokenizer.eos_token_id]
+            controls = _memory_args(organism, state, {"key": key, "intent": mode, "event_time": event})
+            rows.append((prompt, tail, controls))
+    return rows
+
+
+def unadapted_logits(decoder, layer_index, block, prompt, target, controls=None):
+    install_layer(decoder, layer_index, block.base)
+    try:
+        with torch.no_grad():
+            logits = (answer_logits(decoder, prompt, target) if controls is None
+                      else memory_logits(decoder, prompt, target, controls))
+            return logits.log_softmax(-1)
+    finally:
+        install_layer(decoder, layer_index, block)
+
+
 def train(decoder, layer_index, block, language, memory, steps, learning_rate, reference_weight,
           memory_weight, contrast_weight, *, dialogue=(), dialogue_kl_weight=1.):
     block.down.requires_grad_(True)
@@ -85,7 +135,10 @@ def train(decoder, layer_index, block, language, memory, steps, learning_rate, r
         if memory and step % 3 == 0:
             pair_index, side = divmod(step // 3, 2 if contrast_weight else 1)
             batch = paired[memory_order[pair_index % len(paired)]]
-            (prompt, target, controls, teacher), contrast = batch[side]
+            sample, contrast = batch[side]
+            prompt, target, controls = sample[:3]
+            teacher = (sample[3] if len(sample) == 4 else
+                       unadapted_logits(decoder, layer_index, block, prompt, target, controls))
             logits = memory_logits(decoder, prompt, target, controls)
             value_loss = torch.nn.functional.cross_entropy(logits, torch.tensor(target, device="cuda"))
             kl = divergence(logits, teacher)
@@ -101,12 +154,7 @@ def train(decoder, layer_index, block, language, memory, steps, learning_rate, r
             pool = dialogue if dialogue and step % 5 != 1 else language
             is_dialogue = pool is dialogue
             prompt, target = pool[rng.randrange(len(pool))]
-            install_layer(decoder, layer_index, block.base)
-            try:
-                with torch.no_grad():
-                    teacher = answer_logits(decoder, prompt, target).log_softmax(-1)
-            finally:
-                install_layer(decoder, layer_index, block)
+            teacher = unadapted_logits(decoder, layer_index, block, prompt, target)
             logits = answer_logits(decoder, prompt, target)
             kl = divergence(logits, teacher)
             value_loss = torch.nn.functional.cross_entropy(logits, torch.tensor(target, device="cuda"))
@@ -139,7 +187,8 @@ def install_layer(decoder, index, block):
 
 
 def main(output, ceval, layer_index, rank, steps, learning_rate, reference_weight, memory_weight,
-         contrast_weight, *, checkpoint=SOURCE, dialogue_path=None, dialogue_kl_weight=1.):
+         contrast_weight, *, checkpoint=SOURCE, dialogue_path=None, dialogue_kl_weight=1.,
+         expanded_memory=False):
     output = output.resolve()
     if output.exists() and any(output.iterdir()):
         raise FileExistsError(output)
@@ -178,7 +227,8 @@ def main(output, ceval, layer_index, rank, steps, learning_rate, reference_weigh
     gc.collect()
     torch.cuda.synchronize()
     torch.cuda.empty_cache()
-    memory = paired_targets(decoder, tokenizer, organism)
+    memory = (expanded_memory_cases(organism, tokenizer) if expanded_memory
+              else paired_targets(decoder, tokenizer, organism))
     if not language or not memory:
         raise ValueError("The residual curriculum is empty")
     torch.cuda.reset_peak_memory_stats()
@@ -217,6 +267,7 @@ def main(output, ceval, layer_index, rank, steps, learning_rate, reference_weigh
         "dialogue_sequences": len(dialogue),
         "dialogue_kl_weight": dialogue_kl_weight,
         "memory_sequences": len(memory),
+        "expanded_memory": expanded_memory,
         "losses": losses,
         "candidate_sha256": sha(path),
         "integrated_checkpoint_sha256": sha(integrated_path),
@@ -241,6 +292,7 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint", type=Path, default=SOURCE)
     parser.add_argument("--dialogue-corpus", type=Path)
     parser.add_argument("--dialogue-kl-weight", type=float, default=1.)
+    parser.add_argument("--expanded-memory", action="store_true")
     args = parser.parse_args()
     if args.layer < 0 or args.rank < 1 or args.steps < 1 or args.learning_rate <= 0:
         parser.error("Layer, rank, steps and learning-rate are invalid")
@@ -251,4 +303,5 @@ if __name__ == "__main__":
         parser.error("C-Eval directory does not exist")
     main(args.output, args.ceval, args.layer, args.rank, args.steps,
          args.learning_rate, args.reference_weight, args.memory_weight, args.contrast_weight,
-         checkpoint=args.checkpoint, dialogue_path=args.dialogue_corpus, dialogue_kl_weight=args.dialogue_kl_weight)
+         checkpoint=args.checkpoint, dialogue_path=args.dialogue_corpus, dialogue_kl_weight=args.dialogue_kl_weight,
+         expanded_memory=args.expanded_memory)

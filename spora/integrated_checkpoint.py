@@ -248,6 +248,8 @@ def _residual_bundle(residuals):
                        for value in state.values())):
             raise ValueError('Invalid structural residual tensors')
         spec = {'index': index, 'rank': block.rank}
+        if block.memory_only:
+            spec['memory_only'] = True
         spec['sha256'] = _digest(spec, state)
         specs.append(spec)
         tensors.update({f'residual/{index}/{name}': value.detach().cpu().clone()
@@ -501,7 +503,8 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     loaded_residuals = {}
     consumed_residuals = set()
     for spec in residual_specs:
-        if not isinstance(spec, dict) or set(spec) != {'index', 'rank', 'sha256'}:
+        fields = {'index', 'rank', 'sha256'}
+        if not isinstance(spec, dict) or set(spec) not in (fields, fields | {'memory_only'}):
             raise ValueError('Invalid structural residual metadata')
         index, rank = spec['index'], spec['rank']
         if (type(index) is not int or index < 0 or index >= len(layers)
@@ -513,6 +516,10 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         if set(state) != {'down', 'up'}:
             raise ValueError('Invalid structural residual tensor set')
         identity = {'index': index, 'rank': rank}
+        if 'memory_only' in spec:
+            if spec['memory_only'] is not True:
+                raise ValueError('Invalid residual memory activation mode')
+            identity['memory_only'] = True
         if _digest(identity, state) != spec['sha256']:
             raise ValueError('Structural residual digest mismatch')
         if (state['down'].shape != (rank, base.config.hidden_size)
@@ -520,7 +527,7 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
                 or any(not value.is_floating_point() or not bool(torch.isfinite(value).all())
                        for value in state.values())):
             raise ValueError('Invalid structural residual tensor shapes')
-        loaded_residuals[index] = (rank, state)
+        loaded_residuals[index] = (rank, state, spec.get('memory_only', False))
     if consumed_residuals != set(residual_tensors):
         raise ValueError('Unexpected structural residual tensor')
     compatible_layers = metadata.get('compatible_layers', [])
@@ -616,13 +623,14 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         for index, fraction in ((int(key), value) for key, value in fractions.items()):
             integrated.use_feedforward_memory(index, fraction=fraction,
                                               at_output=index in feedforward_output_layers)
-        for index, (rank, residual_state) in loaded_residuals.items():
+        for index, (rank, residual_state, memory_only) in loaded_residuals.items():
             container = layers[index]
             on_memory_layer = index in integrated.layer_indices
             source = container.layer if on_memory_layer else container
             if not isinstance(source, SPORAPretrainedBlock):
                 raise ValueError('Structural residual requires a Qwen-compatible block')
-            block = SPORAResidualBlock(source, rank=rank).to(device).eval()
+            context = integrated._memory_context if memory_only else None
+            block = SPORAResidualBlock(source, rank=rank, memory_context=context).to(device).eval()
             with torch.no_grad():
                 block.down.weight.copy_(residual_state['down'].to(device=device, dtype=block.down.weight.dtype))
                 block.up.weight.copy_(residual_state['up'].to(device=device, dtype=block.up.weight.dtype))

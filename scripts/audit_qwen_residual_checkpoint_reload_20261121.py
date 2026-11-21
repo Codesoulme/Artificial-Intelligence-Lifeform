@@ -15,7 +15,7 @@ from spora.integrated_checkpoint import load_integrated, load_integrated_runtime
 
 
 def main(checkpoint, ceval, output, *, paired_history=False, resave=None, residual_scales=None,
-         candidate=None, candidate_scale=None):
+         candidate=None, candidate_scale=None, memory_only=False):
     if output.exists():
         raise FileExistsError(output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -58,6 +58,9 @@ def main(checkpoint, ceval, output, *, paired_history=False, resave=None, residu
         blocks = [module for module in decoder.modules() if isinstance(module, SPORAResidualBlock)]
         if not blocks:
             raise ValueError("A residual scale sweep requires residual weights")
+        if memory_only:
+            for block in blocks:
+                block.memory_context = decoder._memory_context
         original = [block.up.weight.detach().clone() for block in blocks]
         result = {}
         with torch.no_grad():
@@ -99,6 +102,7 @@ if __name__ == "__main__":
     parser.add_argument("--residual-scales", type=float, nargs="+")
     parser.add_argument("--candidate", type=Path)
     parser.add_argument("--candidate-scale", type=float)
+    parser.add_argument("--memory-only", action="store_true")
     args = parser.parse_args()
     if not args.checkpoint.is_file() or not args.ceval.is_dir():
         parser.error("Checkpoint or C-Eval directory does not exist")
@@ -108,6 +112,8 @@ if __name__ == "__main__":
         args.candidate is not None and args.candidate_scale not in (args.residual_scales or ())
     ):
         parser.error("Specify both candidate options and include its scale in --residual-scales")
+    if args.memory_only and args.residual_scales is None:
+        parser.error("--memory-only requires --residual-scales")
     main(args.checkpoint, args.ceval, args.output, paired_history=args.paired_history,
          resave=args.resave, residual_scales=args.residual_scales,
-         candidate=args.candidate, candidate_scale=args.candidate_scale)
+         candidate=args.candidate, candidate_scale=args.candidate_scale, memory_only=args.memory_only)

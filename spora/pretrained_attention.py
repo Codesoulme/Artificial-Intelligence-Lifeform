@@ -119,7 +119,7 @@ class SPORAResidualBlock(nn.Module):
 
     attention_type = 'full_attention'
 
-    def __init__(self, source, rank=16):
+    def __init__(self, source, rank=16, *, memory_context=None):
         super().__init__()
         if not isinstance(source, SPORAPretrainedBlock):
             raise ValueError('Expected a Qwen-compatible SPORA block')
@@ -128,6 +128,7 @@ class SPORAResidualBlock(nn.Module):
         self.base = source.requires_grad_(False).eval()
         self.hidden_size = source.hidden_size
         self.rank = rank
+        self.memory_context = memory_context
         reference = source.self_attn.qkv.weight
         self.down = nn.Linear(self.hidden_size, rank, bias=False,
                               device=reference.device, dtype=torch.float32)
@@ -138,12 +139,24 @@ class SPORAResidualBlock(nn.Module):
 
     def forward(self, *args, **kwargs):
         output = self.base(*args, **kwargs)
+        read_mask = None
+        if self.memory_context is not None:
+            snapshot = self.memory_context.get()
+            if snapshot is None:
+                return output
+            read_mask = snapshot[2]
         hidden = output[0] if isinstance(output, tuple) else output
         residual = self.up(F.gelu(self.down(hidden.to(self.down.weight.dtype))))
         updated = hidden + residual.to(dtype=hidden.dtype)
+        if read_mask is not None:
+            updated = torch.where(read_mask.to(hidden.device)[:, None, None], updated, hidden)
         if isinstance(output, tuple):
             return (updated, *output[1:])
         return updated
+
+    @property
+    def memory_only(self):
+        return self.memory_context is not None
 
     def residual_norm(self):
         return float((self.down.weight.detach().float().norm()

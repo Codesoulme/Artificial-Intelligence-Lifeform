@@ -51,9 +51,11 @@ def _decoder_signature(decoder):
                    layer.training) for i, layer in enumerate(layers))
     placement = tuple((name, module.read_memory_at_output) for name, module in decoder.base.named_modules()
                       if hasattr(module, 'read_memory_at_output'))
+    residual_modes = tuple((name, id(module.memory_context)) for name, module in decoder.base.named_modules()
+                           if hasattr(module, 'memory_only'))
     return (id(decoder.base), decoder.base.training, id(decoder.reader), decoder.reader.training,
             getattr(decoder.reader, 'strength', None), tuple(decoder.layer_indices), shape,
-            tuple(decoder.compatible_block_indices), decoder.position_table_max_position, placement,
+            tuple(decoder.compatible_block_indices), decoder.position_table_max_position, placement, residual_modes,
             tensors(decoder.base), tensors(decoder.reader),
             None if adapter is None else (id(adapter), adapter.training,
                                           tuple(sorted(adapter.config_dict().items())), tensors(adapter)))
