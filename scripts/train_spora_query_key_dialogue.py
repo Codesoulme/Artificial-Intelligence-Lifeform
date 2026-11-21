@@ -10,12 +10,13 @@ from audit_awake_multiturn_layers import encode
 from scripts.deepseek_semantic_value_pilot import WORDS
 from train_awake_absolute_attention import replay_requests
 from train_awake_partial_layer import TRAIN_FILES
-from train_awake_replacement_replay import divergence
+from train_awake_replacement_replay import divergence, generate
 
 
 TRAIN_TOPICS = frozenset(('constraint', 'reference', 'correction', 'count', 'format', 'rewriting',
                           'preference_change', 'list', 'spatial', 'sequence', 'boundary', 'translation'))
 VALIDATION_TOPICS = frozenset(('sorting', 'calendar', 'category', 'units'))
+ROLLOUT_TOPICS = frozenset(('constraint', 'reference', 'correction', 'count', 'preference_change', 'list'))
 
 
 def answer_request(tokenizer, prompt, answer, controls):
@@ -72,7 +73,27 @@ def validation(decoder, requests, targets):
     return {'teacher_kl': sum(divergences) / len(divergences), 'answer_nll': sum(scores) / len(scores)}
 
 
-def fit_dialogue_predictions(runtime, tokenizer, layer, native, candidate, steps, excluded_questions):
+@torch.no_grad()
+def student_requests(decoder, tokenizer, excluded_questions):
+    scenarios = json.loads(TRAIN_FILES[0].read_text(encoding='utf-8'))['dialogues']
+    rows = []
+    for scenario in scenarios:
+        if scenario['topic'] not in ROLLOUT_TOPICS:
+            continue
+        history = []
+        for question, _ in scenario['turns']:
+            if question in excluded_questions:
+                raise ValueError('A student rollout overlaps the migration evaluation')
+            history.append({'role': 'user', 'content': question})
+            prompt = encode(tokenizer, history)
+            tail = generate(decoder, tokenizer, prompt, 20)
+            rows.append((prompt + tail[:-1], tail, {}))
+            history.append({'role': 'assistant', 'content': tokenizer.decode(tail, skip_special_tokens=True).strip()})
+    return rows
+
+
+def fit_dialogue_predictions(runtime, tokenizer, layer, native, candidate, steps, excluded_questions, *,
+                             student_prefixes=False):
     pools = prepare_requests(runtime, tokenizer, excluded_questions)
     decoder = runtime.decoder
     layer.self_attn = native
@@ -90,14 +111,39 @@ def fit_dialogue_predictions(runtime, tokenizer, layer, native, candidate, steps
         return {name: validation(decoder, requests, references) for name, requests, references in
                 zip(('dialogue', 'memory'), pools[3:], targets[3:], strict=True)}
 
+    def refresh_rollouts():
+        requests = student_requests(decoder, tokenizer, excluded_questions)
+        layer.self_attn = native
+        try:
+            return requests, teacher_targets(decoder, requests)
+        finally:
+            layer.self_attn = candidate
+
+    training = list(zip(pools[:3], targets[:3], strict=True))
+    schedule = (0, 0, 1, 2)
     try:
         before = held()
+        rollout_summary = None
+        if student_prefixes:
+            initial = refresh_rollouts()
+            training.append(initial)
+            schedule = (3, 0, 3, 2, 1, 3, 0, 2)
+            rollout_summary = {'initial_requests': len(initial[0]), 'initial_tokens': sum(len(row[1]) for row in initial[0]),
+                               'before': validation(decoder, *initial)}
+            print('Collected student dialogues', rollout_summary, flush=True)
         trace = []
         for step in range(steps):
-            pool = (0, 0, 1, 2)[step % 4]
-            index = rng.randrange(len(pools[pool]))
-            logits, labels = prediction(decoder, pools[pool][index])
-            kl = divergence(logits, targets[pool][index].float().log_softmax(-1))
+            if student_prefixes and step == steps // 2:
+                training[3] = refresh_rollouts()
+                rollout_summary['refreshed_tokens'] = sum(len(row[1]) for row in training[3][0])
+                rollout_summary['changed_requests'] = sum(a[:2] != b[:2] for a, b in
+                                                           zip(initial[0], training[3][0], strict=True))
+                print('Refreshed student dialogues', rollout_summary['changed_requests'], flush=True)
+            pool = schedule[step % len(schedule)]
+            requests, references = training[pool]
+            index = rng.randrange(len(requests))
+            logits, labels = prediction(decoder, requests[index])
+            kl = divergence(logits, references[index].float().log_softmax(-1))
             loss = kl + .10 * F.cross_entropy(logits, labels) if pool == 0 else kl
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -108,6 +154,8 @@ def fit_dialogue_predictions(runtime, tokenizer, layer, native, candidate, steps
                 trace.append(row)
                 print('Whole-decoder alignment', row, flush=True)
         after = held()
+        if rollout_summary is not None:
+            rollout_summary['after'] = validation(decoder, *initial)
     finally:
         for name in ('weight', 'bias'):
             parameter = getattr(candidate, name).detach().to(native.qkv.weight.dtype)
@@ -115,4 +163,4 @@ def fit_dialogue_predictions(runtime, tokenizer, layer, native, candidate, steps
         layer.self_attn = native
     return {'steps': steps, 'train_dialogue': len(pools[0]), 'train_prose': len(pools[1]),
             'train_memory': len(pools[2]), 'validation_dialogue': len(pools[3]), 'validation_memory': len(pools[4]),
-            'before': before, 'after': after, 'trace': trace}
+            'before': before, 'after': after, 'student_prefixes': rollout_summary, 'trace': trace}

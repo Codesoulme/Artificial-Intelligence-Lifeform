@@ -63,8 +63,10 @@ def main(args):
     benchmarks = (DATA, *(args.ceval / f'{name}.parquet' for name in CEVAL_SUBJECTS),
                   *(extra_path / f'{name}.parquet' for name in extra_subjects))
     inputs = (args.checkpoint, manifest, args.reference, args.attention, attention_report, *benchmarks)
-    if args.calibration_steps:
+    if args.calibration_steps or args.dialogue_steps:
         inputs += TRAIN_FILES
+    if args.resume_component is not None:
+        inputs += (args.resume_component, args.resume_component.with_suffix('.json'))
     sources = {str(path): sha(path) for path in inputs}
     packed = json.loads(manifest.read_text(encoding='utf-8'))['packed']
     reference = json.loads(args.reference.read_text(encoding='utf-8'))
@@ -75,9 +77,17 @@ def main(args):
             or attention['candidate_sha256'] != sources[str(args.attention)]
             or any(reference['sources'].get(str(path)) != sources[str(path)] for path in benchmarks)):
         raise ValueError('The native parent, projection, and verified benchmark must match')
-    projection = torch.load(args.attention, weights_only=True, map_location='cpu')
-    if projection['format'] != 'spora-grouped-absolute-attention-v1' or projection['layer'] != LAYER:
-        raise ValueError('Expected the trained projection for this attention layer')
+    if args.resume_component is None:
+        projection = torch.load(args.attention, weights_only=True, map_location='cpu')
+        if projection['format'] != 'spora-grouped-absolute-attention-v1' or projection['layer'] != LAYER:
+            raise ValueError('Expected the trained projection for this attention layer')
+    else:
+        resume = torch.load(args.resume_component, weights_only=True, map_location='cpu')
+        earlier = json.loads(args.resume_component.with_suffix('.json').read_text(encoding='utf-8'))
+        if (earlier['research_component_sha256'] != sources[str(args.resume_component)]
+                or resume['format'] != 'spora-second-query-key-group-v1' or resume['layer'] != LAYER
+                or resume['parent_sha256'] != sources[str(args.checkpoint)]):
+            raise ValueError('The resumed projection must belong to this parent and have an audit record')
 
     started = time.perf_counter()
     torch.set_num_threads(2)
@@ -117,7 +127,12 @@ def main(args):
     selected = selected_module = dialogue_module = None
     try:
         for name, (parent, group, pairs) in plans.items():
-            weight, bias = select_query_key_rows(values, pairs, projection['state'], group=group)
+            if args.resume_component is None:
+                weight, bias = select_query_key_rows(values, pairs, projection['state'], group=group)
+            else:
+                if resume['group'] != group or tuple(resume['pairs']) != pairs:
+                    raise ValueError('The resumed projection uses different positions')
+                weight, bias = resume['weight'], resume['bias']
             calibration = None
             if args.calibration_steps:
                 layer.self_attn = native
@@ -128,7 +143,8 @@ def main(args):
             whole_decoder = None
             if args.dialogue_steps:
                 whole_decoder = fit_dialogue_predictions(runtime, tokenizer, layer, native, candidate,
-                                                         args.dialogue_steps, excluded_questions)
+                                                         args.dialogue_steps, excluded_questions,
+                                                         student_prefixes=args.student_prefixes)
                 dialogue_module = candidate
                 print('Whole-decoder validation', name, whole_decoder, flush=True)
             layer.self_attn = candidate
@@ -145,19 +161,20 @@ def main(args):
                 row['whole_decoder_calibration'] = whole_decoder
             print('Screen', name, {key: value for key, value in row.items() if key != 'ceval'}, flush=True)
             results[name] = row
-            if correct < prior_correct:
+            if correct < prior_correct and not args.student_prefixes:
                 continue
             if args.second_group_pairs:
                 constraint = dialogue(runtime.decoder, tokenizer, recipe, open_reasoning=False, limit=96, seed=73121)
                 row['recipe_regression_probe'] = constraint
                 row['recipe_ingredient_passed'] = not bool(EGG_INGREDIENT.search(constraint[-1]['answer']))
                 print('Recipe ingredient', name, row['recipe_ingredient_passed'], flush=True)
-                if not row['recipe_ingredient_passed']:
+                if not row['recipe_ingredient_passed'] and not args.student_prefixes:
                     continue
             if selected is None:
                 row['full'] = full_result(runtime, tokenizer, args, reference, extra, prompts[1])
                 print('Full', name, row['full']['checks'], flush=True)
-                if args.second_group_pairs and row['full']['checks']['passed']:
+                if (args.second_group_pairs and row['recipe_ingredient_passed'] and correct >= prior_correct
+                        and row['full']['checks']['passed']):
                     selected, selected_module = name, layer.self_attn
     finally:
         layer.self_attn = native
@@ -183,7 +200,7 @@ def main(args):
               'selected_for_fresh_dialogue': selected, 'fresh_dialogue': fresh,
               'seconds': time.perf_counter() - started, 'peak_gpu_bytes': torch.cuda.max_memory_allocated()}
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    if research_module is not None and args.calibration_steps:
+    if research_module is not None and (args.calibration_steps or args.dialogue_steps):
         artifact = args.output.with_suffix('.pt')
         if artifact.exists():
             raise FileExistsError(artifact)
@@ -208,11 +225,17 @@ if __name__ == '__main__':
                         help='Fit one specified second-group candidate before screening')
     parser.add_argument('--dialogue-steps', type=int, default=0,
                         help='Further fit the same projection using whole-decoder predictions')
+    parser.add_argument('--resume-component', type=Path, help='Use weights from a previous second-group audit')
+    parser.add_argument('--student-prefixes', action='store_true', help='Also distill on student-generated dialogue')
     args = parser.parse_args()
     if args.second_group_pairs and len(args.second_group_pairs) != len(set(args.second_group_pairs)):
         parser.error('Second-group pair counts must be unique')
     if args.calibration_steps and (args.calibration_steps < 8 or len(args.second_group_pairs or ()) != 1):
         parser.error('Calibration requires at least 8 steps and one second-group pair count')
-    if args.dialogue_steps and (args.dialogue_steps < 8 or not args.calibration_steps):
-        parser.error('Dialogue calibration requires local calibration and at least 8 dialogue steps')
+    if args.resume_component is not None and (args.calibration_steps or len(args.second_group_pairs or ()) != 1):
+        parser.error('Resuming requires one second-group pair count and no new local calibration')
+    if args.dialogue_steps and (args.dialogue_steps < 8 or not (args.calibration_steps or args.resume_component)):
+        parser.error('Dialogue calibration requires initial weights and at least 8 dialogue steps')
+    if args.student_prefixes and not args.dialogue_steps:
+        parser.error('Student prefixes require dialogue calibration')
     main(args)
