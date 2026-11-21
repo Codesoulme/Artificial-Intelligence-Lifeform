@@ -616,7 +616,7 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         for index, fraction in ((int(key), value) for key, value in fractions.items()):
             integrated.use_feedforward_memory(index, fraction=fraction,
                                               at_output=index in feedforward_output_layers)
-        for index, (rank, state) in loaded_residuals.items():
+        for index, (rank, residual_state) in loaded_residuals.items():
             container = layers[index]
             on_memory_layer = index in integrated.layer_indices
             source = container.layer if on_memory_layer else container
@@ -624,8 +624,8 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
                 raise ValueError('Structural residual requires a Qwen-compatible block')
             block = SPORAResidualBlock(source, rank=rank).to(device).eval()
             with torch.no_grad():
-                block.down.weight.copy_(state['down'].to(device=device, dtype=block.down.weight.dtype))
-                block.up.weight.copy_(state['up'].to(device=device, dtype=block.up.weight.dtype))
+                block.down.weight.copy_(residual_state['down'].to(device=device, dtype=block.down.weight.dtype))
+                block.up.weight.copy_(residual_state['up'].to(device=device, dtype=block.up.weight.dtype))
             if on_memory_layer:
                 container.layer = block
             else:

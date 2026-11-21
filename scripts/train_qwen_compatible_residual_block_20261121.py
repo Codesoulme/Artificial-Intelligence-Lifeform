@@ -2,6 +2,7 @@
 
 import argparse
 import gc
+import json
 import random
 import sys
 import time
@@ -14,7 +15,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from audit_qwen_compatible_raw_control_20261121 import evaluate
 from deepseek_output_aligned_memory import MODEL, sha, torch, write
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
-from spora.integrated_checkpoint import load_integrated, save_integrated
+from spora.integrated_checkpoint import load_integrated_runtime
 from spora.language_training import atomic_save
 from spora.pretrained_attention import SPORAResidualBlock, SPORAPretrainedBlock
 from train_awake_dialogue_recovery import dialogue_cases, memory_logits
@@ -41,8 +42,34 @@ def prose_cases(tokenizer):
     return rows
 
 
+def dialogue_replay(path, tokenizer, limit):
+    rows = []
+    seen = set()
+    eos = tokenizer.eos_token_id
+    with path.open(encoding="utf-8") as stream:
+        for line in stream:
+            messages = json.loads(line)["messages"]
+            if len(messages) < 4 or len(messages) % 2:
+                raise ValueError("Expected at least two complete dialogue turns")
+            for i, message in enumerate(messages):
+                if message["role"] != ("assistant" if i % 2 else "user") or not message["content"].strip():
+                    raise ValueError("Invalid dialogue message")
+                if message["role"] != "assistant":
+                    continue
+                rendered = tokenizer.apply_chat_template(messages[:i], tokenize=False, add_generation_prompt=True)
+                prompt = tokenizer.encode(rendered + "</think>\n\n", add_special_tokens=False)
+                target = tokenizer.encode(message["content"], add_special_tokens=False) + [eos]
+                fingerprint = (tuple(prompt), tuple(target))
+                if len(prompt) + len(target) <= limit and fingerprint not in seen:
+                    rows.append((prompt, target))
+                    seen.add(fingerprint)
+    if not rows:
+        raise ValueError("No eligible dialogue rows")
+    return rows
+
+
 def train(decoder, layer_index, block, language, memory, steps, learning_rate, reference_weight,
-          memory_weight, contrast_weight):
+          memory_weight, contrast_weight, *, dialogue=(), dialogue_kl_weight=1.):
     block.down.requires_grad_(True)
     block.up.requires_grad_(True)
     parameters = [block.down.weight, block.up.weight]
@@ -71,7 +98,9 @@ def train(decoder, layer_index, block, language, memory, steps, learning_rate, r
                 loss = memory_weight * (.25 * kl + .25 * value_loss + contrast_weight * contrast_loss)
             source = "memory"
         else:
-            prompt, target = language[rng.randrange(len(language))]
+            pool = dialogue if dialogue and step % 5 != 1 else language
+            is_dialogue = pool is dialogue
+            prompt, target = pool[rng.randrange(len(pool))]
             install_layer(decoder, layer_index, block.base)
             try:
                 with torch.no_grad():
@@ -81,8 +110,8 @@ def train(decoder, layer_index, block, language, memory, steps, learning_rate, r
             logits = answer_logits(decoder, prompt, target)
             kl = divergence(logits, teacher)
             value_loss = torch.nn.functional.cross_entropy(logits, torch.tensor(target, device="cuda"))
-            loss = kl + reference_weight * value_loss
-            source = "language"
+            loss = (dialogue_kl_weight if is_dialogue else 1.) * kl + reference_weight * value_loss
+            source = "dialogue" if is_dialogue else "language"
         if not bool(torch.isfinite(loss)):
             raise ValueError("Nonfinite residual training loss")
         loss.backward()
@@ -110,25 +139,30 @@ def install_layer(decoder, index, block):
 
 
 def main(output, ceval, layer_index, rank, steps, learning_rate, reference_weight, memory_weight,
-         contrast_weight):
+         contrast_weight, *, checkpoint=SOURCE, dialogue_path=None, dialogue_kl_weight=1.):
     output = output.resolve()
     if output.exists() and any(output.iterdir()):
         raise FileExistsError(output)
     output.mkdir(parents=True, exist_ok=True)
     protected = {
-        SOURCE: sha(SOURCE),
+        checkpoint: sha(checkpoint),
         MODEL / "model.safetensors": sha(MODEL / "model.safetensors"),
         MODEL / "tokenizer.json": sha(MODEL / "tokenizer.json"),
     }
+    if dialogue_path is not None:
+        protected[dialogue_path] = sha(dialogue_path)
     started = time.perf_counter()
     torch.manual_seed(SEED)
     tokenizer = __import__("transformers").AutoTokenizer.from_pretrained(
         MODEL, local_files_only=True, trust_remote_code=False)
     base = load_full_streamed()
-    decoder, organism, state = load_integrated(SOURCE, base, MODEL, individual_device="cpu")
+    runtime = load_integrated_runtime(checkpoint, base, MODEL)
+    decoder, organism = runtime.decoder, runtime.organism
     decoder.eval().requires_grad_(False)
     position_limit = min(getattr(layer, "max_length", base.config.max_position_embeddings)
                          for layer in decoder.base.model.layers)
+    if decoder.position_table_max_position is not None:
+        position_limit = min(position_limit, decoder.position_table_max_position)
     container = decoder.base.model.layers[layer_index]
     source = container.layer if container.__class__.__name__ == "_MemoryDecoderLayer" else container
     if not isinstance(source, SPORAPretrainedBlock):
@@ -140,6 +174,7 @@ def main(output, ceval, layer_index, rank, steps, learning_rate, reference_weigh
     dialogues = dialogue_cases(tokenizer)
     prose = prose_cases(tokenizer)
     language = [(prompt, target) for _, prompt, target in dialogues] + prose
+    dialogue = dialogue_replay(dialogue_path, tokenizer, min(256, position_limit)) if dialogue_path else ()
     gc.collect()
     torch.cuda.synchronize()
     torch.cuda.empty_cache()
@@ -150,37 +185,25 @@ def main(output, ceval, layer_index, rank, steps, learning_rate, reference_weigh
     block = SPORAResidualBlock(source, rank=rank)
     install_layer(decoder, layer_index, block)
     losses = train(decoder, layer_index, block, language, memory, steps, learning_rate, reference_weight,
-                   memory_weight, contrast_weight)
+                   memory_weight, contrast_weight, dialogue=dialogue, dialogue_kl_weight=dialogue_kl_weight)
     path = output / f"layer-{layer_index}-residual.pt"
     atomic_save({
         "format": "spora-qwen-compatible-residual-block-v1",
-        "source_checkpoint": str(SOURCE),
+        "source_checkpoint": str(checkpoint),
         "base_model": str(MODEL),
         "layer": layer_index,
         "rank": rank,
         "state": {"down": block.down.weight.detach().cpu(), "up": block.up.weight.detach().cpu()},
     }, path)
     integrated_path = output / "integrated.pt"
-    feedforward_fractions = {
-        index: float(getattr(decoder.base.model.layers[index], "feedforward_fraction", 0.))
-        for index in decoder.layer_indices
-        if float(getattr(decoder.base.model.layers[index], "feedforward_fraction", 0.)) != 0.
-    }
-    save_integrated(
-        integrated_path, organism, state,
-        decoder.reader, MODEL, decoder.layer_indices, residuals={layer_index: block},
-        output_adapter=decoder.output_adapter,
-        feedforward_fractions=feedforward_fractions,
-        compatible_layers=decoder.compatible_block_indices,
-        position_table_max_position=decoder.position_table_max_position,
-    )
+    runtime.save(integrated_path)
     print("Saved", integrated_path, flush=True)
     trained = evaluate(decoder, tokenizer, ceval, position_limit, organism, paired_history=paired_history)
     if any(sha(source_path) != digest for source_path, digest in protected.items()):
         raise ValueError("Protected source changed during residual training")
     write(output / "result.json", {
         "format": "spora-qwen-compatible-residual-block-diagnostic-v1",
-        "source_checkpoint": str(SOURCE),
+        "source_checkpoint": str(checkpoint),
         "layer": layer_index,
         "rank": rank,
         "steps": steps,
@@ -191,6 +214,8 @@ def main(output, ceval, layer_index, rank, steps, learning_rate, reference_weigh
         "baseline": baseline,
         "trained": trained,
         "language_sequences": len(language),
+        "dialogue_sequences": len(dialogue),
+        "dialogue_kl_weight": dialogue_kl_weight,
         "memory_sequences": len(memory),
         "losses": losses,
         "candidate_sha256": sha(path),
@@ -213,13 +238,17 @@ if __name__ == "__main__":
     parser.add_argument("--reference-weight", type=float, default=.25)
     parser.add_argument("--memory-weight", type=float, default=.5)
     parser.add_argument("--contrast-weight", type=float, default=0.)
+    parser.add_argument("--checkpoint", type=Path, default=SOURCE)
+    parser.add_argument("--dialogue-corpus", type=Path)
+    parser.add_argument("--dialogue-kl-weight", type=float, default=1.)
     args = parser.parse_args()
     if args.layer < 0 or args.rank < 1 or args.steps < 1 or args.learning_rate <= 0:
         parser.error("Layer, rank, steps and learning-rate are invalid")
     if any(not 0 <= weight < float("inf") for weight in
-           (args.reference_weight, args.memory_weight, args.contrast_weight)):
+           (args.reference_weight, args.memory_weight, args.contrast_weight, args.dialogue_kl_weight)):
         parser.error("Loss weights must be finite and nonnegative")
     if not args.ceval.is_dir():
         parser.error("C-Eval directory does not exist")
     main(args.output, args.ceval, args.layer, args.rank, args.steps,
-         args.learning_rate, args.reference_weight, args.memory_weight, args.contrast_weight)
+         args.learning_rate, args.reference_weight, args.memory_weight, args.contrast_weight,
+         checkpoint=args.checkpoint, dialogue_path=args.dialogue_corpus, dialogue_kl_weight=args.dialogue_kl_weight)
