@@ -98,6 +98,7 @@ class IntegratedSPORARuntime:
                             residuals=self._residuals(),
                             output_adapter=self.decoder.output_adapter,
                             feedforward_fractions=self._feedforward_fractions(),
+                            feedforward_output_layers=self._feedforward_output_layers(),
                             compatible_layers=self.decoder.compatible_block_indices,
                             position_table_max_position=self.decoder.position_table_max_position)
         self.state = candidate
@@ -112,6 +113,7 @@ class IntegratedSPORARuntime:
                         residuals=self._residuals(),
                         output_adapter=self.decoder.output_adapter,
                         feedforward_fractions=self._feedforward_fractions(),
+                        feedforward_output_layers=self._feedforward_output_layers(),
                         compatible_layers=self.decoder.compatible_block_indices,
                         position_table_max_position=self.decoder.position_table_max_position)
         self.checkpoint_path = destination
@@ -144,6 +146,18 @@ class IntegratedSPORARuntime:
                 for index, layer in enumerate(layers)
                 if index in self.decoder.layer_indices
                 and float(getattr(layer, 'feedforward_fraction', 0.)) != 0.}
+
+    def _feedforward_output_layers(self):
+        layers = self.decoder.base.model.layers
+        output_layers = []
+        residuals = self._residuals()
+        for index in self._feedforward_fractions():
+            block = layers[index].layer
+            if index in residuals:
+                block = block.base
+            if block.mlp.read_memory_at_output:
+                output_layers.append(index)
+        return output_layers
 
 
 def _file_sha256(path):
@@ -272,7 +286,7 @@ def _validate_base_config(directory, hidden_width, layers):
 
 def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, replacements=None,
                     residuals=None, output_adapter=None, feedforward_fractions=None, compatible_layers=None,
-                    position_table_max_position=None):
+                    feedforward_output_layers=(), position_table_max_position=None):
     if type(reader) not in (ScaledOpenBaseMemory, NativeSPORAMemoryReader):
         raise ValueError('Expected a supported scaled SPORA memory reader')
     if (not isinstance(layer_indices, (tuple, list)) or len(layer_indices) != 2
@@ -330,6 +344,11 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
                    or not 0. <= value <= 1.
                    for index, value in feedforward_fractions.items())):
         raise ValueError('Invalid feed-forward memory fractions')
+    if (not isinstance(feedforward_output_layers, (tuple, list))
+            or any(type(index) is not int or feedforward_fractions.get(index, 0.) == 0.
+                   for index in feedforward_output_layers)
+            or len(set(feedforward_output_layers)) != len(feedforward_output_layers)):
+        raise ValueError('Output memory requires a nonzero feed-forward fraction')
     schema, individual = flatten(organism, state)
     reader_tensors = reader.state_dict()
     with torch.random.fork_rng(devices=[]):
@@ -363,6 +382,8 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         metadata['feedforward_fractions'] = {
             str(index): float(value) for index, value in sorted(feedforward_fractions.items())
         }
+    if feedforward_output_layers:
+        metadata['feedforward_output_layers'] = sorted(feedforward_output_layers)
     integrity = _digest(metadata, tensors)
     atomic_save({'metadata': metadata, 'tensors': tensors, 'integrity_sha256': integrity}, path)
 
@@ -517,6 +538,12 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
                     or type(value) not in (int, float) or not math.isfinite(value)
                     or not 0. <= value <= 1.) for key, value in fractions.items())):
         raise ValueError('Invalid feed-forward memory fraction metadata')
+    feedforward_output_layers = metadata.get('feedforward_output_layers', [])
+    if (not isinstance(feedforward_output_layers, list)
+            or any(type(index) is not int or fractions.get(str(index), 0.) == 0.
+                   for index in feedforward_output_layers)
+            or len(set(feedforward_output_layers)) != len(feedforward_output_layers)):
+        raise ValueError('Invalid feed-forward output layer metadata')
     organism, state = restore(metadata['individual_schema'], individual_tensors, individual_device)
     if organism.config.memory_width != config['memory_width']:
         raise ValueError('Reader and individual memory widths differ')
@@ -560,7 +587,8 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         if loaded_residuals:
             from .pretrained_attention import SPORAPretrainedBlock, SPORAResidualBlock
         for index, fraction in ((int(key), value) for key, value in fractions.items()):
-            integrated.use_feedforward_memory(index, fraction=fraction)
+            integrated.use_feedforward_memory(index, fraction=fraction,
+                                              at_output=index in feedforward_output_layers)
         for index, (rank, state) in loaded_residuals.items():
             container = layers[index]
             on_memory_layer = index in integrated.layer_indices

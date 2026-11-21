@@ -21,19 +21,39 @@ ACTIVE_CHECKPOINT = Path("runs/qwen-compatible-persistent-v2/integrated.pt")
 CEVAL_SUBJECTS = ("high_school_chinese", "logic", "middle_school_mathematics")
 
 
+def evaluate_memory(decoder, tokenizer, organism, *, paired_history=False):
+    _, cases = history_cases(organism)
+    rows = score_memory(decoder, tokenizer, cases)
+    result = {"memory": rows}
+    summary = {"memory_correct": sum(row["correct"] for row in rows), "memory_total": len(rows)}
+    if paired_history:
+        updated_history = tuple((key, name, (earlier + 2) % 8, (current + 2) % 8)
+                                for key, name, earlier, current in HISTORY)
+        _, updated_cases = history_cases(organism, updated_history)
+        alternate = score_memory(decoder, tokenizer, updated_cases)
+        result["alternate_memory"] = alternate
+        summary["memory_switches"] = sum(
+            fixed["correct"] and changed["correct"] and fixed["answer"] != changed["answer"]
+            and fixed["expected"] not in changed["answer"] and changed["expected"] not in fixed["answer"]
+            for fixed, changed in zip(rows, alternate, strict=True)
+        )
+    return result, summary
+
+
 def evaluate(decoder, tokenizer, ceval, position_limit, organism=None, *, paired_history=False):
     questions = list(ceval_questions(ceval, tokenizer))
     ceval_rows = score_ceval(decoder, questions, position_limit)
     dialogue_rows = [conversation(decoder, tokenizer, case, position_limit,
                                    decoding={"limit": 48}) for case in CASES]
-    memory_rows = []
+    if organism is None and paired_history:
+        raise ValueError("Paired history requires a memory organism")
+    memory, memory_summary = ({"memory": []}, {"memory_correct": 0, "memory_total": 0})
     if organism is not None:
-        _, memory_cases = history_cases(organism)
-        memory_rows = score_memory(decoder, tokenizer, memory_cases)
+        memory, memory_summary = evaluate_memory(decoder, tokenizer, organism, paired_history=paired_history)
     result = {
         "ceval": ceval_rows,
         "dialogue": dialogue_rows,
-        "memory": memory_rows,
+        **memory,
         "summary": {
             "ceval_correct": sum(row["choice"] == row["expected"] for row in ceval_rows),
             "ceval_eligible": sum(row["choice"] is not None for row in ceval_rows),
@@ -41,23 +61,9 @@ def evaluate(decoder, tokenizer, ceval, position_limit, organism=None, *, paired
             "dialogue_followup_correct": sum(rows[1]["correct"] for rows in dialogue_rows),
             "dialogue_both_correct": sum(all(row["correct"] for row in rows) for rows in dialogue_rows),
             "dialogue_eos": sum(row["eos"] for rows in dialogue_rows for row in rows),
-            "memory_correct": sum(row["correct"] for row in memory_rows),
-            "memory_total": len(memory_rows),
+            **memory_summary,
         },
     }
-    if paired_history:
-        if organism is None:
-            raise ValueError("Paired history requires a memory organism")
-        updated_history = tuple((key, name, (earlier + 2) % 8, (current + 2) % 8)
-                                for key, name, earlier, current in HISTORY)
-        _, updated_cases = history_cases(organism, updated_history)
-        alternate = score_memory(decoder, tokenizer, updated_cases)
-        result["alternate_memory"] = alternate
-        result["summary"]["memory_switches"] = sum(
-            fixed["correct"] and changed["correct"] and fixed["answer"] != changed["answer"]
-            and fixed["expected"] not in changed["answer"] and changed["expected"] not in fixed["answer"]
-            for fixed, changed in zip(memory_rows, alternate, strict=True)
-        )
     return result
 
 

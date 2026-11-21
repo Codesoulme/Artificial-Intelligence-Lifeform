@@ -133,12 +133,19 @@ class SPORAGatedFeedForward(nn.Module):
         self.down = down
         self.activation = source.act_fn
         self.read_memory = read_memory
+        self.read_memory_at_output = False
 
     def forward(self, hidden):
+        conditioned = hidden
         if self.read_memory is not None:
-            hidden = self.read_memory(hidden)
-        gate, value = self.projection(hidden).chunk(2, dim=-1)
-        return self.down(self.activation(gate) * value)
+            conditioned = self.read_memory(hidden)
+        projected = hidden if self.read_memory_at_output else conditioned
+        gate, value = self.projection(projected).chunk(2, dim=-1)
+        output = self.down(self.activation(gate) * value)
+        if self.read_memory_at_output and conditioned is not hidden:
+            delta = conditioned.float() - hidden.float()
+            output = output + delta.to(output.dtype)
+        return output
 
 
 class _MemoryDecoderLayer(nn.Module):
@@ -311,18 +318,28 @@ class IntegratedOpenBase(nn.Module):
         self.position_table_max_position = max_position
         return backbone.rotary_emb
 
-    def use_feedforward_memory(self, layer_index, *, fraction=1.):
-        """Move a fraction of one configured reader into its feed-forward input."""
+    def use_feedforward_memory(self, layer_index, *, fraction=1., at_output=False):
+        """Move a fraction of a memory read into its gated feed-forward network."""
         if type(layer_index) is not int or layer_index not in self.layer_indices:
             raise ValueError('Expected a configured memory layer index')
         if type(fraction) not in (int, float) or not math.isfinite(fraction) or not 0. <= fraction <= 1.:
             raise ValueError('Feed-forward memory fraction must be finite and in [0, 1]')
+        if type(at_output) is not bool:
+            raise ValueError('Feed-forward output placement must be boolean')
         wrapper = self.base.model.layers[layer_index]
-        source = getattr(wrapper.layer, 'mlp', None)
+        block = wrapper.layer
+        source = getattr(block, 'mlp', None)
+        if source is None:
+            from .pretrained_attention import SPORAResidualBlock
+            if isinstance(block, SPORAResidualBlock):
+                block = block.base
+                source = block.mlp
         if not isinstance(source, SPORAGatedFeedForward):
             if source is None or any(not hasattr(source, name) for name in ('gate_proj', 'up_proj', 'down_proj', 'act_fn')):
                 raise ValueError('Memory layer does not expose a compatible gated feed-forward network')
-            wrapper.layer.mlp = SPORAGatedFeedForward(source, wrapper.read_feedforward_memory).train(source.training)
+            source = SPORAGatedFeedForward(source, wrapper.read_feedforward_memory).train(source.training)
+            block.mlp = source
+        source.read_memory_at_output = at_output
         wrapper.feedforward_fraction = float(fraction)
 
     @contextmanager
