@@ -253,7 +253,10 @@ def character_proposer(tokenizer, fingerprints, router, features, texts):
     model.load_state_dict(router['state'], strict=True)
     vectors, mask = character_inputs(tokenizer, texts, features, router['user_prefix'])
     selection = select(model, vectors, mask, router['margin'])
+    return selected_span_proposer(fingerprints, selection)
 
+
+def selected_span_proposer(fingerprints, selection):
     def propose(i, question, _):
         span, margin = selection[i]
         if span is None:
@@ -267,13 +270,34 @@ def character_proposer(tokenizer, fingerprints, router, features, texts):
     return propose
 
 
+def entity_query_proposer(decoder, tokenizer, fingerprints, router, texts):
+    from scripts.train_qwen_entity_query_20261122 import (
+        MENTION_PREFIX, ROLE_PREFIX, detected_spans, features_for, selected_targets,
+    )
+    from spora.research_entity_query import MentionTagger, QueryTargetSelector
+
+    tagger = MentionTagger(router['width']).eval()
+    selector = QueryTargetSelector(router['width']).eval()
+    tagger.load_state_dict(router['tagger'], strict=True)
+    selector.load_state_dict(router['selector'], strict=True)
+    rows = [(text,) for text in texts]
+    features, mask = features_for(decoder, tokenizer, rows, MENTION_PREFIX)
+    spans = detected_spans(tagger, features, mask)
+    del features, mask
+    features, mask = features_for(decoder, tokenizer, rows, ROLE_PREFIX)
+    selection = selected_targets(selector, features, mask, spans, router['margin'])
+    return selected_span_proposer(fingerprints, selection)
+
+
 @torch.inference_mode()
 def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_address=False,
           oracle_diagnostic=False, trim_punctuation=False, fresh=False, fresh_v2=False,
           oracle_address_only=False):
     questions = fresh_version_cases() if fresh_v2 else fresh_cases() if fresh else cases()
-    is_character = router.get('format') == 'spora-character-name-span-v1'
-    if is_character and (calibrate_address or trim_punctuation):
+    format_name = router.get('format')
+    is_character = format_name == 'spora-character-name-span-v1'
+    is_factorized = format_name == 'spora-factorized-name-query-v1'
+    if (is_character or is_factorized) and (calibrate_address or trim_punctuation):
         raise ValueError('Character span calibration is learned during training')
     calibration = calibration_cases() if calibrate_address else []
     texts = [question[0] for question in questions] + [question for question, _ in calibration]
@@ -285,17 +309,23 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
     user_prefix = router.get('user_prefix', '')
     if user_prefix not in ((CHARACTER_PROMPT,) if is_character else ('', LOCATOR_PROMPT)):
         raise ValueError('Unsupported locate prompt')
-    features, masks = extract(decoder.base, tokenizer, texts, batch_size=1, hidden_indices=hidden_indices,
-                              user_prefix=user_prefix, last_logit_only=is_character)
     fingerprints = IdentityFingerprints(organism.config.key_count)
     for name, key in zip(NAMES, KEYS, strict=True):
         fingerprints.bind(key, name)
-    if is_character:
-        propose = character_proposer(tokenizer, fingerprints, router, features, texts)
+    if is_factorized:
+        propose = entity_query_proposer(decoder, tokenizer, fingerprints, router, texts)
     else:
-        propose = token_proposer(tokenizer, organism, fingerprints, router, features, masks, trim_punctuation)
-    time_features, time_masks = (extract(decoder.base, tokenizer, texts[:len(questions)], batch_size=1,
-                                         hidden_indices=hidden_indices) if user_prefix else (features, masks))
+        features, masks = extract(decoder.base, tokenizer, texts, batch_size=1, hidden_indices=hidden_indices,
+                                  user_prefix=user_prefix, last_logit_only=is_character)
+        if is_character:
+            propose = character_proposer(tokenizer, fingerprints, router, features, texts)
+        else:
+            propose = token_proposer(tokenizer, organism, fingerprints, router, features, masks, trim_punctuation)
+    if user_prefix or is_factorized:
+        time_features, time_masks = extract(decoder.base, tokenizer, texts[:len(questions)], batch_size=1,
+                                            hidden_indices=hidden_indices)
+    else:
+        time_features, time_masks = features, masks
     temporal_probs = temporal_logits(time_head, time_features, time_masks).softmax(-1)
     time_decisions = time_selection(temporal_probs, time_head['threshold'],
                                     factorized=time_head.get('architecture') == 'factorized')
@@ -377,12 +407,12 @@ def main(args):
     checkpoint_sha = sha(args.checkpoint)
     router, router_sha = load_head(args.router, 'router.pt', 'router_sha256', checkpoint_sha)
     temporal, temporal_sha = load_head(args.temporal, 'temporal.pt', 'temporal_sha256', checkpoint_sha)
-    if router.get('format') == 'spora-character-name-span-v1':
+    uses_spans = router.get('format') in ('spora-character-name-span-v1', 'spora-factorized-name-query-v1')
+    if uses_spans:
         torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     decoder, organism, original = load_integrated(args.checkpoint, load_full_streamed(), MODEL)
-    if (router.get('format') != 'spora-character-name-span-v1'
-            and address_basis_sha256(organism) != router['address_basis_sha256']):
+    if not uses_spans and address_basis_sha256(organism) != router['address_basis_sha256']:
         raise ValueError('Name router belongs to different address weights')
     decoder.eval().requires_grad_(False)
     original_digest = frozen_digest(organism, original)
