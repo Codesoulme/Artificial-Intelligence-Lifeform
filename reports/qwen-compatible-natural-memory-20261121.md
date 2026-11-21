@@ -16,3 +16,5 @@
 有限问法的时间分类通过了 `30/30` 条读入问题和 `40/40` 条拒读问题。联合评测使用独立的模拟个体和有指纹的实验产物，源检查点摘要前后一致。结果存于 `runs/qwen-compatible-natural-memory-v1/` 至 `v8/` 以及 `runs/qwen-compatible-natural-memory-oracle-v1/`。自动姓名识别继续在实验入口评估。
 
 混入 CLUENER 训练分区的自然中文标注后，联合配对从 `7/16` 降到 `6/16`。姓名专项的第二组相似长名新增 `3/16` 次误读，因此保留为失败对照。数据摘要和结果分别在 `runs/qwen-compatible-ffn-output-name-router-v10/result.json` 与 `runs/qwen-compatible-natural-memory-v9/result.json`。
+
+为姓名定位单独加入识别指令后，姓名专项达到 `32/32`，两组相似长名仍各 `0/16` 误读。联合评测达到 `8/16`，八道历史题全部通过，当前题仍把「饮品？」识别为人名。指令只用于姓名特征提取，时间分类和回答都使用原问题。结果在 `runs/qwen-compatible-natural-memory-v10/result.json`。

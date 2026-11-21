@@ -36,6 +36,7 @@ TRAIN_NEGATIVE = ('请写一句鼓励的话。', '我现在想喝饮料。', '�
 HELD_NEGATIVE = ('讲一个关于饮料的故事。', '我想知道现在几点。',
                  '小梅和阿远分别喜欢什么饮料？', '阿明和小岚爱喝什么？')
 LOCATOR_ONLY = ()
+LOCATOR_PROMPT = '识别下列提问中要查询的人的姓名。如果没有姓名或有多个对象，请跳过。\n提问：'
 
 
 class SequenceLocator(nn.Module):
@@ -156,8 +157,9 @@ def unpad_selection(selected, single_length):
 def main(*, checkpoint=None, output=None, include_following_tokens=False,
          diverse_boundaries=False, fresh_boundary_holdout=False, diverse_query_context=False,
          sequence_locator=False, span_locator=False, contrast_query_nouns=False,
-         cluener_replay=False):
+         cluener_replay=False, role_prompt=False):
     output = OUT if output is None else output
+    user_prefix = LOCATOR_PROMPT if role_prompt else ''
     if output.exists():
         raise FileExistsError(output)
     source = p.runtime.CHECKPOINT if checkpoint is None else checkpoint
@@ -249,7 +251,7 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
         source_digest = p.frozen_digest(organism, state)
         tokenizer.padding_side = 'right'
         def label_rows(examples):
-            texts = [tokenizer.apply_chat_template([{'role': 'user', 'content': row['text']}],
+            texts = [tokenizer.apply_chat_template([{'role': 'user', 'content': user_prefix + row['text']}],
                      tokenize=False, add_generation_prompt=True) for row in examples]
             encoding = tokenizer(texts, return_tensors='pt', padding=True, add_special_tokens=False,
                                  return_offsets_mapping=True)
@@ -272,7 +274,8 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
             raise ValueError('Unrepresentable training name span remains')
         if {row['key'] for row in training if row['key'] is not None} != set(KEYS):
             raise ValueError('Dropping spans removed a registered training identity')
-        features, allowed = extract(base, tokenizer, [r['text'] for r in rows], batch_size=2 if cluener_replay else 1)
+        features, allowed = extract(base, tokenizer, [r['text'] for r in rows],
+                                    batch_size=2 if cluener_replay else 1, user_prefix=user_prefix)
         if truth.shape != allowed.shape or bool((truth & ~allowed).any()):
             raise ValueError('Feature mask mismatch')
         vector = torch.cat([F.layer_norm(features[:, i].float(), (features.shape[-1],)) for i in range(2)], dim=-1)
@@ -342,11 +345,12 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
                 result['indices'], result['similarities'] = indices[0].tolist(), scores[0].tolist()
                 result['accepted'] = bool(indices[0, 0] == indices[0, 1] and (scores[0] >= threshold).all())
                 if result['accepted']:
-                    single_text = tokenizer.apply_chat_template([{'role': 'user', 'content': row['text']}],
+                    guarded_question = user_prefix + row['text']
+                    single_text = tokenizer.apply_chat_template([{'role': 'user', 'content': guarded_question}],
                                                                tokenize=False, add_generation_prompt=True)
                     single_length = len(tokenizer(single_text, add_special_tokens=False)['input_ids'])
                     result['guarded_accepted'] = bool(guard.authorize(
-                        row['text'], unpad_selection(selected, single_length), int(indices[0, 0])))
+                        guarded_question, unpad_selection(selected, single_length), int(indices[0, 0])))
                     result['guard_span'] = guard.last
                     if result['span_exact'] is True and guard.last['selected_text'] != row['name']:
                         raise ValueError('Batch and single-question token offsets disagree')
@@ -378,11 +382,13 @@ def main(*, checkpoint=None, output=None, include_following_tokens=False,
                 'address_basis_sha256': basis_sha, 'hidden_indices': [6, 18], 'locator_threshold': 0.5,
                 'locator_following_tokens': 2 if include_following_tokens else 0,
                 'locator_architecture': architecture,
+                'user_prefix': user_prefix,
                 'address_threshold': threshold, 'locator_state': locator_state, 'projection': projection.cpu()}, path)
     report = {'summary': summary, 'rows': results, 'train_count': len(training), 'dropped_train': dropped_train,
               'locator_only_train_count': sum(row['group'] == 'train_locator_only' for row in training),
               'threshold': threshold, 'locator_following_tokens': 2 if include_following_tokens else 0,
               'locator_architecture': architecture,
+              'user_prefix': user_prefix,
               'training_groups': {group: sum(r['group'] == group for r in training)
                                   for group in sorted({r['group'] for r in training})},
               'extra_source_sha256': {str(path): digest for path, digest in extra_sources.items()},
@@ -413,12 +419,13 @@ def cli():
     parser.add_argument('--diverse-query-context', action='store_true')
     parser.add_argument('--contrast-query-nouns', action='store_true')
     parser.add_argument('--cluener-replay', action='store_true')
+    parser.add_argument('--role-prompt', action='store_true')
     args = parser.parse_args()
     main(checkpoint=args.checkpoint, output=args.output, include_following_tokens=args.include_following_tokens,
          diverse_boundaries=args.diverse_boundaries, fresh_boundary_holdout=args.fresh_boundary_holdout,
          diverse_query_context=args.diverse_query_context, sequence_locator=args.sequence_locator,
          span_locator=args.span_locator, contrast_query_nouns=args.contrast_query_nouns,
-         cluener_replay=args.cluener_replay)
+         cluener_replay=args.cluener_replay, role_prompt=args.role_prompt)
 
 
 if __name__ == '__main__':

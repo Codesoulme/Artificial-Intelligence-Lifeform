@@ -22,7 +22,7 @@ from scripts.deepseek_observation_value_probe import pool
 from scripts.deepseek_pooled_address import extract
 from scripts.deepseek_semantic_value_pilot import WORDS
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
-from scripts.deepseek_spora_original_layer_name_router import SequenceLocator, SpanLocator, choose_span, lookahead
+from scripts.deepseek_spora_original_layer_name_router import LOCATOR_PROMPT, SequenceLocator, SpanLocator, choose_span, lookahead
 from scripts.deepseek_spora_runtime_chat import _prepare_memory_read
 from scripts.spora_event_scan_selector import select_event
 from scripts.spora_unknown_state_probe import fresh_controlled_state
@@ -166,7 +166,11 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
     hidden_indices = tuple(router['hidden_indices'])
     if hidden_indices != tuple(time_head['hidden_indices']):
         raise ValueError('Router heads require different features')
-    features, masks = extract(decoder.base, tokenizer, texts, batch_size=1, hidden_indices=hidden_indices)
+    user_prefix = router.get('user_prefix', '')
+    if user_prefix not in ('', LOCATOR_PROMPT):
+        raise ValueError('Unsupported locate prompt')
+    features, masks = extract(decoder.base, tokenizer, texts, batch_size=1, hidden_indices=hidden_indices,
+                              user_prefix=user_prefix)
     bases = torch.stack([F.normalize(site.current_basis.detach().cpu().float(), dim=-1)
                          for site in organism.memories])
     vectors = torch.cat([F.layer_norm(features[:, site].float(), (features.shape[-1],)) for site in range(2)], dim=-1)
@@ -186,7 +190,9 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
     locator.load_state_dict(router['locator_state'], strict=True)
     locator_probs = (locator(vectors, masks) if architecture == 'span'
                      else locator(vectors).squeeze(-1).sigmoid())
-    pooled_questions = pool(features, masks)
+    time_features, time_masks = (extract(decoder.base, tokenizer, texts[:len(questions)], batch_size=1,
+                                         hidden_indices=hidden_indices) if user_prefix else (features, masks))
+    pooled_questions = pool(time_features, time_masks)
     temporal = nn.Linear(pooled_questions.shape[-1], len(time_head['classes'])).eval()
     temporal.load_state_dict(time_head['state'], strict=True)
     temporal_probs = temporal(pooled_questions).softmax(-1)
@@ -199,7 +205,8 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
         selected, single = choose_span(locator_probs[i], masks[i], locator_threshold)
         if not single:
             return None, None, 'no_single_span', None
-        text = tokenizer.apply_chat_template([{'role': 'user', 'content': question}], tokenize=False,
+        guarded_question = user_prefix + question
+        text = tokenizer.apply_chat_template([{'role': 'user', 'content': guarded_question}], tokenize=False,
                                              add_generation_prompt=True)
         encoded = tokenizer(text, add_special_tokens=False, return_offsets_mapping=True)
         size = len(encoded['input_ids'])
@@ -217,12 +224,12 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
                     selected[index] = False
             if not bool(selected.any()):
                 return None, None, 'no_name_after_punctuation', None
-        selected_text = guard.selected_name(question, selected[:size])
+        selected_text = guard.selected_name(guarded_question, selected[:size])
         proposed, similarity = predict(pooled(features[i:i+1], selected.unsqueeze(0)), router['projection'], bases)
         key, second = proposed[0].tolist()
         if key != second:
             return None, None, 'address_disagreement', selected_text
-        if not guard.authorize(question, selected[:size], key):
+        if not guard.authorize(guarded_question, selected[:size], key):
             return None, None, 'identity_mismatch', selected_text
         return key, float(similarity.min()), None, selected_text
 

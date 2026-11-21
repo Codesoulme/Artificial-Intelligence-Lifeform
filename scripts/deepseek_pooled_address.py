@@ -66,11 +66,11 @@ def question_mask(offsets, attention_mask, texts, questions):
 
 
 @torch.no_grad()
-def extract(model, tokenizer, questions, batch_size=8, question_only=True, hidden_indices=(6, 18)):
+def extract(model, tokenizer, questions, batch_size=8, question_only=True, hidden_indices=(6, 18), *, user_prefix=''):
     if (len(hidden_indices) != 2 or any(type(index) is not int or index < 1 for index in hidden_indices)
             or hidden_indices[0] == hidden_indices[1]):
         raise ValueError('Two distinct positive hidden-state indices are required')
-    texts = [tokenizer.apply_chat_template([{'role': 'user', 'content': question}], tokenize=False,
+    texts = [tokenizer.apply_chat_template([{'role': 'user', 'content': user_prefix + question}], tokenize=False,
                                            add_generation_prompt=True) for question in questions]
     if any('<think>' not in text or '</think>' in text for text in texts):
         raise ValueError('Unexpected reasoning template')
