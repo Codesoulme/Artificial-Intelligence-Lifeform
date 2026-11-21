@@ -9,7 +9,7 @@ except ModuleNotFoundError:
     Qwen2Config = None
 
 from spora.integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader
-from spora.research_local_attention import local_attention
+from spora.research_local_attention import anchor_attention, anchored_cache, local_attention
 
 
 @unittest.skipIf(Qwen2Config is None, 'requires the optional Transformers runtime')
@@ -38,4 +38,23 @@ class LocalAttentionTests(unittest.TestCase):
             self.assertEqual(cache.layers[0].keys.shape[-2], 9)
             self.assertEqual(cache.layers[1].keys.shape[-2], 3)
             self.assertEqual(cache.layers[2].keys.shape[-2], 9)
+        left = tokens.clone()
+        left[0, 0] = 10
+        with anchor_attention(decoder, (1,), 4, 1):
+            anchored = decoder(tokens, use_cache=False).logits
+            changed = decoder(left, use_cache=False).logits
+            self.assertFalse(torch.equal(anchored[:, -1], changed[:, -1]))
+            self.assertFalse(torch.equal(anchored[:, -1], expected[:, -1]))
+            cache = DynamicCache(config=config)
+            decoder(tokens[:, :-1], past_key_values=cache, use_cache=True)
+            streamed = decoder(tokens[:, -1:], past_key_values=cache, use_cache=True).logits
+            torch.testing.assert_close(streamed[:, -1], anchored[:, -1], atol=1e-6, rtol=1e-5)
+            self.assertEqual(cache.layers[1].keys.shape[-2], 9)
+            cache = anchored_cache(config, (1,), 4, 1)
+            decoder(tokens[:, :5], past_key_values=cache, use_cache=True)
+            for start, stop in ((5, 7), (7, 8), (8, 9)):
+                streamed = decoder(tokens[:, start:stop], past_key_values=cache, use_cache=True).logits
+                torch.testing.assert_close(streamed, anchored[:, start:stop], atol=1e-6, rtol=1e-5)
+            self.assertEqual(cache.layers[1].keys.shape[-2], 3)
+            self.assertEqual(cache.layers[1].retained_positions.tolist(), [0, 7, 8])
         torch.testing.assert_close(decoder(tokens, use_cache=False).logits, full, rtol=0, atol=0)
