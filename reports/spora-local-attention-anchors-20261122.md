@@ -31,6 +31,10 @@
 
 16 词元版丢掉了全局基线在两个第 32 位置找对的站名，并在第一段末端多答对一条。64 和 128 词元版逐题复现基线的正误，两版在第 96 位置的题上都失败。三种前缀都与最近词元共用同样的 256 词元预算，因此末端四层的存储尺寸相同。64 词元版还在一条长提示里恢复了第二个人的历史饮品，其余 15 条记忆生成与全局基线逐词元一致。本轮将 64 词元版选作下一阶段的结构候选，按同等存储预算下的逐题表现选择。新的位置题用时约 144 秒，更宽前缀的对照约 183 秒。
 
+## 增加采用窗口的层数
+
+将 64／256 窗口从末端四层扩到末端八层，512 词元的键值张量从约 13.00 MiB 降至 11.99 MiB。八道站名位置题的正误逐题一致。第二组记忆少答对一条，更正前查询内部期望值为「果汁」，生成改成数字 4。各布局自身的分段续算均复现整段运行的下一词元首选。保留四层为当前标准候选。实验约 178 秒，逐题证据在 `runs/spora-local-attention-deeper-v1/result.json`。
+
 ## 复现
 
 ```powershell
@@ -43,4 +47,5 @@ $checkpoint = 'runs/spora-native-query-key-v1/bootstrap.pt'
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-bounded-anchors --output runs/spora-local-attention-bounded-anchors-v1/result.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-fact-placements --output runs/spora-local-attention-placements-v1/result.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-wider-prefix --output runs/spora-local-attention-wider-prefix-v1/result.json
+.\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-deeper --output runs/spora-local-attention-deeper-v1/result.json
 ```

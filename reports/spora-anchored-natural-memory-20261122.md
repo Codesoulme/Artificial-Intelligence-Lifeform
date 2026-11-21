@@ -28,6 +28,8 @@
 
 把语义版接到已重载的窗口检查点，96 条留出的端到端换值从 **47/96 升到 71/96**。逐题新增 24 条正确，原先答对的全部保留。32 条负例仍有 2 条触发读取，读入和人名结果逐题一致。改进集中在当前和改前两个类别。在长文本换问法的 12 条上，时间判断从 0 到 1，最终换值仍为 0。训练和端到端实验使用的都是真实模型隐藏状态，模型主权重未参与优化。完整记录在 `runs/spora-anchored-temporal-selector-v1/`、`runs/spora-anchored-temporal-selector-lexical-v1/` 和 `runs/spora-anchored-broad-temporal-v1/`。
 
+加入 108 条新的否定范围和生效顺序问句后，训练集达到 588 条。固定原读入门，校准选择的修正置信度为 0.75。两批旧留出分别为 48/72 和 84/96，另外 36 条独立句式答对 20 条，与旧时间头相同。长文本换问法对应的 12 条单独路由输入仍全部判断错误。保留 480 条训练所得的语义版作为实验参考。追加实验用时约 137 秒，逐题见 `runs/spora-anchored-temporal-selector-scope-v1/`。
+
 ## 复现
 
 ```powershell
@@ -49,6 +51,7 @@ $runArgs[7] = 'runs/spora-past-override-v1'
 $runArgs[7] = 'runs/qwen-compatible-gelu-temporal-factorized-v1/factorized'
 .\.venv\Scripts\python.exe -u scripts/audit_spora_temporal_selector.py --checkpoint $runArgs[1] --temporal $runArgs[7] --temporal-source $runArgs[3] --output runs/spora-anchored-temporal-selector-v1
 .\.venv\Scripts\python.exe -u scripts/audit_spora_temporal_selector.py --checkpoint $runArgs[1] --temporal $runArgs[7] --temporal-source $runArgs[3] --lexical --output runs/spora-anchored-temporal-selector-lexical-v1
+.\.venv\Scripts\python.exe -u scripts/audit_spora_temporal_selector.py --checkpoint $runArgs[1] --temporal $runArgs[7] --temporal-source $runArgs[3] --expand-scope --output runs/spora-anchored-temporal-selector-scope-v1
 .\.venv\Scripts\python.exe -u scripts/audit_spora_anchored_natural_memory.py @runArgs --broad-versions --output-gains 1.5 --reload-only --output runs/spora-anchored-broad-temporal-v1/baseline.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_anchored_natural_memory.py @runArgs --broad-versions --output-gains 1.5 --reload-only --version-selector runs/spora-anchored-temporal-selector-v1/selector.pt --output runs/spora-anchored-broad-temporal-v1/selector.json
 ```

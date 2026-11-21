@@ -122,13 +122,18 @@ def main(checkpoint, output, layout):
         if len(tail) < 8:
             raise ValueError('Expected at least eight compatible layers after the last memory site')
         variants = {'full': (), 'last_four_local': tail[-4:], 'last_eight_local': tail[-8:]}
-    elif layout in ('anchors', 'bounded_anchors', 'placements', 'wider_prefix'):
-        tail = tuple(i for i in compatible if i > max(decoder.layer_indices))[-4:]
+    elif layout in ('anchors', 'bounded_anchors', 'placements', 'wider_prefix', 'deeper'):
+        tail = tuple(i for i in compatible if i > max(decoder.layer_indices))
+        if len(tail) < 8:
+            raise ValueError('Expected eight compatible layers past the final memory reader')
         variants = {'full': (), 'prefix_sixteen': tail}
         if layout == 'anchors':
             variants = {'full': (), 'prefix_four': tail, 'prefix_sixteen': tail}
         elif layout == 'wider_prefix':
             variants = {'full': (), 'prefix_sixty_four': tail, 'prefix_one_twenty_eight': tail}
+        variants = {name: layers[-4:] for name, layers in variants.items()}
+        if layout == 'deeper':
+            variants = {'full': (), 'prefix_sixty_four': tail[-4:], 'prefix_sixty_four_deep': tail[-8:]}
     if layout != 'original':
         held_tokens = tokenizer.encode('\n'.join(corpus['development'] + corpus['test']), add_special_tokens=False)
         if len(held_tokens) <= 256:
@@ -138,7 +143,7 @@ def main(checkpoint, output, layout):
     results = {}
     for variant, layers in variants.items():
         prefix = {'prefix_four': 4, 'prefix_sixteen': 16, 'prefix_sixty_four': 64,
-                  'prefix_one_twenty_eight': 128}.get(variant)
+                  'prefix_sixty_four_deep': 64, 'prefix_one_twenty_eight': 128}.get(variant)
         scope = nullcontext()
         if prefix is not None:
             scope = anchor_attention(decoder, layers, 256, prefix)
@@ -146,7 +151,7 @@ def main(checkpoint, output, layout):
             scope = local_attention(decoder, layers, 256)
         make_cache = lambda: DynamicCache(config=decoder.base.config)
         binder = nullcontext()
-        if layout in ('bounded_anchors', 'placements', 'wider_prefix') and prefix is not None:
+        if layout in ('bounded_anchors', 'placements', 'wider_prefix', 'deeper') and prefix is not None:
             make_cache = lambda: anchored_cache(decoder.base.config, layers, 256, prefix)
             binder = bounded_generation(decoder, make_cache)
         with scope, binder:
@@ -174,7 +179,7 @@ def main(checkpoint, output, layout):
                     'late_fact': answer(decoder, tokenizer, f'{held_filler}\n{heading}\n{question}'),
                     'memory': memory_answers(decoder, tokenizer, held_filler, memory_fixtures),
                 }
-            if layout in ('placements', 'wider_prefix'):
+            if layout in ('placements', 'wider_prefix', 'deeper'):
                 row['placed_facts'] = placed_facts(decoder, tokenizer, source_tokens, held_tokens)
             results[variant] = row
             print(variant, 'cache bytes at 512', probes[-1]['cache_bytes'],
@@ -210,6 +215,8 @@ if __name__ == '__main__':
                           help='Measure bounded attention on facts at different positions')
     variants.add_argument('--compare-wider-prefix', action='store_const', dest='layout', const='wider_prefix',
                           help='Compare wider prefixes at the same total storage limit')
+    variants.add_argument('--compare-deeper', action='store_const', dest='layout', const='deeper',
+                          help='Compare four and eight bounded layers with the same prefix and window')
     parser.set_defaults(layout='original')
     params = parser.parse_args()
     main(params.checkpoint, params.output, params.layout)

@@ -38,6 +38,34 @@ POLARITY_TRIPLES = (
      '{name}的{field}只查旧稿，现用的内容不用列。',
      '{name}的{field}只查那次修改刚定下的，别浏览更初的材料。'),
 )
+SCOPE_TRIPLES = (
+    ('{name}的{field}以现行条款为准，已作废的内容不要列。',
+     '{name}的{field}以原条款为准，我想知道被换下的内容。',
+     '{name}的{field}以第二份条款刚生效的内容为准，初稿跳过。'),
+    ('拿现在生效的一份，只给我{name}的{field}。',
+     '拿生效前的一份，只给我{name}原来的{field}。',
+     '拿改动生效当时的一份，只给我{name}新换的{field}。'),
+    ('对{name}来说，{field}早年有变化。哪项目前依然有效？',
+     '对{name}来说，{field}早年有变化。哪项后来被停用了？',
+     '对{name}来说，{field}早年有变化。那项改动开始实行时选了什么？'),
+    ('不要回顾已经注销的内容，{name}有效的{field}是哪项？',
+     '不要回顾现行的内容，{name}被注销的{field}最初是哪项？',
+     '不要回顾没有修改的原稿，{name}的{field}那回正式执行时是哪项？'),
+    ('{name}第一版提交过{field}。先放下那版，我要核对今天在用什么。',
+     '{name}现有表格也有{field}。先放下那版，我要核对最早交了什么。',
+     '{name}的{field}更新过多回，我只要首轮修订落实时替换成的内容。'),
+    ('请告诉我{name}的{field}还保留哪一项，已经淘汰的省去。',
+     '请告诉我{name}的{field}淘汰掉哪一项，手头在用的省去。',
+     '请告诉我{name}的{field}定稿时加进来哪一项，过往的别复述。'),
+)
+SCOPE_HELD = (
+    ('哪份已撤回不用说，{name}的{field}在现行册里怎么填？',
+     '哪份现行不用说，{name}的{field}在撤回那册原本怎么填？',
+     '现行和旧稿都跳过，{name}的{field}在那回切换落定时怎么填？'),
+    ('先别翻过期单据。{name}还能按哪一项{field}执行？',
+     '先别翻完工单据。{name}在动笔改之前用的哪一项{field}？',
+     '先别翻开工时的单据。{name}首次重订开始执行哪一项{field}？'),
+)
 
 
 def main(args):
@@ -57,6 +85,12 @@ def main(args):
     fresh = [(text, mode if mode is not None else ABSTAIN) for text, _, mode in fresh_version_cases()]
     challenge = data['new_holdout']
     groups = {'train': train, 'calibration': calibration, 'fresh': fresh, 'challenge': challenge}
+    if args.expand_scope:
+        train += temporal_rows(('梁灿', '关芸', '徐澜', '宁萍', '范乔', '席启'),
+                               ('运费方案', '就餐时段', '取件柜', '包装材料', '备注写法', '开门时间'),
+                               SCOPE_TRIPLES, ())
+        groups['new_scope'] = temporal_rows(('严青', '高婉', '屈晴', '陆灼', '倪恒', '窦飞'),
+                                            ('标牌文字', '办理柜台', '餐具'), SCOPE_HELD, ())
     questions = [text for rows in groups.values() for text, _ in rows]
     if len(set(questions)) != len(questions):
         raise ValueError('A version contrast question occurs in more than one split')
@@ -94,7 +128,9 @@ def main(args):
     if not torch.equal(selected == ABSTAIN, baseline == ABSTAIN) or sha(args.checkpoint) != digest:
         raise ValueError('The version-only adjustment changed abstentions or the source checkpoint')
     summary = {}
-    for label in ('calibration', 'fresh', 'challenge'):
+    for label in groups:
+        if label == 'train':
+            continue
         area = slices[label]
         rows = [{'question': text, 'expected': int(target), 'baseline': int(old), 'candidate': int(new)}
                 for text, target, old, new in zip(questions[area], targets[area], baseline[area],
@@ -119,4 +155,5 @@ if __name__ == '__main__':
     for name in ('checkpoint', 'temporal', 'temporal-source', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--lexical', action='store_true', help='Include character features in the learned residual')
+    parser.add_argument('--expand-scope', action='store_true', help='Fit varied timing and negation contrasts')
     main(parser.parse_args())
