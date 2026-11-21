@@ -90,7 +90,7 @@ def placed_facts(decoder, tokenizer, source_tokens, held_tokens):
 
 
 @torch.inference_mode()
-def select_eight_layers(runtime, tokenizer, tail, source_tokens, fixture):
+def calibrate_layers(runtime, tokenizer, layouts, source_tokens, fixture):
     decoder = runtime.decoder
     passage = tokenizer.decode(source_tokens[90:465])
     query = '通知开头写着借用的箱子是绿色。\n' + passage + '\n请回答箱子是什么颜色。'
@@ -104,13 +104,13 @@ def select_eight_layers(runtime, tokenizer, tail, source_tokens, fixture):
 
     teacher = predictions()
     evaluations = []
-    for layers in combinations(tail, 8):
+    for layers in layouts:
         with anchor_attention(decoder, layers, 256, 64):
             distance = [float(F.kl_div(predicted, reference, reduction='sum', log_target=True))
                         for predicted, reference in zip(predictions(), teacher, strict=True)]
         evaluations.append({'layers': layers, 'language_kl': distance[0], 'memory_kl': distance[1]})
     selected = min(evaluations, key=lambda row: row['language_kl'] + row['memory_kl'])
-    print('Selected eight layers', selected, flush=True)
+    print('Selected layers', selected, flush=True)
     return selected['layers'], evaluations
 
 
@@ -149,7 +149,7 @@ def main(checkpoint, output, layout):
         if len(tail) < 8:
             raise ValueError('Expected at least eight compatible layers after the last memory site')
         variants = {'full': (), 'last_four_local': tail[-4:], 'last_eight_local': tail[-8:]}
-    elif layout in ('anchors', 'bounded_anchors', 'placements', 'wider_prefix', 'deeper', 'search_eight'):
+    elif layout in ('anchors', 'bounded_anchors', 'placements', 'wider_prefix', 'deeper', 'search_eight', 'expand'):
         tail = tuple(i for i in compatible if i > max(decoder.layer_indices))
         if len(tail) < 8:
             raise ValueError('Expected eight compatible layers past the final memory reader')
@@ -163,8 +163,30 @@ def main(checkpoint, output, layout):
             variants = {'full': (), 'prefix_sixty_four': tail[-4:], 'prefix_sixty_four_deep': tail[-8:]}
         elif layout == 'search_eight':
             calibration_fixture = prepare(runtime.organism, fixtures[12])
-            selected, calibration = select_eight_layers(runtime, tokenizer, tail, source_tokens, calibration_fixture)
+            selected, calibration = calibrate_layers(runtime, tokenizer, combinations(tail, 8), source_tokens,
+                                                     calibration_fixture)
             variants = {'full': (), 'prefix_sixty_four_selected': selected}
+        elif layout == 'expand':
+            eight = (18, 19, 20, 21, 22, 23, 24, 26)
+            if not set(eight) <= set(tail):
+                raise ValueError('Expansion needs the verified eight-layer starting layout')
+            # Test whole additions distributed across the layers before the last memory site.
+            eligible = [index for index in compatible if 0 < index < max(decoder.layer_indices)
+                        and index not in decoder.layer_indices]
+            blocks = [tuple(eligible[start:start + 4]) for start in range(0, len(eligible) - 3, 3)]
+            blocks.append(tuple(eligible[-4:]))
+            candidates = tuple(sorted(set(blocks)))
+            fixture = prepare(runtime.organism, fixtures[14])
+            twelve, first = calibrate_layers(runtime, tokenizer,
+                                             (tuple(sorted(eight + block)) for block in candidates),
+                                             source_tokens, fixture)
+            next_blocks = [block for block in candidates if set(block).isdisjoint(twelve)]
+            sixteen, second = calibrate_layers(runtime, tokenizer,
+                                               (tuple(sorted(twelve + block)) for block in next_blocks),
+                                               source_tokens, fixture)
+            calibration = first + second
+            variants = {'full': (), 'prefix_sixty_four_selected': eight,
+                        'prefix_sixty_four_twelve': twelve, 'prefix_sixty_four_sixteen': sixteen}
     if layout != 'original':
         held_tokens = tokenizer.encode('\n'.join(corpus['development'] + corpus['test']), add_special_tokens=False)
         if len(held_tokens) <= 256:
@@ -175,7 +197,8 @@ def main(checkpoint, output, layout):
     for variant, layers in variants.items():
         prefix = {'prefix_four': 4, 'prefix_sixteen': 16, 'prefix_sixty_four': 64,
                   'prefix_sixty_four_deep': 64, 'prefix_one_twenty_eight': 128,
-                  'prefix_sixty_four_selected': 64}.get(variant)
+                  'prefix_sixty_four_selected': 64, 'prefix_sixty_four_twelve': 64,
+                  'prefix_sixty_four_sixteen': 64}.get(variant)
         scope = nullcontext()
         if prefix is not None:
             scope = anchor_attention(decoder, layers, 256, prefix)
@@ -183,7 +206,7 @@ def main(checkpoint, output, layout):
             scope = local_attention(decoder, layers, 256)
         make_cache = lambda: DynamicCache(config=decoder.base.config)
         binder = nullcontext()
-        if layout in ('bounded_anchors', 'placements', 'wider_prefix', 'deeper', 'search_eight') and prefix is not None:
+        if prefix is not None and layout != 'anchors':
             make_cache = lambda: anchored_cache(decoder.base.config, layers, 256, prefix)
             binder = bounded_generation(decoder, make_cache)
         with scope, binder:
@@ -211,7 +234,7 @@ def main(checkpoint, output, layout):
                     'late_fact': answer(decoder, tokenizer, f'{held_filler}\n{heading}\n{question}'),
                     'memory': memory_answers(decoder, tokenizer, held_filler, memory_fixtures),
                 }
-            if layout in ('placements', 'wider_prefix', 'deeper', 'search_eight'):
+            if layout in ('placements', 'wider_prefix', 'deeper', 'search_eight', 'expand'):
                 row['placed_facts'] = placed_facts(decoder, tokenizer, source_tokens, held_tokens)
             results[variant] = row
             print(variant, 'cache bytes at 512', probes[-1]['cache_bytes'],
@@ -253,6 +276,8 @@ if __name__ == '__main__':
                           help='Compare four and eight bounded layers with the same prefix and window')
     variants.add_argument('--search-eight', action='store_const', dest='layout', const='search_eight',
                           help='Select eight layers on separate calibration prompts before evaluating')
+    variants.add_argument('--expand', action='store_const', dest='layout', const='expand',
+                          help='Test adding local windows before the final memory site')
     parser.set_defaults(layout='original')
     params = parser.parse_args()
     main(params.checkpoint, params.output, params.layout)

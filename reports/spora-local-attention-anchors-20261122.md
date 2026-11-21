@@ -41,6 +41,19 @@
 
 另写四个三轮场景，将 365 词元的无关短文放在第一轮，后续每个模型保留自己的生成历史。原始全局、四层、八层的严格短答均为 0/12，自然结束都是 5/12。四层和八层分别有 10/12 和 11/12 轮与全局模型逐词元一致。八层在人物交换首轮给出了目标物品，但仍带解释，并在后续错判归还后的状态。三种布局都能在寄存更正后给出东门，但未按要求只写地点。多轮数据覆盖窄，实验将每轮限制为 24 词元。逐题输出在 `runs/spora-anchored-dialogue-v1/`。
 
+## 把窗口推进到前半部分
+
+在八层布局上按四层一组向前扩展，避开第一层和两个记忆读取层。用普通长提示和一条独立的记忆输入筛选八种候选。十二层版加第 1–4 层，十六层版再加第 8–11 层。
+
+| 布局 | 键值张量 | 两组受控记忆 | 站名位置题 |
+|---|---:|---:|---:|
+| 全局 | 14.00 MiB | 5/8、7/8 | 5/8 |
+| 八层 | 11.99 MiB | 6/8、7/8 | 5/8 |
+| 十二层 | 10.99 MiB | 6/8、8/8 | 4/8 |
+| 十六层 | 9.98 MiB | 6/8、8/8 | 4/8 |
+
+十二层丢掉第二组第 32 个填充词元之后的事实，十六层还丢掉第二组末段的事实，并答对第一组末段原来错的一题。各布局中，分段和整段计算仍给出相同的下一词元首选。八层作为重载核对过的候选，十二和十六层保留为结构对照。计算约 227 秒，详细结果在 `runs/spora-local-attention-expand-v1/result.json`。
+
 ## 复现
 
 ```powershell
@@ -55,6 +68,7 @@ $checkpoint = 'runs/spora-native-query-key-v1/bootstrap.pt'
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-wider-prefix --output runs/spora-local-attention-wider-prefix-v1/result.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --compare-deeper --output runs/spora-local-attention-deeper-v1/result.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --search-eight --output runs/spora-local-attention-search-eight-v1/result.json
+.\.venv\Scripts\python.exe -u scripts/audit_spora_local_attention.py --checkpoint $checkpoint --expand --output runs/spora-local-attention-expand-v1/result.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_anchored_dialogue.py --checkpoint $checkpoint --output runs/spora-anchored-dialogue-v1/full.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_anchored_dialogue.py --checkpoint runs/spora-anchored-native-candidate-v1/bootstrap.pt --output runs/spora-anchored-dialogue-v1/four.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_anchored_dialogue.py --checkpoint runs/spora-anchored-native-eight-v1/bootstrap.pt --output runs/spora-anchored-dialogue-v1/eight.json
