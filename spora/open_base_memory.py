@@ -72,7 +72,7 @@ class OpenBaseMemory(nn.Module):
 
 
 @contextmanager
-def memory_hooks(layers, adapter, state, *, current_only=False, addresses=None):
+def memory_hooks(layers, adapter, state, *, current_only=False, addresses=None, gate=None):
     """Attach two hooks for one immutable state snapshot and then remove them.
 
     Layers must be distinct modules whose outputs are tensors of shape
@@ -86,6 +86,8 @@ def memory_hooks(layers, adapter, state, *, current_only=False, addresses=None):
         raise ValueError('Expected an OpenBaseMemory adapter')
     if type(current_only) is not bool:
         raise ValueError('current_only must be a boolean')
+    if gate is not None and not callable(gate):
+        raise ValueError('Gate must be callable')
     if addresses is not None and (not isinstance(addresses, (tuple, list)) or len(addresses) != 2
                                   or any(not isinstance(address, torch.Tensor) for address in addresses)):
         raise ValueError('Addresses must contain one tensor per site')
@@ -103,8 +105,20 @@ def memory_hooks(layers, adapter, state, *, current_only=False, addresses=None):
                 for site in range(2)
             )
             fixed_addresses = None if addresses is None else tuple(address.detach().clone() for address in addresses)
+        gate_state = {'enabled': None}
         for site, layer in enumerate(layers):
             def hook(_module, _inputs, output, site=site):
+                if gate is not None and site == 0 and gate_state['enabled'] is None:
+                    decision = gate(output)
+                    if isinstance(decision, torch.Tensor):
+                        if decision.numel() != 1 or decision.dtype != torch.bool:
+                            raise ValueError('Gate must return one boolean tensor for memory_hooks')
+                        decision = bool(decision.item())
+                    if type(decision) is not bool:
+                        raise ValueError('Gate must return a boolean')
+                    gate_state['enabled'] = decision
+                if gate_state['enabled'] is False:
+                    return output
                 return adapter(output, snapshots[site], site, None if fixed_addresses is None else fixed_addresses[site])
             handles.append(layer.register_forward_hook(hook))
         yield adapter
