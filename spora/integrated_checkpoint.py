@@ -20,7 +20,9 @@ from .memory_reply import MemoryReplyAdapter
 from .language_training import atomic_save
 from .named_address import feature_files_sha256, structural_feature_sha256
 from .structure_transfer import SPORALayerReplacement, SPORALayerBlend
-from .value_position_checkpoint import VALUE_POSITION_PREFIX, decode_value_positions, value_position_bundle
+from .value_position_checkpoint import (QUERY_KEY_POSITION_PREFIX, VALUE_POSITION_PREFIX,
+                                        decode_query_key_positions, decode_value_positions,
+                                        query_key_position_bundle, value_position_bundle)
 from .state_codec import flatten, restore
 from .internal_memory import observe_sourced as observe_spora_sourced
 
@@ -99,6 +101,7 @@ class IntegratedSPORARuntime:
                             self.model_dir, self.decoder.layer_indices, replacements=self._replacements(),
                             residuals=self._residuals(),
                             value_positions=value_position_modules(self.decoder),
+                            query_key_positions=query_key_position_modules(self.decoder),
                             output_adapter=self.decoder.output_adapter,
                             feedforward_fractions=self._feedforward_fractions(),
                             feedforward_output_layers=self._feedforward_output_layers(),
@@ -117,6 +120,7 @@ class IntegratedSPORARuntime:
                         self.model_dir, self.decoder.layer_indices, replacements=self._replacements(),
                         residuals=self._residuals(),
                         value_positions=value_position_modules(self.decoder),
+                        query_key_positions=query_key_position_modules(self.decoder),
                         output_adapter=self.decoder.output_adapter,
                         feedforward_fractions=self._feedforward_fractions(),
                         feedforward_output_layers=self._feedforward_output_layers(),
@@ -195,9 +199,25 @@ def value_position_modules(decoder):
     if not decoder.compatible_block_indices:
         return {}
     from .pretrained_attention import ValuePositionAttention
+    from .research_partial_query_key import PartialQueryKeyPositionAttention
+
+    result = {}
+    for index, block in _compatible_blocks(decoder):
+        attention = block.self_attn
+        if isinstance(attention, PartialQueryKeyPositionAttention):
+            attention = attention.parent
+        if isinstance(attention, ValuePositionAttention):
+            result[index] = attention
+    return result
+
+
+def query_key_position_modules(decoder):
+    if not decoder.compatible_block_indices:
+        return {}
+    from .research_partial_query_key import PartialQueryKeyPositionAttention
 
     return {index: block.self_attn for index, block in _compatible_blocks(decoder)
-            if isinstance(block.self_attn, ValuePositionAttention)}
+            if isinstance(block.self_attn, PartialQueryKeyPositionAttention)}
 
 
 def _file_sha256(path):
@@ -327,7 +347,7 @@ def _validate_base_config(directory, hidden_width, layers):
 
 
 def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, replacements=None,
-                    residuals=None, value_positions=None, output_adapter=None,
+                    residuals=None, value_positions=None, query_key_positions=None, output_adapter=None,
                     feedforward_fractions=None, compatible_layers=None,
                     feedforward_output_layers=(), gelu_gate_layers=(), position_table_max_position=None,
                     position_coefficients=None):
@@ -382,6 +402,7 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
     value_specs, value_tensors = value_position_bundle(
         value_positions, compatible_layers, base_config, position_table_max_position,
     )
+    query_key_specs, query_key_tensors = query_key_position_bundle(query_key_positions, value_positions or {}, base_config)
     variant = (structural_feature_sha256(base_sha, config_sha, {x['index']: x['sha256'] for x in specs},
                                          {x['index']: x['max_length'] for x in specs}) if specs else None)
     _validate_binding(organism, base_sha, config_sha, variant)
@@ -410,7 +431,7 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         raise ValueError('Invalid reader tensor set, shape or dtype')
     tensors = {**{'individual/' + k: v.detach().cpu().clone() for k, v in individual.items()},
                **{'reader/' + k: v.detach().cpu().clone() for k, v in reader_tensors.items()},
-               **replacement_tensors, **residual_tensors, **output_tensors, **value_tensors}
+               **replacement_tensors, **residual_tensors, **output_tensors, **value_tensors, **query_key_tensors}
     metadata = {'format': (OUTPUT_ADAPTER_FORMAT if output_config is not None
                            else STRUCTURAL_FORMAT if specs else FORMAT),
                 'base_sha256': base_sha, 'feature_config_sha256': config_sha,
@@ -428,6 +449,8 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         metadata['gelu_gate_layers'] = sorted(gelu_gate_layers)
     if value_specs:
         metadata['value_position_layers'] = value_specs
+    if query_key_specs:
+        metadata['query_key_position_layers'] = query_key_specs
     if position_table_max_position is not None:
         metadata['position_table_max_position'] = position_table_max_position
     if position_coefficients is not None:
@@ -493,10 +516,12 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     residual_tensors = {k: v for k, v in tensors.items() if k.startswith('residual/')}
     output_tensors = {k[len('output/'):]: v for k, v in tensors.items() if k.startswith('output/')}
     value_tensors = {k: v for k, v in tensors.items() if k.startswith(VALUE_POSITION_PREFIX)}
+    query_key_tensors = {k: v for k, v in tensors.items() if k.startswith(QUERY_KEY_POSITION_PREFIX)}
     has_position = 'position/coefficients' in tensors
     position_coefficients = tensors.get('position/coefficients')
     if (len(individual_tensors) + len(reader_tensors) + len(replacement_tensors)
-            + len(residual_tensors) + len(output_tensors) + len(value_tensors) + has_position != len(tensors)):
+            + len(residual_tensors) + len(output_tensors) + len(value_tensors) + len(query_key_tensors)
+            + has_position != len(tensors)):
         raise ValueError('Unexpected integrated checkpoint tensor')
     format_name = metadata['format']
     if format_name in (LEGACY_FORMAT, FORMAT):
@@ -604,6 +629,9 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         metadata.get('value_position_layers', {}), value_tensors, compatible_layers, base_config,
         position_table_max_position,
     )
+    loaded_query_key_positions = decode_query_key_positions(
+        metadata.get('query_key_position_layers', {}), query_key_tensors, loaded_value_positions, base_config,
+    )
     output_config = metadata.get('output_adapter')
     if output_config is None:
         if output_tensors:
@@ -710,10 +738,14 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
                     block.mlp.activation = SPORAGeluGate().eval()
         if loaded_value_positions:
             from .pretrained_attention import ValuePositionAttention
+            from .research_partial_query_key import PartialQueryKeyPositionAttention
 
             for index, block in _compatible_blocks(integrated):
                 if index in loaded_value_positions:
-                    block.self_attn = ValuePositionAttention(block.self_attn, *loaded_value_positions[index]).eval()
+                    attention = ValuePositionAttention(block.self_attn, *loaded_value_positions[index])
+                    if index in loaded_query_key_positions:
+                        attention = PartialQueryKeyPositionAttention(attention, *loaded_query_key_positions[index])
+                    block.self_attn = attention.eval()
     except Exception:
         for index, layer in previous.items():
             layers[index] = layer

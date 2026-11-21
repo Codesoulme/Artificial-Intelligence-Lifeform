@@ -138,7 +138,7 @@ class IntegratedCheckpointTests(unittest.TestCase):
         self.assertTrue(torch.equal(actual, expected))
 
     @torch.no_grad()
-    def test_checkpoint_restores_gelu_and_value_positions_on_compatible_layers(self):
+    def test_checkpoint_restores_gelu_and_position_migrations_on_compatible_layers(self):
         try:
             from transformers import Qwen2Config, Qwen2ForCausalLM
         except ModuleNotFoundError as error:
@@ -146,6 +146,7 @@ class IntegratedCheckpointTests(unittest.TestCase):
                 raise
             self.skipTest('Qwen2 inference dependencies are optional')
         from spora.pretrained_attention import SPORAGeluGate, ValuePositionAttention
+        from spora.research_partial_query_key import PartialQueryKeyPositionAttention
 
         config = Qwen2Config(vocab_size=9, hidden_size=8, intermediate_size=16,
                              num_hidden_layers=3, num_attention_heads=2, num_key_value_heads=1,
@@ -165,16 +166,20 @@ class IntegratedCheckpointTests(unittest.TestCase):
         layer = base.model.layers[0].layer
         value = ValuePositionAttention(layer.self_attn, 0, torch.randn(16, 8),
                                        torch.randn(4, 8), torch.randn(4)).eval()
-        layer.self_attn = value
+        partial = PartialQueryKeyPositionAttention(value, (1,), torch.randn(6, 8), torch.randn(6)).eval()
+        layer.self_attn = partial
         save_integrated(self.path, self.organism, self.state, reader, self.root, (0, 2),
                         compatible_layers=(0, 1, 2), gelu_gate_layers=(0, 1),
-                        value_positions={0: value}, position_table_max_position=16)
+                        value_positions={0: value}, query_key_positions={0: partial}, position_table_max_position=16)
 
         restored, _, state = load_integrated(self.path, copy, self.root)
         self.assertIsInstance(copy.model.layers[0].layer.mlp.activation, SPORAGeluGate)
         self.assertIsInstance(copy.model.layers[1].mlp.activation, SPORAGeluGate)
-        self.assertIsInstance(copy.model.layers[0].layer.self_attn, ValuePositionAttention)
-        self.assertEqual(copy.model.layers[0].layer.self_attn.group, 0)
+        restored_attention = copy.model.layers[0].layer.self_attn
+        self.assertIsInstance(restored_attention, PartialQueryKeyPositionAttention)
+        self.assertEqual(restored_attention.pairs, (1,))
+        self.assertIsInstance(restored_attention.parent, ValuePositionAttention)
+        self.assertEqual(restored_attention.parent.group, 0)
         self.assertIs(type(copy.model.layers[2].layer.mlp.activation),
                       type(base.model.layers[2].layer.mlp.activation))
         tokens = torch.tensor([[3, 5, 6, 4]])
@@ -183,6 +188,12 @@ class IntegratedCheckpointTests(unittest.TestCase):
         torch.testing.assert_close(actual, expected, rtol=0, atol=0)
 
         payload = torch.load(self.path, weights_only=True)
+        payload['metadata']['query_key_position_layers']['0'] = [1, 1]
+        payload['integrity_sha256'] = _digest(payload['metadata'], payload['tensors'])
+        torch.save(payload, self.path)
+        with self.assertRaisesRegex(ValueError, 'query/key rotary pairs'):
+            load_integrated(self.path, Qwen2ForCausalLM(config).eval(), self.root)
+        payload['metadata']['query_key_position_layers']['0'] = [1]
         payload['metadata']['value_position_layers']['0'] = 1
         payload['integrity_sha256'] = _digest(payload['metadata'], payload['tensors'])
         torch.save(payload, self.path)

@@ -13,7 +13,7 @@ import torch
 
 from .durable import TensorStore
 from .integrated_checkpoint import (FORMAT, STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT, _file_sha256, _validate_binding,
-                                    load_integrated, value_position_modules)
+                                    load_integrated, query_key_position_modules, value_position_modules)
 from .integrated_open_base import NativeSPORAMemoryReader
 from .internal_memory import observe_sourced
 from .named_address import address_basis_sha256
@@ -56,10 +56,13 @@ def _decoder_signature(decoder):
     activations = tuple((name, id(module.activation)) for name, module in decoder.base.named_modules()
                         if hasattr(module, 'read_memory_at_output'))
     value_groups = tuple((index, id(module), module.group) for index, module in value_position_modules(decoder).items())
+    query_key_pairs = tuple((index, id(module), module.group, module.pairs,
+                             id(module._coordinates), module._coordinates._version)
+                            for index, module in query_key_position_modules(decoder).items())
     return (id(decoder.base), decoder.base.training, id(decoder.reader), decoder.reader.training,
             getattr(decoder.reader, 'strength', None), tuple(decoder.layer_indices), shape,
             tuple(decoder.compatible_block_indices), decoder.position_table_max_position,
-            placement, residual_modes, activations, value_groups,
+            placement, residual_modes, activations, value_groups, query_key_pairs,
             tensors(decoder.base), tensors(decoder.reader),
             None if adapter is None else (id(adapter), adapter.training,
                                           tuple(sorted(adapter.config_dict().items())), tensors(adapter)))
