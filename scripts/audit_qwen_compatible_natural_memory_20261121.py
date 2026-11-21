@@ -120,9 +120,10 @@ def fresh_version_cases():
     return questions
 
 
-def answer(decoder, tokenizer, organism, question, state, key, mode, reply=None):
-    event = None
-    if mode != 0:
+def answer(decoder, tokenizer, organism, question, state, key, mode, reply=None, *, event=None):
+    if event is not None and (mode not in (1, 2) or type(event) is not int or not 0 <= event < state.cursor):
+        raise ValueError('Explicit observation event requires a valid historical read')
+    if mode != 0 and event is None:
         selection = select_event(organism, state, key, 'effective_previous' if mode == 1 else 'effective_latest',
                                  as_of=state.cursor - 1)
         if selection['status'] != 'experimental_candidate':
