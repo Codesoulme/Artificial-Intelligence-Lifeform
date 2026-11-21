@@ -1,0 +1,65 @@
+"""Checkpoint metadata and tensors for learned value-position components."""
+
+import torch
+
+
+VALUE_POSITION_PREFIX = 'value_position/'
+PARAMETERS = ('position', 'weight', 'bias')
+
+
+def value_position_bundle(components, compatible, config, position_limit):
+    if components is not None and not isinstance(components, dict):
+        raise ValueError('Invalid value-position layers')
+    if not components:
+        return {}, {}
+    from .pretrained_attention import ValuePositionAttention
+
+    if any(
+        type(index) is not int or not isinstance(component, ValuePositionAttention)
+        or component.layer_idx != index for index, component in components.items()
+    ):
+        raise ValueError('Invalid value-position layers')
+    specs = {str(index): component.group for index, component in sorted(components.items())}
+    tensors = {}
+    for index, component in components.items():
+        values = component.position.weight, component.weight, component.bias
+        for name, tensor in zip(PARAMETERS, values, strict=True):
+            tensors[f'{VALUE_POSITION_PREFIX}{index}/{name}'] = tensor.detach().cpu().clone()
+    decode_value_positions(specs, tensors, compatible, config, position_limit)
+    return specs, tensors
+
+
+def decode_value_positions(specs, tensors, compatible, config, position_limit):
+    if not isinstance(specs, dict):
+        raise ValueError('Invalid value-position metadata')
+    if not specs and not tensors:
+        return {}
+    heads = config.get('num_attention_heads')
+    key_heads = config.get('num_key_value_heads', heads)
+    hidden = config.get('hidden_size')
+    if (type(heads) is not int or heads < 1 or type(hidden) is not int or hidden % heads
+            or type(key_heads) is not int or key_heads < 1 or heads % key_heads
+            or type(position_limit) is not int or position_limit < 1):
+        raise ValueError('Value positions need a compatible grouped model with a fixed position limit')
+    width = config.get('head_dim', hidden // heads)
+    if type(width) is not int or width < 1:
+        raise ValueError('Invalid value-position head width')
+    by_layer = {str(index): index for index in compatible}
+    if any(name not in by_layer or type(group) is not int or not 0 <= group < key_heads
+           for name, group in specs.items()):
+        raise ValueError('Invalid value-position layer or group')
+    used = {f'{VALUE_POSITION_PREFIX}{name}/{field}' for name in specs for field in PARAMETERS}
+    if used != set(tensors):
+        raise ValueError('Missing or unexpected value-position tensors')
+    decoded = {}
+    for name, group in specs.items():
+        position, weight, bias = (tensors[f'{VALUE_POSITION_PREFIX}{name}/{field}'] for field in PARAMETERS)
+        if any(not isinstance(tensor, torch.Tensor) or tensor.dtype not in (torch.float16, torch.float32)
+               or not bool(torch.isfinite(tensor).all()) for tensor in (position, weight, bias)):
+            raise ValueError('Invalid learned value-position tensors')
+        if (position.ndim != 2 or position.shape[1] != hidden
+                or not position_limit <= position.shape[0] <= 65536
+                or weight.shape != (width, hidden) or bias.shape != (width,)):
+            raise ValueError('Value-position tensors do not match the model or its position limit')
+        decoded[by_layer[name]] = group, position, weight, bias
+    return decoded

@@ -138,14 +138,14 @@ class IntegratedCheckpointTests(unittest.TestCase):
         self.assertTrue(torch.equal(actual, expected))
 
     @torch.no_grad()
-    def test_gelu_gate_checkpoint_restores_memory_and_plain_layers(self):
+    def test_checkpoint_restores_gelu_and_value_positions_on_compatible_layers(self):
         try:
             from transformers import Qwen2Config, Qwen2ForCausalLM
         except ModuleNotFoundError as error:
             if error.name != 'transformers':
                 raise
             self.skipTest('Qwen2 inference dependencies are optional')
-        from spora.pretrained_attention import SPORAGeluGate
+        from spora.pretrained_attention import SPORAGeluGate, ValuePositionAttention
 
         config = Qwen2Config(vocab_size=9, hidden_size=8, intermediate_size=16,
                              num_hidden_layers=3, num_attention_heads=2, num_key_value_heads=1,
@@ -159,20 +159,35 @@ class IntegratedCheckpointTests(unittest.TestCase):
         reader = NativeSPORAMemoryReader(8, 64, .5)
         model = IntegratedOpenBase(base, reader, (0, 2)).eval()
         model.migrate_pretrained_blocks()
+        model.migrate_position_encoder(16)
         base.model.layers[0].layer.mlp.activation = SPORAGeluGate().eval()
         base.model.layers[1].mlp.activation = SPORAGeluGate().eval()
+        layer = base.model.layers[0].layer
+        value = ValuePositionAttention(layer.self_attn, 0, torch.randn(16, 8),
+                                       torch.randn(4, 8), torch.randn(4)).eval()
+        layer.self_attn = value
         save_integrated(self.path, self.organism, self.state, reader, self.root, (0, 2),
-                        compatible_layers=(0, 1, 2), gelu_gate_layers=(0, 1))
+                        compatible_layers=(0, 1, 2), gelu_gate_layers=(0, 1),
+                        value_positions={0: value}, position_table_max_position=16)
 
         restored, _, state = load_integrated(self.path, copy, self.root)
         self.assertIsInstance(copy.model.layers[0].layer.mlp.activation, SPORAGeluGate)
         self.assertIsInstance(copy.model.layers[1].mlp.activation, SPORAGeluGate)
+        self.assertIsInstance(copy.model.layers[0].layer.self_attn, ValuePositionAttention)
+        self.assertEqual(copy.model.layers[0].layer.self_attn.group, 0)
         self.assertIs(type(copy.model.layers[2].layer.mlp.activation),
                       type(base.model.layers[2].layer.mlp.activation))
         tokens = torch.tensor([[3, 5, 6, 4]])
         expected = model(tokens, memory_state=self.state, use_cache=False).logits
         actual = restored(tokens, memory_state=state, use_cache=False).logits
         torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+
+        payload = torch.load(self.path, weights_only=True)
+        payload['metadata']['value_position_layers']['0'] = 1
+        payload['integrity_sha256'] = _digest(payload['metadata'], payload['tensors'])
+        torch.save(payload, self.path)
+        with self.assertRaisesRegex(ValueError, 'value-position layer or group'):
+            load_integrated(self.path, Qwen2ForCausalLM(config).eval(), self.root)
 
     def test_output_adapter_roundtrip_is_persisted_and_attached(self):
         adapter = MemoryOutputAdapter(17, 9, rank=4, max_scale=2.)

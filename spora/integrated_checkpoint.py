@@ -20,6 +20,7 @@ from .memory_reply import MemoryReplyAdapter
 from .language_training import atomic_save
 from .named_address import feature_files_sha256, structural_feature_sha256
 from .structure_transfer import SPORALayerReplacement, SPORALayerBlend
+from .value_position_checkpoint import VALUE_POSITION_PREFIX, decode_value_positions, value_position_bundle
 from .state_codec import flatten, restore
 from .internal_memory import observe_sourced as observe_spora_sourced
 
@@ -97,6 +98,7 @@ class IntegratedSPORARuntime:
             save_integrated(destination, self.organism, candidate, self.decoder.reader,
                             self.model_dir, self.decoder.layer_indices, replacements=self._replacements(),
                             residuals=self._residuals(),
+                            value_positions=value_position_modules(self.decoder),
                             output_adapter=self.decoder.output_adapter,
                             feedforward_fractions=self._feedforward_fractions(),
                             feedforward_output_layers=self._feedforward_output_layers(),
@@ -114,6 +116,7 @@ class IntegratedSPORARuntime:
         save_integrated(destination, self.organism, self.state, self.decoder.reader,
                         self.model_dir, self.decoder.layer_indices, replacements=self._replacements(),
                         residuals=self._residuals(),
+                        value_positions=value_position_modules(self.decoder),
                         output_adapter=self.decoder.output_adapter,
                         feedforward_fractions=self._feedforward_fractions(),
                         feedforward_output_layers=self._feedforward_output_layers(),
@@ -187,6 +190,15 @@ def _compatible_blocks(decoder):
         if index in decoder.layer_indices:
             block = block.layer
         yield index, block.base if isinstance(block, SPORAResidualBlock) else block
+
+def value_position_modules(decoder):
+    if not decoder.compatible_block_indices:
+        return {}
+    from .pretrained_attention import ValuePositionAttention
+
+    return {index: block.self_attn for index, block in _compatible_blocks(decoder)
+            if isinstance(block.self_attn, ValuePositionAttention)}
+
 
 def _file_sha256(path):
     digest = hashlib.sha256()
@@ -315,7 +327,8 @@ def _validate_base_config(directory, hidden_width, layers):
 
 
 def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, replacements=None,
-                    residuals=None, output_adapter=None, feedforward_fractions=None, compatible_layers=None,
+                    residuals=None, value_positions=None, output_adapter=None,
+                    feedforward_fractions=None, compatible_layers=None,
                     feedforward_output_layers=(), gelu_gate_layers=(), position_table_max_position=None,
                     position_coefficients=None):
     if type(reader) not in (ScaledOpenBaseMemory, NativeSPORAMemoryReader):
@@ -366,6 +379,9 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         raise ValueError('Invalid position table length')
     if position_coefficients is not None:
         _validate_position_coefficients(position_coefficients, position_table_max_position, base_config)
+    value_specs, value_tensors = value_position_bundle(
+        value_positions, compatible_layers, base_config, position_table_max_position,
+    )
     variant = (structural_feature_sha256(base_sha, config_sha, {x['index']: x['sha256'] for x in specs},
                                          {x['index']: x['max_length'] for x in specs}) if specs else None)
     _validate_binding(organism, base_sha, config_sha, variant)
@@ -394,7 +410,7 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         raise ValueError('Invalid reader tensor set, shape or dtype')
     tensors = {**{'individual/' + k: v.detach().cpu().clone() for k, v in individual.items()},
                **{'reader/' + k: v.detach().cpu().clone() for k, v in reader_tensors.items()},
-               **replacement_tensors, **residual_tensors, **output_tensors}
+               **replacement_tensors, **residual_tensors, **output_tensors, **value_tensors}
     metadata = {'format': (OUTPUT_ADAPTER_FORMAT if output_config is not None
                            else STRUCTURAL_FORMAT if specs else FORMAT),
                 'base_sha256': base_sha, 'feature_config_sha256': config_sha,
@@ -410,6 +426,8 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
         metadata['compatible_layers'] = list(compatible_layers)
     if gelu_gate_layers:
         metadata['gelu_gate_layers'] = sorted(gelu_gate_layers)
+    if value_specs:
+        metadata['value_position_layers'] = value_specs
     if position_table_max_position is not None:
         metadata['position_table_max_position'] = position_table_max_position
     if position_coefficients is not None:
@@ -474,10 +492,11 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     replacement_tensors = {k: v for k, v in tensors.items() if k.startswith('replacement/')}
     residual_tensors = {k: v for k, v in tensors.items() if k.startswith('residual/')}
     output_tensors = {k[len('output/'):]: v for k, v in tensors.items() if k.startswith('output/')}
+    value_tensors = {k: v for k, v in tensors.items() if k.startswith(VALUE_POSITION_PREFIX)}
     has_position = 'position/coefficients' in tensors
     position_coefficients = tensors.get('position/coefficients')
     if (len(individual_tensors) + len(reader_tensors) + len(replacement_tensors)
-            + len(residual_tensors) + len(output_tensors) + has_position != len(tensors)):
+            + len(residual_tensors) + len(output_tensors) + len(value_tensors) + has_position != len(tensors)):
         raise ValueError('Unexpected integrated checkpoint tensor')
     format_name = metadata['format']
     if format_name in (LEGACY_FORMAT, FORMAT):
@@ -581,6 +600,10 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
         raise ValueError('Invalid position table metadata')
     if has_position:
         _validate_position_coefficients(position_coefficients, position_table_max_position, base_config)
+    loaded_value_positions = decode_value_positions(
+        metadata.get('value_position_layers', {}), value_tensors, compatible_layers, base_config,
+        position_table_max_position,
+    )
     output_config = metadata.get('output_adapter')
     if output_config is None:
         if output_tensors:
@@ -685,6 +708,12 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
             for index, block in _compatible_blocks(integrated):
                 if index in gelu_gate_layers:
                     block.mlp.activation = SPORAGeluGate().eval()
+        if loaded_value_positions:
+            from .pretrained_attention import ValuePositionAttention
+
+            for index, block in _compatible_blocks(integrated):
+                if index in loaded_value_positions:
+                    block.self_attn = ValuePositionAttention(block.self_attn, *loaded_value_positions[index]).eval()
     except Exception:
         for index, layer in previous.items():
             layers[index] = layer
