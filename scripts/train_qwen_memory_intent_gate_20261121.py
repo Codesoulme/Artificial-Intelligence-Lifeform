@@ -51,6 +51,10 @@ MEMORY_NATURAL_PROBE = (
     '从记录里看，对象{key}当前数字是几？',
 )
 
+MEMORY_GATE_TEMPLATES = TRAIN_PROMPTS + MEMORY_NATURAL_PROBE + (
+    '你记得编号{key}保存的数值吗？',
+)
+
 
 class IntentGate(nn.Module):
     format = 'spora-qwen-memory-intent-gate-v1'
@@ -183,9 +187,10 @@ def main(output, steps, learning_rate, cutoff):
     adapter.eval()
     layers = [model.model.layers[5], model.model.layers[17]]
 
-    train_memory = memory_questions(tuple(key for pair in TRAIN_PAIRS for key in pair), TRAIN_PROMPTS)
-    train_questions = list(ORDINARY_TRAIN) + train_memory
-    labels = torch.tensor([0] * len(ORDINARY_TRAIN) + [1] * len(train_memory))
+    train_memory = memory_questions(tuple(key for pair in TRAIN_PAIRS for key in pair), MEMORY_GATE_TEMPLATES)
+    ordinary_train = list(ORDINARY_TRAIN) * (len(train_memory) // len(ORDINARY_TRAIN))
+    train_questions = ordinary_train + train_memory
+    labels = torch.tensor([0] * len(ordinary_train) + [1] * len(train_memory))
     order = torch.randperm(len(train_questions), generator=torch.Generator().manual_seed(49107))
     train_questions = [train_questions[i] for i in order.tolist()]
     labels = labels[order]

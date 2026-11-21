@@ -20,7 +20,7 @@ Qwen2.5-0.5B-Instruct 的中文聊天能力明显优于当前 DeepSeek 分支，
 | 未见对象记忆问法启用记忆 | 8/8 |
 | 未见对象记忆数值回答正确 | 8/8 |
 
-最终候选使用第 5 层隐藏状态训练门，并在第 5 层 hook 中执行，避免训练表示和运行表示错位。自动门版本和外部预判版本得到相同结果，普通问题的回答逐词元保持 `24/24`。第 3 版曾把最后一层表示用于训练、却在第 5 层执行，导致记忆问题全部退化为拒答；该版本作为负向对照保留，说明门控表示必须与注入位置一致。
+最终候选使用第 5 层隐藏状态训练门，并在第 5 层 hook 中执行，避免训练表示和运行表示错位。提高到 `0.95` 阈值后，普通问题的回答逐词元保持 `24/24`，自然记忆正例全部开启。第 3 版曾把最后一层表示用于训练、却在第 5 层执行，导致记忆问题全部退化为拒答；第 8 版虽然覆盖了更多自然正例，却在普通留出上误开启 `10/24`，因此也不采用。
 
 ## 结论
 
@@ -36,4 +36,4 @@ Qwen2.5-0.5B-Instruct 的中文聊天能力明显优于当前 DeepSeek 分支，
 
 代码：`scripts/train_qwen_memory_intent_gate_20261121.py`；运行时改动：`spora/open_base_memory.py`。
 
-结果：`runs/qwen-memory-intent-gate-v6-20261121/result.json`；负向对照：`runs/qwen-memory-intent-gate-v3-20261121/result.json`。
+结果：`runs/qwen-memory-intent-gate-v9-20261121/result.json`；负向对照：`runs/qwen-memory-intent-gate-v3-20261121/result.json`、`runs/qwen-memory-intent-gate-v8-20261121/result.json`。
