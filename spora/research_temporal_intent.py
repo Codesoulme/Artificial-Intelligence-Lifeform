@@ -1,5 +1,9 @@
 """Experimental learned attention over evidence for memory time selection."""
 
+import math
+import unicodedata
+import zlib
+
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -38,16 +42,35 @@ class FactorizedTemporalGate(nn.Module):
         self.read = nn.Linear(feature_width, 1)
         self.version = nn.Linear(feature_width, 3)
 
-    def forward(self, vectors):
+    def forward(self, vectors, version_delta=None):
         read = self.read(vectors)
-        versions = self.version(vectors).log_softmax(-1)
+        versions = self.version(vectors)
+        if version_delta is not None:
+            versions = versions + version_delta
+        versions = versions.log_softmax(-1)
         return torch.cat((F.logsigmoid(read) + versions, F.logsigmoid(-read)), dim=-1)
 
 
-def temporal_logits(payload, features, mask):
+def temporal_character_features(texts, width):
+    if type(width) is not int or width < 1 or any(not isinstance(text, str) for text in texts):
+        raise ValueError('Expected character feature width and question strings')
+    counts = torch.zeros((len(texts), width), dtype=torch.float32)
+    for row, text in enumerate(texts):
+        chars = ''.join(unicodedata.normalize('NFKC', text).split())
+        for length in (1, 2, 3):
+            for start in range(len(chars) - length + 1):
+                encoded = chars[start:start + length].encode('utf-8')
+                counts[row, zlib.crc32(encoded) % width] += 1.
+    return F.normalize(counts, dim=-1) * math.sqrt(width)
+
+
+def temporal_logits(payload, features, mask, *, texts=None):
     width = features.shape[1] * features.shape[-1]
     classes = len(payload['classes'])
     architecture = payload.get('architecture', 'mean')
+    residual = payload.get('version_residual')
+    if residual is not None and (architecture != 'factorized' or not isinstance(residual, dict)):
+        raise ValueError('Version residual requires a factorized temporal head')
     if architecture == 'mean':
         head = nn.Linear(width, classes)
         args = (question_mean(features, mask),)
@@ -56,11 +79,47 @@ def temporal_logits(payload, features, mask):
         args = (features, mask)
     elif architecture == 'factorized':
         head = FactorizedTemporalGate(width)
-        args = (question_mean(features, mask),)
+        vectors = question_mean(features, mask)
+        args = (vectors,)
+        if residual is not None:
+            char_width = residual['char_width']
+            strength = residual['strength']
+            if (type(char_width) is not int or not 0 <= char_width <= 4096
+                    or type(strength) not in (int, float) or not 0. <= strength <= 2.):
+                raise ValueError('Invalid temporal version residual configuration')
+            inputs = vectors
+            if char_width:
+                if texts is None or len(texts) != len(vectors):
+                    raise ValueError('Temporal lexical version head needs one question per feature row')
+                lexical = temporal_character_features(texts, char_width).to(vectors)
+                inputs = torch.cat((vectors, lexical), dim=-1)
+            weight = residual['weight']
+            if (not isinstance(weight, torch.Tensor) or weight.shape != (3, inputs.shape[-1])
+                    or not weight.is_floating_point() or not bool(torch.isfinite(weight).all())):
+                raise ValueError('Invalid temporal version residual projection')
+            delta = F.linear(inputs, weight.to(vectors))
+            args = (vectors, strength * delta)
     else:
         raise ValueError('Unknown temporal intent architecture')
     head.load_state_dict(payload['state'], strict=True)
-    return head.eval()(*args)
+    logits = head.eval()(*args)
+    override = None if residual is None else residual.get('past_override')
+    if override is not None:
+        if type(override) not in (int, float) or not .55 <= override <= .95:
+            raise ValueError('Invalid past-version correction confidence')
+        original = head(vectors)
+        choose_past = past_override_mask(original.softmax(-1), logits.softmax(-1), payload['threshold'], override)
+        logits = torch.where(choose_past[:, None], logits, original)
+    return logits
+
+
+def past_override_mask(original, revised, threshold, confidence):
+    current_decision = time_selection(original, threshold, factorized=True)
+    original_past = original[:, 1] / original[:, :3].sum(-1).clamp_min(1e-8)
+    revised_past = revised[:, 1] / revised[:, :3].sum(-1).clamp_min(1e-8)
+    return ((current_decision == 0) | (current_decision == 2)) & (revised_past >= confidence) & (
+        revised_past >= original_past + .15
+    )
 
 
 def time_selection(probabilities, threshold, *, factorized=False):

@@ -92,7 +92,7 @@ def evaluate(runtime, tokenizer, router, temporal, *, corrected, reply=None):
     propose = entity_query_proposer(runtime.decoder, tokenizer, fingerprints, router, questions)
     features, mask = extract(runtime.decoder.base, tokenizer, questions, batch_size=1,
                              hidden_indices=tuple(temporal['hidden_indices']))
-    probabilities = temporal_logits(temporal, features, mask).softmax(-1)
+    probabilities = temporal_logits(temporal, features, mask, texts=questions).softmax(-1)
     modes = time_selection(probabilities, temporal['threshold'],
                            factorized=temporal.get('architecture') == 'factorized').tolist()
     expected_values = ((CORRECTED, SECOND, FIRST, CORRECTED, None, None, None) if corrected else (FIRST, SECOND))

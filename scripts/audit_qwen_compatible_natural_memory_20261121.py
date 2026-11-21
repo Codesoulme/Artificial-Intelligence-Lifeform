@@ -299,8 +299,10 @@ def entity_query_proposer(decoder, tokenizer, fingerprints, router, texts):
 @torch.inference_mode()
 def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_address=False,
           oracle_diagnostic=False, trim_punctuation=False, fresh=False, fresh_v2=False,
-          oracle_address_only=False, route_only=False, reply=None):
-    questions = fresh_version_cases() if fresh_v2 else fresh_cases() if fresh else cases()
+          oracle_address_only=False, route_only=False, reply=None, evaluation_questions=None):
+    questions = evaluation_questions
+    if questions is None:
+        questions = fresh_version_cases() if fresh_v2 else fresh_cases() if fresh else cases()
     format_name = router.get('format')
     is_character = format_name == 'spora-character-name-span-v1'
     is_factorized = format_name == 'spora-factorized-name-query-v1'
@@ -333,7 +335,7 @@ def score(decoder, tokenizer, organism, router, time_head, states, *, calibrate_
                                             hidden_indices=hidden_indices)
     else:
         time_features, time_masks = features, masks
-    temporal_probs = temporal_logits(time_head, time_features, time_masks).softmax(-1)
+    temporal_probs = temporal_logits(time_head, time_features, time_masks, texts=texts[:len(questions)]).softmax(-1)
     time_decisions = time_selection(temporal_probs, time_head['threshold'],
                                     factorized=time_head.get('architecture') == 'factorized')
 
