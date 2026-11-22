@@ -1,8 +1,10 @@
 """Read a saved SPORA individual's dated memories from Chinese questions."""
 
 import argparse
+from collections import deque
 from datetime import date
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -30,7 +32,13 @@ _MESSAGES = {
     'date_subject_not_enrolled': '这个姓名尚未登记。',
     'date_followup_requires_subject': '请先告诉我你想查谁、哪一天的记录。',
     'date_followup_requires_backfill': '请指定要以哪一天收到的资料为准。',
+    'chat_prompt_too_long': '这条消息太长，请分成几条发给我。',
 }
+_SAVED_MEMORY = re.compile(r'补录|登记|记忆|(?:你(?:还)?记得)|(?:查|核对|翻|看).{0,12}(?:记录|档案|旧资料)'
+                           r'|(?:饮料|饮品).{0,10}(?:记录|档案)|(?:记录|档案).{0,10}(?:饮料|饮品)'
+                           r'|[0-9０-９]{4}[-－年].{0,35}(?:饮料|饮品)')
+_REPLY_LIMIT = 64
+_CHAT_TURNS = 6
 
 
 def load_calendar_state(path, source_sha):
@@ -75,16 +83,64 @@ def calendar_turn(decoder, tokenizer, organism, state, calendar, question, focus
     return result, CalendarFocus.from_read(result['routing'], result['selection'], focus)
 
 
-def console(decoder, tokenizer, organism, state, calendar, questions):
+def _chat_inputs(tokenizer, history, question, limit):
+    turns = list(history)
+    for omitted in range(len(turns) + 1):
+        messages = [{'role': role, 'content': text} for user, reply in turns[omitted:]
+                    for role, text in (('user', user), ('assistant', reply))]
+        messages.append({'role': 'user', 'content': question})
+        prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        if not prompt.endswith('<think>\n'):
+            raise ValueError('Unexpected DeepSeek chat template')
+        inputs = tokenizer(prompt + '</think>\n\n', add_special_tokens=False, return_tensors='pt')
+        if inputs['input_ids'].shape[-1] <= limit:
+            return inputs, omitted
+    return None, len(turns)
+
+
+@torch.inference_mode()
+def ordinary_reply(decoder, tokenizer, history, question):
+    position_limit = decoder.position_table_max_position or decoder.base.config.max_position_embeddings
+    inputs, omitted = _chat_inputs(tokenizer, history, question, position_limit - _REPLY_LIMIT)
+    if inputs is None:
+        return {'reason': 'chat_prompt_too_long', 'answer': None}
+    inputs = inputs.to(decoder.base.device)
+    length = inputs['input_ids'].shape[-1]
+    tokens = decoder.generate(**inputs, max_new_tokens=_REPLY_LIMIT, use_cache=True, do_sample=False,
+                              temperature=None, top_p=None, pad_token_id=tokenizer.pad_token_id,
+                              eos_token_id=tokenizer.eos_token_id)[0, length:].tolist()
+    text = tokenizer.decode(tokens, skip_special_tokens=True).strip()
+    return {'reason': 'generated', 'answer': text, 'turns_used': len(history) - omitted,
+            'prompt_tokens': length, 'generated_tokens': len(tokens),
+            'eos': bool(tokens and tokens[-1] == tokenizer.eos_token_id)}
+
+
+def session_turn(decoder, tokenizer, organism, state, calendar, question, focus, history):
+    result, focus = calendar_turn(decoder, tokenizer, organism, state, calendar, question, focus)
+    reason = result['routing']['reason']
+    if history is not None and reason == 'date_focus_reset':
+        history.clear()
+    if (history is not None and reason == 'unsupported_date_question'
+            and question.strip() and not _SAVED_MEMORY.search(question)):
+        generated = ordinary_reply(decoder, tokenizer, history, question)
+        result = {'routing': {'reason': 'ordinary_chat'}, 'selection': None, 'generated': generated}
+        if generated['answer']:
+            history.append((question, generated['answer']))
+    return result, focus
+
+
+def console(decoder, tokenizer, organism, state, calendar, questions, *, chat=False):
     if calendar is None or not hasattr(organism, 'identity_fingerprints'):
         raise ValueError('Calendar history requires dates and enrolled names in the saved individual')
     focus = None
+    history = deque(maxlen=_CHAT_TURNS) if chat else None
     if questions:
         for question in questions:
-            result, focus = calendar_turn(decoder, tokenizer, organism, state, calendar, question, focus)
+            result, focus = session_turn(decoder, tokenizer, organism, state, calendar, question, focus, history)
             print(json.dumps(result, ensure_ascii=False), flush=True)
         return
-    print('输入带日期的饮品记忆问题。用 /reset 清除追问对象，用 /quit 退出。')
+    print('输入中文问题或日期记忆查询。用 /reset 清除对话，用 /quit 退出。' if chat else
+          '输入带日期的饮品记忆问题。用 /reset 清除追问对象，用 /quit 退出。')
     while True:
         try:
             question = input('你：').strip()
@@ -92,11 +148,11 @@ def console(decoder, tokenizer, organism, state, calendar, questions):
             break
         if question == '/quit':
             break
-        result, focus = calendar_turn(decoder, tokenizer, organism, state, calendar, question, focus)
+        result, focus = session_turn(decoder, tokenizer, organism, state, calendar, question, focus, history)
         generated = result['generated'] or {}
         reason = result['routing']['reason']
-        response = (generated.get('answer') or ('已清除追问对象。' if reason == 'date_focus_reset'
-                                               else _MESSAGES.get(reason, '这条记录目前无法确认。')))
+        response = (generated.get('answer') or ('已清除对话。' if reason == 'date_focus_reset'
+                                               else _MESSAGES.get(generated.get('reason', reason), '暂时无法回答。')))
         print(f'孢子：{response}', flush=True)
 
 
@@ -129,14 +185,15 @@ def main(args):
                 if not args.question:
                     return
             console(runtime.decoder, tokenizer, runtime.organism, runtime.state, runtime.observation_calendar,
-                    args.question)
+                    args.question, chat=args.chat)
         return
     organism, state, calendar = load_calendar_state(args.individual, sha(args.checkpoint))
     runtime = load_integrated_runtime(args.checkpoint, load_full_streamed(), MODEL)
     if (organism.config != runtime.organism.config
             or address_basis_sha256(organism) != address_basis_sha256(runtime.organism)):
         raise ValueError('The individual is incompatible with the decoder checkpoint')
-    console(runtime.decoder.eval().requires_grad_(False), tokenizer, organism, state, calendar, args.question)
+    console(runtime.decoder.eval().requires_grad_(False), tokenizer, organism, state, calendar, args.question,
+            chat=args.chat)
 
 
 if __name__ == '__main__':
@@ -149,6 +206,7 @@ if __name__ == '__main__':
     parser.add_argument('--observe', nargs=2, metavar=('NAME', 'BEVERAGE'), help='Record an explicit direct observation')
     parser.add_argument('--effective-on', type=date.fromisoformat, help='Earlier recorded effective date, YYYY-MM-DD')
     parser.add_argument('--question', action='append', help='Read a Chinese question and print the result')
+    parser.add_argument('--chat', action='store_true', help='Enable ordinary Chinese dialogue alongside dated memory')
     args = parser.parse_args()
     if args.create_database and args.individual is None:
         parser.error('--create-database requires --individual')
