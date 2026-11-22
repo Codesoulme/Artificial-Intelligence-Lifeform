@@ -13,13 +13,14 @@ from datetime import date
 import torch
 
 from .calendar_history import ObservationCalendar
-from .durable import TensorStore
+from .durable import RevisionConflict, TensorStore
 from .growing import capacity, grow, load
 from .integrated_checkpoint import (FORMAT, STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT, _file_sha256, _validate_binding,
                                     load_integrated, query_key_position_modules, value_position_modules)
 from .integrated_open_base import NativeSPORAMemoryReader
 from .internal_memory import observe_sourced
 from .named_address import address_basis_sha256
+from .sleep_memory import behavior_gate, indexed_behavior_gate, propose
 from .structured_text_memory import StructuredTextMemoryState
 
 STORE_FORMAT = 'spora-integrated-durable-v1'
@@ -165,6 +166,31 @@ class IntegratedDurableRuntime:
         candidate, decision = observe_sourced(self.organism, working, key, value, source, quality, valid_at)
         stats = self._commit_state(candidate, metadata=metadata, hook=hook)
         return decision, stats
+
+    def consolidate_history(self, page_index, *, rank=16, steps=600, method='distill', verify=None, hook=None):
+        """Seal one full calendar history page after neural and optional decoder checks."""
+        self._check()
+        if self.observation_calendar is None:
+            raise ValueError('Durable consolidation requires an indexed observation calendar')
+        parent, revision = self.state, self.store.revision
+        candidate, training = propose(self.organism, parent, page_index, rank=rank, steps=steps, method=method)
+        general = behavior_gate(self.organism, parent, candidate, page_index, minimum=1.)
+        indexed = indexed_behavior_gate(self.organism, parent, candidate, page_index)
+        accepted = general['passed'] and indexed['passed'] and training['state_reduction'] >= .2
+        verified = None
+        if accepted and verify is not None:
+            verified = verify(candidate)
+            if type(verified) is not bool:
+                raise ValueError('The decoder verification must return a boolean')
+            accepted = verified
+        result = {'accepted': accepted, 'training': training, 'gate': general, 'indexed_gate': indexed,
+                  'decoder_verified': verified}
+        if accepted:
+            self._check()
+            if self.state is not parent or self.store.revision != revision:
+                raise RevisionConflict('History changed during consolidation verification')
+            result['commit'] = self._commit_state(candidate, hook=hook)
+        return result
 
     def register_structured_text(self, codec_config, *, hook=None):
         """Persist an empty structured-memory schema for this open-base runtime."""

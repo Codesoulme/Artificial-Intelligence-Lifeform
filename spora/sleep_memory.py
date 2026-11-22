@@ -159,6 +159,34 @@ def behavior_gate(model, before, after, page_index, minimum=.95, batch_size=128)
     return {'groups': groups, 'current_logits_exact': current_exact, 'max_probability_difference': maximum, 'passed': passed}
 
 
+@torch.no_grad()
+def indexed_behavior_gate(model, before, after, page_index):
+    """Require exact value decisions and provenance for every actual observation on a page."""
+    from .growing import query
+    from .internal_memory import read_provenance_batch
+
+    if before.internal is None or before.internal.event_keys is None:
+        raise ValueError('Indexed consolidation requires a complete observation index')
+    indexed = before.internal.event_keys[page_index]
+    if not torch.equal(indexed, after.internal.event_keys[page_index]):
+        raise ValueError('Consolidation changed the observation index')
+    start = page_index * model.config.time_count
+    pairs = [(key, start + index) for index, key in enumerate(indexed.tolist()) if key >= 0]
+    if len(pairs) != model.config.time_count:
+        raise ValueError('Indexed consolidation requires a full page of observations')
+    matches, known = 0, 0
+    for offset in range(0, len(pairs), 16):
+        keys, times = torch.tensor(pairs[offset:offset + 16], device=indexed.device).T
+        modes = torch.ones_like(keys)
+        expected = query(model, before, keys, modes, times).argmax(-1)
+        actual = query(model, after, keys, modes, times).argmax(-1)
+        matches += int((expected == actual).sum())
+        known += int((expected != model.config.unknown).sum())
+    exact_provenance = read_provenance_batch(model, before, pairs) == read_provenance_batch(model, after, pairs)
+    return {'events': len(pairs), 'known': known, 'same_value': matches, 'same_provenance': exact_provenance,
+            'passed': matches == len(pairs) and exact_provenance}
+
+
 def consolidate_store(store, model, state, revision, page_index, rank=16, steps=600, seed=2210000):
     candidate, training = propose(model, state, page_index, rank=rank, steps=steps, seed=seed)
     gate = behavior_gate(model, state, candidate, page_index)

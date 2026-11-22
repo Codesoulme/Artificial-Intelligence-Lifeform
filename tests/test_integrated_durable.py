@@ -16,6 +16,7 @@ from spora.integrated_open_base import NativeSPORAMemoryReader
 from spora.internal_memory import WriteControl, attach, enable_event_key_index, read_provenance
 from spora.memory_output import MemoryOutputAdapter
 from spora.language_training import frozen_digest
+from spora.sleep_memory import SealedPage
 from spora.structure_transfer import SPORALayerReplacement
 from spora.temporal import TemporalConfig, TemporalSPORA
 from tests.test_integrated_open_base import Base
@@ -308,6 +309,37 @@ os._exit(0)
             self.assertEqual(restored.observation_calendar.days, (first_day, next_day))
             self.assertEqual(restored.state.cursor, 2)
             self.assertEqual(read_provenance(restored.organism, restored.state, 5, 1)['valid_at'], 0)
+
+    def test_calendar_consolidation_gates_and_recovers_the_old_page(self):
+        self.write_bootstrap(time_count=2)
+        first, second, third = date(2026, 1, 1), date(2026, 1, 2), date(2026, 1, 3)
+        with self.create(calendar=True) as runtime:
+            runtime.observe_sourced(4, 2, 'direct', 1., observed_on=first)
+            runtime.observe_sourced(5, 3, 'direct', 1., observed_on=second)
+            original = frozen_digest(runtime.organism, runtime.state)
+            rejected = runtime.consolidate_history(0, rank=8, method='svd', verify=lambda _: False)
+            self.assertFalse(rejected['accepted'])
+            self.assertIs(rejected['decoder_verified'], False)
+            self.assertEqual(runtime.store.revision, 2)
+
+            def fail(stage):
+                if stage == 'after_manifest':
+                    raise RuntimeError('sleep transaction interrupted')
+
+            with self.assertRaisesRegex(RuntimeError, 'interrupted'):
+                runtime.consolidate_history(0, rank=8, method='svd', hook=fail)
+            self.assertEqual(frozen_digest(runtime.organism, runtime.state), original)
+        with self.open() as runtime:
+            self.assertEqual(frozen_digest(runtime.organism, runtime.state), original)
+            result = runtime.consolidate_history(0, rank=8, method='svd')
+            self.assertTrue(result['accepted'])
+            self.assertEqual(result['indexed_gate']['same_value'], 2)
+            runtime.observe_sourced(6, 4, 'direct', 1., observed_on=third)
+            final = frozen_digest(runtime.organism, runtime.state)
+        with self.open() as restored:
+            self.assertEqual(frozen_digest(restored.organism, restored.state), final)
+            self.assertIsInstance(restored.state.pages[0], SealedPage)
+            self.assertEqual(restored.observation_calendar.days, (first, second, third))
 
     def test_decoder_mutation_and_bootstrap_change_block_commit(self):
         with self.create() as runtime:

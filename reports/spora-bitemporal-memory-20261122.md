@@ -47,6 +47,14 @@ Windows 管道首轮受系统默认编码影响。明确使用 UTF-8 后，独�
 
 新进程重载逐项复现三页、131 次观察和五条问答，耗时约 76 秒。原数据库仍为修订 1、六次观察。58 项回归通过，包含扩页中断。提交前杀掉进程，重载后仍是满的一页及两条观察。提交后杀掉进程，重载恢复第二页、第三条观察及日期。
 
+## 睡眠巩固
+
+扩到三页的历史副本支持单页封存。完整页先在副本生成低秩候选。提交要求该页所有键和时刻的值决策、所有已索引事件的值和来源、当前记忆分布都与原状态一致。调用方还可在提交前检查解码器生成。一次 96 步的秩 16 训练把一条原本未知的查询变成已知，严格门槛拒绝该候选。数据库修订保持不变。
+
+秩 8 的 SVD 候选在两页上通过，逐页保留 64/64 条索引记录的值决策和来源，页张量各减少约 65.8%。两次提交前，五条跨页日期问答的生成和路由逐项复现。相同 131 次观察下，个体存储标量从 145,452 降到 102,792，整理后的 SQLite 主文件从 4,956,160 字节降到 4,784,128 字节。醒来后写入第 132 次观察「小林，酸奶」，新值和五条旧值均由模型生成正确。首次评测约 84 秒。见 `runs/spora-calendar-sleep-v1/result.json`。
+
+新进程在约 70 秒内重载并逐条复现这六条问答。58 项相关回归通过，覆盖额外验证拒绝、封存提交前回滚、重载后保存新记录。这轮验证了显式历史巩固，覆盖两页有限记录。
+
 ## 复现
 
 ```powershell
@@ -67,6 +75,10 @@ $today = Get-Date -Format yyyy-MM-dd
 $growth = 'runs/spora-calendar-growth-example'
 .\.venv\Scripts\python.exe -u scripts/audit_spora_calendar_growth.py --checkpoint $common[1] --source $db --output $growth
 .\.venv\Scripts\python.exe -u scripts/audit_spora_calendar_growth.py --checkpoint $common[1] --output $growth --reopen
+
+$sleep = 'runs/spora-calendar-sleep-example'
+.\.venv\Scripts\python.exe -u scripts/audit_spora_calendar_sleep.py --checkpoint $common[1] --source $growth --output $sleep
+.\.venv\Scripts\python.exe -u scripts/audit_spora_calendar_sleep.py --checkpoint $common[1] --source $growth --output $sleep --reopen
 ```
 
 在示例个体里，这两条问句可以查同一个生效日。

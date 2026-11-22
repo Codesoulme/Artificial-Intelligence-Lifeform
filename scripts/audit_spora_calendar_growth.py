@@ -59,7 +59,8 @@ def extend(runtime, key):
     return boundaries
 
 
-def check(runtime, tokenizer, boundaries):
+def check(runtime, tokenizer, boundaries, *, state=None):
+    state = runtime.state if state is None else state
     source_day = runtime.observation_calendar.days[5].isoformat()
     expected = [
         ('只按截至2026-01-04已收到的记录，2026-01-02对小林有效的饮品是什么？', 0, '咖啡'),
@@ -69,7 +70,7 @@ def check(runtime, tokenizer, boundaries):
     expected.extend((f'小林在{row["day"]}的饮品是什么？', row['event'], row['value']) for row in boundaries)
     rows = []
     for question, event, value in expected:
-        result = read_calendar(runtime.decoder, tokenizer, runtime.organism, runtime.state,
+        result = read_calendar(runtime.decoder, tokenizer, runtime.organism, state,
                                runtime.observation_calendar, question)
         generated = result['generated'] or {}
         passed = (generated.get('event_time') == event and generated.get('matrix_value') == value
