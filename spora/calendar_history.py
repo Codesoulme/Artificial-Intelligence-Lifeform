@@ -22,6 +22,10 @@ _CORE = (
 )
 _ENDING = re.compile(r'[,，。?]\s*只(?:回答|说|给出)(?:饮品|饮料)(?:名称|名字)?[。！!]?\s*$')
 _SEPARATOR = re.compile(r'\s*[,，;；]\s*')
+_FOLLOW_PREFIX = re.compile(r'^(?:那么|那|同一个人|还是这个人|还是他|还是她)\s*')
+_FOLLOW_TAIL = re.compile(r'(?:呢)?[?？。]?\s*$')
+_DATE_ONLY = re.compile(rf'(?P<date>{_DATE})(?:当天|时)?')
+_BEFORE_BACKFILL = re.compile(r'(?:按)?补录(?:到来|收到|出现)?(?:之前|以前|前)(?:的(?:记录|资料|信息))?')
 
 
 def _date(text):
@@ -60,6 +64,62 @@ class ObservationCalendar:
         if not self.days or not self.days[0] <= day <= self.days[-1]:
             return None
         return bisect_right(self.days, day) - 1
+
+
+@dataclass(frozen=True)
+class CalendarFocus:
+    key: int
+    as_of: int
+    known_by: int | None
+    backfill_event: int | None = None
+
+    @classmethod
+    def from_read(cls, route, selection, previous=None):
+        if route['reason'] != 'routed':
+            return None
+        key, as_of = route['key'], route['as_of']
+        backfill = None
+        if previous is not None and (previous.key, previous.as_of) == (key, as_of):
+            backfill = previous.backfill_event
+        if (selection is not None and selection['status'] == 'experimental_candidate'
+                and selection['effective_time'] < selection['event_time']):
+            backfill = selection['event_time']
+        return cls(key, as_of, route['known_by'], backfill)
+
+
+def resolve_calendar_followup(question, calendar, focus):
+    """Resolve just one changed time coordinate against the current conversation focus."""
+    if not isinstance(question, str) or len(question) > 300:
+        return None
+    text = _FOLLOW_TAIL.sub('', _FOLLOW_PREFIX.sub('', unicodedata.normalize('NFKC', question.strip()))).strip()
+    known = _KNOWLEDGE.fullmatch(text)
+    effective = _DATE_ONLY.fullmatch(text)
+    present = _PRESENT.fullmatch(text)
+    previous = _BEFORE_BACKFILL.fullmatch(text)
+    if not (known or effective or present or previous):
+        return None
+    if focus is None:
+        return {'reason': 'date_followup_requires_subject'}
+    as_of, known_by = focus.as_of, focus.known_by
+    if known or effective:
+        try:
+            day = _date((known or effective)['date'])
+        except ValueError:
+            return {'reason': 'invalid_calendar_date'}
+        position = calendar.locate(day)
+        if position is None:
+            return {'reason': 'date_outside_saved_calendar'}
+        if known:
+            known_by = position
+        else:
+            as_of = position
+    elif previous:
+        if focus.backfill_event is None:
+            return {'reason': 'date_followup_requires_backfill'}
+        known_by = focus.backfill_event - 1
+    else:
+        known_by = None
+    return {'reason': 'routed', 'key': focus.key, 'as_of': as_of, 'known_by': known_by}
 
 
 def resolve_calendar_question(question, fingerprints, calendar):

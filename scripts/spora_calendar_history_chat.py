@@ -16,7 +16,7 @@ from scripts.audit_qwen_compatible_natural_memory_20261121 import WORDS, answer
 from scripts.deepseek_local_baseline import MODEL, sha
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.spora_event_scan_selector import select_event
-from spora.calendar_history import ObservationCalendar, resolve_calendar_question
+from spora.calendar_history import CalendarFocus, ObservationCalendar, resolve_calendar_followup, resolve_calendar_question
 from spora.growing import load
 from spora.integrated_checkpoint import load_integrated_runtime
 from spora.integrated_durable import create_integrated_durable, load_integrated_durable
@@ -28,6 +28,8 @@ _MESSAGES = {
     'invalid_calendar_date': '这个日期无效。',
     'date_outside_saved_calendar': '这个日期超出了已保存记录的范围。',
     'date_subject_not_enrolled': '这个姓名尚未登记。',
+    'date_followup_requires_subject': '请先告诉我你想查谁、哪一天的记录。',
+    'date_followup_requires_backfill': '请指定要以哪一天收到的资料为准。',
 }
 
 
@@ -42,8 +44,13 @@ def load_calendar_state(path, source_sha):
     return organism, state, calendar
 
 
-def read_calendar(decoder, tokenizer, organism, state, calendar, question):
+def read_calendar(decoder, tokenizer, organism, state, calendar, question, *, focus=None):
     route = resolve_calendar_question(question, organism.identity_fingerprints, calendar)
+    followup = None
+    if route['reason'] == 'unsupported_date_question':
+        followup = resolve_calendar_followup(question, calendar, focus)
+        if followup is not None:
+            route = followup
     result = {'routing': route, 'selection': None, 'generated': None}
     if route['reason'] != 'routed':
         return result
@@ -51,20 +58,33 @@ def read_calendar(decoder, tokenizer, organism, state, calendar, question):
                             as_of=route['as_of'], known_by=route['known_by'])
     result['selection'] = selected
     if selected['status'] == 'experimental_candidate':
-        result['generated'] = answer(decoder, tokenizer, organism, question, state, route['key'], 2,
-                                     event=selected['event_time'], use_cache=True, output_gain=1.5)
+        generated = answer(decoder, tokenizer, organism, question, state, route['key'], 2,
+                           event=selected['event_time'], use_cache=True, output_gain=1.5,
+                           allowed_replies=WORDS if followup is not None else None)
+        if (followup is not None and generated['reason'] == 'generated'
+                and generated['answer'] != generated['matrix_value']):
+            generated = dict(generated, reason='inconsistent_memory_reply', answer=None)
+        result['generated'] = generated
     return result
+
+
+def calendar_turn(decoder, tokenizer, organism, state, calendar, question, focus):
+    if question == '/reset':
+        return {'routing': {'reason': 'date_focus_reset'}, 'selection': None, 'generated': None}, None
+    result = read_calendar(decoder, tokenizer, organism, state, calendar, question, focus=focus)
+    return result, CalendarFocus.from_read(result['routing'], result['selection'], focus)
 
 
 def console(decoder, tokenizer, organism, state, calendar, questions):
     if calendar is None or not hasattr(organism, 'identity_fingerprints'):
         raise ValueError('Calendar history requires dates and enrolled names in the saved individual')
+    focus = None
     if questions:
         for question in questions:
-            print(json.dumps(read_calendar(decoder, tokenizer, organism, state, calendar, question),
-                             ensure_ascii=False), flush=True)
+            result, focus = calendar_turn(decoder, tokenizer, organism, state, calendar, question, focus)
+            print(json.dumps(result, ensure_ascii=False), flush=True)
         return
-    print('输入带日期的饮品记忆问题，或输入 /quit 退出。')
+    print('输入带日期的饮品记忆问题。用 /reset 清除追问对象，用 /quit 退出。')
     while True:
         try:
             question = input('你：').strip()
@@ -72,9 +92,11 @@ def console(decoder, tokenizer, organism, state, calendar, questions):
             break
         if question == '/quit':
             break
-        result = read_calendar(decoder, tokenizer, organism, state, calendar, question)
+        result, focus = calendar_turn(decoder, tokenizer, organism, state, calendar, question, focus)
         generated = result['generated'] or {}
-        response = generated.get('answer') or _MESSAGES.get(result['routing']['reason'], '这条记录目前无法确认。')
+        reason = result['routing']['reason']
+        response = (generated.get('answer') or ('已清除追问对象。' if reason == 'date_focus_reset'
+                                               else _MESSAGES.get(reason, '这条记录目前无法确认。')))
         print(f'孢子：{response}', flush=True)
 
 

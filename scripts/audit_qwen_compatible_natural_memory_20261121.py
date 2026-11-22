@@ -120,8 +120,21 @@ def fresh_version_cases():
     return questions
 
 
+def _reply_prefix(tokenizer, replies, prompt_length):
+    allowed = {}
+    for reply in replies:
+        tokens = tokenizer.encode(reply, add_special_tokens=False)
+        for index, token in enumerate([*tokens, tokenizer.eos_token_id]):
+            allowed.setdefault(tuple(tokens[:index]), set()).add(token)
+
+    def next_tokens(_batch, sequence):
+        return sorted(allowed[tuple(sequence[prompt_length:].tolist())])
+
+    return next_tokens
+
+
 def answer(decoder, tokenizer, organism, question, state, key, mode, reply=None, *, event=None,
-           use_cache=None, output_gain=1.):
+           use_cache=None, output_gain=1., allowed_replies=None):
     if event is not None and (mode not in (1, 2) or type(event) is not int or not 0 <= event < state.cursor):
         raise ValueError('Explicit observation event requires a valid historical read')
     if mode != 0 and event is None:
@@ -143,6 +156,8 @@ def answer(decoder, tokenizer, organism, question, state, key, mode, reply=None,
     else:
         from scripts.train_qwen_counterfactual_reply_20261122 import sequence_processor
         output_args = {'logits_processor': [sequence_processor(reply, evidence, length)]}
+    if allowed_replies is not None:
+        output_args['prefix_allowed_tokens_fn'] = _reply_prefix(tokenizer, allowed_replies, length)
     generated = decoder.generate(**inputs, **memory, **output_args,
                                  max_new_tokens=32, do_sample=False, top_p=None, temperature=None,
                                  pad_token_id=tokenizer.pad_token_id, eos_token_id=tokenizer.eos_token_id)

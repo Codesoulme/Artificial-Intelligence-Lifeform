@@ -1,7 +1,7 @@
 import unittest
 from datetime import date
 
-from spora.calendar_history import ObservationCalendar, resolve_calendar_question
+from spora.calendar_history import CalendarFocus, ObservationCalendar, resolve_calendar_followup, resolve_calendar_question
 from spora.identity_fingerprints import IdentityFingerprints
 
 
@@ -45,6 +45,30 @@ class CalendarHistoryTests(unittest.TestCase):
             ObservationCalendar.from_payload(self.payload, 3)
         with self.assertRaises(ValueError):
             ObservationCalendar.from_payload(dict(self.payload, days=list(reversed(self.payload['days']))), 4)
+
+    def test_followup_changes_only_the_asked_coordinate(self):
+        focus = CalendarFocus(key=2, as_of=0, known_by=0)
+        self.assertEqual(resolve_calendar_followup('那2026年1月3日呢？', self.calendar, focus),
+                         {'reason': 'routed', 'key': 2, 'as_of': 2, 'known_by': 0})
+        self.assertEqual(resolve_calendar_followup('那按截至2026-01-03已收到的记录呢？', self.calendar, focus),
+                         {'reason': 'routed', 'key': 2, 'as_of': 0, 'known_by': 2})
+        self.assertEqual(resolve_calendar_followup('那按现在掌握的资料呢？', self.calendar, focus),
+                         {'reason': 'routed', 'key': 2, 'as_of': 0, 'known_by': None})
+
+    def test_backfill_followup_uses_the_exact_observation_boundary(self):
+        route = {'reason': 'routed', 'key': 2, 'as_of': 0, 'known_by': None}
+        selected = {'status': 'experimental_candidate', 'event_time': 2, 'effective_time': 0}
+        focus = CalendarFocus.from_read(route, selected)
+        self.assertEqual(self.calendar.days[1], self.calendar.days[2])
+        followup = '那按补录前的资料呢？'
+        self.assertEqual(resolve_calendar_followup(followup, self.calendar, focus)['known_by'], 1)
+        switched = CalendarFocus.from_read(dict(route, key=3), None, focus)
+        self.assertEqual(resolve_calendar_followup(followup, self.calendar, switched),
+                         {'reason': 'date_followup_requires_backfill'})
+        self.assertEqual(resolve_calendar_followup(followup, self.calendar, None),
+                         {'reason': 'date_followup_requires_subject'})
+        self.assertIsNone(CalendarFocus.from_read({'reason': 'unsupported_date_question'}, None, focus))
+        self.assertIsNone(resolve_calendar_followup('把「那按补录前的资料呢」翻译成英文', self.calendar, focus))
 
 
 if __name__ == '__main__':

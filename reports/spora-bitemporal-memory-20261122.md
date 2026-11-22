@@ -70,6 +70,16 @@ Windows 管道首轮受系统默认编码影响。明确使用 UTF-8 后，独�
 
 实机六条日期问答的路由、事件和可见回答逐项一致。预热后交错测量三轮，六条问答的总耗时中位数分别为 1.18 和 1.19 秒，生成仍占主要时间。这组实机数据未测到端到端提速。逐题数据及重复测量见 `runs/spora-selected-history-v3/result.json`。
 
+## 承接日期追问
+
+本机入口保存当前会话中刚确认的人物地址、生效步、资料截止步及已读到的迟到观察。追问可以改变单个时间坐标，也可以切回按现在所知读取。「补录前」使用迟到观察之前的精确步号，同一天收到的多条观察也可区分。改问另一个人时重新查该人的事件。无关输入、歧义和 `/reset` 会清除追问对象。
+
+首轮对照发现一条追问虽读到「咖啡」，自由生成却输出了数字「1」。追问解码允许全部八个饮品候选，具体词仍由解码器及神经记忆输出适配器选出。若生成值与矩阵读出冲突，入口要求重新确认。上下文只延续地址和时间，饮品从持久化的神经状态重新读取。
+
+在含 132 次观察和两名登记人物的副本上，通过命令行连续输入 19 轮。11 次读取均选对事件并生成正确值，另 8 次澄清、拒绝和重置符合预期。小林的同一天先后回答「果汁」「咖啡」「果汁」。换成小周后读到「牛奶」，追问另一日得到「可乐」，此人的查询不会沿用小林的补录事件。原数据库文件摘要一致。逐轮输出保存在 `runs/spora-calendar-followups-v2/result.jsonl`。
+
+隔离源码下 70 项回归通过，48 条单轮日期查询和 20 条不适用请求也再次符合预期。这组对话覆盖日期和资料范围的追问。
+
 ## 复现
 
 ```powershell
@@ -96,6 +106,8 @@ $sleep = 'runs/spora-calendar-sleep-example'
 .\.venv\Scripts\python.exe -u scripts/audit_spora_calendar_sleep.py --checkpoint $common[1] --source $growth --output $sleep --reopen
 
 .\.venv\Scripts\python.exe -u scripts/audit_spora_selected_history_pages.py --checkpoint $common[1] --growth $growth --sleep $sleep --output runs/spora-selected-history-example/result.json
+
+.\.venv\Scripts\python.exe -u scripts/spora_calendar_history_chat.py --checkpoint $common[1] --database "$sleep/individual.sqlite" --question '小林在2026-01-02的饮品是什么？' --question '那按补录前的资料呢？' --question '那按现在掌握的资料呢？'
 ```
 
 在示例个体里，这两条问句可以查同一个生效日。
