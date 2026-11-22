@@ -33,6 +33,7 @@ from scripts.train_spora_dialogue_working_state import WRITER_WIDTH
 from spora.integrated_durable import load_integrated_durable
 from spora.language_training import atomic_save, frozen_digest
 from spora.research_dialogue_working_state import FIELDS, TurnValueWriter, WorkingTurnReader
+from spora.research_update_copy_gate import TypedValueCopyGate
 
 
 CONVERSATION = ROOT / 'data/conversation-development-v2.json'
@@ -204,9 +205,10 @@ def main(args):
     if args.output.exists():
         raise FileExistsError(args.output)
     started = time.perf_counter()
-    sources = {path: sha(path) for path in (
-        DATA, CONVERSATION, BASELINE, args.checkpoint, args.database, args.writer, args.planner,
-    )}
+    source_paths = (DATA, CONVERSATION, BASELINE, args.checkpoint, args.database, args.writer, args.planner)
+    if args.copy_gate:
+        source_paths += (ROOT / 'spora/research_update_copy_gate.py',)
+    sources = {path: sha(path) for path in source_paths}
     held = json.loads(DATA.read_text(encoding='utf-8'))
     writer_payload = torch.load(args.writer, map_location='cpu', weights_only=True)
     planner_payload = torch.load(args.planner, map_location='cpu', weights_only=True)
@@ -230,6 +232,8 @@ def main(args):
         writer = TurnValueWriter(WRITER_WIDTH, feature_width=writer_payload['hidden']).to(device)
         writer.load_state_dict(writer_payload['writer'])
         locator = SemanticLocator(writer.eval(), features)
+        if args.copy_gate:
+            locator = TypedValueCopyGate(locator)
         hidden = planner_payload['model']['project.weight'].shape[1]
         planner = ReadPlan(hidden).to(device)
         planner.load_state_dict(planner_payload['model'])
@@ -242,6 +246,8 @@ def main(args):
         heads = planner(encoded, lengths, kinds)
         rows = []
         for index, row in enumerate(held):
+            if hasattr(locator, 'reset'):
+                locator.reset()
             kind = row['kind']
             current = row['fields'] | row['changes']
             gold = (tuple(row['order']), row['join'], row['style'])
@@ -297,14 +303,16 @@ def main(args):
                                           f'{name.split("_")[0]}_{name.split("_")[1]}']
                                for row in rows]) for name in conditions}
     write(args.output / 'result.json', {
-        'format': 'spora-native-read-plan-v1', 'weight': args.weight,
+        'format': 'spora-native-read-plan-copy-gate-v1' if args.copy_gate else 'spora-native-read-plan-v1',
+        'copy_gate': args.copy_gate, 'weight': args.weight,
         'scores': scores, 'cases': rows, 'date': dates, 'ordinary': ordinary,
         'digest': digest, 'planner_sha256': sha(args.planner),
         'inputs': {str(path): value for path, value in sources.items()},
         'seconds': time.perf_counter() - started,
         'peak_bytes': torch.cuda.max_memory_allocated(),
     })
-    atomic_save({'format': 'spora-native-read-plan-v1', 'weight': args.weight,
+    atomic_save({'format': 'spora-native-read-plan-copy-gate-v1' if args.copy_gate else 'spora-native-read-plan-v1',
+                 'copy_gate': args.copy_gate, 'weight': args.weight,
                  'parent_sha256': sources[args.checkpoint], 'planner_sha256': sha(args.planner)},
                 args.output / 'audit.pt')
     print(scores, flush=True)
@@ -315,6 +323,7 @@ if __name__ == '__main__':
     for name in ('checkpoint', 'database', 'writer', 'planner', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--weight', type=float, default=8.)
+    parser.add_argument('--copy-gate', action='store_true')
     options = parser.parse_args()
     if not 0. <= options.weight <= 64.:
         parser.error('--weight must be in [0, 64]')
