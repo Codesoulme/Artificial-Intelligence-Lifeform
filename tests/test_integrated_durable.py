@@ -29,9 +29,14 @@ class IntegratedDurableTests(unittest.TestCase):
         (self.root/'config.json').write_text('{"hidden_size":3,"num_hidden_layers":3,"num_attention_heads":1,"vocab_size":9}', encoding='utf-8')
         for name in ('tokenizer.json', 'tokenizer_config.json'):
             (self.root/name).write_text('{}', encoding='utf-8')
+        self.bootstrap = self.root/'bootstrap.pt'
+        self.database = self.root/'individual.sqlite'
+        self.write_bootstrap()
+
+    def write_bootstrap(self, *, time_count=64):
         organism = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=64,
                                   expert_rank=4, memory_layers=(0, 1),
-                                  history_writer='rls', current_address='orthogonal'))
+                                  history_writer='rls', current_address='orthogonal', time_count=time_count))
         state = new_state(organism)
         control = WriteControl()
         with torch.no_grad():
@@ -41,8 +46,6 @@ class IntegratedDurableTests(unittest.TestCase):
         state = attach(organism, state, control)
         reader = NativeSPORAMemoryReader(3, 64, 0.5)
         layer = SPORALayerReplacement(3, 1, max_length=8, layer_idx=1)
-        self.bootstrap = self.root/'bootstrap.pt'
-        self.database = self.root/'individual.sqlite'
         save_integrated(self.bootstrap, organism, state, reader, self.root, (0, 2), replacements={1: layer})
 
     def tearDown(self):
@@ -333,6 +336,7 @@ os._exit(0)
         self.assertTrue(all(a is b for a, b in zip(base.model.layers, previous)))
 
     def test_process_termination_before_and_after_commit(self):
+        self.write_bootstrap(time_count=2)
         code = r'''
 import os, sys
 from datetime import date
@@ -350,21 +354,26 @@ runtime.observe_sourced(4, 2, 'direct', 1.0, observed_on=date(2026, 1, 3), hook=
 os._exit(0)
 '''
         with self.create(calendar=True) as runtime:
+            runtime.observe_sourced(2, 0, 'direct', 1.0, observed_on=date(2026, 1, 1))
+            runtime.observe_sourced(3, 1, 'direct', 1.0, observed_on=date(2026, 1, 2))
             initial = frozen_digest(runtime.organism, runtime.state)
         failed = subprocess.run([sys.executable, '-c', code, str(self.root), 'after_first_tensor'],
                                 capture_output=True, timeout=60)
         self.assertEqual(failed.returncode, 42, failed.stderr.decode(errors='replace'))
         with self.open() as restored:
-            self.assertEqual(restored.state.cursor, 0)
-            self.assertEqual(restored.observation_calendar.days, ())
+            self.assertEqual(restored.state.cursor, 2)
+            self.assertEqual(len(restored.state.pages), 1)
+            self.assertEqual(restored.observation_calendar.days, (date(2026, 1, 1), date(2026, 1, 2)))
             self.assertEqual(frozen_digest(restored.organism, restored.state), initial)
         committed = subprocess.run([sys.executable, '-c', code, str(self.root), 'after_commit'],
                                    capture_output=True, timeout=60)
         self.assertEqual(committed.returncode, 42, committed.stderr.decode(errors='replace'))
         with self.open() as restored:
-            self.assertEqual(restored.state.cursor, 1)
-            self.assertEqual(restored.store.revision, 1)
-            self.assertEqual(restored.observation_calendar.days, (date(2026, 1, 3),))
+            self.assertEqual(restored.state.cursor, 3)
+            self.assertEqual(len(restored.state.pages), 2)
+            self.assertEqual(restored.store.revision, 3)
+            self.assertEqual(restored.observation_calendar.days[-1], date(2026, 1, 3))
+            self.assertEqual(restored.state.internal.event_keys[1].tolist(), [4, -1])
 
 
 if __name__ == '__main__':

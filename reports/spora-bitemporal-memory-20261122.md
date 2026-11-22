@@ -39,6 +39,14 @@ Windows 管道首轮受系统默认编码影响。明确使用 UTF-8 后，独�
 
 独立进程打开同一数据库后，从观察步 5、0 和 4 分别回答「牛奶」「咖啡」「果汁」，对应当日新增、按旧有资料查询、按补录复盘旧日。实际修订和日期清单位于 `runs/spora-live-calendar-v1/individual.sqlite`。两个进程的问答记录保存为同目录的 `live-write.jsonl` 和 `reopened.jsonl`。
 
+## 历史页写满后的扩容
+
+已设置观察日历的事务个体会在页满时开下一页。新页、首次写入和新增日期共同提交。实机从六次观察的数据库副本开始追加 125 条，包括干扰人物记录，以及在第 64、128 步改变小林的饮品。两次扩页时，已完成页的历史张量、事件索引和来源张量逐元素一致。
+
+最终有三页、131 次观察。孢子读对了来自第 0、4、5、64、128 步的五个值，覆盖补录前、补录后、当天写入和两页更新。日期以模拟观察日推进。每次扩页事务提交 10 个变化张量，张量内容共 238,112 字节。首轮约 79 秒，SQLite 主文件从 4,612,096 字节变为 4,972,544 字节。逐项记录见 `runs/spora-calendar-growth-v1/result.json`。
+
+新进程重载逐项复现三页、131 次观察和五条问答，耗时约 76 秒。原数据库仍为修订 1、六次观察。58 项回归通过，包含扩页中断。提交前杀掉进程，重载后仍是满的一页及两条观察。提交后杀掉进程，重载恢复第二页、第三条观察及日期。
+
 ## 复现
 
 ```powershell
@@ -55,6 +63,10 @@ $db = 'runs/spora-live-calendar-example/individual.sqlite'
 $today = Get-Date -Format yyyy-MM-dd
 .\.venv\Scripts\python.exe -u scripts/spora_calendar_history_chat.py --checkpoint $common[1] --individual runs/spora-calendar-history-v2/person-0-world-0.pt --create-database $db --observe 小林 牛奶
 .\.venv\Scripts\python.exe -u scripts/spora_calendar_history_chat.py --checkpoint $common[1] --database $db --question "小林在$($today)的饮品是什么？"
+
+$growth = 'runs/spora-calendar-growth-example'
+.\.venv\Scripts\python.exe -u scripts/audit_spora_calendar_growth.py --checkpoint $common[1] --source $db --output $growth
+.\.venv\Scripts\python.exe -u scripts/audit_spora_calendar_growth.py --checkpoint $common[1] --output $growth --reopen
 ```
 
 在示例个体里，这两条问句可以查同一个生效日。

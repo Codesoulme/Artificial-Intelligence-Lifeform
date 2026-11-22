@@ -14,7 +14,7 @@ import torch
 
 from .calendar_history import ObservationCalendar
 from .durable import TensorStore
-from .growing import load
+from .growing import capacity, grow, load
 from .integrated_checkpoint import (FORMAT, STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT, _file_sha256, _validate_binding,
                                     load_integrated, query_key_position_modules, value_position_modules)
 from .integrated_open_base import NativeSPORAMemoryReader
@@ -141,8 +141,10 @@ class IntegratedDurableRuntime:
 
     def observe_sourced(self, key, value, source, quality, valid_at=None, *, observed_on=None,
                         effective_on=None, hook=None):
+        """Commit a controlled observation, extending a full calendar history in the same transaction."""
         self._check()
         calendar = self.observation_calendar
+        working = self.state
         metadata = None
         if calendar is None:
             if observed_on is not None or effective_on is not None:
@@ -158,7 +160,9 @@ class IntegratedDurableRuntime:
                     if valid_at is None or calendar.days[valid_at] != effective_on:
                         raise ValueError('The earlier effective date must exist in the observation calendar')
             metadata = dict(self.store.metadata, observation_calendar=extended.payload())
-        candidate, decision = observe_sourced(self.organism, self.state, key, value, source, quality, valid_at)
+            if working.cursor == capacity(self.organism, working):
+                working = grow(self.organism, working)
+        candidate, decision = observe_sourced(self.organism, working, key, value, source, quality, valid_at)
         stats = self._commit_state(candidate, metadata=metadata, hook=hook)
         return decision, stats
 
