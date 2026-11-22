@@ -158,16 +158,19 @@ class SPORAResidualBlock(nn.Module):
 
     attention_type = 'full_attention'
 
-    def __init__(self, source, rank=16, *, memory_context=None):
+    def __init__(self, source, rank=16, *, memory_context=None, ordinary_only=False):
         super().__init__()
         if not isinstance(source, SPORAPretrainedBlock):
             raise ValueError('Expected a Qwen-compatible SPORA block')
         if type(rank) is not int or not 1 <= rank <= source.hidden_size:
             raise ValueError('Residual rank is outside the hidden width')
+        if type(ordinary_only) is not bool or (ordinary_only and memory_context is None):
+            raise ValueError('An ordinary-only residual requires the decoder memory context')
         self.base = source.requires_grad_(False).eval()
         self.hidden_size = source.hidden_size
         self.rank = rank
         self.memory_context = memory_context
+        self.ordinary_only = ordinary_only
         reference = source.self_attn.qkv.weight
         self.down = nn.Linear(self.hidden_size, rank, bias=False,
                               device=reference.device, dtype=torch.float32)
@@ -181,9 +184,13 @@ class SPORAResidualBlock(nn.Module):
         read_mask = None
         if self.memory_context is not None:
             snapshot = self.memory_context.get()
-            if snapshot is None:
+            if self.ordinary_only:
+                if snapshot is not None:
+                    return output
+            elif snapshot is None:
                 return output
-            read_mask = snapshot[2]
+            else:
+                read_mask = snapshot[2]
         hidden = output[0] if isinstance(output, tuple) else output
         residual = self.up(F.gelu(self.down(hidden.to(self.down.weight.dtype))))
         updated = hidden + residual.to(dtype=hidden.dtype)
@@ -195,7 +202,7 @@ class SPORAResidualBlock(nn.Module):
 
     @property
     def memory_only(self):
-        return self.memory_context is not None
+        return self.memory_context is not None and not self.ordinary_only
 
     def residual_norm(self):
         return float((self.down.weight.detach().float().norm()
