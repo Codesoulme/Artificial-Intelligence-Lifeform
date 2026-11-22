@@ -21,7 +21,8 @@ from scripts.spora_temporal_contrast_cases import ABSTAIN, temporal_rows
 from scripts.train_spora_revision_contrast import build_data, fit
 from spora.integrated_checkpoint import load_integrated_runtime
 from spora.language_training import atomic_save
-from spora.research_temporal_intent import question_mean, temporal_character_features, temporal_logits, time_selection
+from spora.research_temporal_intent import (ordered_question, question_mean, temporal_character_features,
+                                           temporal_logits, time_selection)
 
 
 POLARITY_TRIPLES = (
@@ -66,6 +67,17 @@ SCOPE_HELD = (
      '先别翻完工单据。{name}在动笔改之前用的哪一项{field}？',
      '先别翻开工时的单据。{name}首次重订开始执行哪一项{field}？'),
 )
+ORDER_HELD = (
+    ('先前那份不再执行，请核对{name}还在执行的{field}。',
+     '手头这份继续执行，但我想核对{name}被替换掉的{field}。',
+     '手头这份仍在执行，但我只想核对{name}那回换上去的{field}。'),
+    ('{name}登记过两套{field}，按手头还算数的给我对一下。',
+     '{name}登记过两套{field}，按后来不算数的给我对一下。',
+     '{name}登记过好几套{field}，按那次修订刚落地时采用的给我对一下。'),
+    ('{name}那张{field}表，据说原件早就停了，今天用的写着什么？',
+     '{name}那张{field}表，据说后来换了，原件停用以前写着什么？',
+     '{name}那张{field}表，据说后来又换了，头一次切换落地当天写着什么？'),
+)
 
 
 def main(args):
@@ -91,6 +103,9 @@ def main(args):
                                SCOPE_TRIPLES, ())
         groups['new_scope'] = temporal_rows(('严青', '高婉', '屈晴', '陆灼', '倪恒', '窦飞'),
                                             ('标牌文字', '办理柜台', '餐具'), SCOPE_HELD, ())
+    if args.ordered:
+        groups['unseen_order'] = temporal_rows(('穆清', '余芮', '佟柏', '聂津', '莫岩', '罗珈'),
+                                                ('调度口令', '会议标签', '签发编号'), ORDER_HELD, ())
     questions = [text for rows in groups.values() for text, _ in rows]
     if len(set(questions)) != len(questions):
         raise ValueError('A version contrast question occurs in more than one split')
@@ -99,32 +114,40 @@ def main(args):
     for label, rows in groups.items():
         slices[label] = slice(offset, offset + len(rows))
         offset += len(rows)
-    vectors, initial = [], []
+    vectors, initial, ordered = [], [], []
     for start in range(0, len(questions), 64):
         texts = questions[start:start + 64]
         features, masks = extract(runtime.decoder.base, tokenizer, texts, batch_size=2,
                                   hidden_indices=tuple(head['hidden_indices']), last_logit_only=True)
         vectors.append(question_mean(features, masks))
+        if args.ordered:
+            ordered.append(ordered_question(features, masks))
         initial.append(temporal_logits(head, features, masks, texts=texts))
     vectors, initial = torch.cat(vectors), torch.cat(initial)
     targets = torch.tensor([mode for rows in groups.values() for _, mode in rows])
     baseline = time_selection(initial.softmax(-1), head['threshold'], factorized=True)
     version = F.linear(vectors, head['state']['version.weight'], head['state']['version.bias'])
-    inputs = vectors
+    inputs = torch.cat(ordered) if args.ordered else vectors
     if args.lexical:
         inputs = torch.cat((vectors, temporal_character_features(questions, 1024)), dim=-1)
     training = slices['train']
-    weight = fit(inputs[training], version[training], targets[training])
-    adjusted = (version + inputs @ weight.T).softmax(-1)
-    confidence, winner = adjusted.max(-1)
-
-    def select(threshold):
-        return torch.where((baseline != ABSTAIN) & (confidence >= threshold), winner, baseline)
-
     cal = slices['calibration']
-    threshold = max((.50, .55, .60, .65, .70, .75), key=lambda value: (
-        int((select(value)[cal] == targets[cal]).sum()), value))
-    selected = select(threshold)
+
+    def fit_selector(inputs):
+        weight = fit(inputs[training], version[training], targets[training])
+        confidence, winner = (version + inputs @ weight.T).softmax(-1).max(-1)
+
+        def select(threshold):
+            return torch.where((baseline != ABSTAIN) & (confidence >= threshold), winner, baseline)
+
+        threshold = max((.50, .55, .60, .65, .70, .75), key=lambda value: (
+            int((select(value)[cal] == targets[cal]).sum()), value))
+        return weight, threshold, select(threshold)
+
+    weight, threshold, selected = fit_selector(inputs)
+    predictions = {'baseline': baseline, 'candidate': selected}
+    if args.ordered:
+        _, mean_threshold, predictions['mean_comparison'] = fit_selector(vectors)
     if not torch.equal(selected == ABSTAIN, baseline == ABSTAIN) or sha(args.checkpoint) != digest:
         raise ValueError('The version-only adjustment changed abstentions or the source checkpoint')
     summary = {}
@@ -132,21 +155,24 @@ def main(args):
         if label == 'train':
             continue
         area = slices[label]
-        rows = [{'question': text, 'expected': int(target), 'baseline': int(old), 'candidate': int(new)}
-                for text, target, old, new in zip(questions[area], targets[area], baseline[area],
-                                                  selected[area], strict=True)]
+        rows = [{'question': text, 'expected': int(target),
+                 **{mode: int(values[index]) for mode, values in predictions.items()}}
+                for index, text, target in zip(range(area.start, area.stop), questions[area], targets[area], strict=True)]
         summary[label] = {mode: [sum(row['expected'] == index and row[mode] == index for row in rows)
-                                 for index in range(4)] for mode in ('baseline', 'candidate')}
+                                 for index in range(4)] for mode in predictions}
         summary[label]['rows'] = rows
         print(label, summary[label]['baseline'], summary[label]['candidate'], flush=True)
     args.output.mkdir(parents=True, exist_ok=False)
     component = args.output / 'selector.pt'
     atomic_save({'weight': weight, 'threshold': threshold, 'char_width': 1024 if args.lexical else 0,
+                 'feature_mode': 'ordered' if args.ordered else 'mean',
                  'checkpoint_sha256': digest,
                  'temporal_sha256': source_sha, 'format': 'spora-guarded-version-selector-v1'}, component)
     report = {'summary': summary, 'selector_sha256': sha(component), 'confidence_threshold': threshold,
               'train_count': len(train), 'seconds': time.perf_counter() - started,
               'sources': {'checkpoint_sha256': digest, 'temporal_sha256': source_sha}}
+    if args.ordered:
+        report['mean_comparison_threshold'] = mean_threshold
     (args.output / 'result.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
 
 
@@ -154,6 +180,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('checkpoint', 'temporal', 'temporal-source', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
-    parser.add_argument('--lexical', action='store_true', help='Include character features in the learned residual')
+    features = parser.add_mutually_exclusive_group()
+    features.add_argument('--lexical', action='store_true', help='Include character features in the learned residual')
+    features.add_argument('--ordered', action='store_true', help='Compare position-aware clause features with a mean selector')
     parser.add_argument('--expand-scope', action='store_true', help='Fit varied timing and negation contrasts')
     main(parser.parse_args())

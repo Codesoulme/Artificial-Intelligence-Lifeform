@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from spora.research_temporal_intent import (FactorizedTemporalGate, past_override_mask, question_mean,
+from spora.research_temporal_intent import (FactorizedTemporalGate, ordered_question, past_override_mask, question_mean,
                                           temporal_character_features, temporal_logits, time_selection)
 
 
@@ -37,6 +37,18 @@ class TemporalVersionResidualTests(unittest.TestCase):
         features = temporal_character_features(('Ａ　甲', 'A甲'), 64)
         torch.testing.assert_close(features[0], features[1], rtol=0, atol=0)
 
+    def test_ordered_features_distinguish_clause_order_and_ignore_padding(self):
+        features = torch.tensor([[[[1., -1.], [-1., 1.]]]])
+        mask = torch.ones((1, 2), dtype=torch.bool)
+        reversed_features = features.flip(2)
+        torch.testing.assert_close(question_mean(features, mask), question_mean(reversed_features, mask))
+        original = ordered_question(features, mask)
+        self.assertFalse(torch.equal(original, ordered_question(reversed_features, mask)))
+        padding = torch.full_like(features[:, :, :1], float('nan'))
+        padded_features = torch.cat((padding, features, padding), dim=2)
+        padded_mask = torch.tensor([[False, True, True, False]])
+        torch.testing.assert_close(ordered_question(padded_features, padded_mask), original, rtol=0, atol=0)
+
     def test_selective_override_only_converts_admitted_nonhistorical_reads(self):
         original = torch.tensor([[.65, .10, .15, .1], [.10, .10, .70, .10],
                                  [.16, .12, .12, .60], [.15, .65, .10, .10]])
@@ -58,9 +70,11 @@ class TemporalVersionResidualTests(unittest.TestCase):
         weight[1] = -weight[0]
         payload = {'architecture': 'factorized', 'classes': ['current', 'past', 'later', 'abstain'],
                    'threshold': .5, 'state': gate.state_dict()}
-        selector = {'char_width': 0, 'threshold': .55, 'weight': weight}
         original = temporal_logits(payload, features, mask).softmax(-1)
-        revised = temporal_logits(dict(payload, version_selector=selector), features, mask).softmax(-1)
         self.assertEqual(time_selection(original, .5, factorized=True).tolist(), [2, 3])
-        self.assertEqual(time_selection(revised, .5, factorized=True).tolist(), [0, 3])
-        torch.testing.assert_close(revised[:, 3], original[:, 3])
+        for mode, projection in (('mean', weight), ('ordered', torch.nn.functional.pad(weight, (0, 4)))):
+            with self.subTest(feature_mode=mode):
+                selector = {'char_width': 0, 'threshold': .55, 'weight': projection, 'feature_mode': mode}
+                revised = temporal_logits(dict(payload, version_selector=selector), features, mask).softmax(-1)
+                self.assertEqual(time_selection(revised, .5, factorized=True).tolist(), [0, 3])
+                torch.testing.assert_close(revised[:, 3], original[:, 3])

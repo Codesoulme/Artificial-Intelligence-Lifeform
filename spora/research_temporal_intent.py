@@ -16,6 +16,17 @@ def question_mean(features, mask):
     return F.layer_norm(means, (means.shape[-1],)).flatten(1)
 
 
+def ordered_question(features, mask):
+    """Expose clause order and the final causal state to a version-only selector."""
+    order = mask.cumsum(dim=-1)
+    length = order[:, -1:]
+    early = mask & (order <= (length + 1) // 2)
+    late = mask & ~early
+    final = mask & (order == length)
+    direction = question_mean(features, late) - question_mean(features, early)
+    return torch.cat((question_mean(features, mask), .5 * direction, .5 * question_mean(features, final)), dim=-1)
+
+
 class TemporalTokenGate(nn.Module):
     """Combine a whole-question decision with class-specific token evidence."""
 
@@ -109,14 +120,16 @@ def temporal_logits(payload, features, mask, *, texts=None):
     if selector is not None:
         char_width = selector['char_width']
         confidence = selector['threshold']
+        feature_mode = selector.get('feature_mode', 'mean')
         if (type(char_width) is not int or not 0 <= char_width <= 4096
-                or type(confidence) not in (int, float) or not .5 <= confidence <= .95):
+                or type(confidence) not in (int, float) or not .5 <= confidence <= .95
+                or feature_mode not in ('mean', 'ordered')):
             raise ValueError('Invalid guarded version selector configuration')
-        inputs = vectors
+        inputs = ordered_question(features, mask) if feature_mode == 'ordered' else vectors
         if char_width:
             if texts is None or len(texts) != len(vectors):
                 raise ValueError('Version selector requires one question per feature row')
-            inputs = torch.cat((vectors, temporal_character_features(texts, char_width).to(vectors)), dim=-1)
+            inputs = torch.cat((inputs, temporal_character_features(texts, char_width).to(vectors)), dim=-1)
         weight = selector['weight']
         if (not isinstance(weight, torch.Tensor) or weight.shape != (3, inputs.shape[-1])
                 or not weight.is_floating_point() or not bool(torch.isfinite(weight).all())):

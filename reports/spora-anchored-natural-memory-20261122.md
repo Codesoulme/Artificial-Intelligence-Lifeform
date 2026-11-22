@@ -30,6 +30,24 @@
 
 加入 108 条新的否定范围和生效顺序问句后，训练集达到 588 条。固定原读入门，校准选择的修正置信度为 0.75。两批旧留出分别为 48/72 和 84/96，另外 36 条独立句式答对 20 条，与旧时间头相同。长文本换问法对应的 12 条单独路由输入仍全部判断错误。保留 480 条训练所得的语义版作为实验参考。追加实验用时约 137 秒，逐题见 `runs/spora-anchored-temporal-selector-scope-v1/`。
 
+## 保留问句顺序的版本选择
+
+在相同的 588 条训练问句和 76 条校准问句上，比较平均池化与顺序特征。顺序特征把整句表示、后半句和前半句的表示差、最后一个有效词元的表示输入线性残差。两种方式只调整三类版本的相对分数，保留现有读入门。模型骨干、姓名定位器和记忆读出沿用原配置。校准选择的置信度为顺序特征 0.60、平均池化 0.75。
+
+| 正例集合 | 原时间头 | 平均池化残差 | 顺序特征残差 |
+|---|---:|---:|---:|
+| 校准 | 33/48 | 36/48 | 36/48 |
+| 口语留出 | 44/72 | 48/72 | 52/72 |
+| 更正对照留出 | 58/96 | 84/96 | 74/96 |
+| 旧独立句式 | 20/36 | 20/36 | 18/36 |
+| 新版本顺序句式 | 21/54 | 26/54 | 21/54 |
+
+各组的逐条读入和拒读决定保持一致。新写的 54 条问句使用不同人物和字段，覆盖排除旧选项、从多套记录选版和切换时点。顺序特征在一组留出多答对四条，在其他三组表现更低。拟合和分类用时约 140 秒，逐项记录见 `runs/spora-ordered-version-selector-v1/result.json`。
+
+把顺序残差重载到同一孢子入口，用四层窗口和全局注意力各复测 12 条长输入正例及 8 条负例。入口单独提供当前问句供定位，完整文本供生成。两种布局的时间正确数均从 0/12 到 2/12。两条新增正确分类均为「改后」，一条仍卡在姓名定位；另一条在两份内部状态中分别正确生成「水」与「茶」。端到端正确换值由 0/12 到 1/12，负例触发保留 0/8。顺序残差留作实验权重，默认结构沿用原方案。复验约 121 秒，峰值 CUDA 分配约 4.94 GiB，详见 `runs/spora-ordered-version-selector-v1/long-holdout.json`。
+
+29 项时间路由、版本选择和检查点测试通过。新增检查覆盖前后顺序、填充位置和拒读保护。
+
 ## 复现
 
 ```powershell
@@ -54,4 +72,8 @@ $runArgs[7] = 'runs/qwen-compatible-gelu-temporal-factorized-v1/factorized'
 .\.venv\Scripts\python.exe -u scripts/audit_spora_temporal_selector.py --checkpoint $runArgs[1] --temporal $runArgs[7] --temporal-source $runArgs[3] --expand-scope --output runs/spora-anchored-temporal-selector-scope-v1
 .\.venv\Scripts\python.exe -u scripts/audit_spora_anchored_natural_memory.py @runArgs --broad-versions --output-gains 1.5 --reload-only --output runs/spora-anchored-broad-temporal-v1/baseline.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_anchored_natural_memory.py @runArgs --broad-versions --output-gains 1.5 --reload-only --version-selector runs/spora-anchored-temporal-selector-v1/selector.pt --output runs/spora-anchored-broad-temporal-v1/selector.json
+
+$runArgs[1] = 'runs/spora-native-query-key-v1/bootstrap.pt'
+.\.venv\Scripts\python.exe -u scripts/audit_spora_temporal_selector.py --checkpoint $runArgs[1] --temporal $runArgs[7] --temporal-source $runArgs[3] --expand-scope --ordered --output runs/spora-ordered-version-selector-v1
+.\.venv\Scripts\python.exe -u scripts/audit_spora_anchored_natural_memory.py @runArgs --version-selector runs/spora-ordered-version-selector-v1/selector.pt --route-current-turn --heldout --output-gains 1.5 --output runs/spora-ordered-version-selector-v1/long-holdout.json
 ```
