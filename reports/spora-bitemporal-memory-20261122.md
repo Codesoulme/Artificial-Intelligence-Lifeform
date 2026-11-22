@@ -21,6 +21,16 @@
 
 独立进程从磁盘重载后，24 条路由、回答及快照对照逐项复现，耗时约 82 秒。46 项索引、来源、历史读取和检查点测试通过。
 
+## 中文日期问句入口
+
+新增只读入口。保存的个体同时携带观察日期和已登记姓名的指纹。日期坐标按日解析，截止日包含当天最后一条观察。在已覆盖的日期范围内，空白日按此前最后一条观察定位。入口验证保存的日期数与观察步一致，并核对个体与解码器的地址基底。回答仍由选中的神经历史及原输出适配器生成。
+
+本次支持有限的中文饮品查询句式、ISO 日期和阿拉伯数字的「年／月／日」。试验保留从固定日期表导入的映射。日期范围以保存的记录为依据。完整的日历持续写入、相对日期和开放问题仍待接入。
+
+两种问法共 48 条，包含 40 条正确生成及 8 条待核实记录的正确拒答。额外 20 条无效日期、超出日历、近似姓名、翻译请求和双日期请求也全部正确拒绝，且没有进入神经历史读取。首轮有 24 条问句因问号后附带「只回答饮品名称」而未被解析。补充该边界后复测全部通过，耗时约 85 秒。逐题结果见 `runs/spora-calendar-history-v2/result.json`。
+
+Windows 管道首轮受系统默认编码影响。明确使用 UTF-8 后，独立控制台进程正确回答「咖啡」「果汁」并拒绝未登记姓名，退出后保存文件的摘要一致。50 项日期、版本读取和检查点回归通过。
+
 ## 复现
 
 ```powershell
@@ -29,4 +39,12 @@ $env:MKL_NUM_THREADS = '2'
 $common = @('--checkpoint', 'runs/spora-native-query-key-v1/bootstrap.pt', '--output', 'runs/spora-bitemporal-memory-v1')
 .\.venv\Scripts\python.exe -u scripts/audit_spora_bitemporal_memory.py @common
 .\.venv\Scripts\python.exe -u scripts/audit_spora_bitemporal_memory.py @common --reopen
+
+.\.venv\Scripts\python.exe -u scripts/audit_spora_calendar_history.py --checkpoint $common[1] --prior $common[3] --output runs/spora-calendar-history-v2
+.\.venv\Scripts\python.exe -u scripts/spora_calendar_history_chat.py --checkpoint $common[1] --individual runs/spora-calendar-history-v2/person-0-world-0.pt
 ```
+
+在示例个体里，这两条问句可以查同一个生效日。
+
+- 只按截至2026-01-04已收到的记录，2026-01-02对小林有效的饮品是什么？
+- 帮我查小林在2026年1月2日当天登记的饮料是哪种？
