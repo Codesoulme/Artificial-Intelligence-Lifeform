@@ -31,6 +31,14 @@
 
 Windows 管道首轮受系统默认编码影响。明确使用 UTF-8 后，独立控制台进程正确回答「咖啡」「果汁」并拒绝未登记姓名，退出后保存文件的摘要一致。50 项日期、版本读取和检查点回归通过。
 
+## 持续写入和恢复
+
+中文日期入口可以从便携个体建立独立的 SQLite 存储。每笔显式观察沿用神经写入控制器，默认附上本机当日日期。观察、日期索引和修订号在同一事务提交，姓名和日期用于定位，答案仍由模型读取神经矩阵。已有同一天的多条记录按当天最后一条观察确定查询截止步。指定较早生效日时，要求该日已有观察坐标。待确认的历史事实继续沿用现有确认机制。
+
+实机在新事务个体追加「小林，牛奶」。第 5 步以更正写入，修订号变为 1，当日问句从历史矩阵读到了「牛奶」。源个体和解码器检查点的文件摘要一致。过期写入者被拒绝。分别在写首个张量后和事务提交后强制结束进程，前者恢复为空日历及零步观察，后者恢复为同一次新增观察及对应日期。53 项相关回归通过。
+
+独立进程打开同一数据库后，从观察步 5、0 和 4 分别回答「牛奶」「咖啡」「果汁」，对应当日新增、按旧有资料查询、按补录复盘旧日。实际修订和日期清单位于 `runs/spora-live-calendar-v1/individual.sqlite`。两个进程的问答记录保存为同目录的 `live-write.jsonl` 和 `reopened.jsonl`。
+
 ## 复现
 
 ```powershell
@@ -42,6 +50,11 @@ $common = @('--checkpoint', 'runs/spora-native-query-key-v1/bootstrap.pt', '--ou
 
 .\.venv\Scripts\python.exe -u scripts/audit_spora_calendar_history.py --checkpoint $common[1] --prior $common[3] --output runs/spora-calendar-history-v2
 .\.venv\Scripts\python.exe -u scripts/spora_calendar_history_chat.py --checkpoint $common[1] --individual runs/spora-calendar-history-v2/person-0-world-0.pt
+
+$db = 'runs/spora-live-calendar-example/individual.sqlite'
+$today = Get-Date -Format yyyy-MM-dd
+.\.venv\Scripts\python.exe -u scripts/spora_calendar_history_chat.py --checkpoint $common[1] --individual runs/spora-calendar-history-v2/person-0-world-0.pt --create-database $db --observe 小林 牛奶
+.\.venv\Scripts\python.exe -u scripts/spora_calendar_history_chat.py --checkpoint $common[1] --database $db --question "小林在$($today)的饮品是什么？"
 ```
 
 在示例个体里，这两条问句可以查同一个生效日。

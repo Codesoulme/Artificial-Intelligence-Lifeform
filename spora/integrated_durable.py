@@ -8,10 +8,13 @@ ordinary in-session changes but are not an authentication or tamper boundary.
 """
 from pathlib import Path
 from dataclasses import replace
+from datetime import date
 
 import torch
 
+from .calendar_history import ObservationCalendar
 from .durable import TensorStore
+from .growing import load
 from .integrated_checkpoint import (FORMAT, STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT, _file_sha256, _validate_binding,
                                     load_integrated, query_key_position_modules, value_position_modules)
 from .integrated_open_base import NativeSPORAMemoryReader
@@ -76,6 +79,14 @@ def _require_runtime(decoder, organism, state):
         raise ValueError('Durable runtime requires a native reader and controlled individual')
 
 
+def _observation_calendar(metadata, state):
+    if 'observation_calendar' not in metadata:
+        return None
+    if state.internal is None or state.internal.start_cursor != 0 or state.internal.event_keys is None:
+        raise ValueError('A calendar requires a complete observation index')
+    return ObservationCalendar.from_payload(metadata['observation_calendar'], state.cursor)
+
+
 class IntegratedDurableRuntime:
     def __init__(self, decoder, organism, state, store, bootstrap):
         _require_runtime(decoder, organism, state)
@@ -103,11 +114,16 @@ class IntegratedDurableRuntime:
         if _decoder_signature(self.decoder) != self._signature:
             raise ValueError('Decoder changed since durable state was bound')
 
-    def _commit_state(self, candidate, *, hook=None):
+    @property
+    def observation_calendar(self):
+        return _observation_calendar(self.store.metadata, self.state)
+
+    def _commit_state(self, candidate, *, metadata=None, hook=None):
+        _observation_calendar(self.store.metadata if metadata is None else metadata, candidate)
         previous = self.store.revision
         try:
             stats = self.store.commit(self.organism, candidate,
-                                      expected_revision=previous, hook=hook)
+                                      expected_revision=previous, metadata=metadata, hook=hook)
         except BaseException:
             # A hook can run after COMMIT. Keep the in-process snapshot aligned
             # with the durable revision before propagating the injected error.
@@ -123,10 +139,27 @@ class IntegratedDurableRuntime:
         self._check()
         return self.decoder.generate(*args, memory_state=self.state, **kwargs)
 
-    def observe_sourced(self, key, value, source, quality, valid_at=None, *, hook=None):
+    def observe_sourced(self, key, value, source, quality, valid_at=None, *, observed_on=None,
+                        effective_on=None, hook=None):
         self._check()
+        calendar = self.observation_calendar
+        metadata = None
+        if calendar is None:
+            if observed_on is not None or effective_on is not None:
+                raise ValueError('This individual has no observation calendar')
+        else:
+            observed_on = date.today() if observed_on is None else observed_on
+            extended = calendar.append(observed_on)
+            if effective_on is not None:
+                if type(effective_on) is not date or valid_at is not None:
+                    raise ValueError('Provide either a calendar day or an effective observation step')
+                if effective_on != observed_on:
+                    valid_at = calendar.locate(effective_on)
+                    if valid_at is None or calendar.days[valid_at] != effective_on:
+                        raise ValueError('The earlier effective date must exist in the observation calendar')
+            metadata = dict(self.store.metadata, observation_calendar=extended.payload())
         candidate, decision = observe_sourced(self.organism, self.state, key, value, source, quality, valid_at)
-        stats = self._commit_state(candidate, hook=hook)
+        stats = self._commit_state(candidate, metadata=metadata, hook=hook)
         return decision, stats
 
     def register_structured_text(self, codec_config, *, hook=None):
@@ -205,7 +238,7 @@ class IntegratedDurableRuntime:
         return None if slot is None else self.read_structured_text(slot)
 
 
-def create_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu'):
+def create_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu', calendar_individual=None):
     bootstrap = Path(bootstrap).resolve()
     before = _stat(bootstrap)
     metadata = _bootstrap_metadata(bootstrap)
@@ -216,6 +249,19 @@ def create_integrated_durable(database, bootstrap, base, model_dir, *, individua
         decoder, organism, state = load_integrated(bootstrap, base, model_dir, individual_device=individual_device)
         if _stat(bootstrap) != before:
             raise ValueError('Structural bootstrap changed during load')
+        if calendar_individual is not None:
+            imported, imported_state, archive = load(calendar_individual, individual_device)
+            if (not isinstance(archive, dict) or archive.get('decoder_checkpoint_sha256') != metadata['bootstrap_sha256']
+                    or imported.config != organism.config
+                    or address_basis_sha256(imported) != address_basis_sha256(organism)):
+                raise ValueError('Calendar individual is incompatible with the structural bootstrap')
+            calendar = _observation_calendar(archive, imported_state)
+            if calendar is None:
+                raise ValueError('Calendar individual has no saved observation dates')
+            _validate_binding(imported, metadata['base_sha256'], metadata['feature_config_sha256'],
+                              metadata['feature_variant_sha256'])
+            organism, state = imported, imported_state
+            metadata['observation_calendar'] = calendar.payload()
         _require_runtime(decoder, organism, state)
         store = TensorStore.create(database, organism, state, metadata)
         return IntegratedDurableRuntime(decoder, organism, state, store, bootstrap)
@@ -238,8 +284,12 @@ def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_
     store = TensorStore(database)
     try:
         organism, state, metadata, _ = store.read(device=individual_device)
-        if metadata != expected:
+        if not isinstance(metadata, dict):
+            raise ValueError('Invalid durable state metadata')
+        binding = {key: value for key, value in metadata.items() if key != 'observation_calendar'}
+        if binding != expected:
             raise ValueError('Durable state and structural bootstrap do not match')
+        _observation_calendar(metadata, state)
         decoder, reference, _ = load_integrated(bootstrap, base, model_dir, individual_device=individual_device)
         if _stat(bootstrap) != before:
             raise ValueError('Structural bootstrap changed during load')

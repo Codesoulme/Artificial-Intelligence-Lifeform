@@ -2,17 +2,18 @@ import tempfile
 import unittest
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
 
 import torch
 
 from spora.durable import RevisionConflict
-from spora.growing import new_state
-from spora.integrated_checkpoint import save_integrated
+from spora.growing import new_state, save
+from spora.integrated_checkpoint import _file_sha256, load_integrated, save_integrated
 from spora.integrated_durable import create_integrated_durable, load_integrated_durable
 from spora.integrated_open_base import NativeSPORAMemoryReader
-from spora.internal_memory import WriteControl, attach
+from spora.internal_memory import WriteControl, attach, enable_event_key_index, read_provenance
 from spora.memory_output import MemoryOutputAdapter
 from spora.language_training import frozen_digest
 from spora.structure_transfer import SPORALayerReplacement
@@ -52,8 +53,16 @@ class IntegratedDurableTests(unittest.TestCase):
         model.config = SimpleNamespace(hidden_size=3, num_attention_heads=1)
         return model
 
-    def create(self):
-        return create_integrated_durable(self.database, self.bootstrap, self.base(), self.root)
+    def create(self, *, calendar=False):
+        seed = None
+        if calendar:
+            _, organism, state = load_integrated(self.bootstrap, self.base(), self.root)
+            state = enable_event_key_index(organism, state)
+            seed = self.root / 'calendar-seed.pt'
+            save(seed, organism, state, {'decoder_checkpoint_sha256': _file_sha256(self.bootstrap),
+                                        'observation_calendar': {'format': 'spora-observation-calendar-v1', 'days': []}})
+        return create_integrated_durable(self.database, self.bootstrap, self.base(), self.root,
+                                         calendar_individual=seed)
 
     def open(self):
         return load_integrated_durable(self.database, self.bootstrap, self.base(), self.root)
@@ -278,6 +287,25 @@ os._exit(0)
                 second.observe_sourced(5, 3, 'direct', 1.0)
             self.assertEqual(second.state.cursor, 0)
 
+    def test_calendar_commit_keeps_effective_and_observed_time_distinct(self):
+        first_day, next_day = date(2026, 1, 1), date(2026, 1, 3)
+        with self.create(calendar=True) as writer, self.open() as stale:
+            self.assertEqual(writer.observation_calendar.days, ())
+            writer.observe_sourced(4, 2, 'direct', 1., observed_on=first_day)
+            with self.assertRaises(RevisionConflict):
+                stale.observe_sourced(5, 3, 'direct', 1., observed_on=first_day)
+            self.assertEqual(stale.observation_calendar.days, ())
+            writer.observe_sourced(5, 3, 'direct', 1., observed_on=next_day, effective_on=first_day)
+            with self.assertRaisesRegex(ValueError, 'earlier effective date'):
+                writer.observe_sourced(6, 4, 'direct', 1., observed_on=next_day, effective_on=date(2026, 1, 2))
+            with self.assertRaisesRegex(ValueError, 'nondecreasing'):
+                writer.observe_sourced(6, 4, 'direct', 1., observed_on=first_day)
+            self.assertEqual(writer.store.revision, 2)
+        with self.open() as restored:
+            self.assertEqual(restored.observation_calendar.days, (first_day, next_day))
+            self.assertEqual(restored.state.cursor, 2)
+            self.assertEqual(read_provenance(restored.organism, restored.state, 5, 1)['valid_at'], 0)
+
     def test_decoder_mutation_and_bootstrap_change_block_commit(self):
         with self.create() as runtime:
             layer = runtime.decoder.base.model.layers[1]
@@ -307,6 +335,7 @@ os._exit(0)
     def test_process_termination_before_and_after_commit(self):
         code = r'''
 import os, sys
+from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
 from tests.test_integrated_open_base import Base
@@ -317,16 +346,17 @@ base.config = SimpleNamespace(hidden_size=3, num_attention_heads=1)
 runtime = load_integrated_durable(root/'individual.sqlite', root/'bootstrap.pt', base, root)
 def stop(stage):
     if stage == sys.argv[2]: os._exit(42)
-runtime.observe_sourced(4, 2, 'direct', 1.0, hook=stop)
+runtime.observe_sourced(4, 2, 'direct', 1.0, observed_on=date(2026, 1, 3), hook=stop)
 os._exit(0)
 '''
-        with self.create() as runtime:
+        with self.create(calendar=True) as runtime:
             initial = frozen_digest(runtime.organism, runtime.state)
         failed = subprocess.run([sys.executable, '-c', code, str(self.root), 'after_first_tensor'],
                                 capture_output=True, timeout=60)
         self.assertEqual(failed.returncode, 42, failed.stderr.decode(errors='replace'))
         with self.open() as restored:
             self.assertEqual(restored.state.cursor, 0)
+            self.assertEqual(restored.observation_calendar.days, ())
             self.assertEqual(frozen_digest(restored.organism, restored.state), initial)
         committed = subprocess.run([sys.executable, '-c', code, str(self.root), 'after_commit'],
                                    capture_output=True, timeout=60)
@@ -334,6 +364,7 @@ os._exit(0)
         with self.open() as restored:
             self.assertEqual(restored.state.cursor, 1)
             self.assertEqual(restored.store.revision, 1)
+            self.assertEqual(restored.observation_calendar.days, (date(2026, 1, 3),))
 
 
 if __name__ == '__main__':

@@ -44,12 +44,20 @@ class ObservationCalendar:
                        for day in payload['days'])):
             raise ValueError('Calendar must describe every observation in the saved individual')
         days = tuple(date.fromisoformat(day) for day in payload['days'])
-        if not days or any(a > b for a, b in zip(days, days[1:])):
+        if any(a > b for a, b in zip(days, days[1:])):
             raise ValueError('Calendar dates must be nondecreasing')
         return cls(days)
 
+    def payload(self):
+        return {'format': 'spora-observation-calendar-v1', 'days': [day.isoformat() for day in self.days]}
+
+    def append(self, day):
+        if type(day) is not date or (self.days and day < self.days[-1]):
+            raise ValueError('Observation date must be a nondecreasing calendar day')
+        return ObservationCalendar((*self.days, day))
+
     def locate(self, day):
-        if not self.days[0] <= day <= self.days[-1]:
+        if not self.days or not self.days[0] <= day <= self.days[-1]:
             return None
         return bisect_right(self.days, day) - 1
 

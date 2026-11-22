@@ -1,6 +1,7 @@
 """Read a saved SPORA individual's dated memories from Chinese questions."""
 
 import argparse
+from datetime import date
 import json
 import sys
 from pathlib import Path
@@ -11,13 +12,14 @@ sys.path[:0] = [str(ROOT), str(ROOT / 'scripts'), str(ROOT / 'runs/open-base-dep
 import torch
 from transformers import AutoTokenizer
 
-from scripts.audit_qwen_compatible_natural_memory_20261121 import answer
+from scripts.audit_qwen_compatible_natural_memory_20261121 import WORDS, answer
 from scripts.deepseek_local_baseline import MODEL, sha
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.spora_event_scan_selector import select_event
 from spora.calendar_history import ObservationCalendar, resolve_calendar_question
 from spora.growing import load
 from spora.integrated_checkpoint import load_integrated_runtime
+from spora.integrated_durable import create_integrated_durable, load_integrated_durable
 from spora.named_address import address_basis_sha256
 
 
@@ -54,20 +56,11 @@ def read_calendar(decoder, tokenizer, organism, state, calendar, question):
     return result
 
 
-def main(args):
-    for stream in (sys.stdin, sys.stdout):
-        if not stream.isatty():
-            stream.reconfigure(encoding='utf-8')
-    torch.set_num_threads(2)
-    organism, state, calendar = load_calendar_state(args.individual, sha(args.checkpoint))
-    tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
-    runtime = load_integrated_runtime(args.checkpoint, load_full_streamed(), MODEL)
-    decoder = runtime.decoder.eval().requires_grad_(False)
-    if (organism.config != runtime.organism.config
-            or address_basis_sha256(organism) != address_basis_sha256(runtime.organism)):
-        raise ValueError('The individual is incompatible with the decoder checkpoint')
-    if args.question:
-        for question in args.question:
+def console(decoder, tokenizer, organism, state, calendar, questions):
+    if calendar is None or not hasattr(organism, 'identity_fingerprints'):
+        raise ValueError('Calendar history requires dates and enrolled names in the saved individual')
+    if questions:
+        for question in questions:
             print(json.dumps(read_calendar(decoder, tokenizer, organism, state, calendar, question),
                              ensure_ascii=False), flush=True)
         return
@@ -85,9 +78,60 @@ def main(args):
         print(f'孢子：{response}', flush=True)
 
 
+def main(args):
+    for stream in (sys.stdin, sys.stdout):
+        if not stream.isatty():
+            stream.reconfigure(encoding='utf-8')
+    torch.set_num_threads(2)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
+    if args.database or args.create_database:
+        base = load_full_streamed().eval().requires_grad_(False)
+        if args.create_database:
+            runtime = create_integrated_durable(args.create_database, args.checkpoint, base, MODEL,
+                                                calendar_individual=args.individual)
+        else:
+            runtime = load_integrated_durable(args.database, args.checkpoint, base, MODEL)
+        with runtime:
+            if args.observe:
+                name, value = args.observe
+                if runtime.observation_calendar is None or not hasattr(runtime.organism, 'identity_fingerprints'):
+                    raise ValueError('Explicit observations require saved dates and enrolled names')
+                key = runtime.organism.identity_fingerprints.lookup(name)
+                if key is None or value not in WORDS:
+                    raise ValueError('Use an enrolled name and a supported beverage value')
+                decision, stats = runtime.observe_sourced(key, WORDS.index(value), 'direct', 1.,
+                                                         effective_on=args.effective_on)
+                print(json.dumps({'observation': decision, 'revision': stats['revision'],
+                                  'observed_on': runtime.observation_calendar.days[-1].isoformat()},
+                                 ensure_ascii=False))
+                if not args.question:
+                    return
+            console(runtime.decoder, tokenizer, runtime.organism, runtime.state, runtime.observation_calendar,
+                    args.question)
+        return
+    organism, state, calendar = load_calendar_state(args.individual, sha(args.checkpoint))
+    runtime = load_integrated_runtime(args.checkpoint, load_full_streamed(), MODEL)
+    if (organism.config != runtime.organism.config
+            or address_basis_sha256(organism) != address_basis_sha256(runtime.organism)):
+        raise ValueError('The individual is incompatible with the decoder checkpoint')
+    console(runtime.decoder.eval().requires_grad_(False), tokenizer, organism, state, calendar, args.question)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--checkpoint', type=Path, required=True)
-    parser.add_argument('--individual', type=Path, required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument('--individual', type=Path, help='Read a portable calendar individual')
+    source.add_argument('--database', type=Path, help='Reopen a transactional calendar individual')
+    parser.add_argument('--create-database', type=Path, help='Start a new transactional copy of --individual')
+    parser.add_argument('--observe', nargs=2, metavar=('NAME', 'BEVERAGE'), help='Record an explicit direct observation')
+    parser.add_argument('--effective-on', type=date.fromisoformat, help='Earlier recorded effective date, YYYY-MM-DD')
     parser.add_argument('--question', action='append', help='Read a Chinese question and print the result')
-    main(parser.parse_args())
+    args = parser.parse_args()
+    if args.create_database and args.individual is None:
+        parser.error('--create-database requires --individual')
+    if args.observe and not (args.database or args.create_database):
+        parser.error('--observe requires --database or --create-database')
+    if args.effective_on and not args.observe:
+        parser.error('--effective-on requires --observe')
+    main(args)
