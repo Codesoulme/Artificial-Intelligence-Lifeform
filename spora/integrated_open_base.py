@@ -362,6 +362,22 @@ class IntegratedOpenBase(nn.Module):
         source.read_memory_at_output = at_output
         wrapper.feedforward_fraction = float(fraction)
 
+    @staticmethod
+    def _selected_memory_banks(memory_slots, read_mask, bank_count):
+        if memory_slots is None:
+            return range(bank_count), None
+        slots = memory_slots.tolist()
+        used = slots
+        if read_mask is not None:
+            mask = read_mask.tolist()
+            if len(mask) == 1 or len(slots) == 1:
+                used = slots if any(mask) else []
+            elif len(mask) == len(slots):
+                used = [slot for slot, active in zip(slots, mask, strict=True) if active]
+        banks = sorted({slot for slot in used if 0 <= slot < bank_count})
+        remap = {slot: index for index, slot in enumerate(banks)}
+        return banks, memory_slots.new_tensor([remap.get(slot, -1) for slot in slots])
+
     @contextmanager
     def _snapshot(self, state, addresses, current_only, read_mask, memory_slots,
                   preserve_memory_grad=False):
@@ -386,15 +402,14 @@ class IntegratedOpenBase(nn.Module):
                                          or memory_slots.dtype != torch.long or memory_slots.ndim != 1
                                          or not memory_slots.numel()):
             raise ValueError('Memory slots must be a nonempty integer vector')
-        snapshot = (lambda tensor: tensor.clone() if preserve_memory_grad else tensor.detach().clone())
-        matrices = tuple(tuple(snapshot(t) for t in
-                               [state.current[site]] + ([] if current_only else
-                                [history_site(page, site)[0] for page in state.pages]))
-                         for site in range(2))
         with torch.no_grad():
             fixed_addresses = None if addresses is None else tuple(address.detach().clone() for address in addresses)
             fixed_mask = None if read_mask is None else read_mask.detach().clone()
-            fixed_slots = None if memory_slots is None else memory_slots.detach().clone()
+        snapshot = (lambda tensor: tensor.clone() if preserve_memory_grad else tensor.detach().clone())
+        bank_count = 1 if current_only else len(state.pages) + 1
+        banks, fixed_slots = self._selected_memory_banks(memory_slots, fixed_mask, bank_count)
+        matrices = tuple(tuple(snapshot(state.current[site] if slot == 0 else history_site(state.pages[slot - 1], site)[0])
+                               for slot in banks) for site in range(2))
         token = self._memory_context.set((matrices, fixed_addresses, fixed_mask, fixed_slots))
         try:
             yield

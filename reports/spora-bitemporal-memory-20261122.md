@@ -55,6 +55,21 @@ Windows 管道首轮受系统默认编码影响。明确使用 UTF-8 后，独�
 
 新进程在约 70 秒内重载并逐条复现这六条问答。58 项相关回归通过，覆盖额外验证拒绝、封存提交前回滚、重载后保存新记录。这轮验证了显式历史巩固，覆盖两页有限记录。
 
+## 按所选页准备解码器的记忆
+
+日期路由确定观察步后，本来已知道只需读哪一页。原解码入口仍会展开全部历史页，并把全部矩阵传入该次生成。现在根据显式页请求与批内读取掩码，先确定需要固定的矩阵，再把页号映射到精简的矩阵列表。查询当前记录时无需展开历史页。需要由模型在多页之间选择时，仍提供完整的候选矩阵。
+
+隔离源码测试通过 60 项回归，覆盖显式页、当前值、同批次不同页及遮蔽读取。时间对照使用重载过的 132 次观察个体。另用同一份封存张量重复构造 1、3、8、16 页，单独测量 CPU 上准备矩阵的耗时。单页生成的工作量与实际选中的页数相关。该微基准只覆盖解码入口准备矩阵的阶段。
+
+| 查询 | 封存页 | 准备时间中位数，改造前 → 改造后 | 历史矩阵展开次数 |
+|---|---:|---:|---:|
+| 历史值 | 1 | 290 → 275 微秒 | 2 → 2 |
+| 历史值 | 8 | 1,711 → 280 微秒 | 16 → 2 |
+| 历史值 | 16 | 3,576 → 280 微秒 | 32 → 2 |
+| 当前值 | 16 | 3,413 → 49 微秒 | 32 → 0 |
+
+实机六条日期问答的路由、事件和可见回答逐项一致。预热后交错测量三轮，六条问答的总耗时中位数分别为 1.18 和 1.19 秒，生成仍占主要时间。这组实机数据未测到端到端提速。逐题数据及重复测量见 `runs/spora-selected-history-v3/result.json`。
+
 ## 复现
 
 ```powershell
@@ -79,6 +94,8 @@ $growth = 'runs/spora-calendar-growth-example'
 $sleep = 'runs/spora-calendar-sleep-example'
 .\.venv\Scripts\python.exe -u scripts/audit_spora_calendar_sleep.py --checkpoint $common[1] --source $growth --output $sleep
 .\.venv\Scripts\python.exe -u scripts/audit_spora_calendar_sleep.py --checkpoint $common[1] --source $growth --output $sleep --reopen
+
+.\.venv\Scripts\python.exe -u scripts/audit_spora_selected_history_pages.py --checkpoint $common[1] --growth $growth --sleep $sleep --output runs/spora-selected-history-example/result.json
 ```
 
 在示例个体里，这两条问句可以查同一个生效日。

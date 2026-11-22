@@ -1,11 +1,13 @@
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import torch
 from torch import nn
 
 from spora.integrated_open_base import IntegratedOpenBase, NativeSPORAMemoryReader, ScaledOpenBaseMemory
 from spora.open_base_memory import OpenBaseMemory, memory_hooks
+from spora.sleep_memory import history_site
 
 
 class Decoder(nn.Module):
@@ -350,6 +352,27 @@ class IntegratedOpenBaseTests(unittest.TestCase):
                       torch.tensor([0, 0, 0], dtype=torch.long), torch.tensor([-1, 0]), torch.tensor([0, 1])):
             with self.subTest(slots=slots), self.assertRaises((ValueError, RuntimeError)):
                 model(x, memory_state=memory, memory_slots=slots, current_only=True)
+
+    def test_explicit_memory_slots_materialize_only_the_active_pages(self):
+        model = IntegratedOpenBase(Base(), make_reader(), (0, 2))
+        memory = make_state(1.)
+        memory.pages = [[[torch.eye(3)[None] * scale] for _ in range(2)] for scale in (2., 3., 4.)]
+        x = torch.ones(3, 1, 3)
+        kwargs = {'memory_state': memory, 'memory_slots': torch.tensor([0, 2, 3]),
+                  'memory_read_mask': torch.tensor([True, False, True])}
+        with patch.object(model, '_selected_memory_banks', side_effect=lambda slots, mask, count: (range(count), slots)):
+            reference = model(x, **kwargs)
+        with patch('spora.integrated_open_base.history_site', wraps=history_site) as materialize:
+            result = model(x, **kwargs)
+            torch.testing.assert_close(result, reference, atol=0, rtol=0)
+            self.assertEqual(materialize.call_count, 2)
+            self.assertTrue(all(call.args[0] is memory.pages[2] for call in materialize.call_args_list))
+            materialize.reset_mock()
+            plain = model(x)
+            output = model(x, memory_state=memory, memory_slots=torch.tensor([99]),
+                           memory_read_mask=torch.tensor([False]))
+            torch.testing.assert_close(output, plain, atol=0, rtol=0)
+            materialize.assert_not_called()
 
     def test_per_request_memory_slots_select_current_or_history(self):
         model = IntegratedOpenBase(Base(), make_reader(), (0, 2))
