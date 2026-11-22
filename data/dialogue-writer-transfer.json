@@ -1,0 +1,30 @@
+{
+  "augmentation": {
+    "appointment": {
+      "first": ["登记事项在{place}举行，时间记作{day}{time}。", "这场活动用{place}，请登记在{day}{time}。"],
+      "update": [["place","地点有调整，从{old_place}换到{place}。原时间有效。"],["day","time","原来的时间不能用，更新为{day}{time}，地点保持。"]]
+    },
+    "parcel": {
+      "first": ["寄件单里收件名为{person}，送到{place}，总件数是{quantity}。","寄往{place}的这批货收件人填{person}，共{quantity}。","姓名栏填{person}，收件地址{place}，装{quantity}画纸。"],
+      "update": [["person","别用旧名{old_person}，这批货请交给{person}，另外两项有效。"],["person","单上写的{old_person}收不了，换成{person}，别的照常。"],["quantity","重新清点后只寄{quantity}，别的信息保持原样。"],["quantity","发货数量更正为{quantity}，不要动收件人和地址。"],["place","原地址{old_place}已无效，转送{place}，名字和数量保持。"]]
+    },
+    "route": {
+      "first": ["队伍在{place}会合，务必携带{gear}，出发后统一{direction}前进。","先备齐{gear}到{place}，之后所有人{direction}继续。","本次集合点是{place}，所需物品{gear}，行进方向{direction}。"],
+      "update": [["place","不要去{old_place}，队伍改在{place}碰头，装备方向保持。"],["gear","携带的东西由{old_gear}换成{gear}，行走方向与地点不改。"],["gear","装备清单更新，请改带{gear}，出发地和方向按原定。"],["direction","前进安排有变，现在统一{direction}行进，其他照常。"]]
+    }
+  },
+  "held": [
+    {"kind":"appointment","first":"演示借用登记在星期四中午一点，场地是霜竹创客间。","fields":{"day":"星期四","time":"中午一点","place":"霜竹创客间"},"update":"场地临时腾不出来，麻烦改到经纬教室，具体时间维持原安排。","changes":{"place":"经纬教室"},"question":"先说场地，再写日期与钟点，两项用斜杠隔开。","format":"{place} / {day}{time}"},
+    {"kind":"appointment","first":"桶鼓课请大家周三清晨八点在柳纹活动站签到。","fields":{"day":"周三","time":"清晨八点","place":"柳纹活动站"},"update":"那时老师赶不过来，签到延至星期日傍晚六点，活动站继续使用。","changes":{"day":"星期日","time":"傍晚六点"},"question":"请按地点、日期、时间三行汇报签到安排。","format":"地点：{place}\n日期：{day}\n时间：{time}"},
+    {"kind":"appointment","first":"松岚画廊的导览登记在周日晚上十点。","fields":{"day":"周日","time":"晚上十点","place":"松岚画廊"},"update":"晚上十点那场不办了，调整为周三午后五点，画廊不变。","changes":{"day":"周三","time":"午后五点"},"question":"先把画廊名称放开头，再给来访者写出时间，逗号分隔。","format":"{place}，{day}{time}"},
+    {"kind":"appointment","first":"周五上午七点去溪石园参加小组练习。","fields":{"day":"周五","time":"上午七点","place":"溪石园"},"update":"溪石园要维修，新的集合处是云栅大厅。约的那天与钟点不用动。","changes":{"place":"云栅大厅"},"question":"只回复集合地点。","format":"{place}"},
+    {"kind":"parcel","first":"送到鹅卵石巷的模型有十二套，登记收货人是闻渚。","fields":{"person":"闻渚","place":"鹅卵石巷","quantity":"十二套"},"update":"闻渚不方便收货，请让梁琮签收，套数和送达位置按原单。","changes":{"person":"梁琮"},"question":"用三行给出地址、件数、收货人，按这个顺序。","format":"地址：{place}\n件数：{quantity}\n收货人：{person}"},
+    {"kind":"parcel","first":"件单留的是安栎，要把八份试稿发往碧瓦西街。","fields":{"person":"安栎","place":"碧瓦西街","quantity":"八份"},"update":"印厂说只交付十一份，其它栏都按之前的。","changes":{"quantity":"十一份"},"question":"要寄多少份？只给数量。","format":"{quantity}"},
+    {"kind":"parcel","first":"包裹收件处是风漏胡同，送给池玥，货是十三包。","fields":{"person":"池玥","place":"风漏胡同","quantity":"十三包"},"update":"地址单需要修订，往听雨东坊送。包数和收件名仍有效。","changes":{"place":"听雨东坊"},"question":"按数量、姓名、地址顺序，用斜杠分隔。","format":"{quantity} / {person} / {place}"},
+    {"kind":"parcel","first":"提醒我把十四袋材料交给贺昀，收货地址照塘溪南路写。","fields":{"person":"贺昀","place":"塘溪南路","quantity":"十四袋"},"update":"名单换成单榛签字，货量和去处不改。","changes":{"person":"单榛"},"question":"现在谁来签收？只给姓名。","format":"{person}"},
+    {"kind":"route","first":"队伍在彩棉楼等人，记得备上护膝，之后全员向东北行进。","fields":{"place":"彩棉楼","gear":"护膝","direction":"向东北"},"update":"不用护膝了，换成指北针。地点以及路线沿用。","changes":{"gear":"指北针"},"question":"请依次报装备、方向、集合点，用逗号分隔。","format":"{gear}，{direction}，{place}"},
+    {"kind":"route","first":"计划先在藤砖广场碰面，出发后向西南走；所有人自带登山杖。","fields":{"place":"藤砖广场","gear":"登山杖","direction":"向西南"},"update":"场地占用，请大家在卵石长廊等着。路线和装备同原计划。","changes":{"place":"卵石长廊"},"question":"只回新的见面地点。","format":"{place}"},
+    {"kind":"route","first":"从芙蓉坡集合，然后朝东南步行，请带防晒帽。","fields":{"place":"芙蓉坡","gear":"防晒帽","direction":"朝东南"},"update":"步行改往西北，集合点和物品照原计划。","changes":{"direction":"往西北"},"question":"先给方向，再给装备，分两行。","format":"方向：{direction}\n装备：{gear}"},
+    {"kind":"route","first":"每个人带测距尺到纸影亭，碰头以后朝西南前进。","fields":{"place":"纸影亭","gear":"测距尺","direction":"朝西南"},"update":"准备品改成防潮袋，碰头点和行走方向原样。","changes":{"gear":"防潮袋"},"question":"把需要带的物品放在第一句，再说场地和方向。","format":"请带{gear}。在{place}碰头后{direction}走。"}
+  ]
+}
