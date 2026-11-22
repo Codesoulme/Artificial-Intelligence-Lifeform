@@ -62,6 +62,24 @@ class EventKeyIndexTests(unittest.TestCase):
         self.assertEqual(result['reason'], 'insufficient_effective_candidates')
         read.assert_called_once_with(self.model, state, [], 16)
 
+    def test_known_by_bounds_observation_order_independently_of_validity(self):
+        state, snapshots = self.writes()
+        rows = [{'action': 'new', 'source': 'direct', 'valid_at': 0},
+                {'action': 'correct', 'source': 'direct', 'valid_at': 1}]
+        with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=rows) as read:
+            self.assertEqual(select_event(self.model, state, 2, 'effective_latest', as_of=1)['event_time'], 2)
+            read.assert_called_once_with(self.model, state, [(2, 0), (2, 2)], 16)
+        with patch('scripts.spora_event_scan_selector.read_provenance_batch', return_value=rows[:1]) as read:
+            replay = select_event(self.model, state, 2, 'effective_latest', as_of=1, known_by=1, max_scan=2)
+            self.assertEqual(replay['event_time'], 0)
+            self.assertEqual(replay['history_events'], 2)
+            read.assert_called_once_with(self.model, state, [(2, 0)], 16)
+            self.assertEqual(replay, select_event(self.model, snapshots[2], 2, 'effective_latest', as_of=1))
+        with self.assertRaises(ValueError):
+            select_event(self.model, state, 2, 'latest', known_by=1)
+        with self.assertRaises(ValueError):
+            select_event(self.model, state, 2, 'effective_latest', as_of=1, known_by=state.cursor)
+
     def test_indexed_unknown_event_must_not_be_silently_skipped(self):
         state, _ = self.writes()
         rows = [{'action': 'new', 'source': 'direct', 'valid_at': 0},

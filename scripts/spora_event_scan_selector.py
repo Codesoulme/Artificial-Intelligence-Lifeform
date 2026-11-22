@@ -2,10 +2,13 @@
 from spora.internal_memory import read_provenance_batch
 
 
-def select_event(model, state, key, order, as_of=None, max_scan=4096, batch_size=16):
+def select_event(model, state, key, order, as_of=None, max_scan=4096, batch_size=16, *, known_by=None):
     """Find an observation or effective-time candidate.
 
-    Observation order is not effective time. A neural unknown may hide an event;
+    ``as_of`` bounds effective time. ``known_by`` independently bounds which
+    observations were available, inclusively. Later adjudications are not dated
+    in this format, so past-knowledge queries cannot apply them retroactively.
+    A neural unknown may hide an event;
     even a returned candidate cannot certify completeness or correctness.
     """
     if order not in ('first', 'latest', 'previous', 'effective_first', 'effective_latest', 'effective_previous'):
@@ -19,11 +22,14 @@ def select_event(model, state, key, order, as_of=None, max_scan=4096, batch_size
         raise ValueError('Effective-time selection requires a nonnegative as-of time')
     if not effective and as_of is not None:
         raise ValueError('As-of time only applies to effective-time selection')
+    if known_by is not None and (not effective or type(known_by) is not int or not 0 <= known_by < state.cursor):
+        raise ValueError('Known-by time requires an observed event and effective-time selection')
+    horizon = state.cursor if known_by is None else known_by + 1
     if state.internal.start_cursor != 0:
         return {'status': 'abstain', 'reason': 'incomplete_provenance_history'}
-    if state.cursor > max_scan:
+    if horizon > max_scan:
         return {'status': 'abstain', 'reason': 'scan_budget_exceeded'}
-    resolutions = getattr(model, 'historical_resolutions', None)
+    resolutions = getattr(model, 'historical_resolutions', None) if known_by is None else None
     if resolutions is not None:
         from spora.historical_resolutions import HistoricalResolutions
         if not isinstance(resolutions, HistoricalResolutions):
@@ -34,10 +40,12 @@ def select_event(model, state, key, order, as_of=None, max_scan=4096, batch_size
     # all events and are never silently backfilled with guessed keys.
     event_keys = getattr(state.internal, 'event_keys', None)
     if event_keys is None:
-        events = list(range(state.cursor))
+        if known_by is not None:
+            return {'status': 'abstain', 'reason': 'complete_event_key_index_required'}
+        events = list(range(horizon))
     else:
         state.internal.validate(model, state)
-        indexed = __import__('torch').cat(event_keys)[:state.cursor]
+        indexed = __import__('torch').cat(event_keys)[:horizon]
         events = (indexed == key).nonzero(as_tuple=True)[0].tolist()
     rows = read_provenance_batch(model, state, [(key, event) for event in events], batch_size)
     if len(rows) != len(events):
@@ -84,7 +92,7 @@ def select_event(model, state, key, order, as_of=None, max_scan=4096, batch_size
         effective_time = times[index]
         return {'status': 'experimental_candidate', 'event_time': effective_candidates[effective_time],
                 'effective_time': effective_time, 'candidate_count': len(times),
-                'checked_events': len(events), 'history_events': state.cursor,
+                'checked_events': len(events), 'history_events': horizon,
                 'warning': 'neural_unknown_may_hide_events;effective_time_decoded_from_provenance'}
     index = {'first': 0, 'latest': -1, 'previous': -2}[order]
     if len(candidates) < (2 if order == 'previous' else 1):
