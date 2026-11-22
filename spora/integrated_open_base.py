@@ -271,8 +271,7 @@ class IntegratedOpenBase(nn.Module):
     def anchored_attention_layout(self):
         if self._anchor_layout is None:
             return None
-        layers, window, prefix = self._anchor_layout
-        return {'layers': list(layers), 'window': window, 'prefix': prefix}
+        return dict(self._anchor_layout, layers=list(self._anchor_layout['layers']))
 
     def configure_anchored_attention(self, layout):
         """Bind bounded attention to the migrated decoder's generation path."""
@@ -282,7 +281,8 @@ class IntegratedOpenBase(nn.Module):
             raise ValueError('Anchored attention is already configured')
         spec = validate_anchor_layout(layout, self.compatible_block_indices, self.position_table_max_position)
         if spec is not None:
-            install_anchor_mask(self, *spec)
+            install_anchor_mask(self, spec['layers'], spec['window'], spec['prefix'],
+                                snapshot=spec.get('snapshot', 0), full_prefill=spec.get('full_prefill', False))
             self._anchor_layout = spec
 
     def migrate_pretrained_blocks(self, indices=None):
@@ -423,7 +423,9 @@ class IntegratedOpenBase(nn.Module):
 
             settings = kwargs.get('generation_config') or self.base.generation_config
             if kwargs.get('use_cache', settings.use_cache) and kwargs.get('past_key_values') is None:
-                kwargs['past_key_values'] = anchored_cache(self.base.config, *self._anchor_layout)
+                layout = self._anchor_layout
+                kwargs['past_key_values'] = anchored_cache(self.base.config, layout['layers'],
+                                                           layout['window'], layout['prefix'])
         if memory_output_logits is not None:
             if self.output_adapter is None:
                 raise ValueError('Memory output adapter is not attached')

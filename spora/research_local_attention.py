@@ -41,13 +41,55 @@ def local_attention(decoder, indices, window):
         config.sliding_window = previous_window
 
 
-def install_anchor_mask(decoder, indices, window, prefix):
+def _validate_landmarks(window, prefix, landmarks):
+    if (not isinstance(landmarks, tuple) or any(type(i) is not int or i < prefix for i in landmarks)
+            or landmarks != tuple(sorted(set(landmarks))) or prefix + len(landmarks) >= window - 1):
+        raise ValueError('Landmarks must be distinct ordered positions within the anchor budget')
+
+
+def _keep_key(query, keys, window, prefix, landmarks):
+    distance = query - keys
+    if not landmarks:
+        return (distance >= 0) & ((keys < prefix) | (distance < window - prefix))
+    anchors = keys.new_tensor(landmarks)
+    count = torch.searchsorted(anchors, keys, right=True)
+    pinned = (keys < prefix) | ((count > 0) & (anchors[(count - 1).clamp_min(0)] == keys))
+    # For a non-landmark key k, only landmarks at or before k displace it.
+    # The predicate is monotonic in q, so an evicted key can never be needed later.
+    return (distance >= 0) & (pinned | (distance + prefix + count < window))
+
+
+@torch.no_grad()
+def _attended_landmarks(module, kwargs, window, prefix, count):
+    """Rank omitted positions using normalized attention from the prompt's last 16 queries."""
+    hidden = kwargs['hidden_states'].to(module.qkv.weight.dtype)
+    if hidden.shape[0] != 1:
+        raise ValueError('Snapshot anchors currently support one prompt per generation')
+    queries, keys, _ = module.project(hidden, kwargs['position_embeddings'], kwargs['position_ids'])
+    length = keys.shape[-2]
+    observations = min(16, length)
+    groups = queries.shape[1] // keys.shape[1]
+    queries = queries[:, :, -observations:].unflatten(1, (keys.shape[1], groups)).float()
+    scores = torch.einsum('bhgqd,bhkd->bhgqk', queries, keys.float()) * module.scaling
+    positions = kwargs['cache_position']
+    scores.masked_fill_(positions[None, :] > positions[-observations:, None], -torch.inf)
+    attention = scores.softmax(-1).mean(dim=(0, 1, 2, 3))
+    clustered = torch.nn.functional.avg_pool1d(attention[None, None], 5, stride=1, padding=2)[0, 0]
+    stop = length - (window - prefix - count - 1)
+    indices = clustered[prefix:stop].topk(count).indices + prefix
+    return tuple(sorted(indices.tolist()))
+
+
+def install_anchor_mask(decoder, indices, window, prefix, *, landmarks=(), snapshot=0, full_prefill=False):
     """Install causal prefix and recent-token masks on selected decoder layers."""
     from .integrated_checkpoint import _compatible_blocks
 
     blocks = dict(_compatible_blocks(decoder))
     if not 0 < prefix < window or any(index not in blocks for index in indices):
         raise ValueError('Prefix attention requires compatible decoder layers and a nonempty recent window')
+    _validate_landmarks(window, prefix, landmarks)
+    if type(snapshot) is not int or not 0 <= snapshot < window - prefix - 1 or (landmarks and snapshot):
+        raise ValueError('Snapshot anchors require a separate observed-token budget')
 
     def mask_positions(module, args, kwargs):
         positions = kwargs['cache_position']
@@ -56,14 +98,21 @@ def install_anchor_mask(decoder, indices, window, prefix):
         past = 0 if layer is None else layer.get_seq_length()
         if past + positions.numel() <= window:
             return None
+        if (snapshot or full_prefill) and layer is None:
+            return None
+        if (snapshot or full_prefill) and past == 0:
+            if snapshot:
+                if not hasattr(layer, 'landmarks'):
+                    raise ValueError('Snapshot attention needs an anchored cache')
+                layer.landmarks = _attended_landmarks(module, kwargs, window, prefix, snapshot)
+            return None
         retained = getattr(layer, 'retained_positions', None)
         if retained is None:
             keys = torch.arange(positions[-1] + 1, device=positions.device)
         else:
             keys = torch.cat((retained, positions))
-        distance = positions[:, None] - keys
-        mask = (distance >= 0) & ((distance < window - prefix) | (keys < prefix))
-        mask = mask[None, None]
+        pinned = getattr(layer, 'landmarks', landmarks)
+        mask = _keep_key(positions[:, None], keys, window, prefix, pinned)[None, None]
         original = kwargs['attention_mask']
         if original is not None:
             original = original.index_select(-1, keys)
@@ -78,9 +127,10 @@ def install_anchor_mask(decoder, indices, window, prefix):
 
 
 @contextmanager
-def anchor_attention(decoder, indices, window, prefix):
+def anchor_attention(decoder, indices, window, prefix, *, landmarks=(), snapshot=0, full_prefill=False):
     """Apply the anchor mask for an isolated experiment."""
-    handles = install_anchor_mask(decoder, indices, window, prefix)
+    handles = install_anchor_mask(decoder, indices, window, prefix, landmarks=landmarks, snapshot=snapshot,
+                                  full_prefill=full_prefill)
     try:
         yield
     finally:
@@ -91,7 +141,8 @@ def anchor_attention(decoder, indices, window, prefix):
 def validate_anchor_layout(layout, compatible, position_limit):
     if layout is None:
         return None
-    if not isinstance(layout, dict) or set(layout) != {'layers', 'window', 'prefix'}:
+    required = {'layers', 'window', 'prefix'}
+    if not isinstance(layout, dict) or not required <= layout.keys() <= required | {'full_prefill', 'snapshot'}:
         raise ValueError('Invalid anchored attention layout')
     layers, window, prefix = (layout[key] for key in ('layers', 'window', 'prefix'))
     if (type(window) is not int or type(prefix) is not int or type(position_limit) is not int
@@ -100,19 +151,27 @@ def validate_anchor_layout(layout, compatible, position_limit):
             or any(type(index) is not int or index <= 0 or index not in compatible for index in layers)
             or len(set(layers)) != len(layers)):
         raise ValueError('Anchored attention needs compatible layers and a valid context window')
-    return tuple(sorted(layers)), window, prefix
+    snapshot = layout.get('snapshot', 0)
+    if type(layout.get('full_prefill', False)) is not bool or type(snapshot) is not int or not 0 <= snapshot < window - prefix - 1:
+        raise ValueError('Invalid anchored prefill options')
+    return dict(layout, layers=sorted(layers))
 
 
-def anchored_cache(config, indices, window, prefix):
+def anchored_cache(config, indices, window, prefix, *, landmarks=()):
     """Create isolated storage for append-only decoding under the anchor mask."""
     from transformers.cache_utils import DynamicCache, DynamicLayer
 
     if not 0 < prefix < window - 1 or any(index <= 0 or index >= config.num_hidden_layers for index in indices):
         raise ValueError('Anchored storage needs a full first layer and room for recent tokens')
+    _validate_landmarks(window, prefix, landmarks)
 
     class AnchoredLayer(DynamicLayer):
         retained_positions = None
         seen = 0
+
+        def __init__(self):
+            super().__init__()
+            self.landmarks = landmarks
 
         def update(self, key_states, value_states, cache_kwargs=None):
             positions = cache_kwargs['cache_position']
@@ -120,9 +179,8 @@ def anchored_cache(config, indices, window, prefix):
                              torch.cat((self.retained_positions, positions)))
             keys, values = super().update(key_states, value_states, cache_kwargs)
             self.seen += positions.numel()
-            recent = window - prefix - 1
-            if all_positions.numel() > prefix + recent:
-                keep = (all_positions < prefix) | (all_positions >= self.seen - recent)
+            if all_positions.numel() >= window:
+                keep = _keep_key(self.seen, all_positions, window, prefix, self.landmarks)
                 selected = keep.nonzero(as_tuple=True)[0]
                 self.keys = keys.index_select(-2, selected)
                 self.values = values.index_select(-2, selected)
@@ -140,6 +198,7 @@ def anchored_cache(config, indices, window, prefix):
             self.values = self.values[..., :0, :] if self.is_initialized else None
             self.seen = 0
             self.retained_positions = None
+            self.landmarks = landmarks
 
         def crop(self, max_length):
             raise ValueError('Anchored storage supports append-only generation')

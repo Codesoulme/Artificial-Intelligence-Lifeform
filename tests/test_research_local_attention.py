@@ -15,6 +15,38 @@ from spora.research_local_attention import anchor_attention, anchored_cache, loc
 @unittest.skipIf(Qwen2Config is None, 'requires the optional Transformers runtime')
 class LocalAttentionTests(unittest.TestCase):
     @torch.no_grad()
+    def test_distributed_landmarks_preserve_causality_and_cache_across_chunks(self):
+        torch.manual_seed(17)
+        config = Qwen2Config(vocab_size=19, hidden_size=16, intermediate_size=24, num_hidden_layers=3,
+                             num_attention_heads=4, num_key_value_heads=2, max_position_embeddings=32)
+        config._attn_implementation = 'sdpa'
+        decoder = IntegratedOpenBase(Qwen2ForCausalLM(config).eval(),
+                                     NativeSPORAMemoryReader(16, 8, .5), (0, 2)).eval()
+        decoder.migrate_pretrained_blocks()
+        tokens = torch.arange(16)[None]
+        original = decoder(tokens[:, :6], use_cache=False).logits
+        with anchor_attention(decoder, (1,), 6, 1, landmarks=(3, 9)):
+            expected = decoder(tokens, use_cache=False).logits
+            torch.testing.assert_close(decoder(tokens[:, :6], use_cache=False).logits, original, atol=0, rtol=0)
+            cache = anchored_cache(config, (1,), 6, 1, landmarks=(3, 9))
+            for start, stop in ((0, 2), (2, 6), (6, 7), (7, 11), (11, 14), (14, 16)):
+                actual = decoder(tokens[:, start:stop], past_key_values=cache, use_cache=True).logits
+                torch.testing.assert_close(actual, expected[:, start:stop], atol=1e-6, rtol=1e-5)
+                self.assertEqual(cache.layers[1].keys.shape[-2], min(stop, 5))
+            self.assertEqual(cache.layers[1].retained_positions.tolist(), [0, 3, 9, 14, 15])
+        with anchor_attention(decoder, (1,), 6, 1, snapshot=2):
+            full_prefill = decoder(tokens[:, :14], use_cache=False).logits
+            cache = anchored_cache(config, (1,), 6, 1)
+            prefill = decoder(tokens[:, :14], past_key_values=cache, use_cache=True).logits
+            torch.testing.assert_close(prefill, full_prefill, atol=1e-6, rtol=1e-5)
+            landmark_positions = cache.layers[1].landmarks
+            self.assertEqual(len(landmark_positions), 2)
+            self.assertEqual(cache.layers[1].retained_positions.tolist(), [0, *landmark_positions, 12, 13])
+            continuation = decoder(tokens[:, 14:], past_key_values=cache, use_cache=True).logits
+            self.assertTrue(torch.isfinite(continuation).all())
+            self.assertEqual(cache.layers[1].retained_positions.tolist(), [0, *landmark_positions, 14, 15])
+
+    @torch.no_grad()
     def test_local_window_limits_selected_cache_and_matches_uncached_logits(self):
         torch.manual_seed(11)
         config = Qwen2Config(vocab_size=19, hidden_size=16, intermediate_size=24, num_hidden_layers=3,

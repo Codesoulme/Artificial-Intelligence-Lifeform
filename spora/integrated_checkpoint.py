@@ -469,8 +469,7 @@ def save_integrated(path, organism, state, reader, model_dir, layer_indices, *, 
     if feedforward_output_layers:
         metadata['feedforward_output_layers'] = sorted(feedforward_output_layers)
     if anchor_spec is not None:
-        layers, window, prefix = anchor_spec
-        metadata['anchored_attention'] = {'layers': list(layers), 'window': window, 'prefix': prefix}
+        metadata['anchored_attention'] = anchor_spec
     integrity = _digest(metadata, tensors)
     atomic_save({'metadata': metadata, 'tensors': tensors, 'integrity_sha256': integrity}, path)
 

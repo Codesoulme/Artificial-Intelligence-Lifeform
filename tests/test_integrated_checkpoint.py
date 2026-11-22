@@ -168,11 +168,14 @@ class IntegratedCheckpointTests(unittest.TestCase):
                                        torch.randn(4, 8), torch.randn(4)).eval()
         partial = PartialQueryKeyPositionAttention(value, (1,), torch.randn(6, 8), torch.randn(6)).eval()
         layer.self_attn = partial
+        layout = {'layers': [1], 'window': 6, 'prefix': 1, 'snapshot': 2}
         save_integrated(self.path, self.organism, self.state, reader, self.root, (0, 2),
                         compatible_layers=(0, 1, 2), gelu_gate_layers=(0, 1),
-                        value_positions={0: value}, query_key_positions={0: partial}, position_table_max_position=16)
+                        value_positions={0: value}, query_key_positions={0: partial}, position_table_max_position=16,
+                        anchored_attention=layout)
 
         restored, _, state = load_integrated(self.path, copy, self.root)
+        self.assertEqual(restored.anchored_attention_layout, layout)
         self.assertIsInstance(copy.model.layers[0].layer.mlp.activation, SPORAGeluGate)
         self.assertIsInstance(copy.model.layers[1].mlp.activation, SPORAGeluGate)
         restored_attention = copy.model.layers[0].layer.self_attn
@@ -186,6 +189,12 @@ class IntegratedCheckpointTests(unittest.TestCase):
         expected = model(tokens, memory_state=self.state, use_cache=False).logits
         actual = restored(tokens, memory_state=state, use_cache=False).logits
         torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+
+        long_tokens = torch.tensor([[3, 5, 6, 4, 7, 8, 1, 5]])
+        generated = restored.generate(long_tokens, use_cache=True, max_new_tokens=2, return_dict_in_generate=True)
+        window = generated.past_key_values.layers[1]
+        self.assertEqual(len(window.landmarks), 2)
+        self.assertEqual(window.keys.shape[-2], 5)
 
         payload = torch.load(self.path, weights_only=True)
         payload['metadata']['query_key_position_layers']['0'] = [1, 1]

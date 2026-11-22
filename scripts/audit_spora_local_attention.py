@@ -45,9 +45,9 @@ def cache_probe(decoder, ids, make_cache):
 
 
 @torch.inference_mode()
-def answer(decoder, tokenizer, text, controls=None):
+def answer(decoder, tokenizer, text, controls=None, *, limit=12):
     prompt = closed_think_inputs(tokenizer, text, 'cuda')
-    result = decoder.generate(**prompt, **dict(controls or {}, use_cache=True), max_new_tokens=12,
+    result = decoder.generate(**prompt, **dict(controls or {}, use_cache=True), max_new_tokens=limit,
                               do_sample=False, temperature=None, top_p=None,
                               eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.pad_token_id)
     tail = result[0, prompt['input_ids'].shape[-1]:].tolist()
