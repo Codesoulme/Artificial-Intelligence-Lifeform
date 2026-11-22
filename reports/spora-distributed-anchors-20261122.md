@@ -39,6 +39,27 @@
 
 隔离源码中通过 58 项检查点、事务、解码和局部注意力回归，覆盖从检查点恢复该布局、按问题选取位置和核对生成状态大小。先前并行运行 GPU 评测与回归时，有两项事务子进程遇到系统内存不足。GPU 阶段结束后串行复跑全部通过。
 
+## 按键值头组分配保留位置
+
+把 48 个按问题选择的名额分成两半。前 24 个仍按所有注意力头的平均分挑选，两个键值头组各用 12 个名额补足本组分数最高的位置。各层存储一份共享位置集合。用上一轮的四组登记记录和两组新题，对照平均分与分组名额。生成后统计各局部层对值和整条带日期记录的保留情况。选取阶段只看注意力分数。 [Ada-KV](https://arxiv.org/abs/2407.11550)
+
+| 分配方式 | 二月更新值 | 一月历史值 | 仅输出目标值 | 受控内部记忆 | 1024 词元后的键值张量 |
+|---|---:|---:|---:|---:|---:|
+| 所有头平均 | 6/6 | 2/6 | 0/12 | 8/8 | 21.99 MiB |
+| 平均分加分组名额 | 6/6 | 2/6 | 0/12 | 8/8 | 21.99 MiB |
+
+两种分配方式的正误逐题一致。平均分方案在原八题上的生成也与上次逐词元一致。公演题的旧值「西塔大厅」完整出现在八层中的两层，两种压缩均未在任一局部层保留带日期的旧记录全句。展览和维修的旧记录分别在至少六层完整保留，两种压缩和全局注意力仍答成新值。逐项记录见 `runs/spora-snapshot-group-comparison-v1/result.json`。分组试验耗时约 267 秒，峰值 CUDA 分配约 4.94 GiB。
+
+## 强制保留新旧记录的因果对照
+
+只问六条历史值，在每个局部层的 48 个旧位置名额里先预留一月和二月记录的完整位置。剩余名额按原平均分选择，题目、解码和总预算沿用分组试验。逐词元核对两条完整记录都保留在八个局部层。这个干预使用评测标注定位记录，部署时的选择器仍需自行定位。
+
+完整保留后，历史题由 2/6 升至 3/6，原本答对的两条都保留。公演题从二月的「北桥大厅」恢复到一月的「西塔大厅」。展览、维修和校对仍全部错答二月值。只有公演题在这一干预下恢复。两种保留情况下均没有历史题只输出目标值。独立的受控内部记忆仍为 8/8，键值张量仍为 21.99 MiB。实验约 140 秒，原始结果见 `runs/spora-snapshot-evidence-control-v1/result.json`。
+
+先前的失分有两条来源。裁剪会把日期与值拆开，公演题可以通过保留完整记录恢复。证据齐全时，模型仍会选错日期，需要在版本选择处单独改善。按头组分配保留位置继续用于对照。若尝试降低裁剪损失，下一轮可把完整记录作为选择单位，或保留部分专门读取长文的头。 [DuoAttention](https://arxiv.org/abs/2410.10819)
+
+24 项局部注意力和检查点测试通过，覆盖两种选择方式的完整读入、定长生成状态，以及原有检查点重载。
+
 ## 复现
 
 ```powershell
@@ -49,4 +70,6 @@ $checkpoint = 'runs/spora-native-context-1536-v1/bootstrap.pt'
 .\.venv\Scripts\python.exe -u scripts/audit_spora_distributed_anchors.py --checkpoint $checkpoint --full-prefill-control --output runs/spora-distributed-anchors-control-v1/result.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_distributed_anchors.py --checkpoint $checkpoint --snapshot-only --output runs/spora-distributed-anchors-snapshot-v1/result.json
 .\.venv\Scripts\python.exe -u scripts/audit_spora_distributed_anchors.py --checkpoint $checkpoint --revisions --output runs/spora-distributed-anchors-revisions-v1/result.json
+.\.venv\Scripts\python.exe -u scripts/audit_spora_distributed_anchors.py --checkpoint $checkpoint --snapshot-group-comparison --output runs/spora-snapshot-group-comparison-v1/result.json
+.\.venv\Scripts\python.exe -u scripts/audit_spora_distributed_anchors.py --checkpoint $checkpoint --snapshot-evidence-control --output runs/spora-snapshot-evidence-control-v1/result.json
 ```

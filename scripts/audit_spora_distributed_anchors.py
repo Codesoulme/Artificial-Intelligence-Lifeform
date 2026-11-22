@@ -6,7 +6,9 @@ import sys
 import tempfile
 import time
 from contextlib import nullcontext
+from functools import partial
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / 'scripts'), str(ROOT / 'runs/open-base-deps')]
@@ -22,7 +24,7 @@ from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.train_qwen_counterfactual_reply_20261122 import HELD, prepare, records
 from spora.integrated_checkpoint import _digest, load_integrated_runtime
 from spora.language_training import frozen_digest
-from spora.research_local_attention import anchor_attention, anchored_cache
+from spora.research_local_attention import _attended_landmarks, anchor_attention, anchored_cache
 
 
 def load_without_layout(path):
@@ -55,13 +57,16 @@ def fact_cases(tokenizer, prose):
             yield text, offset, expected
 
 
-def revision_cases(tokenizer, prose):
+def revision_cases(tokenizer, prose, *, extra_cases=False):
     records = (
         ('巡检', '集合站', '石桥站', '杏林站', '月台站'),
         ('展览', '布展组长', '顾晓岚', '沈秋禾', '陆明遥'),
         ('公演', '领票地点', '西塔大厅', '北桥大厅', '东岸大厅'),
         ('维修', '备用门牌', '甲七号', '辛六号', '乙二号'),
     )
+    if extra_cases:
+        records += (('讲座', '签到代号', '玄六', '苍九', '赤五'),
+                    ('校对', '收件人', '纪兰舟', '章海宁', '闵川禾'))
     for index, (event, field, earlier, current, other) in enumerate(records):
         filler = prose[:1000]
         old = f'{event}一月的登记单：{field}填写的是{earlier}。'
@@ -75,6 +80,32 @@ def revision_cases(tokenizer, prose):
         for period, expected, rejected in (('二月更新后', current, earlier), ('一月登记时', earlier, current)):
             question = f'请问{event}{period}的{field}是什么？只回答登记的内容。'
             yield f'{document}\n\n{question}', event, period, expected, (rejected, other)
+
+
+def evidence_positions(tokenizer, text, values):
+    prompt = tokenizer.apply_chat_template([{'role': 'user', 'content': text}], tokenize=False,
+                                           add_generation_prompt=True) + '</think>\n\n'
+    offsets = tokenizer(prompt, add_special_tokens=False, return_offsets_mapping=True)['offset_mapping']
+    evidence = {}
+    for value in values:
+        start = prompt.index(value)
+        stop = start + len(value)
+        line_start, line_stop = prompt.rfind('\n', 0, start) + 1, prompt.index('\n', stop)
+        spans = {'value': (start, stop), 'record': (line_start, line_stop)}
+        evidence[value] = {
+            label: [index for index, (begin, end) in enumerate(offsets) if begin < right and end > left]
+            for label, (left, right) in spans.items()
+        }
+    return evidence
+
+
+def retained_evidence(evidence, generation_cache, layers):
+    kept = {index: set(generation_cache.layers[index].retained_positions.tolist()) for index in layers}
+    return {value: {label: {'tokens': positions,
+                            'retained_by_layer': {index: sorted(kept[index].intersection(positions))
+                                                  for index in layers}}
+                    for label, positions in spans.items()}
+            for value, spans in evidence.items()}
 
 
 def main(args):
@@ -91,6 +122,8 @@ def main(args):
                              add_special_tokens=False)
     if len(prose) < 1117:
         raise ValueError('Expected enough prose for paired long prompts')
+    trace = args.snapshot_group_comparison or args.snapshot_evidence_control
+    revisions = args.revisions or trace
     runtime, layers = load_without_layout(args.checkpoint)
     decoder = runtime.decoder.eval().requires_grad_(False)
     individual = frozen_digest(runtime.organism, runtime.state)
@@ -103,26 +136,33 @@ def main(args):
         variants = {'query_snapshot': (16, ())}
     elif args.full_prefill_control:
         variants = {'fixed_after_full_prefill': (64, ())}
-    elif args.revisions:
+    elif revisions:
         variants = {'full': (0, ()), 'fixed_after_full_prefill': (64, ()), 'query_snapshot': (16, ())}
         test_prose = tokenizer.encode('\n'.join(data['test'] + data['development'] + data['train']),
                                       add_special_tokens=False)
-        dated_facts = tuple(revision_cases(tokenizer, test_prose))
+        dated_facts = tuple(revision_cases(tokenizer, test_prose, extra_cases=trace))
+        if args.snapshot_group_comparison:
+            variants = {'query_snapshot': (16, ()), 'group_snapshot': (16, ())}
+        if args.snapshot_evidence_control:
+            variants = {'evidence_snapshot': (16, ())}
+            dated_facts = dated_facts[1::2]
     results = {}
     for name, (prefix, landmarks) in variants.items():
-        snapshot = 48 if name == 'query_snapshot' else 0
+        snapshot = 48 if name in ('query_snapshot', 'group_snapshot', 'evidence_snapshot') else 0
         full_prefill = snapshot > 0 or name == 'fixed_after_full_prefill'
         scope = nullcontext()
         binder = nullcontext()
+        generation_cache = None
 
         def make_cache():
-            if prefix:
-                return anchored_cache(decoder.base.config, layers, 256, prefix, landmarks=landmarks)
-            return DynamicCache(config=decoder.base.config)
+            nonlocal generation_cache
+            generation_cache = (anchored_cache(decoder.base.config, layers, 256, prefix, landmarks=landmarks)
+                                if prefix else DynamicCache(config=decoder.base.config))
+            return generation_cache
 
         if prefix:
             scope = anchor_attention(decoder, layers, 256, prefix, landmarks=landmarks, snapshot=snapshot,
-                                     full_prefill=full_prefill)
+                                     full_prefill=full_prefill, snapshot_by_group=name == 'group_snapshot')
             binder = bounded_generation(decoder, make_cache)
         with scope, binder:
             cache, _ = cache_probe(decoder, torch.tensor([prose[:1024]], device='cuda'), make_cache)
@@ -130,9 +170,22 @@ def main(args):
                 cache['full_continuation_argmax_equal'] = cache.pop('continuation_argmax_equal')
                 cache['full_max_logit_delta'] = cache.pop('max_logit_delta')
             facts = []
-            if args.revisions:
+            if revisions:
                 for text, event, period, expected, rejected in dated_facts:
-                    row = answer(decoder, tokenizer, text, limit=24)
+                    evidence = evidence_positions(tokenizer, text, (expected, *rejected)) if trace else {}
+                    guard = nullcontext()
+                    if args.snapshot_evidence_control:
+                        both = tuple(sorted(set(evidence[expected]['record'] + evidence[rejected[0]]['record'])))
+                        guard = patch('spora.research_local_attention._attended_landmarks',
+                                      partial(_attended_landmarks, required=both))
+                    with guard:
+                        row = answer(decoder, tokenizer, text, limit=24)
+                    if trace:
+                        row['retained'] = retained_evidence(evidence, generation_cache, layers)
+                    if args.snapshot_evidence_control:
+                        if any(len(tokens) != len(evidence[value]['record']) for value in (expected, rejected[0])
+                               for tokens in row['retained'][value]['record']['retained_by_layer'].values()):
+                            raise ValueError('The controlled run did not preserve both records')
                     facts.append(dict(row, event=event, period=period, expected=expected, rejected=rejected,
                                       correct=expected in row['text'] and all(x not in row['text'] for x in rejected),
                                       exact=row['text'].strip('。！!，,；;？? \n') == expected))
@@ -165,4 +218,6 @@ if __name__ == '__main__':
     modes.add_argument('--snapshot-only', action='store_true', help='Select old keys from the end of the prompt')
     modes.add_argument('--full-prefill-control', action='store_true', help='Trim the fixed prefix after full prefill')
     modes.add_argument('--revisions', action='store_true', help='Compare dated values with nearby distractors')
+    modes.add_argument('--snapshot-group-comparison', action='store_true', help='Trace mean and group quota selection')
+    modes.add_argument('--snapshot-evidence-control', action='store_true', help='Pin both dated records to isolate eviction')
     main(parser.parse_args())

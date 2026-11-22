@@ -60,7 +60,7 @@ def _keep_key(query, keys, window, prefix, landmarks):
 
 
 @torch.no_grad()
-def _attended_landmarks(module, kwargs, window, prefix, count):
+def _attended_landmarks(module, kwargs, window, prefix, count, by_group, *, required=()):
     """Rank omitted positions using normalized attention from the prompt's last 16 queries."""
     hidden = kwargs['hidden_states'].to(module.qkv.weight.dtype)
     if hidden.shape[0] != 1:
@@ -73,14 +73,28 @@ def _attended_landmarks(module, kwargs, window, prefix, count):
     scores = torch.einsum('bhgqd,bhkd->bhgqk', queries, keys.float()) * module.scaling
     positions = kwargs['cache_position']
     scores.masked_fill_(positions[None, :] > positions[-observations:, None], -torch.inf)
-    attention = scores.softmax(-1).mean(dim=(0, 1, 2, 3))
-    clustered = torch.nn.functional.avg_pool1d(attention[None, None], 5, stride=1, padding=2)[0, 0]
+    attention = scores.softmax(-1).mean(dim=(0, 2, 3) if by_group else (0, 1, 2, 3))
+    clustered = torch.nn.functional.avg_pool1d(attention.reshape(1, -1, length), 5, stride=1, padding=2)[0]
     stop = length - (window - prefix - count - 1)
-    indices = clustered[prefix:stop].topk(count).indices + prefix
+    eligible = clustered[:, prefix:stop]
+    if len(required) > count or any(not prefix <= position < stop for position in required):
+        raise ValueError('Required positions must fit in the older-token budget')
+    pinned = torch.tensor(required, dtype=torch.long, device=keys.device) - prefix
+    shared = (count - len(required)) // 2 if by_group else count - len(required)
+    ranked = eligible.mean(dim=0).scatter(0, pinned, -torch.inf)
+    chosen = torch.cat((pinned, ranked.topk(shared).indices))
+    quota, extra = divmod(count - chosen.numel(), len(eligible))
+    for index, group in enumerate(eligible):
+        take = quota + (index < extra)
+        if take:
+            remaining = group.scatter(0, chosen, -torch.inf)
+            chosen = torch.cat((chosen, remaining.topk(take).indices))
+    indices = chosen + prefix
     return tuple(sorted(indices.tolist()))
 
 
-def install_anchor_mask(decoder, indices, window, prefix, *, landmarks=(), snapshot=0, full_prefill=False):
+def install_anchor_mask(decoder, indices, window, prefix, *, landmarks=(), snapshot=0, full_prefill=False,
+                        snapshot_by_group=False):
     """Install causal prefix and recent-token masks on selected decoder layers."""
     from .integrated_checkpoint import _compatible_blocks
 
@@ -90,6 +104,8 @@ def install_anchor_mask(decoder, indices, window, prefix, *, landmarks=(), snaps
     _validate_landmarks(window, prefix, landmarks)
     if type(snapshot) is not int or not 0 <= snapshot < window - prefix - 1 or (landmarks and snapshot):
         raise ValueError('Snapshot anchors require a separate observed-token budget')
+    if snapshot_by_group and not snapshot:
+        raise ValueError('Group quotas require an observed-token budget')
 
     def mask_positions(module, args, kwargs):
         positions = kwargs['cache_position']
@@ -104,7 +120,7 @@ def install_anchor_mask(decoder, indices, window, prefix, *, landmarks=(), snaps
             if snapshot:
                 if not hasattr(layer, 'landmarks'):
                     raise ValueError('Snapshot attention needs an anchored cache')
-                layer.landmarks = _attended_landmarks(module, kwargs, window, prefix, snapshot)
+                layer.landmarks = _attended_landmarks(module, kwargs, window, prefix, snapshot, snapshot_by_group)
             return None
         retained = getattr(layer, 'retained_positions', None)
         if retained is None:
@@ -127,10 +143,11 @@ def install_anchor_mask(decoder, indices, window, prefix, *, landmarks=(), snaps
 
 
 @contextmanager
-def anchor_attention(decoder, indices, window, prefix, *, landmarks=(), snapshot=0, full_prefill=False):
+def anchor_attention(decoder, indices, window, prefix, *, landmarks=(), snapshot=0, full_prefill=False,
+                     snapshot_by_group=False):
     """Apply the anchor mask for an isolated experiment."""
     handles = install_anchor_mask(decoder, indices, window, prefix, landmarks=landmarks, snapshot=snapshot,
-                                  full_prefill=full_prefill)
+                                  full_prefill=full_prefill, snapshot_by_group=snapshot_by_group)
     try:
         yield
     finally:

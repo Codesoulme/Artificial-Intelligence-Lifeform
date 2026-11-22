@@ -34,17 +34,19 @@ class LocalAttentionTests(unittest.TestCase):
                 torch.testing.assert_close(actual, expected[:, start:stop], atol=1e-6, rtol=1e-5)
                 self.assertEqual(cache.layers[1].keys.shape[-2], min(stop, 5))
             self.assertEqual(cache.layers[1].retained_positions.tolist(), [0, 3, 9, 14, 15])
-        with anchor_attention(decoder, (1,), 6, 1, snapshot=2):
-            full_prefill = decoder(tokens[:, :14], use_cache=False).logits
-            cache = anchored_cache(config, (1,), 6, 1)
-            prefill = decoder(tokens[:, :14], past_key_values=cache, use_cache=True).logits
-            torch.testing.assert_close(prefill, full_prefill, atol=1e-6, rtol=1e-5)
-            landmark_positions = cache.layers[1].landmarks
-            self.assertEqual(len(landmark_positions), 2)
-            self.assertEqual(cache.layers[1].retained_positions.tolist(), [0, *landmark_positions, 12, 13])
-            continuation = decoder(tokens[:, 14:], past_key_values=cache, use_cache=True).logits
-            self.assertTrue(torch.isfinite(continuation).all())
-            self.assertEqual(cache.layers[1].retained_positions.tolist(), [0, *landmark_positions, 14, 15])
+        for by_group in (False, True):
+            with self.subTest(by_group=by_group), anchor_attention(decoder, (1,), 8, 1, snapshot=4,
+                                                                  snapshot_by_group=by_group):
+                full_prefill = decoder(tokens[:, :14], use_cache=False).logits
+                cache = anchored_cache(config, (1,), 8, 1)
+                prefill = decoder(tokens[:, :14], past_key_values=cache, use_cache=True).logits
+                torch.testing.assert_close(prefill, full_prefill, atol=1e-6, rtol=1e-5)
+                landmark_positions = cache.layers[1].landmarks
+                self.assertEqual(len(set(landmark_positions)), 4)
+                self.assertEqual(cache.layers[1].retained_positions.tolist(), [0, *landmark_positions, 12, 13])
+                continuation = decoder(tokens[:, 14:], past_key_values=cache, use_cache=True).logits
+                self.assertTrue(torch.isfinite(continuation).all())
+                self.assertEqual(cache.layers[1].retained_positions.tolist(), [0, *landmark_positions, 14, 15])
 
     @torch.no_grad()
     def test_local_window_limits_selected_cache_and_matches_uncached_logits(self):
