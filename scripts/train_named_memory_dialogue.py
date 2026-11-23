@@ -338,7 +338,8 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0):
 
 
 def main(checkpoint, output, steps, varied, contrast_history, teacher_model, teacher_cache, prepare_teacher,
-         stage_embeddings, loss_tokens, collect_student_histories, student_histories, trained_residuals, composition):
+         stage_embeddings, loss_tokens, collect_student_histories, student_histories, trained_residuals, composition,
+         layers, rank, fresh_holdout):
     if output.exists():
         raise FileExistsError(output)
     torch.set_num_threads(2)
@@ -390,17 +391,21 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
     state_digest = frozen_digest(runtime.organism, runtime.state)
     parents = decoder.base.model.layers
     blocks = []
-    for index in LAYERS:
+    for index in layers:
+        if not 0 <= index < len(parents):
+            raise ValueError(f'Layer {index} is outside the decoder')
         if type(parents[index]) is not SPORAPretrainedBlock or index in decoder.layer_indices:
             raise ValueError('Expected an unmodified compatible layer outside the memory readers')
-        block = SPORAResidualBlock(parents[index], rank=16, ordinary_only=True,
+        block = SPORAResidualBlock(parents[index], rank=rank, ordinary_only=True,
                                    memory_context=decoder._memory_context).eval()
         parents[index] = block
         blocks.append(block)
     pairs = history_pairs(tokenizer) if contrast_history else []
     recipe = {'sources': {str(path): digest for path, digest in protected.items()},
-              'seed': SEED, 'layers': list(LAYERS), 'steps': steps, 'varied': varied,
+              'seed': SEED, 'layers': list(layers), 'steps': steps, 'varied': varied,
               'history_pairs': len(pairs), 'loss_tokens_per_step': loss_tokens or None}
+    if rank != 16:
+        recipe['rank'] = rank
     weights = [part.weight for block in blocks for part in (block.down, block.up)]
     output.mkdir(parents=True, exist_ok=False)
     residual_path = output / 'trained-residuals.pt'
@@ -431,7 +436,7 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
     print('Independent dialogue', {key: value for key, value in dialogue.items() if key != 'rows'}, flush=True)
     memory = evaluate(decoder, tokenizer, runtime.organism, records(runtime.organism, HELD))
     print('Memory control', memory['summary'], flush=True)
-    fresh_dialogue = run(decoder, tokenizer, cases=FRESH_CASES) if histories or composition else None
+    fresh_dialogue = run(decoder, tokenizer, cases=FRESH_CASES) if histories or composition or fresh_holdout else None
     if fresh_dialogue is not None:
         print('Fresh dialogue', {key: value for key, value in fresh_dialogue.items() if key != 'rows'}, flush=True)
     if any(sha(path) != digest for path, digest in protected.items()) or frozen_digest(runtime.organism, runtime.state) != state_digest:
@@ -453,6 +458,9 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--steps', type=int, default=256)
+    parser.add_argument('--layers', type=int, nargs='+', default=LAYERS)
+    parser.add_argument('--rank', type=int, default=16)
+    parser.add_argument('--fresh-holdout', action='store_true')
     parser.add_argument('--varied', action='store_true')
     parser.add_argument('--composition', action='store_true',
                         help='Use the project-authored multiround composition training split')
@@ -472,6 +480,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.steps < 1 or args.loss_tokens < 0:
         parser.error('--steps must be positive and --loss-tokens must be nonnegative')
+    if args.rank < 1 or min(args.layers) < 0 or list(args.layers) != sorted(set(args.layers)):
+        parser.error('Choose a positive rank and distinct layers in increasing order')
     if (args.teacher_model is None) != (args.teacher_cache is None) or (args.prepare_teacher and args.teacher_model is None):
         parser.error('Offline distillation requires both --teacher-model and --teacher-cache')
     if args.collect_student_histories and not 1 <= args.collect_student_histories <= len(generated_dialogues()):
