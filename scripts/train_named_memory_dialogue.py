@@ -23,6 +23,7 @@ SEED = 99112
 LAYERS = (22, 24, 27)
 FOUNDATIONS = ROOT / 'data/chinese-foundations.json'
 CORRECTIONS = ROOT / 'data/dialogue-correction-training-v1.json'
+COMPOSITION = ROOT / 'data/dialogue-composition-v1.json'
 REVIEWED = ROOT / 'runs/teaching-curriculum-v5/teacher.jsonl'
 
 
@@ -85,12 +86,14 @@ def tokens(tokenizer, history, question, *, deepseek=True):
     return tokenizer.encode(prompt + suffix, add_special_tokens=False)
 
 
-def examples(tokenizer, *, varied, instructor=None, sampled_histories=None):
+def examples(tokenizer, *, varied, instructor=None, sampled_histories=None, composition=False):
     held = {question for _, turns in CASES + FRESH_CASES for question, _ in turns}
     groups = {}
     dialogues_by_group = source_dialogues()
     if varied:
         dialogues_by_group['varied'] = generated_dialogues()
+    if composition:
+        dialogues_by_group['composition'] = json.loads(COMPOSITION.read_text(encoding='utf-8'))['training']
     for group, dialogues in dialogues_by_group.items():
         rows = []
         for conversation in dialogues:
@@ -274,9 +277,13 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0):
     selected = ('correction', 'foundations', 'reviewed', 'correction', 'foundations')
     if 'varied' in groups:
         selected = ('varied', 'foundations', 'varied', 'correction', 'reviewed')
+    if 'composition' in groups:
+        selected = ('varied', 'foundations', 'composition', 'correction', 'reviewed')
     trace = []
     running = []
     visits = {}
+    projected = 0
+    seen = {}
     for step in range(steps):
         optimizer.zero_grad(set_to_none=True)
         group = selected[step % len(selected)]
@@ -291,6 +298,8 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0):
             positions = sorted((start + offset) % len(target) for offset in range(loss_tokens))
             visits[row_key] = visits.get(row_key, 0) + 1
         offsets = torch.tensor(positions, device='cuda')
+        projected += len(positions)
+        seen.setdefault((group, row_index), set()).update(positions)
         logits = decoder(input_ids=ids, use_cache=False,
                          logits_to_keep=offsets + len(prompt) - 1).logits[0].float()
         labels = labels.index_select(0, offsets)
@@ -321,11 +330,15 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0):
             print(trace[-1], flush=True)
             running.clear()
             torch.cuda.empty_cache()
-    return trace
+    exposure = {'requests': len(seen), 'target_positions': sum(map(len, seen.values())),
+                'target_exposures': projected,
+                'end_targets': sum(len(groups[group][index][1]) - 1 in positions
+                                   for (group, index), positions in seen.items())}
+    return trace, exposure
 
 
 def main(checkpoint, output, steps, varied, contrast_history, teacher_model, teacher_cache, prepare_teacher,
-         stage_embeddings, loss_tokens, collect_student_histories, student_histories, trained_residuals):
+         stage_embeddings, loss_tokens, collect_student_histories, student_histories, trained_residuals, composition):
     if output.exists():
         raise FileExistsError(output)
     torch.set_num_threads(2)
@@ -335,6 +348,8 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
         collect_histories(checkpoint, output, tokenizer, collect_student_histories)
         return
     files = [checkpoint, FOUNDATIONS, CORRECTIONS, REVIEWED]
+    if composition:
+        files.append(COMPOSITION)
     if student_histories is not None:
         files.append(student_histories)
     if teacher_model is not None:
@@ -344,7 +359,8 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
     instructor = (None if teacher_model is None else AutoTokenizer.from_pretrained(
         teacher_model, local_files_only=True, trust_remote_code=False))
     histories, rollout_digest = read_histories(student_histories) if student_histories is not None else (None, None)
-    groups = examples(tokenizer, varied=varied, instructor=instructor, sampled_histories=histories)
+    groups = examples(tokenizer, varied=varied, instructor=instructor, sampled_histories=histories,
+                      composition=composition)
     print('Training requests', {name: len(rows) for name, rows in groups.items()}, flush=True)
     if instructor is not None:
         provenance = {str(path): digest for path, digest in protected.items()}
@@ -390,10 +406,10 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
     residual_path = output / 'trained-residuals.pt'
     torch.cuda.empty_cache()
     if trained_residuals is None:
-        trace = fit(decoder, blocks, groups, steps, pairs, loss_tokens=loss_tokens)
+        trace, exposure = fit(decoder, blocks, groups, steps, pairs, loss_tokens=loss_tokens)
         torch.cuda.empty_cache()
-        atomic_save({'recipe': recipe, 'trace': trace, 'weights': [weight.detach().cpu() for weight in weights]},
-                    residual_path)
+        atomic_save({'recipe': recipe, 'trace': trace, 'exposure': exposure,
+                     'weights': [weight.detach().cpu() for weight in weights]}, residual_path)
         print('Saved trained residuals', residual_path, flush=True)
     else:
         saved = torch.load(trained_residuals, map_location='cpu', weights_only=True)
@@ -405,6 +421,7 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
                     raise ValueError('Invalid trained residual weight')
                 weight.copy_(source)
         trace = saved['trace']
+        exposure = saved.get('exposure')
     decoder.requires_grad_(False)
     if any(sha(path) != digest for path, digest in protected.items()) or frozen_digest(runtime.organism, runtime.state) != state_digest:
         raise ValueError('Experiment changed protected inputs')
@@ -414,7 +431,7 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
     print('Independent dialogue', {key: value for key, value in dialogue.items() if key != 'rows'}, flush=True)
     memory = evaluate(decoder, tokenizer, runtime.organism, records(runtime.organism, HELD))
     print('Memory control', memory['summary'], flush=True)
-    fresh_dialogue = run(decoder, tokenizer, cases=FRESH_CASES) if histories else None
+    fresh_dialogue = run(decoder, tokenizer, cases=FRESH_CASES) if histories or composition else None
     if fresh_dialogue is not None:
         print('Fresh dialogue', {key: value for key, value in fresh_dialogue.items() if key != 'rows'}, flush=True)
     if any(sha(path) != digest for path, digest in protected.items()) or frozen_digest(runtime.organism, runtime.state) != state_digest:
@@ -422,7 +439,7 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
     report = {'candidate_sha256': sha(candidate), **recipe,
               'sampled_history_conversations': len(histories or ()),
               'rollout_checkpoint_sha256': rollout_digest,
-              'trace': trace,
+              'trace': trace, 'supervision_exposure': exposure,
               'teacher_requests': {name: sum(row[-1] is not None for row in rows) for name, rows in groups.items()},
               'training_requests': {name: len(rows) for name, rows in groups.items()},
               'dialogue': dialogue, 'memory': memory, 'fresh_dialogue': fresh_dialogue}
@@ -437,6 +454,8 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--steps', type=int, default=256)
     parser.add_argument('--varied', action='store_true')
+    parser.add_argument('--composition', action='store_true',
+                        help='Use the project-authored multiround composition training split')
     parser.add_argument('--contrast-history', action='store_true')
     parser.add_argument('--teacher-model', type=Path)
     parser.add_argument('--teacher-cache', type=Path)
@@ -459,6 +478,8 @@ if __name__ == '__main__':
         parser.error('Requested history count exceeds the generated training conversations')
     if args.student_histories is not None and not args.varied:
         parser.error('Student histories require --varied')
+    if args.composition and not args.varied:
+        parser.error('Composition examples require --varied')
     if args.trained_residuals is not None and (args.collect_student_histories or args.prepare_teacher):
         parser.error('Saved training weights require the training or evaluation mode')
     main(**vars(args))
