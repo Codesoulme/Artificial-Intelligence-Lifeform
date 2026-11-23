@@ -160,3 +160,36 @@ foreach ($sporaCondition in @('original', 'parent', 'candidate', 'late', 'qwen')
     .\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_midlayers_holdout $sporaCondition
 }
 ```
+
+## 拆开验证第 12 层和第 19 层
+
+从后五层对照的布局出发，第一组把第 23 层换为第 12 层，第二组把第 25 层换为第 19 层。四组都使用同一训练起点、秩 16、种子 99112、1,536 步和 12,269 次答案位置曝光。
+
+| 五层残差放置 | 项目原题整组 / 逐轮 | 项目新题整组 / 逐轮 | 12 组复核整组 / 逐轮 | 受控记忆 |
+|---|---:|---:|---:|---:|
+| 22、23、24、25、27 | 0/10 · 4/21 | 0/10 · 2/21 | 0/12 · 5/26 | 32/32 |
+| 12、22、24、25、27 | 3/10 · 10/21 | 3/10 · 12/21 | 3/12 · 13/26 | 32/32 |
+| 19、22、23、24、27 | 0/10 · 5/21 | 0/10 · 3/21 | 1/12 · 7/26 | 32/32 |
+| 12、19、22、24、27 | 3/10 · 12/21 | 3/10 · 12/21 | 4/12 · 14/26 | 32/32 |
+
+把第 23 层换为第 12 层复现了双中间层布局在两个项目题集上的整组提升。第 19 层在第三套题上有较小改善。比较限于此单种子、参数初始化顺序和两对替换层。分数覆盖短多轮任务，日常开放对话仍需单独验收。
+
+```powershell
+$sporaCheckpoint = 'runs/named-memory-layer9-packed-reply-v1/packed.pt'
+.\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue --checkpoint $sporaCheckpoint --output runs/named-memory-dialogue-layer12-v1 --steps 1536 --varied --loss-tokens 16 --fresh-holdout --layers 12 22 24 25 27
+.\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue --checkpoint $sporaCheckpoint --output runs/named-memory-dialogue-layer19-v1 --steps 1536 --varied --loss-tokens 16 --fresh-holdout --layers 19 22 23 24 27
+foreach ($sporaCondition in @('layer12', 'layer19')) {
+    .\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_midlayers_holdout $sporaCondition
+}
+```
+
+## 在本地入口试用对话候选
+
+本地入口接受 `--dialogue-checkpoint`。启动时核对候选与原封装检查点的结构配置、已有权重和检查点内的神经状态。候选只能在兼容层新增普通对话残差。个体数据库仍绑定原封装检查点，已有记录可以用两种启动方式读写。提取记忆时间特征与生成短事实时暂停对话残差，普通聊天中启用。
+
+用试验库副本运行了两个独立的本地入口进程。第一个进程写入豆浆和可乐并验证历史记录，第二个进程启用对话候选，重开同一副本，逐字读回当前饮品可乐、旧饮品豆浆、当前集合点银杏亭和旧集合点北门，相近的未登记姓名被拒读。候选按照问题要求把第三轮取件问答缩为地点「南站」。复查时原试验库和副本各自的文件摘要保持一致。相关单元测试共 39 项通过。
+
+```powershell
+Set-Location D:\SPORA
+.\.venv\Scripts\python.exe -m scripts.spora_named_memory_chat --dialogue-checkpoint runs/named-memory-dialogue-midlayers-v1/integrated.pt
+```

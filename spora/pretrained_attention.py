@@ -1,6 +1,8 @@
 """Fuse pretrained Qwen2 attention projections for SPORA inference."""
 
 import copy
+from contextlib import contextmanager
+from contextvars import ContextVar
 
 import torch
 from torch import nn
@@ -10,6 +12,19 @@ from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer, Qwen2RMS
 from transformers.utils.deprecation import deprecate_kwarg
 
 from .integrated_open_base import SPORAGatedFeedForward
+
+
+_dialogue_residuals_enabled = ContextVar('spora_dialogue_residuals_enabled', default=True)
+
+
+@contextmanager
+def without_dialogue_residuals():
+    """Keep ordinary dialogue updates out of memory-related inference."""
+    token = _dialogue_residuals_enabled.set(False)
+    try:
+        yield
+    finally:
+        _dialogue_residuals_enabled.reset(token)
 
 
 class SPORAPositionTable(nn.Module):
@@ -185,7 +200,7 @@ class SPORAResidualBlock(nn.Module):
         if self.memory_context is not None:
             snapshot = self.memory_context.get()
             if self.ordinary_only:
-                if snapshot is not None:
+                if snapshot is not None or not _dialogue_residuals_enabled.get():
                     return output
             elif snapshot is None:
                 return output

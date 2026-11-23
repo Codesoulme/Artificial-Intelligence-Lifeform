@@ -10,6 +10,7 @@ from scripts.audit_qwen_durable_entity_reads_20261122 import read_value
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.integrated_durable import create_integrated_durable, load_integrated_durable
+from spora.pretrained_attention import without_dialogue_residuals
 from spora.structured_text_memory import StructuredTextMemoryCodec
 from transformers import AutoTokenizer
 
@@ -69,8 +70,9 @@ class LocalChat:
         address = self.runtime.resolve_confirmed_name(name)['key']
         if address is None:
             return '没有登记这个完整姓名。'
-        hidden, mask = extract(self.runtime.decoder.base, self.tokenizer, [question], batch_size=1,
-                               hidden_indices=tuple(self.temporal['hidden_indices']), last_logit_only=True)
+        with without_dialogue_residuals():
+            hidden, mask = extract(self.runtime.decoder.base, self.tokenizer, [question], batch_size=1,
+                                   hidden_indices=tuple(self.temporal['hidden_indices']), last_logit_only=True)
         mode = choose_modes(self.temporal, hidden, mask, [question])[0]
         if mode == 3 and choose_modes(self.recovery, hidden, mask, [question])[0] == 2:
             mode = 2
@@ -127,9 +129,10 @@ class LocalChat:
         if len(relation) > 128:
             return '关系名太长。'
         query = closed_think_inputs(self.tokenizer, f'请核对{name}登记的{relation}。只答记录内容。', 'cuda')
-        result = self.runtime.generate_structured_relation(
-            **query, entity=entity, relation=relation, codec=self.get_structured_codec(),
-            as_of_revision=revision, pad_token_id=self.tokenizer.pad_token_id)
+        with without_dialogue_residuals():
+            result = self.runtime.generate_structured_relation(
+                **query, entity=entity, relation=relation, codec=self.get_structured_codec(),
+                as_of_revision=revision, pad_token_id=self.tokenizer.pad_token_id)
         if result is None:
             return '没有这项事实记录。'
         return self.tokenizer.decode(result[0, query['input_ids'].shape[1]:], skip_special_tokens=True).strip()
@@ -194,10 +197,12 @@ def main(args):
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     base = load_full_streamed()
     if args.database.exists():
-        runtime = load_integrated_durable(args.database, args.checkpoint, base, MODEL)
+        runtime = load_integrated_durable(args.database, args.checkpoint, base, MODEL,
+                                          dialogue_checkpoint=args.dialogue_checkpoint)
     else:
         runtime = create_integrated_durable(args.database, args.checkpoint, base, MODEL,
-                                            initial_state_factory=fresh_controlled_state)
+                                            initial_state_factory=fresh_controlled_state,
+                                            dialogue_checkpoint=args.dialogue_checkpoint)
     with runtime:
         print('孢子已就绪。可直接聊天。用 /登记、/记、/查 或 /记事、/查事。输入 /退出结束。', flush=True)
         chat = LocalChat(runtime, tokenizer, temporal, recovery)
@@ -217,6 +222,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--dialogue-checkpoint', type=Path, help='Use a compatible ordinary-dialogue checkpoint')
     for name, default in (('source', DEFAULT_SOURCE), ('checkpoint', DEFAULT_PACKED), ('temporal', DEFAULT_TIME),
                           ('recovery', DEFAULT_RECOVERY), ('database', DEFAULT_DATABASE)):
         parser.add_argument('--' + name, type=Path, default=default)

@@ -48,6 +48,46 @@ def _bootstrap_metadata(path):
             'feature_variant_sha256': meta.get('feature_variant_sha256')}
 
 
+def _load_dialogue_decoder(bootstrap, dialogue_checkpoint, base, model_dir, individual_device):
+    if dialogue_checkpoint is None:
+        return load_integrated(bootstrap, base, model_dir, individual_device=individual_device), None
+
+    dialogue_checkpoint = Path(dialogue_checkpoint).resolve()
+    before = _stat(dialogue_checkpoint)
+    original = torch.load(bootstrap, map_location='cpu', weights_only=True)
+    candidate = torch.load(dialogue_checkpoint, map_location='cpu', weights_only=True)
+    if (not isinstance(candidate, dict) or not isinstance(candidate.get('metadata'), dict)
+            or not isinstance(candidate.get('tensors'), dict)):
+        raise ValueError('Invalid dialogue checkpoint')
+    original_meta, candidate_meta = (item['metadata'].copy() for item in (original, candidate))
+    original_specs = original_meta.pop('residuals', [])
+    candidate_specs = candidate_meta.pop('residuals', None)
+    if (original_meta != candidate_meta or not isinstance(candidate_specs, list)
+            or any(not isinstance(spec, dict) or type(spec.get('index')) is not int
+                   for spec in candidate_specs)):
+        raise ValueError('Dialogue checkpoint changed structural metadata')
+
+    existing = {spec['index']: spec for spec in original_specs}
+    retained = {spec['index']: spec for spec in candidate_specs if spec['index'] in existing}
+    added = [spec for spec in candidate_specs if spec['index'] not in existing]
+    if retained != existing or len(candidate_specs) != len(existing) + len(added) or not added or any(
+            spec.get('ordinary_only') is not True for spec in added):
+        raise ValueError('Dialogue checkpoint may only add ordinary-generation residuals')
+
+    original_tensors, candidate_tensors = (item['tensors'] for item in (original, candidate))
+    added_keys = {f"residual/{spec['index']}/{direction}" for spec in added for direction in ('down', 'up')}
+    if (set(candidate_tensors) != set(original_tensors) | added_keys
+            or any(not isinstance(candidate_tensors[key], torch.Tensor)
+                   or value.dtype != candidate_tensors[key].dtype or not torch.equal(value, candidate_tensors[key])
+                   for key, value in original_tensors.items())):
+        raise ValueError('Dialogue checkpoint changed existing tensors')
+    del original, candidate, original_tensors, candidate_tensors
+    loaded = load_integrated(dialogue_checkpoint, base, model_dir, individual_device=individual_device)
+    if _stat(dialogue_checkpoint) != before:
+        raise ValueError('Dialogue checkpoint changed during load')
+    return loaded, (dialogue_checkpoint, before)
+
+
 def _decoder_signature(decoder):
     def tensors(module):
         return tuple((name, id(tensor), tensor._version, tuple(tensor.shape), str(tensor.dtype), str(tensor.device))
@@ -94,11 +134,12 @@ def _observation_calendar(metadata, state):
 
 
 class IntegratedDurableRuntime:
-    def __init__(self, decoder, organism, state, store, bootstrap):
+    def __init__(self, decoder, organism, state, store, bootstrap, dialogue_source=None):
         _require_runtime(decoder, organism, state)
         self.decoder, self.organism, self.state, self.store = decoder, organism, state, store
         self.bootstrap = Path(bootstrap).resolve()
         self._bootstrap_stat = _stat(self.bootstrap)
+        self._dialogue_source = dialogue_source
         self._signature = _decoder_signature(decoder)
 
     def __enter__(self):
@@ -117,6 +158,14 @@ class IntegratedDurableRuntime:
             raise ValueError('Structural bootstrap is unavailable') from error
         if not unchanged:
             raise ValueError('Structural bootstrap changed during runtime')
+        if self._dialogue_source is not None:
+            path, stat = self._dialogue_source
+            try:
+                unchanged = _stat(path) == stat
+            except OSError as error:
+                raise ValueError('Dialogue checkpoint is unavailable') from error
+            if not unchanged:
+                raise ValueError('Dialogue checkpoint changed during runtime')
         if _decoder_signature(self.decoder) != self._signature:
             raise ValueError('Decoder changed since durable state was bound')
 
@@ -359,7 +408,7 @@ class IntegratedDurableRuntime:
 
 
 def create_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu',
-                              calendar_individual=None, initial_state_factory=None):
+                              calendar_individual=None, initial_state_factory=None, dialogue_checkpoint=None):
     if initial_state_factory is not None and (not callable(initial_state_factory) or calendar_individual is not None):
         raise ValueError('A fresh state factory requires a bootstrap without a separate calendar seed')
     bootstrap = Path(bootstrap).resolve()
@@ -369,7 +418,8 @@ def create_integrated_durable(database, bootstrap, base, model_dir, *, individua
     previous_rotary = getattr(base.model, 'rotary_emb', None)
     store = None
     try:
-        decoder, organism, state = load_integrated(bootstrap, base, model_dir, individual_device=individual_device)
+        (decoder, organism, state), dialogue_source = _load_dialogue_decoder(
+            bootstrap, dialogue_checkpoint, base, model_dir, individual_device)
         if _stat(bootstrap) != before:
             raise ValueError('Structural bootstrap changed during load')
         if calendar_individual is not None:
@@ -389,7 +439,7 @@ def create_integrated_durable(database, bootstrap, base, model_dir, *, individua
             state = initial_state_factory(organism)
         _require_runtime(decoder, organism, state)
         store = TensorStore.create(database, organism, state, metadata)
-        return IntegratedDurableRuntime(decoder, organism, state, store, bootstrap)
+        return IntegratedDurableRuntime(decoder, organism, state, store, bootstrap, dialogue_source)
     except BaseException:
         if store is not None:
             store.close()
@@ -400,7 +450,7 @@ def create_integrated_durable(database, bootstrap, base, model_dir, *, individua
         raise
 
 
-def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu'):
+def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu', dialogue_checkpoint=None):
     bootstrap = Path(bootstrap).resolve()
     before = _stat(bootstrap)
     expected = _bootstrap_metadata(bootstrap)
@@ -415,7 +465,8 @@ def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_
         if binding != expected:
             raise ValueError('Durable state and structural bootstrap do not match')
         _observation_calendar(metadata, state)
-        decoder, reference, _ = load_integrated(bootstrap, base, model_dir, individual_device=individual_device)
+        (decoder, reference, _), dialogue_source = _load_dialogue_decoder(
+            bootstrap, dialogue_checkpoint, base, model_dir, individual_device)
         if _stat(bootstrap) != before:
             raise ValueError('Structural bootstrap changed during load')
         if organism.config != reference.config or address_basis_sha256(organism) != address_basis_sha256(reference):
@@ -423,7 +474,7 @@ def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_
         _validate_binding(organism, expected['base_sha256'], expected['feature_config_sha256'],
                           expected['feature_variant_sha256'])
         _require_runtime(decoder, organism, state)
-        return IntegratedDurableRuntime(decoder, organism, state, store, bootstrap)
+        return IntegratedDurableRuntime(decoder, organism, state, store, bootstrap, dialogue_source)
     except BaseException:
         store.close()
         for index, layer in enumerate(previous_layers):

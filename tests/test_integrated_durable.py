@@ -232,6 +232,74 @@ class IntegratedDurableTests(unittest.TestCase):
             self.assertEqual(frozen_digest(restored.organism, restored.state), digest)
             self.assertIsInstance(restored.decoder.base.model.layers[1], SPORALayerReplacement)
 
+    @torch.no_grad()
+    def test_dialogue_checkpoint_preserves_the_bound_individual_and_memory_logits(self):
+        try:
+            from transformers import Qwen2Config, Qwen2ForCausalLM
+        except ModuleNotFoundError as error:
+            if error.name != 'transformers':
+                raise
+            self.skipTest('Qwen2 inference dependencies are optional')
+        from spora.integrated_checkpoint import IntegratedSPORARuntime
+        from spora.integrated_open_base import IntegratedOpenBase
+        from spora.pretrained_attention import SPORAResidualBlock, without_dialogue_residuals
+
+        _, organism, state = load_integrated(self.bootstrap, self.base(), self.root)
+        config = Qwen2Config(vocab_size=9, hidden_size=16, intermediate_size=24, num_hidden_layers=3,
+                             num_attention_heads=4, num_key_value_heads=2, max_position_embeddings=32)
+        config.to_json_file(self.root/'config.json')
+        base = Qwen2ForCausalLM(config).eval()
+        weights = {name: value.clone() for name, value in base.state_dict().items()}
+
+        def fresh_base():
+            model = Qwen2ForCausalLM(config).eval()
+            model.load_state_dict(weights)
+            return model
+
+        decoder = IntegratedOpenBase(base, NativeSPORAMemoryReader(16, 64, .5), (0, 2)).eval()
+        decoder.migrate_pretrained_blocks()
+        checkpoint = IntegratedSPORARuntime(decoder, organism, state, self.root)
+        checkpoint.save(self.bootstrap)
+        residual = SPORAResidualBlock(base.model.layers[1], rank=2, ordinary_only=True,
+                                      memory_context=decoder._memory_context).eval()
+        residual.up.weight.fill_(.3)
+        base.model.layers[1] = residual
+        candidate = self.root/'dialogue.pt'
+        checkpoint.save(candidate)
+        tokens = torch.tensor([[3, 5, 6]])
+
+        with create_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root) as runtime:
+            runtime.observe_sourced(4, 2, 'direct', 1.)
+            revision = runtime.store.revision
+            digest = frozen_digest(runtime.organism, runtime.state)
+            ordinary = runtime.decoder(tokens, use_cache=False).logits
+            memory = runtime.decoder(tokens, memory_state=runtime.state, use_cache=False).logits
+        with load_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root,
+                                     dialogue_checkpoint=candidate) as runtime:
+            self.assertEqual(frozen_digest(runtime.organism, runtime.state), digest)
+            self.assertEqual(runtime.store.revision, revision)
+            self.assertFalse(torch.equal(runtime.decoder(tokens, use_cache=False).logits, ordinary))
+            with without_dialogue_residuals():
+                torch.testing.assert_close(runtime.decoder(tokens, use_cache=False).logits, ordinary,
+                                           atol=0, rtol=0)
+            self.assertFalse(torch.equal(runtime.decoder(tokens, use_cache=False).logits, ordinary))
+            torch.testing.assert_close(runtime.decoder(tokens, memory_state=runtime.state, use_cache=False).logits,
+                                       memory, atol=0, rtol=0)
+            runtime.observe_sourced(4, 3, 'direct', 1.)
+            digest = frozen_digest(runtime.organism, runtime.state)
+            invalid = torch.load(candidate, weights_only=True)
+            reader_key = next(key for key in invalid['tensors'] if key.startswith('reader/'))
+            invalid['tensors'][reader_key].reshape(-1)[0] += 1.
+            torch.save(invalid, candidate)
+            with self.assertRaisesRegex(ValueError, 'Dialogue checkpoint changed during runtime'):
+                runtime.generate_ordinary(tokens)
+        with self.assertRaisesRegex(ValueError, 'Dialogue checkpoint changed existing tensors'):
+            load_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root,
+                                    dialogue_checkpoint=candidate)
+        with load_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root) as runtime:
+            self.assertEqual(runtime.store.revision, revision + 1)
+            self.assertEqual(frozen_digest(runtime.organism, runtime.state), digest)
+
     def test_structured_text_records_use_the_open_base_transaction(self):
         config = {'memory_width': 64, 'identity_slots': 1, 'fact_slots': 1}
         packet = torch.arange(64, dtype=torch.float32)

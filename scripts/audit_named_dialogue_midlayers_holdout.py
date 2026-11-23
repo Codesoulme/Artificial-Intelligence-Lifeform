@@ -73,13 +73,15 @@ CASES = (
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('condition', choices=('original', 'parent', 'candidate', 'late', 'qwen'))
-    args = parser.parse_args()
     checkpoints = {
         'parent': Path('runs/named-memory-layer9-packed-reply-v1/packed.pt'),
         'candidate': Path('runs/named-memory-dialogue-midlayers-v1/integrated.pt'),
         'late': Path('runs/named-memory-dialogue-latelayers-v1/integrated.pt'),
+        'layer12': Path('runs/named-memory-dialogue-layer12-v1/integrated.pt'),
+        'layer19': Path('runs/named-memory-dialogue-layer19-v1/integrated.pt'),
     }
+    parser.add_argument('condition', choices=('original', *checkpoints, 'qwen'))
+    args = parser.parse_args()
     qwen = Path('D:/SPORA-runtime/models/Qwen2.5-1.5B-Instruct-989aa798')
     output = Path('runs/named-memory-dialogue-midlayers-holdout-v1') / f'{args.condition}.json'
     if output.exists():
