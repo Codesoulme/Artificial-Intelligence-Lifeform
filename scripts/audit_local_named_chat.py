@@ -7,7 +7,7 @@ import re
 
 from scripts.spora_named_memory_chat import LocalChat, MODEL, load_full_streamed, sha, torch
 from spora.integrated_checkpoint import load_integrated
-from transformers import AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 CASES = (
@@ -65,7 +65,7 @@ def reasoning_answer(model, tokenizer, history, question, seed, budget):
     return answer.strip(), True
 
 
-def run(model, tokenizer, instruction=None, *, reasoning_budget=0, history_mode='live'):
+def run(model, tokenizer, instruction=None, *, reasoning_budget=0, history_mode='live', instruct_model=False):
     outcomes = []
     for case_index, (group, turns) in enumerate(CASES):
         chat = LocalChat(ModelRuntime(model), tokenizer, None, None)
@@ -88,6 +88,13 @@ def run(model, tokenizer, instruction=None, *, reasoning_budget=0, history_mode=
                 answer, finished = reasoning_answer(model, tokenizer, history, prompt,
                                                      3832 + case_index * 20 + turn_index, reasoning_budget)
                 history.extend(({'role': 'user', 'content': prompt}, {'role': 'assistant', 'content': answer}))
+            elif instruct_model:
+                from scripts.audit_spora_chat_backbones import reply
+
+                eos = model.generation_config.eos_token_id
+                answer = reply(model, tokenizer, history, prompt, device='cuda', deepseek=False, limit=96,
+                               eos=eos if isinstance(eos, list) else [eos])['answer']
+                history.extend(({'role': 'user', 'content': prompt}, {'role': 'assistant', 'content': answer}))
             else:
                 answer = chat.talk(prompt)
             normalized = re.sub(r'\s+', '', answer).strip('。.!！').replace('／', '/')
@@ -100,14 +107,25 @@ def run(model, tokenizer, instruction=None, *, reasoning_budget=0, history_mode=
             'turns': sum(len(row['turns']) for row in outcomes), 'rows': outcomes}
 
 
-def main(checkpoint, output, reasoning_budget, compare_history):
+def main(checkpoint, output, reasoning_budget, compare_history, instruct_reference):
     if output.exists():
         raise FileExistsError(output)
     torch.set_num_threads(2)
-    digest = sha(checkpoint)
-    tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
-    base = load_full_streamed()
-    if compare_history:
+    if instruct_reference is None:
+        tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
+        base = load_full_streamed()
+        protected = (checkpoint,)
+    else:
+        protected = tuple(instruct_reference / name for name in (
+            'model.safetensors', 'config.json', 'generation_config.json', 'tokenizer_config.json', 'tokenizer.json'))
+    sources = {path: sha(path) for path in protected}
+    if instruct_reference is not None:
+        tokenizer = AutoTokenizer.from_pretrained(instruct_reference, local_files_only=True, trust_remote_code=False)
+        model = AutoModelForCausalLM.from_pretrained(
+            instruct_reference, local_files_only=True, trust_remote_code=False, use_safetensors=True,
+            torch_dtype=torch.float16, attn_implementation='sdpa').to('cuda').eval()
+        results = {'instruct_reference': run(model, tokenizer, instruct_model=True)}
+    elif compare_history:
         decoder, _, _ = load_integrated(checkpoint, base, MODEL)
         results = {mode: run(decoder, tokenizer, history_mode=mode) for mode in ('live', 'reference', 'users_only')}
     elif reasoning_budget:
@@ -120,11 +138,12 @@ def main(checkpoint, output, reasoning_budget, compare_history):
                    'spora_with_instruction': run(decoder, tokenizer, INSTRUCTION)}
     for label in results:
         print(label, {key: value for key, value in results[label].items() if key != 'rows'}, flush=True)
-    if sha(checkpoint) != digest:
-        raise ValueError('Checkpoint changed during the audit')
+    if any(sha(path) != digest for path, digest in sources.items()):
+        raise ValueError('Evaluation input changed during the audit')
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open('x', encoding='utf-8') as stream:
-        json.dump({'checkpoint_sha256': digest, 'instruction': INSTRUCTION,
+        json.dump({'checkpoint_sha256': sources.get(checkpoint),
+                   'sources': {str(path): digest for path, digest in sources.items()}, 'instruction': INSTRUCTION,
                    'reasoning_budget': reasoning_budget, 'results': results},
                   stream, ensure_ascii=False, indent=2)
         stream.write('\n')
@@ -132,11 +151,15 @@ def main(checkpoint, output, reasoning_budget, compare_history):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ('checkpoint', 'output'):
-        parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--output', type=Path, required=True)
+    inputs = parser.add_mutually_exclusive_group(required=True)
+    inputs.add_argument('--checkpoint', type=Path)
+    inputs.add_argument('--instruct-reference', type=Path)
     parser.add_argument('--reasoning-budget', type=int, default=0)
     parser.add_argument('--compare-history', action='store_true')
     args = parser.parse_args()
     if args.reasoning_budget < 0 or (args.compare_history and args.reasoning_budget):
         parser.error('Choose either a positive reasoning budget or the history comparison')
+    if args.instruct_reference is not None and (args.compare_history or args.reasoning_budget):
+        parser.error('The instruct reference uses its native dialogue format')
     main(**vars(args))

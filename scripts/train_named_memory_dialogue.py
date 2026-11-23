@@ -10,9 +10,10 @@ from torch.nn import functional as F
 
 from scripts.audit_local_named_chat import CASES, run
 from scripts.audit_qwen_packed_reply_20261122 import HELD, evaluate, records
+from scripts.deepseek_spora_full_stream_loader import load_qwen_streamed
 from scripts.spora_named_memory_chat import MODEL, load_full_streamed, sha
 from spora.integrated_checkpoint import load_integrated_runtime
-from spora.language_training import frozen_digest
+from spora.language_training import atomic_save, frozen_digest
 from spora.pretrained_attention import SPORAPretrainedBlock, SPORAResidualBlock
 from transformers import AutoTokenizer
 
@@ -43,18 +44,54 @@ def source_dialogues():
     return groups
 
 
-def tokens(tokenizer, history, question):
+def generated_dialogues():
+    """Vary values and which field is requested across matched conversations."""
+    plans = ('整理票据', '入库图册', '寄送海报', '清点文具', '标注展板', '归还设备')
+    places = ('西侧大厅', '松林站', '东区前台', '石桥路口', '库房三号门', '二楼档案室')
+    materials = ('布袋', '胶纸', '纸盒', '砂纸', '卡纸', '胶带')
+    separators = ('+', '、', '；', '—')
+    rng = random.Random(SEED)
+    rows = []
+    for _ in range(40):
+        action, other = rng.sample(plans, 2)
+        left, right = rng.sample(places, 2)
+        a, b = rng.sample(materials, 2)
+        first, added = rng.sample(range(2, 10), 2)
+        divider = rng.choice(separators)
+        rows.extend((
+            [(f'{action}去{left}，{other}去{right}。请只回{other}的地点。', right),
+             (f'现在只把{other}改到{left}，报出新的地点。', left),
+             (f'{other}最早说的是哪里？请只发地点。', right)],
+            [(f'登记了{first}份{a}，新增{added}份。直接报总数。', str(first + added)),
+             (f'新增的那批撤销，报最新还剩几份{a}。', str(first))],
+            [(f'填写材料栏，按{b}在前、{a}在后的顺序，用「{divider}」连接。只发结果。',
+              divider.join((b, a))),
+             (f'现在只留排在后面的名称，直接发文字。', a)],
+            [(f'只有地点在{left}时才做{action}，其余地点都做{other}。当前到的是{right}，直接写活动名。', other),
+             (f'地点改成{left}，按这个条件填入活动名。', action)],
+            [(f'把{a}放入上层，把{b}放入下层。请只发上层的物品名。', a),
+             (f'把上层和下层改成放同一种，沿用下层原来的物品。上层现在是什么？', b),
+             (f'上层原来放了哪样？只发名称。', a)],
+        ))
+    return list({tuple(row): row for row in rows}.values())
+
+
+def tokens(tokenizer, history, question, *, deepseek=True):
     messages = [{'role': role, 'content': text} for user, answer in history
                 for role, text in (('user', user), ('assistant', answer))]
     messages.append({'role': 'user', 'content': question})
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    return tokenizer.encode(prompt + '</think>\n\n', add_special_tokens=False)
+    suffix = '</think>\n\n' if deepseek else ''
+    return tokenizer.encode(prompt + suffix, add_special_tokens=False)
 
 
-def examples(tokenizer):
+def examples(tokenizer, *, varied, instructor=None):
     held = {question for _, turns in CASES for question, _ in turns}
     groups = {}
-    for group, dialogues in source_dialogues().items():
+    dialogues_by_group = source_dialogues()
+    if varied:
+        dialogues_by_group['varied'] = generated_dialogues()
+    for group, dialogues in dialogues_by_group.items():
         rows = []
         for conversation in dialogues:
             if any(question in held for question, _ in conversation):
@@ -69,16 +106,90 @@ def examples(tokenizer):
                     continue
                 echo = tokenizer.encode(question, add_special_tokens=False)
                 stale = tokenizer.encode(history[-1][1], add_special_tokens=False) if history else []
-                rows.append((prompt, target, echo, stale))
+                teacher = teacher_request(instructor, history, question, answer) if instructor is not None else None
+                rows.append((prompt, target, echo, stale, teacher))
                 if history and group == 'correction':
                     corrupted = [(user, user) for user, _ in history]
                     alternate = tokens(tokenizer, corrupted, question)
                     if len(alternate) + len(target) <= 512:
-                        rows.append((alternate, target, echo, stale))
+                        teacher = (teacher_request(instructor, corrupted, question, answer)
+                                   if instructor is not None else None)
+                        rows.append((alternate, target, echo, stale, teacher))
         if not rows:
             raise ValueError(f'No training requests for {group}')
         groups[group] = rows
     return groups
+
+
+def teacher_request(tokenizer, history, question, answer):
+    prompt = tokens(tokenizer, history, question, deepseek=False)
+    return prompt, tokenizer.encode(answer, add_special_tokens=False) + [tokenizer.eos_token_id]
+
+
+@torch.inference_mode()
+def cache_teacher(groups, tokenizer, instructor, directory, digest):
+    vocabulary = tokenizer.get_vocab()
+    mapping = torch.full((max(instructor.get_vocab().values()) + 1,), -1, dtype=torch.long)
+    for token, index in instructor.get_vocab().items():
+        if token in vocabulary:
+            mapping[index] = vocabulary[token]
+    mapping[instructor.eos_token_id] = tokenizer.eos_token_id
+    model = load_qwen_streamed(directory, digest)
+    mapping = F.pad(mapping, (0, model.config.vocab_size - len(mapping)), value=-1).cuda()
+    results = {}
+    for group, rows in groups.items():
+        aligned = []
+        for prefix, target, echo, stale, request in rows:
+            prompt, answer = request
+            teacher = None
+            if len(answer) == len(target) and mapping[answer].tolist() == target and len(prompt) + len(answer) <= 512:
+                ids = torch.tensor([prompt + answer[:-1]], device='cuda')
+                logits = model(input_ids=ids, use_cache=False, logits_to_keep=len(answer)).logits[0].float()
+                logits[:, mapping < 0] = -torch.inf
+                top, indices = logits.topk(32, dim=-1)
+                teacher = (mapping[indices].cpu(), (top / 2).softmax(-1).cpu())
+            aligned.append((prefix, target, echo, stale, teacher))
+        results[group] = aligned
+        print('Aligned teacher requests', group, sum(row[-1] is not None for row in aligned), '/', len(rows), flush=True)
+    return results
+
+
+def history_pairs(tokenizer):
+    scenarios = (
+        ('西侧展厅', '连廊前台', '报备地点先前写的是{old}，现在已经换成{new}。',
+         '按修订后的记录，只给出地点。'),
+        ('玻璃瓶', '陶杯', '上一稿里的容器是{old}。现在请将它替换成{new}。',
+         '只写当前稿采用的容器名称。'),
+        ('十一册', '四册', '领取数量原写{old}，请把数量更新成{new}。',
+         '请只输出实际应领的数量。'),
+        ('蓝卡', '白卡', '桌上有蓝卡和白卡。拿走{old}，留下{new}。',
+         '桌上最后剩下哪张卡？只答名称。'),
+        ('剪纸', '制陶', '如果只有十分钟就做{old}，时间足够则做{new}。今天时间足够。',
+         '活动栏只写一个项目，按前面条件填写。'),
+        ('木架', '纸箱', '把{old}放右手边，把{new}放左手边。',
+         '现在左手边是什么？只写物品。'),
+        ('周一', '周三', '一开始定在{old}，经过调整，定在{new}。',
+         '当前日期是哪天？只答星期。'),
+        ('易蓉', '马小东', '{old}负责核收报表，{new}负责取快递。',
+         '取快递的是谁？请只说全名。'),
+        ('外柜', '里柜', '按次序先打开{old}，然后打开{new}。',
+         '第二个要打开的是哪个柜？'),
+        ('晨间会议', '新书分享', '推送题目原本是{old}，负责人说最终采用{new}。',
+         '只回最终采用的题目。'),
+        ('清单一', '清单四', '先复核{old}。完成后再核对{new}。',
+         '先前安排最后复核哪一份？只报编号。'),
+        ('山核桃', '松子', '选购{new}作为新材料，{old}用完就不再购入。',
+         '只写本次新采购的材料。'),
+    )
+    pairs = []
+    for left, right, first, followup in scenarios:
+        for prior in ('好的。', '看到了。', '', f'那就按{left}处理。'):
+            prompts = (tokens(tokenizer, [(first.format(old=left, new=right), prior)], followup),
+                       tokens(tokenizer, [(first.format(old=right, new=left), prior)], followup))
+            answers = [tokenizer.encode(answer, add_special_tokens=False) + [tokenizer.eos_token_id]
+                       for answer in (right, left)]
+            pairs.append((prompts, answers))
+    return pairs
 
 
 def forbidden_prefixes(target, phrases):
@@ -93,32 +204,72 @@ def forbidden_prefixes(target, phrases):
     return sorted(negatives)
 
 
-def fit(decoder, blocks, groups, steps):
+def backpropagate_history_contrast(decoder, prompts, answers):
+    total = 0.
+    for prompt, preferred, other in zip(prompts, answers, reversed(answers), strict=True):
+        index = next(i for i, pair in enumerate(zip(preferred, other)) if pair[0] != pair[1])
+        tokens_before = prompt + preferred[:index]
+        ids = torch.tensor([tokens_before], device='cuda')
+        logits = decoder(input_ids=ids, use_cache=False, logits_to_keep=1).logits[0, -1].float()
+        correct, wrong = logits[preferred[index]], logits[other[index]]
+        loss = F.softplus(1.5 + wrong - correct)
+        if not bool(torch.isfinite(loss)):
+            raise ValueError('Nonfinite dialogue history loss')
+        (.15 * loss).backward()
+        total += float(loss.detach())
+    return total * .15
+
+
+def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0):
     parameters = [weight for block in blocks for weight in (block.down.weight, block.up.weight)]
     optimizer = torch.optim.AdamW(parameters, lr=2e-4, weight_decay=.01)
     rng = random.Random(SEED)
+    pair_rng = random.Random(SEED + 1)
     selected = ('correction', 'foundations', 'reviewed', 'correction', 'foundations')
+    if 'varied' in groups:
+        selected = ('varied', 'foundations', 'varied', 'correction', 'reviewed')
     trace = []
     running = []
+    visits = {}
     for step in range(steps):
+        optimizer.zero_grad(set_to_none=True)
         group = selected[step % len(selected)]
-        prompt, target, echo, stale = rng.choice(groups[group])
+        row_index = rng.randrange(len(groups[group]))
+        prompt, target, echo, stale, teacher = groups[group][row_index]
         labels = torch.tensor(target, device='cuda')
         ids = torch.tensor([prompt + target[:-1]], device='cuda')
-        logits = decoder(input_ids=ids, use_cache=False, logits_to_keep=len(target)).logits[0].float()
+        positions = list(range(len(target)))
+        if loss_tokens and len(target) > loss_tokens:
+            row_key = (group, row_index)
+            start = visits.get(row_key, 0) * loss_tokens
+            positions = sorted((start + offset) % len(target) for offset in range(loss_tokens))
+            visits[row_key] = visits.get(row_key, 0) + 1
+        offsets = torch.tensor(positions, device='cuda')
+        logits = decoder(input_ids=ids, use_cache=False,
+                         logits_to_keep=offsets + len(prompt) - 1).logits[0].float()
+        labels = labels.index_select(0, offsets)
         loss = F.cross_entropy(logits, labels)
+        if teacher is not None:
+            choices, distribution = (tensor[positions].to(logits.device) for tensor in teacher)
+            student_logprob = (logits.gather(-1, choices) / 2).log_softmax(-1)
+            loss = loss + F.kl_div(student_logprob, distribution, reduction='batchmean')
         negatives = forbidden_prefixes(target, (echo, stale) if group == 'correction' else (echo,))
+        selected_rows = {position: i for i, position in enumerate(positions)}
+        negatives = [(selected_rows[position], token) for position, token in negatives if position in selected_rows]
         if negatives:
-            positions, ids = zip(*negatives, strict=True)
-            probabilities = logits.softmax(-1)[list(positions), list(ids)]
+            rows, tokens = zip(*negatives, strict=True)
+            probabilities = logits.softmax(-1)[list(rows), list(tokens)]
             loss = loss - .15 * torch.log1p(-probabilities.clamp(max=.9999)).mean()
         if not bool(torch.isfinite(loss)):
             raise ValueError('Nonfinite dialogue training loss')
-        optimizer.zero_grad(set_to_none=True)
         loss.backward()
+        reported_loss = float(loss.detach())
+        del logits, loss
+        if pairs and step % 4 == 3:
+            reported_loss += backpropagate_history_contrast(decoder, *pair_rng.choice(pairs))
         torch.nn.utils.clip_grad_norm_(parameters, 1., error_if_nonfinite=True)
         optimizer.step()
-        running.append(float(loss.detach()))
+        running.append(reported_loss)
         if (step + 1) % 32 == 0 or step + 1 == steps:
             trace.append({'step': step + 1, 'mean_loss': sum(running) / len(running)})
             print(trace[-1], flush=True)
@@ -126,17 +277,47 @@ def fit(decoder, blocks, groups, steps):
     return trace
 
 
-def main(checkpoint, output, steps):
+def main(checkpoint, output, steps, varied, contrast_history, teacher_model, teacher_cache, prepare_teacher,
+         stage_embeddings, loss_tokens):
     if output.exists():
         raise FileExistsError(output)
     torch.set_num_threads(2)
     torch.manual_seed(SEED)
-    protected = {path: sha(path) for path in (checkpoint, FOUNDATIONS, CORRECTIONS, REVIEWED)}
+    files = [checkpoint, FOUNDATIONS, CORRECTIONS, REVIEWED]
+    if teacher_model is not None:
+        files.extend(teacher_model / name for name in ('model.safetensors', 'config.json', 'tokenizer_config.json',
+                                                       'tokenizer.json', 'generation_config.json'))
+    protected = {path: sha(path) for path in files}
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
-    groups = examples(tokenizer)
+    instructor = (None if teacher_model is None else AutoTokenizer.from_pretrained(
+        teacher_model, local_files_only=True, trust_remote_code=False))
+    groups = examples(tokenizer, varied=varied, instructor=instructor)
     print('Training requests', {name: len(rows) for name, rows in groups.items()}, flush=True)
-    runtime = load_integrated_runtime(checkpoint, load_full_streamed(), MODEL)
-    decoder = runtime.decoder.eval().requires_grad_(False)
+    if instructor is not None:
+        provenance = {str(path): digest for path, digest in protected.items()}
+        recipes = {group: [(row[0], row[1], row[-1]) for row in rows] for group, rows in groups.items()}
+        if prepare_teacher:
+            if teacher_cache.exists():
+                raise FileExistsError(teacher_cache)
+            scored = cache_teacher(groups, tokenizer, instructor, teacher_model,
+                                   protected[teacher_model / 'model.safetensors'])
+            if any(sha(path) != digest for path, digest in protected.items()):
+                raise ValueError('Teacher phase inputs changed')
+            teacher_cache.parent.mkdir(parents=True, exist_ok=True)
+            atomic_save({'sources': provenance, 'recipes': recipes,
+                         'scores': {group: [row[-1] for row in rows] for group, rows in scored.items()}},
+                        teacher_cache)
+            print('Saved offline teacher scores', teacher_cache, flush=True)
+            return
+        cached = torch.load(teacher_cache, map_location='cpu', weights_only=True)
+        if cached['sources'] != provenance or cached['recipes'] != recipes or cached['scores'].keys() != groups.keys():
+            raise ValueError('Offline teacher scores do not match the training inputs')
+        groups = {group: [(*row[:-1], score) for row, score in zip(rows, cached['scores'][group], strict=True)]
+                  for group, rows in groups.items()}
+        protected[teacher_cache] = sha(teacher_cache)
+    runtime = load_integrated_runtime(checkpoint, load_full_streamed(stage_embeddings=stage_embeddings), MODEL,
+                                      disposable_base=True)
+    decoder = runtime.decoder.to('cuda').eval().requires_grad_(False)
     state_digest = frozen_digest(runtime.organism, runtime.state)
     parents = decoder.base.model.layers
     blocks = []
@@ -147,18 +328,24 @@ def main(checkpoint, output, steps):
                                    memory_context=decoder._memory_context).eval()
         parents[index] = block
         blocks.append(block)
-    trace = fit(decoder, blocks, groups, steps)
+    pairs = history_pairs(tokenizer) if contrast_history else []
+    trace = fit(decoder, blocks, groups, steps, pairs, loss_tokens=loss_tokens)
     decoder.requires_grad_(False)
+    if any(sha(path) != digest for path, digest in protected.items()) or frozen_digest(runtime.organism, runtime.state) != state_digest:
+        raise ValueError('Experiment changed protected inputs')
+    output.mkdir(parents=True, exist_ok=False)
+    candidate = runtime.save(output / 'integrated.pt')
+    print('Saved trained checkpoint', candidate, flush=True)
     dialogue = run(decoder, tokenizer)
     print('Independent dialogue', {key: value for key, value in dialogue.items() if key != 'rows'}, flush=True)
     memory = evaluate(decoder, tokenizer, runtime.organism, records(runtime.organism, HELD))
     print('Memory control', memory['summary'], flush=True)
     if any(sha(path) != digest for path, digest in protected.items()) or frozen_digest(runtime.organism, runtime.state) != state_digest:
         raise ValueError('Experiment changed protected inputs')
-    output.mkdir(parents=True, exist_ok=False)
-    candidate = runtime.save(output / 'integrated.pt')
     report = {'candidate_sha256': sha(candidate), 'sources': {str(path): digest for path, digest in protected.items()},
-              'steps': steps, 'layers': list(LAYERS), 'seed': SEED, 'trace': trace,
+              'steps': steps, 'varied': varied, 'history_pairs': len(pairs), 'layers': list(LAYERS),
+              'seed': SEED, 'trace': trace, 'loss_tokens_per_step': loss_tokens or None,
+              'teacher_requests': {name: sum(row[-1] is not None for row in rows) for name, rows in groups.items()},
               'training_requests': {name: len(rows) for name, rows in groups.items()},
               'dialogue': dialogue, 'memory': memory}
     with (output / 'result.json').open('x', encoding='utf-8') as stream:
@@ -171,7 +358,18 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--steps', type=int, default=256)
+    parser.add_argument('--varied', action='store_true')
+    parser.add_argument('--contrast-history', action='store_true')
+    parser.add_argument('--teacher-model', type=Path)
+    parser.add_argument('--teacher-cache', type=Path)
+    parser.add_argument('--prepare-teacher', action='store_true')
+    parser.add_argument('--loss-tokens', type=int, default=0,
+                        help='Limit vocabulary projection to rotating answer positions per update')
+    parser.add_argument('--stage-embeddings', action='store_true',
+                        help='Keep embedding weights on the CPU until decoder assembly finishes')
     args = parser.parse_args()
-    if args.steps < 1:
-        parser.error('--steps must be positive')
+    if args.steps < 1 or args.loss_tokens < 0:
+        parser.error('--steps must be positive and --loss-tokens must be nonnegative')
+    if (args.teacher_model is None) != (args.teacher_cache is None) or (args.prepare_teacher and args.teacher_model is None):
+        parser.error('Offline distillation requires both --teacher-model and --teacher-cache')
     main(**vars(args))

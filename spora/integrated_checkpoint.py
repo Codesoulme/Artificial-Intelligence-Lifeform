@@ -494,7 +494,10 @@ def _validate_position_coefficients(tensor, length, config):
         raise ValueError('Invalid learned position coefficients')
 
 
-def load_integrated(path, base, model_dir, *, individual_device='cpu'):
+def load_integrated(path, base, model_dir, *, individual_device='cpu', disposable_base=False):
+    """Load a checkpoint, optionally releasing old blocks as an owned base is converted."""
+    if type(disposable_base) is not bool:
+        raise ValueError('disposable_base must be a boolean')
     payload = torch.load(path, map_location='cpu', weights_only=True)
     if not isinstance(payload, dict) or set(payload) != {'metadata', 'tensors', 'integrity_sha256'}:
         raise ValueError('Invalid integrated checkpoint')
@@ -707,9 +710,10 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     reader.to(device)
     for block in loaded_replacements.values():
         block.to(device).eval()
-    previous = {index: layers[index] for index in
-                set(loaded_replacements) | set(config['layers']) | set(compatible_layers)}
-    prior_rotary = getattr(base.model, 'rotary_emb', None)
+    previous = {} if disposable_base else {
+        index: layers[index] for index in set(loaded_replacements) | set(config['layers']) | set(compatible_layers)
+    }
+    prior_rotary = None if disposable_base else getattr(base.model, 'rotary_emb', None)
     try:
         for index, block in loaded_replacements.items():
             layers[index] = block
@@ -773,9 +777,9 @@ def load_integrated(path, base, model_dir, *, individual_device='cpu'):
     return integrated, organism, state
 
 
-def load_integrated_runtime(path, base, model_dir, *, individual_device='cpu'):
+def load_integrated_runtime(path, base, model_dir, *, individual_device='cpu', disposable_base=False):
     decoder, organism, state = load_integrated(path, base, model_dir,
-                                                individual_device=individual_device)
+                                                individual_device=individual_device, disposable_base=disposable_base)
     if type(decoder.reader) is not NativeSPORAMemoryReader:
         raise ValueError('Integrated runtime requires native SPORA DeltaMemorySite reader')
     if not hasattr(organism, 'write_control') or state.internal is None:
