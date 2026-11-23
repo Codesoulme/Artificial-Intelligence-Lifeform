@@ -37,6 +37,30 @@ CASES = (
 
 INSTRUCTION = '用自然中文回答。先遵循这条消息的格式要求，再根据对话中明确给出的信息回答。'
 
+FRESH_CASES = (
+    ('换班', (('周嘉值早班，何岚值晚班。晚班是谁？只回名字。', '何岚'),
+             ('两人换班，谁值晚班？还是只回名字。', '周嘉'))),
+    ('物件', (('我把钥匙放进抽屉，把卡片留在桌上。卡片放哪儿了？只说位置。', '桌上|桌子上'),
+             ('没在桌上，我刚把卡片挪进钱包。现在在哪儿？只说位置。', '钱包|钱包里'))),
+    ('周末', (('周六去游泳，周日去爬山。周日干什么？只写活动。', '爬山'),
+             ('周日改成看展了。周六的安排是什么？只写活动。', '游泳'),
+             ('现在周日呢？只写活动。', '看展'))),
+    ('次序', (('门牌号依次是十七、二十、九。只发第二个号码，写成数字。', '20'),
+             ('把最后一个号码移到最前面。现在第二个是哪个？也写数字。', '17'))),
+    ('券数', (('我手里有八张券，用掉三张。还剩几张？只报数字。', '5'),
+             ('刚才那三张里的两张给退回来了。现在几张？只报数字。', '7'))),
+    ('符号', (('把桔子和柚子用冒号连接，只输出这两个词和冒号。', '桔子[:：]柚子'),
+             ('把后面那个换成柿子，分隔符照旧。', '桔子[:：]柿子'))),
+    ('安排', (('周一的预约要是取消就改周五，没取消就照常。现在取消了，报星期几。', '周五|星期五'),
+             ('如果一开始没有取消，应该是哪天？也只回星期。', '周一|星期一'))),
+    ('颜色', (('盒子上原贴红签，出门前换成绿签。现在贴啥颜色？只答颜色。', '绿|绿色'),
+             ('换签之前是什么颜色？只答颜色。', '红|红色'))),
+    ('配料', (('今天要做一道不辣的菜，选蒸南瓜还是辣椒炒肉？只写菜名。', '蒸南瓜'),
+             ('蒸南瓜缺食材。备选有白灼菜心和麻辣豆腐，还是不能辣。只报菜名。', '白灼菜心'))),
+    ('包裹', (('小件放在书架，大件放在柜台。哪个在书架？只回小件或大件。', '小件'),
+             ('把大的也搬到书架。柜台还有件吗？只答有或没有。', '没有'))),
+)
+
 
 class ModelRuntime:
     def __init__(self, model):
@@ -65,9 +89,10 @@ def reasoning_answer(model, tokenizer, history, question, seed, budget):
     return answer.strip(), True
 
 
-def run(model, tokenizer, instruction=None, *, reasoning_budget=0, history_mode='live', instruct_model=False):
+def run(model, tokenizer, instruction=None, *, reasoning_budget=0, history_mode='live', instruct_model=False,
+        cases=CASES):
     outcomes = []
-    for case_index, (group, turns) in enumerate(CASES):
+    for case_index, (group, turns) in enumerate(cases):
         chat = LocalChat(ModelRuntime(model), tokenizer, None, None)
         rows, history = [], []
         for turn_index, (question, expected) in enumerate(turns):
@@ -107,7 +132,7 @@ def run(model, tokenizer, instruction=None, *, reasoning_budget=0, history_mode=
             'turns': sum(len(row['turns']) for row in outcomes), 'rows': outcomes}
 
 
-def main(checkpoint, output, reasoning_budget, compare_history, instruct_reference):
+def main(checkpoint, output, reasoning_budget, compare_history, instruct_reference, fresh_holdout):
     if output.exists():
         raise FileExistsError(output)
     torch.set_num_threads(2)
@@ -124,7 +149,11 @@ def main(checkpoint, output, reasoning_budget, compare_history, instruct_referen
         model = AutoModelForCausalLM.from_pretrained(
             instruct_reference, local_files_only=True, trust_remote_code=False, use_safetensors=True,
             torch_dtype=torch.float16, attn_implementation='sdpa').to('cuda').eval()
-        results = {'instruct_reference': run(model, tokenizer, instruct_model=True)}
+        cases = FRESH_CASES if fresh_holdout else CASES
+        results = {'instruct_reference': run(model, tokenizer, instruct_model=True, cases=cases)}
+    elif fresh_holdout:
+        decoder, _, _ = load_integrated(checkpoint, base, MODEL, disposable_base=True)
+        results = {'spora': run(decoder, tokenizer, cases=FRESH_CASES)}
     elif compare_history:
         decoder, _, _ = load_integrated(checkpoint, base, MODEL)
         results = {mode: run(decoder, tokenizer, history_mode=mode) for mode in ('live', 'reference', 'users_only')}
@@ -144,7 +173,7 @@ def main(checkpoint, output, reasoning_budget, compare_history, instruct_referen
     with output.open('x', encoding='utf-8') as stream:
         json.dump({'checkpoint_sha256': sources.get(checkpoint),
                    'sources': {str(path): digest for path, digest in sources.items()}, 'instruction': INSTRUCTION,
-                   'reasoning_budget': reasoning_budget, 'results': results},
+                   'reasoning_budget': reasoning_budget, 'fresh_holdout': fresh_holdout, 'results': results},
                   stream, ensure_ascii=False, indent=2)
         stream.write('\n')
 
@@ -157,9 +186,12 @@ if __name__ == '__main__':
     inputs.add_argument('--instruct-reference', type=Path)
     parser.add_argument('--reasoning-budget', type=int, default=0)
     parser.add_argument('--compare-history', action='store_true')
+    parser.add_argument('--fresh-holdout', action='store_true')
     args = parser.parse_args()
     if args.reasoning_budget < 0 or (args.compare_history and args.reasoning_budget):
         parser.error('Choose either a positive reasoning budget or the history comparison')
     if args.instruct_reference is not None and (args.compare_history or args.reasoning_budget):
         parser.error('The instruct reference uses its native dialogue format')
+    if args.fresh_holdout and (args.compare_history or args.reasoning_budget):
+        parser.error('The fresh holdout uses live dialogue')
     main(**vars(args))

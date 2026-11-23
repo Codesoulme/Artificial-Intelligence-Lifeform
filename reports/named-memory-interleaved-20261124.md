@@ -55,3 +55,20 @@ Set-Location D:\SPORA
 纯答案组第一次尝试在反向传播中断。Windows 系统日志在错误前一秒记录虚拟内存不足，训练日志还记录了内存分配失败。相同参数重跑完成训练并通过两项评测。运行记录位于 `runs/named-memory-dialogue-teacher-v1/control-save-first.log` 与 `control-retry-v2.log`。两组结果位于 `runs/named-memory-dialogue-answer-control-v2/result.json` 与 `runs/named-memory-dialogue-instruct-distill-v1/result.json`。
 
 后续可在训练场景里收集模型自己的回复，再依据后续用户要求和已知答案评分。当前蒸馏在参考答案的前缀上给出教师信号，而实际聊天要在模型生成的前文中继续。先用固定学生采集一批轨迹做小规模对照，可以在教师和学生分时运行的条件下检查这项差异。它与论文每批用当前学生重新采样的设置有差别。两项论文主要在推理等任务验证，仍需用新题验证能否迁移到中文多轮。 [On-Policy Context Distillation](https://arxiv.org/abs/2602.12275) · [Entropy-Aware On-Policy Distillation](https://arxiv.org/abs/2603.07079)
+
+## 用模型自己的回复训练后续轮
+
+从固定孢子检查点采集 60 组训练场景的 86 条先前回复。训练时用采集的回复替换这些场景的参考前文，保留用户问题和正确的目标回复。对照两组均使用纯答案监督、同一初始检查点、761 条请求、448 步和每步最多四个答案位置。新增十组题在训练中排除，覆盖更正、换班、约束和第三轮回溯。
+
+| 前文来源 | 原评测整组 | 原评测逐轮 | 新题整组 | 新题逐轮 | 受控记忆 |
+|---|---:|---:|---:|---:|---:|
+| 参考回复 | 0/10 | 3/21 | 0/10 | 3/21 | 32/32 |
+| 部分替换为孢子实际回复 | 0/10 | 2/21 | 0/10 | 3/21 | 32/32 |
+
+新题得分持平。这个实验只验证了用固定检查点生成前文，然后在这些前文上继续做答案监督。训练时没有重新采样，也没有教师对学生生成的答案逐位置打分。该做法没有达到晋级条件，封装的原记忆候选继续作为本地入口的默认模型。
+
+千问 2.5 1.5B 指令版按原生模板在新题通过 4/10 组、8/21 轮，记录位于 `runs/named-memory-dialogue-answer-control-v2/fresh-qwen-reference.json`。这个对照测量了各自使用原生配置的效果。
+
+初次训练达到第 448 步，在重新校验底座文件时触发 `MemoryError`。第一次重跑在训练时触发 CUDA 内存分配失败。第二次重跑在组装模型后、每 32 步和保存前归还 PyTorch 未使用的显存分配，并先原子保存约 0.57 MiB 的已训练残差。该轮保存了完整检查点及评测记录。用相同参数和 `--trained-residuals` 在独立进程重新导出，检查点 SHA-256 和逐题结果一致。
+
+候选和运行详情位于 `runs/named-memory-dialogue-student-history-trained-v3/`。新题对照位于 `runs/named-memory-dialogue-answer-control-v2/fresh-dialogue.json`。
