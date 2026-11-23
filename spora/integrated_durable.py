@@ -328,6 +328,35 @@ class IntegratedDurableRuntime:
         slot = None if structured is None else structured.relation_slot(entity, relation, as_of_revision)
         return None if slot is None else self.read_structured_text(slot)
 
+    @torch.no_grad()
+    def generate_structured_relation(self, *, entity, relation, codec, input_ids, as_of_revision=None,
+                                     attention_mask=None, pad_token_id=None):
+        """Generate a bounded factual reply from the selected vector packet."""
+        from .memory_output import MemorySequenceLogitsProcessor
+
+        record = self.read_structured_relation(entity, relation, as_of_revision=as_of_revision)
+        if record is None:
+            return None
+        if (codec.eos_token_id is None or self.state.structured_text.codec_config != codec.config_dict()
+                or not isinstance(input_ids, torch.Tensor) or input_ids.ndim != 2 or input_ids.shape[0] != 1):
+            raise ValueError('Structured generation requires one query and the recorded codec')
+        scores = codec.fact_scores(record['packet'], record['metadata'])
+        top = scores.topk(2, dim=-1)
+        if (not bool((top.values[:, 0] >= .9999).all())
+                or not bool((top.values[:, 0] > top.values[:, 1]).all())
+                or int(top.indices[-1, 0]) != codec.eos_token_id
+                or bool((top.indices[:-1, 0] == codec.eos_token_id).any())):
+            raise ValueError('无法可靠恢复这条事实。')
+        length = input_ids.shape[1]
+        processor = MemorySequenceLogitsProcessor(scores * 1024., length)
+        output = self.generate_ordinary(input_ids=input_ids, attention_mask=attention_mask, use_cache=True,
+                                        do_sample=False, temperature=None, top_p=None, top_k=None,
+                                        pad_token_id=pad_token_id, logits_processor=[processor],
+                                        eos_token_id=codec.eos_token_id, max_new_tokens=len(scores))
+        if output[0, length:].tolist() != top.indices[:, 0].tolist():
+            raise ValueError('无法可靠生成这条事实。')
+        return output
+
 
 def create_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu',
                               calendar_individual=None, initial_state_factory=None):

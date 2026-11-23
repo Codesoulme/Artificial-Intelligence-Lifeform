@@ -4,11 +4,13 @@ import argparse
 from pathlib import Path
 
 from scripts.audit_named_memory_interleaved import choose_modes
+from scripts.deepseek_addressed_read import closed_think_inputs
 from scripts.audit_qwen_compatible_natural_memory_20261121 import MODEL, WORDS, extract, load_head, sha, torch
 from scripts.audit_qwen_durable_entity_reads_20261122 import read_value
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.spora_unknown_state_probe import fresh_controlled_state
 from spora.integrated_durable import create_integrated_durable, load_integrated_durable
+from spora.structured_text_memory import StructuredTextMemoryCodec
 from transformers import AutoTokenizer
 
 
@@ -28,6 +30,7 @@ class LocalChat:
         self.temporal = temporal
         self.recovery = recovery
         self.turns = []
+        self.structured_codec = None
 
     def register(self, name):
         result = self.runtime.resolve_confirmed_name(name)
@@ -80,6 +83,57 @@ class LocalChat:
             return result['text']
         return '这次没能可靠读出饮品记录。'
 
+    def get_structured_codec(self):
+        if self.structured_codec is None:
+            embedding = self.runtime.decoder.base.get_input_embeddings().weight.detach()
+            state = self.runtime.state.structured_text
+            if state is None:
+                self.structured_codec = StructuredTextMemoryCodec(
+                    embedding, memory_width=self.runtime.organism.config.memory_width,
+                    identity_slots=3, fact_slots=5, identity_slot_width=15,
+                    fact_slot_width=9, eos_token_id=self.tokenizer.eos_token_id)
+            else:
+                self.structured_codec = StructuredTextMemoryCodec.from_config(embedding, state.codec_config)
+        return self.structured_codec
+
+    def remember_fact(self, name, relation, text):
+        entity = self.runtime.resolve_confirmed_name(name)['key']
+        if entity is None:
+            return '请先登记这个完整姓名。'
+        names, values = (self.tokenizer.encode(part, add_special_tokens=False) for part in (name, text))
+        codec = self.get_structured_codec()
+        sentinel = int(codec.eos_token_id is not None)
+        if not 0 < len(names) <= codec.identity_slots - sentinel or not 0 < len(values) <= codec.fact_slots - sentinel:
+            return '姓名或事实超出记忆长度。'
+        if any(token in self.tokenizer.all_special_ids for token in (*names, *values)):
+            return '姓名和事实需使用普通文本。'
+        packet, bounds = codec.encode(names, values)
+        decoded = codec.decode(packet, bounds)
+        if (decoded['identity']['token_ids'] != names or decoded['fact']['token_ids'] != values
+                or min(decoded['fact']['margins']) <= 0):
+            return '这条内容无法可靠保存。'
+        result = self.runtime.write_structured_relation(entity, relation, packet.cpu(), bounds,
+                                                        codec_config=codec.config_dict(),
+                                                        replace_existing=True, retain_previous=True)
+        return f'已保存，修订号 {result["record_revision"]}。'
+
+    @torch.inference_mode()
+    def recall_fact(self, name, relation, revision=None):
+        entity = self.runtime.resolve_confirmed_name(name)['key']
+        if entity is None:
+            return '没有登记这个完整姓名。'
+        if self.runtime.state.structured_text is None:
+            return '没有这项事实记录。'
+        if len(relation) > 128:
+            return '关系名太长。'
+        query = closed_think_inputs(self.tokenizer, f'请核对{name}登记的{relation}。只答记录内容。', 'cuda')
+        result = self.runtime.generate_structured_relation(
+            **query, entity=entity, relation=relation, codec=self.get_structured_codec(),
+            as_of_revision=revision, pad_token_id=self.tokenizer.pad_token_id)
+        if result is None:
+            return '没有这项事实记录。'
+        return self.tokenizer.decode(result[0, query['input_ids'].shape[1]:], skip_special_tokens=True).strip()
+
     @torch.inference_mode()
     def talk(self, text):
         messages = [*self.turns, {'role': 'user', 'content': text}]
@@ -111,6 +165,18 @@ class LocalChat:
             return self.remember(*args)
         if command == '/查' and len(args) == 2:
             return self.recall(*args)
+        if command == '/记事' and len(args) == 2:
+            fields = args[1].split(maxsplit=1)
+            if len(fields) == 2:
+                return self.remember_fact(args[0], *fields)
+        if command == '/查事' and len(args) == 2:
+            fields = args[1].split()
+            if len(fields) == 1:
+                return self.recall_fact(args[0], fields[0])
+            if len(fields) == 2 and fields[1].isascii() and fields[1].isdecimal():
+                return self.recall_fact(args[0], fields[0], int(fields[1]))
+        if command in ('/记事', '/查事'):
+            return '用 /记事 姓名 关系 事实，或 /查事 姓名 关系 [修订号]。'
         return '用 /登记 姓名、/记 姓名 饮品、/查 姓名 问题，或输入 /退出。'
 
 
@@ -133,7 +199,7 @@ def main(args):
         runtime = create_integrated_durable(args.database, args.checkpoint, base, MODEL,
                                             initial_state_factory=fresh_controlled_state)
     with runtime:
-        print('孢子已就绪。可直接聊天，也可用 /登记、/记、/查。输入 /退出结束。', flush=True)
+        print('孢子已就绪。可直接聊天。用 /登记、/记、/查 或 /记事、/查事。输入 /退出结束。', flush=True)
         chat = LocalChat(runtime, tokenizer, temporal, recovery)
         while True:
             try:
