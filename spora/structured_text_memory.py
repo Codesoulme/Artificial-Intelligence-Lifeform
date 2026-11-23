@@ -224,8 +224,12 @@ class StructuredTextMemoryCodec(nn.Module):
         self.register_buffer('identity_projection', identity_projection)
         self.register_buffer('fact_projection', fact_projection)
         with torch.no_grad():
-            identity_codebook = F.normalize(embedding.float() @ identity_projection, dim=-1)
-            fact_codebook = F.normalize(embedding.float() @ fact_projection, dim=-1)
+            identity_codes, fact_codes = [], []
+            for chunk in embedding.split(4096):
+                values = chunk.float()
+                identity_codes.append(F.normalize(values @ identity_projection, dim=-1))
+                fact_codes.append(F.normalize(values @ fact_projection, dim=-1))
+            identity_codebook, fact_codebook = torch.cat(identity_codes), torch.cat(fact_codes)
         if not bool(torch.isfinite(identity_codebook).all() and torch.isfinite(fact_codebook).all()):
             raise ValueError('Projected vocabulary contains non-finite values')
         self.register_buffer('identity_codebook', identity_codebook)
@@ -282,6 +286,19 @@ class StructuredTextMemoryCodec(nn.Module):
                 raise ValueError(f'Invalid {name}')
             values[name] = value
         return values
+
+    @torch.no_grad()
+    def fact_scores(self, code, metadata):
+        """Return vocabulary similarities for the recorded fact and EOS positions."""
+        if (not isinstance(code, torch.Tensor) or code.ndim != 1 or code.numel() != self.memory_width
+                or not code.is_floating_point() or not bool(torch.isfinite(code).all())):
+            raise ValueError('Code has the wrong finite floating shape')
+        length = self._metadata(metadata)['fact_length'] + (self.eos_token_id is not None)
+        if length > self.fact_slots:
+            raise ValueError('Fact boundary exceeds its lane capacity')
+        offset = self.identity_slots * self.identity_slot_width
+        lane = code[offset:].to(self.fact_codebook).reshape(self.fact_slots, self.fact_slot_width)[:length]
+        return F.normalize(lane, dim=-1) @ self.fact_codebook.T
 
     @torch.no_grad()
     def decode(self, code, metadata):
