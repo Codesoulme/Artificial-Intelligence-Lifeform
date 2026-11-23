@@ -24,6 +24,7 @@ from spora.growing import grow
 from spora.integrated_checkpoint import load_integrated
 from spora.internal_memory import observe_sourced
 from spora.language_training import atomic_save
+from spora.open_base_memory import addressed_memory_controls
 from spora.structure_transfer import SPORALayerReplacement
 
 SOURCE_CHECKPOINT = ROOT / 'runs/deepseek-temporal-intent-router-native-spora-site-20261110/historical-individual.pt'
@@ -120,27 +121,11 @@ def _rows(facts, tokenizer):
 
 
 def _memory_args(organism, state, row):
-    key = row['key']
-    device = next(organism.parameters()).device
-    keys = torch.tensor([key], dtype=torch.long, device=device)
-    if row['intent'] == 'current':
-        addresses = [torch.nn.functional.normalize(site.current_basis[key:key + 1].to(device).float(), dim=-1)
-                     for site in organism.memories]
-        slot = 0
-    else:
-        event_time = row['event_time']
-        if type(event_time) is not int or not 0 <= event_time < state.cursor:
-            raise ValueError('Historical event must be within the observed state')
-        mode = torch.ones_like(keys)
-        times = torch.tensor([event_time], dtype=torch.long, device=device)
-        _, bound = organism.representation(keys, mode, times % organism.config.time_count)
-        addresses = [organism.memory_address(site, bound, keys, mode) for site in organism.memories]
-        slot = 1 + event_time // organism.config.time_count
-        if slot > len(state.pages):
-            raise ValueError('Historical event page is not allocated')
-    return {'memory_state': state, 'memory_addresses': addresses,
-            'memory_slots': torch.tensor([slot], dtype=torch.long, device=device),
-            'current_only': False, 'use_cache': False}
+    event = None if row['intent'] == 'current' else row['event_time']
+    if row['intent'] != 'current' and event is None:
+        raise ValueError('Historical event must be within the observed state')
+    controls, _ = addressed_memory_controls(organism, state, row['key'], event)
+    return {'memory_state': state, **controls, 'current_only': False, 'use_cache': False}
 
 
 def _set_layers(base, blocks, original):

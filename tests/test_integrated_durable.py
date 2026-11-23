@@ -5,6 +5,7 @@ import sys
 from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import torch
 
@@ -34,7 +35,7 @@ class IntegratedDurableTests(unittest.TestCase):
         self.database = self.root/'individual.sqlite'
         self.write_bootstrap()
 
-    def write_bootstrap(self, *, time_count=64):
+    def write_bootstrap(self, *, time_count=64, with_output=False):
         organism = TemporalSPORA(TemporalConfig(width=32, layers=2, heads=2, memory_width=64,
                                   expert_rank=4, memory_layers=(0, 1),
                                   history_writer='rls', current_address='orthogonal', time_count=time_count))
@@ -47,7 +48,9 @@ class IntegratedDurableTests(unittest.TestCase):
         state = attach(organism, state, control)
         reader = NativeSPORAMemoryReader(3, 64, 0.5)
         layer = SPORALayerReplacement(3, 1, max_length=8, layer_idx=1)
-        save_integrated(self.bootstrap, organism, state, reader, self.root, (0, 2), replacements={1: layer})
+        adapter = MemoryOutputAdapter(organism.config.value_count, 9, rank=2) if with_output else None
+        save_integrated(self.bootstrap, organism, state, reader, self.root, (0, 2), replacements={1: layer},
+                        output_adapter=adapter)
 
     def tearDown(self):
         self.temp.cleanup()
@@ -70,6 +73,33 @@ class IntegratedDurableTests(unittest.TestCase):
 
     def open(self):
         return load_integrated_durable(self.database, self.bootstrap, self.base(), self.root)
+
+    def test_addressed_generation_uses_the_same_committed_value_and_snapshot(self):
+        self.write_bootstrap(with_output=True)
+        with self.create() as runtime:
+            runtime.observe_sourced(2, 1, 'direct', 1.)
+            runtime.observe_sourced(2, 3, 'direct', 1.)
+            current_logits = torch.zeros(1, runtime.organism.config.value_count)
+            earlier_logits = torch.zeros_like(current_logits)
+            current_logits[0, 3], earlier_logits[0, 1] = 1., 1.
+            with (patch('spora.integrated_durable.query', side_effect=(current_logits, earlier_logits)) as query,
+                  patch.object(runtime.decoder, 'generate', return_value='reply') as generate):
+                self.assertEqual(runtime.generate_addressed_memory(key=2), (3, 'reply'))
+                current = generate.call_args.kwargs
+                self.assertIs(current['memory_state'], runtime.state)
+                self.assertEqual(current['memory_slots'].tolist(), [0])
+                self.assertEqual(current['memory_output_logits'].argmax(-1).tolist(), [3])
+                self.assertEqual(runtime.generate_addressed_memory(key=2, event_time=0), (1, 'reply'))
+                earlier = generate.call_args.kwargs
+                self.assertIs(earlier['memory_state'], runtime.state)
+                self.assertEqual(earlier['memory_slots'].tolist(), [1])
+                self.assertEqual(earlier['memory_output_logits'].argmax(-1).tolist(), [1])
+                for call, expected in zip(query.call_args_list, ((2, 0, 0), (2, 1, 0)), strict=True):
+                    self.assertIs(call.args[1], runtime.state)
+                    self.assertEqual(tuple(int(index.item()) for index in call.args[2:]), expected)
+                with self.assertRaisesRegex(ValueError, 'owns the memory evidence'):
+                    runtime.generate_addressed_memory(key=2, memory_output_logits=torch.ones(1, 9))
+                self.assertEqual(generate.call_count, 2)
 
     def test_name_enrollment_commits_and_resolves_after_restart(self):
         initial_sha = _file_sha256(self.bootstrap)

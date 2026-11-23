@@ -64,20 +64,23 @@ def read_value(runtime, tokenizer, question, key, mode, reply=None):
         if selection['status'] != 'experimental_candidate':
             return {'event': None, 'value': None, 'text': None, 'reason': selection['reason']}
         event = selection['event_time']
-    controls, evidence = _prepare_memory_read(runtime.organism, runtime.state, key,
-                                              ('current', 'past', 'later')[mode], event)
-    value = int(evidence.argmax(-1)[0])
-    if value >= len(WORDS):
-        return {'event': event, 'value': None, 'text': None, 'reason': 'unknown_value'}
-    del controls['memory_state']
-    controls['use_cache'] = True
     inputs = closed_think_inputs(tokenizer, question, 'cuda')
     length = inputs['input_ids'].shape[1]
-    output_args = ({'memory_output_logits': evidence} if reply is None else
-                   {'logits_processor': [sequence_processor(reply, evidence, length)]})
-    output = runtime.generate(**inputs, **controls, **output_args, max_new_tokens=24, do_sample=False,
-                              top_p=None, temperature=None, pad_token_id=tokenizer.pad_token_id,
-                              eos_token_id=tokenizer.eos_token_id)
+    settings = {'use_cache': True, 'max_new_tokens': 24, 'do_sample': False, 'top_p': None, 'temperature': None,
+                'pad_token_id': tokenizer.pad_token_id, 'eos_token_id': tokenizer.eos_token_id}
+    if reply is None:
+        value, output = runtime.generate_addressed_memory(**inputs, key=key, event_time=event, **settings)
+    else:
+        controls, evidence = _prepare_memory_read(runtime.organism, runtime.state, key,
+                                                  ('current', 'past', 'later')[mode], event)
+        value = int(evidence.argmax(-1)[0])
+        output = None
+        if value < len(WORDS):
+            del controls['memory_state'], controls['use_cache']
+            output = runtime.generate(**inputs, **controls, **settings,
+                                      logits_processor=[sequence_processor(reply, evidence, length)])
+    if output is None or value >= len(WORDS):
+        return {'event': event, 'value': None, 'text': None, 'reason': 'unknown_value'}
     tokens = output[0, length:].tolist()
     return {'event': event, 'value': WORDS[value], 'tokens': tokens,
             'text': tokenizer.decode(tokens, skip_special_tokens=True).strip(), 'reason': 'generated'}

@@ -20,6 +20,32 @@ _ACTIVE_LAYERS = WeakSet()
 _ACTIVE_LOCK = Lock()
 
 
+def addressed_memory_controls(organism, state, key, event_time=None):
+    """Select the decoder's current matrix or the page containing a historical event."""
+    if type(key) is not int or not 0 <= key < organism.config.key_count:
+        raise ValueError('Key outside finite memory domain')
+    device = next(organism.parameters()).device
+    keys = torch.tensor([key], dtype=torch.long, device=device)
+    modes = torch.zeros_like(keys)
+    times = torch.zeros_like(keys)
+    if event_time is None:
+        addresses = [F.normalize(site.current_basis[key:key + 1].to(device).float(), dim=-1)
+                     for site in organism.memories]
+        slot = 0
+    else:
+        if type(event_time) is not int or not 0 <= event_time < state.cursor:
+            raise ValueError('Historical event must be within the observed state')
+        page, local = divmod(event_time, organism.config.time_count)
+        slot = 1 + page
+        if slot > len(state.pages):
+            raise ValueError('Historical event page is not allocated')
+        modes.fill_(1)
+        times.fill_(event_time)
+        _, bound = organism.representation(keys, modes, torch.full_like(keys, local))
+        addresses = [organism.memory_address(site, bound, keys, modes) for site in organism.memories]
+    return {'memory_addresses': addresses, 'memory_slots': torch.full_like(keys, slot)}, (keys, modes, times)
+
+
 class OpenBaseMemory(nn.Module):
     """Two independent legacy memory readers, one for each supplied layer."""
 

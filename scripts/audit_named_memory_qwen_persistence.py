@@ -10,7 +10,6 @@ from scripts.audit_named_memory_qwen_structure_control import (
 )
 from scripts.deepseek_local_baseline import sha, torch
 from scripts.deepseek_spora_full_stream_loader import load_qwen_streamed
-from scripts.deepseek_spora_runtime_chat import _prepare_memory_read
 from scripts.spora_event_scan_selector import select_event
 from scripts.spora_unknown_state_probe import fresh_controlled_state
 from scripts.train_qwen_counterfactual_reply_20261122 import WORDS
@@ -36,18 +35,14 @@ def assess(runtime, tokenizer, eos, generation):
                 if selected['status'] != 'experimental_candidate':
                     raise ValueError(f'Missing controlled version for {name}')
                 event = selected['event_time']
-            controls, evidence = _prepare_memory_read(runtime.organism, runtime.state, address,
-                                                      ('current', 'past', 'later')[mode], event)
-            controls.pop('memory_state')
-            controls['use_cache'] = True
-            index = int(evidence.argmax(-1)[0])
-            value = WORDS[index] if index < len(WORDS) else None
             inputs = memory_inputs(tokenizer, text, 'cuda')
-            generated = runtime.generate(**inputs, **controls, memory_output_logits=evidence, max_new_tokens=16,
-                                         do_sample=False, temperature=None, top_p=None, top_k=None,
-                                         eos_token_id=eos, pad_token_id=tokenizer.pad_token_id)
-            tokens = generated[0, inputs['input_ids'].shape[1]:].tolist()
-            answer = tokenizer.decode(tokens, skip_special_tokens=True).strip()
+            index, generated = runtime.generate_addressed_memory(
+                **inputs, key=address, event_time=event, use_cache=True, max_new_tokens=16, do_sample=False,
+                temperature=None, top_p=None, top_k=None, eos_token_id=eos, pad_token_id=tokenizer.pad_token_id)
+            if generated is not None and index < len(WORDS):
+                value = WORDS[index]
+                tokens = generated[0, inputs['input_ids'].shape[1]:].tolist()
+                answer = tokenizer.decode(tokens, skip_special_tokens=True).strip()
         passed = address == key and value == expected and (answer is None if expected is None else
                  bool(tokens and tokens[-1] in eos and answer.rstrip('。！ ') == expected))
         rows.append({'name': name, 'question': text, 'address': address, 'mode': mode, 'expected': expected,

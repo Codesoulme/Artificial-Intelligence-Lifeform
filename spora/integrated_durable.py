@@ -15,13 +15,14 @@ import torch
 
 from .calendar_history import ObservationCalendar
 from .durable import RevisionConflict, TensorStore
-from .growing import capacity, grow, load
+from .growing import capacity, grow, load, query
 from .identity_fingerprints import IdentityFingerprints
 from .integrated_checkpoint import (FORMAT, STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT, _file_sha256, _validate_binding,
                                     load_integrated, query_key_position_modules, value_position_modules)
 from .integrated_open_base import NativeSPORAMemoryReader
 from .internal_memory import observe_sourced
 from .named_address import address_basis_sha256
+from .open_base_memory import addressed_memory_controls
 from .registered_name_route import resolve_confirmed_name, verify_detected_name
 from .sleep_memory import behavior_gate, indexed_behavior_gate, propose
 from .structured_text_memory import StructuredTextMemoryState
@@ -151,6 +152,28 @@ class IntegratedDurableRuntime:
             raise ValueError('Ordinary generation does not accept memory controls')
         self._check()
         return self.decoder.generate(*args, **kwargs)
+
+    @torch.no_grad()
+    def generate_addressed_memory(self, *args, key, event_time=None, **kwargs):
+        """Query the committed neural state and generate from that same selection."""
+        reserved = ('memory_state', 'memory_addresses', 'memory_slots', 'memory_read_mask',
+                    'current_only', 'preserve_memory_grad', 'memory_output_logits')
+        if any(name in kwargs for name in reserved):
+            raise ValueError('Addressed generation owns the memory evidence and decoder controls')
+        self._check()
+        organism, state = self.organism, self.state
+        controls, indices = addressed_memory_controls(organism, state, key, event_time)
+        evidence = query(organism, state, *indices)
+        if evidence.shape != (1, organism.config.value_count) or not bool(torch.isfinite(evidence).all()):
+            raise ValueError('Invalid addressed memory evidence')
+        value = int(evidence.argmax(-1)[0])
+        if value == organism.config.unknown:
+            return value, None
+        if self.decoder.output_adapter is None:
+            raise ValueError('Addressed generation requires a memory output adapter')
+        output = self.decoder.generate(*args, **kwargs, **controls, memory_state=state,
+                                       memory_output_logits=evidence)
+        return value, output
 
     def enroll_name(self, key, full_name, *, hook=None):
         """Add an explicit identity binding in its own durable transaction."""

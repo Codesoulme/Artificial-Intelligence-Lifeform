@@ -107,3 +107,13 @@ $donor = 'D:/SPORA-runtime/models/Qwen2.5-1.5B-Instruct-989aa798'
 .\.venv\Scripts\python.exe -m scripts.prepare_named_dialogue_trajectories --checkpoint $checkpoint --output "$dir/scores.pt" --donor $donor --trajectories "$dir/trajectories.pt"
 .\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue --checkpoint $checkpoint --output runs/named-memory-dialogue-trajectory-trained-v1 --steps 1536 --varied --loss-tokens 16 --trajectory-scores "$dir/scores.pt"
 ```
+
+## 将读出与生成绑定到同一次查询
+
+本地入口的 `/查` 现在调用持久运行时的 `generate_addressed_memory`。运行时从已提交的同一份个体状态取得层内读地址、时间页和答案概率，直接用这些结果生成文本。调用方传入确认过的地址和可选历史时间。未知值会在生成前退出。已有实验脚本仍可显式比较不同的回答层。
+
+在新实验库通过本地入口写入豆浆并更正为可乐。独立进程重开后读出当前可乐和更正前豆浆，拒绝未登记的相近姓名。同一运行时入口在千问对照库的副本上复现 21/21 题和此前保存的生成词元。相关检查点、生成和持久化单元测试共 59 项通过。
+
+## 对话示例对照
+
+在 1,536 步纯答案候选上，向每段测试对话前置同一条两轮示例。原题从整组 0/10、逐轮 4/21 变为 1/10、6/21。新题仍是整组 0/10，逐轮从 3/21 降到 1/21。示例仅供诊断，运行记录位于 `runs/named-memory-dialogue-examples-v1/`。
