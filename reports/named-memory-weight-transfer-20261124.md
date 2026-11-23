@@ -54,6 +54,19 @@ DeepSeek 官方将该尺寸的蒸馏版追溯到 Qwen2.5-Math-1.5B。数学版�
 
 这一对照说明，当前孢子结构允许同尺寸指令模型保留已测多轮表现，并用同一份神经状态完成受控记忆读取。自然姓名定位、时间选择和持续写入在千问配置上的效果尚待验证。运行记录及权重位于 `runs/named-memory-qwen-structure-control-v2/`。
 
+## 全骨干插值
+
+以校准后的千问孢子为起点，把 DeepSeek 权重按比例混入 28 层语言计算、末层归一化、普通词元输入和输出投影。固定千问的对话标记与位置表、孢子记忆模块及个体状态。每档均从原文件独立计算插值。
+
+| DeepSeek 权重比例 | 原题整组 / 逐轮 | 新题整组 / 逐轮 | 记忆精确 / 含正确值 |
+|---|---:|---:|---:|
+| 0% | 5/10 · 13/21 | 4/10 · 8/21 | 32/32 · 32/32 |
+| 15% | 0/10 · 1/21 | 0/10 · 0/21 | 28/32 · 32/32 |
+| 35% | 0/10 · 0/21 | 0/10 · 0/21 | 18/32 · 31/32 |
+| 65% | 0/10 · 0/21 | 0/10 · 0/21 | 23/32 · 32/32 |
+
+恢复千问权重后复现全部 74 条输出，各档个体摘要相同。15% 已使完整对话得分从 9/20 降到 0/20。这组实验度量的是固定千问接口下直接线性插值的效果，未针对每档适配新的内部表示或对话格式。逐题记录位于 `runs/named-memory-backbone-mixture-v1/`。
+
 ## 复现
 
 在 `D:\SPORA` 下执行，使用固定版本的千问底座权重。 [Qwen2.5-1.5B](https://huggingface.co/Qwen/Qwen2.5-1.5B/tree/8faed761d45a263340a0528343f099c05c9a4323)
@@ -70,4 +83,5 @@ $ancestor = 'D:/SPORA-runtime/models/Qwen2.5-1.5B-8faed76/model.safetensors'
 $control = 'runs/named-memory-qwen-structure-control-v2/result.json'
 .\.venv\Scripts\python.exe -m scripts.audit_named_memory_qwen_structure_control --checkpoint $checkpoint --donor $donor --output $control --updates 192
 .\.venv\Scripts\python.exe -m scripts.audit_named_memory_qwen_structure_control --checkpoint $checkpoint --donor $donor --output runs/named-memory-qwen-structure-control-v2/reload.json --verify $control
+.\.venv\Scripts\python.exe -m scripts.audit_named_memory_backbone_mixture --checkpoint $checkpoint --donor $donor --calibration $control --output runs/named-memory-backbone-mixture-v1
 ```
