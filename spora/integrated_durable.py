@@ -296,7 +296,10 @@ class IntegratedDurableRuntime:
         return None if slot is None else self.read_structured_text(slot)
 
 
-def create_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu', calendar_individual=None):
+def create_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu',
+                              calendar_individual=None, initial_state_factory=None):
+    if initial_state_factory is not None and (not callable(initial_state_factory) or calendar_individual is not None):
+        raise ValueError('A fresh state factory requires a bootstrap without a separate calendar seed')
     bootstrap = Path(bootstrap).resolve()
     before = _stat(bootstrap)
     metadata = _bootstrap_metadata(bootstrap)
@@ -320,6 +323,8 @@ def create_integrated_durable(database, bootstrap, base, model_dir, *, individua
                               metadata['feature_variant_sha256'])
             organism, state = imported, imported_state
             metadata['observation_calendar'] = calendar.payload()
+        if initial_state_factory is not None:
+            state = initial_state_factory(organism)
         _require_runtime(decoder, organism, state)
         store = TensorStore.create(database, organism, state, metadata)
         return IntegratedDurableRuntime(decoder, organism, state, store, bootstrap)
