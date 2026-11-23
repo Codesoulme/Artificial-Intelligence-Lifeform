@@ -131,3 +131,32 @@ $donor = 'D:/SPORA-runtime/models/Qwen2.5-1.5B-Instruct-989aa798'
 用六项事实分别验证当前值和更正前的值。重新打开后两组各通过 6/6，逐题词元与保存前一致。相关测试共 72 项通过，覆盖旧格式重开后开始保留版本、同一关系连续更正和历史槽位保护。自然寻址及多事实组合回答尚待独立验证。记录位于 `runs/named-structured-fact-history-v1/`。
 
 本地入口增加了 `/记事 姓名 关系 事实` 和 `/查事 姓名 关系 [修订号]`。例如先登记许乔，再输入 `/记事 许乔 集合点 北门`，改写为 `/记事 许乔 集合点 银杏亭`。每次保存会返回修订号。`/查事 许乔 集合点` 返回银杏亭，`/查事 许乔 集合点 1` 返回北门。重启实测也读回另一项事实桂花糖，对未登记的近名和不存在的关系返回无记录。记录位于 `runs/named-memory-structured-cli-v1-*.log`。
+
+## 中间层对话训练与新题复核
+
+从同一个封装检查点起步，沿用 761 条训练请求、随机种子 99112、1,536 步和每步最多 16 个答案位置。把秩 16 的普通对话残差从第 22、24、27 层扩至第 12、19、22、24、27 层。共有 624 条请求参与更新，累计监督 12,269 次，覆盖 4,845 个不同答案位置。训练后两套项目留出题各完整通过 3/10 组、逐轮通过 12/21，受控记忆仍为 32/32。第 12 和 19 层同时扩大了放置范围和可训练参数量。
+
+检查点保存后另编 12 组、26 轮题。各组的下一轮使用模型自己给出的回复继续对话。题目包含两段三轮对话、写通知、调整分工、修改日期、数字格式与关系追踪。使用项目的严格匹配评测，少量自然句题预先允许多种同义写法。DeepSeek 条件使用本地入口的直接回答格式。千问指令版使用原生对话格式。各对照独立加载，生成上限均为 96 个词元。
+
+| 条件 | 完整通过 | 逐轮通过 |
+|---|---:|---:|
+| 原版 DeepSeek | 0/12 | 1/26 |
+| 接入孢子记忆的训练起点 | 0/12 | 1/26 |
+| 第 12、19、22、24、27 层对话候选 | 4/12 | 14/26 |
+| 第 22、23、24、25、27 层对话候选 | 0/12 | 5/26 |
+| 原版千问指令版 | 3/12 | 12/26 |
+
+原版 DeepSeek 和训练起点的 26 轮中有 25 轮回复文本一致。对照表明接入记忆后仍有原模型的多轮缺口，早期整层替换另有可测的语言退化。候选能连续完成两段三轮对话，也能按变化重写通知。报价与调拨、名单重排、两天安排对调仍有失败。样本限于短对话及固定内容或格式要求，整组通过率仍低于自由聊天验收所需的稳定性。千问在前两套留出题分别为 5/10 和 4/10，本轮的两轮分差属于小样本观察。
+
+五个后层对照从相同检查点开训，保持秩、训练请求、种子与监督位置相同，只把第 12、19 层换成第 23、25 层。前两套留出对话均为 0/10，逐轮分别为 4/21 和 2/21，受控记忆仍为 32/32。同预算对照支持将普通对话残差布置到第 12 和 19 层。试验只使用了一个种子，两层同时移动，也无法分出各层的单独贡献。
+
+训练记录位于 `runs/named-memory-dialogue-midlayers-v1/` 和 `runs/named-memory-dialogue-latelayers-v1/`，新题及逐轮结果位于 `runs/named-memory-dialogue-midlayers-holdout-v1/`。本地交流入口使用已经验收的记忆检查点。
+
+```powershell
+$sporaCheckpoint = 'runs/named-memory-layer9-packed-reply-v1/packed.pt'
+.\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue --checkpoint $sporaCheckpoint --output runs/named-memory-dialogue-midlayers-v1 --steps 1536 --varied --loss-tokens 16 --fresh-holdout --layers 12 19 22 24 27
+.\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue --checkpoint $sporaCheckpoint --output runs/named-memory-dialogue-latelayers-v1 --steps 1536 --varied --loss-tokens 16 --fresh-holdout --layers 22 23 24 25 27
+foreach ($sporaCondition in @('original', 'parent', 'candidate', 'late', 'qwen')) {
+    .\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_midlayers_holdout $sporaCondition
+}
+```
