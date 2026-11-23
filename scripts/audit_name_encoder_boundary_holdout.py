@@ -16,14 +16,21 @@ SUFFIXES = ('然', '川', '越', '宁', '和', '信', '明', '白')
 PREFIXES = ('陈', '江', '史', '周', '何', '黄', '田', '唐')
 
 
-def fixture():
+def fixture(fresh=False):
     templates = (
         '上面那张便笺是{name}提交的，给他拿什么饮料？',
         '按材料右边所写，麻烦给{name}找那杯喝的。',
         '{name}那份单子列的是哪款饮品？',
         '麻烦核查以{name}署名的那张纸上的点单内容。',
     )
-    for key, (name, suffix, prefix) in enumerate(zip(NAMES, SUFFIXES, PREFIXES, strict=True)):
+    names, suffixes, prefixes = NAMES, SUFFIXES, PREFIXES
+    if fresh:
+        names = ('祝晴', '阿霖', '小蘋', '潘遥', '霍宛萱', '苏楚竹', '程笛', '孟小雨')
+        suffixes = ('乔', '仪', '雪', '弦', '亭', '玥', '苗', '昭')
+        prefixes = ('蔡', '奚', '林', '严', '易', '俞', '章', '郝')
+        templates = ('把{name}报上来的那杯饮料找出来。', '替{name}选的哪种饮品，旧本上还查得到吗？',
+                     '我得确定{name}交来的记录写的是哪一种。', '核对一下{name}原来喝的是什么。')
+    for key, (name, suffix, prefix) in enumerate(zip(names, suffixes, prefixes, strict=True)):
         for template in templates:
             for kind, value in (('exact', name), ('extended_right', name + suffix), ('extended_left', prefix + name)):
                 question = template.format(name=value)
@@ -36,12 +43,34 @@ def fixture():
                'mentions': [[question.index(person), question.index(person) + len(person)] for person in (name, other)]}
 
 
-def main(encoders, output):
+def verify_substitutions(model, tokenizer, outcomes):
+    replacements = ('许青', '冉晓霏', '小雯', '阿弦')
+    pending = []
+    for row in outcomes:
+        row['substitutions'] = []
+        if row['route'] is not None:
+            left, right, _ = row['candidates'][0]
+            text = row['question']
+            for name in replacements:
+                rewritten = text[:left] + name + text[right:]
+                pending.append((row, name, rewritten, [left, left + len(name)]))
+    tags = annotate(model, tokenizer, [item[2] for item in pending])
+    for (row, name, _, span), detected in zip(pending, tags, strict=True):
+        row['substitutions'].append({'name': name, 'expected': span, 'detected': detected['bio']})
+    for row in outcomes:
+        support = sum(item['detected'] == [item['expected']] for item in row['substitutions'])
+        for minimum in (2, 3, 4):
+            row[f'substitution_{minimum}'] = row['route'] if support >= minimum else None
+
+
+def main(encoders, output, fresh, substitution_check):
     if output.exists():
         raise FileExistsError(output)
     torch.set_num_threads(4)
-    fingerprints = registry(NAMES)
-    rows = list(fixture())
+    rows = list(fixture(fresh))
+    names = dict.fromkeys(row['question'][left:right] for row in rows if row['kind'] == 'exact'
+                          for left, right in row['mentions'])
+    fingerprints = registry(tuple(names))
     for row in rows:
         row['candidates'] = fingerprints.matching_spans(row['question'], max_name_chars=12)
     results = {}
@@ -58,6 +87,8 @@ def main(encoders, output):
             if len(detected) == len(candidates) == 1 and detected[0] == list(candidates[0][:2]):
                 routed = candidates[0][2]
             outcomes.append({**row, 'detected': detected, 'route': routed})
+        if substitution_check:
+            verify_substitutions(model, tokenizer, outcomes)
         summary = {}
         for kind in sorted({row['kind'] for row in outcomes}):
             subset = [row for row in outcomes if row['kind'] == kind]
@@ -66,6 +97,13 @@ def main(encoders, output):
                              'route_correct': sum(row['route'] == row['expected'] for row in subset),
                              'false_links': sum(row['route'] is not None and row['route'] != row['expected']
                                                 for row in subset)}
+            if substitution_check:
+                for minimum in (2, 3, 4):
+                    key = f'substitution_{minimum}'
+                    summary[kind][key] = {
+                        'correct': sum(row[key] == row['expected'] for row in subset),
+                        'false_links': sum(row[key] is not None and row[key] != row['expected'] for row in subset),
+                    }
         print(directory.name, summary, flush=True)
         if sha(directory / 'model.safetensors') != digest:
             raise ValueError('Encoder changed during holdout')
@@ -80,4 +118,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--encoders', type=Path, nargs='+', required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--fresh', action='store_true')
+    parser.add_argument('--substitution-check', action='store_true')
     main(**vars(parser.parse_args()))
