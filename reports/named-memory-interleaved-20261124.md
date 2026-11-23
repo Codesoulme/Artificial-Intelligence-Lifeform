@@ -92,3 +92,18 @@ Set-Location D:\SPORA
 ## 增加普通生成残差容量
 
 保持原 761 条请求池、采样种子、1,536 步和每步最多 16 个答案位置，只将第 22、24、27 层残差的秩从 16 提高到 64。两组实际监督量相同，训练脚本记录到 624 条请求、4,845 个不同位置及 12,269 次位置曝光。最后 32 步平均训练损失从 1.257 降至 0.831。原题逐轮从 4/21 增到 5/21，新题逐轮从 3/21 降至 2/21，两套完整通过均为 0/10。受控记忆为 32/32。本对照的训练样本量和结构覆盖仍有限。结果位于 `runs/named-memory-dialogue-rank64-v1/result.json`。
+
+## 在学生生成的答案上蒸馏
+
+从自动变体训练集采集 128 条孢子生成的续写，每条最多十二个词元。冻结的千问指令版读取同一训练历史，给续写上的最多四个位置打分。另开进程训练孢子，每四步加入一次反向 KL 损失，分布限于千问给分最高的 32 个候选词元。在两组都使用的 12,269 次标准答案位置曝光之外，蒸馏组增加 1,532 次续写位置曝光。采样基于固定父模型，训练中没有更新轨迹。论文方法使用在线采样且有不同的词元近似，本实验只验证上述离线近似。 [On-Policy Context Distillation](https://arxiv.org/abs/2602.12275)
+
+纯答案组和续写蒸馏组的原题都是 4/21。新题从 3/21 降到 1/21。两套题的整组通过数仍各为 0/10，受控记忆保持 32/32。训练集由五类自动变体提供续写，结果适用于本次数据与损失近似。训练和逐题结果位于 `runs/named-memory-dialogue-trajectory-trained-v1/`。
+
+```powershell
+$checkpoint = 'runs/named-memory-layer9-packed-reply-v1/packed.pt'
+$dir = 'runs/named-memory-dialogue-trajectory-v1'
+$donor = 'D:/SPORA-runtime/models/Qwen2.5-1.5B-Instruct-989aa798'
+.\.venv\Scripts\python.exe -m scripts.prepare_named_dialogue_trajectories --checkpoint $checkpoint --output "$dir/trajectories.pt" --count 128
+.\.venv\Scripts\python.exe -m scripts.prepare_named_dialogue_trajectories --checkpoint $checkpoint --output "$dir/scores.pt" --donor $donor --trajectories "$dir/trajectories.pt"
+.\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue --checkpoint $checkpoint --output runs/named-memory-dialogue-trajectory-trained-v1 --steps 1536 --varied --loss-tokens 16 --trajectory-scores "$dir/scores.pt"
+```

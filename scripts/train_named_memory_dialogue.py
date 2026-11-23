@@ -269,11 +269,48 @@ def backpropagate_history_contrast(decoder, prompts, answers):
     return total * .15
 
 
-def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0):
+def read_trajectory_scores(path, checkpoint_digest, groups):
+    payload = torch.load(path, map_location='cpu', weights_only=True)
+    if payload['checkpoint_sha256'] != checkpoint_digest or not payload['rows']:
+        raise ValueError('Trajectory scores are missing or belong to a different checkpoint')
+    seen = set()
+    for row in payload['rows']:
+        index, positions = row['index'], row['positions']
+        choices, log_probs = row['choices'], row['log_probs']
+        if type(index) is not int or not 0 <= index < len(groups['varied']) or index in seen:
+            raise ValueError('Invalid trajectory index')
+        seen.add(index)
+        prompt, target, *_ = groups['varied'][index]
+        if (row['prompt'] != prompt or row['target'] != target or not 1 <= len(row['generated']) <= 12
+                or not positions or positions != sorted(set(positions)) or not 0 <= positions[0]
+                or positions[-1] >= len(row['generated']) or choices.shape != (len(positions), 32)
+                or choices.dtype != torch.long or bool((choices < 0).any()) or bool((choices >= 151936).any())
+                or log_probs.shape != choices.shape or not bool(torch.isfinite(log_probs).all())):
+            raise ValueError('Invalid trajectory score record')
+    return payload['rows']
+
+
+def backpropagate_trajectory(decoder, row):
+    prompt = row['prompt']
+    ids = torch.tensor([prompt + row['generated'][:-1]], device='cuda')
+    positions = torch.tensor(row['positions'], device='cuda') + len(prompt) - 1
+    logits = decoder(input_ids=ids, use_cache=False, logits_to_keep=positions).logits[0].float()
+    scores = logits.gather(-1, row['choices'].to(logits.device)) / 2
+    student = scores.log_softmax(-1)
+    teacher = row['log_probs'].to(logits.device)
+    loss = .5 * (student.exp() * (student - teacher)).sum(-1).mean()
+    if not bool(torch.isfinite(loss)):
+        raise ValueError('Nonfinite trajectory distillation loss')
+    loss.backward()
+    return float(loss.detach())
+
+
+def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0, trajectories=()):
     parameters = [weight for block in blocks for weight in (block.down.weight, block.up.weight)]
     optimizer = torch.optim.AdamW(parameters, lr=2e-4, weight_decay=.01)
     rng = random.Random(SEED)
     pair_rng = random.Random(SEED + 1)
+    trajectory_rng = random.Random(SEED + 8)
     selected = ('correction', 'foundations', 'reviewed', 'correction', 'foundations')
     if 'varied' in groups:
         selected = ('varied', 'foundations', 'varied', 'correction', 'reviewed')
@@ -283,6 +320,7 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0):
     running = []
     visits = {}
     projected = 0
+    trajectory_exposures = 0
     seen = {}
     for step in range(steps):
         optimizer.zero_grad(set_to_none=True)
@@ -322,6 +360,10 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0):
         del logits, loss
         if pairs and step % 4 == 3:
             reported_loss += backpropagate_history_contrast(decoder, *pair_rng.choice(pairs))
+        if trajectories and step % 4 == 3:
+            trajectory = trajectory_rng.choice(trajectories)
+            reported_loss += backpropagate_trajectory(decoder, trajectory)
+            trajectory_exposures += len(trajectory['positions'])
         torch.nn.utils.clip_grad_norm_(parameters, 1., error_if_nonfinite=True)
         optimizer.step()
         running.append(reported_loss)
@@ -334,12 +376,14 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0):
                 'target_exposures': projected,
                 'end_targets': sum(len(groups[group][index][1]) - 1 in positions
                                    for (group, index), positions in seen.items())}
+    if trajectories:
+        exposure['trajectory_exposures'] = trajectory_exposures
     return trace, exposure
 
 
 def main(checkpoint, output, steps, varied, contrast_history, teacher_model, teacher_cache, prepare_teacher,
          stage_embeddings, loss_tokens, collect_student_histories, student_histories, trained_residuals, composition,
-         layers, rank, fresh_holdout):
+         layers, rank, fresh_holdout, trajectory_scores):
     if output.exists():
         raise FileExistsError(output)
     torch.set_num_threads(2)
@@ -353,6 +397,8 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
         files.append(COMPOSITION)
     if student_histories is not None:
         files.append(student_histories)
+    if trajectory_scores is not None:
+        files.append(trajectory_scores)
     if teacher_model is not None:
         files.extend(teacher_model / name for name in ('model.safetensors', 'config.json', 'tokenizer_config.json',
                                                        'tokenizer.json', 'generation_config.json'))
@@ -362,6 +408,7 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
     histories, rollout_digest = read_histories(student_histories) if student_histories is not None else (None, None)
     groups = examples(tokenizer, varied=varied, instructor=instructor, sampled_histories=histories,
                       composition=composition)
+    trajectories = read_trajectory_scores(trajectory_scores, protected[checkpoint], groups) if trajectory_scores else ()
     print('Training requests', {name: len(rows) for name, rows in groups.items()}, flush=True)
     if instructor is not None:
         provenance = {str(path): digest for path, digest in protected.items()}
@@ -411,7 +458,7 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
     residual_path = output / 'trained-residuals.pt'
     torch.cuda.empty_cache()
     if trained_residuals is None:
-        trace, exposure = fit(decoder, blocks, groups, steps, pairs, loss_tokens=loss_tokens)
+        trace, exposure = fit(decoder, blocks, groups, steps, pairs, loss_tokens=loss_tokens, trajectories=trajectories)
         torch.cuda.empty_cache()
         atomic_save({'recipe': recipe, 'trace': trace, 'exposure': exposure,
                      'weights': [weight.detach().cpu() for weight in weights]}, residual_path)
@@ -436,7 +483,7 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
     print('Independent dialogue', {key: value for key, value in dialogue.items() if key != 'rows'}, flush=True)
     memory = evaluate(decoder, tokenizer, runtime.organism, records(runtime.organism, HELD))
     print('Memory control', memory['summary'], flush=True)
-    fresh_dialogue = run(decoder, tokenizer, cases=FRESH_CASES) if histories or composition or fresh_holdout else None
+    fresh_dialogue = run(decoder, tokenizer, cases=FRESH_CASES) if histories or composition or fresh_holdout or trajectories else None
     if fresh_dialogue is not None:
         print('Fresh dialogue', {key: value for key, value in fresh_dialogue.items() if key != 'rows'}, flush=True)
     if any(sha(path) != digest for path, digest in protected.items()) or frozen_digest(runtime.organism, runtime.state) != state_digest:
@@ -467,6 +514,7 @@ if __name__ == '__main__':
     parser.add_argument('--contrast-history', action='store_true')
     parser.add_argument('--teacher-model', type=Path)
     parser.add_argument('--teacher-cache', type=Path)
+    parser.add_argument('--trajectory-scores', type=Path, help='Distill teacher scores on collected student continuations')
     parser.add_argument('--prepare-teacher', action='store_true')
     parser.add_argument('--loss-tokens', type=int, default=0,
                         help='Limit vocabulary projection to rotating answer positions per update')
@@ -490,6 +538,9 @@ if __name__ == '__main__':
         parser.error('Student histories require --varied')
     if args.composition and not args.varied:
         parser.error('Composition examples require --varied')
+    if args.trajectory_scores is not None and (not args.varied or args.student_histories or args.collect_student_histories
+                                               or args.prepare_teacher or args.teacher_model):
+        parser.error('Trajectory scores require the original --varied training histories and answer-only supervision')
     if args.trained_residuals is not None and (args.collect_student_histories or args.prepare_teacher):
         parser.error('Saved training weights require the training or evaluation mode')
     main(**vars(args))
