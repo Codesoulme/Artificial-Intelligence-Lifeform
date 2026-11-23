@@ -74,6 +74,25 @@ class IntegratedDurableTests(unittest.TestCase):
     def open(self):
         return load_integrated_durable(self.database, self.bootstrap, self.base(), self.root)
 
+    def test_versioned_relation_preserves_old_values_across_restart(self):
+        config = {'memory_width': 64, 'identity_slots': 1, 'fact_slots': 1}
+        bounds = {'identity_length': 1, 'fact_length': 1}
+        with self.create() as runtime:
+            first = runtime.write_structured_relation(4, '地点', torch.ones(64), bounds, codec_config=config)
+            runtime.write_structured_relation(5, '地点', torch.full((64,), 99.), bounds)
+        with self.open() as runtime:
+            second = runtime.write_structured_relation(4, '地点', torch.full((64,), 2.), bounds,
+                                                       replace_existing=True, retain_previous=True)
+            runtime.write_structured_relation(4, '地点', torch.full((64,), 3.), bounds, replace_existing=True)
+            with self.assertRaisesRegex(ValueError, 'Relation-bound'):
+                runtime.write_structured_text(first['slot'], torch.zeros(64), bounds)
+        with self.open() as runtime:
+            for revision, expected in ((first['record_revision'], 1.), (second['record_revision'], 2.), (None, 3.)):
+                value = runtime.read_structured_relation(4, '地点', as_of_revision=revision)
+                self.assertTrue(torch.equal(value['packet'], torch.full((64,), expected)))
+            self.assertIsNone(runtime.read_structured_relation(4, '地点', as_of_revision=0))
+            self.assertTrue(torch.equal(runtime.read_structured_relation(5, '地点')['packet'], torch.full((64,), 99.)))
+
     def test_addressed_generation_uses_the_same_committed_value_and_snapshot(self):
         self.write_bootstrap(with_output=True)
         with self.create() as runtime:

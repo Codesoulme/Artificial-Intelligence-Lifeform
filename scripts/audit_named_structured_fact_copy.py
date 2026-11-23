@@ -39,15 +39,15 @@ def write(runtime, encoder, tokenizer, revised):
         tokens = tokenizer.encode(changed if revised else original, add_special_tokens=False)
         packet, bounds = encoder.encode(tokenizer.encode(name, add_special_tokens=False), tokens)
         runtime.write_structured_relation(entity, label, packet.cpu(), bounds, codec_config=encoder.config_dict(),
-                                          replace_existing=revised)
+                                          replace_existing=revised, retain_previous=revised)
 
 
 @torch.inference_mode()
-def assess(runtime, encoder, tokenizer, revised):
+def assess(runtime, encoder, tokenizer, revised, *, as_of_revision=None):
     rows = []
     for name, label, original, changed in FACTS:
         entity = runtime.resolve_confirmed_name(name)['key']
-        record = runtime.read_structured_relation(entity, label)
+        record = runtime.read_structured_relation(entity, label, as_of_revision=as_of_revision)
         target = tokenizer.encode(changed if revised else original, add_special_tokens=False) + [tokenizer.eos_token_id]
         scores = encoder.fact_scores(record['packet'], record['metadata'])
         top = scores.topk(2, dim=-1)
@@ -87,12 +87,20 @@ def main(checkpoint, output, phase):
                 runtime.enroll_name(key, name)
             write(runtime, encoder, tokenizer, False)
             first = assess(runtime, encoder, tokenizer, False)
+            first_revision = runtime.state.structured_text.revision
             write(runtime, encoder, tokenizer, True)
-            result = {'before_correction': first, 'corrected': assess(runtime, encoder, tokenizer, True)}
+            result = {'first_revision': first_revision, 'before_correction': first,
+                      'corrected': assess(runtime, encoder, tokenizer, True),
+                      'historical': assess(runtime, encoder, tokenizer, False, as_of_revision=first_revision)}
+            if result['historical'] != first:
+                raise ValueError('Correction changed the recorded prior facts')
         else:
-            result = {'corrected': assess(runtime, encoder, tokenizer, True)}
             original = json.loads((output / 'write.json').read_text(encoding='utf-8'))
-            if original['corrected'] != result['corrected'] or original['revision'] != runtime.store.revision:
+            result = {'historical': assess(runtime, encoder, tokenizer, False,
+                                           as_of_revision=original['first_revision']),
+                      'corrected': assess(runtime, encoder, tokenizer, True)}
+            if (any(original[name] != result[name] for name in result)
+                    or original['revision'] != runtime.store.revision):
                 raise ValueError('Persisted packet generation changed after reload')
         result['revision'] = runtime.store.revision
     if sha(checkpoint) != digest:

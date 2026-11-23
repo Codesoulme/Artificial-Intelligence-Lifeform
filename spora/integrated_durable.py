@@ -296,7 +296,7 @@ class IntegratedDurableRuntime:
                 'metadata': dict(record.metadata), 'revision': record.revision}
 
     def write_structured_relation(self, entity, relation, packet, metadata, *,
-                                  codec_config=None, replace_existing=False, hook=None):
+                                  codec_config=None, replace_existing=False, retain_previous=False, hook=None):
         """Commit an explicitly supplied entity/relation binding and packet together."""
         self._check()
         current = self.state.structured_text
@@ -309,21 +309,23 @@ class IntegratedDurableRuntime:
         updated = current.put_relation(entity, relation, packet, metadata,
                                        self.organism.config.memory_width,
                                        self.organism.config.key_count,
-                                       replace_existing=replace_existing)
+                                       replace_existing=replace_existing, retain_previous=retain_previous)
         stats = self._commit_state(replace(self.state, structured_text=updated), hook=hook)
         slot = updated.relations[(entity, relation)]
         return {'slot': slot, 'record_revision': updated.records[slot].revision,
                 'state_revision': updated.revision, 'stats': stats}
 
-    def read_structured_relation(self, entity, relation):
-        """Read an explicit relation; unknown bindings return no record."""
+    def read_structured_relation(self, entity, relation, *, as_of_revision=None):
+        """Read the latest retained value at or before a structured memory revision."""
         self._check()
         if (type(entity) is not int or not 0 <= entity < self.organism.config.key_count
                 or not isinstance(relation, str) or not relation.strip()
                 or relation != relation.strip() or len(relation) > 128):
             raise ValueError('Invalid entity or relation')
         structured = self.state.structured_text
-        slot = None if structured is None else structured.relations.get((entity, relation))
+        if as_of_revision is not None and (type(as_of_revision) is not int or as_of_revision < 0):
+            raise ValueError('Structured memory revision must be a nonnegative integer')
+        slot = None if structured is None else structured.relation_slot(entity, relation, as_of_revision)
         return None if slot is None else self.read_structured_text(slot)
 
 

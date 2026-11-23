@@ -25,12 +25,14 @@ class StructuredTextMemoryState:
 
     FORMAT = 'spora-structured-text-state-v1'
     RELATIONAL_FORMAT = 'spora-structured-text-state-v2'
+    VERSIONED_FORMAT = 'spora-structured-text-state-v3'
 
-    def __init__(self, codec_config, records=None, revision=0, relations=None):
+    def __init__(self, codec_config, records=None, revision=0, relations=None, history=None):
         self.codec_config = dict(codec_config)
         self.records = {} if records is None else dict(records)
         self.revision = revision
         self.relations = {} if relations is None else dict(relations)
+        self.history = {} if history is None else dict(history)
 
     @staticmethod
     def tensor_name(key):
@@ -77,13 +79,28 @@ class StructuredTextMemoryState:
                 raise ValueError('Invalid structured text record packet')
             if record.revision > self.revision:
                 raise ValueError('Structured text record revision is ahead of state')
+        if not isinstance(self.history, dict):
+            raise ValueError('Invalid structured relation history')
+        for pair, earlier in self.history.items():
+            if pair not in self.relations or not isinstance(earlier, tuple) or not earlier:
+                raise ValueError('Structured history requires a current relation')
+            last = 0
+            current_revision = self.records[self.relations[pair]].revision
+            for slot in earlier:
+                if type(slot) is not int or slot in slots or slot not in self.records:
+                    raise ValueError('Invalid structured history slot')
+                revision = self.records[slot].revision
+                if not last < revision < current_revision:
+                    raise ValueError('Structured history revisions must increase before the current value')
+                slots.add(slot)
+                last = revision
 
     def put(self, key, packet, metadata, memory_width, key_count=None):
-        if key in self.relations.values():
+        if key in self.relations.values() or any(key in slots for slots in self.history.values()):
             raise ValueError('Relation-bound records require a relation write')
-        return self._put(key, packet, metadata, memory_width, key_count, self.relations)
+        return self._put(key, packet, metadata, memory_width, key_count, self.relations, self.history)
 
-    def _put(self, key, packet, metadata, memory_width, key_count, relations):
+    def _put(self, key, packet, metadata, memory_width, key_count, relations, history):
         if type(key) is not int or key < 0 or (key_count is not None and key >= key_count):
             raise ValueError('Invalid structured text record key')
         if not isinstance(packet, torch.Tensor) or packet.shape != (memory_width,):
@@ -93,39 +110,51 @@ class StructuredTextMemoryState:
                    for index, value in self.records.items()}
         next_revision = self.revision + 1
         records[key] = StructuredTextRecord(packet.detach().clone().float(), dict(metadata), next_revision)
-        result = StructuredTextMemoryState(self.codec_config, records, next_revision, relations)
+        result = StructuredTextMemoryState(self.codec_config, records, next_revision, relations, history)
         result.validate(memory_width, key_count)
         return result
 
-    def put_relation(self, entity, relation, packet, metadata, memory_width, key_count, *, replace_existing=False):
-        """Write an explicitly addressed relation; existing unbound records are untouched.
-
-        Entity identity and relation semantics are caller supplied, not inferred.
-        Corrections replace the current packet; no historical version is retained.
-        """
+    def put_relation(self, entity, relation, packet, metadata, memory_width, key_count, *,
+                     replace_existing=False, retain_previous=False):
+        """Write a relation and optionally start retaining its prior revisions."""
         self.validate(memory_width, key_count)
         if (type(entity) is not int or type(key_count) is not int or key_count < 1
                 or not 0 <= entity < key_count or not isinstance(relation, str)
                 or not relation.strip() or relation != relation.strip() or len(relation) > 128
-                or type(replace_existing) is not bool):
+                or type(replace_existing) is not bool or type(retain_previous) is not bool):
             raise ValueError('Invalid entity, relation, or replacement intent')
         pair = (entity, relation)
         relations = dict(self.relations)
+        history = dict(self.history)
         if pair in relations:
             if not replace_existing:
                 raise ValueError('Relation already exists; explicit replacement required')
             slot = relations[pair]
+            if retain_previous or pair in history:
+                history[pair] = (*history.get(pair, ()), slot)
+                slot = None
         else:
+            slot = None
+        if slot is None:
             slot = next((i for i in range(key_count) if i not in self.records), None)
             if slot is None:
                 raise ValueError('Structured text record capacity exhausted')
             relations[pair] = slot
-        return self._put(slot, packet, metadata, memory_width, key_count, relations)
+        return self._put(slot, packet, metadata, memory_width, key_count, relations, history)
+
+    def relation_slot(self, entity, relation, as_of_revision=None):
+        current = self.relations.get((entity, relation))
+        if current is None or as_of_revision is None:
+            return current
+        for slot in (current, *reversed(self.history.get((entity, relation), ()))):
+            if self.records[slot].revision <= as_of_revision:
+                return slot
+        return None
 
     def schema(self):
         self.validate(self.codec_config['memory_width'])
         schema = {
-            'format': self.RELATIONAL_FORMAT if self.relations else self.FORMAT,
+            'format': self.VERSIONED_FORMAT if self.history else self.RELATIONAL_FORMAT if self.relations else self.FORMAT,
             'codec': dict(self.codec_config),
             'revision': self.revision,
             'records': [
@@ -138,11 +167,14 @@ class StructuredTextMemoryState:
                 {'entity': entity, 'relation': relation, 'slot': slot}
                 for (entity, relation), slot in sorted(self.relations.items())
             ]
+        if self.history:
+            schema['history'] = [{'entity': entity, 'relation': relation, 'slots': list(slots)}
+                                 for (entity, relation), slots in sorted(self.history.items())]
         return schema
 
     @classmethod
     def from_schema(cls, schema, tensors, device='cpu'):
-        if (not isinstance(schema, dict) or schema.get('format') not in (cls.FORMAT, cls.RELATIONAL_FORMAT)
+        if (not isinstance(schema, dict) or schema.get('format') not in (cls.FORMAT, cls.RELATIONAL_FORMAT, cls.VERSIONED_FORMAT)
                 or not isinstance(schema.get('codec'), dict)
                 or not isinstance(schema.get('records'), list)):
             raise ValueError('Invalid structured text state schema')
@@ -157,7 +189,7 @@ class StructuredTextMemoryState:
             records[row['key']] = StructuredTextRecord(
                 tensors[name].to(device), dict(row['metadata']), row['revision'])
         relations = {}
-        if schema['format'] == cls.RELATIONAL_FORMAT:
+        if schema['format'] != cls.FORMAT:
             if not isinstance(schema.get('relations'), list) or not schema['relations']:
                 raise ValueError('Invalid structured text relations schema')
             for row in schema['relations']:
@@ -170,7 +202,22 @@ class StructuredTextMemoryState:
                 relations[pair] = row['slot']
         elif 'relations' in schema:
             raise ValueError('Unexpected relations in legacy schema')
-        result = cls(schema['codec'], records, schema.get('revision'), relations)
+        history = {}
+        if schema['format'] == cls.VERSIONED_FORMAT:
+            if not isinstance(schema.get('history'), list) or not schema['history']:
+                raise ValueError('Missing structured relation history')
+            for row in schema['history']:
+                if (not isinstance(row, dict) or set(row) != {'entity', 'relation', 'slots'}
+                        or type(row['entity']) is not int or not isinstance(row['relation'], str)
+                        or not isinstance(row['slots'], list)):
+                    raise ValueError('Invalid structured history schema')
+                pair = (row['entity'], row['relation'])
+                if pair in history:
+                    raise ValueError('Duplicate structured relation history')
+                history[pair] = tuple(row['slots'])
+        elif 'history' in schema:
+            raise ValueError('Unexpected history in legacy schema')
+        result = cls(schema['codec'], records, schema.get('revision'), relations, history)
         result.validate(schema['codec'].get('memory_width'))
         return result
 

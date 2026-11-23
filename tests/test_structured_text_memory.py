@@ -27,6 +27,7 @@ class StructuredTextMemoryTests(unittest.TestCase):
         self.assertEqual(decoded['identity']['token_ids'], [2])
         self.assertEqual(decoded['fact']['token_ids'], [7, 8])
         self.assertEqual(decoded['metadata'], {'identity_length': 1, 'fact_length': 2})
+        self.assertEqual(self.codec.fact_scores(code, metadata).argmax(-1).tolist(), [7, 8, 31])
 
     def test_identity_and_fact_boundaries_are_explicit(self):
         code, metadata = self.codec.encode([2], [7, 8])
