@@ -71,6 +71,43 @@ class IntegratedDurableTests(unittest.TestCase):
     def open(self):
         return load_integrated_durable(self.database, self.bootstrap, self.base(), self.root)
 
+    def test_name_enrollment_commits_and_resolves_after_restart(self):
+        initial_sha = _file_sha256(self.bootstrap)
+        with self.create() as runtime:
+            self.assertIsNone(runtime.resolve_confirmed_name('小芮')['key'])
+            self.assertEqual(runtime.enroll_name(2, '小芮')['revision'], 1)
+            self.assertEqual(runtime.resolve_confirmed_name('小芮')['key'], 2)
+            self.assertIsNone(runtime.resolve_confirmed_name('小芮璇')['key'])
+            with self.assertRaises(ValueError):
+                runtime.enroll_name(3, '小芮')
+            self.assertEqual(runtime.store.revision, 1)
+        with self.open() as runtime:
+            self.assertEqual(runtime.resolve_confirmed_name('小芮')['key'], 2)
+            self.assertEqual(runtime.verify_detected_name('问小芮', [(1, 3)])['key'], 2)
+            self.assertIsNone(runtime.verify_detected_name('问小芮璇', [(1, 4)])['key'])
+            self.assertIsNone(runtime.verify_detected_name('问小芮和阿奕', [(1, 3), (4, 6)])['key'])
+        self.assertEqual(_file_sha256(self.bootstrap), initial_sha)
+
+    def test_name_enrollment_publishes_only_committed_bindings(self):
+        def fail_at(target):
+            def hook(stage):
+                if stage == target:
+                    raise RuntimeError(target)
+            return hook
+
+        with self.create() as runtime:
+            with self.assertRaisesRegex(RuntimeError, 'before_commit'):
+                runtime.enroll_name(2, '小芮', hook=fail_at('before_commit'))
+            self.assertEqual(runtime.store.revision, 0)
+            self.assertIsNone(runtime.resolve_confirmed_name('小芮')['key'])
+            with self.assertRaisesRegex(RuntimeError, 'after_commit'):
+                runtime.enroll_name(3, '阿奕', hook=fail_at('after_commit'))
+            self.assertEqual(runtime.store.revision, 1)
+            self.assertEqual(runtime.resolve_confirmed_name('阿奕')['key'], 3)
+        with self.open() as runtime:
+            self.assertIsNone(runtime.resolve_confirmed_name('小芮')['key'])
+            self.assertEqual(runtime.resolve_confirmed_name('阿奕')['key'], 3)
+
     @torch.no_grad()
     def test_multiple_query_key_groups_survive_reopen_and_remain_bound(self):
         try:

@@ -74,3 +74,32 @@ class IdentityFingerprints(nn.Module):
         digest = torch.tensor(_fingerprint(name), dtype=torch.int32, device=self.digests.device)
         matching = ((self.digests == digest).all(-1) & self.occupied).nonzero(as_tuple=True)[0]
         return int(matching[0]) if len(matching) == 1 else None
+
+    @torch.no_grad()
+    def matching_spans(self, text, *, max_name_chars):
+        """Return (start, end, key) candidates in the original text.
+
+        A hit can lie inside a longer name or be unrelated to the request.
+        Callers must verify the full mention and the intended subject before reading.
+        """
+        if not isinstance(text, str) or len(text) > 512:
+            raise ValueError('Candidate search requires at most 512 characters')
+        if type(max_name_chars) is not int or not 1 <= max_name_chars <= 128:
+            raise ValueError('Invalid maximum candidate length')
+        self.validate()
+        keys = self.occupied.nonzero(as_tuple=True)[0]
+        digests = self.digests.index_select(0, keys).tolist()
+        enrolled = {bytes(digest): key for digest, key in zip(digests, keys.tolist(), strict=True)}
+        if not enrolled:
+            return []
+        candidates = []
+        for start in range(len(text)):
+            for end in range(start + 1, min(len(text), start + max_name_chars) + 1):
+                try:
+                    digest = bytes(_fingerprint(text[start:end]))
+                except ValueError:
+                    continue
+                key = enrolled.get(digest)
+                if key is not None:
+                    candidates.append((start, end, key))
+        return candidates

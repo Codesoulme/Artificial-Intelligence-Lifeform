@@ -5,7 +5,8 @@ import json
 from pathlib import Path
 
 from scripts.audit_qwen_compatible_natural_memory_20261121 import (
-    MODEL, WORDS, closed_think_inputs, entity_query_proposer, load_head, select_event, sha, torch,
+    MODEL, WORDS, character_proposer, closed_think_inputs, entity_query_proposer, extract, load_head,
+    select_event, sha, torch,
     _prepare_memory_read,
 )
 from scripts.deepseek_pooled_address import extract
@@ -83,15 +84,55 @@ def read_value(runtime, tokenizer, question, key, mode, reply=None):
 
 
 @torch.no_grad()
-def evaluate(runtime, tokenizer, router, temporal, *, corrected, reply=None):
+def evaluate(runtime, tokenizer, router, temporal, *, corrected, reply=None, encoder_spans=None,
+             encoder_mode='teacher_span_diagnostic', confirm_names=False):
     cases = QUESTIONS if corrected else QUESTIONS[:2]
     questions = [question for question, _, _ in cases]
     fingerprints = runtime.organism.identity_fingerprints
     if any(fingerprints.lookup(name) != key for name, key in PEOPLE):
         raise ValueError('Individual lost a registered test name')
-    propose = entity_query_proposer(runtime.decoder, tokenizer, fingerprints, router, questions)
+    name_spans = encoder_spans
+    span_reason = encoder_mode
+    reason_prefix = 'teacher_' if encoder_mode == 'teacher_span_diagnostic' else 'student_'
+    if router is not None and router['format'] == 'spora-research-name-bio-v1':
+        from scripts.train_registered_name_bio import CharacterNameTagger, encode, predict
+
+        batches = encode(runtime.decoder, tokenizer, [(text, ()) for text in questions])
+        tagger = CharacterNameTagger(batches[0][0].shape[-1]).eval()
+        tagger.load_state_dict(router['state'], strict=True)
+        name_spans = list(predict(tagger, batches))
+        span_reason = 'internal_bio_span'
+        reason_prefix = ''
+    if confirm_names:
+        supplied_names = ('小芮', '阿奕', '小芮', '小芮', '小芮璇', None, None)
+
+        def propose(i, _text, _threshold):
+            name = supplied_names[i]
+            if name is None:
+                return None, None, 'confirmation_required', None
+            result = runtime.resolve_confirmed_name(name)
+            return result['key'], None, result['reason'], name
+    elif name_spans is not None:
+        def propose(i, text, _threshold):
+            result = runtime.verify_detected_name(text, name_spans[i])
+            reason = span_reason if result['key'] is not None else reason_prefix + result['reason']
+            return result['key'], None, reason, result['name']
+    elif router is None:
+        def propose(i, _text, _threshold):
+            key = cases[i][1]
+            name = next((name for name, enrolled in PEOPLE if enrolled == key), None)
+            return key, None, 'gold_key_diagnostic', name
+    elif router['format'] == 'spora-factorized-name-query-v1':
+        propose = entity_query_proposer(runtime.decoder, tokenizer, fingerprints, router, questions)
+    elif router['format'] == 'spora-character-name-span-v1':
+        features, _ = extract(runtime.decoder.base, tokenizer, questions, batch_size=1,
+                              hidden_indices=tuple(router['hidden_indices']),
+                              user_prefix=router['user_prefix'], last_logit_only=True)
+        propose = character_proposer(tokenizer, fingerprints, router, features, questions)
+    else:
+        raise ValueError('Unsupported entity router format')
     features, mask = extract(runtime.decoder.base, tokenizer, questions, batch_size=1,
-                             hidden_indices=tuple(temporal['hidden_indices']))
+                             hidden_indices=tuple(temporal['hidden_indices']), last_logit_only=True)
     probabilities = temporal_logits(temporal, features, mask, texts=questions).softmax(-1)
     modes = time_selection(probabilities, temporal['threshold'],
                            factorized=temporal.get('architecture') == 'factorized').tolist()
@@ -118,17 +159,63 @@ def evaluate(runtime, tokenizer, router, temporal, *, corrected, reply=None):
 def main(args):
     torch.set_num_threads(2)
     digest = sha(args.checkpoint)
-    router, router_sha = load_head(args.router, 'router.pt', 'router_sha256', digest)
     temporal, temporal_sha = load_head(args.temporal, 'temporal.pt', 'temporal_sha256', digest)
-    if router['format'] != 'spora-factorized-name-query-v1' or router['hidden_indices'] != temporal['hidden_indices']:
-        raise ValueError('Expected compatible entity and temporal routers')
+    sources = {'checkpoint_sha256': digest, 'temporal_sha256': temporal_sha}
+    router = None
+    encoder_spans = None
+    encoder_mode = 'teacher_span_diagnostic'
+    if args.oracle_names:
+        sources['name_mode'] = 'gold_key_diagnostic'
+    elif args.confirmed_names:
+        sources['name_mode'] = 'explicit_name_and_durable_enrollment'
+    elif args.teacher_names is not None or args.student_names is not None:
+        from scripts.audit_registered_name_teacher import TEACHER, REVISION, WEIGHTS_SHA, annotate
+        from transformers import AutoModelForTokenClassification
+
+        encoder_dir = args.teacher_names or args.student_names
+        weights_sha = sha(encoder_dir / 'model.safetensors')
+        if args.teacher_names is not None:
+            if weights_sha != WEIGHTS_SHA:
+                raise ValueError('Unexpected teacher checkpoint')
+            sources.update(name_mode=encoder_mode, teacher=TEACHER, teacher_revision=REVISION,
+                           teacher_weights_sha256=weights_sha)
+        else:
+            report = json.loads((encoder_dir / 'result.json').read_text(encoding='utf-8'))
+            if (report['student_sha256'] != weights_sha or report['teacher_sha256'] != WEIGHTS_SHA
+                    or report['teacher_revision'] != REVISION):
+                raise ValueError('Student checkpoint does not match its distillation report')
+            encoder_mode = 'distilled_span_diagnostic'
+            sources.update(name_mode=encoder_mode, student_weights_sha256=weights_sha)
+        model = AutoModelForTokenClassification.from_pretrained(
+            encoder_dir, local_files_only=True, use_safetensors=True, trust_remote_code=False).eval()
+        encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_dir, local_files_only=True,
+                                                          trust_remote_code=False, use_fast=True)
+        encoder_spans = [row['bio'] for row in annotate(model, encoder_tokenizer, [row[0] for row in QUESTIONS])]
+        del model, encoder_tokenizer
+    elif args.bio_names is not None:
+        from scripts.train_registered_name_bio import INDICES, PREFIX
+
+        weights = args.bio_names / 'tagger.pt'
+        report = json.loads((args.bio_names / 'result.json').read_text(encoding='utf-8'))
+        router_sha = sha(weights)
+        if report['tagger_sha256'] != router_sha:
+            raise ValueError('BIO head does not match its training report')
+        router = torch.load(weights, map_location='cpu', weights_only=True)
+        if (router['format'] != 'spora-research-name-bio-v1' or router['checkpoint_sha256'] != digest
+                or router['prefix'] != PREFIX or router['hidden_indices'] != list(INDICES)):
+            raise ValueError('Incompatible BIO head')
+        sources.update(name_mode='internal_bio_span', router_sha256=router_sha)
+    else:
+        router, sources['router_sha256'] = load_head(args.router, 'router.pt', 'router_sha256', digest)
+        if (router['format'] not in ('spora-factorized-name-query-v1', 'spora-character-name-span-v1')
+                or router['hidden_indices'] != temporal['hidden_indices']):
+            raise ValueError('Expected compatible entity and temporal routers')
     folder = args.output
     database = folder / 'individual.sqlite'
     initial_path, reload_path = folder / 'before-reload.json', folder / 'after-reload.json'
     target = reload_path if args.reopen else initial_path
     if target.exists() or (not args.reopen and database.exists()):
         raise FileExistsError('Expected a new destination for this phase')
-    sources = {'checkpoint_sha256': digest, 'router_sha256': router_sha, 'temporal_sha256': temporal_sha}
     reply = None
     if args.reply_head is not None:
         reply, sources['reply_sha256'] = load_reply_head(args.reply_head, digest, 'cuda')
@@ -142,18 +229,26 @@ def main(args):
     with open_runtime(database, args.checkpoint, load_full_streamed(), MODEL) as runtime:
         if not args.reopen:
             runtime.state = fresh_controlled_state(runtime.organism)
-            fingerprints = IdentityFingerprints(runtime.organism.config.key_count)
-            for name, key in PEOPLE:
-                fingerprints.bind(key, name)
-            runtime.organism.identity_fingerprints = fingerprints
+            if args.confirmed_names:
+                for name, key in PEOPLE:
+                    runtime.enroll_name(key, name)
+            else:
+                fingerprints = IdentityFingerprints(runtime.organism.config.key_count)
+                for name, key in PEOPLE:
+                    fingerprints.bind(key, name)
+                runtime.organism.identity_fingerprints = fingerprints
             for (_, key), value in zip(PEOPLE, (FIRST, SECOND), strict=True):
                 write_fact(runtime, key, value)
-            before = evaluate(runtime, tokenizer, router, temporal, corrected=False, reply=reply)
+            before = evaluate(runtime, tokenizer, router, temporal, corrected=False, reply=reply,
+                              encoder_spans=encoder_spans, encoder_mode=encoder_mode,
+                              confirm_names=args.confirmed_names)
             write_fact(runtime, PEOPLE[0][1], CORRECTED)
-        after = evaluate(runtime, tokenizer, router, temporal, corrected=True, reply=reply)
+        after = evaluate(runtime, tokenizer, router, temporal, corrected=True, reply=reply,
+                         encoder_spans=encoder_spans, encoder_mode=encoder_mode,
+                         confirm_names=args.confirmed_names)
         control = storage_control(runtime)
         revision = runtime.store.revision
-    if revision != 3 or sha(args.checkpoint) != digest:
+    if revision != (5 if args.confirmed_names else 3) or sha(args.checkpoint) != digest:
         raise ValueError('Unexpected durable revision or modified bootstrap')
     report = {'sources': sources, 'revision': revision, 'after_correction': after, 'storage_control': control}
     if args.reopen:
@@ -169,8 +264,15 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    for option in ('checkpoint', 'router', 'temporal', 'output'):
+    for option in ('checkpoint', 'temporal', 'output'):
         parser.add_argument('--' + option, type=Path, required=True)
+    name_mode = parser.add_mutually_exclusive_group(required=True)
+    name_mode.add_argument('--router', type=Path)
+    name_mode.add_argument('--oracle-names', action='store_true', help='Diagnose the reader with fixture addresses')
+    name_mode.add_argument('--confirmed-names', action='store_true', help='Audit durable enrollment and explicit names')
+    name_mode.add_argument('--teacher-names', type=Path, help='Diagnose with an independent frozen name tagger')
+    name_mode.add_argument('--student-names', type=Path, help='Audit an isolated distilled name tagger')
+    name_mode.add_argument('--bio-names', type=Path, help='Evaluate a tagger using only the SPORA decoder states')
     parser.add_argument('--reply-head', type=Path)
     parser.add_argument('--reopen', action='store_true')
     main(parser.parse_args())

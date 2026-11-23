@@ -6,6 +6,7 @@ Only a single writer with explicit revision checks is supported. Bootstrap hashe
 are verified on open; a cheap file-stat guard and tensor version counters detect
 ordinary in-session changes but are not an authentication or tamper boundary.
 """
+from copy import deepcopy
 from pathlib import Path
 from dataclasses import replace
 from datetime import date
@@ -15,11 +16,13 @@ import torch
 from .calendar_history import ObservationCalendar
 from .durable import RevisionConflict, TensorStore
 from .growing import capacity, grow, load
+from .identity_fingerprints import IdentityFingerprints
 from .integrated_checkpoint import (FORMAT, STRUCTURAL_FORMAT, OUTPUT_ADAPTER_FORMAT, _file_sha256, _validate_binding,
                                     load_integrated, query_key_position_modules, value_position_modules)
 from .integrated_open_base import NativeSPORAMemoryReader
 from .internal_memory import observe_sourced
 from .named_address import address_basis_sha256
+from .registered_name_route import resolve_confirmed_name, verify_detected_name
 from .sleep_memory import behavior_gate, indexed_behavior_gate, propose
 from .structured_text_memory import StructuredTextMemoryState
 
@@ -140,6 +143,30 @@ class IntegratedDurableRuntime:
             raise ValueError('Runtime owns the memory state')
         self._check()
         return self.decoder.generate(*args, memory_state=self.state, **kwargs)
+
+    def enroll_name(self, key, full_name, *, hook=None):
+        """Add an explicit identity binding in its own durable transaction."""
+        self._check()
+        candidate = deepcopy(self.organism)
+        if not hasattr(candidate, 'identity_fingerprints'):
+            device = next(candidate.parameters()).device
+            candidate.identity_fingerprints = IdentityFingerprints(candidate.config.key_count).to(device)
+        candidate.identity_fingerprints.bind(key, full_name)
+        revision = self.store.revision
+        try:
+            stats = self.store.commit(candidate, self.state, expected_revision=revision, hook=hook)
+        finally:
+            if self.store.revision == revision + 1:
+                self.organism = candidate
+        return stats
+
+    def resolve_confirmed_name(self, full_name):
+        self._check()
+        return resolve_confirmed_name(getattr(self.organism, 'identity_fingerprints', None), full_name)
+
+    def verify_detected_name(self, question, spans):
+        self._check()
+        return verify_detected_name(getattr(self.organism, 'identity_fingerprints', None), question, spans)
 
     def observe_sourced(self, key, value, source, quality, valid_at=None, *, observed_on=None,
                         effective_on=None, hook=None):

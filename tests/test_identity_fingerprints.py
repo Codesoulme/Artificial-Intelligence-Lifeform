@@ -50,6 +50,21 @@ class IdentityFingerprintTests(unittest.TestCase):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 binding.lookup(name)
 
+    def test_span_candidates_preserve_overlap_and_original_unicode_offsets(self):
+        binding = self.model.identity_fingerprints
+        binding.bind(4, 'é')
+        binding.bind(6, '小林')
+        binding.bind(7, '小林子')
+        text = 'e\u0301，小林子和小林'
+        expected = [(0, 2, 4), (3, 5, 6), (3, 6, 7), (7, 9, 6)]
+        self.assertEqual(binding.matching_spans(text, max_name_chars=3), expected)
+        schema, tensors = flatten(self.model, self.state)
+        restored, _ = restore(schema, tensors)
+        self.assertEqual(restored.identity_fingerprints.matching_spans(text, max_name_chars=3), expected)
+        self.assertEqual(binding.matching_spans('陌生人', max_name_chars=3), [])
+        with self.assertRaises(ValueError):
+            binding.matching_spans('x' * 513, max_name_chars=3)
+
     def test_tensor_and_file_roundtrips(self):
         self.model.identity_fingerprints.bind(6, '小林')
         schema, tensors = flatten(self.model, self.state)
@@ -68,6 +83,8 @@ class IdentityFingerprintTests(unittest.TestCase):
                 self.assertEqual(revision, 0)
                 self.assertEqual(loaded.identity_fingerprints.lookup('小林'), 6)
                 self.assertIsNone(loaded.identity_fingerprints.lookup('小林子'))
+                self.assertEqual(loaded.identity_fingerprints.matching_spans('给小林子', max_name_chars=3),
+                                 [(1, 3, 6)])
 
     def test_corrupt_identity_state_cannot_be_saved(self):
         binding = self.model.identity_fingerprints
