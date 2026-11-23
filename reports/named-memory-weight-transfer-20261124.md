@@ -40,6 +40,20 @@ DeepSeek 官方将该尺寸的蒸馏版追溯到 Qwen2.5-Math-1.5B。数学版�
 
 在上述 24 层和对话格式条件上，再为输入词嵌入和输出投影的 151,643 个普通词元叠加指令增量。两套题仍各为 0/10 组和 0/21 轮，受控记忆为 32/32。逐题检查可见复述、重复和遗漏用户更正。这个条件沿用 DeepSeek 位置编码，并保留四个记忆层计算。结果位于 `runs/named-memory-weight-vocab-v1/`。
 
+## 同一指令底座的结构对照
+
+完整千问指令版权重先用原生格式评测，再原位迁入孢子的 28 层统一投影、可学习位置表、两处前馈记忆读取及两处记忆残差。位置表从千问自己的旋转编码初始化。个体神经状态来自同一份 DeepSeek 孢子检查点，摘要一致。普通对话沿用千问的输入输出矩阵和结束条件。
+
+| 条件 | 原题整组 / 逐轮 | 新题整组 / 逐轮 | 受控记忆 |
+|---|---:|---:|---:|
+| 原版千问指令版 | 5/10 · 13/21 | 4/10 · 8/21 | — |
+| 迁入孢子结构，沿用原记忆回答层 | 5/10 · 13/21 | 4/10 · 8/21 | 6/32 |
+| 用千问生成分数重新校准记忆回答层 | 5/10 · 13/21 | 4/10 · 8/21 | 32/32 |
+
+迁入结构后，42 条普通对话回复有 41 条逐字一致。变化的一条指代题仍判为错误。只用 64 条已知地址和时间的训练请求校准记忆回答层，训练 192 步，底座与个体保持冻结。独立进程重新加载权重，复现迁入后的全部对话和校准后的全部记忆结果。原来的生成词表即使对齐普通词元，因底座输出分布不同，记忆回答层仍需适配。
+
+这一对照说明，当前孢子结构允许同尺寸指令模型保留已测多轮表现，并用同一份神经状态完成受控记忆读取。自然姓名定位、时间选择和持续写入在千问配置上的效果尚待验证。运行记录及权重位于 `runs/named-memory-qwen-structure-control-v2/`。
+
 ## 复现
 
 在 `D:\SPORA` 下执行，使用固定版本的千问底座权重。 [Qwen2.5-1.5B](https://huggingface.co/Qwen/Qwen2.5-1.5B/tree/8faed761d45a263340a0528343f099c05c9a4323)
@@ -53,4 +67,7 @@ $ancestor = 'D:/SPORA-runtime/models/Qwen2.5-1.5B-8faed76/model.safetensors'
 .\.venv\Scripts\python.exe -m scripts.audit_named_memory_weight_transfer --checkpoint $checkpoint --donor $donor --ancestor $ancestor --output runs/named-memory-weight-task-vector-v2 --variants plain-blocks-half plain-blocks-full
 .\.venv\Scripts\python.exe -m scripts.audit_named_memory_weight_transfer --checkpoint $checkpoint --donor $donor --ancestor $ancestor --output runs/named-memory-weight-chat-format-v1 --variants original plain-blocks-full --chat-markers
 .\.venv\Scripts\python.exe -m scripts.audit_named_memory_weight_transfer --checkpoint $checkpoint --donor $donor --ancestor $ancestor --output runs/named-memory-weight-vocab-v1 --variants plain-blocks-and-vocab-full --chat-markers
+$control = 'runs/named-memory-qwen-structure-control-v2/result.json'
+.\.venv\Scripts\python.exe -m scripts.audit_named_memory_qwen_structure_control --checkpoint $checkpoint --donor $donor --output $control --updates 192
+.\.venv\Scripts\python.exe -m scripts.audit_named_memory_qwen_structure_control --checkpoint $checkpoint --donor $donor --output runs/named-memory-qwen-structure-control-v2/reload.json --verify $control
 ```

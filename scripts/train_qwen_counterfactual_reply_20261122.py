@@ -83,10 +83,10 @@ def load_reply_head(folder, checkpoint_sha, device):
 
 
 @torch.no_grad()
-def cache(decoder, tokenizer, organism, rows, targets):
+def cache(decoder, tokenizer, organism, rows, targets, *, encode=closed_think_inputs):
     logits, evidence_rows, labels = [], [], []
     for text, controls, evidence, target in (prepare(organism, row) for row in rows):
-        prefix = closed_think_inputs(tokenizer, text, 'cuda')['input_ids']
+        prefix = encode(tokenizer, text, 'cuda')['input_ids']
         reference = targets[target]
         suffix = prefix.new_tensor([reference[:-1]])
         full = torch.cat((prefix, suffix), dim=1)
@@ -125,23 +125,24 @@ def fit(adapters, logits, evidence, labels, updates):
 
 
 @torch.inference_mode()
-def evaluate(decoder, tokenizer, organism, rows, adapters=None):
+def evaluate(decoder, tokenizer, organism, rows, adapters=None, *, encode=closed_think_inputs, eos=None):
+    eos = [tokenizer.eos_token_id] if eos is None else eos
     answered = []
     for row in rows:
         text, controls, evidence, target = prepare(organism, row)
-        inputs = closed_think_inputs(tokenizer, text, 'cuda')
+        inputs = encode(tokenizer, text, 'cuda')
         prefix_length = inputs['input_ids'].shape[-1]
         output_args = ({'memory_output_logits': evidence} if adapters is None else
                        {'logits_processor': [sequence_processor(adapters, evidence, prefix_length)]})
         ids = decoder.generate(**inputs, **controls, **output_args, max_new_tokens=16, do_sample=False,
-                               temperature=None, top_p=None, pad_token_id=tokenizer.pad_token_id,
-                               eos_token_id=tokenizer.eos_token_id)
+                               temperature=None, top_p=None, top_k=None, pad_token_id=tokenizer.pad_token_id,
+                               eos_token_id=eos)
         tokens = ids[0, prefix_length:].tolist()
         answer = tokenizer.decode(tokens, skip_special_tokens=True).strip()
         expected = WORDS[target]
         answered.append({'question': text, 'expected': expected, 'answer': answer,
                          'exact': answer.rstrip('。！ ') == expected, 'contains': expected in answer,
-                         'natural_end': bool(tokens and tokens[-1] == tokenizer.eos_token_id)})
+                         'natural_end': bool(tokens and tokens[-1] in eos)})
     by_question = {}
     for row in answered:
         by_question.setdefault(row['question'], []).append(row)
