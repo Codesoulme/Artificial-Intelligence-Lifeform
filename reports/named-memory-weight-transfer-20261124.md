@@ -52,7 +52,9 @@ DeepSeek 官方将该尺寸的蒸馏版追溯到 Qwen2.5-Math-1.5B。数学版�
 
 迁入结构后，42 条普通对话回复有 41 条逐字一致。变化的一条指代题仍判为错误。只用 64 条已知地址和时间的训练请求校准记忆回答层，训练 192 步，底座与个体保持冻结。独立进程重新加载权重，复现迁入后的全部对话和校准后的全部记忆结果。原来的生成词表即使对齐普通词元，因底座输出分布不同，记忆回答层仍需适配。
 
-这一对照说明，当前孢子结构允许同尺寸指令模型保留已测多轮表现，并用同一份神经状态完成受控记忆读取。自然姓名定位、时间选择和持续写入在千问配置上的效果尚待验证。运行记录及权重位于 `runs/named-memory-qwen-structure-control-v2/`。
+这一对照说明，当前孢子结构允许同尺寸指令模型保留已测多轮表现，并用同一份神经状态完成受控记忆读取。运行记录及权重位于 `runs/named-memory-qwen-structure-control-v2/`。
+
+在独立实验库登记六个姓名，交错写入每人的两个版本。第二个进程重载后逐题复核，再给每人追加第三个版本。第三个进程重载并只读。三次均通过 21/21，包括当前、更正前、更正后与三个未登记姓名。第二、三次重开后，逐题回复和生成词元与各自对应的保存记录一致。实验使用确认过的完整姓名和给定时间意图，自动识别人名和时间仍待验证。实验库从受控状态新建，原来个体的数据库保持原样。记录位于 `runs/named-memory-qwen-persistence-v2/`。
 
 ## 全骨干插值
 
@@ -83,5 +85,9 @@ $ancestor = 'D:/SPORA-runtime/models/Qwen2.5-1.5B-8faed76/model.safetensors'
 $control = 'runs/named-memory-qwen-structure-control-v2/result.json'
 .\.venv\Scripts\python.exe -m scripts.audit_named_memory_qwen_structure_control --checkpoint $checkpoint --donor $donor --output $control --updates 192
 .\.venv\Scripts\python.exe -m scripts.audit_named_memory_qwen_structure_control --checkpoint $checkpoint --donor $donor --output runs/named-memory-qwen-structure-control-v2/reload.json --verify $control
+foreach ($phase in 'seed','append','reopen') {
+    .\.venv\Scripts\python.exe -m scripts.audit_named_memory_qwen_persistence --checkpoint $checkpoint --donor $donor --calibration $control --output runs/named-memory-qwen-persistence-v2 --phase $phase
+    if ($LASTEXITCODE) { break }
+}
 .\.venv\Scripts\python.exe -m scripts.audit_named_memory_backbone_mixture --checkpoint $checkpoint --donor $donor --calibration $control --output runs/named-memory-backbone-mixture-v1
 ```
