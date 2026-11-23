@@ -144,6 +144,14 @@ class IntegratedDurableRuntime:
         self._check()
         return self.decoder.generate(*args, memory_state=self.state, **kwargs)
 
+    def generate_ordinary(self, *args, **kwargs):
+        """Run the ordinary decoder path without opening an individual snapshot."""
+        if any(name in kwargs for name in ('memory_state', 'memory_addresses', 'memory_read_mask',
+                                          'memory_slots', 'memory_output_logits')):
+            raise ValueError('Ordinary generation does not accept memory controls')
+        self._check()
+        return self.decoder.generate(*args, **kwargs)
+
     def enroll_name(self, key, full_name, *, hook=None):
         """Add an explicit identity binding in its own durable transaction."""
         self._check()

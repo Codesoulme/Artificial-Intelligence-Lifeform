@@ -76,7 +76,7 @@ class LocalChat:
         if self.runtime.state.cursor == 0:
             return '还没有可读的饮品记录。'
         result = read_value(self.runtime, self.tokenizer, question, address, mode)
-        if result['text'] and result['value'] in result['text']:
+        if result['text'] and result['text'].strip('。！! ') == result['value']:
             return result['text']
         return '这次没能可靠读出饮品记录。'
 
@@ -92,10 +92,10 @@ class LocalChat:
             if len(messages) == 1:
                 return '这条消息太长，请缩短一点。'
             messages = messages[2:]
-        output = self.runtime.generate(**inputs.to('cuda'), max_new_tokens=96, do_sample=False,
-                                       use_cache=True, temperature=None, top_p=None,
-                                       eos_token_id=self.tokenizer.eos_token_id,
-                                       pad_token_id=self.tokenizer.pad_token_id)
+        output = self.runtime.generate_ordinary(**inputs.to('cuda'), max_new_tokens=96, do_sample=False,
+                                                use_cache=True, temperature=None, top_p=None,
+                                                eos_token_id=self.tokenizer.eos_token_id,
+                                                pad_token_id=self.tokenizer.pad_token_id)
         reply = self.tokenizer.decode(output[0, length:], skip_special_tokens=True).strip()
         if reply:
             self.turns = [*messages, {'role': 'assistant', 'content': reply}][-8:]
