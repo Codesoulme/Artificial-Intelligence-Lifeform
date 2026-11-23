@@ -90,7 +90,7 @@ def reasoning_answer(model, tokenizer, history, question, seed, budget):
 
 
 def run(model, tokenizer, instruction=None, *, reasoning_budget=0, history_mode='live', instruct_model=False,
-        cases=CASES):
+        cases=CASES, reply_with_history=None):
     outcomes = []
     for case_index, (group, turns) in enumerate(cases):
         chat = LocalChat(ModelRuntime(model), tokenizer, None, None)
@@ -109,7 +109,10 @@ def run(model, tokenizer, instruction=None, *, reasoning_budget=0, history_mode=
                     for previous, reference in turns[:turn_index]
                     for role, content in (('user', previous), ('assistant', reference.split('|')[0]))
                 ]
-            if reasoning_budget:
+            if reply_with_history is not None:
+                answer = reply_with_history(history, prompt)
+                history.extend(({'role': 'user', 'content': prompt}, {'role': 'assistant', 'content': answer}))
+            elif reasoning_budget:
                 answer, finished = reasoning_answer(model, tokenizer, history, prompt,
                                                      3832 + case_index * 20 + turn_index, reasoning_budget)
                 history.extend(({'role': 'user', 'content': prompt}, {'role': 'assistant', 'content': answer}))
