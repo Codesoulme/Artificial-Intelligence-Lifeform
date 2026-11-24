@@ -11,6 +11,7 @@ from scripts.benchmark_spora_recurrent_dialogue import (
     load_integrated_runtime, recall_prompts, run_dialogue, sha, torch,
 )
 from scripts.train_spora_recurrent_counterfactual import evaluation_pairs, store_json
+from spora.pretrained_attention import without_dialogue_residuals
 from spora.research_recurrent_decode import load_recurrent_replacements, replace
 
 
@@ -78,16 +79,17 @@ def read_in_phase(phase, module, _args, kwargs):
 def main(args):
     paths = [args.checkpoint, SOURCE, *(folder / name for folder in args.candidates
                                        for name in ('attention.pt', 'comparison.json'))]
-    if args.transfer:
-        paths.append(args.transfer)
+    alternate_source = args.transfer or args.dialogue_ablation
+    if alternate_source:
+        paths.append(alternate_source)
     protected = {path: sha(path) for path in paths}
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     source = json.loads(SOURCE.read_text(encoding='utf-8'))
-    generative = args.generate_extended or args.phase_ablation or args.transfer is not None
+    generative = args.generate_extended or args.phase_ablation or alternate_source is not None
     lengths = ('long', 'extended') if args.transfer else ('extended',)
-    if args.transfer:
-        source['recall'] = json.loads(args.transfer.read_text(encoding='utf-8'))['recall']
+    if alternate_source:
+        source['recall'] = json.loads(alternate_source.read_text(encoding='utf-8'))['recall']
     if generative:
         prompts = [row for row in recall_prompts(tokenizer, source, extended=True) if row['length'] in lengths]
     else:
@@ -107,7 +109,9 @@ def main(args):
     else:
         candidates = load_recurrent_replacements(decoder, args.candidates, protected[args.checkpoint]).values()
         arms = [('recurrent', candidates, True), ('without_far_read', candidates, False)]
-        if args.transfer:
+        if args.dialogue_ablation:
+            arms = [('parent_without_dialogue', (), True), ('recurrent_without_dialogue', candidates, True)]
+        elif args.transfer:
             arms = [('parent', (), True), ('recurrent', candidates, True), ('decode', candidates, 'decode')]
         elif args.phase_ablation:
             arms = [(phase, candidates, phase) for phase in ('prefill', 'decode')]
@@ -116,6 +120,8 @@ def main(args):
     for label, selected, read in arms:
         print(f'Measuring {label}', flush=True)
         with ExitStack() as stack:
+            if args.dialogue_ablation:
+                stack.enter_context(without_dialogue_residuals())
             for block, candidate in selected:
                 stack.callback(setattr, candidate, 'include_far', candidate.include_far)
                 if isinstance(read, str):
@@ -151,6 +157,8 @@ if __name__ == '__main__':
                             help='Compare far reads during prefill or cached decoding on the longest cases')
     generation.add_argument('--transfer', type=Path,
                             help='Compare parent, both-phase and decode-only reads on new recall scenarios')
+    generation.add_argument('--dialogue-ablation', type=Path,
+                            help='Disable ordinary dialogue residuals for the longest supplied recall scenarios')
     parser.add_argument('--parent-only', action='store_true',
                         help='Run only the native-attention transfer control')
     arguments = parser.parse_args()

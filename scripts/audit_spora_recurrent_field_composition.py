@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 
 from scripts.benchmark_spora_recurrent_dialogue import (
-    MODEL, SOURCE, AutoTokenizer, extend_positions, frozen_digest, grade, load_full_streamed,
+    MODEL, SOURCE, AutoTokenizer, encode, extend_positions, frozen_digest, grade, load_full_streamed,
     load_integrated_runtime, recall_prompts, reply, run_dialogue, settings_for, sha, torch,
 )
 from scripts.train_spora_recurrent_counterfactual import store_json
@@ -54,6 +54,21 @@ def compare(decoder, tokenizer, prompts, joint, questions):
     return {'rows': rows, 'summary': summarize(rows)}
 
 
+def planned_answers(decoder, tokenizer, prompts, questions):
+    for mode in ('two_lines', 'enumerated_fields'):
+        requests = []
+        for prompt in prompts:
+            question = prompt['question'] + '\n请分两行回答，每行只给一个所问的值。'
+            if mode == 'enumerated_fields':
+                fields = questions[prompt['case']]
+                question += f'\n1. {fields["new"]}\n2. {fields["keep"]}'
+            length = len(encode(tokenizer, [*prompt['history'], {'role': 'user', 'content': question}]))
+            requests.append({**prompt, 'question': question, 'input_tokens': length})
+        generated = run_dialogue(decoder, tokenizer, requests, [])
+        print(mode, generated['recall_passed'], flush=True)
+        yield mode, generated
+
+
 def main(args):
     model_inputs = (args.checkpoint, SOURCE, SCENARIOS,
                     *(folder / name for folder in args.candidates for name in ('attention.pt', 'comparison.json')))
@@ -89,25 +104,36 @@ def main(args):
         joint[name] = [row for row in archive['conditions'][name]['recall'] if row['length'] == 'extended']
 
     results = {}
-    print('Full attention, short histories', flush=True)
-    results['parent_short'] = compare(decoder, tokenizer, short, run_dialogue(decoder, tokenizer, short, [])['recall'],
-                                      questions)
-    print('Full attention, long histories', flush=True)
-    results['parent_extended'] = compare(decoder, tokenizer, extended, joint['parent'], questions)
+    if not args.answer_plan:
+        print('Full attention, short histories', flush=True)
+        results['parent_short'] = compare(decoder, tokenizer, short,
+                                          run_dialogue(decoder, tokenizer, short, [])['recall'], questions)
+        print('Full attention, long histories', flush=True)
+        results['parent_extended'] = compare(decoder, tokenizer, extended, joint['parent'], questions)
+    else:
+        for prompt, existing in zip(extended, joint['recurrent'], strict=True):
+            if any(existing[key] != value for key, value in prompt.items()):
+                raise ValueError('The joint baseline used a different history or question')
     print('Recurrent attention, long histories', flush=True)
     candidates = load_recurrent_replacements(decoder, args.candidates, protected[args.checkpoint])
     with ExitStack() as stack:
         for block, candidate in candidates.values():
             stack.enter_context(replace(block, candidate))
-        results['recurrent_extended'] = compare(decoder, tokenizer, extended, joint['recurrent'], questions)
+        if args.answer_plan:
+            results['original'] = {'recall': joint['recurrent'],
+                                   'recall_passed': {'extended': sum(row['passed'] for row in joint['recurrent'])}}
+            results.update(planned_answers(decoder, tokenizer, extended, questions))
+        else:
+            results['recurrent_extended'] = compare(decoder, tokenizer, extended, joint['recurrent'], questions)
 
     if (frozen_digest(runtime.organism, runtime.state) != individual
             or any(sha(path) != digest for path, digest in protected.items())):
         raise ValueError('A diagnostic source or individual changed')
     store_json(args.output, {'sources': {str(path): digest for path, digest in protected.items()},
                              'individual_sha256': individual, 'conditions': results})
-    for name, result in results.items():
-        print(name, result['summary'], flush=True)
+    if not args.answer_plan:
+        for name, result in results.items():
+            print(name, result['summary'], flush=True)
 
 
 if __name__ == '__main__':
@@ -117,6 +143,8 @@ if __name__ == '__main__':
     parser.add_argument('candidates', type=Path, nargs=2)
     parser.add_argument('--parent-report', type=Path, required=True)
     parser.add_argument('--recurrent-report', type=Path, required=True)
+    parser.add_argument('--answer-plan', action='store_true',
+                        help='Compare formatting and explicit field guidance with the recurrent joint baseline')
     options = parser.parse_args()
     if options.output.exists() or not options.output.parent.is_dir():
         parser.error('Choose a new result path in an existing directory')
