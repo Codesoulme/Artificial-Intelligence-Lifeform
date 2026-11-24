@@ -37,10 +37,12 @@ TRAIN = (
 HELD = (('小赵', '酸奶'), ('小郑', '豆浆'), ('小王', '咖啡'), ('小孙', '果汁'))
 
 
-def generate(model, tokenizer, question, memory=None):
+def generate(model, tokenizer, question, memory=None, *, logits_processor=None):
     prompt = closed_think_inputs(tokenizer, question, 'cuda')
     kwargs = dict(**prompt, use_cache=True, max_new_tokens=24, do_sample=False,
                   pad_token_id=tokenizer.pad_token_id, eos_token_id=tokenizer.eos_token_id)
+    if logits_processor is not None:
+        kwargs['logits_processor'] = logits_processor
     with torch.inference_mode():
         if memory is None:
             output = model.generate(**kwargs)

@@ -116,12 +116,12 @@ def fit(model, tokenizer, head, rows, steps):
             print('pointer fit', step + 1, float(loss.detach()), flush=True)
 
 
-def reply(model, tokenizer, head, question, value):
+def reply(model, tokenizer, head, question, value, *, logits_processor=None):
     def memory_output(_module, inputs, logits):
         return head.mix(inputs[0], logits, value, memory_fraction=MEMORY_FRACTION)
 
     with model.lm_head.register_forward_hook(memory_output):
-        return generate(model, tokenizer, question)
+        return generate(model, tokenizer, question, logits_processor=logits_processor)
 
 
 def classify(answer, wanted, foil, eos):

@@ -31,3 +31,40 @@ class VersionMemoryPointer(nn.Module):
         positions = torch.cat((memory_tokens, self.scaffold_tokens)).expand_as(weights)
         native = native_logits.float().softmax(-1) * (1 - memory_fraction)
         return native.scatter_add(-1, positions, weights * memory_fraction).log()
+
+
+class VersionCoverageBias:
+    """Favor continuing a partially emitted memory value during greedy decoding."""
+
+    def __init__(self, value, strength=8.):
+        self.value = tuple(value)
+        self.strength = strength
+        self.prompt_length = None
+        self.applied = 0
+
+    def next_token(self, generated):
+        length = len(self.value)
+        if length < 2 or not generated:
+            return None
+        if any(generated[start:start + length] == self.value for start in range(len(generated) - length + 1)):
+            return None
+        for covered in range(min(length - 1, len(generated)), 0, -1):
+            if generated[-covered:] == self.value[:covered]:
+                return self.value[covered]
+        return None
+
+    def __call__(self, input_ids, scores):
+        if len(self.value) < 2:
+            return scores
+        if input_ids.shape[0] != 1 or scores.shape[0] != 1:
+            raise ValueError('Version coverage supports one greedy generation at a time')
+        if self.prompt_length is None:
+            self.prompt_length = input_ids.shape[1]
+        generated = tuple(input_ids[0, self.prompt_length:].tolist())
+        token = self.next_token(generated)
+        if token is None:
+            return scores
+        biased = scores.clone()
+        biased[0, token] += self.strength
+        self.applied += 1
+        return biased
