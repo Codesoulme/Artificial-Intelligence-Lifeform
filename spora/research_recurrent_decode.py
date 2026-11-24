@@ -11,7 +11,7 @@ from transformers.models.qwen2.modeling_qwen2 import apply_rotary_pos_emb
 
 from .pretrained_attention import SPORAFusedAttention, SPORAResidualBlock
 from .integrated_checkpoint import _file_sha256
-from .research_recurrent_attention import RECURRENT_UPDATE_RULES
+from .research_recurrent_attention import RECURRENT_UPDATE_RULES, is_append_only_causal_mask
 
 
 class RecurrentDecodeLayer(DynamicLayer):
@@ -68,7 +68,8 @@ class AttentionReplacement(nn.Module):
 
     def forward(self, hidden_states, position_embeddings, attention_mask=None, past_key_values=None,
                 position_ids=None, cache_position=None, **kwargs):
-        if hidden_states.shape[0] != 1 or attention_mask is not None:
+        if hidden_states.shape[0] != 1 or (attention_mask is not None and not is_append_only_causal_mask(
+                attention_mask, cache_position, hidden_states.shape[1])):
             raise ValueError('Recurrent attention probe takes one unpadded causal sequence')
         qkv, history = project_with_history(self.source, hidden_states, position_embeddings, position_ids,
                                             self.history_projection)

@@ -240,3 +240,23 @@ class SplitGatedDeltaRecurrentAttention(GatedDeltaRecurrentAttention):
 RECURRENT_UPDATE_RULES = {core.update_rule: core for core in (
     RecurrentAttention, DeltaRecurrentAttention, GatedDeltaRecurrentAttention, SplitGatedDeltaRecurrentAttention,
 )}
+
+
+def is_append_only_causal_mask(mask, cache_position, query_length):
+    """Recognize the standard causal SDPA mask for an unpadded cache append."""
+    if (cache_position is None or cache_position.shape != (query_length,)
+            or mask.ndim != 4 or mask.shape[:3] != (1, 1, query_length)
+            or mask.shape[-1] < query_length):
+        return False
+    width = mask.shape[-1]
+    positions = torch.arange(width, device=mask.device)
+    if not torch.equal(cache_position, positions[-query_length:]):
+        return False
+    allowed = positions[None, :] <= cache_position[:, None]
+    actual = mask[0, 0]
+    if actual.dtype == torch.bool:
+        return torch.equal(actual, allowed)
+    if not actual.is_floating_point():
+        return False
+    blocked = actual.isneginf() | actual.eq(torch.finfo(actual.dtype).min)
+    return bool(torch.where(allowed, actual.eq(0), blocked).all())
