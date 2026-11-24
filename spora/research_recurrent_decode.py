@@ -62,6 +62,7 @@ class AttentionReplacement(nn.Module):
         self.core = core
         self.include_far = include_far
         self.batched_prefill = True
+        self.batched_training = False
 
     def forward(self, hidden_states, position_embeddings, attention_mask=None, past_key_values=None,
                 position_ids=None, cache_position=None, **kwargs):
@@ -69,7 +70,8 @@ class AttentionReplacement(nn.Module):
             raise ValueError('Recurrent attention probe takes one unpadded causal sequence')
         qkv = projections(self.source, hidden_states, position_embeddings, position_ids)
         if past_key_values is None:
-            output, _ = self.core(*qkv, include_far=self.include_far)
+            output, _ = self.core(*qkv, include_far=self.include_far,
+                                  batched_prefill=self.batched_training and self.core.training)
         else:
             if type(past_key_values) is not DynamicCache or past_key_values.offloading:
                 raise ValueError('Recurrent attention probe expects a non-offloaded dynamic cache')
