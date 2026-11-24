@@ -235,3 +235,37 @@ $sporaCheckpoint = 'runs/named-memory-layer9-packed-reply-v1/packed.pt'
 在复杂更正配方中，只把五层普通对话残差的秩从 16 改为 32。训练量保持 1,536 步与 14,962 次答案位置曝光。最后 32 步平均损失由 0.914 降到 0.688。两套项目题分别完整通过 5/10 和 4/10，合计与秩 16 的 4/10 和 5/10 持平。短多轮复核由 4/12 降为 3/12，三轮更正末轮由 4/12 降为 3/12，前文反转为 5/8，记忆为 32/32。保留秩 16 作为当前对照。 [实验记录](../scripts/audit_named_dialogue_composition.py)
 
 秩 16 候选另用原生推理格式，以温度 0.6、top-p 0.95 和每轮 512 词元运行项目原题。21 轮中只有 1 轮在预算内结束推理并给出最终正文，严格式答案为 0/21。现有直接回答路径在这些短题上仍较适合本机用法。逐题记录位于 `runs/named-memory-dialogue-composition-audit-v1/native-reasoning-512.json`。
+
+## 在三层门控检查点上续训中文对话
+
+两组从 `runs/spora-composition-late-gates-20-23-24-v1/candidate.pt` 开始，继续训练已有的五层普通对话残差。两组各 768 次更新，初始权重、抽样种子和学习率 0.00005 相同，每次更新最多投影 24 个答复词元。第二组将组成样本的前 18 个场景替换为新编的 18 个三轮场景，保持相应样本位置、数据组大小和更新顺序一致。替换内容涉及改动一项后保留其余条件、后续语气调整、证据不足和新消息覆盖旧安排。
+
+| 条件 | 不同请求 | 监督位置曝光 | 原短题整组 / 逐轮 | 新短题整组 / 逐轮 | C-Eval | 受控记忆 |
+|---|---:|---:|---:|---:|---:|---:|
+| 续训前检查点 | — | — | 4/10 · 11/21 | 5/10 · 13/21 | 49/143 | 32/32 |
+| 原配方续训 | 429 | 8,500 | 2/10 · 9/21 | 4/10 · 12/21 | 50/143 | 32/32 |
+| 替换部分三轮场景后续训 | 429 | 8,744 | 3/10 · 10/21 | 4/10 · 12/21 | 50/143 | 32/32 |
+
+新旧答案长度不同，导致实际监督位置数略有差别。检查点逐张量比对确认，两组均只修改五个对话残差的十个权重张量，与持久个体、门控结构和记忆读写有关的张量及配置精确一致。
+
+逐条核对两套开放开发题。所有模型每轮继续使用自己实际生成的前文，按事先写好的要求审阅整段。42 条用户消息与本次两组教材的 644 条不同用户消息逐字无重合。第三套开发题早于本次教材，仍作为对照范围。第四套有六个三轮场景，测试了新情境下的同类能力。
+
+| 条件 | 第三套开放开发题 | 第四套开放开发题 | 第四套正常结束 |
+|---|---:|---:|---:|
+| 续训前 | 0/8 | 0/6 | 18/18 |
+| 原配方续训 | 0/8 | 0/6 | 18/18 |
+| 替换部分三轮场景后续训 | 0/8 | 2/6 | 18/18 |
+
+替换组把下午三点二十顺延四十分钟算成了下午四点，随后在通知里保留了车站名。分工题在更换工具负责人后保留了原材料负责人，末轮也去掉离开的名字。原配方组在两题末轮分别写成三点四十和保留离开的名字。替换组在无彩笔的约束下仍要求用彩笔，也把缺失信息答成猜测。新的训练素材改变了局部表现，开放任务仍需更广泛的数据覆盖和独立审查。扩充时可参考 UltraChat 的分主题、多轮生成方式和 Magpie 的提示多样性设计，并继续核查中文答案和场景重复。 [UltraChat](https://arxiv.org/abs/2305.14233) · [Magpie](https://arxiv.org/abs/2406.08464)
+
+两组续训皆在短多轮题退步。保留完成三处门控迁移的起点作为当前可用实验版本，并保存两组续训候选及逐题结果。实际输出和选择题复核位于 `runs/spora-gelu24-continued-dialogue-audit-v1/`。
+
+```powershell
+$sporaParent = 'runs/spora-composition-late-gates-20-23-24-v1/candidate.pt'
+$sporaCommon = @('--checkpoint', $sporaParent, '--steps', 768, '--varied', '--composition', '--continue-residuals', '--learning-rate', '5e-5', '--loss-tokens', 24, '--fresh-holdout', '--layers', 12, 19, 22, 24, 27)
+.\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue @sporaCommon --output runs/spora-gelu24-continue-control-v1
+.\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue @sporaCommon --output runs/spora-gelu24-continue-followup-v1 --dialogue-data data/dialogue-followup-training-v1.json --replace-composition-prefix
+.\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_composition runs/spora-gelu24-continue-followup-v1/integrated.pt runs/spora-gelu24-continued-dialogue-audit-v1/followup-v4.json --development-only data/conversation-development-v4.json
+.\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_retention $sporaParent runs/spora-gelu24-continued-dialogue-audit-v1/parent-academic.json --short
+.\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_retention runs/spora-gelu24-continue-followup-v1/integrated.pt runs/spora-gelu24-continued-dialogue-audit-v1/followup-academic.json
+```

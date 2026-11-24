@@ -86,7 +86,8 @@ def tokens(tokenizer, history, question, *, deepseek=True):
     return tokenizer.encode(prompt + suffix, add_special_tokens=False)
 
 
-def examples(tokenizer, *, varied, instructor=None, sampled_histories=None, composition=False, dialogue_data=None):
+def examples(tokenizer, *, varied, instructor=None, sampled_histories=None, composition=False, dialogue_data=None,
+             replace_composition_prefix=False):
     held = {question for _, turns in CASES + FRESH_CASES for question, _ in turns}
     groups = {}
     dialogues_by_group = source_dialogues()
@@ -95,7 +96,15 @@ def examples(tokenizer, *, varied, instructor=None, sampled_histories=None, comp
     if composition:
         dialogues_by_group['composition'] = json.loads(COMPOSITION.read_text(encoding='utf-8'))['training']
     if dialogue_data is not None:
-        dialogues_by_group['composition'].extend(json.loads(dialogue_data.read_text(encoding='utf-8'))['training'])
+        supplemental = json.loads(dialogue_data.read_text(encoding='utf-8'))['training']
+        corpus = dialogues_by_group['composition']
+        if replace_composition_prefix:
+            if (not supplemental or len(supplemental) > len(corpus)
+                    or any(len(new) != len(old) for new, old in zip(supplemental, corpus))):
+                raise ValueError('The replacement dialogues must preserve the number of turns in each replaced scene')
+            corpus[:len(supplemental)] = supplemental
+        else:
+            corpus.extend(supplemental)
     for group, dialogues in dialogues_by_group.items():
         rows = []
         for conversation in dialogues:
@@ -125,6 +134,8 @@ def examples(tokenizer, *, varied, instructor=None, sampled_histories=None, comp
                         teacher = (teacher_request(instructor, corrupted, question, answer)
                                    if instructor is not None else None)
                         rows.append((alternate, target, echo, stale, teacher))
+        if replace_composition_prefix and group == 'composition' and len(rows) != sum(map(len, dialogues)):
+            raise ValueError('A composition turn exceeded the supported context or answer length')
         if not rows:
             raise ValueError(f'No training requests for {group}')
         groups[group] = rows
@@ -307,9 +318,9 @@ def backpropagate_trajectory(decoder, row):
     return float(loss.detach())
 
 
-def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0, trajectories=()):
+def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0, trajectories=(), learning_rate=2e-4):
     parameters = [weight for block in blocks for weight in (block.down.weight, block.up.weight)]
-    optimizer = torch.optim.AdamW(parameters, lr=2e-4, weight_decay=.01)
+    optimizer = torch.optim.AdamW(parameters, lr=learning_rate, weight_decay=.01)
     rng = random.Random(SEED)
     pair_rng = random.Random(SEED + 1)
     trajectory_rng = random.Random(SEED + 8)
@@ -385,7 +396,8 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0, trajectories=()):
 
 def main(checkpoint, output, steps, varied, contrast_history, teacher_model, teacher_cache, prepare_teacher,
          stage_embeddings, loss_tokens, collect_student_histories, student_histories, trained_residuals, composition,
-         layers, rank, fresh_holdout, trajectory_scores, dialogue_data=None):
+         layers, rank, fresh_holdout, trajectory_scores, dialogue_data=None, continue_residuals=False,
+         learning_rate=2e-4, replace_composition_prefix=False):
     if output.exists():
         raise FileExistsError(output)
     torch.set_num_threads(2)
@@ -411,7 +423,8 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
         teacher_model, local_files_only=True, trust_remote_code=False))
     histories, rollout_digest = read_histories(student_histories) if student_histories is not None else (None, None)
     groups = examples(tokenizer, varied=varied, instructor=instructor, sampled_histories=histories,
-                      composition=composition, dialogue_data=dialogue_data)
+                      composition=composition, dialogue_data=dialogue_data,
+                      replace_composition_prefix=replace_composition_prefix)
     trajectories = read_trajectory_scores(trajectory_scores, protected[checkpoint], groups) if trajectory_scores else ()
     print('Training requests', {name: len(rows) for name, rows in groups.items()}, flush=True)
     if instructor is not None:
@@ -445,9 +458,18 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
     for index in layers:
         if not 0 <= index < len(parents):
             raise ValueError(f'Layer {index} is outside the decoder')
-        if type(parents[index]) is not SPORAPretrainedBlock or index in decoder.layer_indices:
+        layer = parents[index]
+        if continue_residuals:
+            if (type(layer) is not SPORAResidualBlock or not layer.ordinary_only or layer.rank != rank
+                    or layer.memory_context is not decoder._memory_context):
+                raise ValueError('Expected an existing ordinary-dialogue residual of the requested rank')
+            layer.down.requires_grad_(True)
+            layer.up.requires_grad_(True)
+            blocks.append(layer)
+            continue
+        if type(layer) is not SPORAPretrainedBlock or index in decoder.layer_indices:
             raise ValueError('Expected an unmodified compatible layer outside the memory readers')
-        block = SPORAResidualBlock(parents[index], rank=rank, ordinary_only=True,
+        block = SPORAResidualBlock(layer, rank=rank, ordinary_only=True,
                                    memory_context=decoder._memory_context).eval()
         parents[index] = block
         blocks.append(block)
@@ -457,12 +479,19 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
               'history_pairs': len(pairs), 'loss_tokens_per_step': loss_tokens or None}
     if rank != 16:
         recipe['rank'] = rank
+    if continue_residuals:
+        recipe['continue_residuals'] = True
+    if learning_rate != 2e-4:
+        recipe['learning_rate'] = learning_rate
+    if replace_composition_prefix:
+        recipe['replace_composition_prefix'] = True
     weights = [part.weight for block in blocks for part in (block.down, block.up)]
     output.mkdir(parents=True, exist_ok=False)
     residual_path = output / 'trained-residuals.pt'
     torch.cuda.empty_cache()
     if trained_residuals is None:
-        trace, exposure = fit(decoder, blocks, groups, steps, pairs, loss_tokens=loss_tokens, trajectories=trajectories)
+        trace, exposure = fit(decoder, blocks, groups, steps, pairs, loss_tokens=loss_tokens,
+                              trajectories=trajectories, learning_rate=learning_rate)
         torch.cuda.empty_cache()
         atomic_save({'recipe': recipe, 'trace': trace, 'exposure': exposure,
                      'weights': [weight.detach().cpu() for weight in weights]}, residual_path)
@@ -511,11 +540,15 @@ if __name__ == '__main__':
     parser.add_argument('--steps', type=int, default=256)
     parser.add_argument('--layers', type=int, nargs='+', default=LAYERS)
     parser.add_argument('--rank', type=int, default=16)
+    parser.add_argument('--continue-residuals', action='store_true', help='Update existing ordinary-dialogue residuals')
+    parser.add_argument('--learning-rate', type=float, default=2e-4)
     parser.add_argument('--fresh-holdout', action='store_true')
     parser.add_argument('--varied', action='store_true')
     parser.add_argument('--composition', action='store_true',
                         help='Use the project-authored multiround composition training split')
     parser.add_argument('--dialogue-data', type=Path, help='Add a project dialogue file to the composition group')
+    parser.add_argument('--replace-composition-prefix', action='store_true',
+                        help='Replace the first composition dialogues with the supplied scenes')
     parser.add_argument('--contrast-history', action='store_true')
     parser.add_argument('--teacher-model', type=Path)
     parser.add_argument('--teacher-cache', type=Path)
@@ -533,6 +566,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.steps < 1 or args.loss_tokens < 0:
         parser.error('--steps must be positive and --loss-tokens must be nonnegative')
+    if not 0 < args.learning_rate <= .01:
+        parser.error('--learning-rate must be in (0, 0.01]')
     if args.rank < 1 or min(args.layers) < 0 or list(args.layers) != sorted(set(args.layers)):
         parser.error('Choose a positive rank and distinct layers in increasing order')
     if (args.teacher_model is None) != (args.teacher_cache is None) or (args.prepare_teacher and args.teacher_model is None):
@@ -545,6 +580,8 @@ if __name__ == '__main__':
         parser.error('Composition examples require --varied')
     if args.dialogue_data is not None and not args.composition:
         parser.error('--dialogue-data requires --composition')
+    if args.replace_composition_prefix and args.dialogue_data is None:
+        parser.error('--replace-composition-prefix requires --dialogue-data')
     if args.trajectory_scores is not None and (not args.varied or args.student_histories or args.collect_student_histories
                                                or args.prepare_teacher or args.teacher_model):
         parser.error('Trajectory scores require the original --varied training histories and answer-only supervision')
