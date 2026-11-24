@@ -48,7 +48,7 @@ def _bootstrap_metadata(path):
             'feature_variant_sha256': meta.get('feature_variant_sha256')}
 
 
-def _load_dialogue_decoder(bootstrap, dialogue_checkpoint, base, model_dir, individual_device):
+def _load_dialogue_decoder(bootstrap, dialogue_checkpoint, base, model_dir, individual_device, late_gate_start):
     if dialogue_checkpoint is None:
         return load_integrated(bootstrap, base, model_dir, individual_device=individual_device), None
 
@@ -62,6 +62,17 @@ def _load_dialogue_decoder(bootstrap, dialogue_checkpoint, base, model_dir, indi
     original_meta, candidate_meta = (item['metadata'].copy() for item in (original, candidate))
     original_specs = original_meta.pop('residuals', [])
     candidate_specs = candidate_meta.pop('residuals', None)
+    original_gates = original_meta.pop('gelu_gate_layers', [])
+    candidate_gates = candidate_meta.pop('gelu_gate_layers', [])
+    if candidate_gates != original_gates:
+        if (type(late_gate_start) is not int or late_gate_start < 0 or not isinstance(candidate_gates, list)
+                or any(type(index) is not int for index in candidate_gates)
+                or not set(original_gates) <= set(candidate_gates)):
+            raise ValueError('Dialogue checkpoint changed existing feed-forward gates')
+        new_gates = set(candidate_gates) - set(original_gates)
+        protected_end = max(late_gate_start, max(original_meta['reader']['layers']) + 1)
+        if not new_gates or min(new_gates) < protected_end:
+            raise ValueError('Dialogue checkpoint changed a gate before memory feature extraction ends')
     if (original_meta != candidate_meta or not isinstance(candidate_specs, list)
             or any(not isinstance(spec, dict) or type(spec.get('index')) is not int
                    for spec in candidate_specs)):
@@ -408,7 +419,8 @@ class IntegratedDurableRuntime:
 
 
 def create_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu',
-                              calendar_individual=None, initial_state_factory=None, dialogue_checkpoint=None):
+                              calendar_individual=None, initial_state_factory=None, dialogue_checkpoint=None,
+                              late_gate_start=None):
     if initial_state_factory is not None and (not callable(initial_state_factory) or calendar_individual is not None):
         raise ValueError('A fresh state factory requires a bootstrap without a separate calendar seed')
     bootstrap = Path(bootstrap).resolve()
@@ -419,7 +431,7 @@ def create_integrated_durable(database, bootstrap, base, model_dir, *, individua
     store = None
     try:
         (decoder, organism, state), dialogue_source = _load_dialogue_decoder(
-            bootstrap, dialogue_checkpoint, base, model_dir, individual_device)
+            bootstrap, dialogue_checkpoint, base, model_dir, individual_device, late_gate_start)
         if _stat(bootstrap) != before:
             raise ValueError('Structural bootstrap changed during load')
         if calendar_individual is not None:
@@ -450,7 +462,8 @@ def create_integrated_durable(database, bootstrap, base, model_dir, *, individua
         raise
 
 
-def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu', dialogue_checkpoint=None):
+def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu', dialogue_checkpoint=None,
+                            late_gate_start=None):
     bootstrap = Path(bootstrap).resolve()
     before = _stat(bootstrap)
     expected = _bootstrap_metadata(bootstrap)
@@ -466,7 +479,7 @@ def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_
             raise ValueError('Durable state and structural bootstrap do not match')
         _observation_calendar(metadata, state)
         (decoder, reference, _), dialogue_source = _load_dialogue_decoder(
-            bootstrap, dialogue_checkpoint, base, model_dir, individual_device)
+            bootstrap, dialogue_checkpoint, base, model_dir, individual_device, late_gate_start)
         if _stat(bootstrap) != before:
             raise ValueError('Structural bootstrap changed during load')
         if organism.config != reference.config or address_basis_sha256(organism) != address_basis_sha256(reference):

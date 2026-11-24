@@ -242,10 +242,10 @@ class IntegratedDurableTests(unittest.TestCase):
             self.skipTest('Qwen2 inference dependencies are optional')
         from spora.integrated_checkpoint import IntegratedSPORARuntime
         from spora.integrated_open_base import IntegratedOpenBase
-        from spora.pretrained_attention import SPORAResidualBlock, without_dialogue_residuals
+        from spora.pretrained_attention import SPORAGeluGate, SPORAResidualBlock, without_dialogue_residuals
 
         _, organism, state = load_integrated(self.bootstrap, self.base(), self.root)
-        config = Qwen2Config(vocab_size=9, hidden_size=16, intermediate_size=24, num_hidden_layers=3,
+        config = Qwen2Config(vocab_size=9, hidden_size=16, intermediate_size=24, num_hidden_layers=4,
                              num_attention_heads=4, num_key_value_heads=2, max_position_embeddings=32)
         config.to_json_file(self.root/'config.json')
         base = Qwen2ForCausalLM(config).eval()
@@ -266,6 +266,9 @@ class IntegratedDurableTests(unittest.TestCase):
         base.model.layers[1] = residual
         candidate = self.root/'dialogue.pt'
         checkpoint.save(candidate)
+        base.model.layers[3].mlp.activation = SPORAGeluGate().eval()
+        gated_candidate = self.root/'dialogue-gated.pt'
+        checkpoint.save(gated_candidate)
         tokens = torch.tensor([[3, 5, 6]])
 
         with create_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root) as runtime:
@@ -274,6 +277,17 @@ class IntegratedDurableTests(unittest.TestCase):
             digest = frozen_digest(runtime.organism, runtime.state)
             ordinary = runtime.decoder(tokens, use_cache=False).logits
             memory = runtime.decoder(tokens, memory_state=runtime.state, use_cache=False).logits
+            routing = runtime.decoder.base(tokens, use_cache=False, output_hidden_states=True).hidden_states[3]
+        with self.assertRaisesRegex(ValueError, 'before memory feature extraction ends'):
+            load_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root,
+                                    dialogue_checkpoint=gated_candidate, late_gate_start=4)
+        with load_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root,
+                                     dialogue_checkpoint=gated_candidate, late_gate_start=3) as runtime:
+            self.assertEqual(frozen_digest(runtime.organism, runtime.state), digest)
+            self.assertIsInstance(runtime.decoder.base.model.layers[3].mlp.activation, SPORAGeluGate)
+            with without_dialogue_residuals():
+                actual = runtime.decoder.base(tokens, use_cache=False, output_hidden_states=True).hidden_states[3]
+            torch.testing.assert_close(actual, routing, atol=0, rtol=0)
         with load_integrated_durable(self.database, self.bootstrap, fresh_base(), self.root,
                                      dialogue_checkpoint=candidate) as runtime:
             self.assertEqual(frozen_digest(runtime.organism, runtime.state), digest)

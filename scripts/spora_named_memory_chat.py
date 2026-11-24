@@ -196,13 +196,13 @@ def main(args):
     args.database.parent.mkdir(parents=True, exist_ok=True)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     base = load_full_streamed()
+    candidate_options = {'dialogue_checkpoint': args.dialogue_checkpoint,
+                         'late_gate_start': max(temporal['hidden_indices'])}
     if args.database.exists():
-        runtime = load_integrated_durable(args.database, args.checkpoint, base, MODEL,
-                                          dialogue_checkpoint=args.dialogue_checkpoint)
+        runtime = load_integrated_durable(args.database, args.checkpoint, base, MODEL, **candidate_options)
     else:
         runtime = create_integrated_durable(args.database, args.checkpoint, base, MODEL,
-                                            initial_state_factory=fresh_controlled_state,
-                                            dialogue_checkpoint=args.dialogue_checkpoint)
+                                            initial_state_factory=fresh_controlled_state, **candidate_options)
     with runtime:
         print('孢子已就绪。可直接聊天。用 /登记、/记、/查 或 /记事、/查事。输入 /退出结束。', flush=True)
         chat = LocalChat(runtime, tokenizer, temporal, recovery)
