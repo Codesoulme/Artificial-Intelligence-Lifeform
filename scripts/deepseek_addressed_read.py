@@ -27,8 +27,8 @@ from spora.language_training import frozen_digest
 from spora.open_base_memory import OpenBaseMemory, memory_hooks
 
 
-def closed_think_inputs(tokenizer, question, device):
-    prompt = tokenizer.apply_chat_template([{'role': 'user', 'content': question}], tokenize=False,
+def closed_think_inputs(tokenizer, question, device, *, history=()):
+    prompt = tokenizer.apply_chat_template([*history, {'role': 'user', 'content': question}], tokenize=False,
                                             add_generation_prompt=True)
     if '<think>' not in prompt or '</think>' in prompt:
         raise ValueError('Unexpected DeepSeek generation template')

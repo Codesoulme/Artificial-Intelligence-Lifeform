@@ -101,10 +101,10 @@ def fit(head, features, targets, steps, mode):
 
 
 @torch.inference_mode()
-def atomic_reply(model, tokenizer, head, question, memory):
+def atomic_reply(model, tokenizer, head, question, memory, *, history=()):
     if not len(memory):
-        return {**generate(model, tokenizer, question), 'copy_at': None}
-    inputs = closed_think_inputs(tokenizer, question, memory.device)['input_ids']
+        return {**generate(model, tokenizer, question, history=history), 'copy_at': None}
+    inputs = closed_think_inputs(tokenizer, question, memory.device, history=history)['input_ids']
     eos = tokenizer.eos_token_id
     pieces = []
     past, copy_at = None, None
