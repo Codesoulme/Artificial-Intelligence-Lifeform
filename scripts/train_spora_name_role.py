@@ -43,7 +43,7 @@ def identity_group(names):
     return registry
 
 
-def role_examples(names, templates, affixes, *, separate_boundary=False):
+def role_examples(names, templates, affixes, *, separate_boundary=False, annotate_roles=False):
     rows = []
     for index in range(0, len(names), 4):
         group = names[index:index + 4]
@@ -67,6 +67,14 @@ def role_examples(names, templates, affixes, *, separate_boundary=False):
                     row = {'text': text, 'kind': kind, 'target': target, 'candidates': candidates}
                     if separate_boundary:
                         row['complete'] = [kind not in ('prefix', 'suffix') or key != i for _, _, key in candidates]
+                    if annotate_roles:
+                        mentions = [subject, alternative] if kind == 'two_names' else [mention]
+                        if '{value}' in pattern:
+                            mentions.append(value)
+                        bounds = sorted((text.index(person), text.index(person) + len(person)) for person in mentions)
+                        start = text.index(mention)
+                        row['mentions'] = bounds
+                        row['semantic_target'] = None if kind == 'two_names' else (start, start + len(mention))
                     rows.append(row)
     return rows
 

@@ -1,4 +1,4 @@
-"""Score a registered mention as the target of a memory request."""
+"""Recognize names and select the target of a memory request."""
 
 import torch
 from torch import nn
@@ -56,6 +56,48 @@ def compare_name_scores(decision, boundary, present):
     margin = best - torch.maximum(other, decision[..., -1])
     completeness = boundary.gather(-1, index[:, None]).squeeze(-1)
     return index, torch.minimum(margin, completeness)
+
+
+class NameSpanHead(nn.Module):
+    """Detect complete names before considering enrollment, including names absent from memory."""
+
+    lengths = (2, 3, 4)
+
+    def __init__(self, width):
+        super().__init__()
+        self.project = nn.Linear(width, 64, bias=False)
+        self.score = nn.Sequential(nn.Linear(4 * 64, 64), nn.GELU(), nn.Linear(64, 1))
+        self.length_bias = nn.Parameter(torch.zeros(len(self.lengths)))
+
+    def forward(self, hidden):
+        chars = F.gelu(self.project(F.normalize(hidden.float(), dim=-1)))
+        width = chars.shape[1]
+        pad = F.pad(chars, (0, 0, 1, max(self.lengths)))
+        left, first = pad[:, :width], chars
+        return torch.stack([self.score(torch.cat((left, first, pad[:, length:length + width],
+                                                  pad[:, length + 1:length + 1 + width]), dim=-1)).squeeze(-1)
+                            + bias for length, bias in zip(self.lengths, self.length_bias, strict=True)], dim=-1)
+
+
+def select_nonoverlapping_spans(scores, text_length, *, threshold, limit=8):
+    """Rank valid spans and keep disjoint mentions, preserving text offsets."""
+    spans = [(start, start + length, float(score)) for start, options in enumerate(scores[:text_length])
+             for length, score in zip(NameSpanHead.lengths, options, strict=True)
+             if start + length <= text_length and score > threshold]
+    picked = []
+    for start, stop, _ in sorted(spans, key=lambda span: -span[2]):
+        if all(stop <= a or start >= b for a, b in picked):
+            picked.append((start, stop))
+            if len(picked) == limit:
+                break
+    return sorted(picked)
+
+
+def validate_enrollment(candidate, eligible):
+    """Resolve only the winning exact span. A missing registration ends the request."""
+    if candidate is None:
+        return None
+    return next((item for item in eligible if item[:2] == candidate[:2]), None)
 
 
 def select_name(candidates, scores, *, threshold):
