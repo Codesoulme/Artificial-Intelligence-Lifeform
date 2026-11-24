@@ -40,7 +40,7 @@ def locate(mode, identities, text, spans, gold_name):
     return candidates[0]
 
 
-def measure(group, events, spans, hidden, initial, codec, tokenizer, head, mode, *, selector=locate):
+def measure(group, events, spans, hidden, initial, codec, tokenizer, head, mode, *, selector=locate, field_keys=None):
     slots = RecurrentFieldSlots(len(group), initial.shape[-1], codec.width)
     identities = IdentityFingerprints(4)
     for owner, row in enumerate(group[::len(FIELDS)]):
@@ -52,7 +52,7 @@ def measure(group, events, spans, hidden, initial, codec, tokenizer, head, mode,
     changed = {i for kind, i, _ in events if kind == 'update'}
     details = []
     for phase in ('update', 'query', 'negative'):
-        for (kind, i, text), predicted, state in zip(events, spans, hidden, strict=True):
+        for request, ((kind, i, text), predicted, state) in enumerate(zip(events, spans, hidden, strict=True)):
             if kind != phase and (phase != 'negative' or kind in ('update', 'query')):
                 continue
             if mode == 'confirmed' and phase == 'negative':
@@ -61,14 +61,18 @@ def measure(group, events, spans, hidden, initial, codec, tokenizer, head, mode,
             owner = selected = None
             if mention is not None:
                 start, end, owner = mention
-                entity = F.normalize(state[start:end].mean(dim=0), dim=0)
-                context = F.normalize(state[:len(text)].mean(dim=0), dim=0)
-                key = head(entity, context)
-                scope = slice(owner * len(FIELDS), (owner + 1) * len(FIELDS))
-                if kind == 'update':
-                    selected = slots.revise(key, codec.encode(values[i][1]), eligible=scope)
+                if field_keys is None:
+                    entity = F.normalize(state[start:end].mean(dim=0), dim=0)
+                    context = F.normalize(state[:len(text)].mean(dim=0), dim=0)
+                    key = head(entity, context)
                 else:
-                    selected = slots.select(key, eligible=scope)
+                    key = field_keys[request]
+                if key is not None:
+                    scope = slice(owner * len(FIELDS), (owner + 1) * len(FIELDS))
+                    if kind == 'update':
+                        selected = slots.revise(key, codec.encode(values[i][1]), eligible=scope)
+                    else:
+                        selected = slots.select(key, eligible=scope)
             actual = codec.decode(slots.values[selected]) if selected is not None and kind == 'query' else None
             details.append({'kind': kind, 'text': text, 'slot': selected, 'target': i,
                             'owner': owner, 'predicted_spans': predicted, 'changed': i in changed,

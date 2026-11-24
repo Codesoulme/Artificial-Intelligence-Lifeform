@@ -2,10 +2,30 @@ import unittest
 
 import torch
 
-from spora.research_entity_field_address import EntityFieldAddress, RecurrentFieldSlots, TokenValue, revise_association
+from spora.research_entity_field_address import (
+    EntityFieldAddress, FieldReadout, RecurrentFieldSlots, TokenValue, field_slot_keys, revise_association,
+)
 
 
 class EntityFieldAddressTests(unittest.TestCase):
+    def test_field_readout_ignores_padding_with_and_without_attention(self):
+        hidden = torch.rand(1, 2, 8)
+        extended = torch.cat((hidden, torch.rand(1, 2, 8)), dim=1)
+        for attention in (False, True):
+            head = FieldReadout(8, 4, attention=attention)
+            expected = head(hidden, torch.tensor([[True, True]]))
+            torch.testing.assert_close(head(extended, torch.tensor([[True, True, False, False]])), expected)
+
+    def test_field_abstention_preserves_other_fields_of_same_owner(self):
+        keys = field_slot_keys(torch.tensor([[-4., -3., -2., -1.], [-4., -3., -2., -2.], [-4., -1., -2., -3.]]))
+        self.assertIsNone(keys[0])
+        self.assertIsNone(keys[1])
+        slots = RecurrentFieldSlots(3, 3, 1)
+        for index, address in enumerate(torch.eye(3)):
+            slots.allocate(address, torch.tensor([float(index)]))
+        self.assertEqual(slots.revise(keys[2], torch.tensor([9.])), 1)
+        torch.testing.assert_close(slots.values, torch.tensor([[0.], [9.], [2.]]))
+
     def test_factored_keys_revise_one_entity_field(self):
         head = EntityFieldAddress(2, 2, 2)
         with torch.no_grad():

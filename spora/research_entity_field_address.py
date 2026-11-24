@@ -17,6 +17,33 @@ class EntityFieldAddress(nn.Module):
         return (name.unsqueeze(-1) * field.unsqueeze(-2)).flatten(start_dim=-2)
 
 
+class FieldReadout(nn.Module):
+    """Choose a field or abstain using the frozen request representation."""
+
+    def __init__(self, hidden, field_count, *, attention):
+        super().__init__()
+        self.project = nn.Linear(hidden, 64, bias=False)
+        self.attention = nn.Linear(64, 1, bias=False) if attention else None
+        self.fields = nn.Linear(64, field_count + 1)
+
+    def forward(self, hidden, mask):
+        features = F.gelu(self.project(F.normalize(hidden.float(), dim=-1)))
+        weights = mask.to(features.dtype)
+        if self.attention is not None:
+            scores = self.attention(features).squeeze(-1).masked_fill(~mask, torch.finfo(features.dtype).min)
+            weights = scores.softmax(dim=-1).masked_fill(~mask, 0.)
+        else:
+            weights = weights / weights.sum(dim=-1, keepdim=True).clamp_min(1)
+        return self.fields((features * weights.unsqueeze(-1)).sum(dim=-2))
+
+
+def field_slot_keys(logits):
+    """Translate learned field scores to slot keys, excluding ambiguous requests."""
+    fields = logits[..., :-1]
+    accepted = fields.amax(dim=-1) > logits[..., -1]
+    return [key if allow else None for key, allow in zip(fields.softmax(dim=-1), accepted.tolist(), strict=True)]
+
+
 def revise_association(memory, address, value):
     """Replace the value read at a unit address with one residual update."""
     residual = value - address @ memory
