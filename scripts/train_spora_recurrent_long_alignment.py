@@ -14,6 +14,7 @@ from scripts.benchmark_spora_recurrent_dialogue import (
 from scripts.train_qwen_counterfactual_reply_20261122 import HELD, evaluate, records
 from scripts.train_spora_dialogue_working_state import DATA, dialogue_data
 from spora.language_training import atomic_save
+from spora.research_recurrent_attention import DeltaRecurrentAttention, RecurrentAttention
 from spora.research_recurrent_decode import load_recurrent_replacements, replace
 
 
@@ -116,8 +117,10 @@ def run_candidate(runtime, tokenizer, candidates, prompts, open_cases):
 
 
 def main(args):
-    if not args.verify:
+    if not (args.verify or args.evaluate):
         args.output.mkdir(parents=True, exist_ok=False)
+    if args.evaluate and (args.output / 'result.json').exists():
+        raise FileExistsError(args.output / 'result.json')
     sources = [args.checkpoint, SOURCE, CORPUS, MANIFEST, DATA]
     sources.extend(directory / name for directory in args.candidates for name in ('attention.pt', 'comparison.json'))
     protected = {path: sha(path) for path in sources}
@@ -148,6 +151,9 @@ def main(args):
         if result['sources'] != bindings or result['individual_sha256'] != individual:
             raise ValueError('Alignment inputs differ from the original experiment')
         directories = [args.output / f'layer-{index}' for index in result['metrics']]
+        for index, directory in zip(result['metrics'], directories, strict=True):
+            if 'weight_hashes' in result and sha(directory / 'attention.pt') != result['weight_hashes'][index]:
+                raise ValueError('Saved alignment weights changed before reload')
         aligned = load_recurrent_replacements(decoder, directories, protected[args.checkpoint])
         dialogue, recalled = run_candidate(runtime, tokenizer, aligned, prompts, source['open'])
         if (dialogue != result['dialogue'] or recalled != result['memory']['aligned']
@@ -160,39 +166,66 @@ def main(args):
         print('Reloaded', len(dialogue['recall']), 'recall answers and', recalled['summary']['count'], 'persistent answers',
               flush=True)
         return
-    candidates = load_recurrent_replacements(decoder, args.candidates, protected[args.checkpoint])
-    metrics = {}
-    for index, (block, candidate) in candidates.items():
-        teacher_train, _ = capture(decoder, block.self_attn, [ids for ids, _ in training])
-        teacher_held, _ = capture(decoder, block.self_attn, held)
-        before = alignment_score(candidate.core, teacher_held, device)
-        examples = list(zip(teacher_train, (start for _, start in training), strict=True))
-        trace = train(candidate.core, examples, device, args.steps, args.learning_rate)
-        after = alignment_score(candidate.core, teacher_held, device)
-        metrics[index] = {'before': before, 'after': after, 'training': trace}
-        print(index, 'before', before, 'after', after, flush=True)
-        del examples, teacher_train, teacher_held
+    if args.evaluate:
+        state = torch.load(args.output / 'training.pt', map_location='cpu', weights_only=True)
+        if state['sources'] != bindings or state['individual_sha256'] != individual:
+            raise ValueError('Saved training belongs to other inputs')
+        metrics = state['metrics']
+        directories = [args.output / f'layer-{index}' for index in metrics]
+        for index, directory in zip(metrics, directories, strict=True):
+            if sha(directory / 'attention.pt') != state['weight_hashes'][index]:
+                raise ValueError('A saved aligned layer changed before evaluation')
+        candidates = load_recurrent_replacements(decoder, directories, protected[args.checkpoint])
+    else:
+        candidates = load_recurrent_replacements(decoder, args.candidates, protected[args.checkpoint])
+        metrics, hashes = {}, {}
+        for index, (block, candidate) in candidates.items():
+            if candidate.core.update_rule != args.update_rule:
+                previous = candidate.core
+                heads, width, features = previous.q_map.shape
+                core_type = DeltaRecurrentAttention if args.update_rule == 'block_delta' else RecurrentAttention
+                candidate.core = core_type(heads, width, block=previous.block, features=features).to(device)
+                candidate.core.load_state_dict(previous.state_dict(), strict=True)
+            teacher_train, _ = capture(decoder, block.self_attn, [ids for ids, _ in training])
+            teacher_held, _ = capture(decoder, block.self_attn, held)
+            before = alignment_score(candidate.core, teacher_held, device)
+            examples = list(zip(teacher_train, (start for _, start in training), strict=True))
+            trace = train(candidate.core, examples, device, args.steps, args.learning_rate)
+            after = alignment_score(candidate.core, teacher_held, device)
+            metrics[index] = {'before': before, 'after': after, 'training': trace}
+            hashes[index] = save_aligned(args.output, candidate.core, index, protected[args.checkpoint],
+                                         bindings, individual, metrics[index])
+            print(index, 'before', before, 'after', after, flush=True)
+            del examples, teacher_train, teacher_held
+        state = {'sources': bindings, 'individual_sha256': individual, 'metrics': metrics,
+                 'training_steps': args.steps, 'weight_hashes': hashes,
+                 'train_lengths': [len(ids) for ids, _ in training]}
+        atomic_save(state, args.output / 'training.pt')
     memory = records(runtime.organism, HELD)
     original_memory = evaluate(decoder, tokenizer, runtime.organism, memory)
     dialogue, aligned_memory = run_candidate(runtime, tokenizer, candidates, prompts, source['open'])
     if (frozen_digest(runtime.organism, runtime.state) != individual
             or any(sha(path) != digest for path, digest in protected.items())):
         raise ValueError('An alignment input changed')
-    for index, (_, candidate) in candidates.items():
-        destination = args.output / f'layer-{index}'
-        destination.mkdir()
-        path = destination / 'attention.pt'
-        atomic_save({'format': 'spora-recurrent-attention-v1', 'layer': index, 'block': candidate.core.block,
-                     'checkpoint_sha256': protected[args.checkpoint], 'core': candidate.core.cpu().state_dict()}, path)
-        store_json(destination / 'comparison.json', {'layer': index, 'block': candidate.core.block, 'sources': bindings,
-                                                     'candidate_sha256': sha(path), 'individual_sha256': individual,
-                                                     'calibration': metrics[index]})
-    result = {'train_lengths': [len(ids) for ids, _ in training], 'training_steps': args.steps, 'metrics': metrics,
-              'individual_sha256': individual, 'sources': bindings, 'dialogue': dialogue,
+    result = {**state, 'dialogue': dialogue,
               'memory': {'original': original_memory, 'aligned': aligned_memory,
                          'identical': original_memory == aligned_memory}}
     store_json(args.output / 'result.json', result)
     print({key: value for key, value in dialogue.items() if key not in ('recall', 'open')}, flush=True)
+
+
+def save_aligned(output, core, index, checkpoint_sha, sources, individual, metrics):
+    destination = output / f'layer-{index}'
+    destination.mkdir()
+    path = destination / 'attention.pt'
+    atomic_save({'format': 'spora-recurrent-attention-v1', 'layer': index, 'block': core.block,
+                 'checkpoint_sha256': checkpoint_sha, 'update_rule': core.update_rule,
+                 'core': {key: value.cpu() for key, value in core.state_dict().items()}}, path)
+    digest = sha(path)
+    store_json(destination / 'comparison.json', {'layer': index, 'block': core.block, 'sources': sources,
+                                                 'candidate_sha256': digest, 'individual_sha256': individual,
+                                                 'update_rule': core.update_rule, 'calibration': metrics})
+    return digest
 
 
 def store_json(path, value):
@@ -208,7 +241,10 @@ if __name__ == '__main__':
     parser.add_argument('candidates', nargs=2, type=Path)
     parser.add_argument('--steps', type=int, default=128)
     parser.add_argument('--learning-rate', type=float, default=.001)
-    parser.add_argument('--verify', action='store_true')
+    parser.add_argument('--update-rule', choices=('sum', 'block_delta'), default='sum')
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--verify', action='store_true')
+    modes.add_argument('--evaluate', action='store_true')
     args = parser.parse_args()
     if args.steps < 1 or not 0 < args.learning_rate <= .01:
         parser.error('Choose positive steps and a learning rate through .01')

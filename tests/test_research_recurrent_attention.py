@@ -3,7 +3,7 @@ import unittest
 import torch
 from torch.nn import functional as F
 
-from spora.research_recurrent_attention import RecurrentAttention
+from spora.research_recurrent_attention import DeltaRecurrentAttention, RecurrentAttention
 
 
 class RecurrentAttentionTests(unittest.TestCase):
@@ -70,3 +70,23 @@ class RecurrentAttentionTests(unittest.TestCase):
         for parameter in self.model.parameters():
             self.assertTrue(torch.isfinite(parameter.grad).all())
             self.assertGreater(parameter.grad.norm().item(), 0.)
+
+    def test_delta_revises_matching_key_and_keeps_orthogonal_binding(self):
+        model = DeltaRecurrentAttention(1, 1, block=2, features=2)
+        a, b = (row.repeat(1, 1, 2, 1) for row in torch.eye(2).view(2, 1, 1, 1, 2))
+        matrix, norm = torch.zeros(1, 1, 2, 1), torch.zeros(1, 1, 2)
+        for key, value in ((a, 3.), (b, 7.), (a, 5.)):
+            matrix, norm = model.fold(key, torch.full((1, 1, 2, 1), value), matrix, norm)
+        torch.testing.assert_close(matrix.flatten(), torch.tensor([5., 7.]))
+
+    def test_delta_batch_matches_incremental_state_and_gradients_are_finite(self):
+        model = DeltaRecurrentAttention(2, 4, block=4, features=5)
+        inputs = (self.q, self.k[:, :1].half(), self.v[:, :1].half())
+        expected, state = model(*inputs)
+        output, fast = model(*inputs, batched_prefill=True)
+        torch.testing.assert_close(output, expected)
+        torch.testing.assert_close(fast.matrix, state.matrix)
+        output.square().mean().backward()
+        for parameter in model.parameters():
+            self.assertTrue(torch.isfinite(parameter.grad).all())
+            self.assertGreater(float(parameter.grad.norm()), 0.)

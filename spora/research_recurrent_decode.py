@@ -10,7 +10,7 @@ from transformers.cache_utils import DynamicCache, DynamicLayer
 
 from .pretrained_attention import SPORAFusedAttention, SPORAResidualBlock
 from .integrated_checkpoint import _file_sha256
-from .research_recurrent_attention import RecurrentAttention
+from .research_recurrent_attention import DeltaRecurrentAttention, RecurrentAttention
 
 
 class RecurrentDecodeLayer(DynamicLayer):
@@ -135,7 +135,11 @@ def load_recurrent_replacements(decoder, directories, checkpoint_sha256, first_l
             raise ValueError('Recurrent attention contains an invalid or conflicting layer')
         block = attention_block(decoder, index)
         source = block.self_attn
-        core = RecurrentAttention(source.sizes[0] // source.head_dim, source.head_dim, block=width)
+        rule = saved.get('update_rule', 'sum')
+        if rule != comparison.get('update_rule', 'sum') or rule not in ('sum', 'block_delta'):
+            raise ValueError('Recurrent attention update rule differs from its comparison')
+        core_type = DeltaRecurrentAttention if rule == 'block_delta' else RecurrentAttention
+        core = core_type(source.sizes[0] // source.head_dim, source.head_dim, block=width)
         core.load_state_dict(saved['core'], strict=True)
         if any(not bool(torch.isfinite(parameter).all()) for parameter in core.parameters()):
             raise ValueError('Recurrent attention contains nonfinite weights')

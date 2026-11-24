@@ -19,6 +19,8 @@ class AttentionState:
 class RecurrentAttention(nn.Module):
     """Use exact attention for recent blocks and a fixed-size summary for older ones."""
 
+    update_rule = 'sum'
+
     def __init__(self, heads, head_dim, *, block=16, features=24):
         super().__init__()
         if min(heads, head_dim, block, features) < 1:
@@ -37,6 +39,17 @@ class RecurrentAttention(nn.Module):
         unit = F.normalize(query, dim=-1) * query.shape[-1] ** .5
         gain = torch.einsum('bhtd,hd->bht', unit, self.gate)
         return (gain + self.bias[None, :, None]).sigmoid().unsqueeze(-1)
+
+    def fold(self, keys, values, matrix, normalizer):
+        return matrix + keys.transpose(-1, -2) @ values, normalizer + keys.sum(dim=-2)
+
+    def prefixes(self, keys, values):
+        return (keys.transpose(-1, -2) @ values).cumsum(dim=-3), keys.sum(dim=-2).cumsum(dim=-2)
+
+    def normalize_read(self, weights, matrix_read, normalizer, *, blocked):
+        denom = (weights @ normalizer.unsqueeze(-1) if blocked else
+                 torch.einsum('bhtf,bhf->bht', weights, normalizer).unsqueeze(-1))
+        return matrix_read / denom.clamp_min(1e-6)
 
     def prefill(self, query, key, value, groups, *, include_far):
         size, block = query.shape[-2], self.block
@@ -59,12 +72,11 @@ class RecurrentAttention(nn.Module):
         local = F.scaled_dot_product_attention(q, previous_and_current(k), previous_and_current(v), attn_mask=mask)
         old_k, old_v = k[:, :, :-2], v[:, :, :-2]
         phi = self.phi(old_k.flatten(2, 3), self.k_map).unflatten(-2, (blocks - 2, block))
-        matrices = (phi.transpose(-1, -2) @ old_v).cumsum(dim=-3)
-        normalizers = phi.sum(dim=-2).cumsum(dim=-2)
+        matrices, normalizers = self.prefixes(phi, old_v)
         if include_far:
             recent_queries = q[:, :, 2:].flatten(2, 3)
             qf = self.phi(recent_queries, self.q_map).unflatten(-2, (blocks - 2, block))
-            far = (qf @ matrices) / (qf @ normalizers.unsqueeze(-1)).clamp_min(1e-6)
+            far = self.normalize_read(qf, qf @ matrices, normalizers, blocked=True)
             gain = self.mix_gain(recent_queries).unflatten(-2, (blocks - 2, block))
             local = torch.cat((local[:, :, :2], torch.lerp(local[:, :, 2:], far, gain)), dim=2)
         start = (blocks - 2) * block
@@ -99,8 +111,7 @@ class RecurrentAttention(nn.Module):
         while offset < query.shape[-2]:
             if length % self.block == 0 and recent_k.shape[-2] == 2 * self.block:
                 old_features = self.phi(expand(recent_k[:, :, :self.block]), self.k_map)
-                matrix = matrix + old_features.transpose(-1, -2) @ expand(recent_v[:, :, :self.block])
-                normalizer = normalizer + old_features.sum(dim=-2)
+                matrix, normalizer = self.fold(old_features, expand(recent_v[:, :, :self.block]), matrix, normalizer)
                 recent_k = recent_k[:, :, self.block:]
                 recent_v = recent_v[:, :, self.block:]
             size = min(self.block - length % self.block, query.shape[-2] - offset)
@@ -115,10 +126,38 @@ class RecurrentAttention(nn.Module):
                                                   attn_mask=query_position[:, None] >= key_position[None, :])
             if include_far and length >= 2 * self.block:
                 qf = self.phi(q, self.q_map)
-                denom = torch.einsum('bhtf,bhf->bht', qf, normalizer).unsqueeze(-1)
-                far = (qf @ matrix) / denom.clamp_min(1e-6)
+                far = self.normalize_read(qf, qf @ matrix, normalizer, blocked=False)
                 local = torch.lerp(local, far, self.mix_gain(q))
             outputs.append(local)
             offset += size
             length += size
         return torch.cat(outputs, dim=-2), AttentionState(recent_k, recent_v, matrix, normalizer, length)
+
+
+class DeltaRecurrentAttention(RecurrentAttention):
+    """Fit values with a bounded block delta update on normalized feature keys."""
+
+    update_rule = 'block_delta'
+
+    def phi(self, vectors, weights):
+        features = super().phi(vectors, weights)
+        return F.normalize(features - features.mean(dim=-1, keepdim=True), dim=-1, eps=1e-6)
+
+    def fold(self, keys, values, matrix, normalizer):
+        residual = values - keys @ matrix
+        # Unit-length rows bound the spectral norm of K.T @ K by the block size.
+        update = (keys.transpose(-1, -2) @ residual) / keys.shape[-2]
+        return matrix + update, normalizer
+
+    def prefixes(self, keys, values):
+        batch, heads, _, _, features = keys.shape
+        matrix = keys.new_zeros(batch, heads, features, values.shape[-1])
+        normalizer = keys.new_zeros(batch, heads, features)
+        states = []
+        for block_keys, block_values in zip(keys.unbind(dim=2), values.unbind(dim=2), strict=True):
+            matrix, _ = self.fold(block_keys, block_values, matrix, normalizer)
+            states.append(matrix)
+        return torch.stack(states, dim=2), normalizer.unsqueeze(2).expand(-1, -1, len(states), -1)
+
+    def normalize_read(self, weights, matrix_read, normalizer, *, blocked):
+        return matrix_read
