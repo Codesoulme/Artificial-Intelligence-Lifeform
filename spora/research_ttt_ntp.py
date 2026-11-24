@@ -6,6 +6,7 @@ state at the next position, rather than a finite symbolic value embedding.
 """
 from contextlib import contextmanager
 from contextvars import ContextVar
+from dataclasses import dataclass
 
 import torch
 from torch import nn
@@ -13,6 +14,40 @@ from torch.nn import functional as F
 
 
 _ACTIVE_MEMORY = ContextVar('spora_ttt_ntp_memory', default=None)
+
+
+@dataclass(frozen=True)
+class LowRankFastWeight:
+    """Represent a sum of rank-one writes as values.T @ keys."""
+
+    keys: torch.Tensor
+    values: torch.Tensor
+
+    def __post_init__(self):
+        if (self.keys.ndim != 2 or self.values.ndim != 2 or self.keys.shape[0] != self.values.shape[0]
+                or self.keys.device != self.values.device or self.keys.dtype != torch.float32
+                or self.values.dtype != torch.float32 or not bool(torch.isfinite(self.keys).all())
+                or not bool(torch.isfinite(self.values).all())):
+            raise ValueError('Invalid low-rank fast weight')
+
+    @property
+    def shape(self):
+        return self.values.shape[1], self.keys.shape[1]
+
+    def read(self, hidden):
+        return (hidden.float() @ self.keys.T) @ self.values
+
+    @torch.no_grad()
+    def write(self, keys, targets, *, eta, ridge):
+        if (keys.ndim != 2 or targets.ndim != 2 or keys.shape[0] != targets.shape[0]
+                or (targets.shape[1], keys.shape[1]) != self.shape or not 0 < eta <= 1 or not ridge > 0):
+            raise ValueError('Low-rank write dimensions or settings are invalid')
+        state = self
+        for key, target in zip(keys.float(), targets.float(), strict=True):
+            residual = target - state.read(key)
+            update = eta * residual / (key.square().sum() + ridge)
+            state = LowRankFastWeight(torch.cat((state.keys, key[None])), torch.cat((state.values, update[None])))
+        return state
 
 
 class TTTNTPMemoryLinear(nn.Module):
@@ -34,15 +69,15 @@ class TTTNTPMemoryLinear(nn.Module):
         if active is None or self.layer_id not in active:
             return output
         fast = active[self.layer_id]
-        if (not isinstance(fast, torch.Tensor) or fast.ndim != 2
-                or tuple(fast.shape) != tuple(self.base.weight.shape)
-                or not fast.is_floating_point() or not bool(torch.isfinite(fast).all())):
+        dense = isinstance(fast, torch.Tensor) and fast.ndim == 2 and fast.is_floating_point()
+        if ((not dense and not isinstance(fast, LowRankFastWeight)) or tuple(fast.shape) != tuple(self.base.weight.shape)
+                or (dense and not bool(torch.isfinite(fast).all()))):
             raise ValueError('Fast weight has an incompatible shape or value')
         read_hidden = hidden.float() if self.query_bridge is None else self.query_bridge(hidden.float())
         if (not isinstance(read_hidden, torch.Tensor) or read_hidden.shape != hidden.shape
                 or not bool(torch.isfinite(read_hidden).all())):
             raise ValueError('Query bridge returned an incompatible value')
-        delta = F.linear(read_hidden, fast.float())
+        delta = F.linear(read_hidden, fast.float()) if dense else fast.read(read_hidden)
         if self.read_adapter is not None:
             return output + self.read_adapter(delta).to(device=output.device, dtype=output.dtype)
         return output + delta.to(device=output.device, dtype=output.dtype)
@@ -220,7 +255,8 @@ def use_memory(memory):
     """Expose an immutable snapshot to the wrapped layers for one call."""
     if not isinstance(memory, dict) or any(not isinstance(key, int) for key in memory):
         raise ValueError('Memory must be a layer-indexed dictionary')
-    snapshot = {key: value.detach() for key, value in memory.items()}
+    snapshot = {key: (LowRankFastWeight(value.keys.detach(), value.values.detach())
+                      if isinstance(value, LowRankFastWeight) else value.detach()) for key, value in memory.items()}
     token = _ACTIVE_MEMORY.set(snapshot)
     try:
         yield

@@ -3,7 +3,7 @@ import unittest
 import torch
 from torch import nn
 
-from spora.research_ttt_ntp import (TTTNTPMemoryLinear, TTTNTPWriteTargetAdapter,
+from spora.research_ttt_ntp import (LowRankFastWeight, TTTNTPMemoryLinear, TTTNTPWriteTargetAdapter,
                                     attach_read_adapters, fresh_memory, install,
                                     attach_query_bridges, attach_query_basis_bridges, sequential_ntp_write, use_memory,
                                     use_memory_with_grad, use_query_bridges)
@@ -22,6 +22,22 @@ class ToyDecoder(nn.Module):
 
 
 class ResearchTTTNTPTests(unittest.TestCase):
+    def test_factorized_writes_match_dense_reads_in_the_decoder(self):
+        wrappers = install(ToyDecoder(), (0,))
+        dense = fresh_memory(wrappers)
+        empty = LowRankFastWeight(torch.empty(0, 3), torch.empty(0, 2))
+        keys = torch.tensor([[1., 1., 2.], [1., 2., 2.], [1., 1., 2.]])
+        targets = torch.tensor([[2., 3.], [4., 5.], [6., 7.]])
+        first = empty.write(keys[:1], targets[:1], eta=.5, ridge=1.)
+        full = first.write(keys[1:], targets[1:], eta=.5, ridge=1.)
+        sequential_ntp_write(dense, keys, {0: targets}, eta=.5, ridge=1.)
+        self.assertEqual(first.keys.shape, (1, 3))
+        self.assertEqual(full.keys.shape, (3, 3))
+        with use_memory(dense):
+            reference = wrappers[0](keys)
+        with use_memory({0: full}):
+            torch.testing.assert_close(wrappers[0](keys), reference)
+
     def test_install_and_absent_memory_preserve_native_layer(self):
         decoder = ToyDecoder()
         wrappers = install(decoder, (0, 1))
