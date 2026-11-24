@@ -41,6 +41,7 @@ _WORDS = ('现用版|现在的|当前版|现行版|现在这份', '首版|初版
 _REPLIES = tuple(re.compile(r'(?:就(?:查|用|看)|查|用|看|选|要)?(?:' + words + r')(?:吧|就行|即可)?')
                  for words in _WORDS)
 _CANCEL = re.compile(r'算了|还是算了|先不查了?|暂时不查|先不看了?|改天再查|下次再说|不用了')
+_EXPLICIT_READ = re.compile(r'(?:请)?(?:查|查看|查阅|核对|读取)(?:当前版|现行版|首版|初版|第一版|上一版|前一版)(?:吧|即可)?')
 
 
 @dataclass(frozen=True)
@@ -85,6 +86,12 @@ def start_version_turn(question, subject, revisions, today, legacy, plan, intent
         return VersionDecision(Intent.OTHER)
     pending = PendingVersion(subject, tuple(revisions), today, tuple(distinct.values()))
     return VersionDecision(Intent.ASK, pending=pending)
+
+
+def use_explicit_read_plan(question, plan):
+    """Keep the timeline interpretation of a standalone, explicit lookup instruction."""
+    clauses = re.split(r'[。；.!?;]', unicodedata.normalize('NFKC', question))
+    return None if any(_EXPLICIT_READ.fullmatch(part.strip()) for part in clauses) else plan
 
 
 def resolve_version_turn(pending, reply, timelines, today):

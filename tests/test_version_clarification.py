@@ -2,7 +2,9 @@ from datetime import date
 import unittest
 
 from spora.identity_fingerprints import IdentityFingerprints
-from spora.research_version_clarification import Intent, resolve_version_turn, scope_version_intent, start_version_turn
+from spora.research_version_clarification import (Intent, resolve_version_turn, scope_version_intent, start_version_turn,
+                                                  use_explicit_read_plan)
+from spora.research_version_roles import ABSTAIN
 from spora.research_version_scope import addressed_subject
 from spora.temporal_routing import CURRENT
 
@@ -60,6 +62,18 @@ class VersionClarificationTests(unittest.TestCase):
         self.assertIsNone(self.start(Intent.READ, question=quoted).route)
         pending = self.start(Intent.ASK).pending
         self.assertIsNone(resolve_version_turn(pending, '初版', {0: self.revisions[1:]}, self.today).route)
+
+    def test_explicit_version_order_can_preserve_a_known_timeline(self):
+        explicit = '霍盈的饮品写的是什么？请查当前版。'
+        plan = use_explicit_read_plan(explicit, ABSTAIN)
+        self.assertIsNone(plan)
+        decision = start_version_turn(explicit, 0, self.revisions, self.today, ABSTAIN, plan, Intent.READ)
+        self.assertEqual(decision.route, (0, 2))
+        quoted = '润色这句话。霍盈的饮品写的是什么？请查当前版。'
+        decision = start_version_turn(quoted, 0, self.revisions, self.today, ABSTAIN, plan, Intent.READ)
+        self.assertIsNone(decision.route)
+        self.assertEqual(use_explicit_read_plan('先别查当前版。', ABSTAIN), ABSTAIN)
+        self.assertEqual(use_explicit_read_plan('“请查当前版。”', ABSTAIN), ABSTAIN)
 
     def test_colloquial_field_boundary_is_scoped_to_exact_subject_and_field(self):
         names = IdentityFingerprints(2)
