@@ -40,22 +40,27 @@ def material(tokenizer, path, count):
     raise ValueError('The existing Chinese corpus has too few independent passages')
 
 
+def training_history(example, fillers, index):
+    count = (0, 5, 11, 14)[index % 4]
+    rng = random.Random(SEED + index)
+    selected = rng.sample(fillers, count)
+    initial_offset = index % (count + 1)
+    update_offset = initial_offset + (index // 3) % (count - initial_offset + 1)
+    history = []
+    for offset in range(count + 1):
+        if offset == initial_offset:
+            exchange(history, example['first'][0], '好，我知道了。')
+        if offset == update_offset:
+            exchange(history, example['update'][0], '好，已经更改。')
+        if offset < count:
+            exchange(history, selected[offset], '这段也看到了。')
+    return history
+
+
 def training_sequences(tokenizer, examples, fillers):
     rows = []
     for index, example in enumerate(examples):
-        count = (0, 5, 11, 14)[index % 4]
-        rng = random.Random(SEED + index)
-        selected = rng.sample(fillers, count)
-        initial_offset = index % (count + 1)
-        update_offset = initial_offset + (index // 3) % (count - initial_offset + 1)
-        history = []
-        for offset in range(count + 1):
-            if offset == initial_offset:
-                exchange(history, example['first'][0], '好，我知道了。')
-            if offset == update_offset:
-                exchange(history, example['update'][0], '好，已经更改。')
-            if offset < count:
-                exchange(history, selected[offset], '这段也看到了。')
+        history = training_history(example, fillers, index)
         history.append({'role': 'user', 'content': example['question']})
         prompt = encode(tokenizer, history)
         answer = tokenizer.encode(example['answer'], add_special_tokens=False)
