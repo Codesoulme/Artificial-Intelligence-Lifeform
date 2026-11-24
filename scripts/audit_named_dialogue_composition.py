@@ -51,16 +51,20 @@ def main():
     parser.add_argument('output', type=Path)
     parser.add_argument('--short-holdout', action='store_true')
     parser.add_argument('--history-pairs', choices=('include', 'only'))
+    parser.add_argument('--development-only', type=Path,
+                        help='Evaluate just the supplied open-dialogue development scenarios')
     args = parser.parse_args()
+    if args.development_only is not None and (args.short_holdout or args.history_pairs):
+        parser.error('--development-only runs without the short or paired diagnostics')
     if args.output.exists():
         raise FileExistsError(args.output)
-    sources = {str(path): sha(path) for path in (args.checkpoint, DATA, DEVELOPMENT)}
+    development_path = args.development_only or DEVELOPMENT
+    inputs = (development_path,) if args.development_only is not None else (DATA, DEVELOPMENT)
+    sources = {str(path): sha(path) for path in (args.checkpoint, *inputs)}
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     decoder, _, _ = load_integrated(args.checkpoint, load_full_streamed(), MODEL, disposable_base=True)
     settings = settings_for(decoder, tokenizer, 96)
-    composition = json.loads(DATA.read_text(encoding='utf-8'))['evaluation']
-    development = json.loads(DEVELOPMENT.read_text(encoding='utf-8'))['scenarios']
     result = {'sources': sources}
     if args.history_pairs:
         result['history_pairs'] = score_history_pairs(decoder, tokenizer, settings)
@@ -68,7 +72,10 @@ def main():
         result['short'] = run(decoder, tokenizer, cases=CASES)
         print('Short holdout', {key: value for key, value in result['short'].items() if key != 'rows'}, flush=True)
     if args.history_pairs != 'only':
-        result['composition'] = score_rollouts(decoder, tokenizer, composition, settings=settings)
+        if args.development_only is None:
+            composition = json.loads(DATA.read_text(encoding='utf-8'))['evaluation']
+            result['composition'] = score_rollouts(decoder, tokenizer, composition, settings=settings)
+        development = json.loads(development_path.read_text(encoding='utf-8'))['scenarios']
         result['open'], _ = evaluate(decoder, tokenizer, development, {}, settings)
     if any(sha(Path(path)) != digest for path, digest in sources.items()):
         raise ValueError('Evaluation input changed')

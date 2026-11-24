@@ -68,3 +68,29 @@ MOHAWK 将迁移分为词元混合、块输出和整网预测三个目标。Llam
 Set-Location D:\SPORA
 .\.venv\Scripts\python.exe -m scripts.spora_named_memory_chat --dialogue-checkpoint runs/spora-composition-gelu-layer26-layer21-v1/candidate.pt
 ```
+
+## 后层门控的逐层筛选
+
+以第 21、26 层检查点为共享对照，依次试验第 20、23、24 层。保留已通过的替换，回滚不通过的替换。筛选要求受控记忆输出逐项一致，且 C-Eval 总分、对话结束数、严格组通过数和逐轮通过数均不低于共享对照。每层使用相同的原题和贪心解码设置。
+
+| 新增门控 | C-Eval | 开发对话词元与对照一致 | 正常结束 | 严格组 / 轮 | 受控记忆 |
+|---|---:|---:|---:|---:|---:|
+| 双层对照 | 49/143 | 24/24 | 24/24 | 4/12 · 17/26 | 32/32 |
+| 第 20 层 | 48/143 | 21/24 | 24/24 | 4/12 · 17/26 | 32/32 |
+| 第 23 层 | 49/143 | 21/24 | 23/24 | 4/12 · 17/26 | 32/32 |
+| 第 24 层 | 49/143 | 24/24 | 24/24 | 4/12 · 17/26 | 32/32 |
+
+纳入第 24 层，三个门控位置为 21、24、26。第 24 层答错的一个选择题换了选项，受控记忆的实际输出逐项一致。临时替换第 23 层时，早餐建议用完 96 词元仍未正常结束。第 20 层和第 23 层各自恢复 SiLU。实验目录为 `runs/spora-composition-late-gates-20-23-24-v1/`。
+
+独立重载核对了检查点的全部张量及门控清单，复现了选择题选项、开放对话词元、严格短对话和受控记忆。新检查点摘要为 `99fe05df3af8d6fa99b248d3e025016b62bfb351b014fa7030745b2494a0d8b2`。
+
+另写了 8 组三轮日常开发题，按场景要求逐条阅读回复。三层版与双层版有 19/24 轮文本相同，两版均为 23/24 轮正常结束、0/8 组完成全部要求。三层版在解释车窗雾气时从「蒸发」改为「凝结」，最后仍漏掉冷玻璃。在安慰朋友的场景中，首轮给出了安慰，后两轮原样复述，未落实口语和字数要求。两版都在发通知时把推迟后的十点半答成十点。新题作为开发诊断，后续验收需要更广的独立场景及人工复核。
+
+```powershell
+$sporaParent = 'runs/spora-composition-gelu-layer26-layer21-v1/candidate.pt'
+$sporaRun = 'runs/spora-composition-late-gates-20-23-24-v1'
+.\.venv\Scripts\python.exe -m scripts.screen_spora_gelu_layers --checkpoint $sporaParent --ceval runs --output $sporaRun --layers 20 23 24
+.\.venv\Scripts\python.exe -m scripts.screen_spora_gelu_layers --checkpoint $sporaParent --ceval runs --output $sporaRun --verify
+.\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_composition $sporaParent "$sporaRun/open-parent.json" --development-only data/conversation-development-v3.json
+.\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_composition "$sporaRun/candidate.pt" "$sporaRun/open-candidate.json" --development-only data/conversation-development-v3.json
+```
