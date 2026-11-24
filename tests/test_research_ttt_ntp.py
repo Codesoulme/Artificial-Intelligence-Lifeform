@@ -37,6 +37,10 @@ class ResearchTTTNTPTests(unittest.TestCase):
             reference = wrappers[0](keys)
         with use_memory({0: full}):
             torch.testing.assert_close(wrappers[0](keys), reference)
+        torch.testing.assert_close(full.recover_targets(3, eta=.5, ridge=1.), targets)
+        torch.testing.assert_close(full.recover_targets(1, eta=.5, ridge=1.), targets[-1:])
+        with self.assertRaises(ValueError):
+            full.recover_targets(4, eta=.5, ridge=1.)
 
     def test_install_and_absent_memory_preserve_native_layer(self):
         decoder = ToyDecoder()

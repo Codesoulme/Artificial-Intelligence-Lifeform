@@ -41,7 +41,7 @@ def exact(answer, value):
     return answer.strip().rstrip('。.!！ ').strip() == value
 
 
-def fact_cache(model, tokenizer, wrappers, fact, value):
+def fact_cache(model, tokenizer, wrappers, fact, value, *, decoder_only=False):
     encoded = tokenizer(fact, return_tensors='pt', add_special_tokens=False,
                         return_offsets_mapping=True)
     offsets = encoded.pop('offset_mapping')[0].tolist()
@@ -59,7 +59,8 @@ def fact_cache(model, tokenizer, wrappers, fact, value):
         hooks.append(wrapper.base.register_forward_hook(capture))
     try:
         with torch.inference_mode():
-            result = model(**inputs, output_hidden_states=True, use_cache=False, return_dict=True)
+            forward = model.model if decoder_only else model
+            result = forward(**inputs, output_hidden_states=True, use_cache=False, return_dict=True)
     finally:
         for hook in hooks:
             hook.remove()

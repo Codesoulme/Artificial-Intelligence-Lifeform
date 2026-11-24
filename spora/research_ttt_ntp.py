@@ -38,6 +38,17 @@ class LowRankFastWeight:
         return (hidden.float() @ self.keys.T) @ self.values
 
     @torch.no_grad()
+    def recover_targets(self, count, *, eta, ridge):
+        """Recover the last write targets from the ordered rank-one factors."""
+        if type(count) is not int or not 1 <= count <= len(self.keys) or not 0 < eta <= 1 or not ridge > 0:
+            raise ValueError('Invalid fast-weight replay parameters')
+        position = torch.arange(len(self.keys), device=self.keys.device)
+        keys = self.keys[-count:]
+        earlier = (keys @ self.keys.T).masked_fill(position >= position[-count:, None], 0.)
+        residual = self.values[-count:] * (keys.square().sum(-1, keepdim=True) + ridge) / eta
+        return earlier @ self.values + residual
+
+    @torch.no_grad()
     def write(self, keys, targets, *, eta, ridge):
         if (keys.ndim != 2 or targets.ndim != 2 or keys.shape[0] != targets.shape[0]
                 or (targets.shape[1], keys.shape[1]) != self.shape or not 0 < eta <= 1 or not ridge > 0):
