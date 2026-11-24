@@ -9,6 +9,7 @@ import torch
 from torch.nn import functional as F
 
 from scripts.audit_spora_dialogue_working_state import FrozenTurnFeatures
+from scripts.prepare_spora_revision_samples import dialogue_samples
 from scripts.train_spora_described_revision_span import assess, encode, make_rows, score, summarize
 from scripts.train_spora_revision_events import compare, state_audit
 from scripts.train_spora_revision_intent import (
@@ -53,6 +54,22 @@ def paired_turns(specs, schemas, fixture, patterns):
                 turns.append((text, topic, field, candidate))
                 previous.append(current)
     return turns, previous
+
+
+def with_confirmed_replay(turns, source, specs, fixture, names, groups):
+    confirmed, _ = dialogue_samples(specs, fixture, names, source['values']['train'])
+    if len(turns) != 4 * len(groups):
+        raise ValueError('Replay expects four contrast turns per matched case')
+    mixed = []
+    for index, (row, group) in enumerate(zip(confirmed, groups, strict=True)):
+        four = turns[4 * index:4 * index + 4]
+        _, topic, field, value = four[0]
+        if row['change'] != {field: value} or (group['field'], group['candidate']) != (field, value):
+            raise ValueError('The replay case and contrast group differ')
+        first, second = (0, 3) if index % 2 == 0 else (1, 2)
+        mixed.extend((four[first], four[second], (row['update'][0], topic, field, value),
+                      (group['texts'][0], topic, field, value)))
+    return mixed
 
 
 def rivals_for(rows, old_values, width):
@@ -145,11 +162,14 @@ def main(args):
     fields = {spec['case']: spec['fields'] for spec in specs}
     schemas = {topic: dict(zip(keys, names[topic], strict=True)) for topic, keys in fields.items()}
     fixture = read(OBSERVATIONS)['topics']
-    groups = training_groups(read(DATA), specs, fixture, names)
+    source = read(DATA)
+    groups = training_groups(source, specs, fixture, names)
     train_specs = [(spec['case'], group['field'], group['old'], group['candidate'])
                    for spec, start in zip(specs, range(0, len(groups), 24), strict=True)
                    for group in groups[start:start + 24]]
     train, old_train = paired_turns(train_specs, schemas, fixture, TRAIN_TURNS)
+    if args.mixed:
+        train = with_confirmed_replay(train, source, specs, fixture, names, groups)
     episodes = held_episodes({'cases': specs})
     before = examples(episodes, fields, names, TEST)
     confirmed = [(row['update'], row['topic'], *next(iter(row['change'].items()))) for row in episodes]
@@ -178,13 +198,15 @@ def main(args):
     tests_encoded = {name: encode(featurizer, rows, 'identifier') for name, rows in groups.items()}
     train_encoded = rivals = None
     if not args.verify:
-        print('Encoding', len(train), 'contrast turns', flush=True)
+        print('Encoding', len(train), 'training turns', flush=True)
         train_rows = make_rows(train, schemas)
         train_encoded = encode(featurizer, train_rows, 'identifier')
-        rivals = rivals_for(train_rows, dict(zip((row[0] for row in train), old_train, strict=True)),
-                            train_encoded[0].shape[1])
+        if not args.mixed:
+            rivals = rivals_for(train_rows, dict(zip((row[0] for row in train), old_train, strict=True)),
+                                train_encoded[0].shape[1])
     arms = {}
-    for mode in ('prior', *ARMS):
+    modes = ('mixed_replay',) if args.mixed else ('prior', *ARMS)
+    for mode in modes:
         print('writer', mode, flush=True)
         writer = JointTurnValueWriter(64, feature_width=base.config.hidden_size).to(base.device)
         writer.load_state_dict(saved[mode] if args.verify and mode != 'prior' else initial)
@@ -229,4 +251,5 @@ if __name__ == '__main__':
         parser.add_argument(name, type=Path)
     parser.add_argument('layers', nargs=2, type=Path)
     parser.add_argument('--verify', action='store_true')
+    parser.add_argument('--mixed', action='store_true', help='Replace half of the proposal turns with confirmed revisions')
     main(parser.parse_args())
