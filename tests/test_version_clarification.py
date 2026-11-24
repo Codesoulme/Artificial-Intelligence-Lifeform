@@ -2,7 +2,7 @@ from datetime import date
 import unittest
 
 from spora.identity_fingerprints import IdentityFingerprints
-from spora.research_version_clarification import Intent, resolve_version_turn, start_version_turn
+from spora.research_version_clarification import Intent, resolve_version_turn, scope_version_intent, start_version_turn
 from spora.research_version_scope import addressed_subject
 from spora.temporal_routing import CURRENT
 
@@ -39,6 +39,15 @@ class VersionClarificationTests(unittest.TestCase):
                 self.assertEqual(result.action, expected)
                 self.assertIsNone(result.route)
                 self.assertIsNone(result.pending)
+
+    def test_rejected_lookup_cannot_open_a_read_or_a_pending_turn(self):
+        for intent in Intent:
+            self.assertEqual(scope_version_intent(intent, permits_lookup=True), intent)
+            rejected = scope_version_intent(intent, permits_lookup=False)
+            decision = self.start(rejected)
+            self.assertIsNone(decision.route)
+            self.assertIsNone(decision.pending)
+            self.assertIsNone(resolve_version_turn(decision.pending, '第一版', {0: self.revisions}, self.today).route)
 
     def test_transitions_respect_schedule_and_lookup_scope(self):
         self.assertIsNone(self.start(Intent.ASK, subject=None).pending)

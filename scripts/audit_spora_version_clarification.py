@@ -99,7 +99,7 @@ def decision_record(decision):
 
 
 @torch.inference_mode()
-def run_dialogues(model, tokenizer, head, bank, schedules, held, actions, plans):
+def run_dialogues(model, tokenizer, head, bank, schedules, held, actions, plans, *, generate_values=True):
     embedding = model.get_input_embeddings().weight.detach()
     codebook = F.normalize(embedding.index_select(1, compress_dimension(embedding.shape[1]).to(embedding.device)).float(), dim=-1)
     names, fields = addresses()
@@ -107,7 +107,7 @@ def run_dialogues(model, tokenizer, head, bank, schedules, held, actions, plans)
     reads = []
 
     def generate(question, route, gold, variant, history=()):
-        if route is None:
+        if route is None or not generate_values:
             return None
         subject, slot = route
         name = SUBJECTS[subject][1]

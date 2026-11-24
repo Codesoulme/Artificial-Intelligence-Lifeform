@@ -6,6 +6,8 @@ from enum import IntEnum
 import re
 import unicodedata
 
+from torch import nn
+
 from .research_version_roles import apply_version_plan
 from .research_version_scope import _DATE_HINT, _ORDINAL_HINT
 from .research_version_timeline import VersionQuery, select_version
@@ -16,6 +18,20 @@ class Intent(IntEnum):
     ASK = 1
     DEFER = 2
     OTHER = 3
+
+
+class VersionAccessHead(nn.Sequential):
+    """Estimate whether the utterance requests any versioned-memory action."""
+
+    def __init__(self, width):
+        super().__init__(nn.Linear(width, 64), nn.GELU(), nn.Linear(64, 1))
+
+
+def scope_version_intent(intent, *, permits_lookup):
+    """A rejected request can neither read a record nor create a pending lookup."""
+    if not permits_lookup and intent in (Intent.READ, Intent.ASK):
+        return Intent.OTHER
+    return intent
 
 
 _VERSIONS = (VersionQuery('current'), VersionQuery('ordinal', 1), VersionQuery('previous'))
