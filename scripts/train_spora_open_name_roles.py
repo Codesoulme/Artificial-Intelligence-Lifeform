@@ -26,16 +26,16 @@ def hidden_batch(featurize, rows):
     return batch.masked_fill(~inside[..., None], 0), lengths
 
 
-def fit_proposer(proposer, hidden, lengths, rows):
+def fit_proposer(proposer, hidden, lengths, rows, *, epochs=12, lr=.003):
     valid = torch.arange(hidden.shape[1])[None, :, None] + torch.tensor(proposer.lengths) <= lengths[:, None, None]
     targets = torch.zeros_like(valid, dtype=torch.float32)
     for i, row in enumerate(rows):
         for start, stop in row['mentions']:
             targets[i, start, proposer.lengths.index(stop - start)] = 1.
     rng = torch.Generator().manual_seed(SEED)
-    optimizer = torch.optim.AdamW(proposer.parameters(), lr=.003, weight_decay=.03)
+    optimizer = torch.optim.AdamW(proposer.parameters(), lr=lr, weight_decay=.03)
     positive_weight = (valid.sum() - targets.sum()) / targets.sum() / 3
-    for _ in range(12):
+    for _ in range(epochs):
         for ids in torch.randperm(len(rows), generator=rng).split(64):
             optimizer.zero_grad(set_to_none=True)
             active = valid[ids]
@@ -117,6 +117,11 @@ def replay_roles(held, featurize, proposer, floor, role, joint, tokenizer):
 
 
 def replay_profiles(held, featurize, proposer, configs, joint, tokenizer):
+    return replay_proposer_profiles(held, featurize,
+                                    {name: (proposer, *profile) for name, profile in configs.items()}, joint, tokenizer)
+
+
+def replay_proposer_profiles(held, featurize, configs, joint, tokenizer):
     size = len(FIELDS) * 4
     groups = [held[start:start + size] for start in range(0, len(held), size)]
     result = {name: [] for name in configs}
@@ -128,12 +133,12 @@ def replay_profiles(held, featurize, proposer, configs, joint, tokenizer):
         rows = annotate_group(group, foreign, events, names)
         hidden, lengths = hidden_batch(featurize, rows)
         initial = joint(*representations(featurize, group))[:, 0]
-        floors = dict.fromkeys(floor for _, floor, _ in configs.values() if floor is not None)
-        spans_by_floor = {floor: proposals(proposer, hidden, lengths, floor) for floor in floors}
-        spans_by_floor[None] = [row['mentions'] for row in rows]
-        for name, (role, floor, margin) in configs.items():
+        bounds = dict.fromkeys((proposer, floor) for proposer, _, floor, _ in configs.values())
+        spans = {(proposer, floor): [row['mentions'] for row in rows] if floor is None else
+                 proposals(proposer, hidden, lengths, floor) for proposer, floor in bounds}
+        for name, (proposer, role, floor, margin) in configs.items():
             selected = [registered for _, registered in resolve_rows(
-                role, rows, hidden, spans_by_floor[floor], margin_floor=margin)]
+                role, rows, hidden, spans[proposer, floor], margin_floor=margin)]
             report = measure(group, events, selected, hidden.float(), initial, codec, tokenizer, joint, name,
                              selector=lambda _mode, _registry, _text, chosen, _gold: chosen)
             result[name].extend(report)
