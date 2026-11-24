@@ -35,10 +35,13 @@ FORMAT = 'spora-working-turn-experiment-v1'
 
 
 class FrozenTurnFeatures:
-    def __init__(self, decoder, tokenizer):
+    def __init__(self, decoder, tokenizer, *, depth=FEATURE_DEPTH):
         self.model = decoder.base.model
         self.device = decoder.base.device
         self.tokenizer = tokenizer
+        if not 1 <= depth <= len(self.model.layers):
+            raise ValueError('Feature depth must name an existing decoder layer')
+        self.depth = depth
 
     @torch.no_grad()
     def __call__(self, texts):
@@ -52,7 +55,7 @@ class FrozenTurnFeatures:
             for token, (begin, end) in enumerate(row):
                 positions[i, begin:end] = token
         layers = self.model.layers
-        self.model.layers = nn.ModuleList(layers[:FEATURE_DEPTH])
+        self.model.layers = nn.ModuleList(layers[:self.depth])
         try:
             hidden = []
             for begin in range(0, len(texts), 12):
