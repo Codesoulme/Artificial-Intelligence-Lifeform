@@ -4,6 +4,7 @@ import argparse
 from contextlib import ExitStack, contextmanager
 from functools import partial
 import json
+import math
 import os
 from pathlib import Path
 import random
@@ -19,6 +20,7 @@ from scripts.train_spora_recurrent_long_alignment import (
     frozen_digest, load_full_streamed, load_integrated_runtime, load_recurrent_replacements, material, recall_prompts,
     records, replace, run_dialogue, sha, torch, training_sequences,
 )
+from scripts.train_spora_dialogue_working_state import annotated
 from spora.language_training import atomic_save
 from spora.research_dialogue_working_state import FIELDS
 
@@ -54,25 +56,46 @@ def alternate(example, source, rng):
         if not start or text[start - 1:end] != edits[field]:
             raise ValueError('Update annotation did not identify the corrected value')
         text = text[:start - 1] + swaps[field] + text[end:]
-    answer = source['kinds'][example['kind']]['answer'].format(**(example['initial'] | swaps))
-    return {**example, 'update': (text, None), 'answer': answer}
+    current = example['initial'] | swaps
+    answer = source['kinds'][example['kind']]['answer'].format(**current)
+    return {**example, 'update': (text, None), 'answer': answer, 'current': current, 'changes': swaps}
 
 
-def training_pairs(tokenizer, source, examples):
+def field_token_groups(tokenizer, example, template, expected_ids):
+    answer, boundaries = annotated(template, example['current'])
+    if answer != example['answer']:
+        raise ValueError('Field annotations differ from the supervised answer')
+    encoded = tokenizer(answer, add_special_tokens=False, return_offsets_mapping=True)
+    if encoded.input_ids != expected_ids:
+        raise ValueError('Field annotations use a different answer tokenization')
+    groups = tuple(tuple(i for i, (left, right) in enumerate(encoded.offset_mapping)
+                         if left < right and left < stop and right >= start)
+                   for start, stop in boundaries if start)
+    if not groups or not all(groups):
+        raise ValueError('The target answer lacks a token span for a requested field')
+    return groups
+
+
+def training_pairs(tokenizer, source, examples, *, field_weight=0.):
     rng = random.Random(SEED)
     alternate_examples = [alternate(row, source, rng) for row in examples]
     fillers = material(tokenizer, CORPUS, 40)
     originals = training_sequences(tokenizer, examples, fillers)
     swaps = training_sequences(tokenizer, alternate_examples, fillers)
     pairs = []
-    for (first, first_end), (second, second_end) in zip(originals, swaps, strict=True):
+    for example, other, (first, first_end), (second, second_end) in zip(
+        examples, alternate_examples, originals, swaps, strict=True
+    ):
         first_answer = [*first[first_end + 1:], tokenizer.eos_token_id]
         second_answer = [*second[second_end + 1:], tokenizer.eos_token_id]
         difference = next((i for i, (a, b) in enumerate(zip(first_answer, second_answer)) if a != b), None)
         if difference is None or first[:first_end + 1] == second[:second_end + 1]:
             raise ValueError('Counterfactual histories must change the correct answer at a shared prefix')
-        pairs.append(((first, first_answer, difference, second_answer[difference]),
-                      (second, second_answer, difference, first_answer[difference])))
+        template = source['kinds'][example['kind']]['answer']
+        first_fields = field_token_groups(tokenizer, example, template, first_answer[:-1]) if field_weight else ()
+        second_fields = field_token_groups(tokenizer, other, template, second_answer[:-1]) if field_weight else ()
+        pairs.append(((first, first_answer, difference, second_answer[difference], first_fields),
+                      (second, second_answer, difference, first_answer[difference], second_fields)))
     return pairs
 
 
@@ -98,13 +121,18 @@ def evaluation_pairs(tokenizer, source):
     return base, pairs
 
 
-def loss_for(decoder, request):
-    ids, answer, difference, foil = request
+def loss_for(decoder, request, field_weight):
+    ids, answer, difference, foil, fields = request
     device = decoder.base.device
     tokens = torch.tensor([ids], device=device)
     logits = decoder(input_ids=tokens, use_cache=False, logits_to_keep=len(answer)).logits[0].float()
     target = torch.tensor(answer, device=device)
-    exact = F.cross_entropy(logits, target)
+    if field_weight:
+        losses = F.cross_entropy(logits, target, reduction='none')
+        balanced = torch.stack([losses[list(positions)].mean() for positions in fields]).mean()
+        exact = (losses.mean() + field_weight * balanced) / (1 + field_weight)
+    else:
+        exact = F.cross_entropy(logits, target)
     margin = logits[difference, target[difference]] - logits[difference, foil]
     return exact + .3 * F.softplus(1. - margin), margin
 
@@ -118,7 +146,7 @@ def checkpoint_layers(decoder, first):
         yield
 
 
-def fit(decoder, candidates, pairs, steps, learning_rate):
+def fit(decoder, candidates, pairs, steps, learning_rate, field_weight=0.):
     params = [param for _, replacement in candidates.values() for param in replacement.core.parameters()]
     optimizer = torch.optim.AdamW(params, lr=learning_rate, weight_decay=0.)
     rng = random.Random(SEED)
@@ -133,7 +161,7 @@ def fit(decoder, candidates, pairs, steps, learning_rate):
         optimizer.zero_grad(set_to_none=True)
         observations = []
         for arm in batch:
-            loss, margin = loss_for(decoder, arm)
+            loss, margin = loss_for(decoder, arm, field_weight)
             (loss * .5).backward()
             observations.append((float(loss.detach()), float(margin.detach())))
         gradient = torch.nn.utils.clip_grad_norm_(params, 1., error_if_nonfinite=True)
@@ -167,13 +195,16 @@ def install(stack, candidates):
         stack.enter_context(replace(block, replacement))
 
 
-def evaluate_candidate(runtime, tokenizer, held, regular, open_cases):
+def evaluate_candidate(runtime, tokenizer, held, regular, open_cases, transfer=()):
     decoder = runtime.decoder
     after = assess(decoder, tokenizer, held, open_cases)
     original_cases = run_dialogue(decoder, tokenizer, regular, [])
     memory = records(runtime.organism, HELD)
     memory_after = evaluate(decoder, tokenizer, runtime.organism, memory)
-    return {'paired_after': after, 'original_cases_after': original_cases, 'memory_after': memory_after}
+    result = {'paired_after': after, 'original_cases_after': original_cases, 'memory_after': memory_after}
+    if transfer:
+        result['transfer_after'] = run_dialogue(decoder, tokenizer, transfer, [])
+    return result
 
 
 def save_training(args, candidates, sources, checkpoint_sha, individual, trace, pair_count, peak):
@@ -193,6 +224,8 @@ def save_training(args, candidates, sources, checkpoint_sha, individual, trace, 
                                                    'individual_sha256': individual, 'candidate_sha256': saved[str(index)]})
     training = {'sources': sources, 'individual_sha256': individual, 'training_pairs': pair_count, 'trace': trace,
                 'training_peak_bytes': peak, 'candidate_hashes': saved}
+    if args.field_weight:
+        training['field_weight'] = args.field_weight
     store_json(args.output / 'training.json', training)
     print('Saved recurrent weights for evaluation', flush=True)
     return training
@@ -205,6 +238,8 @@ def main(args):
     if not args.verify and (args.output / 'result.json').exists():
         raise FileExistsError(args.output / 'result.json')
     inputs = [args.checkpoint, SOURCE, CORPUS, MANIFEST, DATA, args.reference]
+    if args.transfer:
+        inputs.append(args.transfer)
     inputs.extend(directory / name for directory in args.candidates for name in ('attention.pt', 'comparison.json'))
     protected = {path: sha(path) for path in inputs}
     if json.loads(MANIFEST.read_text(encoding='utf-8'))['files'][CORPUS.name] != protected[CORPUS]:
@@ -215,9 +250,14 @@ def main(args):
     source = json.loads(SOURCE.read_text(encoding='utf-8'))
     training_data = json.loads(DATA.read_text(encoding='utf-8'))
     regular, held = evaluation_pairs(tokenizer, source)
+    transfer = []
+    if args.transfer:
+        transfer_source = {**source, 'recall': json.loads(args.transfer.read_text(encoding='utf-8'))['recall']}
+        transfer = [row for row in recall_prompts(tokenizer, transfer_source, extended=True)
+                    if row['length'] == 'extended']
     examples = dialogue_data(training_data, held=False, count=16)
     questions = {case['question'] for case in examples}
-    if questions & {row['question'] for row in held}:
+    if questions & {row['question'] for row in (*held, *transfer)}:
         raise ValueError('A held question occurs in the training partition')
     base = load_full_streamed()
     rotary = base.model.rotary_emb
@@ -236,7 +276,8 @@ def main(args):
     sources = {str(path): digest for path, digest in protected.items()}
     if args.verify or args.evaluate:
         training = json.loads((args.output / 'training.json').read_text(encoding='utf-8'))
-        if training['sources'] != sources or training['individual_sha256'] != individual:
+        if (training['sources'] != sources or training['individual_sha256'] != individual
+                or training.get('field_weight', 0.) != args.field_weight):
             raise ValueError('The saved training used different inputs')
         directories = [args.output / f'layer-{index}' for index in candidates]
         for index, directory in zip(candidates, directories, strict=True):
@@ -244,7 +285,7 @@ def main(args):
                 raise ValueError('The saved recurrent weights changed')
         trained = load_recurrent_replacements(decoder, directories, protected[args.checkpoint])
     else:
-        pairs = training_pairs(tokenizer, training_data, examples)
+        pairs = training_pairs(tokenizer, training_data, examples, field_weight=args.field_weight)
         trained = candidates
         with ExitStack() as installed:
             install(installed, trained)
@@ -253,7 +294,7 @@ def main(args):
                 replacement.core.train().requires_grad_(True)
             torch.cuda.reset_peak_memory_stats()
             with checkpoint_layers(decoder, min(candidates) + 1):
-                trace = fit(decoder, candidates, pairs, args.steps, args.learning_rate)
+                trace = fit(decoder, candidates, pairs, args.steps, args.learning_rate, args.field_weight)
             peak = torch.cuda.max_memory_allocated()
         for _, replacement in trained.values():
             replacement.core.eval().requires_grad_(False)
@@ -267,7 +308,7 @@ def main(args):
             raise ValueError('The saved experiment used different training weights or inputs')
         with ExitStack() as installed:
             install(installed, trained)
-            result = evaluate_candidate(runtime, tokenizer, held, regular, source['open'])
+            result = evaluate_candidate(runtime, tokenizer, held, regular, source['open'], transfer)
         if (any(expected[key] != value for key, value in result.items())
                 or individual != frozen_digest(runtime.organism, runtime.state)
                 or any(sha(path) != digest for path, digest in protected.items())):
@@ -285,7 +326,7 @@ def main(args):
     else:
         with ExitStack() as installed:
             install(installed, trained)
-            result = evaluate_candidate(runtime, tokenizer, held, regular, source['open'])
+            result = evaluate_candidate(runtime, tokenizer, held, regular, source['open'], transfer)
         store_json(evaluation_path, {'candidate_hashes': training['candidate_hashes'], 'result': result})
     print('Trained', result['paired_after']['counterfactual'], result['original_cases_after']['recall_passed'],
           result['memory_after']['summary'], flush=True)
@@ -309,10 +350,15 @@ if __name__ == '__main__':
     parser.add_argument('candidates', nargs=2, type=Path)
     parser.add_argument('--steps', type=int, default=32)
     parser.add_argument('--learning-rate', type=float, default=.0005)
+    parser.add_argument('--field-weight', type=float, default=0.,
+                        help='Mix equal weight per annotated answer field into the full-answer loss')
+    parser.add_argument('--transfer', type=Path, help='Optional additional long-dialogue evaluation scenarios')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('--verify', action='store_true')
     modes.add_argument('--evaluate', action='store_true', help='Finish evaluation of already saved weights')
     args = parser.parse_args()
     if args.steps < 1 or not 0 < args.learning_rate <= .01:
         parser.error('Choose positive updates and a learning rate through .01')
+    if args.field_weight < 0 or not math.isfinite(args.field_weight):
+        parser.error('--field-weight must be finite and nonnegative')
     main(args)
