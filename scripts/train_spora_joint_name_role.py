@@ -44,7 +44,7 @@ def fit(head, features, present, rows, *, boundary_weight, epochs=14):
         for indices in torch.randperm(len(rows), generator=rng).split(96):
             active = present[indices]
             optimizer.zero_grad(set_to_none=True)
-            decision, boundary = head(features[indices], active)
+            decision, boundary = head(features[indices].float(), active)
             target_loss = F.cross_entropy(decision, target[indices], reduction='none')
             boundary_loss = F.binary_cross_entropy_with_logits(
                 boundary[active], complete[indices][active], reduction='sum') / active.sum().clamp_min(1)
