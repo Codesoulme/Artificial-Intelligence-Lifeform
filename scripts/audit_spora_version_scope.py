@@ -91,7 +91,7 @@ def summarize(rows):
     return summary
 
 
-def verify_answers(model, tokenizer, bank, head, rows):
+def verify_answers(model, tokenizer, bank, head, rows, *, route_mode='scoped_auto'):
     embedding = model.get_input_embeddings().weight.detach()
     columns = compress_dimension(embedding.shape[1]).to(embedding.device)
     codebook = F.normalize(embedding.index_select(1, columns).float(), dim=-1)
@@ -100,7 +100,7 @@ def verify_answers(model, tokenizer, bank, head, rows):
     expected_values = [values for _, _, _, values, _ in SUBJECTS]
     names = [name for _, name, _, _, _ in SUBJECTS]
     for index, row in enumerate(rows):
-        selected = row['routes']['scoped_auto']
+        selected = row['routes'][route_mode]
         value_tokens = empty
         if selected is not None:
             subject, slot = selected
