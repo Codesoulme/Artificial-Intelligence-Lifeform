@@ -14,7 +14,8 @@ from scripts.train_spora_described_revision_span import assess as extract_values
 from scripts.train_spora_revision_intent import JointTurnValueWriter
 from scripts.train_spora_revision_reference import training_cases
 from scripts.train_spora_separate_revision_reference import (
-    ACTIONS, FIELD_TEXT, SEED, UNSEEN_TOPIC, DraftReferenceMatcher, cuts, encode, predictions, tensors, train_heads,
+    ACTIONS, FIELD_TEXT, SEED, UNSEEN_TOPIC, DraftReferenceMatcher, cuts, encode, encode_texts, predictions, tensors,
+    train_heads,
 )
 from scripts.train_spora_observed_episodes import encode_changes, state_for, state_values
 from scripts.train_spora_revision_intent import (
@@ -61,12 +62,13 @@ def proposals(cases, names, fixtures):
                 choices = [value for value in pool if value != old]
                 candidate = choices[index % len(choices)]
                 options.append({'topic': topic, 'field': field, 'value': candidate, 'initial': row['initial'],
-                                'name': label, 'theme': fixtures[topic]['label'], 'old': old})
+                                'name': label, 'theme': fixtures[topic]['label'], 'old': old,
+                                'record_key': row['key'], 'first': row['first']})
             result[topic][field] = options
     return result
 
 
-def build(catalog, split, *, per_pair, topic_key=False):
+def build(catalog, split, *, per_pair, key_kind='description'):
     rows = []
     for left, right in combinations(sorted(catalog), 2):
         for field in sorted(catalog[left].keys() & catalog[right].keys()):
@@ -74,8 +76,7 @@ def build(catalog, split, *, per_pair, topic_key=False):
             for index in range(per_pair):
                 drafts = (a[index % len(a)], b[(index + 1) % len(b)])
                 for order in (drafts, drafts[::-1]):
-                    descriptions = tuple(draft['theme'] if topic_key else
-                                         f'{draft["theme"]}的{draft["name"]}，{FIELD_TEXT[field]}' for draft in order)
+                    descriptions = tuple(draft_key(draft, key_kind) for draft in order)
                     for target in (0, 1, None):
                         bridge = (AMBIGUOUS[split] if target is None else SCOPE[split].format(
                             alias=topic_cue(order[target]['topic'], split, index)))
@@ -85,6 +86,26 @@ def build(catalog, split, *, per_pair, topic_key=False):
                                          'descriptions': descriptions, 'options': order, 'target': target,
                                          'confirm': confirm})
     return rows
+
+
+def draft_key(draft, kind):
+    if kind == 'observation':
+        return draft['record_key']
+    if kind == 'topic':
+        return draft['theme']
+    return f'{draft["theme"]}的{draft["name"]}，{FIELD_TEXT[draft["field"]]}'
+
+
+def observation_keys(featurizer, sets):
+    observations = {}
+    for rows in sets.values():
+        for row in rows:
+            for draft in row['options']:
+                key, text = draft['record_key'], draft['first']
+                if observations.setdefault(key, text) != text:
+                    raise ValueError('A scoped record has conflicting registration turns')
+    encoded = encode_texts(featurizer, sorted(set(observations.values())))
+    return {key: encoded[text] for key, text in observations.items()}
 
 
 def copied_candidates(writer, featurizer, cases, schemas):
@@ -144,7 +165,7 @@ def main(args):
     started = perf_counter()
     torch.set_num_threads(2)
     output = args.output
-    report, weights = output / 'result.json', output / 'reference.pt'
+    report, weights, stored_keys = output / 'result.json', output / 'reference.pt', output / 'observation-keys.pt'
     if not args.verify:
         output.mkdir(parents=True, exist_ok=False)
     parent = read(args.reference / 'result.json')
@@ -164,6 +185,8 @@ def main(args):
     expected = read(report) if args.verify else None
     if expected is not None and (expected['sources'] != sources or expected['weights_sha256'] != sha(weights)):
         raise ValueError('Independent replay inputs changed')
+    if args.verify and args.observation_key and expected['observation_keys_sha256'] != sha(stored_keys):
+        raise ValueError('Stored observation representations changed')
 
     specs, data, fixtures = read(EPISODES)['cases'], read(DATA), read(OBSERVATIONS)['topics']
     labels = {topic: (*ROLE_NAMES[topic], EXTRA_NAMES[topic]) for topic in EXTRA_NAMES}
@@ -172,9 +195,10 @@ def main(args):
     calibration = training_cases(specs, fixtures, labels, data['values']['held'], calibration=True)
     held = held_episodes({'cases': specs})
     sets = {}
+    kind = 'observation' if args.observation_key else ('topic' if args.topic_key else 'description')
     for split, cases, count in (('train', train, 9), ('calibration', calibration, 4), ('held', held, 4)):
         valid = [case for case in cases if split == 'held' or case['topic'] != UNSEEN_TOPIC]
-        sets[split] = build(proposals(valid, schemas, fixtures), split, per_pair=count, topic_key=args.topic_key)
+        sets[split] = build(proposals(valid, schemas, fixtures), split, per_pair=count, key_kind=kind)
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     base = load_full_streamed()
@@ -187,7 +211,17 @@ def main(args):
     extend_positions(decoder, rotary, 2048)
     feature = FrozenTurnFeatures(decoder, tokenizer, depth=20)
     evaluation = {name: rows for name, rows in sets.items() if name != 'train'}
-    eval_features = encode(feature, evaluation)
+    key_bank = None
+    if args.observation_key:
+        if args.verify:
+            key_bank = torch.load(stored_keys, weights_only=True, map_location='cpu')
+        else:
+            key_bank = observation_keys(feature, evaluation)
+            atomic_save(key_bank, stored_keys)
+        required = {key for rows in evaluation.values() for row in rows for key in row['descriptions']}
+        if key_bank.keys() != required or any(v.shape != (base.config.hidden_size,) for v in key_bank.values()):
+            raise ValueError('Stored observation bank does not match the evaluation records')
+    eval_features = encode(feature, evaluation, stored=key_bank)
     hidden = base.config.hidden_size
     original = torch.load(ref_weights, weights_only=True, map_location='cpu')
     action = nn.Sequential(nn.Linear(hidden, 64), nn.GELU(), nn.Linear(64, 2)).eval().requires_grad_(False)
@@ -199,7 +233,9 @@ def main(args):
     if args.verify:
         matcher.load_state_dict(torch.load(weights, weights_only=True, map_location='cpu'))
     else:
-        train_features = encode(feature, {'train': sets['train']})
+        training = {'train': sets['train']}
+        keys = observation_keys(feature, training) if args.observation_key else None
+        train_features = encode(feature, training, stored=keys)
         train_heads(matcher, action, tensors(sets['train'], train_features))
         atomic_save(matcher.state_dict(), weights)
     matcher.eval()
@@ -232,6 +268,9 @@ def main(args):
     result = {'sources': sources, 'individual_sha256': individual, 'weights_sha256': sha(weights),
               'train_turns': len(sets['train']), 'calibration_turns': len(sets['calibration']),
               'value_extraction': extracts, 'arms': results, 'memory': memory}
+    if args.observation_key:
+        result['observation_keys_sha256'] = sha(stored_keys)
+        result['observation_keys'] = len(key_bank)
     if args.verify:
         if any(expected[key] != value for key, value in result.items()):
             raise ValueError('Independent replay did not match')
@@ -258,6 +297,8 @@ if __name__ == '__main__':
     for name in ('checkpoint', 'reference', 'writer', 'output'):
         parser.add_argument(name, type=Path)
     parser.add_argument('layers', nargs=2, type=Path)
-    parser.add_argument('--topic-key', action='store_true', help='Match using only the topic representation')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--topic-key', action='store_true', help='Match using only the topic representation')
+    group.add_argument('--observation-key', action='store_true', help='Match vectors saved from the original registration turns')
     parser.add_argument('--verify', action='store_true')
     main(parser.parse_args())

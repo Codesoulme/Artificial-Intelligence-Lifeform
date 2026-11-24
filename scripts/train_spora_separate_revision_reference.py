@@ -90,9 +90,7 @@ def build_cases(cases, names, split, *, original=False):
     return result
 
 
-def encode(featurizer, sets):
-    texts = sorted({text for rows in sets.values() for row in rows
-                    for text in (row['bridge'], row['utterance'], *row['descriptions'])})
+def encode_texts(featurizer, texts):
     features = {}
     for start in range(0, len(texts), 48):
         batch = texts[start:start + 48]
@@ -100,6 +98,13 @@ def encode(featurizer, sets):
         for i, text in enumerate(batch):
             features[text] = hidden[i, :len(text)].float().mean(dim=0)
     return features
+
+
+def encode(featurizer, sets, *, stored=None):
+    stored = {} if stored is None else stored
+    texts = {text for rows in sets.values() for row in rows
+             for text in (row['bridge'], row['utterance'], *row['descriptions'])}
+    return stored | encode_texts(featurizer, sorted(texts - stored.keys()))
 
 
 def tensors(rows, features):

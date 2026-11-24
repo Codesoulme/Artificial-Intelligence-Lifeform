@@ -42,7 +42,7 @@ def training_cases(specs, fixture, names, vocab, *, calibration=False):
         field, value = next(iter(row['change'].items()))
         other = next(item for item in row['initial'] if item != field)
         choices = [item for item in vocab[other] if item != row['initial'][other]]
-        cases.append({'key': f'{topic}-{i}', 'topic': topic, 'initial': row['initial'],
+        cases.append({'key': f'{topic}-{i}', 'topic': topic, 'initial': row['initial'], 'first': row['first'][0],
                       'drafts': ((field, value), (other, choices[i % len(choices)]))})
     return cases
 
