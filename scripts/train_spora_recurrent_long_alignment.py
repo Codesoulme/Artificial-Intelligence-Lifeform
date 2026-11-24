@@ -14,7 +14,7 @@ from scripts.benchmark_spora_recurrent_dialogue import (
 from scripts.train_qwen_counterfactual_reply_20261122 import HELD, evaluate, records
 from scripts.train_spora_dialogue_working_state import DATA, dialogue_data
 from spora.language_training import atomic_save
-from spora.research_recurrent_attention import DeltaRecurrentAttention, RecurrentAttention
+from spora.research_recurrent_attention import GatedDeltaRecurrentAttention, RECURRENT_UPDATE_RULES
 from spora.research_recurrent_decode import load_recurrent_replacements, replace
 
 
@@ -87,6 +87,7 @@ def train(core, train_rows, device, steps, lr):
         if (step + 1) % 16 == 0 or step + 1 == steps:
             trace.append({'step': step + 1, 'all_positions': float(global_error.detach()),
                           'answer_positions': float(answer_error.detach())})
+            print(f'  Step {step + 1}/{steps}, answer error {trace[-1]["answer_positions"]:.4f}', flush=True)
     core.eval().requires_grad_(False)
     return trace
 
@@ -145,6 +146,7 @@ def main(args):
             for row in prompts if row['length'] == 'extended']
     if {tuple(ids[:start + 1]) for ids, start in training} & {tuple(ids) for ids in held}:
         raise ValueError('An extended recall sequence overlaps training')
+    print('Loading the verified DeepSeek checkpoint', flush=True)
     base = load_full_streamed()
     rotary = base.model.rotary_emb
     runtime = load_integrated_runtime(args.checkpoint, base, MODEL, disposable_base=True)
@@ -196,17 +198,29 @@ def main(args):
         candidates = load_recurrent_replacements(decoder, args.candidates, protected[args.checkpoint])
         metrics, hashes = {}, {}
         for index, (block, candidate) in candidates.items():
+            torch.cuda.empty_cache()
             if candidate.core.update_rule != args.update_rule:
                 previous = candidate.core
                 heads, width, features = previous.q_map.shape
-                core_type = DeltaRecurrentAttention if args.update_rule == 'block_delta' else RecurrentAttention
+                core_type = RECURRENT_UPDATE_RULES[args.update_rule]
                 candidate.core = core_type(heads, width, block=previous.block, features=features).to(device)
-                candidate.core.load_state_dict(previous.state_dict(), strict=True)
+                parameters = previous.state_dict()
+                gate_names = {'history_gates', 'history_bias'}
+                transferable = {name: value for name, value in parameters.items()
+                                if name not in gate_names or isinstance(candidate.core, GatedDeltaRecurrentAttention)}
+                loaded = candidate.core.load_state_dict(transferable, strict=False)
+                if set(loaded.missing_keys) - gate_names or loaded.unexpected_keys:
+                    raise ValueError('The recurrent update rules have incompatible projections')
             candidate.history_projection = args.history_projection
+            print(f'Layer {index}: capturing {len(training)} training and {len(held)} held-out attention targets',
+                  flush=True)
             teacher_train, _ = capture(decoder, block.self_attn, [ids for ids, _ in training],
-                                       history_projection=candidate.history_projection)
-            teacher_held, _ = capture(decoder, block.self_attn, held, history_projection=candidate.history_projection)
+                                       history_projection=candidate.history_projection, capture_logits=False)
+            teacher_held, _ = capture(decoder, block.self_attn, held,
+                                      history_projection=candidate.history_projection, capture_logits=False)
+            torch.cuda.empty_cache()
             before = alignment_score(candidate.core, teacher_held, device)
+            print(f'Layer {index}: fitting {args.steps} updates', flush=True)
             examples = list(zip(teacher_train, (start for _, start in training), strict=True))
             trace = train(candidate.core, examples, device, args.steps, args.learning_rate)
             after = alignment_score(candidate.core, teacher_held, device)
@@ -219,6 +233,8 @@ def main(args):
                  'training_steps': args.steps, 'weight_hashes': hashes,
                  'train_lengths': [len(ids) for ids, _ in training]}
         atomic_save(state, args.output / 'training.pt')
+        torch.cuda.empty_cache()
+    print('Evaluating generated dialogue and persistent recall', flush=True)
     memory = records(runtime.organism, HELD)
     original_memory = evaluate(decoder, tokenizer, runtime.organism, memory)
     dialogue, aligned_memory = run_candidate(runtime, tokenizer, candidates, prompts, source['open'])
@@ -263,7 +279,7 @@ if __name__ == '__main__':
     parser.add_argument('candidates', nargs=2, type=Path)
     parser.add_argument('--steps', type=int, default=128)
     parser.add_argument('--learning-rate', type=float, default=.001)
-    parser.add_argument('--update-rule', choices=('sum', 'block_delta'), default='sum')
+    parser.add_argument('--update-rule', choices=tuple(RECURRENT_UPDATE_RULES), default='sum')
     parser.add_argument('--history-projection', choices=('rotary', 'unrotated'), default='rotary')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('--verify', action='store_true')

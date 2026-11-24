@@ -185,3 +185,28 @@ class DeltaRecurrentAttention(RecurrentAttention):
 
     def normalize_read(self, weights, matrix_read, normalizer, *, blocked):
         return matrix_read
+
+
+class GatedDeltaRecurrentAttention(DeltaRecurrentAttention):
+    """Learn separate retention and residual-write strengths for each history block."""
+
+    update_rule = 'gated_block_delta'
+
+    def __init__(self, heads, head_dim, *, block=16, features=24):
+        super().__init__(heads, head_dim, block=block, features=features)
+        self.history_gates = nn.Parameter(torch.zeros(heads, features, 2))
+        self.history_bias = nn.Parameter(torch.tensor([-5., 5.]).expand(heads, 2).clone())
+
+    def fold(self, keys, values, matrix, normalizer):
+        gate_input = keys.mean(dim=-2) * keys.shape[-1] ** .5
+        gates = torch.einsum('bhf,hfg->bhg', gate_input, self.history_gates) + self.history_bias
+        forget, write = gates.sigmoid().unbind(dim=-1)
+        retained = matrix * (1 - forget[..., None, None])
+        residual = values - keys @ retained
+        update = (keys.transpose(-1, -2) @ residual) / keys.shape[-2]
+        return retained + write[..., None, None] * update, normalizer
+
+
+RECURRENT_UPDATE_RULES = {core.update_rule: core for core in (
+    RecurrentAttention, DeltaRecurrentAttention, GatedDeltaRecurrentAttention,
+)}

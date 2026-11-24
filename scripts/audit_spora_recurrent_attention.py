@@ -26,8 +26,26 @@ from train_awake_partial_layer import TRAIN_FILES, corpus
 SEED = 24136
 
 
+class _AttentionInputCaptured(Exception):
+    pass
+
+
+def causal_teacher_mix(query, key, value, query_rows=128):
+    """Compute the same causal attention with a bounded temporary score matrix."""
+    length = query.shape[-2]
+    positions = torch.arange(length, device=query.device)
+    parts = []
+    for start in range(0, length, query_rows):
+        end = min(start + query_rows, length)
+        mask = positions[start:end, None] >= positions[None, :end]
+        parts.append(F.scaled_dot_product_attention(
+            query[..., start:end, :], key[..., :end, :], value[..., :end, :], attn_mask=mask,
+        ))
+    return torch.cat(parts, dim=-2)
+
+
 @torch.no_grad()
-def capture(decoder, source, sequences, *, history_projection='rotary'):
+def capture(decoder, source, sequences, *, history_projection='rotary', capture_logits=True):
     features, scores = [], []
     current = {}
 
@@ -40,13 +58,22 @@ def capture(decoder, source, sequences, *, history_projection='rotary'):
         groups = q.shape[1] // k.shape[1]
         keys = k.float().repeat_interleave(groups, dim=1)
         values = v.float().repeat_interleave(groups, dim=1)
+        if not capture_logits:
+            current['mix'] = causal_teacher_mix(q.float(), keys, values).half().cpu()
+            raise _AttentionInputCaptured
         current['mix'] = F.scaled_dot_product_attention(q.float(), keys, values, is_causal=True).half().cpu()
 
     handle = source.register_forward_pre_hook(pre, with_kwargs=True)
     try:
         for ids in sequences:
-            probs = last_logits(decoder, ids)
-            scores.append(probs.cpu())
+            try:
+                probs = last_logits(decoder, ids)
+            except _AttentionInputCaptured:
+                pass
+            else:
+                if not capture_logits:
+                    raise RuntimeError('The requested attention layer did not run')
+                scores.append(probs.cpu())
             features.append(current.copy())
     finally:
         handle.remove()

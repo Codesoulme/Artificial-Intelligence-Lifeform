@@ -3,7 +3,7 @@ import unittest
 import torch
 from torch.nn import functional as F
 
-from spora.research_recurrent_attention import DeltaRecurrentAttention, RecurrentAttention
+from spora.research_recurrent_attention import DeltaRecurrentAttention, GatedDeltaRecurrentAttention, RecurrentAttention
 
 
 class RecurrentAttentionTests(unittest.TestCase):
@@ -90,6 +90,19 @@ class RecurrentAttentionTests(unittest.TestCase):
         for parameter in model.parameters():
             self.assertTrue(torch.isfinite(parameter.grad).all())
             self.assertGreater(float(parameter.grad.norm()), 0.)
+
+    def test_gated_delta_uses_same_state_and_trains_both_gates(self):
+        model = GatedDeltaRecurrentAttention(2, 4, block=4, features=5)
+        inputs = (self.q, self.k[:, :1], self.v[:, :1])
+        expected, state = model(*inputs)
+        output, batched = model(*inputs, batched_prefill=True)
+        torch.testing.assert_close(expected, output)
+        for original, saved in zip(state.tensors(), batched.tensors(), strict=True):
+            torch.testing.assert_close(original, saved)
+        output.square().mean().backward()
+        for column in model.history_gates.grad.unbind(dim=-1):
+            self.assertTrue(torch.isfinite(column).all())
+            self.assertGreater(float(column.norm()), 0.)
 
     def test_unrotated_history_keeps_local_attention_and_matches_stream(self):
         key, value = self.k[:, :1].half(), self.v[:, :1].half()

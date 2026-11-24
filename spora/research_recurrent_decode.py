@@ -11,7 +11,7 @@ from transformers.models.qwen2.modeling_qwen2 import apply_rotary_pos_emb
 
 from .pretrained_attention import SPORAFusedAttention, SPORAResidualBlock
 from .integrated_checkpoint import _file_sha256
-from .research_recurrent_attention import DeltaRecurrentAttention, RecurrentAttention
+from .research_recurrent_attention import RECURRENT_UPDATE_RULES
 
 
 class RecurrentDecodeLayer(DynamicLayer):
@@ -149,14 +149,14 @@ def load_recurrent_replacements(decoder, directories, checkpoint_sha256, first_l
         block = attention_block(decoder, index)
         source = block.self_attn
         rule = saved.get('update_rule', 'sum')
-        if rule != comparison.get('update_rule', 'sum') or rule not in ('sum', 'block_delta'):
+        if rule != comparison.get('update_rule', 'sum') or rule not in RECURRENT_UPDATE_RULES:
             raise ValueError('Recurrent attention update rule differs from its comparison')
         history = saved.get('history_projection', 'rotary')
         if history != comparison.get('history_projection', 'rotary') or history not in ('rotary', 'unrotated'):
             raise ValueError('Recurrent history projection differs from its comparison')
         if history == 'unrotated' and type(source) is not SPORAFusedAttention:
             raise ValueError('Unrotated history requires native rotary fused projections')
-        core_type = DeltaRecurrentAttention if rule == 'block_delta' else RecurrentAttention
+        core_type = RECURRENT_UPDATE_RULES[rule]
         core = core_type(source.sizes[0] // source.head_dim, source.head_dim, block=width)
         core.load_state_dict(saved['core'], strict=True)
         if any(not bool(torch.isfinite(parameter).all()) for parameter in core.parameters()):
