@@ -168,12 +168,15 @@ class WorkingTurnReader(nn.Module):
         self.order_scale = nn.Parameter(torch.zeros(())) if ordered else None
         nn.init.zeros_(self.output.weight)
 
-    def attention(self, hidden, embeddings, owners, positions, continuation=None):
+    def attention(self, hidden, embeddings, owners, positions, continuation=None, *, eligible=None):
         query = self.query(hidden.float())
         keys = self.key(embeddings.float()) + self.fields(owners) + self.positions(positions)
         weight = (query @ keys.T) * (keys.shape[-1] ** -.5)
         if continuation is not None:
             weight = weight + 8. * self.order_scale.tanh() * continuation
+        if eligible is not None:
+            weight = weight.masked_fill(~eligible, torch.finfo(weight.dtype).min)
+            return weight.softmax(dim=-1).masked_fill(~eligible, 0.)
         return weight.softmax(dim=-1)
 
     def forward(self, hidden, embeddings, owners, positions):
@@ -187,6 +190,7 @@ class WorkingTurnReader(nn.Module):
         if decoder._memory_context.get() is not None or _READ_SCOPE.get() is not None:
             raise ValueError('Working condition reads require ordinary dialogue')
         ids, owners, positions = state.tokens(decoder.base.device)
+        sizes = tuple(len(value) for value in state.slots if value)
         supervision = []
         if not ids.numel():
             yield supervision
@@ -226,11 +230,10 @@ class WorkingTurnReader(nn.Module):
         def copy(_head, inputs, output):
             if _READ_SCOPE.get() is not marker or decoder._memory_context.get() is not None:
                 return output
-            continuation = None
-            if self.order_scale is not None:
-                prefix = inferred_prompt if prompt_tokens is None else prompt_tokens
-                continuation = slot_continuations(sequence, projected, prefix, ids, positions)
-            weights = self.attention(inputs[0], embeddings, owners, positions, continuation)
+            prefix = inferred_prompt if prompt_tokens is None else prompt_tokens
+            weights = self.copy_attention(
+                inputs[0], embeddings, owners, positions, ids, sequence, projected, prefix, sizes,
+            )
             if targets is not None:
                 matching = ids[None, :] == targets[:, None]
                 selected = matching.any(dim=-1)
@@ -253,6 +256,10 @@ class WorkingTurnReader(nn.Module):
                 cleanup.callback(head_handle.remove)
             yield supervision
 
+    def copy_attention(self, hidden, embeddings, owners, positions, ids, sequence, projected, prefix, sizes):
+        continuation = (None if self.order_scale is None else
+                        slot_continuations(sequence, projected, prefix, ids, positions))
+        return self.attention(hidden, embeddings, owners, positions, continuation)
 
     def copy_scores(self, hidden, logits, ids, weights):
         bonus = (12. * self.copy_scale.tanh() * weights).to(logits.dtype)
@@ -272,6 +279,8 @@ class MixtureWorkingTurnReader(WorkingTurnReader):
     def copy_scores(self, hidden, logits, ids, weights):
         normalized = F.rms_norm(hidden.float(), (hidden.shape[-1],))
         gate = self.copy_gate(normalized)
+        has_state_mass = weights.sum(dim=-1, keepdim=True).gt(0)
+        gate = gate.masked_fill(~has_state_mass, torch.finfo(gate.dtype).min)
         language = logits.float().log_softmax(dim=-1) + F.logsigmoid(-gate)
         unique, inverse = ids.unique(return_inverse=True)
         state_mass = weights.new_zeros((*weights.shape[:-1], unique.numel()))
@@ -280,6 +289,41 @@ class MixtureWorkingTurnReader(WorkingTurnReader):
         copied = state_mass.clamp_min(torch.finfo(state_mass.dtype).tiny).log() + F.logsigmoid(gate)
         combined = torch.logaddexp(language.gather(-1, selected), copied)
         return language.scatter(-1, selected, combined)
+
+
+class CoveredWorkingTurnReader(MixtureWorkingTurnReader):
+    """Use reply coverage or span continuation to refine working-state attention."""
+
+    def __init__(self, hidden, width=64, *, follow_span=False, suppress_completed=True):
+        super().__init__(hidden, width)
+        self.follow_span = follow_span
+        self.suppress_completed = suppress_completed
+
+    def copy_attention(self, hidden, embeddings, owners, positions, ids, sequence, projected, prefix, sizes):
+        continuation = slot_continuations(sequence, projected, prefix, ids, positions)
+        eligible = (~slot_coverage(sequence, projected, prefix, ids, sizes) if self.suppress_completed
+                    else torch.ones_like(continuation))
+        if self.follow_span:
+            ongoing = continuation & eligible
+            eligible = torch.where(ongoing.any(dim=-1, keepdim=True), ongoing, eligible)
+        return self.attention(hidden, embeddings, owners, positions, continuation, eligible=eligible)
+
+
+def slot_coverage(sequence, projected, prompt_tokens, ids, sizes):
+    """Mark fields already emitted as exact spans at each projected reply position."""
+    reply = sequence[:, prompt_tokens:]
+    fields = []
+    for value in ids.split(sizes):
+        span = value.numel()
+        if reply.shape[-1] < span:
+            covered = torch.zeros((reply.shape[0], projected.numel()), dtype=torch.bool, device=reply.device)
+        else:
+            ends = reply.unfold(-1, span, 1).eq(value).all(dim=-1)
+            seen = ends.cumsum(dim=-1).gt(0)
+            index = projected - prompt_tokens - span + 1
+            covered = seen[:, index.clamp_min(0)] & index.ge(0)
+        fields.append(covered[..., None].expand(-1, -1, span))
+    return torch.cat(fields, dim=-1)
 
 
 def slot_continuations(sequence, projected, prompt_tokens, ids, positions):

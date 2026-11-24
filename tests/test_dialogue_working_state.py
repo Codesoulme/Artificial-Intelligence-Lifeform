@@ -6,8 +6,8 @@ import torch
 from torch import nn
 
 from spora.research_dialogue_working_state import (
-    FIELDS, JointTurnValueWriter, MixtureWorkingTurnReader, TurnValueWriter, WorkingTurnReader, WorkingTurnState,
-    characters, slot_continuations,
+    FIELDS, CoveredWorkingTurnReader, JointTurnValueWriter, MixtureWorkingTurnReader, TurnValueWriter,
+    WorkingTurnReader, WorkingTurnState, characters, slot_continuations, slot_coverage,
 )
 
 
@@ -172,6 +172,36 @@ class DialogueWorkingStateTests(unittest.TestCase):
         eligible = slot_continuations(sequence, selected, 3, ids, positions)
         next_ids = [ids[row].tolist() for row in eligible[0]]
         self.assertEqual(next_ids, [[], [3, 6], [4], [], [3, 6]])
+
+    def test_coverage_uses_completed_values_in_generated_history_only(self):
+        ids = torch.tensor([2, 3, 4, 3, 4, 2, 6])
+        sizes = (3, 2, 2)
+        sequence = torch.tensor([[8, 2, 3, 4, 2, 3, 4, 2, 6]])
+        projected = torch.tensor([3, 4, 5, 6, 7, 8])
+        covered = slot_coverage(sequence, projected, 4, ids, sizes)
+        counts = covered.sum(dim=-1)[0].tolist()
+        self.assertEqual(counts, [0, 0, 0, 5, 5, 7])
+        for index in projected.tolist():
+            incremental = slot_coverage(sequence[:, :index + 1], torch.tensor([index]), 4, ids, sizes)
+            self.assertTrue(torch.equal(incremental[0, 0], covered[0, index - 3]))
+
+    def test_span_positions_stay_eligible_until_complete_and_then_restore_vocabulary(self):
+        reader = CoveredWorkingTurnReader(8, width=4, follow_span=True)
+        ids = torch.tensor([2, 3, 4, 2, 5])
+        owners = torch.tensor([0, 0, 0, 1, 1])
+        positions = torch.tensor([0, 1, 2, 0, 1])
+        sequence = torch.tensor([[8, 2, 3, 4, 9, 2, 5]])
+        projected = torch.arange(sequence.shape[1])
+        hidden = torch.randn(1, sequence.shape[1], 8)
+        embeddings = torch.randn(ids.numel(), 8)
+        weights = reader.copy_attention(hidden, embeddings, owners, positions, ids, sequence, projected, 1, (3, 2))
+        allowed = [ids[row].tolist() for row in weights[0].gt(0)]
+        self.assertEqual(allowed, [[2, 3, 4, 2, 5], [3, 5], [4], [2, 5], [2, 5], [5], []])
+        logits = torch.randn(1, sequence.shape[1], 10)
+        mixed = reader.copy_scores(hidden, logits, ids, weights)
+        torch.testing.assert_close(mixed.exp().sum(dim=-1), torch.ones(1, sequence.shape[1]))
+        torch.testing.assert_close(mixed[:, -1], logits[:, -1].log_softmax(dim=-1))
+
 
     def test_ordered_reader_aligns_cached_tokens_with_selected_training_positions(self):
         decoder = SimpleNamespace(base=TinyOrderedBase(), _memory_context=ContextVar('test_ordered_memory', default=None))

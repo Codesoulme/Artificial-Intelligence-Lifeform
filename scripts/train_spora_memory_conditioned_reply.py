@@ -157,7 +157,7 @@ def one_answer(decoder, tokenizer, reader, history, row, new, foil, settings):
                             [re.escape(value) for value in forbidden])}
 
 
-def heldout(decoder, tokenizer, reader, held, *, include_both=True):
+def heldout(decoder, tokenizer, reader, held, *, include_both=True, scopes=('long', 'state_only')):
     settings = settings_for(decoder, tokenizer, 48)
     rows = []
     for i, row in enumerate(held):
@@ -169,9 +169,10 @@ def heldout(decoder, tokenizer, reader, held, *, include_both=True):
         variants = (('matched', values['new'], replacement),)
         if include_both:
             variants += (('swapped', replacement, values['new']),)
-        outputs = {name: {arm: one_answer(decoder, tokenizer, reader, history, row, new, foil, settings)
+        histories = {'long': row['history'], 'state_only': []}
+        outputs = {name: {arm: one_answer(decoder, tokenizer, reader, histories[name], row, new, foil, settings)
                           for arm, new, foil in variants}
-                   for name, history in (('long', row['history']), ('state_only', []))}
+                   for name in scopes}
         rows.append({'case': row['case'], 'variant': row['variant'], 'values': values,
                      'replacement': replacement, 'outputs': outputs})
     return rows
@@ -179,7 +180,7 @@ def heldout(decoder, tokenizer, reader, held, *, include_both=True):
 
 def summary(rows):
     result = {}
-    for scope in ('long', 'state_only'):
+    for scope in rows[0]['outputs']:
         cases = [row['outputs'][scope] for row in rows]
         result[scope] = {condition: {metric: sum(case[condition][metric] for case in cases)
                                      for metric in ('passed', 'new', 'keep', 'foil', 'eos')}

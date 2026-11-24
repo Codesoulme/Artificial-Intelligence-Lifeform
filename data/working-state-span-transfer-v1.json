@@ -1,0 +1,35 @@
+{
+  "scope": "Fresh question-only transfer for span coverage. Values are supplied through the read-state audit and excluded from the visible prompt.",
+  "recall": [
+    {
+      "name": "clinic_booking",
+      "question": "家里有人替我去复诊，给我一条可以直接转发的提醒，写清哪天几点和哪家门诊。",
+      "values": [["周二清晨七点", "星期三晚上七点半", "星桥门诊"], ["周六晚上七点", "星期日上午十点半", "菱湖诊疗室"]]
+    },
+    {
+      "name": "repair_pickup",
+      "question": "修理件这次安排谁领？把领取地址也一并发来。",
+      "values": [["小环街口", "苍石修配柜", "莫雪绮"], ["陶艺店旁", "鹤岬售后点", "谢铭之"]]
+    },
+    {
+      "name": "pottery_inventory",
+      "question": "装箱标签要重写，请发我最终的份量和接货姓名，单位也要带上。",
+      "values": [["七轴", "十六柄", "姚惟澄"], ["三桶", "二十一盘", "傅辛桐"]]
+    },
+    {
+      "name": "choir_program",
+      "question": "把合唱节目单现在该印的歌名、领唱姓名一块发我，打印处等着用。",
+      "values": [["暮山背影", "竹影落在井边", "林钰青"], ["新茶旧友", "檐上听雨", "傅昀真"]]
+    },
+    {
+      "name": "garden_supply",
+      "question": "明早那个花园活动，给晚到的人一句提醒，在哪里找我们、随身带什么？",
+      "values": [["花盆铲", "防刺袖套", "石楠长廊东端"], ["剪刀包", "加长枝剪", "海桐坡入口"]]
+    },
+    {
+      "name": "film_notice",
+      "question": "我们要补一条现场须知。麻烦写上主持人的姓名和观众入场的通道。",
+      "values": [["石梯口", "青釉影厅连廊", "乔霁帆"], ["接待前台", "栖霞放映厅侧门", "岑舒玉"]]
+    }
+  ]
+}
