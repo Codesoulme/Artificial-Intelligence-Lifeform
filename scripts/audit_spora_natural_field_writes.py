@@ -40,7 +40,7 @@ def locate(mode, identities, text, spans, gold_name):
     return candidates[0]
 
 
-def measure(group, events, spans, hidden, initial, codec, tokenizer, head, mode):
+def measure(group, events, spans, hidden, initial, codec, tokenizer, head, mode, *, selector=locate):
     slots = RecurrentFieldSlots(len(group), initial.shape[-1], codec.width)
     identities = IdentityFingerprints(4)
     for owner, row in enumerate(group[::len(FIELDS)]):
@@ -57,7 +57,7 @@ def measure(group, events, spans, hidden, initial, codec, tokenizer, head, mode)
                 continue
             if mode == 'confirmed' and phase == 'negative':
                 continue
-            mention = locate(mode, identities, text, predicted, group[i]['name'])
+            mention = selector(mode, identities, text, predicted, group[i]['name'])
             owner = selected = None
             if mention is not None:
                 start, end, owner = mention
