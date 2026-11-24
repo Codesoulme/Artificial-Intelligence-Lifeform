@@ -53,6 +53,8 @@ def main():
     parser.add_argument('--history-pairs', choices=('include', 'only'))
     parser.add_argument('--development-only', type=Path,
                         help='Evaluate just the supplied open-dialogue development scenarios')
+    parser.add_argument('--stage-output-projection', action='store_true',
+                        help='Keep the output projection on CPU until checkpoint assembly finishes')
     args = parser.parse_args()
     if args.development_only is not None and (args.short_holdout or args.history_pairs):
         parser.error('--development-only runs without the short or paired diagnostics')
@@ -63,7 +65,14 @@ def main():
     sources = {str(path): sha(path) for path in (args.checkpoint, *inputs)}
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
-    decoder, _, _ = load_integrated(args.checkpoint, load_full_streamed(), MODEL, disposable_base=True)
+    print('Loading verified base weights', flush=True)
+    base = load_full_streamed(stage_output_projection=args.stage_output_projection)
+    print('Assembling checkpoint', flush=True)
+    decoder, _, _ = load_integrated(args.checkpoint, base, MODEL, disposable_base=True)
+    if args.stage_output_projection:
+        torch.cuda.empty_cache()
+        print('Moving output projection to CUDA', flush=True)
+        base.lm_head.to(base.device)
     settings = settings_for(decoder, tokenizer, 96)
     result = {'sources': sources}
     if args.history_pairs:

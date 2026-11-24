@@ -40,17 +40,19 @@ def stream_fp16_tensor(stream, item, data_start, file_size, device):
     return result
 
 
-def load_full_streamed(*, skip_replaced=(), stage_embeddings=False):
+def load_full_streamed(*, skip_replaced=(), stage_embeddings=False, stage_output_projection=False):
     """Load verified base on CUDA; skipped meta layers MUST be replaced before use.
 
     ``skip_replaced`` is research-only and saves peak memory when a verified
     integrated checkpoint replaces those exact layers immediately afterwards.
     The caller must verify all meta tensors are gone before inference.
     """
-    return load_qwen_streamed(MODEL, WEIGHT_SHA, skip_replaced=skip_replaced, stage_embeddings=stage_embeddings)
+    return load_qwen_streamed(MODEL, WEIGHT_SHA, skip_replaced=skip_replaced, stage_embeddings=stage_embeddings,
+                              stage_output_projection=stage_output_projection)
 
 
-def load_qwen_streamed(model_dir, expected_sha, *, skip_replaced=(), stage_embeddings=False):
+def load_qwen_streamed(model_dir, expected_sha, *, skip_replaced=(), stage_embeddings=False,
+                       stage_output_projection=False):
     path = Path(model_dir) / 'model.safetensors'
     if sha(path) != expected_sha:
         raise ValueError('Base weight digest mismatch')
@@ -87,7 +89,9 @@ def load_qwen_streamed(model_dir, expected_sha, *, skip_replaced=(), stage_embed
                 raise ValueError(f'Base tensor shape mismatch: {name}')
             if name in skipped:
                 continue
-            device = 'cpu' if stage_embeddings and name in ('model.embed_tokens.weight', 'lm_head.weight') else 'cuda'
+            host = ((stage_embeddings and name in ('model.embed_tokens.weight', 'lm_head.weight'))
+                    or (stage_output_projection and name == 'lm_head.weight'))
+            device = 'cpu' if host else 'cuda'
             weights[name] = stream_fp16_tensor(stream, header[name], 8 + header_size, file_size, device)
         incompatible = base.load_state_dict(weights, strict=not (skipped or tied_head), assign=True)
         if set(incompatible.missing_keys) != skipped | tied_head or incompatible.unexpected_keys:
