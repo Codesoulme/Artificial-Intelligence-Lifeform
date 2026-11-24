@@ -238,8 +238,7 @@ class WorkingTurnReader(nn.Module):
                     mass = (weights[0] * matching).sum(dim=-1)
                     supervision.append(-mass[selected].clamp_min(1e-8).log().mean())
             if self.copy_logits:
-                bonus = (12. * self.copy_scale.tanh() * weights).to(output.dtype)
-                return output.scatter_add(-1, ids.expand_as(bonus), bonus)
+                return self.copy_scores(inputs[0], output, ids, weights)
             return output
 
         with ExitStack() as cleanup:
@@ -253,6 +252,34 @@ class WorkingTurnReader(nn.Module):
                 head_handle = decoder.base.lm_head.register_forward_hook(copy)
                 cleanup.callback(head_handle.remove)
             yield supervision
+
+
+    def copy_scores(self, hidden, logits, ids, weights):
+        bonus = (12. * self.copy_scale.tanh() * weights).to(logits.dtype)
+        return logits.scatter_add(-1, ids.expand_as(bonus), bonus)
+
+
+class MixtureWorkingTurnReader(WorkingTurnReader):
+    """Mix the language vocabulary with a gated distribution over internal state tokens."""
+
+    def __init__(self, hidden, width=64):
+        super().__init__(hidden, width, ordered=True)
+        self.copy_gate = nn.Linear(hidden, 1)
+        nn.init.zeros_(self.copy_gate.weight)
+        nn.init.constant_(self.copy_gate.bias, -4.)
+        self.copy_scale.requires_grad_(False)
+
+    def copy_scores(self, hidden, logits, ids, weights):
+        normalized = F.rms_norm(hidden.float(), (hidden.shape[-1],))
+        gate = self.copy_gate(normalized)
+        language = logits.float().log_softmax(dim=-1) + F.logsigmoid(-gate)
+        unique, inverse = ids.unique(return_inverse=True)
+        state_mass = weights.new_zeros((*weights.shape[:-1], unique.numel()))
+        state_mass = state_mass.scatter_add(-1, inverse.expand_as(weights), weights)
+        selected = unique.expand_as(state_mass)
+        copied = state_mass.clamp_min(torch.finfo(state_mass.dtype).tiny).log() + F.logsigmoid(gate)
+        combined = torch.logaddexp(language.gather(-1, selected), copied)
+        return language.scatter(-1, selected, combined)
 
 
 def slot_continuations(sequence, projected, prompt_tokens, ids, positions):

@@ -6,8 +6,8 @@ import torch
 from torch import nn
 
 from spora.research_dialogue_working_state import (
-    FIELDS, JointTurnValueWriter, TurnValueWriter, WorkingTurnReader, WorkingTurnState, characters,
-    slot_continuations,
+    FIELDS, JointTurnValueWriter, MixtureWorkingTurnReader, TurnValueWriter, WorkingTurnReader, WorkingTurnState,
+    characters, slot_continuations,
 )
 
 
@@ -51,6 +51,25 @@ class DialogueWorkingStateTests(unittest.TestCase):
         self.assertEqual(nxt.slots[FIELDS.index('time')], (8, 9))
         self.assertEqual(nxt.slots[FIELDS.index('place')], (4, 5))
         self.assertEqual(nxt.update({}), nxt)
+
+    def test_mixture_normalizes_and_combines_repeated_token_mass(self):
+        reader = MixtureWorkingTurnReader(8, width=4)
+        hidden = torch.randn(1, 2, 8)
+        logits = torch.randn(1, 2, 6, requires_grad=True)
+        ids = torch.tensor([1, 4, 1])
+        weights = torch.tensor([[[.25, .10, .65], [.20, .60, .20]]], requires_grad=True)
+
+        scores = reader.copy_scores(hidden, logits, ids, weights)
+        gate = reader.copy_gate.bias.sigmoid()
+        expected = logits.softmax(-1) * (1 - gate)
+        expected[..., 1] += gate * (weights[..., 0] + weights[..., 2])
+        expected[..., 4] += gate * weights[..., 1]
+        torch.testing.assert_close(scores.exp(), expected)
+        torch.testing.assert_close(scores.exp().sum(-1), torch.ones(1, 2))
+        (-scores[..., 1].mean()).backward()
+        for tensor in (reader.copy_gate.weight, logits, weights):
+            self.assertTrue(torch.isfinite(tensor.grad).all())
+
 
     def test_writer_has_separate_absent_and_span_positions(self):
         writer = TurnValueWriter(8, feature_width=6)
