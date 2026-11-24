@@ -88,19 +88,21 @@ class JointTurnValueWriter(TurnValueWriter):
         self.pair_width = 8
         self.pair = nn.Linear(width, len(FIELDS) * 2 * self.pair_width)
 
-    def forward(self, codes, features=None):
-        hidden, valid = self.encode(codes, features)
+    def span_scores(self, hidden, valid):
         boundaries = self.boundary_scores(hidden, valid)
-        batch, length = codes.shape
+        batch, length = valid.shape
         endpoints = self.pair(hidden).reshape(batch, length, len(FIELDS), 2, self.pair_width)
         start, end = endpoints.permute(3, 0, 2, 1, 4).unbind(0)
         interaction = (start @ end.transpose(-1, -2)) * self.pair_width ** -.5
         span_scores = boundaries[:, :, 0, 1:, None] + boundaries[:, :, 1, None, 1:] + interaction
-        indices = torch.arange(length, device=codes.device)
+        indices = torch.arange(length, device=hidden.device)
         widths = indices[None, :] - indices[:, None]
         span_scores = span_scores.masked_fill((widths < 0) | (widths >= SPAN_LIMIT), -torch.inf)
         absent = boundaries[..., 0].sum(dim=-1, keepdim=True)
-        return torch.cat((absent, span_scores.flatten(start_dim=-2)), dim=-1)
+        return absent, span_scores.flatten(start_dim=-2)
+
+    def forward(self, codes, features=None):
+        return torch.cat(self.span_scores(*self.encode(codes, features)), dim=-1)
 
     def loss(self, codes, boundaries, features=None):
         start, end = boundaries.unbind(-1)

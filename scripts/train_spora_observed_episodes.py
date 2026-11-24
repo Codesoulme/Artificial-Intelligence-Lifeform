@@ -206,7 +206,7 @@ def summarize(rows):
 
 
 @torch.inference_mode()
-def audit_update_spans(module, features, cases):
+def audit_update_spans(module, features, cases, *, separate=False):
     """Separate absent-score rejection from failure to rank the right interval."""
     device = module.embedding.weight.device
     rows = []
@@ -217,17 +217,148 @@ def audit_update_spans(module, features, cases):
             raise ValueError('The held update must identify one eligible correct span')
         begin = text.index(value)
         finish = begin + len(value) - 1
-        scores = module(characters([text]).to(device), features(text).to(device))[0, FIELDS.index(field)].float()
-        expected = scores[1 + begin * len(text) + finish]
+        codes, context = characters([text]).to(device), features(text).to(device)
+        address = FIELDS.index(field)
+        if separate:
+            activities, candidates = module.scores(codes, context)
+            gate = float(activities[0, address])
+            scores = candidates[0, address].float()
+        else:
+            joint = module(codes, context)[0, address].float()
+            absent, scores = joint[0], joint[1:]
+        expected = scores[begin * len(text) + finish]
         if not torch.isfinite(expected):
             raise ValueError('The annotated correction span was masked out')
-        best, highest = scores[1:].max(dim=0)
+        best, highest = scores.max(dim=0)
         first, last = divmod(int(highest), len(text))
-        rows.append({'key': case['key'], 'field': field, 'expected': value,
-                     'best_span': text[first:last + 1], 'rank': 1 + int((scores[1:] > expected).sum()),
-                     'best_minus_absent': float(best - scores[0]),
-                     'expected_minus_absent': float(expected - scores[0])})
+        if separate:
+            row = {'field_logit': gate}
+        else:
+            row = {'best_minus_absent': float(best - absent), 'expected_minus_absent': float(expected - absent)}
+        rows.append({'key': case['key'], 'field': field, 'expected': value, **row,
+                     'best_span': text[first:last + 1], 'rank': 1 + int((scores > expected).sum())})
     return rows
+
+
+def calibrate_writer(module, features, calibration, negatives):
+    choices = (0., .75, 1.5, 3., 6.)
+    measurements = []
+    for cutoff in choices:
+        def locate(text):
+            return module.write(text, cutoff, features=features(text).to(module.embedding.weight.device))
+
+        revisions = sum(locate(row['update'][0]) == row['change'] for row in calibration)
+        initial = sum(locate(row['first'][0]) == row['initial'] for row in calibration)
+        clean = sum(not locate(text) for text in negatives)
+        measurements.append({'threshold': cutoff, 'update': revisions, 'initial': initial,
+                             'no_write': clean, 'count': len(calibration), 'negatives': len(negatives)})
+    best = max(measurements, key=lambda row: (row['no_write'] >= len(negatives) - 1,
+                                              row['update'], row['initial'], row['no_write'], -row['threshold']))
+    return best['threshold'], measurements
+
+
+def compare_writers(args, decoder, tokenizer, head, adapter, route, planner, gate, thresholds, individual,
+                    cases, records_, source, training, topics, fixture, prototypes, char_features, features_at_turn,
+                    protected, action, organism):
+    from scripts.prepare_spora_revision_samples import dialogue_samples
+    from spora.research_revision_writer import SeparateTurnValueWriter
+
+    started = perf_counter()
+    baseline = read(args.compare_writers / 'result.json')
+    source_weights = args.compare_writers / 'observation-weights.pt'
+    source_report = args.compare_writers / 'result.json'
+    older = {Path(name).resolve(): digest for name, digest in baseline['sources'].items()}
+    if (baseline['individual_sha256'] != individual or baseline['checkpoint_sha256'] != sha(source_weights)
+            or any(older.get(p.resolve()) != h for p, h in protected.items())):
+        raise ValueError('The previous observation run uses different sources')
+    protected.update({p: sha(p) for p in (source_report, source_weights)})
+    digests = {str(p): h for p, h in protected.items()}
+    checkpoint = torch.load(source_weights, map_location='cpu', weights_only=True)
+    planner.load_state_dict(checkpoint['planner'])
+    planner.eval().requires_grad_(False)
+    names = {name: (*ROLE_NAMES[name], EXTRA_NAMES[name]) for name in EXTRA_NAMES}
+    specimens = records_['cases']
+    augment, negatives = dialogue_samples(specimens, fixture, names, source['values']['train'])
+    calibration, cal_negatives = dialogue_samples(specimens, fixture, names, source['values']['held'], calibration=True)
+    training = training + augment
+    fit_text = {row[turn][0] for row in training for turn in ('first', 'update')} | set(negatives)
+    cal_text = {row[turn][0] for row in calibration for turn in ('first', 'update')} | set(cal_negatives)
+    held_text = {case[turn] for case in cases for turn in ('first', 'update', 'neutral', 'all', 'limited')}
+    if fit_text & cal_text or held_text & (fit_text | cal_text):
+        raise ValueError('A revision example intersects calibration or evaluation')
+    questions = {case[key] for case in cases for key in ('all', 'limited')}
+    prompts = {(domain, q) for domain in topics for q in questions}
+    inputs = questions | {case['first'] for case in cases} | {x for items in prototypes.values() for x in items}
+    inputs |= scope_texts(prompts)
+    base = decoder.base
+    features = text_features(base, tokenizer, inputs, keep_tokens=questions)
+    # Both writers receive an identical, precomputed copy of the frozen features.
+    ordered = sorted(fit_text | {row['question'] for row in training} | set(source['no_write']))
+    index = {text: i for i, text in enumerate(ordered)}
+    encoded = None if args.verify else features_at_turn(ordered)
+
+    def for_training(texts):
+        return encoded[[index[text] for text in texts], :max(map(len, texts))]
+
+    weights = args.output / 'revision-writers.pt'
+    states = args.output / 'working-state.pt'
+    if args.verify:
+        expected = read(args.output / 'result.json')
+        if (expected['sources'] != digests or expected['weights_sha256'] != sha(weights)
+                or expected['states_sha256'] != sha(states)):
+            raise ValueError('A revision study artifact changed before reload')
+        saved = torch.load(weights, map_location='cpu', weights_only=True)
+        snapshots = torch.load(states, map_location='cpu', weights_only=True)
+    else:
+        saved, snapshots = {}, {}
+    result, span_audit = {}, {}
+    for mode, architecture in (('joint', JointTurnValueWriter), ('separate', SeparateTurnValueWriter)):
+        torch.manual_seed(SEED)
+        module = architecture(64, feature_width=base.config.hidden_size).to(base.device)
+        if args.verify:
+            module.load_state_dict(saved[mode]['weights'])
+        else:
+            missing, unexpected = module.load_state_dict(checkpoint['writer'], strict=False)
+            new_parameters = ['operation.weight', 'operation.bias', 'activity.weight', 'activity.bias']
+            if unexpected or set(missing) != (set(new_parameters) if mode == 'separate' else set()):
+                raise ValueError('A writer unexpectedly lost its warm start')
+            torch.manual_seed(SEED)
+            fit_writer(module, training, source['no_write'] + negatives, 5, base.device, features=for_training)
+        module.eval().requires_grad_(False)
+        cutoff, calibration_metrics = calibrate_writer(module, char_features, calibration, cal_negatives)
+        votes = locate_writes(lambda text: module.write(text, cutoff, features=char_features(text).to(base.device)),
+                              cases)
+        if not args.verify:
+            saved[mode] = {'weights': {key: value.cpu() for key, value in module.state_dict().items()}, 'cutoff': cutoff}
+            snapshots[mode] = episodes(cases, votes, tokenizer, features[0], prototypes, topics)
+        elif saved[mode]['cutoff'] != cutoff:
+            raise ValueError('The write calibration did not reproduce')
+        output = audit(decoder, tokenizer, head, adapter, route, planner, gate, features,
+                       snapshots[mode], cases, topics, thresholds)
+        correct = sum(votes[case['key']][1].get(next(iter(case['change']))) == next(iter(case['change'].values()))
+                      for case in cases)
+        result[mode] = {'cutoff': cutoff, 'calibration': calibration_metrics, 'writing': metrics(cases, votes),
+                        'correct_updated_value': correct, 'read': summarize(output), 'rows': output, 'votes': votes}
+        print('writer study', mode, 'cutoff', cutoff, result[mode]['writing'], result[mode]['read'], flush=True)
+        if args.verify:
+            span_audit[mode] = audit_update_spans(module, char_features, cases, separate=mode == 'separate')
+    if not args.verify:
+        atomic_save(saved, weights)
+        atomic_save(snapshots, states)
+    memory = evaluate(decoder, tokenizer, organism, records(organism, HELD))
+    if (memory != action['memory'] or any(sha(path) != digest for path, digest in protected.items())):
+        raise ValueError('A revision study changed the durable replay or source')
+    core = {'arms': result, 'sources': digests, 'individual_sha256': individual, 'memory': memory}
+    if args.verify:
+        if any(expected[key] != value for key, value in core.items()):
+            raise ValueError('Independent revision replay did not reproduce')
+        store_json(args.output / 'reload.json', {'weights_sha256': sha(weights), 'states_sha256': sha(states),
+                                                 'seconds': perf_counter() - started, 'update_spans': span_audit})
+    else:
+        store_json(args.output / 'result.json', {**core, 'training_count': len(training),
+                                                 'added_turn_pairs': len(augment), 'added_negatives': len(negatives),
+                                                 'weights_sha256': sha(weights), 'states_sha256': sha(states),
+                                                 'seconds': perf_counter() - started})
 
 
 def main(args):
@@ -313,6 +444,17 @@ def main(args):
     path = args.output / 'working-state.pt'
     weights = args.output / 'observation-weights.pt'
     digests = {str(p): h for p, h in protected.items()}
+    if args.compare_writers:
+        if not args.verify:
+            args.output.mkdir(parents=True, exist_ok=False)
+        with ExitStack() as stack:
+            install(stack, layers)
+            compare_writers(args, decoder, tokenizer, head, adapter, route, planner, gate, thresholds, individual,
+                            cases, records_, source, training, topics, fixture, prototypes, char_features,
+                            features_at_turn, protected, action, runtime.organism)
+        if frozen_digest(runtime.organism, runtime.state) != individual:
+            raise ValueError('A revision study changed the individual')
+        return
     if args.verify or args.audit_spans:
         reference = read(args.output / 'result.json')
         if (reference['sources'] != digests or reference['individual_sha256'] != individual
@@ -400,7 +542,10 @@ if __name__ == '__main__':
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--verify', action='store_true')
     mode.add_argument('--audit-spans', action='store_true')
+    parser.add_argument('--compare-writers', type=Path, help='Compare write heads from this verified episode run')
     args = parser.parse_args()
+    if args.compare_writers and args.audit_spans:
+        parser.error('Span audit uses an original episode run')
     if not (args.verify or args.audit_spans) and args.output.exists():
         parser.error('Choose a fresh episode experiment directory')
     main(args)
