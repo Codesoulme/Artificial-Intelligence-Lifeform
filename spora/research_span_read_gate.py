@@ -33,3 +33,19 @@ class StateReadGate(nn.Module):
         wanted = required >= field_min
         return ((need >= need_min) & (match >= match_min) & wanted.any(dim=-1)
                 & ~(wanted & ~present).any(dim=-1))
+
+class ObservationReadGate(StateReadGate):
+    """Learn whether the working state covers the requested fields from paired masks."""
+
+    def __init__(self, hidden, width=64):
+        super().__init__(hidden, width)
+        self.coverage_bias = nn.Parameter(torch.tensor(2.))
+
+    def coverage(self, required, present):
+        missing_evidence = F.softplus(required).masked_fill(present, 0.).sum(dim=-1)
+        return self.coverage_bias - missing_evidence
+
+    def allow(self, need, required, relevance, present, thresholds):
+        scores = torch.stack((need, relevance, self.coverage(required, present)), dim=-1)
+        minimum = scores.new_tensor(thresholds)
+        return present.any(dim=-1) & (scores >= minimum).all(dim=-1)
