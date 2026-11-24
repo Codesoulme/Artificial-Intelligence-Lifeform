@@ -955,11 +955,11 @@ def main():
         chat.organism.self_name = chat.self_name
         chat.awake_individual['self_name_sha256'] = sha(name_path)
 
+    chat.ordinary_new_tokens = args.ordinary_new_tokens
+
     def record_sleep_event(kind, payload, source, event_id=None):
         if ledger is not None:
             revision = chat.working_sha
-    chat.ordinary_new_tokens = args.ordinary_new_tokens
-
             ledger.append(kind, dict(payload, memory_revision=revision), event_id=event_id or uuid4().hex,
                           source=source, state_version=revision if isinstance(revision, int) else 0)
 
@@ -971,11 +971,11 @@ def main():
             question = line.strip()
             if not question:
                 continue
+            if starts_new_topic(question):
+                ordinary_history.clear()
             command = question.split(maxsplit=1)
             if world_session is not None and command[0] == '/world-plan':
                 try:
-            if starts_new_topic(question):
-                ordinary_history.clear()
                     values = [float(value) for value in command[1].split()] if len(command) == 2 else []
                     suggestion = world_session.choose_imagined_plan(last_simulation, values)
                 except ValueError:
