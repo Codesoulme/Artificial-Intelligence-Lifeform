@@ -148,7 +148,7 @@ def replay(rows, actions):
         address, value = row['address'], row['value']
         before = active.copy()
         transition(expected, address, value, expected_pending, expected_active)
-        transition(actual, address, value, pending, active)
+        transition(actual, address, row.get('candidate', value), pending, active)
         turns.append({**row, 'actual_action': actual, 'expected_action': expected,
                       'active': active.copy(), 'expected_active': expected_active.copy(),
                       'pending': sorted(pending.items()), 'expected_pending': sorted(expected_pending.items()),
