@@ -36,7 +36,7 @@ class TurnValueWriter(nn.Module):
         self.boundary = nn.Linear(width, len(FIELDS) * 2)
         self.absent = nn.Linear(width, len(FIELDS) * 2)
 
-    def forward(self, codes, features=None):
+    def encode(self, codes, features):
         valid = codes.ne(0)
         x = self.embedding(codes)
         if self.semantic is not None:
@@ -44,12 +44,23 @@ class TurnValueWriter(nn.Module):
         x = (x * valid[:, :, None]).transpose(1, 2)
         for layer in self.context:
             x = (x + F.gelu(layer(x))) * valid[:, None, :]
-        x = x.transpose(1, 2)
+        return x.transpose(1, 2), valid
+
+    def boundary_scores(self, x, valid):
         spans = self.boundary(x).transpose(1, 2)
         spans = spans.masked_fill(~valid[:, None, :], -torch.inf)
         pooled = x.sum(dim=1) / valid.sum(dim=1, keepdim=True).clamp_min(1)
         logits = torch.cat((self.absent(pooled).unsqueeze(-1), spans), dim=-1)
-        return logits.reshape(codes.shape[0], len(FIELDS), 2, -1)
+        return logits.reshape(x.shape[0], len(FIELDS), 2, -1)
+
+    def forward(self, codes, features=None):
+        return self.boundary_scores(*self.encode(codes, features))
+
+    def loss(self, codes, boundaries, features=None):
+        truth = boundaries.flatten()
+        logits = self(codes, features).flatten(end_dim=2)
+        loss = F.cross_entropy(logits, truth, reduction='none')
+        return (loss * torch.where(truth > 0, 2.5, 1.)).mean()
 
     @torch.inference_mode()
     def write(self, text, margin=2., *, features=None):
@@ -65,6 +76,48 @@ class TurnValueWriter(nn.Module):
             best = int(candidates.argmax())
             start, end = divmod(best, length)
             if float(candidates[start, end] - probs[:, 0].sum()) >= margin:
+                spans[field] = text[start:end + 1]
+        return spans
+
+
+class JointTurnValueWriter(TurnValueWriter):
+    """Score a whole replacement span against a field's no-write decision."""
+
+    def __init__(self, width=64, *, feature_width=0):
+        super().__init__(width, feature_width=feature_width)
+        self.pair_width = 8
+        self.pair = nn.Linear(width, len(FIELDS) * 2 * self.pair_width)
+
+    def forward(self, codes, features=None):
+        hidden, valid = self.encode(codes, features)
+        boundaries = self.boundary_scores(hidden, valid)
+        batch, length = codes.shape
+        endpoints = self.pair(hidden).reshape(batch, length, len(FIELDS), 2, self.pair_width)
+        start, end = endpoints.permute(3, 0, 2, 1, 4).unbind(0)
+        interaction = (start @ end.transpose(-1, -2)) * self.pair_width ** -.5
+        span_scores = boundaries[:, :, 0, 1:, None] + boundaries[:, :, 1, None, 1:] + interaction
+        indices = torch.arange(length, device=codes.device)
+        widths = indices[None, :] - indices[:, None]
+        span_scores = span_scores.masked_fill((widths < 0) | (widths >= SPAN_LIMIT), -torch.inf)
+        absent = boundaries[..., 0].sum(dim=-1, keepdim=True)
+        return torch.cat((absent, span_scores.flatten(start_dim=-2)), dim=-1)
+
+    def loss(self, codes, boundaries, features=None):
+        start, end = boundaries.unbind(-1)
+        truth = torch.where(start > 0, 1 + (start - 1) * codes.shape[1] + end - 1, 0).flatten()
+        logits = self(codes, features).flatten(end_dim=1)
+        loss = F.cross_entropy(logits, truth, reduction='none')
+        return (loss * torch.where(truth > 0, 2.5, 1.)).mean()
+
+    @torch.inference_mode()
+    def write(self, text, margin=0., *, features=None):
+        logits = self(characters([text]).to(self.embedding.weight.device), features)[0]
+        scores, candidates = logits[:, 1:].max(dim=-1)
+        accepted = (scores - logits[:, 0] >= margin).tolist()
+        spans = {}
+        for field, candidate, keep in zip(FIELDS, candidates.tolist(), accepted, strict=True):
+            if keep:
+                start, end = divmod(candidate, len(text))
                 spans[field] = text[start:end + 1]
         return spans
 

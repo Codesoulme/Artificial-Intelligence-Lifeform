@@ -12,7 +12,6 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / 'scripts'), str(ROOT / 'runs/open-base-deps')]
 
 import torch
-from torch.nn import functional as F
 
 from scripts.audit_spora_native_query_key import write
 from scripts.deepseek_local_baseline import sha
@@ -84,10 +83,7 @@ def fit_writer(model, rows, no_write, epochs, device, *, features=None):
         losses = []
         for batch in torch.randperm(len(examples), device=device).cpu().split(64):
             context = None if encoded is None else encoded[batch].to(device)
-            logits = model(codes[batch].to(device), context).flatten(end_dim=2)
-            truth = targets[batch].to(device).flatten()
-            loss = F.cross_entropy(logits, truth, reduction='none')
-            loss = (loss * torch.where(truth > 0, 2.5, 1.)).mean()
+            loss = model.loss(codes[batch].to(device), targets[batch].to(device), context)
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1., error_if_nonfinite=True)

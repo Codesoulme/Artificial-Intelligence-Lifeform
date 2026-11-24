@@ -5,7 +5,9 @@ import unittest
 import torch
 from torch import nn
 
-from spora.research_dialogue_working_state import FIELDS, TurnValueWriter, WorkingTurnReader, WorkingTurnState, characters
+from spora.research_dialogue_working_state import (
+    FIELDS, JointTurnValueWriter, TurnValueWriter, WorkingTurnReader, WorkingTurnState, characters,
+)
 
 
 class TinyDecoder:
@@ -39,6 +41,35 @@ class DialogueWorkingStateTests(unittest.TestCase):
         self.assertEqual(output.shape, (2, len(FIELDS), 2, 6))
         self.assertTrue(torch.isfinite(output[..., 0]).all())
         self.assertTrue(torch.isneginf(output[0, ..., 3:]).all())
+
+    def test_joint_writer_scores_only_complete_valid_spans_and_no_write(self):
+        writer = JointTurnValueWriter(8, feature_width=6)
+        codes = characters(['去北门', '请更改地址'])
+        features = torch.ones(*codes.shape, 6)
+        width = codes.shape[1]
+        scores = writer(codes, features)
+        self.assertEqual(scores.shape, (2, len(FIELDS), 1 + width ** 2))
+        self.assertTrue(torch.isfinite(scores[..., 0]).all())
+        self.assertTrue(torch.isfinite(scores[0, :, 1 + width + 2]).all())
+        self.assertTrue(torch.isneginf(scores[0, :, 1 + 2 * width + 1]).all())
+        self.assertTrue(torch.isneginf(scores[0, :, 1 + width + 3]).all())
+        boundaries = torch.zeros(2, len(FIELDS), 2, dtype=torch.long)
+        boundaries[0, FIELDS.index('place')] = torch.tensor([2, 3])
+        loss = writer.loss(codes, boundaries, features)
+        self.assertTrue(torch.isfinite(loss))
+        loss.backward()
+        self.assertTrue(torch.isfinite(writer.pair.weight.grad).all())
+        self.assertGreater(writer.pair.weight.grad.norm().item(), 0.)
+
+    def test_joint_writer_uses_no_write_even_with_a_legal_span(self):
+        writer = JointTurnValueWriter(8)
+        scores = torch.full((1, len(FIELDS), 17), -10.)
+        scores[..., 0] = 5.
+        place = FIELDS.index('place')
+        scores[0, place, 1 + 4 + 3] = 6.
+        writer.forward = lambda codes, features: scores
+        self.assertEqual(writer.write('到青芒站', margin=2.), {})
+        self.assertEqual(writer.write('到青芒站', margin=.5), {'place': '青芒站'})
 
     def test_reader_starts_neutral_and_excludes_durable_reads(self):
         decoder = TinyDecoder()

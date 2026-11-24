@@ -1,0 +1,45 @@
+{
+  "train": {
+    "appointment": {
+      "first": ["会议预约已确认：{place}是碰面的场地，计划{day}{time}开始。", "请提醒工作人员，{day}{time}开会，安排在{place}，入场前签到。"],
+      "update": [
+        ["day", "time", "把见面的日子和钟点换成{day}{time}，还是去原先那个场地。"],
+        ["day", "time", "大家仍然在那里碰头，改到{day}{time}，不用重找房间。"],
+        ["place", "见面的日期和钟点都沿用，场地临时调整为{place}，请发个提示。"],
+        ["place", "取消在{old_place}碰头，新的场地用{place}吧，时间保持原定。"]
+      ]
+    },
+    "parcel": {
+      "first": ["货物发往{place}，请把{quantity}样册交给{person}签收。", "收货地点写{place}；这回发给{person}的是{quantity}材料。"],
+      "update": [
+        ["person", "面单只需换姓名，新收件人是{person}，还是送去上次说的地址。"],
+        ["person", "名字栏的{old_person}划掉，交给{person}签收，别动其他内容。"],
+        ["quantity", "实际装箱只有{quantity}底稿，姓名地址还是原来那两栏。"],
+        ["place", "不要寄往{old_place}，麻烦发到{place}，数量和收货人保持原样。"]
+      ]
+    },
+    "route": {
+      "first": ["到达{place}后等一下，组员各带{gear}，人齐了就{direction}出发。", "会合点定在{place}，一定要随身带上{gear}；点完名之后{direction}。"],
+      "update": [
+        ["place", "等候位置用{place}，别到{old_place}去了，路怎么走和要带什么照旧。"],
+        ["place", "请在{place}等队伍，仍沿原定方向出发，携带品没有变化。"],
+        ["gear", "把清单上的{old_gear}去掉，改带{gear}入场，集合位置与路线保持原样。"],
+        ["direction", "到了集合处以后先{direction}行进，碰头的地方和携带物都沿用此前安排。"]
+      ]
+    }
+  },
+  "held": [
+    {"kind":"appointment","first":["这次晨会在{place}开，安排在{day}{time}，请早点到。",{"place":"紫藤艺廊","day":"星期一","time":"上午七点二十"}],"update":["大家碰头的场地照原通知，开会改在{day}{time}。",{"day":"星期三","time":"下午五点十分"}],"question":"开会通知上最终应该写哪一天、几点，以及什么地点？"},
+    {"kind":"appointment","first":["有个碰面约在{day}{time}，场地填的是{place}。",{"day":"周五","time":"下午一点四十","place":"栗色钟楼"}],"update":["钟点和日期都接着用，只把碰头地址换到{place}，麻烦通知一下。",{"place":"金鹭工场"}],"question":"帮我说全这次改过的约见安排，包括日期、钟点、场地。"},
+    {"kind":"appointment","first":["请记一条：{day}{time}，大家到{place}听签到说明。",{"day":"周二","time":"上午七点四十","place":"白鹭邮亭"}],"update":["签到的地方还是原处。原来写的是{old_day}{old_time}，请改成{day}{time}。",{"day":"星期五","time":"中午一点半"}],"question":"发一条新的签到说明，说明什么日子、几点、去哪儿。"},
+    {"kind":"appointment","first":["会面预定{day}{time}，会场是{place}，票已经发了。",{"day":"星期三","time":"凌晨三点一刻","place":"雨丝剧场"}],"update":["{old_place}临时停用，新的会场就写{place}，原先约好的日子和钟点不调整。",{"place":"海棠讲堂"}],"question":"给参会的人一句话，说明最终的日期、时间和场地。"},
+    {"kind":"parcel","first":["货单的目的地是{place}，请给{person}留{quantity}色卡。",{"place":"浮石图书室","person":"邵文遥","quantity":"十二枚"}],"update":["收件人的名字是{person}。数量和送达地点照旧填写。",{"person":"冯若谷"}],"question":"按姓名 / 数量 / 地点的顺序写出更新后的三栏，用斜杠隔开。"},
+    {"kind":"parcel","first":["签收人登记的是{person}，快件是{quantity}线稿，写好后发到{place}。",{"person":"穆宁","quantity":"六捆","place":"松鹤门厅"}],"update":["复点后装进去的是{quantity}，仍旧交到原处，由原先那个人签。",{"quantity":"十三册"}],"question":"只写三栏，顺序是收件人 / 件数 / 地址。"},
+    {"kind":"parcel","first":["送到{place}的东西是{quantity}图册，收件栏写{person}。",{"place":"黑瓦驿馆","quantity":"二十张","person":"颜时雨"}],"update":["收货人填错了，划掉{old_person}以后用{person}，原址和件数接着用。",{"person":"高明澈"}],"question":"把更正完的姓名、数量和地点用斜杠隔开，按这个顺序写。"},
+    {"kind":"parcel","first":["存件记录：{person}需要签收{quantity}贴纸，送件地是{place}。",{"person":"卫子秋","quantity":"八沓","place":"陶土前廊"}],"update":["这次件要改投{place}；签收人保持原样，箱子里还是原来的数量。",{"place":"石榴茶社"}],"question":"面单上最终写什么？只答姓名 / 数量 / 地点三栏。"},
+    {"kind":"route","first":["在{place}等队友，带上{gear}，集合完{direction}走。",{"place":"月白西廊","gear":"速写板","direction":"朝东北"}],"update":["先前的{old_place}锁了，改到{place}碰头吧；要带的东西和后面的路线都沿用。",{"place":"云纹拱门"}],"question":"用一句话通知集合位置、必须带的东西和出发后的方向。"},
+    {"kind":"route","first":["路线单写明，去{place}会合，记得带{gear}；大家再一起{direction}。",{"place":"纸鸢园门","gear":"绘图尺","direction":"朝西南"}],"update":["碰头处不挪。出门走原来的方向，唯独随身用品换成{gear}。",{"gear":"折页地图"}],"question":"概括新指引，必须同时写碰头处、携带物、走的方向。"},
+    {"kind":"route","first":["出发之前到{place}，各自带{gear}。点名完就{direction}走。",{"place":"藤架前院","gear":"车票夹","direction":"向东北"}],"update":["路线得调整一下，集合完{direction}走。要带的东西和等人的地点继续按原计划。",{"direction":"往西南"}],"question":"给队员发最后一版，说明在哪里集合、带什么、向哪边走。"},
+    {"kind":"route","first":["由{place}开始会合，随后{direction}行进，每个人带好{gear}。",{"place":"杏色修理棚","direction":"朝东南","gear":"防水袋"}],"update":["携带物上不用{old_gear}了，记着换为{gear}。集合房间和行进方向照原定。",{"gear":"细绳卷"}],"question":"写一条更新过的出发通知，写齐集合点、要带的物件和方向。"}
+  ]
+}
