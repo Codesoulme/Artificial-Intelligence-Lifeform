@@ -24,6 +24,7 @@ SEED = 26244
 TOP = 48
 MODES = ('native', 'exclude_unchanged', 'learned')
 MENTIONED = 'learned_when_old_mentioned'
+TRANSFER_MODES = (*MODES, MENTIONED, 'keep_native_extension')
 BREAKS = frozenset('。！？；，、：,.!?;:\n《》「」')
 
 
@@ -46,10 +47,11 @@ def span_features(text, start, stop, old, mentions, relative):
 
 
 @torch.inference_mode()
-def candidates(writer, featurizer, cases, schemas, *, training=False):
+def candidates(writer, featurizer, cases, schemas, *, training=False, given_field=False):
     turns = [case[:4] for case in cases]
     rows = make_rows(turns, schemas)
-    if training:
+    restrict_field = training or given_field
+    if restrict_field:
         rows = [row for row in rows if row[-1] is not None]
     data = encode(featurizer, rows, 'identifier')
     width = data[0].shape[1]
@@ -60,7 +62,7 @@ def candidates(writer, featurizer, cases, schemas, *, training=False):
     output = []
     offset = 0
     for text, topic, field, expected, old in cases:
-        count = 1 if training else len(schemas[topic])
+        count = 1 if restrict_field else len(schemas[topic])
         logits = all_logits[offset:offset + count]
         ranked_fields = (logits[:, 1:].amax(dim=1) - logits[:, 0]).argmax().item()
         selected_field = FIELDS[rows[offset + ranked_fields][1]]
@@ -109,7 +111,10 @@ def choices(model, rows, mode):
     results = []
     for row in rows:
         spans, features = row['spans'], row['features']
-        if mode == 'native' or (mode == MENTIONED and not occurrences(row['text'], row['old'])):
+        mentions = occurrences(row['text'], row['old'])
+        intact_native = len(mentions) == 1 and row['old'] in spans[0] and spans[0] != row['old']
+        if (mode == 'native' or (mode in (MENTIONED, 'keep_native_extension') and not mentions)
+                or (mode == 'keep_native_extension' and intact_native)):
             pick = 0
         elif mode == 'exclude_unchanged':
             pick = next((i for i, value in enumerate(spans) if value != row['old']), 0)
@@ -127,6 +132,47 @@ def span_report(rows):
             'old': sum(row['choice']['text'] == row['old'] for row in rows),
             'truncated': sum(row['choice']['text'] != row['value'] and row['choice']['text'] in row['value'] for row in rows),
             'candidate_reaches_target': sum(row['candidate_reaches_target'] for row in rows)}
+
+
+def transfer_cases(payload):
+    sets = {kind: [] for kind in ('embedded', 'separate', 'omitted')}
+    for group in payload['groups']:
+        old = group['old']
+        for kind, count in (('embedded', 1), ('separate', 2), ('omitted', 0)):
+            new = group['unrelated'] if kind == 'omitted' else group['expanded']
+            text = group[kind]
+            if text.count(new) != 1 or len(occurrences(text, old)) != count:
+                raise ValueError(f'Incorrect old or new span for {kind} in {group["topic"]}')
+            if kind != 'omitted' and (old == new or old not in new):
+                raise ValueError('The expanded value must contain the original value')
+            sets[kind].append((text, group['topic'], group['field'], new, old))
+    return sets
+
+
+def transfer_audit(path, writer, featurizer, model, schemas):
+    digest = sha(path)
+    cases = transfer_cases(read(path))
+    ranked = {kind: candidates(writer, featurizer, rows, schemas) for kind, rows in cases.items()}
+    diagnostic = {kind: candidates(writer, featurizer, rows, schemas, given_field=True) for kind, rows in cases.items()}
+    arms = {}
+    for mode in TRANSFER_MODES:
+        choices_by_case = {kind: choices(model, rows, mode) for kind, rows in ranked.items()}
+        arms[mode] = {'spans': {kind: span_report(rows) for kind, rows in choices_by_case.items()},
+                      'choices': choices_by_case}
+        print('transfer', mode, arms[mode]['spans'], flush=True)
+    if sha(path) != digest:
+        raise ValueError('Transfer cases changed during replay')
+    given_field = {kind: span_report(choices(model, rows, 'native')) for kind, rows in diagnostic.items()}
+    print('transfer given field', given_field, flush=True)
+    return {'source': str(path), 'source_sha256': digest, 'arms': arms, 'given_field': given_field}
+
+
+def save_replay(path, payload):
+    if path.exists():
+        if read(path) != payload:
+            raise ValueError(f'Independent replay changed {path.name}')
+    else:
+        store_json(path, payload)
 
 
 def main(args):
@@ -216,6 +262,7 @@ def main(args):
     evidence_gate = arms.pop(MENTIONED)
     if arms['native']['automatic'] != previous['automatic']:
         raise ValueError('Native writer control did not match the prior experiment')
+    transfer = transfer_audit(args.transfer, writer, feat, reranker, schemas) if args.transfer else None
     layers = load_recurrent_replacements(decoder, args.layers, sources[str(args.checkpoint)])
     with ExitStack() as stack:
         install(stack, layers)
@@ -228,8 +275,11 @@ def main(args):
     if args.verify:
         if any(expected[key] != value for key, value in result.items()):
             raise ValueError('Independent replay did not match')
-        store_json(args.output / 'old-evidence-gate.json', evidence_gate)
-        store_json(args.output / 'reload.json', {'weights_sha256': result['weights_sha256'], 'seconds': perf_counter() - start})
+        save_replay(args.output / 'old-evidence-gate.json', evidence_gate)
+        if transfer is not None:
+            save_replay(args.output / 'boundary-transfer.json', transfer)
+        if not (args.output / 'reload.json').exists():
+            store_json(args.output / 'reload.json', {'weights_sha256': result['weights_sha256'], 'seconds': perf_counter() - start})
     else:
         store_json(report, {**result, 'seconds': perf_counter() - start})
         store_json(args.output / 'old-evidence-gate.json', evidence_gate)
@@ -241,4 +291,8 @@ if __name__ == '__main__':
         parser.add_argument(name, type=Path)
     parser.add_argument('layers', nargs=2, type=Path)
     parser.add_argument('--verify', action='store_true')
-    main(parser.parse_args())
+    parser.add_argument('--transfer', type=Path, help='Replay a fresh boundary dataset against existing weights')
+    args = parser.parse_args()
+    if args.transfer is not None and not args.verify:
+        parser.error('--transfer requires --verify to use existing weights')
+    main(args)
