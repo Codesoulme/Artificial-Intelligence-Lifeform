@@ -99,3 +99,31 @@ def partial_masks(state, missing, targets, vocabulary_size, device):
             valid[index] = step
     use = torch.arange(len(targets), device=device)[:, None] <= torch.tensor(valid, device=device)
     return use.split(len(FIELDS), dim=-1)
+
+class TokenFieldAccessHead(nn.Module):
+    """Give each field a distinct view of the question's token sequence."""
+
+    def __init__(self, hidden, width=64):
+        super().__init__()
+        self.tokens = nn.Linear(hidden, width, bias=False)
+        self.field_queries = nn.Parameter(torch.randn(len(FIELDS), width) / width ** .5)
+        self.roles = nn.Sequential(nn.Linear(3 * width, width), nn.GELU(), nn.Dropout(.1), nn.Linear(width, 4))
+
+    def forward(self, tokens, present):
+        contextual = self.tokens(tokens.float())
+        attend = contextual @ self.field_queries.T * contextual.shape[-1] ** -.5
+        attend = attend.masked_fill(~present[..., None], torch.finfo(attend.dtype).min).softmax(dim=-2)
+        local = torch.einsum('btf,btw->bfw', attend, contextual)
+        pooled = ((contextual * present[..., None]).sum(dim=1)
+                  / present.sum(dim=1, keepdim=True).clamp_min(1))
+        fields = self.field_queries.expand(local.shape[0], -1, -1)
+        return self.roles(torch.cat((local, pooled[:, None, :].expand_as(local), fields), dim=-1))
+
+
+def typed_field_surface(encode, label, value=()):
+    """Place a value or its absence under the same semantic label within one action."""
+    if not label.strip():
+        raise ValueError('A typed field action needs a spoken label')
+    if not value:
+        return tuple(encode(f'{label}尚未记录。'))
+    return (*encode(f'{label}为'), *value, *encode('。'))

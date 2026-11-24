@@ -5,7 +5,7 @@ import torch
 from spora.research_dialogue_working_state import FIELDS, WorkingTurnState
 from spora.research_field_access import (
     EXCLUDE, IGNORE, OPTIONAL, REQUIRE, FieldAccessPlan, MissingFieldActions,
-    partial_masks, partial_targets,
+    TokenFieldAccessHead, partial_masks, partial_targets, typed_field_surface,
 )
 from spora.research_span_action import SpanActionHead
 
@@ -40,6 +40,33 @@ class FieldAccessTests(unittest.TestCase):
         self.assertTrue(torch.isneginf(logits[1:, 32 + count:]).all())
         with self.assertRaises(ValueError):
             partial_masks(state, (), targets, 32, 'cpu')
+
+
+class TypedFieldTests(unittest.TestCase):
+    def test_bound_address_keeps_the_exact_value_under_the_same_role(self):
+        encode = lambda text: list(map(ord, text))
+        name = '取件人'
+        value = tuple(encode('辛雨'))
+        known = typed_field_surface(encode, name, value)
+        unknown = typed_field_surface(encode, name)
+        self.assertEqual(''.join(map(chr, known)), '取件人为辛雨。')
+        self.assertEqual(''.join(map(chr, unknown)), '取件人尚未记录。')
+        self.assertEqual(known[len(name) + 1:-1], value)
+        with self.assertRaises(ValueError):
+            typed_field_surface(encode, ' ')
+
+    def test_field_access_ignores_padded_question_positions(self):
+        torch.manual_seed(6)
+        model = TokenFieldAccessHead(6, width=8).eval()
+        sequence = torch.randn(1, 4, 6)
+        plain = model(sequence, torch.ones(1, 4, dtype=torch.bool))
+        extra = torch.cat((sequence, 100. * torch.randn(1, 3, 6)), dim=1)
+        mask = torch.tensor([[True, True, True, True, False, False, False]])
+        scores = model(extra, mask)
+        torch.testing.assert_close(scores, plain)
+        scores.square().mean().backward()
+        self.assertIsNotNone(model.field_queries.grad)
+        self.assertTrue(torch.isfinite(model.field_queries.grad).all())
 
 
 if __name__ == '__main__':
