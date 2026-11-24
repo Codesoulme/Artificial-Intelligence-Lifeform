@@ -1,0 +1,47 @@
+{
+  "scope": "New recall scenarios for comparing always-on far reads with reads after prefill. Values and wording are reserved for this diagnostic.",
+  "recall": [
+    {
+      "name": "clinic_booking",
+      "first": "把复诊安排记一下：定在{old}，地点是{keep}。",
+      "update": "诊室那边把时间改为{new}，地点没有动。",
+      "question": "我要发给家里人一条复诊提醒，帮我把时间和去哪儿一起写上。",
+      "values": [["周二上午九点", "周四下午三点", "春和门诊部"], ["周五早上八点", "周六下午两点", "杏林社区诊室"]]
+    },
+    {
+      "name": "repair_pickup",
+      "first": "修好的衣服要从{old}拿，取件的人是{keep}。",
+      "update": "店家通知改到{new}取，仍然请原来那个人去。",
+      "question": "我想发消息通知取件。该去哪里取件，由谁去？",
+      "values": [["西街裁缝铺", "鹭汀驿站", "杨枫宜"], ["沿河店", "柳树巷门房", "陆语彤"]]
+    },
+    {
+      "name": "pottery_inventory",
+      "first": "给{keep}留一批茶杯，入库单写的是{old}。",
+      "update": "重新数过，实际留给同一个人的是{new}。",
+      "question": "这批茶杯最终要留给谁，留多少？把数量和单位都写出来。",
+      "values": [["十一只", "九只", "薛延秋"], ["六箱", "八箱", "韩知昀"]]
+    },
+    {
+      "name": "choir_program",
+      "first": "合唱节目暂用《{old}》，领唱人是{keep}。",
+      "update": "曲目最后换成《{new}》，领唱照原定安排。",
+      "question": "节目单要印了，麻烦告诉我现在用的曲名和领唱姓名。",
+      "values": [["远岸微光", "晚风归舟", "蒋澄宇"], ["林间晨响", "纸上晴空", "秦禾笙"]]
+    },
+    {
+      "name": "garden_supply",
+      "first": "花圃活动约在{keep}碰头，每个人带{old}。",
+      "update": "碰头位置照旧。工具不要按先前说的带，改带{new}。",
+      "question": "帮我告诉新来的同伴，应该到哪儿碰头，以及他手上需要带什么。",
+      "values": [["长嘴水壶", "小号耙子", "山茶园北侧"], ["竹夹", "橡胶手套", "柳湾花房"]]
+    },
+    {
+      "name": "film_notice",
+      "first": "给放映活动留了{keep}当主持，观众从{old}入场。",
+      "update": "主持照旧，观众请从{new}走，原入口关闭。",
+      "question": "把主持人和观众现在要走的入口发给我，两项都需要。",
+      "values": [["大厅扶梯口", "蓝窗侧门", "何舟冉"], ["铜牌正门", "银铃连廊", "梁鹤清"]]
+    }
+  ]
+}
