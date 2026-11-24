@@ -42,16 +42,16 @@ BOOST = 8.
 
 
 @torch.inference_mode()
-def write_fresh(model, tokenizer, columns, *, layer, eta, ridge):
+def write_fresh(model, tokenizer, columns, *, layer, eta, ridge, events=EVENTS, facts=FACTS):
     sites = install(model, (layer,))
     projection = compress_dimension(sites[layer].base.in_features).to(columns.device)
     banks = {}
     try:
-        for domain, events in EVENTS.items():
-            for name, old, current in events:
+        for domain, rows in events.items():
+            for name, old, current in rows:
                 versions = []
                 for value in (old, current):
-                    event = FACTS[domain].format(name=name, value=value)
+                    event = facts[domain].format(name=name, value=value)
                     captured = fact_cache(model, tokenizer, sites, event, value, decoder_only=True)
                     keys = captured['keys'][layer].index_select(-1, projection)
                     codes = F.normalize(captured['value_embeddings'].index_select(-1, columns), dim=-1)

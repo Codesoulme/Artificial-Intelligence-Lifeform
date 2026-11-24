@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from spora.research_versioned_memory_pointer import VersionCoverageBias
+from spora.research_versioned_memory_pointer import VersionCoverageBias, VersionReplyActions
 
 
 class VersionMemoryCoverageTests(unittest.TestCase):
@@ -31,3 +31,24 @@ class VersionMemoryCoverageTests(unittest.TestCase):
                 self.assertIsNone(bias.next_token((2,)))
                 self.assertIs(bias(torch.tensor([[0, 2]]), scores), scores)
                 self.assertIsNone(bias.prompt_length)
+
+
+class VersionReplyActionTests(unittest.TestCase):
+    def test_whole_value_action_competes_once_and_respects_the_remaining_budget(self):
+        head = VersionReplyActions(3, [4])
+        with torch.no_grad():
+            head.actions.weight.zero_()
+            head.actions.bias.copy_(torch.tensor([9., 0.]))
+        hidden = torch.zeros(3)
+        logits = torch.zeros(6)
+        self.assertIsNone(head.choose(hidden, logits, copied=False, room_for_copy=True, memory_fraction=.95))
+        self.assertEqual(head.choose(hidden, logits, copied=True, room_for_copy=True, memory_fraction=.95), 4)
+        self.assertEqual(head.choose(hidden, logits, copied=False, room_for_copy=False, memory_fraction=.95), 4)
+
+    def test_an_ordinary_token_can_win_before_a_copy_occurs(self):
+        head = VersionReplyActions(3, [4])
+        with torch.no_grad():
+            head.actions.weight.zero_()
+            head.actions.bias.copy_(torch.tensor([-9., 0.]))
+        logits = torch.tensor([15., 0., 0., 0., 0., 0.])
+        self.assertEqual(head.choose(torch.zeros(3), logits, copied=False, room_for_copy=True, memory_fraction=.2), 0)

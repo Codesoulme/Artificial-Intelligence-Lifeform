@@ -68,3 +68,30 @@ class VersionCoverageBias:
         biased[0, token] += self.strength
         self.applied += 1
         return biased
+
+
+class VersionReplyActions(nn.Module):
+    """Learn when to emit one complete stored value during ordinary generation."""
+
+    def __init__(self, hidden_size, scaffold_tokens):
+        super().__init__()
+        self.register_buffer('scaffold_tokens', torch.as_tensor(scaffold_tokens, dtype=torch.long))
+        self.project = nn.Linear(hidden_size, 96)
+        self.progress = nn.Embedding(2, 96)
+        self.actions = nn.Linear(96, 1 + len(scaffold_tokens))
+
+    def forward(self, hidden, copied):
+        hidden = F.normalize(hidden.float(), dim=-1) * hidden.shape[-1] ** .5
+        scores = self.actions(F.gelu(self.project(hidden) + self.progress(copied.long())))
+        return torch.cat((scores[..., :1].masked_fill(copied[..., None], -torch.inf), scores[..., 1:]), dim=-1)
+
+    def choose(self, hidden, native_logits, *, copied, room_for_copy, memory_fraction):
+        progress = torch.as_tensor(copied, device=hidden.device)
+        actions = self(hidden, progress)
+        if not room_for_copy:
+            actions[0] = -torch.inf
+        actions = actions.softmax(-1) * memory_fraction
+        native = native_logits.float().softmax(-1) * (1 - memory_fraction)
+        native.scatter_add_(0, self.scaffold_tokens, actions[1:])
+        probability, token = native.max(0)
+        return None if bool(actions[0] > probability) else int(token)
