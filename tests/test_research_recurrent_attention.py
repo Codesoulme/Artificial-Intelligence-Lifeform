@@ -35,6 +35,16 @@ class RecurrentAttentionTests(unittest.TestCase):
         torch.testing.assert_close(output[:, :, :17], perturbed[:, :, :17])
         self.assertFalse(torch.equal(output[:, :, 17:], perturbed[:, :, 17:]))
 
+    def test_gqa_keeps_native_key_width_and_storage_precision(self):
+        key, value = (tensor[:, :1].half() for tensor in (self.k, self.v))
+        expected, _ = self.model(self.q, key.float().repeat_interleave(2, dim=1),
+                                 value.float().repeat_interleave(2, dim=1))
+        actual, state = self.model(self.q, key, value)
+        torch.testing.assert_close(expected, actual)
+        self.assertEqual(state.key.shape[1], 1)
+        self.assertIs(state.key.dtype, torch.float16)
+        self.assertIs(state.matrix.dtype, torch.float32)
+
     def test_training_reaches_summary_and_gate(self):
         output, _ = self.model(self.q, self.k, self.v)
         output.square().mean().backward()

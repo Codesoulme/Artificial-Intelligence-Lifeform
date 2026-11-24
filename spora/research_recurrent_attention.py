@@ -34,9 +34,16 @@ class RecurrentAttention(nn.Module):
                                        weights)) + 1e-5
 
     def forward(self, query, key, value, state=None, *, include_far=True):
-        query, key, value = query.float(), key.float(), value.float()
-        if query.shape != key.shape or key.shape != value.shape or not query.shape[-2]:
+        if (query.ndim != 4 or key.ndim != 4 or key.shape != value.shape or query.shape[0] != key.shape[0]
+                or query.shape[-2:] != key.shape[-2:] or not query.shape[-2]
+                or not key.shape[1] or query.shape[1] % key.shape[1]):
             raise ValueError('Expected aligned nonempty query, key and value')
+        query = query.float()
+        groups = query.shape[1] // key.shape[1]
+
+        def expand(tensor):
+            return tensor.float().repeat_interleave(groups, dim=1) if groups > 1 else tensor.float()
+
         if state is None:
             batch, heads, _, head_dim = query.shape
             features = self.k_map.shape[-1]
@@ -50,8 +57,8 @@ class RecurrentAttention(nn.Module):
         offset = 0
         while offset < query.shape[-2]:
             if length % self.block == 0 and recent_k.shape[-2] == 2 * self.block:
-                old_features = self.phi(recent_k[:, :, :self.block], self.k_map)
-                matrix = matrix + old_features.transpose(-1, -2) @ recent_v[:, :, :self.block]
+                old_features = self.phi(expand(recent_k[:, :, :self.block]), self.k_map)
+                matrix = matrix + old_features.transpose(-1, -2) @ expand(recent_v[:, :, :self.block])
                 normalizer = normalizer + old_features.sum(dim=-2)
                 recent_k = recent_k[:, :, self.block:]
                 recent_v = recent_v[:, :, self.block:]
@@ -63,7 +70,7 @@ class RecurrentAttention(nn.Module):
             recent_v = torch.cat((recent_v, value[:, :, current]), dim=-2)
             query_position = torch.arange(size, device=q.device) + past
             key_position = torch.arange(recent_k.shape[-2], device=q.device)
-            local = F.scaled_dot_product_attention(q, recent_k, recent_v,
+            local = F.scaled_dot_product_attention(q, expand(recent_k), expand(recent_v),
                                                   attn_mask=query_position[:, None] >= key_position[None, :])
             if include_far and length >= 2 * self.block:
                 qf = self.phi(q, self.q_map)

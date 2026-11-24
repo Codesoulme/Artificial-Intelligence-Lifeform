@@ -136,6 +136,22 @@ def _require_runtime(decoder, organism, state):
         raise ValueError('Durable runtime requires a native reader and controlled individual')
 
 
+def _bind_recurrent_layers(decoder, directories, parent, first_layer):
+    if not directories:
+        return {}
+    from .research_recurrent_decode import load_recurrent_replacements
+
+    directories = tuple(Path(directory).resolve() for directory in directories)
+    paths = [directory / name for directory in directories for name in ('attention.pt', 'comparison.json')]
+    sources = {path: _stat(path) for path in paths}
+    replacements = load_recurrent_replacements(decoder, directories, _file_sha256(parent), first_layer)
+    if any(_stat(path) != stamp for path, stamp in sources.items()):
+        raise ValueError('A recurrent attention candidate changed during startup')
+    for block, replacement in replacements.values():
+        block.self_attn = replacement
+    return sources
+
+
 def _observation_calendar(metadata, state):
     if 'observation_calendar' not in metadata:
         return None
@@ -145,12 +161,13 @@ def _observation_calendar(metadata, state):
 
 
 class IntegratedDurableRuntime:
-    def __init__(self, decoder, organism, state, store, bootstrap, dialogue_source=None):
+    def __init__(self, decoder, organism, state, store, bootstrap, dialogue_source=None, attention_sources=None):
         _require_runtime(decoder, organism, state)
         self.decoder, self.organism, self.state, self.store = decoder, organism, state, store
         self.bootstrap = Path(bootstrap).resolve()
         self._bootstrap_stat = _stat(self.bootstrap)
         self._dialogue_source = dialogue_source
+        self._attention_sources = {} if attention_sources is None else attention_sources
         self._signature = _decoder_signature(decoder)
 
     def __enter__(self):
@@ -177,6 +194,13 @@ class IntegratedDurableRuntime:
                 raise ValueError('Dialogue checkpoint is unavailable') from error
             if not unchanged:
                 raise ValueError('Dialogue checkpoint changed during runtime')
+        for path, stamp in self._attention_sources.items():
+            try:
+                unchanged = _stat(path) == stamp
+            except OSError as error:
+                raise ValueError('Recurrent attention candidate is unavailable') from error
+            if not unchanged:
+                raise ValueError('Recurrent attention candidate changed during runtime')
         if _decoder_signature(self.decoder) != self._signature:
             raise ValueError('Decoder changed since durable state was bound')
 
@@ -420,7 +444,7 @@ class IntegratedDurableRuntime:
 
 def create_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu',
                               calendar_individual=None, initial_state_factory=None, dialogue_checkpoint=None,
-                              late_gate_start=None):
+                              late_gate_start=None, recurrent_attention=()):
     if initial_state_factory is not None and (not callable(initial_state_factory) or calendar_individual is not None):
         raise ValueError('A fresh state factory requires a bootstrap without a separate calendar seed')
     bootstrap = Path(bootstrap).resolve()
@@ -450,8 +474,10 @@ def create_integrated_durable(database, bootstrap, base, model_dir, *, individua
         if initial_state_factory is not None:
             state = initial_state_factory(organism)
         _require_runtime(decoder, organism, state)
+        attention_sources = _bind_recurrent_layers(decoder, recurrent_attention,
+                                                   dialogue_checkpoint or bootstrap, late_gate_start or 0)
         store = TensorStore.create(database, organism, state, metadata)
-        return IntegratedDurableRuntime(decoder, organism, state, store, bootstrap, dialogue_source)
+        return IntegratedDurableRuntime(decoder, organism, state, store, bootstrap, dialogue_source, attention_sources)
     except BaseException:
         if store is not None:
             store.close()
@@ -463,7 +489,7 @@ def create_integrated_durable(database, bootstrap, base, model_dir, *, individua
 
 
 def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_device='cpu', dialogue_checkpoint=None,
-                            late_gate_start=None):
+                            late_gate_start=None, recurrent_attention=()):
     bootstrap = Path(bootstrap).resolve()
     before = _stat(bootstrap)
     expected = _bootstrap_metadata(bootstrap)
@@ -487,7 +513,9 @@ def load_integrated_durable(database, bootstrap, base, model_dir, *, individual_
         _validate_binding(organism, expected['base_sha256'], expected['feature_config_sha256'],
                           expected['feature_variant_sha256'])
         _require_runtime(decoder, organism, state)
-        return IntegratedDurableRuntime(decoder, organism, state, store, bootstrap, dialogue_source)
+        attention_sources = _bind_recurrent_layers(decoder, recurrent_attention,
+                                                   dialogue_checkpoint or bootstrap, late_gate_start or 0)
+        return IntegratedDurableRuntime(decoder, organism, state, store, bootstrap, dialogue_source, attention_sources)
     except BaseException:
         store.close()
         for index, layer in enumerate(previous_layers):

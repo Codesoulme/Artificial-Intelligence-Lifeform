@@ -197,7 +197,8 @@ def main(args):
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     base = load_full_streamed()
     candidate_options = {'dialogue_checkpoint': args.dialogue_checkpoint,
-                         'late_gate_start': max(temporal['hidden_indices'])}
+                         'late_gate_start': max(temporal['hidden_indices']),
+                         'recurrent_attention': args.recurrent_attention}
     if args.database.exists():
         runtime = load_integrated_durable(args.database, args.checkpoint, base, MODEL, **candidate_options)
     else:
@@ -223,6 +224,8 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dialogue-checkpoint', type=Path, help='Use a compatible ordinary-dialogue checkpoint')
+    parser.add_argument('--recurrent-attention', type=Path, action='append', default=[],
+                        help='Enable a recurrent attention candidate directory for the chosen checkpoint')
     for name, default in (('source', DEFAULT_SOURCE), ('checkpoint', DEFAULT_PACKED), ('temporal', DEFAULT_TIME),
                           ('recovery', DEFAULT_RECOVERY), ('database', DEFAULT_DATABASE)):
         parser.add_argument('--' + name, type=Path, default=default)
