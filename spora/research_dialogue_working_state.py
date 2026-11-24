@@ -27,14 +27,15 @@ def characters(texts):
 class TurnValueWriter(nn.Module):
     """Predict a current value span or an explicit no-write address per field."""
 
-    def __init__(self, width=64, *, feature_width=0):
+    def __init__(self, width=64, *, feature_width=0, fields=FIELDS):
         super().__init__()
+        self.fields = tuple(fields)
         self.embedding = nn.Embedding(CHAR_BUCKETS, width, padding_idx=0)
         self.semantic = nn.Linear(feature_width, width, bias=False) if feature_width else None
         self.context = nn.ModuleList(nn.Conv1d(width, width, 5, dilation=d, padding=2 * d)
                                      for d in (1, 2, 4))
-        self.boundary = nn.Linear(width, len(FIELDS) * 2)
-        self.absent = nn.Linear(width, len(FIELDS) * 2)
+        self.boundary = nn.Linear(width, len(self.fields) * 2)
+        self.absent = nn.Linear(width, len(self.fields) * 2)
 
     def encode(self, codes, features):
         valid = codes.ne(0)
@@ -51,7 +52,7 @@ class TurnValueWriter(nn.Module):
         spans = spans.masked_fill(~valid[:, None, :], -torch.inf)
         pooled = x.sum(dim=1) / valid.sum(dim=1, keepdim=True).clamp_min(1)
         logits = torch.cat((self.absent(pooled).unsqueeze(-1), spans), dim=-1)
-        return logits.reshape(x.shape[0], len(FIELDS), 2, -1)
+        return logits.reshape(x.shape[0], len(self.fields), 2, -1)
 
     def forward(self, codes, features=None):
         return self.boundary_scores(*self.encode(codes, features))
@@ -70,7 +71,7 @@ class TurnValueWriter(nn.Module):
         width = indices[None, :] - indices[:, None]
         possible = (width >= 0) & (width < SPAN_LIMIT)
         spans = {}
-        for field, probs in zip(FIELDS, logits, strict=True):
+        for field, probs in zip(self.fields, logits, strict=True):
             candidates = probs[0, 1:, None] + probs[1, None, 1:]
             candidates = candidates.masked_fill(~possible, -torch.inf)
             best = int(candidates.argmax())
