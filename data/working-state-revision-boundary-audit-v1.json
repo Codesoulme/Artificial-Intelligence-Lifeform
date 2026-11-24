@@ -1,0 +1,29 @@
+{
+  "scope": "Second project-authored boundary holdout. Values and messages are reserved for evaluation.",
+  "groups": [
+    {"topic":"clinic_booking","field":"time","old":"下午三点","expanded":"周一下午三点半","unrelated":"明天清早七点五十",
+     "embedded":"我拿到复诊单了，上面约的是周一下午三点半，请把到场时间填完整。",
+     "separate":"之前说下午三点只是大概，门诊锁下来的号是周一下午三点半。",
+     "omitted":"我把药拿完才去，新的就诊时刻是明天清早七点五十，联系窗口照常。"},
+    {"topic":"repair_pickup","field":"place","old":"大厅柜","expanded":"旧厂大厅柜西口","unrelated":"三楼靠电梯的维修窗口",
+     "embedded":"领修好物品的地址现在登记为旧厂大厅柜西口，记得带原来的领取单。",
+     "separate":"大厅柜有好几个，我问到修好的那台放在旧厂大厅柜西口，领件地点记这个。",
+     "omitted":"别往一楼总台去，代领的人直接找三楼靠电梯的维修窗口。"},
+    {"topic":"pottery_inventory","field":"quantity","old":"十二筐","expanded":"一百一十二筐","unrelated":"四十七篮",
+     "embedded":"库房两批合在一起了，配货员往单子上填一百一十二筐，原来的接货人不变。",
+     "separate":"十二筐是第一次盘点的数，合计发货是一百一十二筐，别把前面截掉。",
+     "omitted":"按仓库最后一张清单，应该移交四十七篮，签字人的姓名照原单。"},
+    {"topic":"choir_program","field":"gear","old":"山窗","expanded":"雨后的山窗","unrelated":"拨开清晨的雾",
+     "embedded":"印节目册的时候请标出合唱《雨后的山窗》，节目顺序按给你的表来。",
+     "separate":"排演时大家叫它《山窗》，交给主持人的正式曲名是《雨后的山窗》。",
+     "omitted":"上台时间照旧，合唱最终定下来唱《拨开清晨的雾》。"},
+    {"topic":"garden_supply","field":"gear","old":"小铲","expanded":"尖头小铲","unrelated":"蓝柄除草钩",
+     "embedded":"干活那拨人把尖头小铲带来，花坛用的器具按这项登记。",
+     "separate":"清单原来写小铲，现在统一改发尖头小铲，带队安排没变。",
+     "omitted":"铁耙给另一组，这队昨天领错了，随身工具请更新成蓝柄除草钩。"},
+    {"topic":"film_notice","field":"place","old":"正门","expanded":"旧戏院正门东岗","unrelated":"白色指示牌下的验票口",
+     "embedded":"给观众的入场通知发出去，票从旧戏院正门东岗验，别只写戏院名字。",
+     "separate":"正门只是大方向，场务确定过，观众应到旧戏院正门东岗验票。",
+     "omitted":"候场区临时换了，放映入场从白色指示牌下的验票口进，主持人沿用原安排。"}
+  ]
+}
