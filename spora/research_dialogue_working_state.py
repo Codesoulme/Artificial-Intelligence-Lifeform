@@ -150,10 +150,12 @@ class WorkingTurnState:
 class WorkingTurnReader(nn.Module):
     """Read state token vectors by cross-attention at a decoder layer."""
 
-    def __init__(self, hidden, width=64, *, layer_index=-1, copy_logits=True):
+    def __init__(self, hidden, width=64, *, layer_index=-1, copy_logits=True, ordered=False):
         super().__init__()
         if type(layer_index) is not int or layer_index < -1 or type(copy_logits) is not bool:
             raise ValueError('Invalid working-state read configuration')
+        if type(ordered) is not bool or (ordered and not copy_logits):
+            raise ValueError('Ordered reads require copy scores')
         self.layer_index = layer_index
         self.copy_logits = copy_logits
         self.query = nn.Linear(hidden, width, bias=False)
@@ -163,12 +165,15 @@ class WorkingTurnReader(nn.Module):
         self.positions = nn.Embedding(SPAN_LIMIT, width)
         self.output = nn.Linear(width, hidden, bias=False)
         self.copy_scale = nn.Parameter(torch.zeros(()))
+        self.order_scale = nn.Parameter(torch.zeros(())) if ordered else None
         nn.init.zeros_(self.output.weight)
 
-    def attention(self, hidden, embeddings, owners, positions):
+    def attention(self, hidden, embeddings, owners, positions, continuation=None):
         query = self.query(hidden.float())
         keys = self.key(embeddings.float()) + self.fields(owners) + self.positions(positions)
         weight = (query @ keys.T) * (keys.shape[-1] ** -.5)
+        if continuation is not None:
+            weight = weight + 8. * self.order_scale.tanh() * continuation
         return weight.softmax(dim=-1)
 
     def forward(self, hidden, embeddings, owners, positions):
@@ -178,7 +183,7 @@ class WorkingTurnReader(nn.Module):
         return hidden + update.to(hidden.dtype)
 
     @contextmanager
-    def active(self, decoder, state, *, targets=None):
+    def active(self, decoder, state, *, targets=None, prompt_tokens=None):
         if decoder._memory_context.get() is not None or _READ_SCOPE.get() is not None:
             raise ValueError('Working condition reads require ordinary dialogue')
         ids, owners, positions = state.tokens(decoder.base.device)
@@ -189,6 +194,27 @@ class WorkingTurnReader(nn.Module):
         with torch.no_grad():
             embeddings = decoder.base.get_input_embeddings()(ids)
         marker = object()
+        sequence, projected, inferred_prompt = None, None, None
+
+        def capture(_base, args, kwargs):
+            nonlocal sequence, projected, inferred_prompt
+            if _READ_SCOPE.get() is not marker or decoder._memory_context.get() is not None:
+                return
+            tokens = kwargs.get('input_ids', args[0] if args else None)
+            if tokens is None:
+                raise ValueError('Ordered working-state reads require token input')
+            past = kwargs.get('past_key_values')
+            continuing = past is not None and past.get_seq_length() > 0
+            if continuing and sequence is None:
+                raise ValueError('Ordered working-state reads require the current prompt')
+            sequence = torch.cat((sequence, tokens), dim=1) if continuing else tokens
+            if not continuing:
+                inferred_prompt = tokens.shape[1]
+            keep = kwargs.get('logits_to_keep', 0)
+            offset = sequence.shape[1] - tokens.shape[1]
+            projected = (keep + offset if isinstance(keep, torch.Tensor) else
+                         torch.arange(sequence.shape[1] - (keep or tokens.shape[1]), sequence.shape[1],
+                                      device=tokens.device))
 
         def read(_layer, _inputs, output):
             if _READ_SCOPE.get() is not marker or decoder._memory_context.get() is not None:
@@ -200,7 +226,11 @@ class WorkingTurnReader(nn.Module):
         def copy(_head, inputs, output):
             if _READ_SCOPE.get() is not marker or decoder._memory_context.get() is not None:
                 return output
-            weights = self.attention(inputs[0], embeddings, owners, positions)
+            continuation = None
+            if self.order_scale is not None:
+                prefix = inferred_prompt if prompt_tokens is None else prompt_tokens
+                continuation = slot_continuations(sequence, projected, prefix, ids, positions)
+            weights = self.attention(inputs[0], embeddings, owners, positions, continuation)
             if targets is not None:
                 matching = ids[None, :] == targets[:, None]
                 selected = matching.any(dim=-1)
@@ -214,9 +244,26 @@ class WorkingTurnReader(nn.Module):
 
         with ExitStack() as cleanup:
             cleanup.callback(_READ_SCOPE.reset, _READ_SCOPE.set(marker))
+            if self.order_scale is not None:
+                input_handle = decoder.base.register_forward_pre_hook(capture, with_kwargs=True)
+                cleanup.callback(input_handle.remove)
             layer_handle = decoder.base.model.layers[self.layer_index].register_forward_hook(read)
             cleanup.callback(layer_handle.remove)
             if targets is not None or self.copy_logits:
                 head_handle = decoder.base.lm_head.register_forward_hook(copy)
                 cleanup.callback(head_handle.remove)
             yield supervision
+
+
+def slot_continuations(sequence, projected, prompt_tokens, ids, positions):
+    """Mark next tokens of the longest slot prefix at the end of the reply so far."""
+    lags = torch.arange(SPAN_LIMIT - 1, device=ids.device)
+    recent = projected[:, None] - lags
+    suffixes = sequence[:, recent.clamp_min(0)].masked_fill(recent < prompt_tokens, -1)
+    precedes = torch.arange(ids.numel(), device=ids.device)[:, None] - 1 - lags
+    prefixes = ids[precedes.clamp_min(0)]
+    needed = lags < positions[:, None]
+    matches = ((suffixes[:, :, None] == prefixes) | ~needed).all(dim=-1)
+    lengths = torch.where(matches, positions, 0)
+    longest = lengths.amax(dim=-1, keepdim=True)
+    return (lengths == longest) & longest.gt(0)

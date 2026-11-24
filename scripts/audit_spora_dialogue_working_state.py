@@ -118,9 +118,10 @@ def train_examples(rows, tokenizer, *, contrast):
 def fit_reader(decoder, reader, tokenizer, cases, steps, *, contrast=False):
     rng = random.Random(SEED)
     examples = train_examples(cases, tokenizer, contrast=contrast)
-    params = [p for name, p in reader.named_parameters() if name != 'copy_scale']
+    params = [p for name, p in reader.named_parameters() if name not in ('copy_scale', 'order_scale')]
+    scale_params = [reader.copy_scale] if reader.order_scale is None else [reader.copy_scale, reader.order_scale]
     optimizer = torch.optim.AdamW([{'params': params, 'lr': .001},
-                                   {'params': [reader.copy_scale], 'lr': .01}], weight_decay=0)
+                                   {'params': scale_params, 'lr': .01}], weight_decay=0)
     losses, trace = [], []
     pair_width = 2 if contrast else 1
     pair = None
@@ -133,7 +134,7 @@ def fit_reader(decoder, reader, tokenizer, cases, steps, *, contrast=False):
         groups = (len(labels) + 3) // 4
         indices = tuple(range(rng.randrange(groups), len(labels), groups))
         pointer = torch.tensor([labels[i] for i in indices], device=decoder.base.device) if contrast else None
-        with reader.active(decoder, state, targets=pointer) as guidance:
+        with reader.active(decoder, state, targets=pointer, prompt_tokens=len(ids) - len(labels) + 1) as guidance:
             logits, target = tile_logits(decoder, (ids, labels, indices))
         loss = F.cross_entropy(logits, target)
         if guidance:
@@ -146,6 +147,8 @@ def fit_reader(decoder, reader, tokenizer, cases, steps, *, contrast=False):
         if (step + 1) % 32 == 0 or step + 1 == steps:
             item = {'step': step + 1, 'loss': sum(losses) / len(losses),
                     'copy_scale': float(12. * reader.copy_scale.detach().tanh())}
+            if reader.order_scale is not None:
+                item['order_scale'] = float(8. * reader.order_scale.detach().tanh())
             trace.append(item)
             print('Working-state reader', item, flush=True)
             losses.clear()

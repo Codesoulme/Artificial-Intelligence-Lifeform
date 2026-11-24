@@ -7,6 +7,7 @@ from torch import nn
 
 from spora.research_dialogue_working_state import (
     FIELDS, JointTurnValueWriter, TurnValueWriter, WorkingTurnReader, WorkingTurnState, characters,
+    slot_continuations,
 )
 
 
@@ -23,6 +24,23 @@ class TinyDecoder:
         for layer in self.base.model.layers:
             features = layer(features)
         return self.base.lm_head(features)
+
+
+class TinyOrderedBase(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.device = torch.device('cpu')
+        self.model = SimpleNamespace(layers=[nn.Identity()])
+        self.embedding = nn.Embedding(32, 8)
+        self.lm_head = nn.Linear(8, 32, bias=False)
+
+    def get_input_embeddings(self):
+        return self.embedding
+
+    def forward(self, input_ids, *, logits_to_keep=0, past_key_values=None):
+        positions = slice(-logits_to_keep, None) if isinstance(logits_to_keep, int) else logits_to_keep
+        hidden = self.model.layers[0](self.embedding(input_ids))
+        return self.lm_head(hidden[:, positions])
 
 
 class DialogueWorkingStateTests(unittest.TestCase):
@@ -126,3 +144,32 @@ class DialogueWorkingStateTests(unittest.TestCase):
         with reader.active(decoder, state):
             self.assertFalse(torch.equal(decoder.logits(), baseline))
         self.assertTrue(torch.equal(decoder.logits(), baseline))
+
+    def test_ordered_copy_requires_reply_prefix_and_prefers_longest_match(self):
+        state = WorkingTurnState().update({'place': (2, 3, 4), 'person': (3, 5), 'gear': (2, 6)})
+        ids, _, positions = state.tokens('cpu')
+        sequence = torch.tensor([[9, 2, 3, 2, 3, 4, 2]])
+        selected = torch.tensor([2, 3, 4, 5, 6])
+        eligible = slot_continuations(sequence, selected, 3, ids, positions)
+        next_ids = [ids[row].tolist() for row in eligible[0]]
+        self.assertEqual(next_ids, [[], [3, 6], [4], [], [3, 6]])
+
+    def test_ordered_reader_aligns_cached_tokens_with_selected_training_positions(self):
+        decoder = SimpleNamespace(base=TinyOrderedBase(), _memory_context=ContextVar('test_ordered_memory', default=None))
+        reader = WorkingTurnReader(8, width=4, ordered=True)
+        state = WorkingTurnState().update({'place': (9, 12, 13)})
+        tokens = torch.tensor([[1, 9, 9, 12]])
+        cache = SimpleNamespace(get_seq_length=lambda: 2)
+        with torch.no_grad():
+            reader.query.weight.zero_()
+            reader.copy_scale.fill_(1.)
+            reader.order_scale.fill_(2.)
+        with reader.active(decoder, state):
+            prefill = decoder.base(input_ids=tokens[:, :2], logits_to_keep=1)
+            first = decoder.base(input_ids=tokens[:, 2:3], logits_to_keep=1, past_key_values=cache)
+            second = decoder.base(input_ids=tokens[:, 3:], logits_to_keep=1, past_key_values=cache)
+        with reader.active(decoder, state, prompt_tokens=2):
+            projected = decoder.base(input_ids=tokens, logits_to_keep=torch.tensor([1, 2, 3]))
+        torch.testing.assert_close(torch.cat((prefill, first, second), dim=1), projected)
+        self.assertEqual((first - decoder.base(tokens[:, 2:3])).argmax().item(), 12)
+        self.assertEqual((second - decoder.base(tokens[:, 3:])).argmax().item(), 13)
