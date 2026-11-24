@@ -127,3 +127,21 @@ def typed_field_surface(encode, label, value=()):
     if not value:
         return tuple(encode(f'{label}尚未记录。'))
     return (*encode(f'{label}为'), *value, *encode('。'))
+
+KEEP_SCOPE, FIRST_ONLY, SECOND_ONLY, FIRST_REQUIRED, SECOND_REQUIRED, SKIP_MEMORY = range(6)
+
+
+class PairedFieldScopeHead(nn.Module):
+    """Predict a joint policy whose field assignments follow the described field order."""
+
+    def __init__(self, hidden, width=96):
+        super().__init__()
+        self.net = nn.Sequential(nn.Linear(hidden, width), nn.GELU(), nn.Linear(width, 6))
+        self.register_buffer('reverse', torch.tensor(
+            [KEEP_SCOPE, SECOND_ONLY, FIRST_ONLY, SECOND_REQUIRED, FIRST_REQUIRED, SKIP_MEMORY]),
+            persistent=False)
+
+    def forward(self, order, swapped_order):
+        direct = self.net(order.float())
+        reverse = self.net(swapped_order.float()).index_select(-1, self.reverse)
+        return (direct + reverse) * .5

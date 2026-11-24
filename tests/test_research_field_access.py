@@ -5,7 +5,7 @@ import torch
 from spora.research_dialogue_working_state import FIELDS, WorkingTurnState
 from spora.research_field_access import (
     EXCLUDE, IGNORE, OPTIONAL, REQUIRE, FieldAccessPlan, MissingFieldActions,
-    TokenFieldAccessHead, partial_masks, partial_targets, typed_field_surface,
+    PairedFieldScopeHead, TokenFieldAccessHead, partial_masks, partial_targets, typed_field_surface,
 )
 from spora.research_span_action import SpanActionHead
 
@@ -67,6 +67,16 @@ class TypedFieldTests(unittest.TestCase):
         scores.square().mean().backward()
         self.assertIsNotNone(model.field_queries.grad)
         self.assertTrue(torch.isfinite(model.field_queries.grad).all())
+
+
+class PairedFieldScopeTests(unittest.TestCase):
+    def test_swapping_descriptors_swaps_directional_predictions_only(self):
+        torch.manual_seed(17)
+        head = PairedFieldScopeHead(8, width=6)
+        order, reverse = torch.randn(3, 8), torch.randn(3, 8)
+        first_scores, reverse_scores = head(order, reverse), head(reverse, order)
+        torch.testing.assert_close(first_scores, reverse_scores.index_select(-1, head.reverse))
+        self.assertEqual(head.reverse.tolist(), [0, 2, 1, 4, 3, 5])
 
 
 if __name__ == '__main__':

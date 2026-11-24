@@ -83,7 +83,7 @@ def expand_training(topics, fixture, sample):
 
 
 @torch.inference_mode()
-def text_features(base, tokenizer, texts):
+def text_features(base, tokenizer, texts, *, keep_tokens=None):
     pooled, sequence = {}, {}
     for text in sorted(texts):
         ids = torch.tensor([tokens(tokenizer, text)], device=base.device)
@@ -93,7 +93,8 @@ def text_features(base, tokenizer, texts):
         scale = math.sqrt(hidden.shape[-1])
         pooled[text] = torch.cat([F.normalize(view, dim=0) for view in
                                   (hidden.mean(dim=0), hidden[-1], words.mean(dim=0))]).cpu() * scale
-        sequence[text] = torch.cat((F.normalize(hidden, dim=-1), F.normalize(words, dim=-1)), dim=-1).cpu() * scale
+        if keep_tokens is None or text in keep_tokens:
+            sequence[text] = torch.cat((F.normalize(hidden, dim=-1), F.normalize(words, dim=-1)), dim=-1).cpu() * scale
     return pooled, sequence
 
 
@@ -257,15 +258,20 @@ def run_answer(decoder, tokenizer, head, adapter, prompt, state, plan, read, dom
 
 
 @torch.inference_mode()
-def audits(decoder, tokenizer, head, adapter, model, gate, features, cases, topics, fixture, thresholds, *, oracle=False):
+def audits(decoder, tokenizer, head, adapter, model, gate, features, cases, topics, fixture, thresholds, *, oracle=False, scope_plan=None):
     pooled, sequence = features
     whole, partial, empty = [], [], []
     for i, row in enumerate(cases):
         key, q, values = row['case'], row['question'], row['values']
         a, b = fields = topics[key]['fields']
         label_a, label_b = ROLE_NAMES[key]
-        plan, enabled = ((labels(fields), True) if oracle else policy(
-            model, gate, pooled, sequence, q, case_observation(row, fixture), thresholds))
+        raw = case_observation(row, fixture)
+        if oracle:
+            plan, enabled = labels(fields), True
+        elif scope_plan is not None:
+            plan, enabled = scope_plan(key, q, raw)
+        else:
+            plan, enabled = policy(model, gate, pooled, sequence, q, raw, thresholds)
         prompt = prompt_ids(tokenizer, [], q)
         def decode(values_to_use):
             return run_answer(decoder, tokenizer, head, adapter, prompt, state_for(tokenizer, values_to_use),
