@@ -21,8 +21,9 @@ class RecurrentDecodeLayer(DynamicLayer):
         self.core = core
         self.state = None
 
-    def consume(self, query, key, value, *, include_far):
-        output, self.state = self.core(query, key, value, state=self.state, include_far=include_far)
+    def consume(self, query, key, value, *, include_far, batched_prefill):
+        output, self.state = self.core(query, key, value, state=self.state, include_far=include_far,
+                                      batched_prefill=batched_prefill)
         self.keys, self.values = self.state.key, self.state.value
         self.is_initialized = True
         self.device, self.dtype = self.keys.device, self.keys.dtype
@@ -60,6 +61,7 @@ class AttentionReplacement(nn.Module):
         self.source = source
         self.core = core
         self.include_far = include_far
+        self.batched_prefill = True
 
     def forward(self, hidden_states, position_embeddings, attention_mask=None, past_key_values=None,
                 position_ids=None, cache_position=None, **kwargs):
@@ -81,7 +83,7 @@ class AttentionReplacement(nn.Module):
                 raise ValueError('Recurrent layer cache provenance differs from the active attention')
             if cache_position is None or int(cache_position[0]) != layer.get_seq_length():
                 raise ValueError('Recurrent layer cache requires append-only positions')
-            output = layer.consume(*qkv, include_far=self.include_far)
+            output = layer.consume(*qkv, include_far=self.include_far, batched_prefill=self.batched_prefill)
         mixed = output.transpose(1, 2).flatten(start_dim=-2).contiguous()
         return self.source.out(mixed.to(self.source.out.weight.dtype)).to(hidden_states.dtype), None
 

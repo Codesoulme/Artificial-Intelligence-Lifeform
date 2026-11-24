@@ -33,13 +33,54 @@ class RecurrentAttention(nn.Module):
         return F.softplus(torch.einsum('bhtd,hdf->bhtf', F.normalize(vectors, dim=-1) * vectors.shape[-1] ** .5,
                                        weights)) + 1e-5
 
-    def forward(self, query, key, value, state=None, *, include_far=True):
+    def mix_gain(self, query):
+        unit = F.normalize(query, dim=-1) * query.shape[-1] ** .5
+        gain = torch.einsum('bhtd,hd->bht', unit, self.gate)
+        return (gain + self.bias[None, :, None]).sigmoid().unsqueeze(-1)
+
+    def prefill(self, query, key, value, groups, *, include_far):
+        size, block = query.shape[-2], self.block
+        blocks = (size + block - 1) // block
+
+        def block_view(tensor):
+            return F.pad(tensor, (0, 0, 0, blocks * block - size)).unflatten(-2, (blocks, block))
+
+        def previous_and_current(tensor):
+            previous = F.pad(tensor[:, :, :-1], (0, 0, 0, 0, 1, 0))
+            return torch.cat((previous, tensor), dim=-2)
+
+        q = block_view(query)
+        k = block_view(key.float().repeat_interleave(groups, dim=1))
+        v = block_view(value.float().repeat_interleave(groups, dim=1))
+        row = torch.arange(block, device=query.device)
+        column = torch.arange(2 * block, device=query.device)
+        mask = (row[:, None] + block >= column[None, :]).expand(blocks, -1, -1).clone()
+        mask[0, :, :block] = False
+        local = F.scaled_dot_product_attention(q, previous_and_current(k), previous_and_current(v), attn_mask=mask)
+        old_k, old_v = k[:, :, :-2], v[:, :, :-2]
+        phi = self.phi(old_k.flatten(2, 3), self.k_map).unflatten(-2, (blocks - 2, block))
+        matrices = (phi.transpose(-1, -2) @ old_v).cumsum(dim=-3)
+        normalizers = phi.sum(dim=-2).cumsum(dim=-2)
+        if include_far:
+            recent_queries = q[:, :, 2:].flatten(2, 3)
+            qf = self.phi(recent_queries, self.q_map).unflatten(-2, (blocks - 2, block))
+            far = (qf @ matrices) / (qf @ normalizers.unsqueeze(-1)).clamp_min(1e-6)
+            gain = self.mix_gain(recent_queries).unflatten(-2, (blocks - 2, block))
+            local = torch.cat((local[:, :, :2], torch.lerp(local[:, :, 2:], far, gain)), dim=2)
+        start = (blocks - 2) * block
+        state = AttentionState(key[:, :, start:].clone(), value[:, :, start:].clone(),
+                               matrices[:, :, -1].clone(), normalizers[:, :, -1].clone(), size)
+        return local.flatten(2, 3)[:, :, :size], state
+
+    def forward(self, query, key, value, state=None, *, include_far=True, batched_prefill=False):
         if (query.ndim != 4 or key.ndim != 4 or key.shape != value.shape or query.shape[0] != key.shape[0]
                 or query.shape[-2:] != key.shape[-2:] or not query.shape[-2]
                 or not key.shape[1] or query.shape[1] % key.shape[1]):
             raise ValueError('Expected aligned nonempty query, key and value')
         query = query.float()
         groups = query.shape[1] // key.shape[1]
+        if batched_prefill and state is None and 4 * self.block <= query.shape[-2] <= 2048:
+            return self.prefill(query, key, value, groups, include_far=include_far)
 
         def expand(tensor):
             return tensor.float().repeat_interleave(groups, dim=1) if groups > 1 else tensor.float()
@@ -76,9 +117,7 @@ class RecurrentAttention(nn.Module):
                 qf = self.phi(q, self.q_map)
                 denom = torch.einsum('bhtf,bhf->bht', qf, normalizer).unsqueeze(-1)
                 far = (qf @ matrix) / denom.clamp_min(1e-6)
-                gain = torch.einsum('bhtd,hd->bht', F.normalize(q, dim=-1) * q.shape[-1] ** .5, self.gate)
-                gain = (gain + self.bias[None, :, None]).sigmoid().unsqueeze(-1)
-                local = torch.lerp(local, far, gain)
+                local = torch.lerp(local, far, self.mix_gain(q))
             outputs.append(local)
             offset += size
             length += size

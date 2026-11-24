@@ -45,6 +45,25 @@ class RecurrentAttentionTests(unittest.TestCase):
         self.assertIs(state.key.dtype, torch.float16)
         self.assertIs(state.matrix.dtype, torch.float32)
 
+    def test_batched_prefill_matches_sequential_and_keeps_only_recent_storage(self):
+        key, value = self.k[:, :1].half(), self.v[:, :1].half()
+        for count in (16, 20, 23, 25):
+            with self.subTest(count=count):
+                inputs = tuple(tensor[:, :, :count] for tensor in (self.q, key, value))
+                for include_far in (False, True):
+                    expected, state = self.model(*inputs, include_far=include_far)
+                    output, fast = self.model(*inputs, include_far=include_far, batched_prefill=True)
+                    torch.testing.assert_close(expected, output)
+                    for name in ('key', 'value', 'matrix', 'normalizer'):
+                        saved = getattr(fast, name)
+                        torch.testing.assert_close(getattr(state, name), saved)
+                        self.assertEqual(saved.untyped_storage().nbytes(), saved.numel() * saved.element_size())
+                if count < 25:
+                    continuation = tuple(tensor[:, :, count:] for tensor in (self.q, key, value))
+                    slow_tail, _ = self.model(*continuation, state=state)
+                    fast_tail, _ = self.model(*continuation, state=fast)
+                    torch.testing.assert_close(slow_tail, fast_tail)
+
     def test_training_reaches_summary_and_gate(self):
         output, _ = self.model(self.q, self.k, self.v)
         output.square().mean().backward()

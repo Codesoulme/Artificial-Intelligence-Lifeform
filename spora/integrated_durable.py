@@ -208,6 +208,10 @@ class IntegratedDurableRuntime:
     def observation_calendar(self):
         return _observation_calendar(self.store.metadata, self.state)
 
+    @property
+    def position_table_max_position(self):
+        return self.decoder.position_table_max_position
+
     def _commit_state(self, candidate, *, metadata=None, hook=None):
         _observation_calendar(self.store.metadata if metadata is None else metadata, candidate)
         previous = self.store.revision

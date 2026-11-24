@@ -140,11 +140,13 @@ class LocalChat:
     @torch.inference_mode()
     def talk(self, text):
         messages = [*self.turns, {'role': 'user', 'content': text}]
+        position_limit = getattr(self.runtime, 'position_table_max_position', None)
+        prompt_limit = min(1024, position_limit - 96) if position_limit is not None else 1024
         while True:
             prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             inputs = self.tokenizer(prompt + '</think>\n\n', return_tensors='pt', add_special_tokens=False)
             length = inputs['input_ids'].shape[1]
-            if length <= 1024:
+            if length <= prompt_limit:
                 break
             if len(messages) == 1:
                 return '这条消息太长，请缩短一点。'
