@@ -1,0 +1,19 @@
+{
+  "scope": "Topics share slot schemas intentionally. Train, calibration and transfer wording are separate.",
+  "topics": [
+    {"name":"clinic_booking","fields":["time","place"],"other":"museum_visit","train_keys":["医疗预约与诊后复查","问诊和后续诊疗安排"],"train":["记的复查定在几点，去的医院是哪家？","从这次问诊安排里找出时间和门诊地址。"],"cal_key":"预约看诊与复诊提醒","cal":"后续去看医生的时间和场地分别是什么？","transfer_key":"门诊复诊及到访安排","example":["下周二上午九点","梅桥诊所"]},
+    {"name":"museum_visit","fields":["time","place"],"other":"clinic_booking","train_keys":["参观展品与博物馆导览","博物馆参观预约和展厅开放"],"train":["我们约的导览何时开始、在哪家馆？","把参观展品的约定钟点和建筑名字发过来。"],"cal_key":"文博展览参观和集合时间","cal":"查看这场展览的会合时刻和参观地点。","transfer_key":"预约参观博物馆展览","example":["周五上午十一点","泊湾展览馆"]},
+    {"name":"repair_pickup","fields":["place","person"],"other":"hotel_checkin","train_keys":["维修品领取和送修单","维修售后交接与代领取"],"train":["返修后的物件去哪里领，派谁去？","把代领修理件的人和维修柜台名称写出来。"],"cal_key":"售后物品领取及经手人","cal":"这单返修结束，取回的地址和取回人各是谁？","transfer_key":"维修件售后领取的经手人与柜台","example":["枫驿维护台","杜岚依"]},
+    {"name":"hotel_checkin","fields":["place","person"],"other":"repair_pickup","train_keys":["旅馆住宿登记和预订人","入住酒店及办理入住的客人"],"train":["旅馆登记在谁名下，我们订了哪家？","把住宿地点和办理入住的客人名字列给我。"],"cal_key":"住宿预留地址与客人信息","cal":"住宿资料上该填写的旅店名称和预订人是什么？","transfer_key":"住宿订单登记的旅店和入住客人","example":["茂林假日客舍","郝书桃"]},
+    {"name":"pottery_inventory","fields":["quantity","person"],"other":"ballot_count","train_keys":["库存盘点及货物收取","库房出货的计量和签收"],"train":["盘点完的货交给谁，确认了几件？","告诉我配货单最后留下的件数和领货人。"],"cal_key":"仓储出库的收货记录","cal":"库房这次拨付的总件数与接货人分别是什么？","transfer_key":"库房盘点与配货签收","example":["十三盒","鲁怀安"]},
+    {"name":"ballot_count","fields":["quantity","person"],"other":"pottery_inventory","train_keys":["选票清点与得票者","投票统计和候选人"],"train":["投票结果上写的是哪位候选人、有几票？","把投票记录里的票数和候选人汇报一下。"],"cal_key":"选举统计的候选人与票数","cal":"登记的得票总数和对应的候选人各是什么？","transfer_key":"选票统计与得票候选人","example":["九十六票","唐未青"]},
+    {"name":"choir_program","fields":["gear","person"],"other":"tool_checkout","train_keys":["合唱节目 曲目和领唱者","声乐演出 节目名称与歌手"],"train":["晚会的合唱单上唱哪支歌，谁来领唱？","给我声乐节目里唱的曲目和主唱名字。"],"cal_key":"节目演唱和歌单人员","cal":"合唱环节需要登记的歌曲标题与领唱是谁？","transfer_key":"合唱演出节目单与主唱","example":["雨过麦田","沈近云"]},
+    {"name":"tool_checkout","fields":["gear","person"],"other":"choir_program","train_keys":["工具领用登记和经手人","设备借用及领取人员"],"train":["这次工具登记借了什么、由谁保管？","把借出的设备和办理领用的人员告诉我。"],"cal_key":"器材借出手续与交接名单","cal":"借用表里的器具名称和领用人分别是什么？","transfer_key":"器具借用清单和保管人","example":["折叠测杆","曾月松"]},
+    {"name":"garden_supply","fields":["gear","place"],"other":"hiking_setup","train_keys":["园艺劳动与花圃集会材料","花园养护的集合点以及使用器具"],"train":["做花坛养护先到哪儿，自己要带哪样工具？","园艺活动的见面位置和随身材料记的是什么？"],"cal_key":"园圃活动的会合与工具提醒","cal":"把种植活动的集合位置和要准备的器具告诉大家。","transfer_key":"花园活动的园艺器具和集合点","example":["浇水长勺","柔枝苗圃"]},
+    {"name":"hiking_setup","fields":["gear","place"],"other":"garden_supply","train_keys":["户外徒步集合和随身装备","爬山路线的会合地点和登山装备"],"train":["登山队约在哪儿汇合，需要带什么装备？","户外小队要到哪里集合，背包应装上哪件东西？"],"cal_key":"徒步出发集合和装备提醒","cal":"把徒步队碰头位置与该准备的装备一起说出来。","transfer_key":"山区徒步的集合位置和随身装备","example":["铝合金登山杖","石鸥坡路口"]},
+    {"name":"film_notice","fields":["place","person"],"other":"hotel_checkin","train_keys":["电影放映入场通道和现场主持","影院活动主持人与放映入口"],"train":["电影活动哪位主持，观众从哪里进场？","把放映会的主持者和入场的门告诉我。"],"cal_key":"影片展映的主持与观众通道","cal":"展映当天负责主持的人和观众入口各是什么？","transfer_key":"电影放映的观众入口与活动主持人","example":["天穹放映馆侧门","叶栩风"]},
+    {"name":"team_meeting","fields":["time","place"],"other":"clinic_booking","train_keys":["小组工作会议和会议室","同事的讨论地点和预定时间"],"train":["组会记在几时哪间会议室？","把内部讨论会的会议室和约定时间发一下。"],"cal_key":"团队工作沟通预约和会议场地","cal":"这场工作碰头会的时间、地点定了吗？","transfer_key":"团队工作例会和会议室预约","example":["明日下午四点半","桥石协作室"]}
+  ],
+  "cal_ordinary": ["录音笔录不到声音时怎么检查？","用一句短话告诉我果核可以扔在哪里。","怎样给一张普通邀请函写开头？","引体向上和俯卧撑有什么区别？","为采购留言写一句语气温和的提醒。","电视剧的主持人和片尾字幕有什么区别？"],
+  "held_ordinary": ["第一次去影院排队，一般为什么要把手机调成静音？","设计一份不提具体姓名的乐团招募启事。","怎样区分过敏和普通感冒？我只是想了解差别。","网店试算运费要填哪些通用信息？","苹果六个，送人两个，还剩几个？","花盆里应该放碎石吗？给一个简短理由。"]
+}

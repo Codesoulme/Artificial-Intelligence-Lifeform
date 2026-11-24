@@ -150,13 +150,13 @@ def backbone_step(base, ids, cache):
 
 
 @torch.inference_mode()
-def generate(decoder, tokenizer, head, prompt, state, *, limit=48):
+def generate(decoder, tokenizer, head, prompt, state, *, limit=48, should_read=None):
     base = decoder.base
     budget_vocab = base.config.vocab_size
     cache = DynamicCache(config=base.config)
     hidden = backbone_step(base, prompt, cache)
     remaining = {field for field, value in enumerate(state.slots) if value}
-    route = bool(remaining and head.route_logit(hidden) >= 0.)
+    route = bool(remaining and (head.route_logit(hidden) >= 0. if should_read is None else should_read(hidden, state)))
     keys = head.field_keys(state, base.get_input_embeddings()) if route else None
     surface, reads, eos = [], [], False
     while len(surface) < limit:
