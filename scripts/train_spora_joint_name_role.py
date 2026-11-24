@@ -35,12 +35,12 @@ def training_targets(rows, present):
     return targets, complete
 
 
-def fit(head, features, present, rows, *, boundary_weight):
+def fit(head, features, present, rows, *, boundary_weight, epochs=14):
     target, complete = training_targets(rows, present)
     weight = torch.where(target == present.shape[1], 1., 3.)
     rng = torch.Generator().manual_seed(SEED)
     optimizer = torch.optim.AdamW(head.parameters(), lr=.003, weight_decay=.03)
-    for _ in range(14):
+    for _ in range(epochs):
         for indices in torch.randperm(len(rows), generator=rng).split(96):
             active = present[indices]
             optimizer.zero_grad(set_to_none=True)

@@ -79,12 +79,12 @@ def role_batch(rows, hidden, proposals_by_row):
     return labelled, pad_candidates(inputs, counts)
 
 
-def resolve_rows(role, rows, hidden, spans_by_row):
+def resolve_rows(role, rows, hidden, spans_by_row, *, margin_floor=0.):
     labelled, features = role_batch(rows, hidden, spans_by_row)
     picked = decisions(role, labelled, *features)
     output = []
     for row, (candidate, margin) in zip(rows, picked, strict=True):
-        span = candidate[:2] if candidate is not None and margin > 0. else None
+        span = candidate[:2] if candidate is not None and margin > margin_floor else None
         output.append((span, validate_enrollment(span, row['candidates'])))
     return output
 
@@ -112,9 +112,14 @@ def annotate_group(group, foreign, events, names):
 
 
 def replay_roles(held, featurize, proposer, floor, role, joint, tokenizer):
+    configs = {'proposed': (role, floor, 0.), 'annotated': (role, None, 0.)}
+    return replay_profiles(held, featurize, proposer, configs, joint, tokenizer)
+
+
+def replay_profiles(held, featurize, proposer, configs, joint, tokenizer):
     size = len(FIELDS) * 4
     groups = [held[start:start + size] for start in range(0, len(held), size)]
-    result = {name: [] for name in ('proposed', 'annotated')}
+    result = {name: [] for name in configs}
     codec = TokenValue(len(tokenizer))
     for i, group in enumerate(groups):
         names = [row['name'] for row in group[::len(FIELDS)]]
@@ -123,9 +128,12 @@ def replay_roles(held, featurize, proposer, floor, role, joint, tokenizer):
         rows = annotate_group(group, foreign, events, names)
         hidden, lengths = hidden_batch(featurize, rows)
         initial = joint(*representations(featurize, group))[:, 0]
-        for name, spans in (('proposed', proposals(proposer, hidden, lengths, floor)),
-                            ('annotated', [row['mentions'] for row in rows])):
-            selected = [registered for _, registered in resolve_rows(role, rows, hidden, spans)]
+        floors = dict.fromkeys(floor for _, floor, _ in configs.values() if floor is not None)
+        spans_by_floor = {floor: proposals(proposer, hidden, lengths, floor) for floor in floors}
+        spans_by_floor[None] = [row['mentions'] for row in rows]
+        for name, (role, floor, margin) in configs.items():
+            selected = [registered for _, registered in resolve_rows(
+                role, rows, hidden, spans_by_floor[floor], margin_floor=margin)]
             report = measure(group, events, selected, hidden.float(), initial, codec, tokenizer, joint, name,
                              selector=lambda _mode, _registry, _text, chosen, _gold: chosen)
             result[name].extend(report)
