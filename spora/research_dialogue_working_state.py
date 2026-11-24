@@ -95,10 +95,14 @@ class WorkingTurnState:
 
 
 class WorkingTurnReader(nn.Module):
-    """Read state token vectors by cross-attention on the final decoder layer."""
+    """Read state token vectors by cross-attention at a decoder layer."""
 
-    def __init__(self, hidden, width=64):
+    def __init__(self, hidden, width=64, *, layer_index=-1, copy_logits=True):
         super().__init__()
+        if type(layer_index) is not int or layer_index < -1 or type(copy_logits) is not bool:
+            raise ValueError('Invalid working-state read configuration')
+        self.layer_index = layer_index
+        self.copy_logits = copy_logits
         self.query = nn.Linear(hidden, width, bias=False)
         self.key = nn.Linear(hidden, width, bias=False)
         self.value = nn.Linear(hidden, width, bias=False)
@@ -150,13 +154,16 @@ class WorkingTurnReader(nn.Module):
                 if bool(selected.any()):
                     mass = (weights[0] * matching).sum(dim=-1)
                     supervision.append(-mass[selected].clamp_min(1e-8).log().mean())
-            bonus = (12. * self.copy_scale.tanh() * weights).to(output.dtype)
-            return output.scatter_add(-1, ids.expand_as(bonus), bonus)
+            if self.copy_logits:
+                bonus = (12. * self.copy_scale.tanh() * weights).to(output.dtype)
+                return output.scatter_add(-1, ids.expand_as(bonus), bonus)
+            return output
 
         with ExitStack() as cleanup:
             cleanup.callback(_READ_SCOPE.reset, _READ_SCOPE.set(marker))
-            layer_handle = decoder.base.model.layers[-1].register_forward_hook(read)
+            layer_handle = decoder.base.model.layers[self.layer_index].register_forward_hook(read)
             cleanup.callback(layer_handle.remove)
-            head_handle = decoder.base.lm_head.register_forward_hook(copy)
-            cleanup.callback(head_handle.remove)
+            if targets is not None or self.copy_logits:
+                head_handle = decoder.base.lm_head.register_forward_hook(copy)
+                cleanup.callback(head_handle.remove)
             yield supervision

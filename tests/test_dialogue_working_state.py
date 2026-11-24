@@ -18,7 +18,9 @@ class TinyDecoder:
 
     def logits(self):
         features = self.embedding(torch.tensor([[1, 2, 3]]))
-        return self.base.lm_head(self.base.model.layers[0](features))
+        for layer in self.base.model.layers:
+            features = layer(features)
+        return self.base.lm_head(features)
 
 
 class DialogueWorkingStateTests(unittest.TestCase):
@@ -69,4 +71,27 @@ class DialogueWorkingStateTests(unittest.TestCase):
                 losses[0].backward()
                 self.assertGreater(reader.query.weight.grad.norm().item(), 0.)
                 raise RuntimeError('cancelled')
+        self.assertTrue(torch.equal(decoder.logits(), baseline))
+
+    def test_internal_read_at_selected_layer_with_copy_scores_disabled(self):
+        decoder = TinyDecoder()
+        decoder.base.model.layers.append(nn.Linear(8, 8, bias=False))
+        with torch.no_grad():
+            decoder.base.model.layers[1].weight.zero_()
+        baseline = decoder.logits()
+        reader = WorkingTurnReader(8, width=4, layer_index=0, copy_logits=False)
+        state = WorkingTurnState().update({'time': (9, 12)})
+        with torch.no_grad():
+            reader.output.weight.fill_(.5)
+            reader.copy_scale.fill_(2.)
+        with reader.active(decoder, state, targets=torch.tensor([9, 12, 2])) as losses:
+            self.assertTrue(torch.equal(decoder.logits(), baseline))
+            self.assertEqual(len(losses), 1)
+            losses[0].backward()
+            self.assertTrue(torch.isfinite(reader.key.weight.grad).all())
+        with torch.no_grad():
+            decoder.base.model.layers[1].weight.copy_(torch.eye(8))
+        baseline = decoder.logits()
+        with reader.active(decoder, state):
+            self.assertFalse(torch.equal(decoder.logits(), baseline))
         self.assertTrue(torch.equal(decoder.logits(), baseline))
