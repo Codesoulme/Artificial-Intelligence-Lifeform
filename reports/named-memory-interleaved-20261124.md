@@ -218,3 +218,20 @@ $sporaCheckpoint = 'runs/named-memory-layer9-packed-reply-v1/packed.pt'
 .\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue --checkpoint $sporaCheckpoint --output runs/named-memory-dialogue-midlayers-everyday-v1 --steps 1536 --varied --composition --dialogue-data data/dialogue-everyday-training-v1.json --loss-tokens 16 --fresh-holdout --layers 12 19 22 24 27
 .\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_composition runs/named-memory-dialogue-midlayers-everyday-v1/integrated.pt runs/named-memory-dialogue-composition-audit-v1/everyday.json --short-holdout
 ```
+
+## 前文反转对照
+
+在复杂更正组的训练配方上，每四步增加一对仅前文不同、正确答案随之反转的样本，以首次分歧词元的分数差训练模型。样本池有 12 种场景、48 对前文。额外开发题有 8 对，每对交换两个实体或值，助理的前轮回复固定指向同一个选项。两边都按正确前文给出答案才算通过。
+
+| 条件 | 前文反转 | 项目原题整组 / 逐轮 | 项目新题整组 / 逐轮 | 短多轮复核整组 / 逐轮 | 三轮更正末轮 | 受控记忆 |
+|---|---:|---:|---:|---:|---:|---:|
+| 复杂更正监督 | 5/8 | 4/10 · 11/21 | 5/10 · 13/21 | 4/12 · 17/26 | 4/12 | 32/32 |
+| 追加前文对比损失 | 6/8 | 5/10 · 12/21 | 4/10 · 12/21 | 3/12 · 14/26 | 4/12 | 32/32 |
+
+前文反转只多通过了交货方式一对。开放开发题中，新增损失使模型建议用户先确认朋友能否一起参加，但改期回答仍遗漏地点，动机题仍编造原因。已通过的复杂更正候选仍作为对照。结果保存在 `runs/named-memory-dialogue-composition-audit-v1/` 的 `composition-history-pairs.json` 和 `history-contrast.json`。
+
+## 增加适配容量和启用原生推理
+
+在复杂更正配方中，只把五层普通对话残差的秩从 16 改为 32。训练量保持 1,536 步与 14,962 次答案位置曝光。最后 32 步平均损失由 0.914 降到 0.688。两套项目题分别完整通过 5/10 和 4/10，合计与秩 16 的 4/10 和 5/10 持平。短多轮复核由 4/12 降为 3/12，三轮更正末轮由 4/12 降为 3/12，前文反转为 5/8，记忆为 32/32。保留秩 16 作为当前对照。 [实验记录](../scripts/audit_named_dialogue_composition.py)
+
+秩 16 候选另用原生推理格式，以温度 0.6、top-p 0.95 和每轮 512 词元运行项目原题。21 轮中只有 1 轮在预算内结束推理并给出最终正文，严格式答案为 0/21。现有直接回答路径在这些短题上仍较适合本机用法。逐题记录位于 `runs/named-memory-dialogue-composition-audit-v1/native-reasoning-512.json`。
