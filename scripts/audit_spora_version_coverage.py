@@ -48,9 +48,9 @@ def write_fresh(model, tokenizer, columns, *, layer, eta, ridge, events=EVENTS, 
     banks = {}
     try:
         for domain, rows in events.items():
-            for name, old, current in rows:
+            for name, *values in rows:
                 versions = []
-                for value in (old, current):
+                for value in values:
                     event = facts[domain].format(name=name, value=value)
                     captured = fact_cache(model, tokenizer, sites, event, value, decoder_only=True)
                     keys = captured['keys'][layer].index_select(-1, projection)
