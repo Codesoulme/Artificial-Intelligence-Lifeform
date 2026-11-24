@@ -19,7 +19,7 @@ from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from spora.integrated_checkpoint import load_integrated_runtime
 from spora.language_training import atomic_save, frozen_digest
 from spora.research_recurrent_attention import RecurrentAttention
-from spora.research_recurrent_decode import AttentionReplacement, attention_block, projections, replace
+from spora.research_recurrent_decode import AttentionReplacement, attention_block, project_with_history, replace
 from train_awake_partial_layer import TRAIN_FILES, corpus
 
 
@@ -27,14 +27,16 @@ SEED = 24136
 
 
 @torch.no_grad()
-def capture(decoder, source, sequences):
+def capture(decoder, source, sequences, *, history_projection='rotary'):
     features, scores = [], []
     current = {}
 
     def pre(_module, args, kwargs):
         hidden = kwargs['hidden_states'] if 'hidden_states' in kwargs else args[0]
-        q, k, v = projections(source, hidden, kwargs['position_embeddings'], kwargs.get('position_ids'))
+        (q, k, v), history = project_with_history(source, hidden, kwargs['position_embeddings'],
+                                                kwargs.get('position_ids'), history_projection)
         current['qkv'] = tuple(tensor.cpu() for tensor in (q, k, v))
+        current['history'] = None if history is None else tuple(tensor.cpu() for tensor in history)
         groups = q.shape[1] // k.shape[1]
         keys = k.float().repeat_interleave(groups, dim=1)
         values = v.float().repeat_interleave(groups, dim=1)

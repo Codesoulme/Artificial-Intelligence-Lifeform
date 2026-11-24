@@ -76,9 +76,8 @@ def train(core, train_rows, device, steps, lr):
             order = list(range(len(train_rows)))
             rng.shuffle(order)
         item, answer_start = train_rows[order.pop()]
-        qkv = tuple(tensor.to(device) for tensor in item['qkv'])
         target = item['mix'].to(device).float()
-        output, _ = core(*qkv, batched_prefill=True)
+        output = projected_history(core, item, device)
         error = (output - target).square()
         # Preserve the general mixer and give extra weight to the positions that generate the answer.
         global_error = error.mean() / target.square().mean().clamp_min(1e-8)
@@ -96,13 +95,21 @@ def train(core, train_rows, device, steps, lr):
 def alignment_score(core, rows, device):
     total = []
     for item in rows:
-        projected, _ = core(*(value.to(device) for value in item['qkv']), batched_prefill=True)
+        projected = projected_history(core, item, device)
         target = item['mix'].to(device).float()
         positions = (slice(None), slice(-16, None))
         total.append([float((projected[:, :, pos] - target[:, :, pos]).square().mean()
                             / target[:, :, pos].square().mean().clamp_min(1e-8)) for pos in positions])
     return {'all_positions': sum(row[0] for row in total) / len(total),
             'last_16_positions': sum(row[1] for row in total) / len(total)}
+
+
+def projected_history(core, item, device):
+    qkv = tuple(tensor.to(device) for tensor in item['qkv'])
+    history = item.get('history')
+    if history is not None:
+        history = tuple(tensor.to(device) for tensor in history)
+    return core(*qkv, batched_prefill=True, history=history)[0]
 
 
 def run_candidate(runtime, tokenizer, candidates, prompts, open_cases):
@@ -156,13 +163,22 @@ def main(args):
                 raise ValueError('Saved alignment weights changed before reload')
         aligned = load_recurrent_replacements(decoder, directories, protected[args.checkpoint])
         dialogue, recalled = run_candidate(runtime, tokenizer, aligned, prompts, source['open'])
+        cache = []
+        if any(candidate.history_projection == 'unrotated' for _, candidate in aligned.values()):
+            from scripts.verify_spora_recurrent_attention import cache_probe
+
+            with ExitStack() as installed:
+                for block, candidate in aligned.values():
+                    installed.enter_context(replace(block, candidate))
+                for length in (382, len(held[0])):
+                    cache.append(cache_probe(decoder, held[0][:length], aligned))
         if (dialogue != result['dialogue'] or recalled != result['memory']['aligned']
                 or frozen_digest(runtime.organism, runtime.state) != individual
                 or any(sha(path) != digest for path, digest in protected.items())):
             raise ValueError('Reload changed an answer, input or individual state')
         store_json(args.output / 'reload.json', {'identical': True, 'recall': len(dialogue['recall']),
                                                 'open_turns': sum(len(case['turns']) for case in dialogue['open']),
-                                                'memory': recalled['summary']})
+                                                'memory': recalled['summary'], 'cache': cache})
         print('Reloaded', len(dialogue['recall']), 'recall answers and', recalled['summary']['count'], 'persistent answers',
               flush=True)
         return
@@ -186,14 +202,16 @@ def main(args):
                 core_type = DeltaRecurrentAttention if args.update_rule == 'block_delta' else RecurrentAttention
                 candidate.core = core_type(heads, width, block=previous.block, features=features).to(device)
                 candidate.core.load_state_dict(previous.state_dict(), strict=True)
-            teacher_train, _ = capture(decoder, block.self_attn, [ids for ids, _ in training])
-            teacher_held, _ = capture(decoder, block.self_attn, held)
+            candidate.history_projection = args.history_projection
+            teacher_train, _ = capture(decoder, block.self_attn, [ids for ids, _ in training],
+                                       history_projection=candidate.history_projection)
+            teacher_held, _ = capture(decoder, block.self_attn, held, history_projection=candidate.history_projection)
             before = alignment_score(candidate.core, teacher_held, device)
             examples = list(zip(teacher_train, (start for _, start in training), strict=True))
             trace = train(candidate.core, examples, device, args.steps, args.learning_rate)
             after = alignment_score(candidate.core, teacher_held, device)
             metrics[index] = {'before': before, 'after': after, 'training': trace}
-            hashes[index] = save_aligned(args.output, candidate.core, index, protected[args.checkpoint],
+            hashes[index] = save_aligned(args.output, candidate, index, protected[args.checkpoint],
                                          bindings, individual, metrics[index])
             print(index, 'before', before, 'after', after, flush=True)
             del examples, teacher_train, teacher_held
@@ -214,17 +232,21 @@ def main(args):
     print({key: value for key, value in dialogue.items() if key not in ('recall', 'open')}, flush=True)
 
 
-def save_aligned(output, core, index, checkpoint_sha, sources, individual, metrics):
+def save_aligned(output, candidate, index, checkpoint_sha, sources, individual, metrics):
     destination = output / f'layer-{index}'
     destination.mkdir()
     path = destination / 'attention.pt'
+    core = candidate.core
+    history = candidate.history_projection
     atomic_save({'format': 'spora-recurrent-attention-v1', 'layer': index, 'block': core.block,
                  'checkpoint_sha256': checkpoint_sha, 'update_rule': core.update_rule,
+                 'history_projection': history,
                  'core': {key: value.cpu() for key, value in core.state_dict().items()}}, path)
     digest = sha(path)
     store_json(destination / 'comparison.json', {'layer': index, 'block': core.block, 'sources': sources,
                                                  'candidate_sha256': digest, 'individual_sha256': individual,
-                                                 'update_rule': core.update_rule, 'calibration': metrics})
+                                                 'update_rule': core.update_rule, 'history_projection': history,
+                                                 'calibration': metrics})
     return digest
 
 
@@ -242,6 +264,7 @@ if __name__ == '__main__':
     parser.add_argument('--steps', type=int, default=128)
     parser.add_argument('--learning-rate', type=float, default=.001)
     parser.add_argument('--update-rule', choices=('sum', 'block_delta'), default='sum')
+    parser.add_argument('--history-projection', choices=('rotary', 'unrotated'), default='rotary')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('--verify', action='store_true')
     modes.add_argument('--evaluate', action='store_true')

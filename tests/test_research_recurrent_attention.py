@@ -90,3 +90,24 @@ class RecurrentAttentionTests(unittest.TestCase):
         for parameter in model.parameters():
             self.assertTrue(torch.isfinite(parameter.grad).all())
             self.assertGreater(float(parameter.grad.norm()), 0.)
+
+    def test_unrotated_history_keeps_local_attention_and_matches_stream(self):
+        key, value = self.k[:, :1].half(), self.v[:, :1].half()
+        history = (-self.q, -key)
+        for core in (self.model, DeltaRecurrentAttention(2, 4, block=4, features=5)):
+            full, final = core(self.q, key, value, history=history, batched_prefill=True)
+            native, _ = core(self.q, key, value, include_far=False, batched_prefill=True)
+            local, _ = core(self.q, key, value, history=history, include_far=False, batched_prefill=True)
+            torch.testing.assert_close(local, native)
+            torch.testing.assert_close(full[:, :, :8], native[:, :, :8])
+            self.assertFalse(torch.equal(full[:, :, 8:], native[:, :, 8:]))
+            cached, state = core(self.q[:, :, :17], key[:, :, :17], value[:, :, :17],
+                                 history=tuple(tensor[:, :, :17] for tensor in history), batched_prefill=True)
+            tail, streamed = core(self.q[:, :, 17:], key[:, :, 17:], value[:, :, 17:], state=state,
+                                  history=tuple(tensor[:, :, 17:] for tensor in history))
+            torch.testing.assert_close(full, torch.cat((cached, tail), dim=2))
+            for expected, actual in zip(final.tensors(), streamed.tensors(), strict=True):
+                torch.testing.assert_close(expected, actual)
+            self.assertLessEqual(final.history_key.shape[-2], 2 * core.block)
+            with self.assertRaisesRegex(ValueError, 'changed during the stream'):
+                core(self.q[:, :, 17:], key[:, :, 17:], value[:, :, 17:], state=state)

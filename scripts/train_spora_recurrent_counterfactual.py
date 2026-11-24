@@ -184,10 +184,12 @@ def save_training(args, candidates, sources, checkpoint_sha, individual, trace, 
         path = directory / 'attention.pt'
         core = replacement.core
         atomic_save({'format': 'spora-recurrent-attention-v1', 'layer': index, 'block': core.block,
-                     'checkpoint_sha256': checkpoint_sha, 'update_rule': core.update_rule, 'core': core.state_dict()}, path)
+                     'checkpoint_sha256': checkpoint_sha, 'update_rule': core.update_rule, 'core': core.state_dict(),
+                     'history_projection': replacement.history_projection}, path)
         saved[str(index)] = sha(path)
         store_json(directory / 'comparison.json', {'layer': index, 'block': core.block, 'sources': sources,
                                                    'update_rule': core.update_rule,
+                                                   'history_projection': replacement.history_projection,
                                                    'individual_sha256': individual, 'candidate_sha256': saved[str(index)]})
     training = {'sources': sources, 'individual_sha256': individual, 'training_pairs': pair_count, 'trace': trace,
                 'training_peak_bytes': peak, 'candidate_hashes': saved}

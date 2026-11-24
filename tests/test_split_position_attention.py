@@ -17,6 +17,7 @@ if transformers is not None:
     from spora.pretrained_attention import (AbsoluteAttention, SPORAFusedAttention, SplitPositionAttention,
                                             ValuePositionAttention, load_value_position_attention)
     from spora.research_partial_query_key import PartialQueryKeyPositionAttention, select_query_key_rows
+    from spora.research_recurrent_decode import project_with_history
     from spora.value_position_checkpoint import decode_query_key_positions, query_key_position_bundle
 
 
@@ -35,6 +36,17 @@ class SplitPositionAttentionTests(unittest.TestCase):
         self.hidden = torch.randn(1, 5, 24)
         self.positions = torch.arange(5)[None]
         self.embeddings = Qwen2RotaryEmbedding(self.config)(self.hidden, self.positions)
+
+    def test_recurrent_history_uses_unrotated_keys_without_changing_local_projection(self):
+        shifted = self.positions + 21
+        moved = Qwen2RotaryEmbedding(self.config)(self.hidden, shifted)
+        local, history = project_with_history(self.rotary, self.hidden, self.embeddings, self.positions, 'unrotated')
+        other_local, other_history = project_with_history(self.rotary, self.hidden, moved, shifted, 'unrotated')
+        for actual, expected in zip(local, self.rotary.project(self.hidden, self.embeddings, self.positions), strict=True):
+            torch.testing.assert_close(actual, expected, atol=0, rtol=0)
+        for actual, expected in zip(history, other_history, strict=True):
+            torch.testing.assert_close(actual, expected, atol=0, rtol=0)
+        self.assertFalse(torch.equal(local[1], other_local[1]))
 
     def test_only_selected_queries_and_keys_use_absolute_position(self):
         args = self.hidden, self.embeddings, self.positions

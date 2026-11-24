@@ -48,8 +48,7 @@ def cache_probe(decoder, ids, layers):
         if not isinstance(recurrent, RecurrentDecodeLayer) or recurrent.state.length != len(ids):
             raise ValueError('The recurrent layer did not handle the complete cached sequence')
         state = recurrent.state
-        size = sum(tensor.numel() * tensor.element_size()
-                   for tensor in (state.key, state.value, state.matrix, state.normalizer))
+        size = sum(tensor.numel() * tensor.element_size() for tensor in state.tensors())
         storage[index] = {'recent_tokens': state.key.shape[-2], 'recent_key_heads': state.key.shape[1],
                           'recent_key_dtype': str(state.key.dtype), 'layer_bytes': size}
     return {'tokens': len(ids), 'layers': storage,

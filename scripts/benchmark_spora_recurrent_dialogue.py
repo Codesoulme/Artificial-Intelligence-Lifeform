@@ -94,7 +94,7 @@ def cached_bytes(cache):
     for index, layer in enumerate(cache.layers):
         tensors = (layer.keys, layer.values)
         if isinstance(layer, RecurrentDecodeLayer):
-            tensors += (layer.state.matrix, layer.state.normalizer)
+            tensors = layer.state.tensors()
         storage[index] = sum(tensor.untyped_storage().nbytes() for tensor in tensors)
     return storage
 

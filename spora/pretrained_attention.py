@@ -88,10 +88,13 @@ class SPORAFusedAttention(nn.Module):
         self.qkv.bias = torch.nn.Parameter(bias, requires_grad=False)
         self.out = source.o_proj
 
-    def project(self, hidden_states, position_embeddings, position_ids):
+    def project_unrotated(self, hidden_states):
         shape = hidden_states.shape[:-1]
-        query, key, value = (projection.reshape(*shape, -1, self.head_dim).transpose(1, 2)
-                             for projection in self.qkv(hidden_states).split(self.sizes, dim=-1))
+        return tuple(projection.reshape(*shape, -1, self.head_dim).transpose(1, 2)
+                     for projection in self.qkv(hidden_states).split(self.sizes, dim=-1))
+
+    def project(self, hidden_states, position_embeddings, position_ids):
+        query, key, value = self.project_unrotated(hidden_states)
         cos, sin = position_embeddings
         query, key = apply_rotary_pos_emb(query, key, cos, sin)
         return query, key, value

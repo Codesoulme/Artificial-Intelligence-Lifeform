@@ -14,6 +14,11 @@ class AttentionState:
     matrix: torch.Tensor
     normalizer: torch.Tensor
     length: int
+    history_key: torch.Tensor | None = None
+
+    def tensors(self):
+        base = (self.key, self.value, self.matrix, self.normalizer)
+        return base if self.history_key is None else (*base, self.history_key)
 
 
 class RecurrentAttention(nn.Module):
@@ -51,7 +56,7 @@ class RecurrentAttention(nn.Module):
                  torch.einsum('bhtf,bhf->bht', weights, normalizer).unsqueeze(-1))
         return matrix_read / denom.clamp_min(1e-6)
 
-    def prefill(self, query, key, value, groups, *, include_far):
+    def prefill(self, query, key, value, groups, *, include_far, history):
         size, block = query.shape[-2], self.block
         blocks = (size + block - 1) // block
 
@@ -70,29 +75,41 @@ class RecurrentAttention(nn.Module):
         mask = (row[:, None] + block >= column[None, :]).expand(blocks, -1, -1).clone()
         mask[0, :, :block] = False
         local = F.scaled_dot_product_attention(q, previous_and_current(k), previous_and_current(v), attn_mask=mask)
-        old_k, old_v = k[:, :, :-2], v[:, :, :-2]
+        history_query, history_key = history if history is not None else (query, key)
+        summary_keys = k if history is None else block_view(history_key.float().repeat_interleave(groups, dim=1))
+        old_k, old_v = summary_keys[:, :, :-2], v[:, :, :-2]
         phi = self.phi(old_k.flatten(2, 3), self.k_map).unflatten(-2, (blocks - 2, block))
         matrices, normalizers = self.prefixes(phi, old_v)
         if include_far:
             recent_queries = q[:, :, 2:].flatten(2, 3)
-            qf = self.phi(recent_queries, self.q_map).unflatten(-2, (blocks - 2, block))
+            summary_queries = recent_queries if history is None else block_view(history_query)[:, :, 2:].flatten(2, 3)
+            qf = self.phi(summary_queries, self.q_map).unflatten(-2, (blocks - 2, block))
             far = self.normalize_read(qf, qf @ matrices, normalizers, blocked=True)
             gain = self.mix_gain(recent_queries).unflatten(-2, (blocks - 2, block))
             local = torch.cat((local[:, :, :2], torch.lerp(local[:, :, 2:], far, gain)), dim=2)
         start = (blocks - 2) * block
         state = AttentionState(key[:, :, start:].clone(), value[:, :, start:].clone(),
-                               matrices[:, :, -1].clone(), normalizers[:, :, -1].clone(), size)
+                               matrices[:, :, -1].clone(), normalizers[:, :, -1].clone(), size,
+                               None if history is None else history_key[:, :, start:].clone())
         return local.flatten(2, 3)[:, :, :size], state
 
-    def forward(self, query, key, value, state=None, *, include_far=True, batched_prefill=False):
+    def forward(self, query, key, value, state=None, *, include_far=True, batched_prefill=False, history=None):
         if (query.ndim != 4 or key.ndim != 4 or key.shape != value.shape or query.shape[0] != key.shape[0]
                 or query.shape[-2:] != key.shape[-2:] or not query.shape[-2]
                 or not key.shape[1] or query.shape[1] % key.shape[1]):
             raise ValueError('Expected aligned nonempty query, key and value')
         query = query.float()
+        if history is not None:
+            h_query, h_key = history
+            if h_query.shape != query.shape or h_key.shape != key.shape:
+                raise ValueError('History projections must match the local query and key shapes')
+            history = h_query.float(), h_key
+        if state is not None and (state.history_key is None) != (history is None):
+            raise ValueError('History projection changed during the stream')
+        history_query, history_key = history if history is not None else (query, key)
         groups = query.shape[1] // key.shape[1]
         if batched_prefill and state is None and 4 * self.block <= query.shape[-2] <= 2048:
-            return self.prefill(query, key, value, groups, include_far=include_far)
+            return self.prefill(query, key, value, groups, include_far=include_far, history=history)
 
         def expand(tensor):
             return tensor.float().repeat_interleave(groups, dim=1) if groups > 1 else tensor.float()
@@ -102,36 +119,43 @@ class RecurrentAttention(nn.Module):
             features = self.k_map.shape[-1]
             state = AttentionState(key[:, :, :0], value[:, :, :0],
                                    query.new_zeros(batch, heads, features, head_dim),
-                                   query.new_zeros(batch, heads, features), 0)
+                                   query.new_zeros(batch, heads, features), 0,
+                                   None if history is None else history_key[:, :, :0])
         recent_k, recent_v, matrix, normalizer, length = (
             state.key, state.value, state.matrix, state.normalizer, state.length,
         )
+        recent_history = state.history_key
         outputs = []
         offset = 0
         while offset < query.shape[-2]:
             if length % self.block == 0 and recent_k.shape[-2] == 2 * self.block:
-                old_features = self.phi(expand(recent_k[:, :, :self.block]), self.k_map)
+                folded = recent_k if recent_history is None else recent_history
+                old_features = self.phi(expand(folded[:, :, :self.block]), self.k_map)
                 matrix, normalizer = self.fold(old_features, expand(recent_v[:, :, :self.block]), matrix, normalizer)
                 recent_k = recent_k[:, :, self.block:]
                 recent_v = recent_v[:, :, self.block:]
+                if recent_history is not None:
+                    recent_history = recent_history[:, :, self.block:]
             size = min(self.block - length % self.block, query.shape[-2] - offset)
             current = slice(offset, offset + size)
             q = query[:, :, current]
             past = recent_k.shape[-2]
             recent_k = torch.cat((recent_k, key[:, :, current]), dim=-2)
             recent_v = torch.cat((recent_v, value[:, :, current]), dim=-2)
+            if recent_history is not None:
+                recent_history = torch.cat((recent_history, history_key[:, :, current]), dim=-2)
             query_position = torch.arange(size, device=q.device) + past
             key_position = torch.arange(recent_k.shape[-2], device=q.device)
             local = F.scaled_dot_product_attention(q, expand(recent_k), expand(recent_v),
                                                   attn_mask=query_position[:, None] >= key_position[None, :])
             if include_far and length >= 2 * self.block:
-                qf = self.phi(q, self.q_map)
+                qf = self.phi(history_query[:, :, current], self.q_map)
                 far = self.normalize_read(qf, qf @ matrix, normalizer, blocked=False)
                 local = torch.lerp(local, far, self.mix_gain(q))
             outputs.append(local)
             offset += size
             length += size
-        return torch.cat(outputs, dim=-2), AttentionState(recent_k, recent_v, matrix, normalizer, length)
+        return torch.cat(outputs, dim=-2), AttentionState(recent_k, recent_v, matrix, normalizer, length, recent_history)
 
 
 class DeltaRecurrentAttention(RecurrentAttention):
