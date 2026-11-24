@@ -28,6 +28,7 @@ from deepseek_memory_turn_priority import OUT as PRIORITY_RUN, gate_probabilitie
 from deepseek_output_aligned_memory import MODEL, SEED, SLOTS, SOURCE, encode, load_integrated, read, read_bank, sha, torch, write_bank
 from spora.awake_chat import awake_chat_lines
 from spora.awake_recall_intent import SUBJECT_SCOPE_CONFLICT, OrdinaryIntent, RecallIntent, SameSubjectIntent, SelfNameIntent
+from spora.chat_request_scope import starts_new_topic, treats_quotes_as_text
 from spora.continuous_bank_store import (
     bank_revision, commit_banks, read_archived_slots, read_bank_tensor, read_banks, read_recent_snapshots, read_slots_as_of,
 )
@@ -437,6 +438,20 @@ class ContinuousMemoryChat:
                               action='read', reason='read', memory_start=0)
         return result
 
+    def _ordinary_response(self, question, history, current_ids):
+        prompt, context_turns = ordinary_context_ids(self.tokenizer, history, question,
+                                                     self.position_limit - self.ordinary_new_tokens, current_ids)
+        budget = min(self.ordinary_new_tokens, self.position_limit - len(prompt))
+        ids = torch.tensor([prompt], device=self.codes.device)
+        tokens = self.decoder.generate(input_ids=ids, attention_mask=torch.ones_like(ids), do_sample=False,
+                                       max_new_tokens=budget, pad_token_id=self.tokenizer.pad_token_id,
+                                       eos_token_id=self.tokenizer.eos_token_id)
+        generated = tokens[0, ids.shape[1]:]
+        response = self.tokenizer.decode(generated, skip_special_tokens=True).strip()
+        generation = dict(prompt_tokens=len(prompt), budget=budget, tokens=len(generated),
+                          end_token=bool(len(generated) and int(generated[-1]) == self.tokenizer.eos_token_id))
+        return response, context_turns, generation
+
     @torch.inference_mode()
     def answer(self, question, entity=None, version=1, history=None, *, timing_threshold=THRESHOLD, back=0, as_of=None,
                topic_observer=None, consume_topic=None, bind_topic=None, ordinary_history=()):
@@ -468,6 +483,11 @@ class ContinuousMemoryChat:
             return dict(response='这条消息太长，请拆成几段发给我。', action='clarify', reason='position_limit', field=None,
                         confidence=None, inherits=False, memory_start=None, entity=entity, version=version,
                         subject_reason='no_subject')
+        if entity is None and not back and as_of is None and history_issue is None and treats_quotes_as_text(question):
+            response, context_turns, generation = self._ordinary_response(question, ordinary_history, features[3])
+            return dict(response=response, action='ordinary', reason='quoted_text_request', field='ordinary',
+                        confidence=None, inherits=False, memory_start=None, entity=None, version=version,
+                        subject_reason='quoted_text', context_turns=context_turns, generation=generation)
         if (self.self_name is not None and entity is None and version == 1 and not back and as_of is None
                 and history_issue is None and self.self_name.targets_self(question) and self.self_name(*features[:2])):
             return self._answer_self_name(features[3], consume_topic is not None)
@@ -593,16 +613,7 @@ class ContinuousMemoryChat:
                     elif as_of_utc is not None:
                         response = f'截至 {as_of_utc} 的记录是「{response}」。'
         elif action == 'ordinary':
-            prompt, context_turns = ordinary_context_ids(self.tokenizer, ordinary_history, question,
-                                                        self.position_limit - self.ordinary_new_tokens, features[3])
-            available = self.position_limit - len(prompt)
-            budget = min(self.ordinary_new_tokens, available)
-            ids = torch.tensor([prompt], device=self.codes.device)
-            tokens = self.decoder.generate(input_ids=ids, attention_mask=torch.ones_like(ids), do_sample=False,
-                                           max_new_tokens=budget,
-                                           pad_token_id=self.tokenizer.pad_token_id, eos_token_id=self.tokenizer.eos_token_id)
-            generated = tokens[0, ids.shape[1]:]
-            response = self.tokenizer.decode(generated, skip_special_tokens=True).strip()
+            response, context_turns, generation = self._ordinary_response(question, ordinary_history, features[3])
         else:
             response = MISSING if action == 'missing' else CLARIFY
         result = dict(response=response, action=action, reason=reason, field=selected, confidence=predicted['confidence'],
@@ -615,8 +626,7 @@ class ContinuousMemoryChat:
             result['confirmed_recent_read'] = confirmed
         if action == 'ordinary':
             result['context_turns'] = context_turns
-            result['generation'] = dict(prompt_tokens=len(prompt), budget=budget, tokens=len(generated),
-                                        end_token=bool(len(generated) and int(generated[-1]) == self.tokenizer.eos_token_id))
+            result['generation'] = generation
         return result
 
 
@@ -964,6 +974,8 @@ def main():
             command = question.split(maxsplit=1)
             if world_session is not None and command[0] == '/world-plan':
                 try:
+            if starts_new_topic(question):
+                ordinary_history.clear()
                     values = [float(value) for value in command[1].split()] if len(command) == 2 else []
                     suggestion = world_session.choose_imagined_plan(last_simulation, values)
                 except ValueError:
@@ -1008,7 +1020,6 @@ def main():
                 if consume_topic is not None:
                     consume_topic()
                 history = None
-                ordinary_history.clear()
                 try:
                     if args.version != 1 or args.back or args.as_of is not None:
                         result = dict(action='defer', reason='read_only_query_mode')
@@ -1034,8 +1045,6 @@ def main():
                                  consume_topic=consume_topic, bind_topic=bind_topic, ordinary_history=ordinary_history)
             if result['action'] == 'ordinary':
                 ordinary_history.append((question, result['response']))
-            else:
-                ordinary_history.clear()
             print(json.dumps(result, ensure_ascii=False) if args.json else result['response'], flush=True)
             history = None if args.awake_topic_recall else question
 

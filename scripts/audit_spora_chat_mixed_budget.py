@@ -154,7 +154,9 @@ def replay_scope_fix(output):
     profile = output.resolve() / 'tokens-64'
     if not (profile / 'memory.sqlite3').is_file() or profile.is_relative_to(PROFILE.resolve()):
         raise ValueError('The scope check needs the isolated long-running chat profile')
-    cases = SECOND_SESSION + (FIRST_SESSION[11],)
+    ordinary_start = {**FIRST_SESSION[0], 'text': '另起一个话题。' + FIRST_SESSION[0]['text']}
+    cases = SECOND_SESSION + (FIRST_SESSION[11], ordinary_start, FIRST_SESSION[1],
+                              recall('齐宁平常最爱喝什么？', CORRECTED_VALUE), FIRST_SESSION[5])
     originals = protected_profile()
     checkpoint = ROOT / 'runs/deepseek-awake-ordinary-intent.pt'
     for mode, head in (('quote-fix', None), ('quote-fix-with-ordinary-head', checkpoint)):
