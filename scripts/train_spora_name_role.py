@@ -43,12 +43,13 @@ def identity_group(names):
     return registry
 
 
-def role_examples(names, templates, affixes):
+def role_examples(names, templates, affixes, *, separate_boundary=False):
     rows = []
     for index in range(0, len(names), 4):
         group = names[index:index + 4]
         registry = identity_group(group)
         for i, subject in enumerate(group):
+            foreign = names[(index + 4 + i) % len(names)] if separate_boundary else '袁继北'
             value = group[(i + 1) % 4]
             alternative = group[(i + 2) % 4]
             for j, pattern in enumerate(templates):
@@ -56,14 +57,17 @@ def role_examples(names, templates, affixes):
                 variants = (
                     ('valid', subject, i), ('suffix', subject + affix, None),
                     ('prefix', affix + subject, None), ('two_names', subject + '和' + alternative, None),
-                    ('unknown', '袁继北', None),
+                    ('unknown', foreign, None),
                 )
                 for kind, mention, target in variants:
                     text = pattern.format(subject=mention, value=value)
                     if kind == 'valid' and '{value}' in pattern:
                         kind = 'registered_contact'
-                    rows.append({'text': text, 'kind': kind, 'target': target,
-                                 'candidates': registry.matching_spans(text, max_name_chars=8)})
+                    candidates = registry.matching_spans(text, max_name_chars=8)
+                    row = {'text': text, 'kind': kind, 'target': target, 'candidates': candidates}
+                    if separate_boundary:
+                        row['complete'] = [kind not in ('prefix', 'suffix') or key != i for _, _, key in candidates]
+                    rows.append(row)
     return rows
 
 
@@ -119,7 +123,7 @@ def calibration_floor(rows, scores):
     return max(0., *bad)
 
 
-def replay(source, featurize, args_by_name, joint, tokenizer):
+def replay(source, featurize, args_by_name, joint, tokenizer, *, resolve=None):
     size = 4 * len(FIELDS)
     groups = [source[start:start + size] for start in range(0, len(source), size)]
     results = {name: [] for name in args_by_name}
@@ -136,9 +140,12 @@ def replay(source, featurize, args_by_name, joint, tokenizer):
         inputs = torch.stack(all_features)
         initial = joint(*representations(featurize, group))[:, 0]
         for name, (head, floor) in args_by_name.items():
-            scores = split_scores(head, inputs, counts)
-            selected = [select_name(row['candidates'], values, threshold=floor)
-                        for row, values in zip(rows, scores, strict=True)]
+            if resolve is None:
+                scores = split_scores(head, inputs, counts)
+                selected = [select_name(row['candidates'], values, threshold=floor)
+                            for row, values in zip(rows, scores, strict=True)]
+            else:
+                selected = resolve(head, floor, rows, inputs, counts)
             details = measure(group, events, selected, hidden, initial, codec, tokenizer, joint, name,
                               selector=lambda _mode, _registry, _text, chosen, _gold: chosen)
             results[name].extend(detail | {'predicted_spans': None} for detail in details)
