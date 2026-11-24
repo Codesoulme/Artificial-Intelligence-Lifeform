@@ -193,3 +193,28 @@ foreach ($sporaCondition in @('layer12', 'layer19')) {
 Set-Location D:\SPORA
 .\.venv\Scripts\python.exe -m scripts.spora_named_memory_chat --dialogue-checkpoint runs/named-memory-dialogue-midlayers-v1/integrated.pt
 ```
+
+## 更正约束和开放表达
+
+在第 12、19、22、24、27 层沿用秩 16 和 1,536 步，引入项目自写 24 段三轮对话。这些训练样本占五分之一更新步骤，要求更正部分内容时保留其他条件。实际答案位置曝光从 12,269 增至 14,962，样本分布和监督量一起改变。
+
+| 评测 | 普通对话候选 | 加入复杂更正对话 | 同比例混入日常对话 |
+|---|---:|---:|---:|
+| 项目原题整组 / 逐轮 | 3/10 · 12/21 | 4/10 · 11/21 | 3/10 · 10/21 |
+| 项目新题整组 / 逐轮 | 3/10 · 12/21 | 5/10 · 13/21 | 3/10 · 11/21 |
+| 12 组短多轮整组 / 逐轮 | 4/12 · 14/26 | 4/12 · 17/26 | 3/12 · 13/26 |
+| 同类三轮更正的末轮通过 | 3/12 | 4/12 | 2/12 |
+| 受控记忆 | 32/32 | 32/32 | 32/32 |
+
+8 组开放开发对话的逐题记录显示，增加复杂更正训练后，早餐建议停止复读，依然使用了用户已经说没有的面包。模型也把改期问题答成只有时间，并给未交代的动机编了原因。下一组使用项目自写的 24 段日常训练对话补充建议、解释、澄清和改写。72 条用户话语与三轮更正及开放开发题的精确匹配结果为零。LIMA 的实验强调指令调优的覆盖与质量，本项目在小型 DeepSeek 上单独测量收益。 [LIMA](https://arxiv.org/abs/2305.11206)
+
+日常对话组仍用五分之一训练步骤抽取两批自写样本，共使用 646 条请求，实际监督 15,096 次，覆盖 6,212 个不同答案位置。混合后短多轮和三轮更正得分下降。开放题重新出现复读，模型在第三轮还答回了旧的约会时间。这个对照同时改变了日常覆盖和每种复杂更正样本的曝光。综合保留复杂更正候选，用同一数据配方追加前文对比损失，直接测模型会不会随着前文变化而更换答案。
+
+逐题记录和耗时位于 `runs/named-memory-dialogue-composition-audit-v1/`。评测入口为 `scripts/audit_named_dialogue_composition.py`。
+
+```powershell
+$sporaCheckpoint = 'runs/named-memory-layer9-packed-reply-v1/packed.pt'
+.\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue --checkpoint $sporaCheckpoint --output runs/named-memory-dialogue-midlayers-composition-v1 --steps 1536 --varied --composition --loss-tokens 16 --fresh-holdout --layers 12 19 22 24 27
+.\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue --checkpoint $sporaCheckpoint --output runs/named-memory-dialogue-midlayers-everyday-v1 --steps 1536 --varied --composition --dialogue-data data/dialogue-everyday-training-v1.json --loss-tokens 16 --fresh-holdout --layers 12 19 22 24 27
+.\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_composition runs/named-memory-dialogue-midlayers-everyday-v1/integrated.pt runs/named-memory-dialogue-composition-audit-v1/everyday.json --short-holdout
+```

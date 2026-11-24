@@ -86,7 +86,7 @@ def tokens(tokenizer, history, question, *, deepseek=True):
     return tokenizer.encode(prompt + suffix, add_special_tokens=False)
 
 
-def examples(tokenizer, *, varied, instructor=None, sampled_histories=None, composition=False):
+def examples(tokenizer, *, varied, instructor=None, sampled_histories=None, composition=False, dialogue_data=None):
     held = {question for _, turns in CASES + FRESH_CASES for question, _ in turns}
     groups = {}
     dialogues_by_group = source_dialogues()
@@ -94,6 +94,8 @@ def examples(tokenizer, *, varied, instructor=None, sampled_histories=None, comp
         dialogues_by_group['varied'] = generated_dialogues()
     if composition:
         dialogues_by_group['composition'] = json.loads(COMPOSITION.read_text(encoding='utf-8'))['training']
+    if dialogue_data is not None:
+        dialogues_by_group['composition'].extend(json.loads(dialogue_data.read_text(encoding='utf-8'))['training'])
     for group, dialogues in dialogues_by_group.items():
         rows = []
         for conversation in dialogues:
@@ -383,7 +385,7 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0, trajectories=()):
 
 def main(checkpoint, output, steps, varied, contrast_history, teacher_model, teacher_cache, prepare_teacher,
          stage_embeddings, loss_tokens, collect_student_histories, student_histories, trained_residuals, composition,
-         layers, rank, fresh_holdout, trajectory_scores):
+         layers, rank, fresh_holdout, trajectory_scores, dialogue_data=None):
     if output.exists():
         raise FileExistsError(output)
     torch.set_num_threads(2)
@@ -395,6 +397,8 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
     files = [checkpoint, FOUNDATIONS, CORRECTIONS, REVIEWED]
     if composition:
         files.append(COMPOSITION)
+    if dialogue_data is not None:
+        files.append(dialogue_data)
     if student_histories is not None:
         files.append(student_histories)
     if trajectory_scores is not None:
@@ -407,7 +411,7 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
         teacher_model, local_files_only=True, trust_remote_code=False))
     histories, rollout_digest = read_histories(student_histories) if student_histories is not None else (None, None)
     groups = examples(tokenizer, varied=varied, instructor=instructor, sampled_histories=histories,
-                      composition=composition)
+                      composition=composition, dialogue_data=dialogue_data)
     trajectories = read_trajectory_scores(trajectory_scores, protected[checkpoint], groups) if trajectory_scores else ()
     print('Training requests', {name: len(rows) for name, rows in groups.items()}, flush=True)
     if instructor is not None:
@@ -511,6 +515,7 @@ if __name__ == '__main__':
     parser.add_argument('--varied', action='store_true')
     parser.add_argument('--composition', action='store_true',
                         help='Use the project-authored multiround composition training split')
+    parser.add_argument('--dialogue-data', type=Path, help='Add a project dialogue file to the composition group')
     parser.add_argument('--contrast-history', action='store_true')
     parser.add_argument('--teacher-model', type=Path)
     parser.add_argument('--teacher-cache', type=Path)
@@ -538,6 +543,8 @@ if __name__ == '__main__':
         parser.error('Student histories require --varied')
     if args.composition and not args.varied:
         parser.error('Composition examples require --varied')
+    if args.dialogue_data is not None and not args.composition:
+        parser.error('--dialogue-data requires --composition')
     if args.trajectory_scores is not None and (not args.varied or args.student_histories or args.collect_student_histories
                                                or args.prepare_teacher or args.teacher_model):
         parser.error('Trajectory scores require the original --varied training histories and answer-only supervision')
