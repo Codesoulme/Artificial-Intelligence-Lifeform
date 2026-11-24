@@ -69,6 +69,16 @@ def ordinary_context_ids(tokenizer, history, question, cap, current_ids):
     return current_ids, 0
 
 
+def parse_ordinary_budget(value):
+    try:
+        budget = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError('Expected a token count') from error
+    if not 1 <= budget <= 512:
+        raise argparse.ArgumentTypeError('Ordinary generation budget must be between 1 and 512 tokens')
+    return budget
+
+
 def parse_as_of(text):
     try:
         value = datetime.fromisoformat(text)
@@ -176,6 +186,7 @@ class ContinuousMemoryChat:
         self.recall_intent = None
         self.same_subject_intent = None
         self.ordinary_intent = None
+        self.ordinary_new_tokens = ORDINARY_NEW_TOKENS
         self.subject_hops = 1
         self.self_name = None
         self.gate_cutoff = setup['gate_cutoff'] if gate_cutoff is None else gate_cutoff
@@ -583,13 +594,15 @@ class ContinuousMemoryChat:
                         response = f'截至 {as_of_utc} 的记录是「{response}」。'
         elif action == 'ordinary':
             prompt, context_turns = ordinary_context_ids(self.tokenizer, ordinary_history, question,
-                                                        self.position_limit - ORDINARY_NEW_TOKENS, features[3])
+                                                        self.position_limit - self.ordinary_new_tokens, features[3])
             available = self.position_limit - len(prompt)
+            budget = min(self.ordinary_new_tokens, available)
             ids = torch.tensor([prompt], device=self.codes.device)
             tokens = self.decoder.generate(input_ids=ids, attention_mask=torch.ones_like(ids), do_sample=False,
-                                           max_new_tokens=min(ORDINARY_NEW_TOKENS, available),
+                                           max_new_tokens=budget,
                                            pad_token_id=self.tokenizer.pad_token_id, eos_token_id=self.tokenizer.eos_token_id)
-            response = self.tokenizer.decode(tokens[0, ids.shape[1]:], skip_special_tokens=True).strip()
+            generated = tokens[0, ids.shape[1]:]
+            response = self.tokenizer.decode(generated, skip_special_tokens=True).strip()
         else:
             response = MISSING if action == 'missing' else CLARIFY
         result = dict(response=response, action=action, reason=reason, field=selected, confidence=predicted['confidence'],
@@ -602,6 +615,8 @@ class ContinuousMemoryChat:
             result['confirmed_recent_read'] = confirmed
         if action == 'ordinary':
             result['context_turns'] = context_turns
+            result['generation'] = dict(prompt_tokens=len(prompt), budget=budget, tokens=len(generated),
+                                        end_token=bool(len(generated) and int(generated[-1]) == self.tokenizer.eos_token_id))
         return result
 
 
@@ -730,6 +745,8 @@ def main():
     parser.add_argument('--expand', action='store_true', help='Allocate one memory page when registration reaches capacity')
     parser.add_argument('--memory-file', type=Path, default=WORKING_BANKS)
     parser.add_argument('--history', help='Preceding user turn')
+    parser.add_argument('--ordinary-new-tokens', type=parse_ordinary_budget, default=ORDINARY_NEW_TOKENS,
+                        help='Maximum tokens for ordinary dialogue replies')
     parser.add_argument('--awake-state', type=Path, help='Persist the experimental awake core during stdin chat')
     parser.add_argument('--sleep-replay', type=int, metavar='WRITES', help='Verify recent writes when entering sleep')
     parser.add_argument('--sleep-world', type=Path, help='Load a bounded P11 world model for synthetic sleep simulations')
@@ -931,6 +948,8 @@ def main():
     def record_sleep_event(kind, payload, source, event_id=None):
         if ledger is not None:
             revision = chat.working_sha
+    chat.ordinary_new_tokens = args.ordinary_new_tokens
+
             ledger.append(kind, dict(payload, memory_revision=revision), event_id=event_id or uuid4().hex,
                           source=source, state_version=revision if isinstance(revision, int) else 0)
 
