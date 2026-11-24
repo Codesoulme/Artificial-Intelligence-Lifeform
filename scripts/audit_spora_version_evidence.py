@@ -86,26 +86,35 @@ def choose_thresholds(proposals, rows, schedules):
 
 
 @torch.inference_mode()
-def semantic_scores(model, tokenizer, probes):
-    words = [tokens(tokenizer, word) for word in ('是', '否')]
-    if any(len(encoded) != 1 for encoded in words):
-        raise ValueError('The verifier labels need one token each')
+def frozen_choice_logits(model, tokenizer, questions, labels):
+    words = [tokens(tokenizer, word) for word in labels]
+    if any(len(encoded) != 1 for encoded in words) or len({encoded[0] for encoded in words}) != len(words):
+        raise ValueError('Choice labels need distinct single tokens')
     label_ids = [encoded[0] for encoded in words]
     prompts = []
-    for question, label in probes:
-        for test in ('这句话是否要求读取候选版本？', '候选版本是否属于被排除或未被请求的内容？'):
-            user = f'{test}\n原话：{question}\n候选：{label}\n只答是或否。'
-            chat = tokenizer.apply_chat_template([{'role': 'user', 'content': user}], tokenize=False,
-                                                 add_generation_prompt=True)
-            if not chat.endswith('<think>\n'):
-                raise ValueError('Unexpected DeepSeek template')
-            prompts.append(chat + '</think>\n\n')
+    for question in questions:
+        chat = tokenizer.apply_chat_template([{'role': 'user', 'content': question}], tokenize=False,
+                                             add_generation_prompt=True)
+        if not chat.endswith('<think>\n'):
+            raise ValueError('Unexpected DeepSeek template')
+        prompts.append(chat + '</think>\n\n')
     scores = []
     for offset in range(0, len(prompts), 4):
         inputs = tokenizer(prompts[offset:offset + 4], return_tensors='pt', padding=True,
                            padding_side='left', add_special_tokens=False).to(model.device)
         logits = model(**inputs, use_cache=False, logits_to_keep=1).logits[:, -1, label_ids].float()
-        scores.extend(logits.softmax(-1).cpu().tolist())
+        scores.append(logits)
+        if (offset + 4) % 64 == 0:
+            print('Scored prompts', offset + 4, 'of', len(prompts), flush=True)
+    return torch.cat(scores) if scores else torch.empty(0, len(label_ids), device=model.device)
+
+
+@torch.inference_mode()
+def semantic_scores(model, tokenizer, probes):
+    questions = [f'{test}\n原话：{question}\n候选：{label}\n只答是或否。'
+                 for question, label in probes for test in
+                 ('这句话是否要求读取候选版本？', '候选版本是否属于被排除或未被请求的内容？')]
+    scores = frozen_choice_logits(model, tokenizer, questions, ('是', '否')).softmax(-1).cpu().tolist()
     return {probe: min(positive[0], negative[1]) for probe, positive, negative in
             zip(probes, scores[::2], scores[1::2], strict=True)}
 
