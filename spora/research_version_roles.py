@@ -28,9 +28,11 @@ class VersionRoleHead(nn.Module):
         self.roles = nn.Linear(64, 4)
         self.versions = nn.Linear(64, 5)
 
-    def forward(self, clauses):
+    def forward(self, clauses, role_evidence=None):
         vectors = self.project(F.layer_norm(clauses.float(), (clauses.shape[-1],)))
-        return self.roles(vectors), self.versions(vectors)
+        role_vectors = (vectors if role_evidence is None else
+                        self.project(F.layer_norm(role_evidence.float(), (role_evidence.shape[-1],))))
+        return self.roles(role_vectors), self.versions(vectors)
 
 
 def version_plan(roles, versions):

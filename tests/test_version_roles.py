@@ -1,11 +1,23 @@
 from datetime import date
 import unittest
 
+import torch
+
 from spora.research_version_roles import (ABSTAIN, CURRENT, DENY, EXCLUDE, EXPIRED, FIRST, PREVIOUS, SEEK,
-                                          UNSPECIFIED, apply_version_plan, clause_spans, version_plan)
+                                          UNSPECIFIED, VersionRoleHead, apply_version_plan, clause_spans, version_plan)
 
 
 class VersionRolesTests(unittest.TestCase):
+    def test_role_evidence_does_not_replace_version_evidence(self):
+        torch.manual_seed(2)
+        head = VersionRoleHead(4)
+        mean = torch.tensor([[[1., 2., 5., 0.]]])
+        tail = mean.flip(-1)
+        original_roles, original_versions = head(mean)
+        moved_roles, moved_versions = head(mean, tail)
+        self.assertFalse(torch.equal(original_roles, moved_roles))
+        self.assertTrue(torch.equal(original_versions, moved_versions))
+
     def test_role_switch_changes_target_without_changing_the_version_mentions(self):
         self.assertEqual(version_plan([SEEK, EXCLUDE], [FIRST, CURRENT]), FIRST)
         self.assertEqual(version_plan([EXCLUDE, SEEK], [FIRST, CURRENT]), CURRENT)

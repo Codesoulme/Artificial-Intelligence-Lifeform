@@ -89,19 +89,22 @@ def held_examples():
 
 
 @torch.no_grad()
-def clause_features(model, tokenizer, questions):
+def clause_features(model, tokenizer, questions, *, tail_chars=None):
     extract = FrozenTurnFeatures(SimpleNamespace(base=model), tokenizer, depth=12)
     all_spans = [clause_spans(question) for question in questions]
     width = max(map(len, all_spans))
     vectors = torch.zeros(len(questions), width, model.config.hidden_size)
     mask = torch.zeros(len(questions), width, dtype=torch.bool)
+    tail = torch.zeros_like(vectors) if tail_chars is not None else None
     for offset in range(0, len(questions), 20):
         encoded = extract(questions[offset:offset + 20]).float()
         for index, spans in enumerate(all_spans[offset:offset + len(encoded)]):
             for pos, (start, end) in enumerate(spans):
                 vectors[offset + index, pos] = encoded[index, start:end].mean(0)
                 mask[offset + index, pos] = True
-    return vectors, mask
+                if tail is not None:
+                    tail[offset + index, pos] = encoded[index, max(start, end - tail_chars):end].mean(0)
+    return (vectors, mask) if tail is None else (vectors, mask, tail)
 
 
 def flat_features(vectors, mask):
@@ -114,7 +117,7 @@ def make_heads(width):
             'roles': VersionRoleHead(width)}
 
 
-def fit(heads, features, mask, rows, steps):
+def fit(heads, features, mask, rows, steps, *, role_features=None):
     shape = features.shape[:2]
     role_labels = torch.full(shape, -100, dtype=torch.long)
     version_labels = role_labels.clone()
@@ -134,7 +137,8 @@ def fit(heads, features, mask, rows, steps):
             if mode == 'flat':
                 loss = F.cross_entropy(head(flat[batch]), flat_labels[batch])
             else:
-                roles, versions = head(features[batch])
+                evidence = None if role_features is None else role_features[batch]
+                roles, versions = head(features[batch], evidence)
                 loss = F.cross_entropy(roles.flatten(0, 1), role_labels[batch].flatten())
                 loss += F.cross_entropy(versions.flatten(0, 1), version_labels[batch].flatten())
             optimizer.zero_grad(set_to_none=True)
@@ -145,22 +149,27 @@ def fit(heads, features, mask, rows, steps):
 
 
 @torch.inference_mode()
-def predictions(heads, vectors, mask):
-    flat_scores, flat_ids = heads['flat'](flat_features(vectors, mask)).softmax(-1).max(-1)
-    role_logits, version_logits = heads['roles'](vectors)
+def role_predictions(head, vectors, mask, role_features=None):
+    role_logits, version_logits = head(vectors, role_features)
     role_scores, role_ids = role_logits.softmax(-1).max(-1)
     version_scores, version_ids = version_logits.softmax(-1).max(-1)
-    proposed = {'flat': [{'plan': int(value), 'confidence': float(score)} for value, score in zip(flat_ids, flat_scores)],
-                'roles': []}
+    proposed = []
     for index in range(len(vectors)):
         live = mask[index]
         roles, versions = role_ids[index, live].tolist(), version_ids[index, live].tolist()
         scores = [float(score) for role, score in zip(roles, role_scores[index, live], strict=True) if role != NEUTRAL]
         scores.extend(float(score) for role, v, score in zip(roles, versions, version_scores[index, live], strict=True)
                       if role in (SEEK, EXCLUDE) and v != UNSPECIFIED)
-        proposed['roles'].append({'plan': version_plan(roles, versions), 'confidence': min(scores, default=0.),
-                                  'roles': roles, 'versions': versions})
+        proposed.append({'plan': version_plan(roles, versions), 'confidence': min(scores, default=0.),
+                         'roles': roles, 'versions': versions})
     return proposed
+
+
+@torch.inference_mode()
+def predictions(heads, vectors, mask):
+    flat_scores, flat_ids = heads['flat'](flat_features(vectors, mask)).softmax(-1).max(-1)
+    return {'flat': [{'plan': int(value), 'confidence': float(score)} for value, score in zip(flat_ids, flat_scores)],
+            'roles': role_predictions(heads['roles'], vectors, mask)}
 
 
 def compatible_plan(prediction, threshold):
