@@ -74,6 +74,32 @@ class IntegratedDurableTests(unittest.TestCase):
     def open(self):
         return load_integrated_durable(self.database, self.bootstrap, self.base(), self.root)
 
+    def test_structured_confirmation_cannot_overwrite_a_newer_fact(self):
+        config = {'memory_width': 64, 'identity_slots': 1, 'fact_slots': 1}
+        bounds = {'identity_length': 1, 'fact_length': 1}
+        current = torch.ones(64)
+        proposed = torch.full((64,), 2.)
+        newer = torch.full((64,), 3.)
+        with self.create() as runtime:
+            first = runtime.write_structured_relation(4, '地点', current, bounds, codec_config=config,
+                                                      expected_record_revision=None)
+            runtime.write_structured_relation(4, '联系人', current, bounds, expected_record_revision=None)
+            second = runtime.write_structured_relation(4, '地点', newer, bounds, replace_existing=True,
+                                                       retain_previous=True)
+            with self.assertRaisesRegex(ValueError, 'changed after'):
+                runtime.write_structured_relation(4, '地点', proposed, bounds, replace_existing=True,
+                                                  retain_previous=True, expected_record_revision=first['record_revision'])
+            with self.assertRaisesRegex(ValueError, 'changed after'):
+                runtime.write_structured_relation(4, '地点', proposed, bounds, replace_existing=True,
+                                                  expected_record_revision=None)
+            runtime.write_structured_relation(4, '地点', proposed, bounds, replace_existing=True, retain_previous=True,
+                                              expected_record_revision=second['record_revision'])
+        with self.open() as runtime:
+            torch.testing.assert_close(runtime.read_structured_relation(4, '地点')['packet'], proposed)
+            torch.testing.assert_close(runtime.read_structured_relation(4, '联系人')['packet'], current)
+            old = runtime.read_structured_relation(4, '地点', as_of_revision=second['record_revision'])
+            torch.testing.assert_close(old['packet'], newer)
+
     def test_versioned_relation_preserves_old_values_across_restart(self):
         config = {'memory_width': 64, 'identity_slots': 1, 'fact_slots': 1}
         bounds = {'identity_length': 1, 'fact_length': 1}

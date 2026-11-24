@@ -27,6 +27,13 @@ from .registered_name_route import resolve_confirmed_name, verify_detected_name
 from .sleep_memory import behavior_gate, indexed_behavior_gate, propose
 from .structured_text_memory import StructuredTextMemoryState
 
+
+_ANY_RECORD_REVISION = object()
+
+
+class StructuredRecordChanged(ValueError):
+    """The relation changed after the caller read its revision."""
+
 STORE_FORMAT = 'spora-integrated-durable-v1'
 
 
@@ -384,7 +391,8 @@ class IntegratedDurableRuntime:
                 'metadata': dict(record.metadata), 'revision': record.revision}
 
     def write_structured_relation(self, entity, relation, packet, metadata, *,
-                                  codec_config=None, replace_existing=False, retain_previous=False, hook=None):
+                                  codec_config=None, replace_existing=False, retain_previous=False,
+                                  expected_record_revision=_ANY_RECORD_REVISION, hook=None):
         """Commit an explicitly supplied entity/relation binding and packet together."""
         self._check()
         current = self.state.structured_text
@@ -394,6 +402,11 @@ class IntegratedDurableRuntime:
             current = StructuredTextMemoryState(codec_config)
         elif codec_config is not None and current.codec_config != dict(codec_config):
             raise ValueError('Structured text codec configuration mismatch')
+        if expected_record_revision is not _ANY_RECORD_REVISION:
+            existing = self.read_structured_relation(entity, relation)
+            revision = existing['revision'] if existing is not None else None
+            if revision != expected_record_revision:
+                raise StructuredRecordChanged('The structured record changed after its correction was proposed')
         updated = current.put_relation(entity, relation, packet, metadata,
                                        self.organism.config.memory_width,
                                        self.organism.config.key_count,

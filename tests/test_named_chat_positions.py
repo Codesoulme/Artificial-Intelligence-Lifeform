@@ -4,7 +4,8 @@ from unittest.mock import Mock
 
 import torch
 
-from scripts.spora_named_memory_chat import LocalChat
+from scripts.spora_named_memory_chat import LocalChat, PendingFact
+from spora.integrated_durable import StructuredRecordChanged
 
 
 class TokenBatch(dict):
@@ -36,3 +37,12 @@ class NamedChatPositionTests(unittest.TestCase):
     def test_rejects_input_that_cannot_leave_reply_budget(self):
         self.assertIn('太长', self.chat.talk('一个无法放进位置表的提问'))
         self.runtime.generate_ordinary.assert_not_called()
+
+    def test_stale_pending_fact_is_cancelled_with_a_localized_message(self):
+        self.runtime.write_structured_relation = Mock(side_effect=StructuredRecordChanged())
+        self.chat.pending_fact = PendingFact(4, '集合点', torch.ones(64), {}, {}, 3)
+        reply = self.chat.handle('/确认记事')
+        self.assertIn('请重新提出修改', reply)
+        self.assertIsNone(self.chat.pending_fact)
+        self.assertEqual(self.runtime.write_structured_relation.call_args.kwargs['expected_record_revision'], 3)
+        self.assertEqual(self.chat.handle('/确认记事'), '没有待确认的事实。')

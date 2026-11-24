@@ -1,6 +1,7 @@
 """Local Chinese dialogue and explicitly addressed persistent memory."""
 
 import argparse
+from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.audit_named_memory_interleaved import choose_modes
@@ -9,7 +10,7 @@ from scripts.audit_qwen_compatible_natural_memory_20261121 import MODEL, WORDS, 
 from scripts.audit_qwen_durable_entity_reads_20261122 import read_value
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.spora_unknown_state_probe import fresh_controlled_state
-from spora.integrated_durable import create_integrated_durable, load_integrated_durable
+from spora.integrated_durable import StructuredRecordChanged, create_integrated_durable, load_integrated_durable
 from spora.pretrained_attention import without_dialogue_residuals
 from spora.structured_text_memory import StructuredTextMemoryCodec
 from transformers import AutoTokenizer
@@ -24,6 +25,16 @@ DEFAULT_RECOVERY = RUNS / 'named-memory-time-expanded-v1'
 DEFAULT_DATABASE = RUNS / 'named-memory-local' / 'individual.sqlite'
 
 
+@dataclass(frozen=True)
+class PendingFact:
+    entity: int
+    relation: str
+    packet: torch.Tensor
+    bounds: dict
+    codec_config: dict
+    revision: int | None
+
+
 class LocalChat:
     def __init__(self, runtime, tokenizer, temporal, recovery):
         self.runtime = runtime
@@ -32,6 +43,7 @@ class LocalChat:
         self.recovery = recovery
         self.turns = []
         self.structured_codec = None
+        self.pending_fact = None
 
     def register(self, name):
         result = self.runtime.resolve_confirmed_name(name)
@@ -98,7 +110,7 @@ class LocalChat:
                 self.structured_codec = StructuredTextMemoryCodec.from_config(embedding, state.codec_config)
         return self.structured_codec
 
-    def remember_fact(self, name, relation, text):
+    def remember_fact(self, name, relation, text, *, pending=False):
         entity = self.runtime.resolve_confirmed_name(name)['key']
         if entity is None:
             return '请先登记这个完整姓名。'
@@ -114,9 +126,32 @@ class LocalChat:
         if (decoded['identity']['token_ids'] != names or decoded['fact']['token_ids'] != values
                 or min(decoded['fact']['margins']) <= 0):
             return '这条内容无法可靠保存。'
-        result = self.runtime.write_structured_relation(entity, relation, packet.cpu(), bounds,
-                                                        codec_config=codec.config_dict(),
-                                                        replace_existing=True, retain_previous=True)
+        if pending:
+            current = self.runtime.read_structured_relation(entity, relation)
+            revision = current['revision'] if current is not None else None
+            self.pending_fact = PendingFact(entity, relation, packet.cpu(), bounds, codec.config_dict(), revision)
+            return f'待确认：{name}的{relation}改为{text}。用 /确认记事 保存，或用 /撤回记事 取消。'
+        result = self.runtime.write_structured_relation(
+            entity, relation, packet.cpu(), bounds, codec_config=codec.config_dict(),
+            replace_existing=True, retain_previous=True)
+        return f'已保存，修订号 {result["record_revision"]}。'
+
+    def finish_pending_fact(self, *, confirm):
+        pending = self.pending_fact
+        if pending is None:
+            return '没有待确认的事实。'
+        if not confirm:
+            self.pending_fact = None
+            return '已撤回待确认的修改。'
+        try:
+            result = self.runtime.write_structured_relation(
+                pending.entity, pending.relation, pending.packet, pending.bounds,
+                codec_config=pending.codec_config, replace_existing=True, retain_previous=True,
+                expected_record_revision=pending.revision)
+        except StructuredRecordChanged:
+            self.pending_fact = None
+            return '这项记录在提议之后已更新。请重新提出修改。'
+        self.pending_fact = None
         return f'已保存，修订号 {result["record_revision"]}。'
 
     @torch.inference_mode()
@@ -170,18 +205,20 @@ class LocalChat:
             return self.remember(*args)
         if command == '/查' and len(args) == 2:
             return self.recall(*args)
-        if command == '/记事' and len(args) == 2:
+        if command in ('/记事', '/拟记事') and len(args) == 2:
             fields = args[1].split(maxsplit=1)
             if len(fields) == 2:
-                return self.remember_fact(args[0], *fields)
+                return self.remember_fact(args[0], *fields, pending=command == '/拟记事')
+        if command in ('/确认记事', '/撤回记事') and not args:
+            return self.finish_pending_fact(confirm=command == '/确认记事')
         if command == '/查事' and len(args) == 2:
             fields = args[1].split()
             if len(fields) == 1:
                 return self.recall_fact(args[0], fields[0])
             if len(fields) == 2 and fields[1].isascii() and fields[1].isdecimal():
                 return self.recall_fact(args[0], fields[0], int(fields[1]))
-        if command in ('/记事', '/查事'):
-            return '用 /记事 姓名 关系 事实，或 /查事 姓名 关系 [修订号]。'
+        if command in ('/记事', '/拟记事', '/查事', '/确认记事', '/撤回记事'):
+            return '用 /记事 或 /拟记事 姓名 关系 事实，/查事 姓名 关系 [修订号]，或单独输入 /确认记事、/撤回记事。'
         return '用 /登记 姓名、/记 姓名 饮品、/查 姓名 问题，或输入 /退出。'
 
 
@@ -207,7 +244,7 @@ def main(args):
         runtime = create_integrated_durable(args.database, args.checkpoint, base, MODEL,
                                             initial_state_factory=fresh_controlled_state, **candidate_options)
     with runtime:
-        print('孢子已就绪。可直接聊天。用 /登记、/记、/查 或 /记事、/查事。输入 /退出结束。', flush=True)
+        print('孢子已就绪。可直接聊天。用 /登记、/记、/查 或 /记事、/拟记事、/查事。输入 /退出结束。', flush=True)
         chat = LocalChat(runtime, tokenizer, temporal, recovery)
         while True:
             try:
