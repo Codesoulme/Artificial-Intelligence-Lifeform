@@ -318,8 +318,35 @@ def backpropagate_trajectory(decoder, row):
     return float(loss.detach())
 
 
-def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0, trajectories=(), learning_rate=2e-4):
+@torch.inference_mode()
+def cache_parent_scores(decoder, groups):
+    """Keep the parent distribution on replay examples in 32 tokens and a tail bin."""
+    scores = {}
+    for group in ('foundations', 'correction', 'reviewed'):
+        rows = []
+        for prompt, target, *_ in groups[group]:
+            ids = torch.tensor([prompt + target[:-1]], device='cuda')
+            logits = decoder(input_ids=ids, use_cache=False, logits_to_keep=len(target)).logits[0].float()
+            values, indices = logits.topk(32, dim=-1)
+            probabilities = (values - logits.logsumexp(dim=-1, keepdim=True)).exp()
+            tail = (1. - probabilities.sum(dim=-1, keepdim=True)).clamp_min(0.)
+            distribution = torch.cat((probabilities, tail), dim=-1)
+            rows.append((indices.cpu(), distribution.cpu()))
+        scores[group] = rows
+        print('Cached parent scores', group, len(rows), flush=True)
+    return scores
+
+
+def replay_loss(logits, indices, teacher):
+    student = logits.log_softmax(dim=-1).gather(-1, indices)
+    tail = torch.log1p(-student.exp().sum(dim=-1, keepdim=True).clamp(max=1. - 1e-6))
+    return F.kl_div(torch.cat((student, tail), dim=-1), teacher, reduction='batchmean')
+
+
+def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0, trajectories=(), learning_rate=2e-4,
+        retention_weight=0.):
     parameters = [weight for block in blocks for weight in (block.down.weight, block.up.weight)]
+    parent_scores = cache_parent_scores(decoder, groups) if retention_weight else {}
     optimizer = torch.optim.AdamW(parameters, lr=learning_rate, weight_decay=.01)
     rng = random.Random(SEED)
     pair_rng = random.Random(SEED + 1)
@@ -334,6 +361,7 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0, trajectories=(), l
     visits = {}
     projected = 0
     trajectory_exposures = 0
+    retention_exposures = 0
     seen = {}
     for step in range(steps):
         optimizer.zero_grad(set_to_none=True)
@@ -359,6 +387,11 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0, trajectories=(), l
             choices, distribution = (tensor[positions].to(logits.device) for tensor in teacher)
             student_logprob = (logits.gather(-1, choices) / 2).log_softmax(-1)
             loss = loss + F.kl_div(student_logprob, distribution, reduction='batchmean')
+        if group in parent_scores:
+            indices, parent = parent_scores[group][row_index]
+            loss = loss + retention_weight * replay_loss(
+                logits, indices[positions].to(logits.device), parent[positions].to(logits.device))
+            retention_exposures += len(positions)
         negatives = forbidden_prefixes(target, (echo, stale) if group == 'correction' else (echo,))
         selected_rows = {position: i for i, position in enumerate(positions)}
         negatives = [(selected_rows[position], token) for position, token in negatives if position in selected_rows]
@@ -391,13 +424,15 @@ def fit(decoder, blocks, groups, steps, pairs, loss_tokens=0, trajectories=(), l
                                    for (group, index), positions in seen.items())}
     if trajectories:
         exposure['trajectory_exposures'] = trajectory_exposures
+    if retention_weight:
+        exposure['retention_exposures'] = retention_exposures
     return trace, exposure
 
 
 def main(checkpoint, output, steps, varied, contrast_history, teacher_model, teacher_cache, prepare_teacher,
          stage_embeddings, loss_tokens, collect_student_histories, student_histories, trained_residuals, composition,
          layers, rank, fresh_holdout, trajectory_scores, dialogue_data=None, continue_residuals=False,
-         learning_rate=2e-4, replace_composition_prefix=False):
+         learning_rate=2e-4, replace_composition_prefix=False, retention_weight=0.):
     if output.exists():
         raise FileExistsError(output)
     torch.set_num_threads(2)
@@ -485,13 +520,16 @@ def main(checkpoint, output, steps, varied, contrast_history, teacher_model, tea
         recipe['learning_rate'] = learning_rate
     if replace_composition_prefix:
         recipe['replace_composition_prefix'] = True
+    if retention_weight:
+        recipe['retention_weight'] = retention_weight
     weights = [part.weight for block in blocks for part in (block.down, block.up)]
     output.mkdir(parents=True, exist_ok=False)
     residual_path = output / 'trained-residuals.pt'
     torch.cuda.empty_cache()
     if trained_residuals is None:
         trace, exposure = fit(decoder, blocks, groups, steps, pairs, loss_tokens=loss_tokens,
-                              trajectories=trajectories, learning_rate=learning_rate)
+                              trajectories=trajectories, learning_rate=learning_rate,
+                              retention_weight=retention_weight)
         torch.cuda.empty_cache()
         atomic_save({'recipe': recipe, 'trace': trace, 'exposure': exposure,
                      'weights': [weight.detach().cpu() for weight in weights]}, residual_path)
@@ -542,6 +580,8 @@ if __name__ == '__main__':
     parser.add_argument('--rank', type=int, default=16)
     parser.add_argument('--continue-residuals', action='store_true', help='Update existing ordinary-dialogue residuals')
     parser.add_argument('--learning-rate', type=float, default=2e-4)
+    parser.add_argument('--retention-weight', type=float, default=0.,
+                        help='Keep parent predictions on foundation, correction and reviewed replay')
     parser.add_argument('--fresh-holdout', action='store_true')
     parser.add_argument('--varied', action='store_true')
     parser.add_argument('--composition', action='store_true',
@@ -568,6 +608,8 @@ if __name__ == '__main__':
         parser.error('--steps must be positive and --loss-tokens must be nonnegative')
     if not 0 < args.learning_rate <= .01:
         parser.error('--learning-rate must be in (0, 0.01]')
+    if not 0 <= args.retention_weight <= 10 or (args.retention_weight and not args.continue_residuals):
+        parser.error('--retention-weight must be in [0, 10] and requires existing residuals when nonzero')
     if args.rank < 1 or min(args.layers) < 0 or list(args.layers) != sorted(set(args.layers)):
         parser.error('Choose a positive rank and distinct layers in increasing order')
     if (args.teacher_model is None) != (args.teacher_cache is None) or (args.prepare_teacher and args.teacher_model is None):

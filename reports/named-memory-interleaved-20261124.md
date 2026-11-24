@@ -269,3 +269,33 @@ $sporaCommon = @('--checkpoint', $sporaParent, '--steps', 768, '--varied', '--co
 .\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_retention $sporaParent runs/spora-gelu24-continued-dialogue-audit-v1/parent-academic.json --short
 .\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_retention runs/spora-gelu24-continue-followup-v1/integrated.pt runs/spora-gelu24-continued-dialogue-audit-v1/followup-academic.json
 ```
+
+## 续训更新幅度与旧能力保留
+
+以三处门控迁移后的原检查点和新教材续训检查点为两端，对普通对话残差的两组矩阵做线性插值。逐张量验证只有这五层的十个张量发生变化，两个检查点的记忆状态、其余张量和结构一致。每个比例只加载一份模型，限于同一起点与同一轮续训得到的权重。这个试验借鉴了 WiSE-FT 的前后权重插值，论文的结果来自视觉模型。 [WiSE-FT](https://arxiv.org/abs/2109.01903)
+
+| 保留的更新比例 | 原短题整组 / 逐轮 | 新短题整组 / 逐轮 | 第四套开放开发题 |
+|---|---:|---:|---:|
+| 0% | 4/10 · 11/21 | 5/10 · 13/21 | 0/6 |
+| 25% | 4/10 · 11/21 | 5/10 · 14/21 | 0/6 |
+| 50% | 4/10 · 11/21 | 4/10 · 12/21 | 0/6 |
+| 75% | 3/10 · 10/21 | 4/10 · 12/21 | 1/6 |
+| 100% | 3/10 · 10/21 | 4/10 · 12/21 | 2/6 |
+
+75% 保住了分工更新，见面时间仍算成下午三点四十。25% 保住两个短题集的整组分数，第四套开放题中的两处改进都未复现。此轮选点依据这些开发集，三种比例均作为实验检查点保存。逐题输出位于 `runs/spora-gelu24-update-scale-v1/`。
+
+随后沿用新教材、768 步、种子及学习率。在基础对话、纠正对话和已审阅样本上，提前记录续训前模型的每个答案位置的概率。续训时，对这三组的原交叉熵损失叠加权重为 1 的分组 KL 散度。分组保留教师最可能的 32 个词元，其他词元的总概率作为第 33 类。这部分监督只来自原训练样本；开放新题没有用于预测对齐。校验使用同一分布验证损失接近零，并在不同预测上验证梯度有限。
+
+本次仍使用 429 个不同请求、8,744 次监督位置曝光，其中 6,009 次叠加旧模型分布。预测对齐候选在原短题恢复到 4/10 组、11/21 轮，在新短题为 4/10 组、11/21 轮，受控记忆为 32/32。它没有复现此前新教材候选在第四套开放题通过的两组，见面顺延误答为三点四十，更换工具负责人后仍报旧分工。训练后仍只有十个普通对话权重张量与起点不同。
+
+独立进程重新加载预测对齐候选，C-Eval 总分保持 49/143，32 条受控记忆记录与起点逐项一致。考虑到新短题和开放开发题的表现，保留三处门控的原候选作为本地试用版本。
+
+用另一套 6 组、18 轮开放开发题检查三份完整模型。题目在查看本轮插值结果之前写成，逐字检查与训练用户话语无重合。续训前、新教材续训、预测对齐续训三组完整通过均为 0/6，结束次数分别为 18/18、17/18、17/18。三者在提货时间段更正中都未说出正确的新时段。新教材与预测对齐候选在分工题第二轮都能列出最新角色，回答第三轮时又把发资料错归给苏瑶。逐题结果在 `runs/spora-gelu24-replay-audit-v1/`。
+
+```powershell
+$sporaParent = 'runs/spora-composition-late-gates-20-23-24-v1/candidate.pt'
+$sporaUpdate = 'runs/spora-gelu24-continue-followup-v1/integrated.pt'
+.\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_update_scale $sporaParent $sporaUpdate data/conversation-development-v4.json runs/spora-gelu24-update-scale-v1
+.\.venv\Scripts\python.exe -m scripts.train_named_memory_dialogue --checkpoint $sporaParent --output runs/spora-gelu24-continue-followup-replay-v1 --steps 768 --varied --composition --dialogue-data data/dialogue-followup-training-v1.json --replace-composition-prefix --continue-residuals --learning-rate 5e-5 --loss-tokens 24 --fresh-holdout --layers 12 19 22 24 27 --retention-weight 1
+.\.venv\Scripts\python.exe -m scripts.audit_named_dialogue_retention runs/spora-gelu24-continue-followup-replay-v1/integrated.pt runs/spora-gelu24-replay-audit-v1/replay-academic.json --memory
+```
