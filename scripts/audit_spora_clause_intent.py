@@ -18,7 +18,9 @@ DEPTH = 20
 
 
 def clause_features(featurize, rows, width):
-    offsets = [clause_ends(row['text']) for row in rows]
+    offsets = [[offset for offset in clause_ends(row['text']) if offset >= row.get('focus_start', 0)] for row in rows]
+    if any(not bounds for bounds in offsets):
+        raise ValueError('The requested feature span must include a clause ending')
     lengths = torch.tensor([len(bounds) for bounds in offsets])
     length = int(lengths.max())
     result = torch.zeros(len(rows), length, width, dtype=torch.float16)

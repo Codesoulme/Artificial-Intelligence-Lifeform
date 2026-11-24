@@ -17,11 +17,11 @@ def clause_ends(text):
 
 
 class ClauseIntent(nn.Module):
-    def __init__(self, width, *, recurrent):
+    def __init__(self, width, *, recurrent, classes=2):
         super().__init__()
         self.project = nn.Linear(width, 64, bias=False)
         self.recurrent = nn.GRU(64, 64, batch_first=True) if recurrent else None
-        self.decision = nn.Sequential(nn.Linear(128, 64), nn.GELU(), nn.Linear(64, 2))
+        self.decision = nn.Sequential(nn.Linear(128, 64), nn.GELU(), nn.Linear(64, classes))
 
     def forward(self, hidden, mask):
         hidden = F.gelu(self.project(F.normalize(hidden.float(), dim=-1)))
