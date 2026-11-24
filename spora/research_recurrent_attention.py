@@ -197,9 +197,15 @@ class GatedDeltaRecurrentAttention(DeltaRecurrentAttention):
         self.history_gates = nn.Parameter(torch.zeros(heads, features, 2))
         self.history_bias = nn.Parameter(torch.tensor([-5., 5.]).expand(heads, 2).clone())
 
+    @staticmethod
+    def gate_input(keys):
+        return keys.mean(dim=-2) * keys.shape[-1] ** .5
+
+    def gate_logits(self, gate_input):
+        return torch.einsum('bhf,hfg->bhg', gate_input, self.history_gates) + self.history_bias
+
     def fold(self, keys, values, matrix, normalizer):
-        gate_input = keys.mean(dim=-2) * keys.shape[-1] ** .5
-        gates = torch.einsum('bhf,hfg->bhg', gate_input, self.history_gates) + self.history_bias
+        gates = self.gate_logits(self.gate_input(keys))
         forget, write = gates.sigmoid().unbind(dim=-1)
         retained = matrix * (1 - forget[..., None, None])
         residual = values - keys @ retained
@@ -207,6 +213,30 @@ class GatedDeltaRecurrentAttention(DeltaRecurrentAttention):
         return retained + write[..., None, None] * update, normalizer
 
 
+class SplitGatedDeltaRecurrentAttention(GatedDeltaRecurrentAttention):
+    """Use an independent key-directed erase strength at each block update."""
+
+    update_rule = 'split_gated_block_delta'
+
+    def __init__(self, heads, head_dim, *, block=16, features=24):
+        super().__init__(heads, head_dim, block=block, features=features)
+        self.erase_offset = nn.Parameter(torch.zeros(heads, features))
+        self.erase_bias = nn.Parameter(torch.zeros(heads))
+
+    def fold(self, keys, values, matrix, normalizer):
+        gate_input = self.gate_input(keys)
+        forget_logit, write_logit = self.gate_logits(gate_input).unbind(dim=-1)
+        erase_logit = write_logit + torch.einsum('bhf,hf->bh', gate_input, self.erase_offset) + self.erase_bias
+        retained = matrix * (1 - forget_logit.sigmoid()[..., None, None])
+        write = write_logit.sigmoid()[..., None, None]
+        erase = erase_logit.sigmoid()[..., None, None]
+        # Match the tied update at initialization and let the erase gate learn
+        # to remove a different amount along the normalized block keys.
+        residual = write * values - erase * (keys @ retained)
+        update = (keys.transpose(-1, -2) @ residual) / keys.shape[-2]
+        return retained + update, normalizer
+
+
 RECURRENT_UPDATE_RULES = {core.update_rule: core for core in (
-    RecurrentAttention, DeltaRecurrentAttention, GatedDeltaRecurrentAttention,
+    RecurrentAttention, DeltaRecurrentAttention, GatedDeltaRecurrentAttention, SplitGatedDeltaRecurrentAttention,
 )}

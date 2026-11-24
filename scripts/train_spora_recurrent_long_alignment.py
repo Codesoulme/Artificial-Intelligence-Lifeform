@@ -14,7 +14,7 @@ from scripts.benchmark_spora_recurrent_dialogue import (
 from scripts.train_qwen_counterfactual_reply_20261122 import HELD, evaluate, records
 from scripts.train_spora_dialogue_working_state import DATA, dialogue_data
 from spora.language_training import atomic_save
-from spora.research_recurrent_attention import GatedDeltaRecurrentAttention, RECURRENT_UPDATE_RULES
+from spora.research_recurrent_attention import RECURRENT_UPDATE_RULES
 from spora.research_recurrent_decode import load_recurrent_replacements, replace
 
 
@@ -205,9 +205,10 @@ def main(args):
                 core_type = RECURRENT_UPDATE_RULES[args.update_rule]
                 candidate.core = core_type(heads, width, block=previous.block, features=features).to(device)
                 parameters = previous.state_dict()
-                gate_names = {'history_gates', 'history_bias'}
+                gate_names = {'history_gates', 'history_bias', 'erase_offset', 'erase_bias'}
+                destination = candidate.core.state_dict()
                 transferable = {name: value for name, value in parameters.items()
-                                if name not in gate_names or isinstance(candidate.core, GatedDeltaRecurrentAttention)}
+                                if name not in gate_names or name in destination}
                 loaded = candidate.core.load_state_dict(transferable, strict=False)
                 if set(loaded.missing_keys) - gate_names or loaded.unexpected_keys:
                     raise ValueError('The recurrent update rules have incompatible projections')

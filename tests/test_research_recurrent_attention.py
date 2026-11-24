@@ -3,7 +3,9 @@ import unittest
 import torch
 from torch.nn import functional as F
 
-from spora.research_recurrent_attention import DeltaRecurrentAttention, GatedDeltaRecurrentAttention, RecurrentAttention
+from spora.research_recurrent_attention import (
+    DeltaRecurrentAttention, GatedDeltaRecurrentAttention, RecurrentAttention, SplitGatedDeltaRecurrentAttention,
+)
 
 
 class RecurrentAttentionTests(unittest.TestCase):
@@ -104,10 +106,35 @@ class RecurrentAttentionTests(unittest.TestCase):
             self.assertTrue(torch.isfinite(column).all())
             self.assertGreater(float(column.norm()), 0.)
 
+    def test_split_delta_starts_tied_and_erases_only_along_matching_keys(self):
+        tied = GatedDeltaRecurrentAttention(1, 1, block=2, features=2)
+        split = SplitGatedDeltaRecurrentAttention(1, 1, block=2, features=2)
+        missing, unexpected = split.load_state_dict(tied.state_dict(), strict=False)
+        self.assertEqual(set(missing), {'erase_offset', 'erase_bias'})
+        self.assertEqual(unexpected, [])
+        keys = torch.tensor([[[[1., 0.], [1., 0.]]]])
+        matrix = torch.tensor([[[[3.], [7.]]]])
+        norm = torch.zeros(1, 1, 2)
+        values = torch.full((1, 1, 2, 1), 5.)
+        original, _ = tied.fold(keys, values, matrix, norm)
+        initialized, _ = split.fold(keys, values, matrix, norm)
+        torch.testing.assert_close(initialized, original)
+        initialized.sum().backward()
+        self.assertGreater(split.erase_offset.grad.norm().item(), 0.)
+        with torch.no_grad():
+            split.erase_bias.fill_(-10.)
+            less_erased, _ = split.fold(keys, values, matrix, norm)
+            empty_written, _ = split.fold(keys, values, torch.zeros_like(matrix), norm)
+            tied_written, _ = tied.fold(keys, values, torch.zeros_like(matrix), norm)
+        self.assertGreater(float(less_erased[0, 0, 0, 0]), float(original.detach()[0, 0, 0, 0]))
+        torch.testing.assert_close(less_erased[:, :, 1], original[:, :, 1])
+        torch.testing.assert_close(empty_written, tied_written)
+
     def test_unrotated_history_keeps_local_attention_and_matches_stream(self):
         key, value = self.k[:, :1].half(), self.v[:, :1].half()
         history = (-self.q, -key)
-        for core in (self.model, DeltaRecurrentAttention(2, 4, block=4, features=5)):
+        for core in (self.model, DeltaRecurrentAttention(2, 4, block=4, features=5),
+                     SplitGatedDeltaRecurrentAttention(2, 4, block=4, features=5)):
             full, final = core(self.q, key, value, history=history, batched_prefill=True)
             native, _ = core(self.q, key, value, include_far=False, batched_prefill=True)
             local, _ = core(self.q, key, value, history=history, include_far=False, batched_prefill=True)
