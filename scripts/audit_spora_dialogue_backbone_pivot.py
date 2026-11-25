@@ -40,23 +40,44 @@ def evaluate(generate, cases):
     return {'counts': dict(counts), 'rows': rows}
 
 
-def main(args):
-    if args.output.exists():
-        raise FileExistsError(args.output)
+def compare_qwen(checkpoint, donor, calibration, comparisons):
     started = perf_counter()
     torch.set_num_threads(2)
     torch.cuda.reset_peak_memory_stats()
-    files = (args.checkpoint, *(args.donor / name for name in FILES))
+    files = (checkpoint, *(donor / name for name in FILES))
     sources = {str(path): sha(path) for path in files}
-    if sources[str(args.checkpoint)] != CHECKPOINT_SHA or sources[str(args.donor / 'model.safetensors')] != QWEN_SHA:
+    if sources[str(checkpoint)] != CHECKPOINT_SHA or sources[str(donor / 'model.safetensors')] != QWEN_SHA:
         raise ValueError('Expected the pinned instruction-backbone control')
-    calibration_file = args.calibration.with_suffix('.reply.pt')
-    calibration_sha = sha(args.calibration)
-    tokenizer = AutoTokenizer.from_pretrained(args.donor, local_files_only=True, trust_remote_code=False)
-    base = load_qwen_streamed(args.donor, QWEN_SHA)
+    calibration_file = calibration.with_suffix('.reply.pt')
+    calibration_sha = sha(calibration)
+    tokenizer = AutoTokenizer.from_pretrained(donor, local_files_only=True, trust_remote_code=False)
+    base = load_qwen_streamed(donor, QWEN_SHA)
     eos = base.generation_config.eos_token_id
+    native = comparisons(base, tokenizer, eos)
+    payload = torch.load(checkpoint, map_location='cpu', weights_only=True)
+    metadata, tensors = payload['metadata'], payload['tensors']
+    if _digest(metadata, tensors) != payload['integrity_sha256']:
+        raise ValueError('SPORA checkpoint integrity mismatch')
+    decoder, organism, state = attach_control(base, metadata, tensors)
+    before = frozen_digest(organism, state)
+    reference = json.loads(calibration.read_text(encoding='utf-8'))
+    decoder.output_adapter, adapter_sha = load_calibration(calibration_file, reference, sources, decoder, organism)
+    integrated = comparisons(decoder, tokenizer, eos)
+    if (frozen_digest(organism, state) != before or sha(calibration_file) != adapter_sha
+            or sha(calibration) != calibration_sha
+            or any(sha(Path(path)) != digest for path, digest in sources.items())):
+        raise ValueError('Evaluation changed a protected source')
+    return {'sources': sources, 'calibration_sha256': calibration_sha,
+            'adapter_sha256': adapter_sha, 'individual_sha256': before,
+            'native': native, 'integrated': integrated,
+            'peak_bytes': torch.cuda.max_memory_allocated(), 'seconds': perf_counter() - started}
 
-    def comparisons(model):
+
+def main(args):
+    if args.output.exists():
+        raise FileExistsError(args.output)
+
+    def comparisons(model, tokenizer, eos):
         print(type(model).__name__, flush=True)
         native_reply = partial(reply, model, tokenizer, device='cuda', deepseek=False, limit=BUDGET, eos=eos)
 
@@ -69,25 +90,9 @@ def main(args):
         holdout = [(name, stages, ORACLE_PROMPTS[name]) for name, _, stages, _ in HELD]
         return {'development': evaluate(generate, CASES), 'held': evaluate(generate, holdout)}
 
-    native = comparisons(base)
-    payload = torch.load(args.checkpoint, map_location='cpu', weights_only=True)
-    metadata, tensors = payload['metadata'], payload['tensors']
-    if _digest(metadata, tensors) != payload['integrity_sha256']:
-        raise ValueError('SPORA checkpoint integrity mismatch')
-    decoder, organism, state = attach_control(base, metadata, tensors)
-    before = frozen_digest(organism, state)
-    reference = json.loads(args.calibration.read_text(encoding='utf-8'))
-    decoder.output_adapter, adapter_sha = load_calibration(calibration_file, reference, sources, decoder, organism)
-    integrated = comparisons(decoder)
-    if (frozen_digest(organism, state) != before or sha(calibration_file) != adapter_sha
-            or sha(args.calibration) != calibration_sha
-            or any(sha(Path(path)) != digest for path, digest in sources.items())):
-        raise ValueError('Evaluation changed a protected source')
+    result = compare_qwen(args.checkpoint, args.donor, args.calibration, comparisons)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    store_json(args.output, {'sources': sources, 'calibration_sha256': calibration_sha,
-                             'adapter_sha256': adapter_sha, 'individual_sha256': before,
-                             'budget': BUDGET, 'positions': POSITIONS, 'native': native, 'integrated': integrated,
-                             'peak_bytes': torch.cuda.max_memory_allocated(), 'seconds': perf_counter() - started})
+    store_json(args.output, {**result, 'budget': BUDGET, 'positions': POSITIONS})
 
 
 if __name__ == '__main__':
