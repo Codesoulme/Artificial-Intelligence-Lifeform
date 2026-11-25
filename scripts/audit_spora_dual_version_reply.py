@@ -106,10 +106,10 @@ def fit(model, tokenizer, head, rows, steps):
 
 @torch.inference_mode()
 def reply(model, tokenizer, head, question, memories, *, require_coverage=False, history=(),
-          max_new_tokens=LIMIT, memory_fraction=MEMORY_FRACTION):
+          max_new_tokens=LIMIT, memory_fraction=MEMORY_FRACTION, cover_present_slots=False):
     if not any(value is not None for value in memories):
         return {**generate(model, tokenizer, question, history=history, max_new_tokens=max_new_tokens), 'copied': []}
-    require_coverage = require_coverage and all(value is not None for value in memories)
+    require_coverage = require_coverage and (cover_present_slots or all(value is not None for value in memories))
     inputs = closed_think_inputs(tokenizer, question, model.device, history=history)['input_ids']
     eos = tokenizer.eos_token_id
     tail, copied, past = [], [], None

@@ -75,8 +75,8 @@ class VersionReplyActions(nn.Module):
 
     def __init__(self, hidden_size, scaffold_tokens, *, slots=1):
         super().__init__()
-        if slots not in (1, 2):
-            raise ValueError('Version reply actions support one or two slots')
+        if type(slots) is not int or not 1 <= slots <= 5:
+            raise ValueError('Version reply actions support one to five slots')
         self.slots = slots
         self.register_buffer('scaffold_tokens', torch.as_tensor(scaffold_tokens, dtype=torch.long))
         self.project = nn.Linear(hidden_size, 96)
