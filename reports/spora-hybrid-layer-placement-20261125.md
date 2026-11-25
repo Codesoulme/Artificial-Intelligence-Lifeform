@@ -23,6 +23,40 @@
 
 核对四个候选使用了同一父检查点、训练与留出来源和个体摘要。两处新位置各保存一份约 296 KiB 的权重，摘要与各自报告一致。93 词元分段对照中新层保持相同的 16 词元近期上限，块状与增量实现的最大绝对误差约为 `7.15e-7`。第 21 层后续预测对齐使单层 KL 上升。该结果说明要把它作为较难的初始化情况记录，真实双层组合的长前文表现由下一环节决定。
 
+## 整网恢复前
+
+| 配置 | 短题完整 | 约 700 词元完整 | 约 1,400 词元完整 | 开放题逐轮词面通过 |
+| --- | ---: | ---: | ---: | ---: |
+| 完整注意力父模型 | 8/10 | 4/10 | 4/10 | 10/18 |
+| 循环层 19、22 | 8/10 | 7/10 | 2/10 | 8/18 |
+| 循环层 21、24 | 6/10 | 1/10 | 1/10 | 6/18 |
+
+两份基准中的父模型逐题输出与判分一致，题集、父检查点和重建个体摘要一致。约 700 词元时，第 21、24 层组合写出了正确的新值 3 次，应保留的字段只出现 2 次。第 19、22 层组合这两项均为 7 次。约 1,400 词元时，两组的保留字段分别为 2 和 5 次。开放题这一列沿用现有词面判分。
+
+由于循环实现从旧训练以来增加了更新规则和执行路径，本轮在当前代码下重跑两个恢复条件。各训练 32 步，学习率为 0.0005，只更新两处循环分支。使用完整答案交叉熵和首个不同答案词元的对比损失。对照程序核对两组抽样索引与序列长度的逐步记录、恢复权重摘要和相同测试来源。 [成对更正训练设计](spora-recurrent-counterfactual-20261124.md)
+
+## 匹配恢复后的生成
+
+| 配置 | 约 700 词元原更正 | 约 1,400 词元原更正 | 约 700 词元换值题，单题 / 两边均对 | 约 1,400 词元换值题，单题 / 两边均对 | 具名持久读取 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 循环层 19、22 | 7/10 | 2/10 | 5/10 · 2/5 | 3/10 · 1/5 | 32/32 |
+| 循环层 21、24 | 1/10 | 1/10 | 2/10 · 0/5 | 2/10 · 1/5 | 32/32 |
+
+两组使用同样的 48 对训练样本，实际抽到 31 个不同的对。核对两组的 32 个抽样位置和输入长度逐步一致。两组的原更正和成对更正得分与恢复前一致。约 700 词元时，第 21、24 层组合在一条交接题上输出了两遍「十七捆」，漏掉收件人。第 19、22 层组合输出了收件人和更新后的数量。持久读取给定姓名对应的地址和版本，两组的 32 条完整生成结果逐条相同。训练及评测用时分别约 606、616 秒，训练的 CUDA 张量峰值分别约为 4.07、4.11 GiB。
+
+## 本机成本
+
+| 输入词元 | 两组循环版 / 父模型张量存储 | 19、22 层首词 / 同次父模型 | 21、24 层首词 / 同次父模型 | 19、22 层增量每步 / 同次父模型 | 21、24 层增量每步 / 同次父模型 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 640 | 16.56 / 17.50 MiB | 1,050 / 1,066 ms | 1,054 / 1,034 ms | 74.6 / 69.3 ms | 58.3 / 56.0 ms |
+| 1,536 | 39.31 / 42.00 MiB | 4,377 / 4,489 ms | 3,340 / 3,395 ms | 66.7 / 68.8 ms | 61.6 / 55.5 ms |
+
+两种组合在最长输入时各节省约 2.69 MiB，每个循环层均保存 164,992 字节的状态。两次独立计时中的父模型耗时也有明显波动，所以表中按各自同一轮父模型比较。增量耗时的变化方向随配置和输入长度而异。29 项循环注意力与持久化测试通过，另有两项被套件跳过。来源对照额外验证了摘要不一致会被拒绝，共用一处循环层的布局可以比较。
+
+## 后续选择
+
+目前保留第 19、22 层组合做结构基线。下一步先试第 19、24 层，保留较接近父模型的第 24 层，恢复第 21 层的完整注意力。若需进一步区分，再试第 21、22 层。每个组合仍替换两层，用同题比较未更改字段是否保留。两种交叉组合可以检查第 21 层的影响是否随搭档而变。层间距离和父模型前馈门控所在位置也在变化，结果解释以这四种组合为限。HALO 和 KL 引导的混合注意力研究都给出了选择替换位置的实测对照。 [HALO](https://arxiv.org/html/2601.22156v1#S6.T4) · [KL 引导的层选择](https://arxiv.org/html/2512.20569v1#A7.T14)
+
 ## 初始化命令
 
 ```powershell
@@ -42,4 +76,31 @@ foreach ($sporaLayer in 21,24) {
 
 ```powershell
 .\.venv\Scripts\python.exe -u -m scripts.benchmark_spora_recurrent_dialogue $sporaParent runs/spora-recurrent-morph-21-24-extended-v1.json runs/spora-gelu24-recurrent-layer21-morph-v1 runs/spora-gelu24-recurrent-layer24-morph-v1 --dialogue-only --extend
+```
+
+## 恢复与对照命令
+
+```powershell
+$sporaOldRef = 'runs/spora-recurrent-dialogue-extended-v1.json'
+$sporaNewRef = 'runs/spora-recurrent-morph-21-24-extended-v1.json'
+$sporaOldRun = 'runs/spora-morph-recovery-19-22-v1'
+$sporaNewRun = 'runs/spora-morph-recovery-21-24-v1'
+.\.venv\Scripts\python.exe -m scripts.audit_spora_recurrent_placement $sporaOldRef $sporaNewRef
+.\.venv\Scripts\python.exe -u -m scripts.train_spora_recurrent_counterfactual $sporaParent $sporaNewRef $sporaNewRun runs/spora-gelu24-recurrent-layer21-morph-v1 runs/spora-gelu24-recurrent-layer24-morph-v1 --steps 32 --learning-rate .0005
+.\.venv\Scripts\python.exe -u -m scripts.train_spora_recurrent_counterfactual $sporaParent $sporaOldRef $sporaOldRun runs/spora-gelu24-recurrent-layer19-v2 runs/spora-gelu24-recurrent-layer22-v1 --steps 32 --learning-rate .0005
+.\.venv\Scripts\python.exe -m scripts.audit_spora_recurrent_placement $sporaOldRef $sporaNewRef --recoveries $sporaOldRun $sporaNewRun
+```
+
+固定 640 和 1,536 个输入词元复测首词延迟、16 次增量前向和实际保存的张量。每一种结构单独热身，交换条件顺序，三次取中位数。
+
+```powershell
+.\.venv\Scripts\python.exe -u -m scripts.benchmark_spora_recurrent_dialogue $sporaParent "$sporaOldRun/timing.json" "$sporaOldRun/layer-19" "$sporaOldRun/layer-22" --timing-only --extend --length 640 --length 1536
+.\.venv\Scripts\python.exe -u -m scripts.benchmark_spora_recurrent_dialogue $sporaParent "$sporaNewRun/timing.json" "$sporaNewRun/layer-21" "$sporaNewRun/layer-24" --timing-only --extend --length 640 --length 1536
+```
+
+交叉组合复用已逐题对齐的父模型答复。载入时校验父模型权重、题集、个体和位置上限，每组省去重新生成 48 条父模型答复。
+
+```powershell
+.\.venv\Scripts\python.exe -u -m scripts.benchmark_spora_recurrent_dialogue $sporaParent runs/spora-recurrent-morph-19-24-extended-v1.json runs/spora-gelu24-recurrent-layer19-v2 runs/spora-gelu24-recurrent-layer24-morph-v1 --dialogue-only --extend --parent-reference $sporaOldRef
+.\.venv\Scripts\python.exe -u -m scripts.benchmark_spora_recurrent_dialogue $sporaParent runs/spora-recurrent-morph-21-22-extended-v1.json runs/spora-gelu24-recurrent-layer21-morph-v1 runs/spora-gelu24-recurrent-layer22-v1 --dialogue-only --extend --parent-reference $sporaOldRef
 ```

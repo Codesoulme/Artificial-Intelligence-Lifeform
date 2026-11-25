@@ -223,6 +223,7 @@ def save_training(args, candidates, sources, checkpoint_sha, individual, trace, 
                                                    'history_projection': replacement.history_projection,
                                                    'individual_sha256': individual, 'candidate_sha256': saved[str(index)]})
     training = {'sources': sources, 'individual_sha256': individual, 'training_pairs': pair_count, 'trace': trace,
+                'steps': args.steps, 'learning_rate': args.learning_rate,
                 'training_peak_bytes': peak, 'candidate_hashes': saved}
     if args.field_weight:
         training['field_weight'] = args.field_weight

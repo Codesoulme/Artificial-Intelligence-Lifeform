@@ -134,9 +134,10 @@ def using(replacements, mode):
         yield
 
 
-def benchmark(decoder, tokenizer, fillers, replacements, repeats, *, extended=False):
+def benchmark(decoder, tokenizer, fillers, replacements, repeats, *, extended=False, lengths=None):
     tokens = tokenizer.encode('\n'.join(fillers), add_special_tokens=False)
-    lengths = (96, 384, 640, 752, 1024, 1536) if extended else (96, 384, 640, 752)
+    if lengths is None:
+        lengths = (96, 384, 640, 752, 1024, 1536) if extended else (96, 384, 640, 752)
     if decoder.position_table_max_position is not None and max(lengths) + 16 > decoder.position_table_max_position:
         raise ValueError('The position table is too short for the selected benchmark lengths')
     tokens *= (max(lengths) + len(tokens) - 1) // len(tokens)
@@ -181,8 +182,18 @@ def extend_positions(decoder, native_rotary, limit):
     decoder.position_table_max_position = limit
 
 
+def parent_dialogue(path, checkpoint, protected, individual, positions):
+    reference = json.loads(path.read_text(encoding='utf-8'))
+    if (reference['individual_sha256'] != individual or reference['position_table'] != positions
+            or any(reference['sources'].get(str(source)) != protected[source] for source in (checkpoint, SOURCE))):
+        raise ValueError('Parent dialogue uses different weights, prompts, or positions')
+    return reference['dialogue']['parent']
+
+
 def main(args):
     inputs = [args.checkpoint, SOURCE]
+    if args.parent_reference:
+        inputs.append(args.parent_reference)
     inputs.extend(directory / name for directory in args.candidates for name in ('attention.pt', 'comparison.json'))
     protected = {path: sha(path) for path in inputs}
     source = json.loads(SOURCE.read_text(encoding='utf-8'))
@@ -202,10 +213,16 @@ def main(args):
               'sources': {str(path): value for path, value in protected.items()}, 'individual_sha256': individual}
     if not args.dialogue_only:
         fillers = source['filler'] + (source['extra_filler'] if args.extend else [])
-        result['timing'] = benchmark(decoder, tokenizer, fillers, replacements, args.repeats, extended=args.extend)
+        result['timing'] = benchmark(decoder, tokenizer, fillers, replacements, args.repeats, extended=args.extend,
+                                     lengths=args.length)
     if not args.timing_only:
         result['dialogue'] = {}
-        for name in ('parent', 'recurrent'):
+        modes = ('parent', 'recurrent')
+        if args.parent_reference:
+            result['dialogue']['parent'] = parent_dialogue(args.parent_reference, args.checkpoint, protected,
+                                                           individual, decoder.position_table_max_position)
+            modes = ('recurrent',)
+        for name in modes:
             with using(replacements, name):
                 arm = run_dialogue(decoder, tokenizer, prompts, source['open'])
             result['dialogue'][name] = arm
@@ -224,6 +241,8 @@ if __name__ == '__main__':
     parser.add_argument('output', type=Path)
     parser.add_argument('candidates', nargs='+', type=Path)
     parser.add_argument('--repeats', type=int, default=3)
+    parser.add_argument('--length', type=int, action='append', help='Select a timing input length, repeatable')
+    parser.add_argument('--parent-reference', type=Path, help='Reuse a verified complete-attention dialogue report')
     run_mode = parser.add_mutually_exclusive_group()
     run_mode.add_argument('--timing-only', action='store_true')
     run_mode.add_argument('--dialogue-only', action='store_true')
@@ -231,4 +250,9 @@ if __name__ == '__main__':
     options = parser.parse_args()
     if options.output.exists() or options.repeats < 1:
         parser.error('Use a new output path and positive repeat count')
+    if options.length and (options.dialogue_only or any(length < 1 for length in options.length)
+                           or len(set(options.length)) != len(options.length)):
+        parser.error('Timing lengths must be distinct positive counts and require a timing run')
+    if options.parent_reference and options.timing_only:
+        parser.error('Parent references require a dialogue run')
     main(options)
