@@ -26,6 +26,13 @@ class VersionTimelineTests(unittest.TestCase):
         self.assertEqual(select_version(records, VersionQuery('as_of', october(14), october(17)), self.today), 2)
         self.assertIsNone(select_version(records, VersionQuery('ordinal', 4), self.today))
 
+    def test_local_chat_can_recall_same_day_revision_numbers(self):
+        records = ((october(2), october(2)),) * 3
+        self.assertEqual(select_version(records, VersionQuery('ordinal', 1), self.today, retain_same_day=True), 0)
+        self.assertEqual(select_version(records, VersionQuery('previous'), self.today, retain_same_day=True), 1)
+        self.assertEqual(select_version(records, VersionQuery('current'), self.today, retain_same_day=True), 2)
+        self.assertEqual(select_version(records, VersionQuery('as_of', october(2)), self.today, retain_same_day=True), 2)
+
     def test_requires_a_real_change_and_a_supported_calendar_day(self):
         before = parse_version_query('2026年10月13日那回变更生效前，查哪一份？')
         after = parse_version_query('2026-10-13那回变更生效时，查哪一份？')

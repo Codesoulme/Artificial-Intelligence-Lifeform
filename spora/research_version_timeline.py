@@ -75,7 +75,7 @@ def effective_order(revisions, *, as_of, known_by):
     return tuple(by_effective[day] for day in sorted(by_effective))
 
 
-def select_version(revisions, request, today):
+def select_version(revisions, request, today, *, retain_same_day=False):
     if request is None:
         return None
     known_by = request.known_by if request.known_by is not None else today
@@ -85,7 +85,12 @@ def select_version(revisions, request, today):
     as_of = request.coordinate if dated else today
     if as_of > today:
         return None
-    candidates = effective_order(revisions, as_of=as_of, known_by=known_by)
+    if retain_same_day and request.kind in ('ordinal', 'previous'):
+        candidates = sorted((slot for slot, (effective, observed) in enumerate(revisions)
+                             if effective <= as_of and observed <= known_by),
+                            key=lambda slot: (*revisions[slot], slot))
+    else:
+        candidates = effective_order(revisions, as_of=as_of, known_by=known_by)
     if request.kind in ('before_change', 'after_change'):
         if len(candidates) < 2 or revisions[candidates[-1]][0] != as_of:
             return None

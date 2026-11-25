@@ -78,3 +78,11 @@ class DialogueVersionScopeTests(unittest.TestCase):
         self.assertIsNone(changed.address)
         unresolved = pending_followup_targets('那之前旧版本是哪份呢？', NAMES, FIELDS, DRINK)
         self.assertIsNone(pending_after_lookup({DRINK: ()}, unresolved, [], ('unresolved_scope',)))
+
+    def test_pending_accepts_the_short_command_offered_by_the_chat_prompt(self):
+        for text, expected in (('查当前版。', VersionQuery('current')), ('首版', VersionQuery('ordinal', 1)),
+                               ('就查上一版吧', VersionQuery('previous'))):
+            with self.subTest(text=text):
+                target, = pending_followup_targets(text, NAMES, FIELDS, DRINK)
+                self.assertEqual(target.address, DRINK)
+                self.assertEqual(target.query, expected)

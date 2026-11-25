@@ -42,7 +42,7 @@ BOOST = 8.
 
 
 @torch.inference_mode()
-def write_fresh(model, tokenizer, columns, *, layer, eta, ridge, events=EVENTS, facts=FACTS):
+def write_fresh(model, tokenizer, columns, *, layer, eta, ridge, events=EVENTS, facts=FACTS, minimum_tokens=2):
     sites = install(model, (layer,))
     projection = compress_dimension(sites[layer].base.in_features).to(columns.device)
     banks = {}
@@ -55,7 +55,7 @@ def write_fresh(model, tokenizer, columns, *, layer, eta, ridge, events=EVENTS, 
                     captured = fact_cache(model, tokenizer, sites, event, value, decoder_only=True)
                     keys = captured['keys'][layer].index_select(-1, projection)
                     codes = F.normalize(captured['value_embeddings'].index_select(-1, columns), dim=-1)
-                    if len(keys) != len(tokens(tokenizer, value)) or not 2 <= len(keys) <= 4:
+                    if len(keys) != len(tokens(tokenizer, value)) or not minimum_tokens <= len(keys) <= 4:
                         raise ValueError(f'Unexpected span width for {event}')
                     state = lexical_write(LowRankFastWeight(keys[:0], codes[:0]), keys, codes, eta=eta, ridge=ridge)
                     versions.append((state.keys.cpu(), state.values.cpu()))

@@ -91,14 +91,14 @@ def resolve_query(catalog, mention, query, today):
     return resolve_address(catalog, address, query, today)
 
 
-def resolve_address(catalog, address, query, today):
+def resolve_address(catalog, address, query, today, *, retain_same_day=False):
     if query is None:
         return None, 'unresolved_scope'
     versions = catalog.get(address, ())
     if not versions:
         return None, 'unknown_address'
     timeline = tuple((entry.effective, entry.observed) for entry in versions)
-    selected = select_version(timeline, query, today)
+    selected = select_version(timeline, query, today, retain_same_day=retain_same_day)
     return (None, 'missing_version') if selected is None else (versions[selected].number, 'located')
 
 

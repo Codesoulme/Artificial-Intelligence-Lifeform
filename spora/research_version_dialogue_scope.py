@@ -17,6 +17,7 @@ _CANCEL_TURN = re.compile(r'^(?:先别查|先不查(?:了)?|不查了|算了|先
 _REJECTED_CLAUSE = re.compile(r'^(?:不是|别查|不查|不用查|不要查|先不看)')
 _AMBIGUOUS_REFERENCE = re.compile(r'谁的|(?:他|她|对方|另一个人|别人)的')
 _ANCHORED_PERSON = re.compile(r'\S+的(?=(?:首|初|上一|前一|当前|现行|第[一二三四五六七八九1-9])版)')
+_PENDING_CHOICE = re.compile(r'(?:就|请)?(?:查|看|用|选)?(?:当前版|现行版|首版|初版|第一版|上一版|前一版)(?:吧|即可)?[。！？?!]?')
 
 
 @dataclass(frozen=True)
@@ -87,6 +88,8 @@ def advance_scope(scope, targets, selected, *, persistent=False):
 
 
 def pending_followup_targets(question, enrolled, fields, address):
+    if _PENDING_CHOICE.fullmatch(question.strip()):
+        return (LookupTarget(address, parse_lookup_scope(question), 'pending'),)
     targets = dialogue_targets(question, enrolled, fields, (address,))
     result = []
     for item in targets:

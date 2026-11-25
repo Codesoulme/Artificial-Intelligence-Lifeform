@@ -4,6 +4,8 @@
 
 **本机试聊**：在 `D:\SPORA` 双击 `chat.cmd`，输入短句后回车。默认加载P18版本，当前回答仍可能错误；可用 `/memory 12` 查看已有符号记忆，`/quit` 退出。详见[使用说明](docs/local-conversation.md)。此入口只读，不启动训练。
 
+**DeepSeek 版次记忆试聊**支持登记短值、追问上一版，以及重启后读回。使用 `spora_version_chat.cmd` 打开独立记忆档案。 [本机使用说明](docs/version-chat-local-use.md)
+
 **持续活动原型P24**：新增随个体保存的神经规划与工作状态；无后续用户输入时可继续有限图任务，支持放松／专注／睡眠切换。用`awake.cmd`体验数字环境演示，详见[本机入口](docs/awake-local-use.md)与[机制及边界](docs/P24-awake-design.md)。尚未实现任意中文自主思考或完整做梦。
 
 **结构基础复查P25**：发现并验证中文记忆读取中的角色丢失与空段干扰，加入可选typed_v1候选及逐步生成的状态一致性保护。旧语言权重仍使用原读法；本轮未扩大中文训练。详见[审查、实验与下一步门槛](docs/P25-foundation-review.md)。

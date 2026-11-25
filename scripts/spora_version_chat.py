@@ -1,0 +1,247 @@
+"""Interactive DeepSeek chat with a dedicated, versioned SPORA memory profile."""
+
+import argparse
+from datetime import date
+from hashlib import sha256
+import json
+from pathlib import Path
+import re
+import sqlite3
+import sys
+from types import SimpleNamespace
+from uuid import uuid4
+
+import torch
+from torch.nn import functional as F
+
+from scripts.audit_spora_dialogue_version_scope import TemporalProposals
+from scripts.audit_spora_dialogue_working_state import FrozenTurnFeatures
+from scripts.audit_spora_dual_version_reply import FIELDS
+from scripts.audit_spora_dual_version_routing import reply_to_route
+from scripts.audit_spora_fast_weight_lexical_write import SOURCE, base, compress_dimension, tokens
+from scripts.audit_spora_version_coverage import write_fresh
+from scripts.audit_spora_versioned_memory_generation import read_versions
+from scripts.deepseek_spora_full_stream_loader import load_full_streamed
+from scripts.deepseek_spora_ttt_read_adapter_pilot import generate
+from spora.research_multi_version_route import resolve_address
+from spora.research_ttt_ntp import LowRankFastWeight
+from spora.research_version_dialogue_scope import (advance_scope, dialogue_targets, pending_after_lookup,
+                                                   pending_followup_targets)
+from spora.research_version_store import MemoryAddress, VersionStore
+from spora.research_versioned_memory_pointer import VersionReplyActions
+
+
+FIELD_IDS = {label: field for field, label in FIELDS.items()}
+NAME = re.compile(r'[\u3400-\u9fff]{2,12}')
+VALUE = re.compile(r'[\w ·-]{1,24}')
+CANCEL = re.compile(r'^(?:先别查|先不查(?:了)?|不查了|算了|先暂停)(?:[，,。；;！!\s]|$)')
+DEFER_UNTIL = re.compile(r'(?:稍后|过会儿|等会儿|改天|下次)再(?:问|查|说)[。！？!?]*$')
+HELP = ('/记 姓名 | 字段 | 短值 [| 生效日期 YYYY-MM-DD]。字段可用饮品、见面地点、用品、书目。'
+        '查询时可说「请查林语的饮品当前版」，再问「那上一版呢」。'
+        '/清空对话 清除本轮对话和指代范围。/退出 结束。')
+
+
+def write_request(raw, today):
+    parts = [part.strip() for part in raw.split('|')]
+    if len(parts) not in (3, 4):
+        raise ValueError('请用 /记 姓名 | 字段 | 短值 [| YYYY-MM-DD]。')
+    name, field, value = parts[:3]
+    if not NAME.fullmatch(name):
+        raise ValueError('姓名须为 2 到 12 个中文字符。同名记录可使用不同显示名。')
+    if field not in FIELD_IDS:
+        raise ValueError('字段请选择饮品、见面地点、用品或书目。')
+    if not VALUE.fullmatch(value):
+        raise ValueError('请用简短的名称或数值，可含空格、间隔号和连字符。')
+    try:
+        effective = date.fromisoformat(parts[3]) if len(parts) == 4 else today
+        if len(parts) == 4 and effective.isoformat() != parts[3]:
+            raise ValueError('Noncanonical date')
+    except ValueError as error:
+        raise ValueError('日期请用 YYYY-MM-DD。') from error
+    return MemoryAddress(name, FIELD_IDS[field]), value, effective
+
+
+def clarify(catalog, targets, reasons, today):
+    duplicate = len({item.address for item in targets if item.address}) < sum(item.address is not None for item in targets)
+    if len(targets) > 2 or (duplicate and 'located' in reasons):
+        return '请分开查阅，每次明确指定一项或两项记录。'
+    for item, reason in zip(targets, reasons, strict=True):
+        address = item.address
+        if address is None:
+            return '我还没确定要查谁的哪项记录。请告诉我姓名和事项。'
+        label = FIELDS[address.field]
+        if reason == 'unknown_address' or address not in catalog:
+            return f'我没有找到{address.name}的{label}记录。请核对姓名或事项。'
+        if reason == 'missing_version':
+            return f'{address.name}的{label}找不到这一版。你可以指定当前版或首版。'
+        if reason == 'unresolved_scope':
+            active = [entry for entry in catalog[address] if entry.effective <= today and entry.observed <= today]
+            if not active:
+                return f'{address.name}的{label}目前没有生效的记录。'
+            if len(active) == 1:
+                return f'{address.name}的{label}目前只有一版。你可以说「查当前版」。'
+            return f'{address.name}的{label}要查当前版、首版，还是上一版？'
+    return '请分别给出要查的人物、事项和版次。'
+
+
+def deferred_lookup(question):
+    canceled = CANCEL.match(question)
+    if not canceled:
+        return False
+    remainder = question[canceled.end():].strip('，,。；;！! ')
+    return not remainder or bool(DEFER_UNTIL.search(remainder))
+
+
+class VersionChat:
+    def __init__(self, store, model, tokenizer, reader, propose, settings, *, ordinary_tokens):
+        self.store, self.model, self.tokenizer, self.reader = store, model, tokenizer, reader
+        self.propose, self.settings, self.ordinary_tokens = propose, settings, ordinary_tokens
+        embedding = model.get_input_embeddings().weight.detach()
+        self.columns = compress_dimension(embedding.shape[1]).to(embedding.device)
+        self.codebook = F.normalize(embedding.index_select(1, self.columns).float(), dim=-1)
+        self.reset_dialogue()
+
+    def reset_dialogue(self):
+        self.history, self.scope, self.pending = [], (), None
+
+    @torch.inference_mode()
+    def save(self, raw, today):
+        address, value, effective = write_request(raw, today)
+        pieces = tokens(self.tokenizer, value)
+        if not 1 <= len(pieces) <= 4 or set(pieces) & set(self.tokenizer.all_special_ids):
+            raise ValueError('这个值太长，请用四个分词以内的短名称。')
+        bank = write_fresh(self.model, self.tokenizer, self.columns, layer=self.settings['layers'][0],
+                           eta=self.settings['eta'], ridge=self.settings['ridge'],
+                           events={address.field: ((address.name, value),)},
+                           facts={address.field: '\n{value}'}, minimum_tokens=1)
+        if read_versions(bank, self.codebook)[address.name][0].tolist() != pieces:
+            raise ValueError('写入前的读回校验未通过，请换一个短名称。')
+        keys, values = bank[address.name][0]
+        number = self.store.append(uuid4().hex, address, effective, today, LowRankFastWeight(keys, values))
+        self.reset_dialogue()
+        return {'kind': 'saved', 'answer': f'已登记{address.name}的{FIELDS[address.field]}。', 'record': number}
+
+    @torch.inference_mode()
+    def turn(self, question, today):
+        if len(question) > 512:
+            raise ValueError('每条消息最多 512 个字符。')
+        if deferred_lookup(question):
+            self.reset_dialogue()
+            return {'kind': 'defer', 'answer': '好，等你想查时再说。', 'selected': [], 'reasons': []}
+        catalog = self.store.catalog()
+        enrolled = {address.name for address in catalog}
+        targets = (dialogue_targets(question, enrolled, FIELDS, self.scope) if self.pending is None else
+                   pending_followup_targets(question, enrolled, FIELDS, self.pending))
+        proposals = iter(self.propose([item.evidence for item in targets
+                                       if item.evidence is not None and item.address is not None]))
+        decisions = []
+        for item in targets:
+            query = next(proposals) if item.evidence is not None and item.address is not None else item.query
+            decisions.append(resolve_address(catalog, item.address, query, today, retain_same_day=True))
+        route = [number for number, _ in decisions]
+        reasons = tuple(reason for _, reason in decisions)
+        selected = []
+        if not targets:
+            kind = 'chat'
+            output = generate(self.model, self.tokenizer, question, history=self.history, max_new_tokens=self.ordinary_tokens)
+            answer = output['answer']
+        elif None in route or len(route) > 2 or len(set(route)) != len(route):
+            kind = 'clarify'
+            answer = clarify(catalog, targets, reasons, today)
+        else:
+            kind = 'read'
+            selected, output = reply_to_route(self.model, self.tokenizer, self.store, self.codebook, self.reader,
+                                              question, route, history=self.history)
+            answer = output['answer']
+            if output['token_ids'] and output['token_ids'][-1] == self.tokenizer.eos_token_id:
+                answer = answer.rstrip('，,、 ')
+                if answer and answer[-1] not in '。！？.!?':
+                    answer += '。'
+        self.scope = advance_scope(self.scope, targets, selected)
+        self.pending = pending_after_lookup(catalog, targets, selected, reasons)
+        self.history = [*self.history, {'role': 'user', 'content': question},
+                        {'role': 'assistant', 'content': answer}][-4:]
+        return {'kind': kind, 'answer': answer, 'selected': selected, 'reasons': list(reasons)}
+
+    def dispatch(self, line):
+        if line == '/帮助':
+            return {'kind': 'help', 'answer': HELP}
+        if line == '/清空对话':
+            self.reset_dialogue()
+            return {'kind': 'reset', 'answer': '已清空本轮对话，记忆记录已保留。'}
+        if line.startswith('/记 '):
+            return self.save(line[3:], date.today())
+        if line.startswith('/'):
+            raise ValueError('命令未识别。输入 /帮助 查看用法。')
+        return self.turn(line, date.today())
+
+
+def artifacts(reader_dir, normalizer_dir):
+    reader, normalizer, writer = reader_dir / 'head.pt', normalizer_dir / 'normalizers.pt', SOURCE / 'adapters.pt'
+    reader_report = json.loads((reader_dir / 'result.json').read_text(encoding='utf-8'))
+    normalizer_report = json.loads((normalizer_dir / 'guarded.json').read_text(encoding='utf-8'))
+    paths = (base.MODEL / 'model.safetensors', base.MODEL / 'tokenizer.json', base.MODEL / 'tokenizer_config.json', writer)
+    sources = {path.name: base.sha(path) for path in paths}
+    expected = {Path(path).name: digest for path, digest in reader_report['sources'].items()}
+    reader_digest = base.sha(reader)
+    if (sources['model.safetensors'] != base.WEIGHT_SHA or any(expected.get(file) != digest for file, digest in sources.items())
+            or reader_digest != reader_report['head_sha256']
+            or reader_digest not in (digest for path, digest in normalizer_report['sources'].items() if Path(path).name == 'head.pt')
+            or base.sha(normalizer) != normalizer_report['normalizer_sha256']):
+        raise ValueError('本机模型、记忆读出与口语核验文件不匹配。')
+    binding = sha256(json.dumps({'codec': 'lexical-fast-weights-v1', 'sources': sources}, sort_keys=True).encode()).hexdigest()
+    return reader, normalizer, writer, binding
+
+
+def main(args):
+    torch.set_num_threads(2)
+    interactive = sys.stdin.isatty() and not args.json
+    if interactive:
+        print('正在校验并加载本机模型，首次打开可能需要约一分钟。', flush=True)
+    reader_path, normalizer_path, writer_path, binding = artifacts(args.reader, args.normalizer)
+    model = load_full_streamed()
+    tokenizer = base.AutoTokenizer.from_pretrained(base.MODEL, local_files_only=True, trust_remote_code=False)
+    width = model.config.hidden_size
+    state = torch.load(reader_path, map_location='cpu', weights_only=True)
+    reader = VersionReplyActions(width, state['scaffold_tokens'], slots=2)
+    reader.load_state_dict(state)
+    extractor = FrozenTurnFeatures(SimpleNamespace(base=model), tokenizer, depth=len(model.model.layers))
+    proposer = TemporalProposals(extractor, width, torch.load(normalizer_path, map_location='cpu', weights_only=True)['final_layer'])
+    settings = torch.load(writer_path, map_location='cpu', weights_only=True)
+    args.profile.mkdir(parents=True, exist_ok=True)
+    database = args.profile / 'versions.sqlite3'
+    with VersionStore(database, binding, create=not database.exists()) as store:
+        chat = VersionChat(store, model, tokenizer, reader.eval().to(model.device), proposer, settings,
+                           ordinary_tokens=args.reply_tokens)
+        if interactive:
+            print('孢子版本记忆已就绪。输入 /帮助 查看用法。', flush=True)
+        while True:
+            try:
+                line = input('你> ' if interactive else '').strip()
+            except (EOFError, KeyboardInterrupt):
+                break
+            if line == '/退出':
+                break
+            if not line:
+                continue
+            try:
+                result = chat.dispatch(line)
+            except (ValueError, sqlite3.Error) as error:
+                result = {'kind': 'error', 'answer': str(error)}
+            print(json.dumps(result, ensure_ascii=False) if args.json else f"孢子> {result['answer']}", flush=True)
+
+
+if __name__ == '__main__':
+    cli = argparse.ArgumentParser(description=__doc__)
+    cli.add_argument('--profile', type=Path, default=Path('runs/spora-version-chat-local'))
+    cli.add_argument('--reader', type=Path, default=Path('runs/spora-dual-version-reply-v1'))
+    cli.add_argument('--normalizer', type=Path, default=Path('runs/spora-version-normalizer-v1'))
+    cli.add_argument('--reply-tokens', type=int, default=72)
+    cli.add_argument('--json', action='store_true', help='Emit one JSON record per stdin line')
+    options = cli.parse_args()
+    if not 1 <= options.reply_tokens <= 256:
+        cli.error('--reply-tokens must be between 1 and 256')
+    try:
+        main(options)
+    except (OSError, ValueError, KeyError, sqlite3.Error) as error:
+        cli.exit(1, f'孢子未能启动。{error}\n')
