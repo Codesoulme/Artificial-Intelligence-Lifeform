@@ -1,7 +1,7 @@
 """Test whether far recurrent reads help when full attention cannot see early turns."""
 
 import argparse
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack
 import json
 from pathlib import Path
 from time import perf_counter
@@ -12,71 +12,37 @@ from scripts.benchmark_spora_recurrent_dialogue import (
     load_integrated_runtime, recall_prompts, run_dialogue, sha, torch,
 )
 from scripts.train_spora_recurrent_counterfactual import store_json
-from spora.research_recurrent_decode import attention_block, load_recurrent_replacements, replace
+from spora.research_recurrent_decode import load_recurrent_replacements, replace, restrict_full_attention
 
 
 BOUNDARY = 512
 POSITIONS = 2048
 
 
-def segment_mask(start, count, boundary, device):
-    end = start + count
-    keys = torch.arange(end, device=device)
-    queries = keys[start:]
-    same_segment = (queries[:, None] >= boundary) == (keys[None, :] >= boundary)
-    return (same_segment & (keys[None, :] <= queries[:, None]))[None, None]
-
-
-@contextmanager
-def restrict_full_attention(decoder, boundary, excluded):
-    last_shape, allowed = None, None
-
-    def restrict(layer, args, kwargs):
-        nonlocal last_shape, allowed
-        hidden = kwargs['hidden_states']
-        cache = kwargs.get('past_key_values')
-        start = cache.get_seq_length(layer.layer_idx) if cache is not None else 0
-        count = hidden.shape[1]
-        shape = (start, count, hidden.device)
-        if shape != last_shape:
-            positions = kwargs.get('cache_position')
-            if hidden.shape[0] != 1 or positions is None or not torch.equal(
-                    positions, torch.arange(start, start + count, device=hidden.device)):
-                raise ValueError('Segment probe requires one append-only sequence')
-            allowed = segment_mask(start, count, boundary, hidden.device)
-            last_shape = shape
-        prior = kwargs.get('attention_mask')
-        if prior is None:
-            mask = allowed
-        elif prior.dtype == torch.bool:
-            mask = prior[..., :start + count] & allowed
-        else:
-            mask = prior[..., :start + count].masked_fill(~allowed, torch.finfo(prior.dtype).min)
-        return args, {**kwargs, 'attention_mask': mask}
-
-    with ExitStack() as hooks:
-        for index in range(len(decoder.base.model.layers)):
-            if index not in excluded:
-                module = attention_block(decoder, index).self_attn
-                hook = module.register_forward_pre_hook(restrict, with_kwargs=True)
-                hooks.callback(hook.remove)
-        yield
-
-
 def main(args):
     started = perf_counter()
-    paths = [args.checkpoint, SOURCE, *(folder / name for folder in args.candidates
-                                       for name in ('attention.pt', 'comparison.json'))]
-    protected = {path: sha(path) for path in (*paths, args.reference)}
+    common = (args.checkpoint, SOURCE)
+    candidate_paths = [folder / name for folder in args.candidates for name in ('attention.pt', 'comparison.json')]
+    recovery_paths = tuple(args.recovery / name for name in ('training.json', 'result.json')) if args.recovery else ()
+    protected = {path: sha(path) for path in (*common, *candidate_paths, args.reference, *recovery_paths)}
     reference = json.loads(args.reference.read_text(encoding='utf-8'))
+    expected_paths = common if args.recovery else (*common, *candidate_paths)
     if (reference['position_table'] != POSITIONS
-            or any(reference['sources'].get(str(path)) != protected[path] for path in paths)):
+            or any(reference['sources'].get(str(path)) != protected[path] for path in expected_paths)):
         raise ValueError('The benchmark reference used different inputs or position budget')
+    original = reference['dialogue']['recurrent']['recall']
+    if args.recovery:
+        training, result = [json.loads(path.read_text(encoding='utf-8')) for path in recovery_paths]
+        if (any(result.get(key) != value for key, value in training.items())
+                or any(training['sources'].get(str(path)) != protected[path] for path in (*common, args.reference))
+                or training['individual_sha256'] != reference['individual_sha256']):
+            raise ValueError('The recovered results do not match the shared benchmark')
+        original = result['original_cases_after']['recall']
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     source = json.loads(SOURCE.read_text(encoding='utf-8'))
     prompts = [row for row in recall_prompts(tokenizer, source, extended=True) if row['length'] == 'extended']
-    original = [row for row in reference['dialogue']['recurrent']['recall'] if row['length'] == 'extended']
+    original = [row for row in original if row['length'] == 'extended']
     for prompt, saved in zip(prompts, original, strict=True):
         question = {'role': 'user', 'content': prompt['question']}
         evidence_length = len(encode(tokenizer, [*prompt['history'][:4],
@@ -100,6 +66,9 @@ def main(args):
     candidates = load_recurrent_replacements(decoder, args.candidates, protected[args.checkpoint])
     if tuple(candidates) != tuple(reference['layers']):
         raise ValueError('The benchmark reference used a different layer placement')
+    if args.recovery and any(protected[folder / 'attention.pt'] != training['candidate_hashes'][str(layer)]
+                             for layer, folder in zip(candidates, args.candidates, strict=True)):
+        raise ValueError('The loaded candidates and recovered outputs use different weights')
     results = {'unrestricted': {'rows': original, 'summary': summarize(original)['extended']}}
     for label, selected, far in (('restricted_parent', {}, False),
                                  ('restricted_with_far', candidates, True),
@@ -128,6 +97,7 @@ if __name__ == '__main__':
     parser.add_argument('reference', type=Path)
     parser.add_argument('output', type=Path)
     parser.add_argument('candidates', nargs=2, type=Path)
+    parser.add_argument('--recovery', type=Path, help='Use verified unrestricted outputs from recovery training')
     options = parser.parse_args()
     if options.output.exists():
         parser.error('Choose a new output path')

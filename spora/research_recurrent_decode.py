@@ -1,6 +1,6 @@
 """Install a digest-bound recurrent attention candidate for local greedy dialogue."""
 
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 import json
 from pathlib import Path
 
@@ -116,6 +116,49 @@ def attention_block(decoder, index):
     if not isinstance(getattr(block, 'self_attn', None), SPORAFusedAttention):
         raise ValueError('Recurrent migration expects the fused SPORA attention projections')
     return block
+
+
+def segment_mask(start, count, boundary, device):
+    keys = torch.arange(start + count, device=device)
+    queries = keys[start:]
+    same_segment = (queries[:, None] >= boundary) == (keys[None, :] >= boundary)
+    return (same_segment & (keys[None, :] <= queries[:, None]))[None, None]
+
+
+@contextmanager
+def restrict_full_attention(decoder, boundary, excluded):
+    """Run fused attention within each segment and leave recurrent layers intact."""
+    last_shape, allowed = None, None
+
+    def restrict(layer, args, kwargs):
+        nonlocal last_shape, allowed
+        hidden = kwargs['hidden_states']
+        cache = kwargs.get('past_key_values')
+        start = cache.get_seq_length(layer.layer_idx) if cache is not None else 0
+        count = hidden.shape[1]
+        shape = (start, count, hidden.device)
+        if shape != last_shape:
+            positions = kwargs.get('cache_position')
+            if hidden.shape[0] != 1 or positions is None or not torch.equal(
+                    positions, torch.arange(start, start + count, device=hidden.device)):
+                raise ValueError('Segmented attention requires one append-only sequence')
+            allowed = segment_mask(start, count, boundary, hidden.device)
+            last_shape = shape
+        prior = kwargs.get('attention_mask')
+        if prior is None:
+            mask = allowed
+        elif prior.dtype == torch.bool:
+            mask = prior[..., :start + count] & allowed
+        else:
+            mask = prior[..., :start + count].masked_fill(~allowed, torch.finfo(prior.dtype).min)
+        return args, {**kwargs, 'attention_mask': mask}
+
+    with ExitStack() as hooks:
+        for index in range(len(decoder.base.model.layers)):
+            if index not in excluded:
+                hook = attention_block(decoder, index).self_attn.register_forward_pre_hook(restrict, with_kwargs=True)
+                hooks.callback(hook.remove)
+        yield
 
 
 @contextmanager

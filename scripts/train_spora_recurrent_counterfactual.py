@@ -1,7 +1,7 @@
 """Train two recurrent layers to follow a changed value through long dialogue."""
 
 import argparse
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack, contextmanager, nullcontext
 from functools import partial
 import json
 import math
@@ -18,11 +18,12 @@ from torch.utils.checkpoint import checkpoint
 from scripts.train_spora_recurrent_long_alignment import (
     CORPUS, DATA, HELD, MANIFEST, MODEL, SOURCE, AutoTokenizer, dialogue_data, encode, evaluate, extend_positions,
     frozen_digest, load_full_streamed, load_integrated_runtime, load_recurrent_replacements, material, recall_prompts,
-    records, replace, run_dialogue, sha, torch, training_sequences,
+    records, replace, run_dialogue, sha, torch, training_history, training_sequences,
 )
 from scripts.train_spora_dialogue_working_state import annotated
 from spora.language_training import atomic_save
 from spora.research_dialogue_working_state import FIELDS
+from spora.research_recurrent_decode import restrict_full_attention
 
 
 SEED = 50721
@@ -99,6 +100,37 @@ def training_pairs(tokenizer, source, examples, *, field_weight=0.):
     return pairs
 
 
+def segment_boundaries(tokenizer, source, examples, pairs, block):
+    rng = random.Random(SEED)
+    fillers = material(tokenizer, CORPUS, 40)
+    cuts = []
+    for index, (example, pair) in enumerate(zip(examples, pairs, strict=True)):
+        counterfactual = alternate(example, source, rng)
+        ends = []
+        for scenario, (ids, *_) in zip((example, counterfactual), pair, strict=True):
+            history = training_history(scenario, fillers, index)
+            last_event = next(i for i, turn in enumerate(history)
+                              if turn['role'] == 'user' and turn['content'] == scenario['update'][0])
+            rendered = tokenizer.apply_chat_template(history[:last_event + 2], tokenize=False,
+                                                     add_generation_prompt=False)
+            prefix = tokenizer.encode(rendered, add_special_tokens=False)
+            if ids[:len(prefix)] != prefix:
+                raise ValueError('The separated history must preserve the original prompt prefix')
+            ends.append(len(prefix))
+        padded_end = max(ends) + 2 * block
+        cut = ((padded_end + block - 1) // block) * block
+        for scenario, (ids, answer, *_) in zip((example, counterfactual), pair, strict=True):
+            prompt_end = len(ids) - len(answer) + 1
+            suffix = tokenizer.decode(ids[cut:prompt_end], skip_special_tokens=True)
+            if prompt_end - cut < 96 or any(str(value) in suffix for value in scenario['current'].values()):
+                cut = None
+                break
+        cuts.append(cut)
+    if not any(cut is not None for cut in cuts):
+        raise ValueError('Expected long histories with both facts before a segment boundary')
+    return cuts
+
+
 def evaluation_pairs(tokenizer, source):
     base = [row for row in recall_prompts(tokenizer, source, extended=True) if row['length'] != 'short']
     pairs = []
@@ -146,12 +178,13 @@ def checkpoint_layers(decoder, first):
         yield
 
 
-def fit(decoder, candidates, pairs, steps, learning_rate, field_weight=0.):
+def fit(decoder, candidates, pairs, steps, learning_rate, field_weight=0., *, boundaries=None):
     params = [param for _, replacement in candidates.values() for param in replacement.core.parameters()]
     optimizer = torch.optim.AdamW(params, lr=learning_rate, weight_decay=0.)
     rng = random.Random(SEED)
     order = [max(range(len(pairs)), key=lambda i: max(len(arm[0]) for arm in pairs[i]))]
     trace = []
+    eligible = 0
     for step in range(steps):
         if not order:
             order = list(range(len(pairs)))
@@ -160,15 +193,22 @@ def fit(decoder, candidates, pairs, steps, learning_rate, field_weight=0.):
         batch = pairs[pair_index]
         optimizer.zero_grad(set_to_none=True)
         observations = []
-        for arm in batch:
-            loss, margin = loss_for(decoder, arm, field_weight)
-            (loss * .5).backward()
-            observations.append((float(loss.detach()), float(margin.detach())))
+        boundary = boundaries[pair_index] if boundaries is not None else None
+        eligible += int(boundary is not None)
+        masked = boundary is not None and eligible % 2 == 1
+        context = restrict_full_attention(decoder, boundary, candidates) if masked else nullcontext()
+        with context:
+            for arm in batch:
+                loss, margin = loss_for(decoder, arm, field_weight)
+                (loss * .5).backward()
+                observations.append((float(loss.detach()), float(margin.detach())))
         gradient = torch.nn.utils.clip_grad_norm_(params, 1., error_if_nonfinite=True)
         optimizer.step()
         row = {'step': step + 1, 'pair_index': pair_index, 'tokens': [len(arm[0]) for arm in batch],
                'loss': sum(obs[0] for obs in observations) / len(observations), 'margins': [obs[1] for obs in observations],
                'gradient': float(gradient)}
+        if masked:
+            row['segment_boundary'] = boundary
         trace.append(row)
         if step == 0 or (step + 1) % 8 == 0 or step + 1 == steps:
             print('Training', row, flush=True)
@@ -227,6 +267,8 @@ def save_training(args, candidates, sources, checkpoint_sha, individual, trace, 
                 'training_peak_bytes': peak, 'candidate_hashes': saved}
     if args.field_weight:
         training['field_weight'] = args.field_weight
+    if args.segment_supervision:
+        training['segment_supervision'] = {'masked_steps': sum('segment_boundary' in row for row in trace)}
     store_json(args.output / 'training.json', training)
     print('Saved recurrent weights for evaluation', flush=True)
     return training
@@ -278,7 +320,8 @@ def main(args):
     if args.verify or args.evaluate:
         training = json.loads((args.output / 'training.json').read_text(encoding='utf-8'))
         if (training['sources'] != sources or training['individual_sha256'] != individual
-                or training.get('field_weight', 0.) != args.field_weight):
+                or training.get('field_weight', 0.) != args.field_weight
+                or ('segment_supervision' in training) != args.segment_supervision):
             raise ValueError('The saved training used different inputs')
         directories = [args.output / f'layer-{index}' for index in candidates]
         for index, directory in zip(candidates, directories, strict=True):
@@ -287,6 +330,12 @@ def main(args):
         trained = load_recurrent_replacements(decoder, directories, protected[args.checkpoint])
     else:
         pairs = training_pairs(tokenizer, training_data, examples, field_weight=args.field_weight)
+        boundaries = None
+        if args.segment_supervision:
+            blocks = {replacement.core.block for _, replacement in candidates.values()}
+            if len(blocks) != 1:
+                raise ValueError('Segment supervision requires the same recent block size in both branches')
+            boundaries = segment_boundaries(tokenizer, training_data, examples, pairs, blocks.pop())
         trained = candidates
         with ExitStack() as installed:
             install(installed, trained)
@@ -295,7 +344,8 @@ def main(args):
                 replacement.core.train().requires_grad_(True)
             torch.cuda.reset_peak_memory_stats()
             with checkpoint_layers(decoder, min(candidates) + 1):
-                trace = fit(decoder, candidates, pairs, args.steps, args.learning_rate, args.field_weight)
+                trace = fit(decoder, candidates, pairs, args.steps, args.learning_rate, args.field_weight,
+                            boundaries=boundaries)
             peak = torch.cuda.max_memory_allocated()
         for _, replacement in trained.values():
             replacement.core.eval().requires_grad_(False)
@@ -353,6 +403,8 @@ if __name__ == '__main__':
     parser.add_argument('--learning-rate', type=float, default=.0005)
     parser.add_argument('--field-weight', type=float, default=0.,
                         help='Mix equal weight per annotated answer field into the full-answer loss')
+    parser.add_argument('--segment-supervision', action='store_true',
+                        help='Restrict full attention on alternate eligible long training pairs')
     parser.add_argument('--transfer', type=Path, help='Optional additional long-dialogue evaluation scenarios')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('--verify', action='store_true')

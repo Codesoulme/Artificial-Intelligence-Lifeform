@@ -21,7 +21,11 @@ CPU 检查覆盖了未来词元、跨段屏蔽、提示预填充与增量生成�
 
 各组均在输出预算内正常结束。远距读取开关改变了受限条件下全部十条的生成文字，却没有恢复任何应答值。例如取展板题仍会要求用户提供地点和联络人。核对了结果中的原始历史、目标值和来源摘要，诊断用时约 159 秒。
 
-下一步把一部分长样本的训练改为段内精确注意力，让循环层在早期原话一直可被常规注意力读取的情况之外，也练习传递更正后的值及仍有效的字段。保留相同的训练步数和样本顺序，分别评估普通生成、受限条件，以及具名持久读取。论文使用更大规模的混合骨干并合并两项损失。这里的小型对照只改变有限训练预算中的部分前向条件。 [训练设计参考](https://arxiv.org/html/2610.06750v1)
+## 等预算训练
+
+把一部分长样本的训练改为段内精确注意力，给循环层学习传递更正值和仍有效字段的机会。每一对样本的分段点相同，放在最后一次有效更新之后，至少隔开两个近期块。分段点后须有至少 96 个提示词元，并逐例排除出现待答值副本的样本。沿用原来的样本顺序，每隔一个合格的长样本对给予分段约束，其余步采用常规训练。按已保存的基线抽样顺序预核对，32 次中有 16 次满足条件，安排 8 次分段训练。论文使用更大规模的混合骨干并合并两项损失。本地实验用轮替保持总前向次数一致。 [训练设计参考](https://arxiv.org/html/2610.06750v1)
+
+对照使用同一第 19、22 层的位置、已有候选权重、父检查点、学习率及抽样顺序。恢复完分别评估常规对话、受限条件下开关远距读取，以及具名持久读取。受限对照会从相应训练报告加载普通答复，并核对生成报告和新层权重的摘要。
 
 ## 复现
 
@@ -30,4 +34,16 @@ $env:OMP_NUM_THREADS = '2'
 $env:MKL_NUM_THREADS = '2'
 $env:PYTHONUTF8 = '1'
 .\.venv\Scripts\python.exe -u -m scripts.audit_spora_recurrent_pathways runs/spora-composition-late-gates-20-23-24-v1/candidate.pt runs/spora-recurrent-dialogue-extended-v1.json runs/spora-recurrent-pathways-v1.json runs/spora-gelu24-recurrent-layer19-v2 runs/spora-gelu24-recurrent-layer22-v1
+```
+
+```powershell
+$sporaParent = 'runs/spora-composition-late-gates-20-23-24-v1/candidate.pt'
+$sporaReference = 'runs/spora-recurrent-dialogue-extended-v1.json'
+$sporaControl = 'runs/spora-morph-recovery-19-22-v1'
+$sporaAux = 'runs/spora-recurrent-segment-supervision-v1'
+.\.venv\Scripts\python.exe -u -m scripts.train_spora_recurrent_counterfactual $sporaParent $sporaReference $sporaAux runs/spora-gelu24-recurrent-layer19-v2 runs/spora-gelu24-recurrent-layer22-v1 --steps 32 --learning-rate .0005 --segment-supervision
+foreach ($sporaRun in $sporaControl,$sporaAux) {
+    .\.venv\Scripts\python.exe -u -m scripts.audit_spora_recurrent_pathways $sporaParent $sporaReference "$sporaRun/pathways.json" "$sporaRun/layer-19" "$sporaRun/layer-22" --recovery $sporaRun
+    if ($LASTEXITCODE -ne 0) { break }
+}
 ```
