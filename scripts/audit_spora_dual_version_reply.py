@@ -105,22 +105,23 @@ def fit(model, tokenizer, head, rows, steps):
 
 
 @torch.inference_mode()
-def reply(model, tokenizer, head, question, memories, *, require_coverage=False, history=()):
+def reply(model, tokenizer, head, question, memories, *, require_coverage=False, history=(),
+          max_new_tokens=LIMIT, memory_fraction=MEMORY_FRACTION):
     if not any(value is not None for value in memories):
-        return {**generate(model, tokenizer, question, history=history), 'copied': []}
+        return {**generate(model, tokenizer, question, history=history, max_new_tokens=max_new_tokens), 'copied': []}
     require_coverage = require_coverage and all(value is not None for value in memories)
     inputs = closed_think_inputs(tokenizer, question, model.device, history=history)['input_ids']
     eos = tokenizer.eos_token_id
     tail, copied, past = [], [], None
     mask = 0
-    while len(tail) < LIMIT:
+    while len(tail) < max_new_tokens:
         output = model.model(input_ids=inputs, past_key_values=past, use_cache=True)
         past = output.past_key_values
         hidden = output.last_hidden_state[0, -1]
-        available = tuple(value is not None and len(value) <= LIMIT - len(tail) for value in memories)
+        available = tuple(value is not None and len(value) <= max_new_tokens - len(tail) for value in memories)
         pending = any(fits and not (mask & (1 << slot)) for slot, fits in enumerate(available))
         slot, token = head.choose_slot(hidden, model.lm_head(hidden), copied=mask, available=available,
-                                       memory_fraction=MEMORY_FRACTION,
+                                       memory_fraction=memory_fraction,
                                        blocked_token=eos if require_coverage and pending else None)
         if slot is not None:
             copied.append({'slot': slot, 'at': len(tail)})
