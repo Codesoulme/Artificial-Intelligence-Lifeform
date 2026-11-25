@@ -6,8 +6,9 @@ from unittest.mock import patch
 import torch
 
 from scripts.audit_spora_version_coverage import write_fresh
-from scripts.spora_version_chat import compose_followup, compose_request, confirmed_time, deferred_lookup, write_request
+from scripts.spora_version_chat import VersionChat, compose_followup, compose_request, confirmed_time, deferred_lookup, write_request
 from spora.integrated_open_base import SPORAGatedFeedForward
+from spora.research_version_dialogue_scope import PartialLookup
 from spora.research_version_store import MemoryAddress
 from spora.research_version_timeline import VersionQuery
 
@@ -89,3 +90,35 @@ class VersionChatCommandTests(unittest.TestCase):
         self.assertTrue(deferred_lookup('先不查了。'))
         self.assertFalse(deferred_lookup('先不查了，帮我写封邮件。'))
         self.assertFalse(deferred_lookup('把「先不查了」翻译成英语。'))
+
+    def test_spoken_partial_accepts_only_supported_incomplete_coordinates(self):
+        embedding = torch.nn.Embedding(2, 8)
+        model = SimpleNamespace(get_input_embeddings=lambda: embedding)
+        store = SimpleNamespace(catalog=lambda: {MemoryAddress('林语', 'drinks'): (),
+                                                 MemoryAddress('周小宁', 'drinks'): ()})
+        today = date(2026, 11, 26)
+        question = '先前留的要喝哪一种？我马上说是谁。'
+        candidates = (
+            PartialLookup(owner='林语'),
+            PartialLookup(field='drinks'),
+            PartialLookup(),
+            PartialLookup(owner='陌生人'),
+            PartialLookup(field='books'),
+            PartialLookup(owner='林语', field='drinks'),
+            PartialLookup(field='drinks', query=VersionQuery('current')),
+        )
+        with patch('scripts.spora_version_chat.generate', return_value={'answer': '好。'}):
+            for index, candidate in enumerate(candidates):
+                chat = VersionChat(store, model, None, None, lambda _: [], {}, ordinary_tokens=4,
+                                   spoken=lambda text, _: candidate if text == question else None)
+                with self.subTest(candidate=candidate):
+                    first = chat.turn(question, today)
+                    self.assertEqual(first['selected'], [])
+                    self.assertEqual(first['kind'], 'clarify' if index < 2 else 'chat')
+                    if index == 1:
+                        ambiguous = chat.turn('林语或周小宁', today)
+                        self.assertEqual(ambiguous['reasons'], ['ambiguous_address'])
+                        self.assertEqual(chat.partial_lookup, candidate)
+                        self.assertEqual(chat.turn('先不查了。', today)['selected'], [])
+                        self.assertIsNone(chat.partial_lookup)
+                        self.assertEqual(chat.turn('林语当前版', today)['kind'], 'chat')

@@ -63,6 +63,13 @@ def _lookup_parts(text, enrolled, fields):
     return PartialLookup(name if name != '谁' else None, labels.get(field), parse_lookup_scope(version) if version else None)
 
 
+def _reply_parts(text, enrolled, fields):
+    # A field such as 用品 can start with the same character as a command prefix.
+    return _lookup_parts(text, enrolled, fields) or _lookup_parts(
+        _SLOT_REPLY.sub('', text.strip(), count=1), enrolled, fields
+    )
+
+
 def start_partial_lookup(question, enrolled, fields):
     """Remember missing coordinates only when the user explicitly asks to look up a record."""
     opening = _LOOKUP_START.match(question.strip())
@@ -73,10 +80,10 @@ def start_partial_lookup(question, enrolled, fields):
 
 
 def ambiguous_partial_reply(question, enrolled, fields):
-    parts = _ALTERNATIVE.split(_SLOT_REPLY.sub('', question.strip(), count=1))
+    parts = _ALTERNATIVE.split(question.strip())
     if len(parts) < 2:
         return None
-    replies = [_lookup_parts(text, enrolled, fields) for text in parts]
+    replies = [_reply_parts(text, enrolled, fields) for text in parts]
     if any(reply is None for reply in replies):
         return None
     for slot in ('owner', 'field', 'query'):
@@ -101,7 +108,7 @@ def continue_partial_lookup(question, pending, enrolled, fields):
             return None
         reply = replacement
     else:
-        reply = _lookup_parts(_SLOT_REPLY.sub('', text, count=1), enrolled, fields)
+        reply = _reply_parts(text, enrolled, fields)
     if reply is None or reply == PartialLookup():
         return None
     changed_address = reply.owner and reply.field and (
@@ -122,7 +129,7 @@ def resolve_spoken_proposal(question, address, enrolled, fields):
         remainder = approval[1]
         if not remainder:
             return 'confirmed', pending
-        reply = _lookup_parts(_SLOT_REPLY.sub('', remainder, count=1), enrolled, fields)
+        reply = _reply_parts(remainder, enrolled, fields)
         if reply is not None and reply.owner is None and reply.field is None and reply.query is not None:
             return 'confirmed', replace(pending, query=reply.query)
         if ambiguous_partial_reply(remainder, enrolled, fields) == 'query':
@@ -131,7 +138,7 @@ def resolve_spoken_proposal(question, address, enrolled, fields):
     if _CORRECTION.fullmatch(text):
         change = continue_partial_lookup(text, pending, enrolled, fields)
         return ('confirmed', change) if change is not None else ('revoked', None)
-    reply = _lookup_parts(_SLOT_REPLY.sub('', text, count=1), enrolled, fields)
+    reply = _reply_parts(text, enrolled, fields)
     if reply is not None and reply.owner is None and reply.field is None and reply.query is not None:
         return 'awaiting_confirmation', None
     return 'revoked', None

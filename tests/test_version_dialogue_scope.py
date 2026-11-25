@@ -45,6 +45,15 @@ class DialogueVersionScopeTests(unittest.TestCase):
         self.assertEqual(ambiguous_partial_reply('先查首版或者当前版？', NAMES, FIELDS), 'query')
         self.assertEqual(ambiguous_partial_reply('首版或者当前版？', NAMES, FIELDS), 'query')
 
+    def test_partial_reply_keeps_the_initial_character_of_a_bare_field(self):
+        fields = {**FIELDS, 'items': '用品'}
+        pending = PartialLookup(owner=NAMES[0])
+        for reply in ('用品当前版。', '查用品当前版。', '用用品当前版。'):
+            with self.subTest(reply=reply):
+                self.assertEqual(continue_partial_lookup(reply, pending, NAMES, fields),
+                                 PartialLookup(owner=NAMES[0], field='items', query=VersionQuery('current')))
+        self.assertEqual(ambiguous_partial_reply('用品或者饮品？', NAMES, fields), 'field')
+
     def test_full_new_address_without_version_discards_the_old_version(self):
         partial = start_partial_lookup('查闻韶宁的首版。', NAMES, FIELDS)
         changed = continue_partial_lookup('查闻绍宁的饮品。', partial, NAMES, FIELDS)

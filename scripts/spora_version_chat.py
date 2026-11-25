@@ -31,9 +31,9 @@ from spora.integrated_checkpoint import load_integrated_runtime
 from spora.research_multi_version_route import resolve_address
 from spora.research_recurrent_decode import load_recurrent_replacements
 from spora.research_ttt_ntp import LowRankFastWeight
-from spora.research_version_dialogue_scope import (advance_scope, ambiguous_partial_reply, continue_partial_lookup, dialogue_targets,
-                                                   eligible_spoken_lookup, pending_after_lookup, pending_followup_targets,
-                                                   resolve_spoken_proposal, start_partial_lookup)
+from spora.research_version_dialogue_scope import (PartialLookup, advance_scope, ambiguous_partial_reply, continue_partial_lookup,
+                                                   dialogue_targets, eligible_spoken_lookup, pending_after_lookup,
+                                                   pending_followup_targets, resolve_spoken_proposal, start_partial_lookup)
 from spora.research_version_store import MemoryAddress, VersionStore
 from spora.research_version_timeline import parse_version_query
 from spora.research_versioned_memory_pointer import VersionReplyActions
@@ -274,6 +274,11 @@ class VersionChat:
             return {'kind': 'clarify', 'answer': '请确认一个具体时间，例如「周五傍晚」。', 'selected': []}
         return self.compose_selected(request, when, selection)
 
+    def ask_for_coordinate(self, partial):
+        self.partial_lookup = partial
+        return {'kind': 'clarify', 'answer': ask_lookup_coordinate(partial),
+                'selected': [], 'reasons': ['incomplete_address']}
+
     @torch.inference_mode()
     def turn(self, question, today):
         if len(question) > 512:
@@ -314,16 +319,21 @@ class VersionChat:
             self.scope, self.pending = (), None
             target = partial.target()
             if target is None:
-                self.partial_lookup = partial
-                return {'kind': 'clarify', 'answer': ask_lookup_coordinate(partial),
-                        'selected': [], 'reasons': ['incomplete_address']}
+                return self.ask_for_coordinate(partial)
             targets = (target,)
         else:
             targets = (dialogue_targets(question, enrolled, FIELDS, self.scope) if self.pending is None else
                        pending_followup_targets(question, enrolled, FIELDS, self.pending))
         if not targets and self.spoken is not None and proposal is None and eligible_spoken_lookup(question):
             suggested = self.spoken(question, enrolled)
-            if suggested in catalog:
+            if isinstance(suggested, PartialLookup):
+                owner, field = suggested.owner, suggested.field
+                supported = ((owner in enrolled and field is None)
+                             or (owner is None and any(address.field == field for address in catalog)))
+                if supported and suggested.query is None:
+                    self.history, self.scope, self.pending = [], (), None
+                    return self.ask_for_coordinate(suggested)
+            elif suggested in catalog:
                 self.history, self.scope, self.pending = [], (), None
                 self.spoken_pending = suggested
                 return ask_spoken_approval(suggested)
