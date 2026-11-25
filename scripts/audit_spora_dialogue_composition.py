@@ -55,11 +55,12 @@ SECOND = (
 )
 
 
-def replay(profile, cases, composition):
+def replay(profile, cases, composition, recurrent=None):
     start = perf_counter()
+    backend = [] if recurrent is None else ['--recurrent', *map(str, recurrent)]
     proc = subprocess.run(
         ['cmd.exe', '/d', '/c', 'spora_version_chat.cmd', '--profile', str(profile),
-         '--composition', str(composition), '--json'],
+         '--composition', str(composition), *backend, '--json'],
         cwd=ROOT, input='\n'.join([*(line for line, _, _ in cases), '/退出', '']),
         encoding='utf-8', capture_output=True, timeout=270,
     )
@@ -70,11 +71,16 @@ def replay(profile, cases, composition):
     for (question, kind, expected), result in zip(cases, output, strict=True):
         selected = (result['record'],) if result['kind'] == 'saved' else tuple(result.get('selected', ()))
         passed = kind == result['kind'] and expected == selected
-        if kind == 'composed':
+        if kind in ('read', 'composed'):
             wanted = {RECORDS[number - 1][2] for number in expected}
             shown = {value for _, _, value in RECORDS if value in result['answer']}
+            passed &= wanted == shown and all(result['answer'].count(value) == 1 for value in wanted)
+        if kind == 'read' and recurrent is not None:
+            passed &= all(f'{field}：{value}' in result['answer']
+                          for _, field, value in (RECORDS[number - 1] for number in expected))
+        if kind == 'composed':
             when = '今晚七点' if question == BOOK_REQUEST else '周五傍晚'
-            passed &= wanted == shown and result['answer'].count(when) == 1 and len(result.get('copied', ())) == 3
+            passed &= result['answer'].count(when) == 1 and len(result.get('copied', ())) == 3
         row = {'question': question, 'expected': kind, 'expected_records': expected, 'output': result, 'passed': passed}
         observed.append(row)
         if not passed:
@@ -85,17 +91,22 @@ def replay(profile, cases, composition):
 def main(args):
     args.output.mkdir(parents=True, exist_ok=False)
     profile = (args.output / 'profile').resolve()
-    first = replay(profile, FIRST, args.composition)
+    first = replay(profile, FIRST, args.composition, args.recurrent)
     database = profile / 'versions.sqlite3'
     original = digest(database)
-    second = replay(profile, SECOND, args.composition)
+    second = replay(profile, SECOND, args.composition, args.recurrent)
     initial = {tuple(row['expected_records']): row['output']
-               for row in first['checks'] if row['expected'] == 'composed'}
+               for row in first['checks'] if row['expected'] == 'composed' and row['passed']}
     after = {tuple(row['expected_records']): row['output']
-             for row in second['checks'] if row['expected'] == 'composed'}
+             for row in second['checks'] if row['expected'] == 'composed' and row['passed']}
+    expected_after = {numbers for _, kind, numbers in SECOND if kind == 'composed'}
     checks = {'archive_unchanged': original == digest(database),
-              'same_composition_after_restart': bool(after) and all(initial[number] == value for number, value in after.items())}
-    store_json(args.output / 'result.json', {'first': first, 'restart': second, 'controls': checks})
+              'same_composition_after_restart': after.keys() == expected_after
+              and all(initial.get(number) == value for number, value in after.items())}
+    store_json(args.output / 'result.json', {
+        'first': first, 'restart': second, 'controls': checks,
+        'recurrent': None if args.recurrent is None else [str(path) for path in args.recurrent],
+    })
     print(f"first {first['passed']}/{len(FIRST)}, restart {second['passed']}/{len(SECOND)}", checks, flush=True)
     if first['passed'] != len(FIRST) or second['passed'] != len(SECOND) or not all(checks.values()):
         raise SystemExit(1)
@@ -105,4 +116,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output', type=Path)
     parser.add_argument('--composition', type=Path, default=Path('runs/spora-typed-composition-v1'))
+    parser.add_argument('--recurrent', nargs=3, type=Path, metavar=('CHECKPOINT', 'LAYER19', 'LAYER22'))
     main(parser.parse_args())

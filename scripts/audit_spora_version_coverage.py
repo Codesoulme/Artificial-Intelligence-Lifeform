@@ -5,6 +5,7 @@ from collections import Counter
 import json
 from pathlib import Path
 from time import perf_counter
+from types import SimpleNamespace
 
 import torch
 from torch.nn import functional as F
@@ -15,8 +16,10 @@ from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.deepseek_spora_ttt_joint_writer_reader_pilot import fact_cache
 from scripts.deepseek_spora_ttt_read_adapter_pilot import generate
 from scripts.train_spora_recurrent_counterfactual import store_json
+from spora.integrated_open_base import SPORAGatedFeedForward
 from spora.language_training import atomic_save
-from spora.research_ttt_ntp import LowRankFastWeight, install
+from spora.pretrained_attention import SPORAResidualBlock
+from spora.research_ttt_ntp import LowRankFastWeight
 from spora.research_versioned_memory_pointer import VersionCoverageBias, VersionMemoryPointer
 from transformers import LogitsProcessorList
 
@@ -43,25 +46,33 @@ BOOST = 8.
 
 @torch.inference_mode()
 def write_fresh(model, tokenizer, columns, *, layer, eta, ridge, events=EVENTS, facts=FACTS, minimum_tokens=2):
-    sites = install(model, (layer,))
-    projection = compress_dimension(sites[layer].base.in_features).to(columns.device)
+    layers = model.model.layers
+    if type(layer) is not int or not 0 <= layer < len(layers):
+        raise ValueError('Layer id is outside the decoder')
+    block = getattr(layers[layer], 'layer', layers[layer])
+    if isinstance(block, SPORAResidualBlock):
+        block = block.base
+    mlp = getattr(block, 'mlp', None)
+    down = mlp.down if isinstance(mlp, SPORAGatedFeedForward) else getattr(mlp, 'down_proj', None)
+    if not isinstance(down, torch.nn.Linear):
+        raise ValueError('Expected a linear down projection for lexical memory')
+    # fact_cache only observes the projection input. The lexical writer does not need a TTT wrapper.
+    sites = {layer: SimpleNamespace(base=down)}
+    projection = compress_dimension(down.in_features).to(columns.device)
     banks = {}
-    try:
-        for domain, rows in events.items():
-            for name, *values in rows:
-                versions = []
-                for value in values:
-                    event = facts[domain].format(name=name, value=value)
-                    captured = fact_cache(model, tokenizer, sites, event, value, decoder_only=True)
-                    keys = captured['keys'][layer].index_select(-1, projection)
-                    codes = F.normalize(captured['value_embeddings'].index_select(-1, columns), dim=-1)
-                    if len(keys) != len(tokens(tokenizer, value)) or not minimum_tokens <= len(keys) <= 4:
-                        raise ValueError(f'Unexpected span width for {event}')
-                    state = lexical_write(LowRankFastWeight(keys[:0], codes[:0]), keys, codes, eta=eta, ridge=ridge)
-                    versions.append((state.keys.cpu(), state.values.cpu()))
-                banks[name] = versions
-    finally:
-        model.model.layers[layer].mlp.down_proj = sites[layer].base
+    for domain, rows in events.items():
+        for name, *values in rows:
+            versions = []
+            for value in values:
+                event = facts[domain].format(name=name, value=value)
+                captured = fact_cache(model, tokenizer, sites, event, value, decoder_only=True)
+                keys = captured['keys'][layer].index_select(-1, projection)
+                codes = F.normalize(captured['value_embeddings'].index_select(-1, columns), dim=-1)
+                if len(keys) != len(tokens(tokenizer, value)) or not minimum_tokens <= len(keys) <= 4:
+                    raise ValueError(f'Unexpected span width for {event}')
+                state = lexical_write(LowRankFastWeight(keys[:0], codes[:0]), keys, codes, eta=eta, ridge=ridge)
+                versions.append((state.keys.cpu(), state.values.cpu()))
+            banks[name] = versions
     return banks
 
 

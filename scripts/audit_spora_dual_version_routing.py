@@ -178,7 +178,7 @@ def build_bank(store, model, tokenizer, columns, source):
     return metadata
 
 
-def reply_to_route(model, tokenizer, store, codebook, reader, question, route, *, history=()):
+def reply_to_route(model, tokenizer, store, codebook, reader, question, route, *, history=(), labels=None):
     if not route:
         return [], reply(model, tokenizer, reader, question, (None, None), history=history)
     if None in route or len(route) > 2 or len(set(route)) != len(route):
@@ -189,8 +189,22 @@ def reply_to_route(model, tokenizer, store, codebook, reader, question, route, *
         bank[number] = [(state.keys, state.values)]
     decoded = read_versions(bank, codebook)
     values = tuple(decoded[number][0] for number in route)
-    return route, reply(model, tokenizer, reader, question, values + (None,) * (2 - len(values)),
-                        require_coverage=len(values) == 2, history=history)
+    output = reply(model, tokenizer, reader, question, values + (None,) * (2 - len(values)),
+                   require_coverage=labels is not None or len(values) == 2,
+                   cover_present_slots=labels is not None, history=history)
+    if labels is not None:
+        copied = {item['slot']: item['at'] for item in output['copied']}
+        if len(labels) != len(values) or set(copied) != set(range(len(values))):
+            raise ValueError('这次没有完整读回选中的记忆，请重试。')
+        fields = []
+        for index, (label, value) in enumerate(zip(labels, values, strict=True)):
+            start = copied[index]
+            actual = output['token_ids'][start:start + len(value)]
+            if actual != value.tolist():
+                raise ValueError('读出的名称与记录不一致，请重试。')
+            fields.append(f'{label}：{tokenizer.decode(actual)}')
+        output['answer'] = '；'.join(fields) + '。'
+    return route, output
 
 
 @torch.inference_mode()

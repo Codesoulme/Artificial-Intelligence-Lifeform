@@ -54,6 +54,19 @@ cd D:\SPORA
 
 没给出时间时，孢子会先追问。也可以在写作要求末尾加一句「时间定在周五傍晚」。此方式沿用刚选中的版次。转题、取消、清空或重启后需要重新查阅两项。 [多轮回放](../reports/spora-dialogue-composition-cli-20261126.md)
 
+## 试用循环注意力版
+
+准备好孢子父检查点和第 19、22 层权重后，可以在同一个本机入口登记、查阅和成句。
+
+```powershell
+$sporaParent = 'runs/spora-composition-late-gates-20-23-24-v1/candidate.pt'
+$sporaLayer19 = 'runs/spora-gelu24-recurrent-layer19-v2'
+$sporaLayer22 = 'runs/spora-gelu24-recurrent-layer22-v1'
+.\spora_version_chat.cmd --profile runs\my-version-memory --composition runs\spora-typed-composition-v1 --recurrent $sporaParent $sporaLayer19 $sporaLayer22
+```
+
+循环版支持原有版次档案，启动会检验父检查点、循环层权重和词汇档案的绑定。每次模型前向最多处理 2048 个词元位置。遇到长度提示可用 `/清空对话` 再试，已登记的记忆会保留。 [循环版回放](../reports/spora-recurrent-version-chat-20261126.md)
+
 ## 本机回放
 
 回放从空测试档案开始，使用 Windows 启动入口发送登记和查阅消息，然后退出并在独立进程重开。脚本只使用位于指定结果目录下的新档案。

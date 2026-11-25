@@ -1,6 +1,7 @@
 """Interactive DeepSeek chat with a dedicated, versioned SPORA memory profile."""
 
 import argparse
+from contextlib import contextmanager
 from datetime import date
 from hashlib import sha256
 import json
@@ -25,7 +26,9 @@ from scripts.audit_spora_version_coverage import write_fresh
 from scripts.audit_spora_versioned_memory_generation import read_versions
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.deepseek_spora_ttt_read_adapter_pilot import generate
+from spora.integrated_checkpoint import load_integrated_runtime
 from spora.research_multi_version_route import resolve_address
+from spora.research_recurrent_decode import load_recurrent_replacements
 from spora.research_ttt_ntp import LowRankFastWeight
 from spora.research_version_dialogue_scope import (advance_scope, dialogue_targets, pending_after_lookup,
                                                    pending_followup_targets)
@@ -143,10 +146,12 @@ def deferred_lookup(question):
 
 
 class VersionChat:
-    def __init__(self, store, model, tokenizer, reader, propose, settings, *, ordinary_tokens, composer=None):
+    def __init__(self, store, model, tokenizer, reader, propose, settings, *, ordinary_tokens, composer=None,
+                 typed_lookup=False):
         self.store, self.model, self.tokenizer, self.reader = store, model, tokenizer, reader
         self.propose, self.settings, self.ordinary_tokens = propose, settings, ordinary_tokens
         self.composer = composer
+        self.typed_lookup = typed_lookup
         embedding = model.get_input_embeddings().weight.detach()
         self.columns = compress_dimension(embedding.shape[1]).to(embedding.device)
         self.codebook = F.normalize(embedding.index_select(1, self.columns).float(), dim=-1)
@@ -267,8 +272,14 @@ class VersionChat:
             answer = clarify(catalog, targets, reasons, today)
         else:
             kind = 'read'
+            labels = None
+            if self.typed_lookup:
+                addresses = [target.address for target in targets]
+                multi_person = len({address.name for address in addresses}) > 1
+                labels = [f'{address.name}的{FIELDS[address.field]}' if multi_person else FIELDS[address.field]
+                          for address in addresses]
             selected, output = reply_to_route(self.model, self.tokenizer, self.store, self.codebook, self.reader,
-                                              question, route, history=self.history)
+                                              question, route, history=self.history, labels=labels)
             answer = output['answer']
             if output['token_ids'] and output['token_ids'][-1] == self.tokenizer.eos_token_id:
                 answer = answer.rstrip('，,、 ')
@@ -337,13 +348,52 @@ def composition_head(directory, width, device):
     return head.eval().to(device)
 
 
+@contextmanager
+def local_model(recurrent):
+    if recurrent is None:
+        yield load_full_streamed()
+        return
+    from scripts.benchmark_spora_recurrent_dialogue import extend_positions, using
+
+    checkpoint, *layers = recurrent
+    model = load_full_streamed(stage_output_projection=True)
+    rotary = model.model.rotary_emb
+    runtime = load_integrated_runtime(checkpoint, model, base.MODEL, disposable_base=True)
+    decoder = runtime.decoder.eval().requires_grad_(False)
+    limit = 2048
+    if decoder.position_table_max_position is None or decoder.position_table_max_position > limit:
+        raise ValueError('循环版需要经验证的位置表。')
+    if decoder.position_table_max_position < limit:
+        extend_positions(decoder, rotary, limit)
+    replacements = load_recurrent_replacements(decoder, layers, base.sha(checkpoint))
+    if tuple(replacements) != (19, 22):
+        raise ValueError('请按顺序提供第 19、22 层循环注意力权重。')
+    torch.cuda.empty_cache()
+    model.lm_head.to(model.device)
+
+    def check_position(_module, inputs):
+        if int(inputs[1].amax()) >= limit:
+            raise ValueError('循环版对话超出 2048 词元上限，请清空对话或缩短消息。')
+
+    hook = model.model.rotary_emb.register_forward_pre_hook(check_position)
+    try:
+        with using(replacements, 'recurrent'):
+            yield model
+    finally:
+        hook.remove()
+
+
 def main(args):
     torch.set_num_threads(2)
     interactive = sys.stdin.isatty() and not args.json
     if interactive:
         print('正在校验并加载本机模型，首次打开可能需要约一分钟。', flush=True)
     reader_path, normalizer_path, writer_path, binding = artifacts(args.reader, args.normalizer)
-    model = load_full_streamed()
+    with local_model(args.recurrent) as model:
+        run_chat(args, model, reader_path, normalizer_path, writer_path, binding, interactive)
+
+
+def run_chat(args, model, reader_path, normalizer_path, writer_path, binding, interactive):
     tokenizer = base.AutoTokenizer.from_pretrained(base.MODEL, local_files_only=True, trust_remote_code=False)
     width = model.config.hidden_size
     state = torch.load(reader_path, map_location='cpu', weights_only=True)
@@ -352,14 +402,21 @@ def main(args):
     composer = composition_head(args.composition, width, model.device) if args.composition is not None else None
     extractor = FrozenTurnFeatures(SimpleNamespace(base=model), tokenizer, depth=len(model.model.layers))
     proposer = TemporalProposals(extractor, width, torch.load(normalizer_path, map_location='cpu', weights_only=True)['final_layer'])
+
+    def propose(evidence):
+        if args.recurrent is None:
+            return proposer(evidence)
+        return [proposer([text])[0] for text in evidence]
+
     settings = torch.load(writer_path, map_location='cpu', weights_only=True)
     args.profile.mkdir(parents=True, exist_ok=True)
     database = args.profile / 'versions.sqlite3'
     with VersionStore(database, binding, create=not database.exists()) as store:
-        chat = VersionChat(store, model, tokenizer, reader.eval().to(model.device), proposer, settings,
-                           ordinary_tokens=args.reply_tokens, composer=composer)
+        chat = VersionChat(store, model, tokenizer, reader.eval().to(model.device), propose, settings,
+                           ordinary_tokens=args.reply_tokens, composer=composer, typed_lookup=args.recurrent is not None)
         if interactive:
-            print('孢子版本记忆已就绪。输入 /帮助 查看用法。', flush=True)
+            backend = '循环注意力版' if args.recurrent else '原始注意力版'
+            print(f'孢子版本记忆已就绪。当前使用{backend}。输入 /帮助 查看用法。', flush=True)
         while True:
             try:
                 line = input('你> ' if interactive else '').strip()
@@ -382,6 +439,8 @@ if __name__ == '__main__':
     cli.add_argument('--reader', type=Path, default=Path('runs/spora-dual-version-reply-v1'))
     cli.add_argument('--normalizer', type=Path, default=Path('runs/spora-version-normalizer-v1'))
     cli.add_argument('--composition', type=Path, help='Enable the audited typed composition head')
+    cli.add_argument('--recurrent', nargs=3, type=Path, metavar=('CHECKPOINT', 'LAYER19', 'LAYER22'),
+                     help='Load the integrated recurrent SPORA checkpoint and both layer directories')
     cli.add_argument('--reply-tokens', type=int, default=72)
     cli.add_argument('--json', action='store_true', help='Emit one JSON record per stdin line')
     options = cli.parse_args()
