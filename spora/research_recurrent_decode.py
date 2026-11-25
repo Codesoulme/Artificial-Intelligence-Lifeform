@@ -118,16 +118,22 @@ def attention_block(decoder, index):
     return block
 
 
-def segment_mask(start, count, boundary, device):
+def segment_mask(start, count, boundary, device, *, extra_keys=(), recent_block=None):
     keys = torch.arange(start + count, device=device)
     queries = keys[start:]
-    same_segment = (queries[:, None] >= boundary) == (keys[None, :] >= boundary)
-    return (same_segment & (keys[None, :] <= queries[:, None]))[None, None]
+    if recent_block is None:
+        allowed = (queries[:, None] >= boundary) == (keys[None, :] >= boundary)
+    else:
+        first_recent = (queries.div(recent_block, rounding_mode='floor') - 1) * recent_block
+        allowed = keys[None, :] >= first_recent[:, None]
+    if extra_keys:
+        allowed = allowed | torch.isin(keys, torch.tensor(extra_keys, device=device))[None, :]
+    return (allowed & (keys[None, :] <= queries[:, None]))[None, None]
 
 
 @contextmanager
-def restrict_full_attention(decoder, boundary, excluded):
-    """Run fused attention within each segment and leave recurrent layers intact."""
+def restrict_full_attention(decoder, boundary, excluded, *, extra_keys=(), recent_block=None):
+    """Limit fused attention to a local region and optional selected positions."""
     last_shape, allowed = None, None
 
     def restrict(layer, args, kwargs):
@@ -142,7 +148,8 @@ def restrict_full_attention(decoder, boundary, excluded):
             if hidden.shape[0] != 1 or positions is None or not torch.equal(
                     positions, torch.arange(start, start + count, device=hidden.device)):
                 raise ValueError('Segmented attention requires one append-only sequence')
-            allowed = segment_mask(start, count, boundary, hidden.device)
+            allowed = segment_mask(start, count, boundary, hidden.device, extra_keys=extra_keys,
+                                   recent_block=recent_block)
             last_shape = shape
         prior = kwargs.get('attention_mask')
         if prior is None:
