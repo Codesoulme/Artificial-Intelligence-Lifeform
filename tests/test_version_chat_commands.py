@@ -85,6 +85,7 @@ class VersionChatCommandTests(unittest.TestCase):
 
     def test_cancel_defers_without_swallowing_a_new_task(self):
         self.assertTrue(deferred_lookup('先别查，林语的饮品上一版我过会儿再问。'))
+        self.assertTrue(deferred_lookup('先别查了。'))
         self.assertTrue(deferred_lookup('先不查了。'))
         self.assertFalse(deferred_lookup('先不查了，帮我写封邮件。'))
         self.assertFalse(deferred_lookup('把「先不查了」翻译成英语。'))

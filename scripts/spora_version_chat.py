@@ -30,8 +30,8 @@ from spora.integrated_checkpoint import load_integrated_runtime
 from spora.research_multi_version_route import resolve_address
 from spora.research_recurrent_decode import load_recurrent_replacements
 from spora.research_ttt_ntp import LowRankFastWeight
-from spora.research_version_dialogue_scope import (advance_scope, dialogue_targets, pending_after_lookup,
-                                                   pending_followup_targets)
+from spora.research_version_dialogue_scope import (advance_scope, ambiguous_partial_reply, continue_partial_lookup, dialogue_targets,
+                                                   pending_after_lookup, pending_followup_targets, start_partial_lookup)
 from spora.research_version_store import MemoryAddress, VersionStore
 from spora.research_version_timeline import parse_version_query
 from spora.research_versioned_memory_pointer import VersionReplyActions
@@ -40,7 +40,7 @@ from spora.research_versioned_memory_pointer import VersionReplyActions
 FIELD_IDS = {label: field for field, label in FIELDS.items()}
 NAME = re.compile(r'[\u3400-\u9fff]{2,12}')
 VALUE = re.compile(r'[\w ·-]{1,24}')
-CANCEL = re.compile(r'^(?:先别查|先不查(?:了)?|不查了|算了|先暂停)(?:[，,。；;！!\s]|$)')
+CANCEL = re.compile(r'^(?:先别查(?:了)?|先不查(?:了)?|不查了|算了|先暂停)(?:[，,。；;！!\s]|$)')
 DEFER_UNTIL = re.compile(r'(?:稍后|过会儿|等会儿|改天|下次)再(?:问|查|说)[。！？!?]*$')
 HELP = ('/记 姓名 | 字段 | 短值 [| 生效日期 YYYY-MM-DD]。字段可用饮品、见面地点、用品、书目。'
         '查询时可说「请查林语的饮品当前版」，再问「那上一版呢」。'
@@ -145,6 +145,16 @@ def deferred_lookup(question):
     return not remainder or bool(DEFER_UNTIL.search(remainder))
 
 
+def ask_lookup_coordinate(partial):
+    if partial.owner is None and partial.field is not None:
+        return f'请告诉我要查谁的{FIELDS[partial.field]}。'
+    if partial.owner is None:
+        return '请告诉我要查谁的记录。'
+    if partial.field is None:
+        return f'要查{partial.owner}的哪项记录？可回答饮品、见面地点、用品或书目。'
+    return f'要查{partial.owner}的{FIELDS[partial.field]}哪一版？可回答当前版、首版或上一版。'
+
+
 class VersionChat:
     def __init__(self, store, model, tokenizer, reader, propose, settings, *, ordinary_tokens, composer=None,
                  typed_lookup=False):
@@ -159,6 +169,7 @@ class VersionChat:
 
     def reset_dialogue(self):
         self.history, self.scope, self.pending = [], (), None
+        self.partial_lookup = None
         self.compose_selection, self.compose_pending = (), None
 
     @torch.inference_mode()
@@ -183,6 +194,7 @@ class VersionChat:
         if self.composer is None:
             raise ValueError('启动时请用 --composition 指定成句模型目录。')
         self.scope, self.pending = (), None
+        self.partial_lookup = None
         self.compose_selection, self.compose_pending = (), None
         targets, when, question = compose_request(raw)
         catalog = self.store.catalog()
@@ -228,6 +240,7 @@ class VersionChat:
         if not compose_followup(question):
             return None
         self.scope, self.pending = (), None
+        self.partial_lookup = None
         if not selection:
             return {'kind': 'clarify', 'answer': '请先查阅同一人的两项记录，再告诉我要写什么。', 'selected': []}
         owner = selection[0][0].name
@@ -252,8 +265,26 @@ class VersionChat:
                 return composed
         catalog = self.store.catalog()
         enrolled = {address.name for address in catalog}
-        targets = (dialogue_targets(question, enrolled, FIELDS, self.scope) if self.pending is None else
-                   pending_followup_targets(question, enrolled, FIELDS, self.pending))
+        previous, self.partial_lookup = self.partial_lookup, None
+        if previous and (slot := ambiguous_partial_reply(question, enrolled, FIELDS)):
+            self.partial_lookup = previous
+            label = {'owner': '姓名', 'field': '字段', 'query': '版次'}[slot]
+            return {'kind': 'clarify', 'answer': f'请确认这次要查的{label}，一次选一个。',
+                    'selected': [], 'reasons': ['ambiguous_address']}
+        partial = continue_partial_lookup(question, previous, enrolled, FIELDS) if previous else None
+        if partial is None and self.pending is None:
+            partial = start_partial_lookup(question, enrolled, FIELDS)
+        if partial is not None:
+            self.scope, self.pending = (), None
+            target = partial.target()
+            if target is None:
+                self.partial_lookup = partial
+                return {'kind': 'clarify', 'answer': ask_lookup_coordinate(partial),
+                        'selected': [], 'reasons': ['incomplete_address']}
+            targets = (target,)
+        else:
+            targets = (dialogue_targets(question, enrolled, FIELDS, self.scope) if self.pending is None else
+                       pending_followup_targets(question, enrolled, FIELDS, self.pending))
         proposals = iter(self.propose([item.evidence for item in targets
                                        if item.evidence is not None and item.address is not None]))
         decisions = []
@@ -273,13 +304,21 @@ class VersionChat:
         else:
             kind = 'read'
             labels = None
-            if self.typed_lookup:
+            read_question = question
+            confirmed = len(targets) == 1 and targets[0].source == 'confirmed'
+            if self.typed_lookup or confirmed:
                 addresses = [target.address for target in targets]
                 multi_person = len({address.name for address in addresses}) > 1
                 labels = [f'{address.name}的{FIELDS[address.field]}' if multi_person else FIELDS[address.field]
                           for address in addresses]
+            if confirmed:
+                target = targets[0]
+                version = {'current': '当前版', 'previous': '上一版'}.get(target.query.kind)
+                if version is None:
+                    version = f'第{target.query.coordinate}版'
+                read_question = f'请查{target.address.name}的{FIELDS[target.address.field]}{version}。'
             selected, output = reply_to_route(self.model, self.tokenizer, self.store, self.codebook, self.reader,
-                                              question, route, history=self.history, labels=labels)
+                                              read_question, route, history=self.history, labels=labels)
             answer = output['answer']
             if output['token_ids'] and output['token_ids'][-1] == self.tokenizer.eos_token_id:
                 answer = answer.rstrip('，,、 ')
