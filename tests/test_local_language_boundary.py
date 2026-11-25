@@ -1,6 +1,7 @@
 import unittest
 
 from scripts.audit_spora_local_language_boundary import HELD, SMOKE_SCORING, assess
+from scripts.audit_spora_reply_preservation import public_checks, summarize
 
 
 class LocalLanguageBoundaryTests(unittest.TestCase):
@@ -25,3 +26,20 @@ class LocalLanguageBoundaryTests(unittest.TestCase):
         required, forbidden, limit = SMOKE_SCORING['one-step']
         self.assertTrue(assess('把书桌里的废纸拿出来。', True, required, forbidden, limit)['pass'])
         self.assertFalse(assess('先把桌子里的废纸。', True, required, forbidden, limit)['pass'])
+
+    def test_three_paragraphs_do_not_satisfy_the_higher_level_with_short_sentences(self):
+        answer = '用柔软的布擦木桌。\n\n避免把杯子直接放在桌上。\n\n定期给木材上蜡。'
+        self.assertTrue(all(public_checks(22, 1, answer).values()))
+        stricter = public_checks(22, 3, answer)
+        self.assertTrue(stricter['structure'])
+        self.assertFalse(stricter['length'])
+
+    def test_equal_totals_do_not_hide_lost_and_gained_replies(self):
+        rows = [{'split': 'revision', 'outputs': {
+            'base': {'passed': base_pass, 'eos': True},
+            'preserving': {'passed': candidate, 'eos': True}}}
+            for base_pass, candidate in ((True, False), (False, True))]
+        result = summarize(rows)['revision']
+        self.assertEqual(result['base_pass'], result['preserving_pass'])
+        self.assertEqual(result['preserving_lost'], 1)
+        self.assertEqual(result['preserving_gained'], 1)

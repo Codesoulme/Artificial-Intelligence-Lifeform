@@ -96,11 +96,12 @@ def collect(model, tokenizer, rows):
     return torch.cat(features), torch.cat(labels), torch.tensor(divergence, device=model.device)
 
 
-def fit(model, features, labels, mistakes, *, steps, contrastive):
+def fit(model, features, labels, mistakes, *, steps, contrastive, preservation=None):
     torch.manual_seed(SEED)
     adapter = ReplyResidual(model.config.hidden_size).to(model.device)
     optimizer = torch.optim.AdamW(adapter.parameters(), lr=.003)
     generator = torch.Generator().manual_seed(SEED)
+    preserve_generator = torch.Generator().manual_seed(SEED + 1)
     for index in range(steps):
         positions = torch.randint(len(labels), (6,), generator=generator).to(model.device)
         pair = mistakes[torch.randint(len(mistakes), (2,), generator=generator).to(model.device)]
@@ -112,6 +113,11 @@ def fit(model, features, labels, mistakes, *, steps, contrastive):
             selected = scores[-2:].gather(1, y[-2:, None]).squeeze(1)
             rejected = scores[-2:].gather(1, pair[:, 1:]).squeeze(1)
             loss = loss + .3 * F.softplus(1 - selected + rejected).mean()
+        if preservation is not None:
+            anchor_hidden, teacher = preservation
+            anchor = torch.randint(len(anchor_hidden), (3,), generator=preserve_generator).to(model.device)
+            student = model.lm_head(adapter(anchor_hidden[anchor])).float().log_softmax(-1)
+            loss = loss + F.kl_div(student, teacher[anchor], reduction='batchmean')
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
