@@ -66,6 +66,26 @@ class DialogueVersionScopeTests(unittest.TestCase):
         self.assertEqual(target.source, 'carried')
         self.assertEqual(advance_scope((PLACE,), (target,), [7]), (DRINK,))
 
+    def test_explicit_reference_to_a_confirmed_record_uses_its_address_only(self):
+        text = '刚才核对过的那份记录，麻烦再查一下上一版。'
+        target, = dialogue_targets(text, NAMES, FIELDS, (PLACE,))
+        self.assertEqual((target.address, target.query), (PLACE, VersionQuery('previous')))
+        for scope in ((), (PLACE, DRINK)):
+            with self.subTest(scope=scope):
+                unresolved, = dialogue_targets(text, NAMES, FIELDS, scope)
+                self.assertIsNone(unresolved.address)
+                self.assertEqual(unresolved.query, VersionQuery('previous'))
+        target, = dialogue_targets('请再核对刚刚查到的那项。', NAMES, FIELDS, (DRINK,))
+        self.assertEqual((target.address, target.query), (DRINK, None))
+
+    def test_confirmed_record_reference_does_not_capture_a_new_task(self):
+        for text in ('把刚才查到的那条写成一句话。', '刚才查到的那项，不用再查首版。',
+                     '换个话题，刚才查到的那项帮我翻译一下。',
+                     '以前查过的那项，麻烦再查一下上一版。'):
+            with self.subTest(text=text):
+                self.assertEqual(dialogue_targets(text, NAMES, FIELDS, (DRINK,)), ())
+        self.assertEqual(pending_followup_targets('请再查刚才确认过的那条首版。', NAMES, FIELDS, DRINK), ())
+
     def test_named_field_can_shift_to_another_field_of_the_same_person(self):
         target, = dialogue_targets('那见面地点当前版呢？', NAMES, FIELDS, (DRINK,))
         self.assertEqual(target.address, PLACE)

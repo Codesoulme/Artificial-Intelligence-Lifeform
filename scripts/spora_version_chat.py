@@ -156,7 +156,7 @@ def ask_lookup_coordinate(partial):
     if partial.owner is None and partial.field is not None:
         return f'请告诉我要查谁的{FIELDS[partial.field]}。'
     if partial.owner is None:
-        return '请告诉我要查谁的记录。'
+        return '请告诉我要查谁的哪项记录。'
     if partial.field is None:
         return f'要查{partial.owner}的哪项记录？可回答饮品、见面地点、用品或书目。'
     return f'要查{partial.owner}的{FIELDS[partial.field]}哪一版？可回答当前版、首版或上一版。'
@@ -324,6 +324,9 @@ class VersionChat:
         else:
             targets = (dialogue_targets(question, enrolled, FIELDS, self.scope) if self.pending is None else
                        pending_followup_targets(question, enrolled, FIELDS, self.pending))
+        if len(targets) == 1 and targets[0].source == 'unresolved_confirmed_reference':
+            self.history, self.scope, self.pending = [], (), None
+            return self.ask_for_coordinate(PartialLookup(query=targets[0].query))
         if not targets and self.spoken is not None and proposal is None and eligible_spoken_lookup(question):
             suggested = self.spoken(question, enrolled)
             if isinstance(suggested, PartialLookup):

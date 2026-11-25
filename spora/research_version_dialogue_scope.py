@@ -20,6 +20,12 @@ _ANCHORED_PERSON = re.compile(r'\S+的(?=(?:首|初|上一|前一|当前|现行|
 _PENDING_CHOICE = re.compile(r'(?:就|请)?(?:查|看|用|选)?(?:当前版|现行版|首版|初版|第一版|上一版|前一版)(?:吧|即可)?[。！？?!]?')
 _LOOKUP_START = re.compile(r'^(?:请|帮我|麻烦)?(?:查一下|查询|核对|查)')
 _VERSION_WORD = r'当前版|现行版|首版|初版|上一版|前一版|第[一二三四五六七八九1-9]版'
+_RECENT_RECORD = r'(?:刚才|刚刚|上一轮|上轮)(?:你|我们)?(?:查到|查过|核对过|确认过)的(?:那项|那条|那份|那笔)(?:记录)?'
+_RECHECK = r'(?:(?:请|麻烦)(?:你|帮我)?\s*)?(?:再)?(?:查|核对|看|报)(?:一下|一遍)?'
+_CONFIRMED_REFERENCE = re.compile(
+    rf'(?:{_RECHECK}{_RECENT_RECORD}|{_RECENT_RECORD}[，,、\s]*{_RECHECK})'
+    rf'\s*(?P<version>{_VERSION_WORD})?(?:吧|好吗)?[。！？?!]*'
+)
 _SLOT_REPLY = re.compile(r'^(?:(?:就|请|先)(?:查|看|选)|说的是|改查|改成|用|是|查)?\s*')
 _CORRECTION = re.compile(r'^不是(.+?)[，,]\s*(?:而?是|改查|改成)(.+)$')
 _ALTERNATIVE = re.compile(r'还是|或者|抑或|或')
@@ -159,11 +165,18 @@ def owner_for_field(scope, field):
     return None
 
 
-def dialogue_targets(question, enrolled, fields, scope, *, bounded=True):
+def dialogue_targets(question, enrolled, fields, scope, *, bounded=True, confirmed_reference=True):
     """Form a proposed read. The caller still validates every address and version."""
     text = question.strip()
     if _TEXT_TASK.search(text) or _CANCEL_TURN.match(text):
         return ()
+    reference = _CONFIRMED_REFERENCE.fullmatch(text) if confirmed_reference else None
+    if reference is not None:
+        version = reference['version']
+        query = parse_lookup_scope(version) if version else None
+        if len(scope) != 1:
+            return (LookupTarget(None, query, 'unresolved_confirmed_reference'),)
+        return (LookupTarget(scope[0], query, 'carried'),)
     follow = bool(_FOLLOW.match(text) and _VERSION_HINT.search(text))
     resetting = bool(_RESET.search(text))
     if bounded and resetting and not follow:
@@ -211,7 +224,7 @@ def advance_scope(scope, targets, selected, *, persistent=False):
 def pending_followup_targets(question, enrolled, fields, address):
     if _PENDING_CHOICE.fullmatch(question.strip()):
         return (LookupTarget(address, parse_lookup_scope(question), 'pending'),)
-    targets = dialogue_targets(question, enrolled, fields, (address,))
+    targets = dialogue_targets(question, enrolled, fields, (address,), confirmed_reference=False)
     result = []
     for item in targets:
         if item.source == 'carried':

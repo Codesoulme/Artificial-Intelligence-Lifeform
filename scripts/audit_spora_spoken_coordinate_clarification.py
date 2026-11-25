@@ -134,14 +134,14 @@ def expected_proposal(kind, address):
     return address
 
 
-def replay(store, model, tokenizer, reader, settings, suggestions):
+def replay(store, model, tokenizer, reader, settings, suggestions, *, cases=HELD):
     chat = action.VersionChat(store, model, tokenizer, reader, lambda evidence: [None] * len(evidence), settings,
                               ordinary_tokens=12, typed_lookup=True, spoken=lambda question, _: suggestions.get(question))
     today = date.today()
     catalog = store.catalog()
     values = {action.MemoryAddress(name, field): value for name, field, value in dense.RECORDS}
     results, counts = [], Counter()
-    for kind, person, field, question in HELD:
+    for kind, person, field, question in cases:
         chat.reset_dialogue()
         target = None if person is None else action.MemoryAddress(dense.NAMES[person], field)
         if question == '那当前版呢？':
