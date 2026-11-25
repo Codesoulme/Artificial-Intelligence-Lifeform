@@ -40,8 +40,8 @@ def layout(row):
     return ''.join(annotated), sources, slice(body_starts[2], body_starts[2] + len(turns[2])), roles
 
 
-def capture(extractor, rows):
-    layouts = [layout(row) for row in rows]
+def capture(extractor, rows, *, arrange=layout):
+    layouts = [arrange(row) for row in rows]
     width = max(item[2].stop - item[2].start for item in layouts)
     exact, whole, order, latest, masks, gold = [], [], [], [], [], []
     for start in range(0, len(layouts), 12):
