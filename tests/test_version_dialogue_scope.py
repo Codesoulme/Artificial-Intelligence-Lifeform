@@ -90,6 +90,14 @@ class DialogueVersionScopeTests(unittest.TestCase):
         utterance = '先别查，闻韶宁的饮品上一版我过会儿再问。'
         self.assertEqual(dialogue_targets(utterance, NAMES, FIELDS, (DRINK,)), ())
 
+    def test_unquoted_wording_edit_does_not_authorize_the_embedded_lookup(self):
+        for framing in ('把这句话改得礼貌些：', '将那段话写得更客气：', '把这句改成问句：'):
+            text = framing + '请查闻韶宁的饮品上一版。'
+            with self.subTest(text=text):
+                self.assertFalse(eligible_spoken_lookup(text))
+                self.assertEqual(dialogue_targets(text, NAMES, FIELDS, (DRINK,)), ())
+        self.assertTrue(eligible_spoken_lookup('请查闻韶宁的饮品上一版。'))
+
     def test_explicit_correction_replaces_inherited_owner(self):
         text = '不是闻韶宁的饮品，改查闻绍宁的饮品当前版。'
         target, = dialogue_targets(text, NAMES, FIELDS, (DRINK,))

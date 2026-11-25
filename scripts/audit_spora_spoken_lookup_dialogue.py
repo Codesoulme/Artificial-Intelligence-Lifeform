@@ -48,6 +48,8 @@ FIRST = (
     (PLACE, *CONFIRM_PLACE),
     RESET,
     ('是，上一版。', 'chat', None, None),
+    ('把这句话改得礼貌些：请查罗映禾的见面地点上一版。', 'chat', None, None),
+    RESET,
     (ITEM, *CONFIRM_ITEM),
 )
 RESTART = (
