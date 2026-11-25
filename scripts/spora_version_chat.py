@@ -32,7 +32,8 @@ from spora.research_multi_version_route import resolve_address
 from spora.research_recurrent_decode import load_recurrent_replacements
 from spora.research_ttt_ntp import LowRankFastWeight
 from spora.research_version_dialogue_scope import (advance_scope, ambiguous_partial_reply, continue_partial_lookup, dialogue_targets,
-                                                   pending_after_lookup, pending_followup_targets, start_partial_lookup)
+                                                   eligible_spoken_lookup, pending_after_lookup, pending_followup_targets,
+                                                   resolve_spoken_proposal, start_partial_lookup)
 from spora.research_version_store import MemoryAddress, VersionStore
 from spora.research_version_timeline import parse_version_query
 from spora.research_versioned_memory_pointer import VersionReplyActions
@@ -161,14 +162,21 @@ def ask_lookup_coordinate(partial):
     return f'要查{partial.owner}的{FIELDS[partial.field]}哪一版？可回答当前版、首版或上一版。'
 
 
+def ask_spoken_approval(address):
+    return {'kind': 'clarify', 'answer': (f'你是要查{address.name}的{FIELDS[address.field]}吗？'
+                                          '确认后可以说「是，上一版」或「是」，也可直接改口。'),
+            'selected': [], 'reasons': ['unconfirmed_address']}
+
+
 class VersionChat:
     def __init__(self, store, model, tokenizer, reader, propose, settings, *, ordinary_tokens, composer=None,
-                 typed_lookup=False, awake=None):
+                 typed_lookup=False, awake=None, spoken=None):
         self.store, self.model, self.tokenizer, self.reader = store, model, tokenizer, reader
         self.propose, self.settings, self.ordinary_tokens = propose, settings, ordinary_tokens
         self.composer = composer
         self.typed_lookup = typed_lookup
         self.awake = awake
+        self.spoken = spoken
         embedding = model.get_input_embeddings().weight.detach()
         self.columns = compress_dimension(embedding.shape[1]).to(embedding.device)
         self.codebook = F.normalize(embedding.index_select(1, self.columns).float(), dim=-1)
@@ -179,6 +187,7 @@ class VersionChat:
             self.awake[1]()
         self.history, self.scope, self.pending = [], (), None
         self.partial_lookup = None
+        self.spoken_pending = None
         self.compose_selection, self.compose_pending = (), None
 
     @torch.inference_mode()
@@ -206,6 +215,7 @@ class VersionChat:
             self.awake[1]()
         self.scope, self.pending = (), None
         self.partial_lookup = None
+        self.spoken_pending = None
         self.compose_selection, self.compose_pending = (), None
         targets, when, question = compose_request(raw)
         catalog = self.store.catalog()
@@ -252,6 +262,7 @@ class VersionChat:
             return None
         self.scope, self.pending = (), None
         self.partial_lookup = None
+        self.spoken_pending = None
         if not selection:
             return {'kind': 'clarify', 'answer': '请先查阅同一人的两项记录，再告诉我要写什么。', 'selected': []}
         owner = selection[0][0].name
@@ -280,13 +291,23 @@ class VersionChat:
                 return composed
         catalog = self.store.catalog()
         enrolled = {address.name for address in catalog}
+        proposal, self.spoken_pending = self.spoken_pending, None
+        approved = None
+        if proposal is not None and eligible_spoken_lookup(question):
+            decision, approved = resolve_spoken_proposal(question, proposal, enrolled, FIELDS)
+            if decision == 'awaiting_confirmation':
+                self.spoken_pending = proposal
+                return ask_spoken_approval(proposal)
+            if decision == 'declined':
+                return {'kind': 'clarify', 'answer': '请重新告诉我要查谁的哪项记录。', 'selected': [],
+                        'reasons': ['address_declined']}
         previous, self.partial_lookup = self.partial_lookup, None
         if previous and (slot := ambiguous_partial_reply(question, enrolled, FIELDS)):
             self.partial_lookup = previous
             label = {'owner': '姓名', 'field': '字段', 'query': '版次'}[slot]
             return {'kind': 'clarify', 'answer': f'请确认这次要查的{label}，一次选一个。',
                     'selected': [], 'reasons': ['ambiguous_address']}
-        partial = continue_partial_lookup(question, previous, enrolled, FIELDS) if previous else None
+        partial = approved or (continue_partial_lookup(question, previous, enrolled, FIELDS) if previous else None)
         if partial is None and self.pending is None:
             partial = start_partial_lookup(question, enrolled, FIELDS)
         if partial is not None:
@@ -300,6 +321,12 @@ class VersionChat:
         else:
             targets = (dialogue_targets(question, enrolled, FIELDS, self.scope) if self.pending is None else
                        pending_followup_targets(question, enrolled, FIELDS, self.pending))
+        if not targets and self.spoken is not None and proposal is None and eligible_spoken_lookup(question):
+            suggested = self.spoken(question, enrolled)
+            if suggested in catalog:
+                self.history, self.scope, self.pending = [], (), None
+                self.spoken_pending = suggested
+                return ask_spoken_approval(suggested)
         proposals = iter(self.propose([item.evidence for item in targets
                                        if item.evidence is not None and item.address is not None]))
         decisions = []
@@ -371,6 +398,8 @@ class VersionChat:
                 help_text.append(COMPOSE_HELP)
             if self.awake is not None:
                 help_text.append(AWAKE_HELP)
+            if self.spoken is not None:
+                help_text.append('口语查阅会先询问人物和事项。确认后可回复「是，上一版」。')
             return {'kind': 'help', 'answer': '\n'.join(help_text)}
         if line == '/清空对话':
             self.reset_dialogue()
@@ -467,6 +496,36 @@ def main(args):
         run_chat(args, model, reader_path, normalizer_path, writer_path, binding, interactive)
 
 
+def spoken_lookup_planner(folder, recurrent, model, tokenizer):
+    from scripts.audit_spora_spoken_query_plan import DEPTH, QueryPlanProbe, predict, proposed_address, vectors
+
+    report = json.loads((folder / 'result.json').read_text(encoding='utf-8'))
+    candidate = folder / 'public.pt'
+    identifiers = {Path(path).resolve(): digest for path, digest in report['sources'].items()}
+    sources = [recurrent[0], *(path / 'attention.pt' for path in recurrent[1:])]
+    if (base.sha(candidate) != report['results']['public']['probe_sha256']
+            or any(identifiers.get(path.resolve()) != base.sha(path) for path in sources)):
+        raise ValueError('口语查阅模型与循环骨干不匹配。')
+    cutoff = report.get('address_proposal', {}).get('threshold', report['results']['public']['threshold'])
+    if not isinstance(cutoff, (int, float)) or not 0 <= cutoff <= 1.000001:
+        raise ValueError('口语查阅阈值不合法。')
+    head = QueryPlanProbe(model.config.hidden_size).eval()
+    head.load_state_dict(torch.load(candidate, map_location='cpu', weights_only=True))
+    extract = FrozenTurnFeatures(SimpleNamespace(base=model), tokenizer, depth=DEPTH)
+
+    def propose(question, enrolled):
+        if not any(name in question for name in enrolled):
+            return None
+        # Multiple mentioned people are scored by the same head used in the audit.
+        if sum(name in question for name in enrolled) > 2:
+            return None
+        feature, (names,) = vectors(extract, [question], enrolled, 'user-span')
+        (scored,) = predict(head, feature)
+        return proposed_address(scored, names, cutoff)
+
+    return propose
+
+
 def run_chat(args, model, reader_path, normalizer_path, writer_path, binding, interactive):
     tokenizer = base.AutoTokenizer.from_pretrained(base.MODEL, local_files_only=True, trust_remote_code=False)
     width = model.config.hidden_size
@@ -476,6 +535,8 @@ def run_chat(args, model, reader_path, normalizer_path, writer_path, binding, in
     composer = composition_head(args.composition, width, model.device) if args.composition is not None else None
     extractor = FrozenTurnFeatures(SimpleNamespace(base=model), tokenizer, depth=len(model.model.layers))
     proposer = TemporalProposals(extractor, width, torch.load(normalizer_path, map_location='cpu', weights_only=True)['final_layer'])
+    spoken = (spoken_lookup_planner(args.spoken_lookup, args.recurrent, model, tokenizer)
+              if args.spoken_lookup is not None else None)
 
     def propose(evidence):
         if args.recurrent is None:
@@ -494,6 +555,8 @@ def run_chat(args, model, reader_path, normalizer_path, writer_path, binding, in
                          if args.recurrent else [])
             protected = (database, args.awake_core, reader_path, normalizer_path, writer_path,
                          base.MODEL / 'model.safetensors', *recurrent)
+            if args.spoken_lookup is not None:
+                protected += (args.spoken_lookup / 'public.pt', args.spoken_lookup / 'result.json')
             if path in {file.resolve() for file in protected}:
                 raise ValueError('在线状态需要使用独立文件。')
             individual = {'codec': binding, 'profile': str(database.resolve()),
@@ -512,7 +575,7 @@ def run_chat(args, model, reader_path, normalizer_path, writer_path, binding, in
             awake = (observe, consume, bind)
         chat = VersionChat(store, model, tokenizer, reader.eval().to(model.device), propose, settings,
                            ordinary_tokens=args.reply_tokens, composer=composer, typed_lookup=args.recurrent is not None,
-                           awake=awake)
+                           awake=awake, spoken=spoken)
         if interactive:
             backend = '循环注意力版' if args.recurrent else '原始注意力版'
             print(f'孢子版本记忆已就绪。当前使用{backend}。输入 /帮助 查看用法。', flush=True)
@@ -547,11 +610,14 @@ if __name__ == '__main__':
                      help='Load the integrated recurrent SPORA checkpoint and both layer directories')
     cli.add_argument('--awake-state', type=Path, help='Run and persist the online CPU state')
     cli.add_argument('--awake-core', type=Path, default=Path('runs/p24-awake/core-seed7.pt'))
+    cli.add_argument('--spoken-lookup', type=Path, help='Propose a memory address for explicit confirmation')
     cli.add_argument('--reply-tokens', type=int, default=72)
     cli.add_argument('--json', action='store_true', help='Emit one JSON record per stdin line')
     options = cli.parse_args()
     if not 1 <= options.reply_tokens <= 256:
         cli.error('--reply-tokens must be between 1 and 256')
+    if options.spoken_lookup is not None and options.recurrent is None:
+        cli.error('--spoken-lookup requires the supported recurrent weights')
     try:
         main(options)
     except (OSError, ValueError, KeyError, sqlite3.Error) as error:

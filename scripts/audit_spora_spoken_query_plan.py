@@ -171,6 +171,13 @@ def planned(scored, owners, threshold):
     return (action, owner, field, version) if action == READ else (action, UNLABELED, UNLABELED, UNLABELED)
 
 
+def proposed_address(scored, owners, threshold):
+    (action, action_score), (owner, owner_score), (field, field_score), _ = scored
+    if action != READ or owner >= len(owners) or min(action_score, owner_score, field_score) < threshold:
+        return None
+    return MemoryAddress(owners[owner], FIELDS_ORDER[field])
+
+
 def pick_threshold(predictions, owners, labels):
     def quality(threshold):
         decisions = [planned(row, names, threshold) for row, names in zip(predictions, owners, strict=True)]

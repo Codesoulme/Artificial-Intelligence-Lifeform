@@ -1,8 +1,8 @@
 import unittest
 
 from spora.research_version_dialogue_scope import (PartialLookup, advance_scope, ambiguous_partial_reply, continue_partial_lookup,
-                                                   dialogue_targets, pending_after_lookup, pending_followup_targets,
-                                                   start_partial_lookup)
+                                                   dialogue_targets, eligible_spoken_lookup, pending_after_lookup,
+                                                   pending_followup_targets, resolve_spoken_proposal, start_partial_lookup)
 from spora.research_version_store import MemoryAddress
 from spora.research_version_timeline import VersionQuery
 
@@ -122,3 +122,21 @@ class DialogueVersionScopeTests(unittest.TestCase):
                 target, = pending_followup_targets(text, NAMES, FIELDS, DRINK)
                 self.assertEqual(target.address, DRINK)
                 self.assertEqual(target.query, expected)
+
+    def test_spoken_proposal_requires_affirmation_before_using_a_bare_version(self):
+        self.assertEqual(resolve_spoken_proposal('上一版。', DRINK, NAMES, FIELDS), ('awaiting_confirmation', None))
+        self.assertEqual(resolve_spoken_proposal('是。', DRINK, NAMES, FIELDS),
+                         ('confirmed', PartialLookup(DRINK.name, DRINK.field)))
+        self.assertEqual(resolve_spoken_proposal('是，上一版。', DRINK, NAMES, FIELDS),
+                         ('confirmed', PartialLookup(DRINK.name, DRINK.field, VersionQuery('previous'))))
+        self.assertEqual(resolve_spoken_proposal('是，首版还是当前版？', DRINK, NAMES, FIELDS),
+                         ('confirmed', PartialLookup(DRINK.name, DRINK.field)))
+
+    def test_spoken_proposal_rejects_or_replaces_the_previous_target(self):
+        self.assertEqual(resolve_spoken_proposal('不对。', DRINK, NAMES, FIELDS), ('declined', None))
+        self.assertEqual(resolve_spoken_proposal('不是闻韶宁的饮品，是闻绍宁的饮品首版。', DRINK, NAMES, FIELDS),
+                         ('confirmed', PartialLookup(OTHER_DRINK.name, OTHER_DRINK.field, VersionQuery('ordinal', 1))))
+        self.assertEqual(resolve_spoken_proposal('对，帮我写一句话。', DRINK, NAMES, FIELDS), ('revoked', None))
+        self.assertEqual(resolve_spoken_proposal('不是别人的，是闻绍宁。', DRINK, NAMES, FIELDS), ('revoked', None))
+        for question in ('换个话题，聊海星。', '把「那上一版呢」翻译成英文。', '先别查了，聊点别的。'):
+            self.assertFalse(eligible_spoken_lookup(question))

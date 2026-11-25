@@ -24,6 +24,8 @@ _SLOT_REPLY = re.compile(r'^(?:(?:就|请|先)(?:查|看|选)|说的是|改查|�
 _CORRECTION = re.compile(r'^不是(.+?)[，,]\s*(?:而?是|改查|改成)(.+)$')
 _ALTERNATIVE = re.compile(r'还是|或者|抑或|或')
 _TRAILING = '。！？?!吧'
+_APPROVAL = re.compile(r'(?:是的|是|对的|对|没错)(?:[，,、：:\s]+(.+))?')
+_DECLINE = re.compile(r'^(?:不是|不对|没这个意思)[。！？?!]*$')
 
 
 @dataclass(frozen=True)
@@ -107,6 +109,37 @@ def continue_partial_lookup(question, pending, enrolled, fields):
     )
     version = reply.query if changed_address and not correction else reply.query or pending.query
     return PartialLookup(reply.owner or pending.owner, reply.field or pending.field, version)
+
+
+def resolve_spoken_proposal(question, address, enrolled, fields):
+    """Consume a proposal only after an affirmative reply or explicit correction."""
+    text = question.strip().rstrip(_TRAILING).strip()
+    pending = PartialLookup(address.name, address.field)
+    if _DECLINE.fullmatch(text):
+        return 'declined', None
+    approval = _APPROVAL.fullmatch(text)
+    if approval:
+        remainder = approval[1]
+        if not remainder:
+            return 'confirmed', pending
+        reply = _lookup_parts(_SLOT_REPLY.sub('', remainder, count=1), enrolled, fields)
+        if reply is not None and reply.owner is None and reply.field is None and reply.query is not None:
+            return 'confirmed', replace(pending, query=reply.query)
+        if ambiguous_partial_reply(remainder, enrolled, fields) == 'query':
+            return 'confirmed', pending
+        return 'revoked', None
+    if _CORRECTION.fullmatch(text):
+        change = continue_partial_lookup(text, pending, enrolled, fields)
+        return ('confirmed', change) if change is not None else ('revoked', None)
+    reply = _lookup_parts(_SLOT_REPLY.sub('', text, count=1), enrolled, fields)
+    if reply is not None and reply.owner is None and reply.field is None and reply.query is not None:
+        return 'awaiting_confirmation', None
+    return 'revoked', None
+
+
+def eligible_spoken_lookup(question):
+    """Respect text transformations and turns that close or leave a lookup."""
+    return not (_TEXT_TASK.search(question) or _RESET.search(question) or _CANCEL_TURN.match(question))
 
 
 def owner_for_field(scope, field):

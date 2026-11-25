@@ -69,6 +69,16 @@ $sporaLayer22 = 'runs/spora-gelu24-recurrent-layer22-v1'
 
 循环版支持原有版次档案，启动会检验父检查点、循环层权重和词汇档案的绑定。每次模型前向最多处理 2048 个词元位置。遇到长度提示可用 `/清空对话` 再试，已登记的记忆会保留。 [循环版回放](../reports/spora-recurrent-version-chat-20261126.md)
 
+### 口语查阅试验
+
+有本机训练产物 `runs/spora-spoken-query-data-v2/public.pt` 及同目录的 `result.json` 时，可以在循环版加上 `--spoken-lookup`。
+
+```powershell
+.\.\spora_version_chat.cmd --profile runs\my-version-memory --recurrent $sporaParent $sporaLayer19 $sporaLayer22 --spoken-lookup runs\spora-spoken-query-data-v2
+```
+
+模型在识别到适合查阅的口语请求后，会先说出猜测的人物和事项。确认时可回复「是，上一版」。也可先回答「是」，再补充所需版次。若猜错，可以说「不是林语的饮品，是周小宁的饮品首版」。换话题、取消、清空或重启后，请重新说明要查的内容。遇到模型未提出查阅的问法，可以直接给出姓名、事项和版次。 [跨轮回放](../reports/spora-spoken-lookup-dialogue-20261126.md)
+
 ### 在线状态
 
 加上 `--awake-state` 可让清醒模块在进程空闲时继续运行。默认加载 `runs/p24-awake/core-seed7.pt`，用 CPU 做小步更新。用同一份状态文件重启时，需要保持同一档案和模型权重。

@@ -43,11 +43,12 @@ PAIRS = (
 )
 
 
-def replay(profile, questions, recurrent):
+def replay(profile, questions, recurrent, *, extra_options=()):
     command = ['cmd.exe', '/d', '/c', 'spora_version_chat.cmd', '--profile', str(profile),
                '--reply-tokens', '72', '--json']
     if recurrent is not None:
         command.extend(('--recurrent', *map(str, recurrent)))
+    command.extend(map(str, extra_options))
     started = perf_counter()
     process = subprocess.run(command, cwd=ROOT, input='\n'.join([*questions, '/退出', '']),
                              encoding='utf-8', capture_output=True, timeout=360)
