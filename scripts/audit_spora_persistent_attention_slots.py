@@ -1,6 +1,7 @@
 """Replay a bounded bank of persistent tensors through one native attention reader."""
 
 import argparse
+from contextlib import ExitStack
 from pathlib import Path
 from time import perf_counter
 from unittest.mock import patch
@@ -19,6 +20,12 @@ from spora.research_recurrent_decode import attention_block, load_recurrent_repl
 LAYERS = (20, 23)
 SLOT_BUDGET = 40
 FORMAT = 'spora-persistent-attention-slots-v1'
+LOGIT_BIASES = (0, 2, 4)
+BASE_CASES = tuple((*fields, ('1', '2')) for fields in query_audit.FIELDS)
+FRESH_CASES = (
+    ('摊位排班', '摊位', '班次', ('3', '7')),
+    ('仓单核对', '柜号', '批次', ('4', '9')),
+)
 
 
 def capture_record(decoder, attention, ids):
@@ -38,7 +45,7 @@ def capture_record(decoder, attention, ids):
     return captured
 
 
-def attend_with_slots(query, key, value, slots, mask, scale):
+def attend_with_slots(query, key, value, slots, mask, scale, *, bias=0, capture_mass=None):
     """Let persistent and current keys compete in the same softmax."""
     saved_key, saved_value = slots
     count = saved_key.shape[-2]
@@ -47,16 +54,30 @@ def attend_with_slots(query, key, value, slots, mask, scale):
     groups = query.shape[1] // key.shape[1]
     key = key.repeat_interleave(groups, dim=1)
     value = value.repeat_interleave(groups, dim=1)
+    query = query[..., -1:, :]
     if mask is not None:
-        current = mask[..., -1:, :]
+        current = mask[..., -1:, :key.shape[-2] - count]
         padding = (0 if current.dtype.is_floating_point else True)
         mask = torch.nn.functional.pad(current, (count, 0), value=padding)
+    if bias:
+        if mask is None:
+            mask = query.new_zeros((1, 1, 1, key.shape[-2]))
+        elif mask.dtype == torch.bool:
+            mask = torch.zeros_like(mask, dtype=query.dtype).masked_fill(~mask, -torch.inf)
+        else:
+            mask = mask.to(query.dtype)
+        mask[..., :count] += bias
+    if capture_mass is not None:
+        logits = (query.float() @ key.float().transpose(-2, -1)) * scale
+        if mask is not None:
+            logits = logits.masked_fill(~mask, -torch.inf) if mask.dtype == torch.bool else logits + mask
+        capture_mass(logits.softmax(-1)[0, :, 0, :count].sum(-1).tolist())
     return torch.nn.functional.scaled_dot_product_attention(
-        query[..., -1:, :], key, value, attn_mask=mask, scale=scale,
+        query, key, value, attn_mask=mask, scale=scale,
     )
 
 
-def read_with_slots(decoder, attention, ids, slots):
+def augment_attention(attention, slots, bias, capture_mass):
     forward = attention.forward
 
     def augmented(hidden_states, position_embeddings, attention_mask, past_key_values=None,
@@ -71,21 +92,34 @@ def read_with_slots(decoder, attention, ids, slots):
         query, key, value = attention.project(
             hidden_states.to(attention.qkv.weight.dtype), position_embeddings, position_ids,
         )
-        mixed = attend_with_slots(query, key, value, slots, attention_mask, attention.scaling)
+        mixed = attend_with_slots(
+            query, key, value, slots, attention_mask, attention.scaling, bias=bias, capture_mass=capture_mass,
+        )
         result = normal.clone()
         result[:, -1:, :] = attention.out(mixed.transpose(1, 2).flatten(start_dim=-2)).to(normal)
         return result, weights
 
+    return augmented
+
+
+def read_attention(decoder, ids, sites, *, bias=0, mass=None):
     input_ids = torch.tensor([ids], device=decoder.base.device)
     # The reserved positions give previously written keys a fixed, causal position before the query.
     positions = torch.arange(SLOT_BUDGET, SLOT_BUDGET + len(ids), device=input_ids.device)[None]
-    with patch.object(attention, 'forward', augmented):
+    with ExitStack() as hooks:
+        for attention, slots in sites:
+            capture = None if mass is None else mass[attention.layer_idx].extend
+            hooks.enter_context(patch.object(attention, 'forward', augment_attention(attention, slots, bias, capture)))
         logits = decoder(input_ids=input_ids, position_ids=positions, use_cache=False, logits_to_keep=1).logits
     return logits[0, -1].float().log_softmax(dim=-1)
 
 
-def record_ids(tokenizer, topic, left, right, mapping):
-    text = f'{topic}的字段编号已经确认。{left}的编号是{1 + mapping}，{right}的编号是{2 - mapping}。'
+def record_text(topic, left, right, mapping, labels):
+    return f'{topic}的字段编号已经确认。{left}的编号是{labels[mapping]}，{right}的编号是{labels[1 - mapping]}。'
+
+
+def record_ids(tokenizer, topic, left, right, mapping, labels):
+    text = record_text(topic, left, right, mapping, labels)
     formatted = tokenizer.apply_chat_template([{'role': 'user', 'content': text}],
                                               tokenize=False, add_generation_prompt=False)
     ids = tokenizer.encode(formatted, add_special_tokens=False)
@@ -94,12 +128,12 @@ def record_ids(tokenizer, topic, left, right, mapping):
     return ids
 
 
-def write_banks(decoder, tokenizer, attentions):
+def write_banks(decoder, tokenizer, attentions, cases):
     return {
         layer: {
-            topic: [capture_record(decoder, attention, record_ids(tokenizer, topic, left, right, mapping))
+            topic: [capture_record(decoder, attention, record_ids(tokenizer, topic, left, right, mapping, labels))
                     for mapping in (0, 1)]
-            for topic, left, right in query_audit.FIELDS
+            for topic, left, right, labels in cases
         }
         for layer, attention in attentions.items()
     }
@@ -124,17 +158,67 @@ def measure(decoder, tokenizer, attentions, banks):
                 for mapping in (0, 1)
             ]
             for layer, attention in attentions.items():
-                empty = read_with_slots(decoder, attention, ids, None)
+                empty = read_attention(decoder, ids, ((attention, None),))
                 conditions = []
                 for mapping, slots in enumerate(banks[layer][topic]):
                     expected = mapping ^ field
-                    scores = read_with_slots(decoder, attention, ids, slots)
+                    scores = read_attention(decoder, ids, ((attention, slots),))
                     conditions.append({'mapping': mapping, 'target': expected + 1,
                                        'empty': query_audit.readout(empty, label_ids, expected),
                                        'stored': query_audit.readout(scores, label_ids, expected),
                                        'visible': baseline[mapping]})
                 rows.append({'topic': topic, 'field': name, 'layer': layer, 'reads': conditions})
     return rows, label_ids
+
+
+def sweep(decoder, tokenizer, attentions, banks):
+    cases = BASE_CASES + FRESH_CASES
+    count = min(key.shape[-2] for bank in banks.values() for versions in bank.values() for key, _ in versions)
+    suffix = tokenizer.encode('编号：', add_special_tokens=False)
+    rows = []
+    for index, (topic, left, right, labels) in enumerate(cases):
+        foreign_topic = cases[(index + 1) % len(cases)][0]
+        label_tokens = [tokenizer.encode(label, add_special_tokens=False) for label in labels]
+        if any(len(tokens) != 1 for tokens in label_tokens) or label_tokens[0] == label_tokens[1]:
+            raise ValueError('Expected two distinct single-token labels')
+        label_ids = [tokens[0] for tokens in label_tokens]
+        fresh = index >= len(BASE_CASES)
+        for field, name in enumerate((left, right)):
+            question = (f'我想核对{topic}留下的{name}编号。能只报数字吗？' if fresh
+                        else f'回到{topic}的登记：{name}对应哪个编号？请只填编号。')
+            request = {'role': 'user', 'content': question}
+            ids = encode(tokenizer, [request]) + suffix
+            if any(token in ids for token in label_ids):
+                raise ValueError('An answer label appeared in the fresh request')
+            empty = read_attention(decoder, ids, ())
+            visibility = []
+            for mapping in (0, 1):
+                history = [{'role': 'user', 'content': record_text(topic, left, right, mapping, labels)},
+                           {'role': 'assistant', 'content': '好，我已登记。'}, request]
+                visibility.append(last_logits(decoder, encode(tokenizer, history) + suffix))
+            for layers in ((23,), (20, 23)):
+                row = {'topic': topic, 'field': name, 'fresh': fresh, 'layers': layers,
+                       'foreign_topic': foreign_topic, 'label_ids': label_ids, 'conditions': []}
+                for bias in LOGIT_BIASES:
+                    for loaded_topic, compatible in ((topic, True), (foreign_topic, False)):
+                        for mapping in (0, 1):
+                            sites = [
+                                (attentions[layer], tuple(part[..., -count:, :] for part in banks[layer][loaded_topic][mapping]))
+                                for layer in layers
+                            ]
+                            mass = {layer: [] for layer in layers}
+                            scores = read_attention(decoder, ids, sites, bias=bias, mass=mass)
+                            expected = mapping ^ field
+                            row['conditions'].append({
+                                'bias': bias, 'compatible': compatible, 'mapping': mapping,
+                                'target': label_ids[expected], 'mass': mass,
+                                'empty': query_audit.readout(empty, label_ids, expected),
+                                'visible': query_audit.readout(visibility[mapping], label_ids, expected),
+                                'stored': query_audit.readout(scores, label_ids, expected),
+                            })
+                rows.append(row)
+        print(topic, 'memory slots per layer', count, flush=True)
+    return rows, count
 
 
 @torch.inference_mode()
@@ -163,16 +247,22 @@ def main(args):
         raise ValueError('Expected the established recurrent layout')
     attentions = {layer: attention_block(decoder, layer).self_attn for layer in LAYERS}
     identity = {'format': FORMAT, 'sources': {str(p): h for p, h in protected.items()},
-                'individual_sha256': individual, 'budget': SLOT_BUDGET}
+                'individual_sha256': individual, 'budget': SLOT_BUDGET, 'sweep': args.sweep}
     with using(candidates, 'recurrent'):
         if args.output is None:
-            payload = {**identity, 'banks': write_banks(decoder, tokenizer, attentions)}
+            cases = BASE_CASES + FRESH_CASES if args.sweep else BASE_CASES
+            payload = {**identity, 'banks': write_banks(decoder, tokenizer, attentions, cases)}
         else:
             serialized = sha(args.artifact)
             payload = torch.load(args.artifact, map_location='cpu', weights_only=True)
             if any(payload[key] != value for key, value in identity.items()):
                 raise ValueError('The written memory used a different model, script, or individual')
-            rows, label_ids = measure(decoder, tokenizer, attentions, payload['banks'])
+            if args.sweep:
+                rows, count = sweep(decoder, tokenizer, attentions, payload['banks'])
+                details = {'slots_per_layer': count, 'biases': LOGIT_BIASES}
+            else:
+                rows, label_ids = measure(decoder, tokenizer, attentions, payload['banks'])
+                details = {'label_ids': label_ids}
             if sha(args.artifact) != serialized:
                 raise RuntimeError('The persistent slots changed during evaluation')
     if individual != frozen_digest(runtime.organism, runtime.state) or any(sha(p) != h for p, h in protected.items()):
@@ -180,7 +270,7 @@ def main(args):
     if args.output is None:
         atomic_save(payload, args.artifact)
     else:
-        store_json(args.output, {**identity, 'slots_sha256': serialized, 'rows': rows, 'label_ids': label_ids,
+        store_json(args.output, {**identity, **details, 'slots_sha256': serialized, 'rows': rows,
                                  'seconds': perf_counter() - started})
 
 
@@ -190,6 +280,7 @@ if __name__ == '__main__':
     parser.add_argument('artifact', type=Path)
     parser.add_argument('candidates', nargs=2, type=Path)
     parser.add_argument('--output', type=Path, help='Read a previously written bank and score the answers')
+    parser.add_argument('--sweep', action='store_true', help='Audit memory attention mass across matched conditions')
     args = parser.parse_args()
     if (args.output or args.artifact).exists():
         parser.error('Choose a new output path')
