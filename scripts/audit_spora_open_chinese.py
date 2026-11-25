@@ -25,6 +25,12 @@ EXTENDED_BUDGET = 144
 EXTENDED_POSITIONS = 512
 
 
+def response_checks(text, required, forbidden):
+    missing = [group for group in required if not any(term in text for term in group)]
+    abandoned = [term for term in forbidden if term in text]
+    return {'missing': missing, 'abandoned': abandoned, 'surface_pass': bool(text and not missing and not abandoned)}
+
+
 def evaluate(answer):
     cases, counts = [], Counter()
     for name, prompts, resolved, required, forbidden in CASES:
@@ -38,13 +44,9 @@ def evaluate(answer):
             conditions['neutral'] = answer([(prompt, '收到。') for prompt in prompts[:-1]], prompts[-1])
             conditions['resolved'] = answer([], resolved)
         for mode, row in conditions.items():
-            text = row['answer']
-            missing = [group for group in required if not any(term in text for term in group)]
-            abandoned = [term for term in forbidden if term in text]
-            row['checks'] = {'missing': missing, 'abandoned': abandoned,
-                             'surface_pass': bool(text and not missing and not abandoned)}
-            counts.update({f'{mode}_cases': 1, f'{mode}_surface_pass': row['checks']['surface_pass'],
-                           f'{mode}_abandoned': bool(abandoned), f'{mode}_eos': row['eos']})
+            checks = row['checks'] = response_checks(row['answer'], required, forbidden)
+            counts.update({f'{mode}_cases': 1, f'{mode}_surface_pass': checks['surface_pass'],
+                           f'{mode}_abandoned': bool(checks['abandoned']), f'{mode}_eos': row['eos']})
         cases.append({'name': name, 'turns': prompts, 'resolved_prompt': resolved, 'required': required,
                       'forbidden': forbidden, 'rollout': rollout, 'conditions': conditions})
         print(name, {mode: row['checks']['surface_pass'] for mode, row in conditions.items()}, flush=True)
@@ -97,7 +99,7 @@ def extend_qwen(previous, model, tokenizer, eos):
     return outputs
 
 
-def deepseek(checkpoint):
+def compare_deepseek(checkpoint, comparisons):
     started = perf_counter()
     torch.set_num_threads(2)
     torch.cuda.reset_peak_memory_stats()
@@ -107,23 +109,11 @@ def deepseek(checkpoint):
         raise ValueError('Expected the pinned DeepSeek backbone and SPORA checkpoint')
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
     base = load_full_streamed()
-
-    def comparisons(model):
-        print(type(model).__name__, flush=True)
-
-        def answer(history, prompt):
-            result = generate(model, tokenizer, history, prompt, POSITIONS, budget=BUDGET)
-            if result['retained'] != len(history) or result['budget'] != BUDGET:
-                raise ValueError('DeepSeek prompt or reply budget was truncated')
-            return result
-
-        return evaluate(answer)
-
-    native = comparisons(base)
+    native = comparisons('native', base, tokenizer)
     decoder, organism, state = load_integrated(checkpoint, base, MODEL, individual_device='cpu')
     decoder.eval().requires_grad_(False)
     before = frozen_digest(organism, state)
-    integrated = comparisons(decoder)
+    integrated = comparisons('integrated', decoder, tokenizer)
     if frozen_digest(organism, state) != before:
         raise ValueError('Dialogue evaluation changed the isolated individual')
     if any(sha(Path(path)) != digest for path, digest in sources.items()):
@@ -131,6 +121,18 @@ def deepseek(checkpoint):
     return {'native': native, 'integrated': integrated, 'sources': sources, 'individual_sha256': before,
             'seconds': perf_counter() - started,
             'peak_bytes': torch.cuda.max_memory_allocated()}
+
+
+def direct_deepseek(label, model, tokenizer):
+    print(label, type(model).__name__, flush=True)
+
+    def answer(history, prompt):
+        result = generate(model, tokenizer, history, prompt, POSITIONS, budget=BUDGET)
+        if result['retained'] != len(history) or result['budget'] != BUDGET:
+            raise ValueError('DeepSeek prompt or reply budget was truncated')
+        return result
+
+    return evaluate(answer)
 
 
 def main(args):
@@ -156,7 +158,7 @@ def main(args):
         result.update(baseline_sha256=baseline_sha, extended_budget=EXTENDED_BUDGET,
                       extended_positions=EXTENDED_POSITIONS)
     else:
-        result = deepseek(args.checkpoint)
+        result = compare_deepseek(args.checkpoint, direct_deepseek)
     if sha(manifest) != digest:
         raise ValueError('Case manifest changed during evaluation')
     store_json(destination, {**result, 'cases_sha256': digest, 'budget': BUDGET, 'positions': POSITIONS})
