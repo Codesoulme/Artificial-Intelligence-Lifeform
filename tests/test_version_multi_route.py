@@ -1,7 +1,8 @@
 from datetime import date
 import unittest
 
-from spora.research_multi_version_route import Lookup, explicit_queries, mentions, resolve
+from spora.research_multi_version_route import (Lookup, corroborated_version, explicit_queries, fallback_evidence, mentions,
+                                               normalize_version, resolve)
 from spora.research_version_store import MemoryAddress, MemoryVersion
 from spora.research_version_timeline import VersionQuery
 
@@ -57,3 +58,25 @@ class MultiVersionRouteTests(unittest.TestCase):
                          [VersionQuery('previous'), VersionQuery('current')])
         ambiguous = '查闻韶宁的饮品在现行记录以前用的那份。'
         self.assertEqual(explicit_queries(ambiguous, mentions(ambiguous, NAMES, FIELDS)), [None])
+
+    def test_learned_evidence_keeps_temporal_words_without_name_or_field(self):
+        question = '请查闻韶宁的饮品起头落下的是啥；见面地点当前版。'
+        drink, _ = mentions(question, NAMES, FIELDS)
+        self.assertEqual(fallback_evidence(question, drink), '请查该项起头落下的是啥')
+        self.assertIsNone(normalize_version(Lookup.SKIP))
+        self.assertEqual(normalize_version(Lookup.FIRST), VersionQuery('ordinal', 1))
+
+    def test_learned_evidence_excludes_explicit_choices_and_unparsed_date(self):
+        for text in ('初版还是现在的', '第3次记的那回', '三月上旬当时有效的', '记不清哪回'):
+            question = '请查闻韶宁的饮品' + text + '。'
+            with self.subTest(text=text):
+                self.assertIsNone(fallback_evidence(question, mentions(question, NAMES, FIELDS)[0]))
+
+    def test_learned_proposal_needs_evidence_for_that_version(self):
+        self.assertEqual(corroborated_version(Lookup.FIRST, '查该项起头存档写的是哪款'), VersionQuery('ordinal', 1))
+        self.assertIsNone(corroborated_version(Lookup.PREVIOUS, '查该项起头存档写的是哪款'))
+        self.assertEqual(corroborated_version(Lookup.PREVIOUS, '查该项最后一次更换之前写的'), VersionQuery('previous'))
+        for evidence in ('查该项开头落笔那一回', '查该项从前刚登记时写的', '查该项现行记录以前用的那份'):
+            for request in (Lookup.FIRST, Lookup.PREVIOUS, Lookup.CURRENT):
+                with self.subTest(evidence=evidence, request=request):
+                    self.assertIsNone(corroborated_version(request, evidence))

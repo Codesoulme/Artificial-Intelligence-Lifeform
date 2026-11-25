@@ -31,6 +31,14 @@ _LOCAL_SKIP = re.compile(r'(?:别|不必|不用|不要|不需要)(?:再)?(?:查|
 _PREVIOUS_ALIAS = re.compile(r'(?:现在|当前|现行|现用)(?:的)?前一(?:份|版)|上(?:一?个版本|一份记录)|前一份')
 _FIRST_ALIAS = re.compile(r'最初|初次登记|当初')
 _UNRESOLVED_RELATIVE = re.compile(r'此前|以前|之前|之后|前[一二三几]\S|生效前|更正前')
+_UNCERTAIN_LOOKUP = re.compile(r'还是|或者|抑或|任选|随便|不知道|不确定|记不清|都可以|任意|说不清|不作数|不要|不是|\d|'
+                               r'[零一二三四五六七八九十廿]+月|第[两二三四五六七八九十]|截至|到期|哪个版本')
+_FIRST_MARKER = re.compile(r'第一笔|第一本登记|头一[回遭]|一上来|最开[始头]|起头|开头')
+_ENTRY_MARKER = re.compile(r'登|录|入档|立档|存档|清单|档案|写进|记进|头一')
+_ADJACENT = re.compile(r'紧挨|紧贴|挨着|前一格|往前挪一档|往前推一[格个档]|向前数一条|接着的上一条')
+_LATEST_CHANGE = re.compile(r'最近一次|最后一次|刚(?:换|改|调|替|被)')
+_CHANGED_OUT = re.compile(r'替掉|换下|换走|调换下|之前|以前|改动前|生效前')
+_ACTIVE = re.compile(r'仍有效|眼下有效|还在照办|还管用|仍在用|手头还认|还算有效|现用|正在用')
 
 
 @dataclass(frozen=True)
@@ -105,3 +113,29 @@ def explicit_queries(question, candidates):
             query = None
         queries.append(query)
     return queries
+
+
+def fallback_evidence(question, mention):
+    """Isolate wording for an unresolved exact address, without exposing a stored value."""
+    before = _BOUNDARY.split(question[:mention.start])[-1]
+    suffix = _BOUNDARY.split(question[mention.end:])[0]
+    if _UNCERTAIN_LOOKUP.search(before + suffix) or not suffix.strip():
+        return None
+    if mention.owner is not None and before.endswith(mention.owner + '的'):
+        before = before[:-len(mention.owner) - 1]
+    return before + '该项' + suffix
+
+
+def normalize_version(request):
+    """Translate a confident learned proposal into a timeline operation."""
+    return _REQUESTS.get(request)
+
+
+def corroborated_version(request, evidence):
+    """Require wording that distinguishes the proposed version from the other versions."""
+    support = {
+        Lookup.FIRST: _FIRST_MARKER.search(evidence) and _ENTRY_MARKER.search(evidence),
+        Lookup.PREVIOUS: _ADJACENT.search(evidence) or (_LATEST_CHANGE.search(evidence) and _CHANGED_OUT.search(evidence)),
+        Lookup.CURRENT: _ACTIVE.search(evidence),
+    }
+    return _REQUESTS.get(request) if support.get(request) else None

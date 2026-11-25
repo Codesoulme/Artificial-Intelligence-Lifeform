@@ -178,6 +178,21 @@ def build_bank(store, model, tokenizer, columns, source):
     return metadata
 
 
+def reply_to_route(model, tokenizer, store, codebook, reader, question, route):
+    if not route:
+        return [], reply(model, tokenizer, reader, question, (None, None))
+    if None in route or len(route) > 2 or len(set(route)) != len(route):
+        return [], {'answer': '我没能确定全部记录，请核对姓名、事项或版本。', 'token_ids': [], 'copied': []}
+    bank = {}
+    for number in route:
+        state = store.read(number)
+        bank[number] = [(state.keys, state.values)]
+    decoded = read_versions(bank, codebook)
+    values = tuple(decoded[number][0] for number in route)
+    return route, reply(model, tokenizer, reader, question, values + (None,) * (2 - len(values)),
+                        require_coverage=len(values) == 2)
+
+
 @torch.inference_mode()
 def evaluate(model, tokenizer, extract, store, codebook, reader, saved, metadata, *, cases=HELD):
     catalog = store.catalog()
@@ -208,23 +223,12 @@ def evaluate(model, tokenizer, extract, store, codebook, reader, saved, metadata
                 decisions.append({'owner': item.owner, 'field': item.field, 'request': label,
                                   'number': number, 'reason': reason})
             route = [item['number'] for item in decisions if item['request'] != Lookup.SKIP.name]
-            selected = []
-            if not route:
-                if fallback is None:
-                    fallback = reply(model, tokenizer, reader, question, (None, None))
-                output = fallback
-            elif None in route or len(route) > 2 or len(set(route)) != len(route):
-                output = {'answer': '我没能确定全部记录，请核对姓名、事项或版本。', 'token_ids': [], 'copied': []}
+            if not route and fallback is not None:
+                selected, output = [], fallback
             else:
-                selected = route
-                bank = {}
-                for number in selected:
-                    state = store.read(number)
-                    bank[number] = [(state.keys, state.values)]
-                decoded = read_versions(bank, codebook)
-                values = tuple(decoded[number][0] for number in selected)
-                output = reply(model, tokenizer, reader, question, values + (None,) * (2 - len(values)),
-                               require_coverage=len(values) == 2)
+                selected, output = reply_to_route(model, tokenizer, store, codebook, reader, question, route)
+                if not route:
+                    fallback = output
             wanted = [metadata[event]['text'] for event in expected if event]
             foils = [value['text'] for event, value in metadata.items() if event not in expected]
             complete = bool(expected and None not in expected)
