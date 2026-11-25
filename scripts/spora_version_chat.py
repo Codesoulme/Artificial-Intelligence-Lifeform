@@ -14,6 +14,7 @@ from uuid import uuid4
 import torch
 from torch.nn import functional as F
 
+from scripts.audit_spora_active_time import TIME
 from scripts.audit_spora_dialogue_version_scope import TemporalProposals
 from scripts.audit_spora_dialogue_working_state import FrozenTurnFeatures
 from scripts.audit_spora_dual_version_reply import FIELDS, reply as version_reply
@@ -42,11 +43,17 @@ HELP = ('/记 姓名 | 字段 | 短值 [| 生效日期 YYYY-MM-DD]。字段可�
         '查询时可说「请查林语的饮品当前版」，再问「那上一版呢」。'
         '/清空对话 清除本轮对话和指代范围。/退出 结束。')
 COMPOSE_HELP = ('/成句 姓名 | 字段版次 | 字段版次 | 时间 | 写作要求。'
+                '也可先查两项后说「按这两项写一句消息」。'
                 '可组合见面地点和用品、见面地点和书目、书目和饮品。')
 COMPOSE_PAIRS = (
     {'places', 'items'}, {'places', 'books'}, {'books', 'drinks'},
 )
 COMPOSE_FIELD = re.compile(r'(饮品|见面地点|用品|书目)\s*(当前版|首版|上一版|第[一二三四五六七八九1-9]版)')
+COMPOSE_REFERENCE = re.compile(r'^(?:那就|那|接着|麻烦|请|就)?(?:按|用|根据)(?:刚(?:刚)?查到的)?这两(?:条记录|项记录|条|项)')
+COMPOSE_ACTION = re.compile(r'(?:写|拟)(?:出|好|成)?(?:一条|一句|个|条|句)?(?:微信|短讯|短信|便条|通知|消息|提醒|邀约)')
+COMPOSE_CANCEL = re.compile(r'先别|不用写|不要写|还没定|还未确定|待定|取消|算了|换(?:个|一个)?(?:话题|问题)|改查')
+CONFIRMED_TIME = re.compile(r'(?:时间(?:是|定(?:在|为)|改(?:到|成))|(?:就)?约在)\s*(' + TIME.pattern + r')(?=[，,。！？!?；;\s]|$)')
+BARE_TIME = re.compile(r'(?:时间(?:是|定(?:在|为)|改(?:到|成))\s*)?(' + TIME.pattern + r')[。！？!?]?')
 
 
 def write_request(raw, today):
@@ -86,6 +93,22 @@ def compose_request(raw):
     if not VALUE.fullmatch(when) or len(question) > 512:
         raise ValueError('请给出一个简短的明确时间及不超过 512 字的写作要求。')
     return targets, when, question
+
+
+def compose_followup(question):
+    return bool(COMPOSE_REFERENCE.match(question) and COMPOSE_ACTION.search(question)
+                and not COMPOSE_CANCEL.search(question) and not re.search(r'[“”「」]|翻译|润色', question))
+
+
+def confirmed_time(question, *, answer_only=False):
+    if COMPOSE_CANCEL.search(question) or re.search(r'或者|还是|暂定|如果|可能|不确定|未定|备选|[“”「」]', question):
+        return None
+    if answer_only:
+        match = BARE_TIME.fullmatch(question)
+        return match[1] if match else None
+    choices = CONFIRMED_TIME.findall(question)
+    candidates = [match.group() for match in TIME.finditer(question)]
+    return choices[0] if len(choices) == 1 and candidates == choices else None
 
 
 def clarify(catalog, targets, reasons, today):
@@ -131,6 +154,7 @@ class VersionChat:
 
     def reset_dialogue(self):
         self.history, self.scope, self.pending = [], (), None
+        self.compose_selection, self.compose_pending = (), None
 
     @torch.inference_mode()
     def save(self, raw, today):
@@ -154,12 +178,8 @@ class VersionChat:
         if self.composer is None:
             raise ValueError('启动时请用 --composition 指定成句模型目录。')
         self.scope, self.pending = (), None
+        self.compose_selection, self.compose_pending = (), None
         targets, when, question = compose_request(raw)
-        if when not in question:
-            question += f'时间是{when}。'
-        when_ids = tokens(self.tokenizer, when)
-        if not 1 <= len(when_ids) <= 4 or self.tokenizer.decode(when_ids) != when:
-            raise ValueError('时间须能按原文编码为一至四个词元。')
         catalog = self.store.catalog()
         decisions = [resolve_address(catalog, address, query, today, retain_same_day=True)
                      for address, query in targets]
@@ -168,14 +188,23 @@ class VersionChat:
                           for (address, _), (_, reason) in zip(targets, decisions, strict=True)
                           if reason != 'located')
             return {'kind': 'clarify', 'answer': answer, 'selected': []}
-        selected = [number for number, _ in decisions]
+        return self.compose_selected(question, when, tuple(
+            (address, number) for (address, _), (number, _) in zip(targets, decisions, strict=True)
+        ))
+
+    def compose_selected(self, question, when, selection):
+        if when not in question:
+            question += f'时间是{when}。'
+        when_ids = tokens(self.tokenizer, when)
+        if not 1 <= len(when_ids) <= 4 or self.tokenizer.decode(when_ids) != when:
+            raise ValueError('时间须能按原文编码为一至四个词元。')
+        selected = [number for _, number in selection]
         bank = {}
         for number in selected:
             state = self.store.read(number)
             bank[number] = [(state.keys, state.values)]
         values = read_versions(bank, self.codebook)
-        fields = [(address.field, values[number][0])
-                  for (address, _), number in zip(targets, selected, strict=True)]
+        fields = [(address.field, values[number][0]) for address, number in selection]
         memory = arrangement([*fields, ('time', torch.tensor(when_ids, device=self.model.device))])
         output = version_reply(self.model, self.tokenizer, self.composer, question, memory,
                                require_coverage=True, cover_present_slots=True, max_new_tokens=72)
@@ -185,6 +214,26 @@ class VersionChat:
             return {'kind': 'clarify', 'answer': '这次没有生成完整消息，请核对字段和写作要求。', 'selected': selected}
         return {'kind': 'composed', 'answer': output['answer'], 'selected': selected, 'copied': sorted(copied)}
 
+    def compose_from_dialogue(self, question):
+        selection, pending = self.compose_selection, self.compose_pending
+        self.compose_selection, self.compose_pending = (), None
+        if pending is not None and (when := confirmed_time(question, answer_only=True)) is not None:
+            selection, request = pending
+            return self.compose_selected(request, when, selection)
+        if not compose_followup(question):
+            return None
+        self.scope, self.pending = (), None
+        if not selection:
+            return {'kind': 'clarify', 'answer': '请先查阅同一人的两项记录，再告诉我要写什么。', 'selected': []}
+        owner = selection[0][0].name
+        fields = '和'.join(FIELDS[address.field] for address, _ in selection)
+        request = f'请给{owner}{question}。请用已查到的{fields}。'
+        when = confirmed_time(question)
+        if when is None:
+            self.compose_pending = selection, request
+            return {'kind': 'clarify', 'answer': '请确认一个具体时间，例如「周五傍晚」。', 'selected': []}
+        return self.compose_selected(request, when, selection)
+
     @torch.inference_mode()
     def turn(self, question, today):
         if len(question) > 512:
@@ -192,6 +241,10 @@ class VersionChat:
         if deferred_lookup(question):
             self.reset_dialogue()
             return {'kind': 'defer', 'answer': '好，等你想查时再说。', 'selected': [], 'reasons': []}
+        if self.composer is not None:
+            composed = self.compose_from_dialogue(question)
+            if composed is not None:
+                return composed
         catalog = self.store.catalog()
         enrolled = {address.name for address in catalog}
         targets = (dialogue_targets(question, enrolled, FIELDS, self.scope) if self.pending is None else
@@ -223,6 +276,10 @@ class VersionChat:
                     answer += '。'
         self.scope = advance_scope(self.scope, targets, selected)
         self.pending = pending_after_lookup(catalog, targets, selected, reasons)
+        if (self.composer is not None and len(self.scope) == len(selected) == 2
+                and self.scope[0].name == self.scope[1].name
+                and {address.field for address in self.scope} in COMPOSE_PAIRS):
+            self.compose_selection = tuple(zip(self.scope, selected, strict=True))
         self.history = [*self.history, {'role': 'user', 'content': question},
                         {'role': 'assistant', 'content': answer}][-4:]
         return {'kind': kind, 'answer': answer, 'selected': selected, 'reasons': list(reasons)}

@@ -1,12 +1,28 @@
 from datetime import date
 import unittest
 
-from scripts.spora_version_chat import compose_request, deferred_lookup, write_request
+from scripts.spora_version_chat import compose_followup, compose_request, confirmed_time, deferred_lookup, write_request
 from spora.research_version_store import MemoryAddress
 from spora.research_version_timeline import VersionQuery
 
 
 class VersionChatCommandTests(unittest.TestCase):
+    def test_natural_composition_requires_a_reference_and_a_writing_action(self):
+        self.assertTrue(compose_followup('按这两项写一句消息。'))
+        self.assertTrue(compose_followup('那就根据刚查到的这两条记录拟条提醒。'))
+        for question in ('帮我写一句消息。', '按这两项解释一下。', '按这两项先别写消息。',
+                         '按这两项翻译「写一句消息」。'):
+            with self.subTest(question=question):
+                self.assertFalse(compose_followup(question))
+
+    def test_scope_composition_does_not_guess_among_temporal_mentions(self):
+        self.assertEqual(confirmed_time('按这两项写一句消息，时间定在周五傍晚。'), '周五傍晚')
+        self.assertEqual(confirmed_time('星期三中午。', answer_only=True), '星期三中午')
+        for question in ('地点别动，改查周五傍晚的车次。', '时间定在周五傍晚或者周日晚上。',
+                         '时间定在周五傍晚。旧稿写周日晚上。', '如果时间是周五傍晚，先别发。'):
+            with self.subTest(question=question):
+                self.assertIsNone(confirmed_time(question))
+
     def test_composition_uses_individual_field_versions(self):
         targets, when, question = compose_request('林语 | 见面地点当前版 | 用品 上一版 | 明早八点 | 帮我写一句。')
         self.assertEqual(targets, [(MemoryAddress('林语', 'places'), VersionQuery('current')),
