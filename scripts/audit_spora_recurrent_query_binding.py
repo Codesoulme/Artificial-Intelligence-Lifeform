@@ -12,7 +12,7 @@ from scripts.benchmark_spora_recurrent_dialogue import (
     load_full_streamed, load_integrated_runtime, sha, torch, using,
 )
 from scripts.train_spora_recurrent_counterfactual import store_json
-from spora.research_recurrent_decode import load_recurrent_replacements
+from spora.research_recurrent_decode import attention_block, load_recurrent_replacements
 
 
 FIELDS = (
@@ -21,6 +21,7 @@ FIELDS = (
     ('物品交接', '地点', '时间'),
 )
 PROBE_LAYERS = (18, 19, 22, 25)
+QUERY_LAYERS = (20, 23)
 POSITIONS = 2048
 
 
@@ -49,31 +50,33 @@ def snapshot(module_output):
     return module_output if isinstance(module_output, torch.Tensor) else module_output[0]
 
 
-def capture(decoder, layers, ids):
+def capture(decoder, sites, ids):
     positions = {}
 
-    def capture_last(layer):
+    def capture_last(layer, width):
         def hook(_module, _args, output):
-            positions[layer] = snapshot(output)[:, -1, :].clone()
+            positions[layer] = snapshot(output)[:, -1, :width].clone()
         return hook
 
     with ExitStack() as hooks:
-        for layer in PROBE_LAYERS:
-            handle = layers[layer].register_forward_hook(capture_last(layer))
+        for layer, (module, width) in sites.items():
+            handle = module.register_forward_hook(capture_last(layer, width))
             hooks.callback(handle.remove)
         log_probs = last_logits(decoder, ids)
-    if tuple(positions) != PROBE_LAYERS:
+    if tuple(positions) != tuple(sites):
         raise RuntimeError('Decoder did not run all probe layers in order')
     return log_probs, positions
 
 
-def patched(decoder, layer, ids, replacement):
+def patched(decoder, site, ids, replacement):
+    module, width = site
+
     def hook(_module, _args, output):
         hidden = snapshot(output).clone()
-        hidden[:, -1, :] = replacement
+        hidden[:, -1, :width] = replacement
         return hidden if isinstance(output, torch.Tensor) else (hidden, *output[1:])
 
-    handle = layer.register_forward_hook(hook)
+    handle = module.register_forward_hook(hook)
     try:
         return last_logits(decoder, ids)
     finally:
@@ -86,15 +89,22 @@ def readout(scores, label_ids, expected):
             'selected': 1 + int(choices.argmax()), 'top_token': int(scores.argmax())}
 
 
-def evaluate(decoder, tokenizer, fillers, label_ids):
-    layers = decoder.base.model.layers
+def intervention_sites(decoder, query_only):
+    if query_only:
+        attentions = {layer: attention_block(decoder, layer).self_attn for layer in QUERY_LAYERS}
+        # Fused projections are ordered Q, K, V. Only Q at the aligned final position is replaced.
+        return {layer: (attention.qkv, attention.sizes[0]) for layer, attention in attentions.items()}
+    return {layer: (decoder.base.model.layers[layer], None) for layer in PROBE_LAYERS}
+
+
+def evaluate(decoder, tokenizer, fillers, label_ids, sites):
     results = []
     for topic, prompts in questions(tokenizer, fillers):
-        captures = {key: capture(decoder, layers, ids) for key, ids in prompts.items()}
+        captures = {key: capture(decoder, sites, ids) for key, ids in prompts.items()}
         self_key = (0, 0)
         original_scores, vectors = captures[self_key]
-        for layer in PROBE_LAYERS:
-            repeated = patched(decoder, layers[layer], prompts[self_key], vectors[layer])
+        for layer, site in sites.items():
+            repeated = patched(decoder, site, prompts[self_key], vectors[layer])
             if not torch.equal(repeated, original_scores):
                 raise RuntimeError(f'Self-patch changed the logits at layer {layer}')
         for (mapping, field), ids in prompts.items():
@@ -103,18 +113,18 @@ def evaluate(decoder, tokenizer, fillers, label_ids):
             row = {'topic': topic, 'mapping': mapping, 'field': field, 'tokens': len(ids),
                    'baseline': readout(captures[mapping, field][0], label_ids, current),
                    'patches': {}}
-            for layer in PROBE_LAYERS:
+            for layer, site in sites.items():
                 row['patches'][layer] = {}
                 for label, donor_mapping in (('same_assignment', mapping), ('reversed_assignment', 1 - mapping)):
                     donor = captures[donor_mapping, 1 - field][1][layer]
-                    scores = patched(decoder, layers[layer], ids, donor)
+                    scores = patched(decoder, site, ids, donor)
                     row['patches'][layer][label] = readout(scores, label_ids, expected)
             results.append(row)
         print(topic, len(prompts[self_key]), flush=True)
     return results
 
 
-def summarize(rows, label_ids):
+def summarize(rows, label_ids, layers):
     correct = [row for row in rows if row['baseline']['log_odds'] > 0]
     grounded_topics = [
         topic for topic, _, _ in FIELDS if sum(row['topic'] == topic for row in correct) == 4
@@ -130,7 +140,7 @@ def summarize(rows, label_ids):
                 label: sum(row['patches'][layer][label]['log_odds'] > 0 for row in grounded)
                 for label in ('same_assignment', 'reversed_assignment')
             }
-            for layer in PROBE_LAYERS
+            for layer in layers
         },
     }
 
@@ -164,17 +174,19 @@ def main(args):
     candidates = load_recurrent_replacements(decoder, args.candidates, protected[args.checkpoint])
     if tuple(candidates) != (19, 22):
         raise ValueError('This probe compares the established two-layer layout with its parent')
+    sites = intervention_sites(decoder, args.query_only)
     conditions = {}
     for mode in ('parent', 'recurrent'):
         with using(candidates, mode):
-            rows = evaluate(decoder, tokenizer, fillers, label_ids)
-        summary = summarize(rows, label_ids)
+            rows = evaluate(decoder, tokenizer, fillers, label_ids, sites)
+        summary = summarize(rows, label_ids, sites)
         conditions[mode] = {'summary': summary, 'rows': rows}
         print(mode, summary, flush=True)
     if (individual != frozen_digest(runtime.organism, runtime.state)
             or any(sha(path) != digest for path, digest in protected.items())):
         raise RuntimeError('A source artifact or individual changed')
-    store_json(args.output, {'conditions': conditions, 'long': args.long, 'layers': list(PROBE_LAYERS),
+    store_json(args.output, {'conditions': conditions, 'long': args.long, 'layers': list(sites),
+                             'intervention': 'query' if args.query_only else 'residual',
                              'label_ids': label_ids,
                              'individual_sha256': individual, 'seconds': perf_counter() - started,
                              'sources': {str(path): digest for path, digest in protected.items()}})
@@ -186,6 +198,7 @@ if __name__ == '__main__':
     parser.add_argument('output', type=Path)
     parser.add_argument('candidates', nargs=2, type=Path)
     parser.add_argument('--long', action='store_true')
+    parser.add_argument('--query-only', action='store_true', help='Replace only the later attention query')
     args = parser.parse_args()
     if args.output.exists():
         parser.error('Choose a new output path')
