@@ -181,16 +181,18 @@ def pick_threshold(predictions, owners, labels):
 
 
 @torch.inference_mode()
-def evaluate(model, tokenizer, store, reader, extract, probe, threshold, representation):
+def evaluate(model, tokenizer, store, reader, extract, probe, threshold, representation, *,
+             requests=None, records=RECORDS):
     catalog = store.catalog()
     names = {address.name for address in catalog}
-    requests = ([(natural, READ, number) for number, _, natural, _ in PAIRS]
-                + [(other, CHAT, None) for _, _, _, other in PAIRS]
-                + [(text, ASK, None) for text in HELD_ASK] + [(text, CHAT, None) for text in HELD_CHAT])
+    if requests is None:
+        requests = ([(natural, READ, number) for number, _, natural, _ in PAIRS]
+                    + [(other, CHAT, None) for _, _, _, other in PAIRS]
+                    + [(text, ASK, None) for text in HELD_ASK] + [(text, CHAT, None) for text in HELD_CHAT])
     features, owners = vectors(extract, [text for text, _, _ in requests], names, representation)
     embedding = model.get_input_embeddings().weight
     codebook = F.normalize(embedding.index_select(1, compress_dimension(embedding.shape[1]).to(embedding.device)).float(), dim=-1)
-    known_values = [row[-1] for row in RECORDS]
+    known_values = [row[-1] for row in records]
     rows, totals = [], {mode: Counter() for mode in ('raw', 'calibrated')}
     cached = {}
     for (text, action, number), scored, candidates in zip(requests, predict(probe, features), owners, strict=True):
@@ -223,7 +225,8 @@ def evaluate(model, tokenizer, store, reader, extract, probe, threshold, represe
             arms[mode] = dict(action=proposed, owner=None if owner == UNLABELED else candidates[owner],
                               field=chosen_field, version=None if version == UNLABELED else version,
                               record=record, output=output, exact_read=correct)
-        rows.append(dict(question=text, expected_action=action, expected_record=number, scored=scored, arms=arms))
+        rows.append(dict(question=text, candidates=candidates, expected_action=action, expected_record=number,
+                         scored=scored, arms=arms))
     return rows, totals
 
 
