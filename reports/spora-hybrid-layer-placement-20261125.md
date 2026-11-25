@@ -53,9 +53,18 @@
 
 两种组合在最长输入时各节省约 2.69 MiB，每个循环层均保存 164,992 字节的状态。两次独立计时中的父模型耗时也有明显波动，所以表中按各自同一轮父模型比较。增量耗时的变化方向随配置和输入长度而异。29 项循环注意力与持久化测试通过，另有两项被套件跳过。来源对照额外验证了摘要不一致会被拒绝，共用一处循环层的布局可以比较。
 
-## 后续选择
+## 四组交叉结果
 
-目前保留第 19、22 层组合做结构基线。下一步先试第 19、24 层，保留较接近父模型的第 24 层，恢复第 21 层的完整注意力。若需进一步区分，再试第 21、22 层。每个组合仍替换两层，用同题比较未更改字段是否保留。两种交叉组合可以检查第 21 层的影响是否随搭档而变。层间距离和父模型前馈门控所在位置也在变化，结果解释以这四种组合为限。HALO 和 KL 引导的混合注意力研究都给出了选择替换位置的实测对照。 [HALO](https://arxiv.org/html/2601.22156v1#S6.T4) · [KL 引导的层选择](https://arxiv.org/html/2512.20569v1#A7.T14)
+| 循环层 | 短题完整 | 约 700 词元完整 / 保留字段 | 约 1,400 词元完整 / 保留字段 | 开放题逐轮词面通过 |
+| --- | ---: | ---: | ---: | ---: |
+| 19、22 | 8/10 | 7/10 · 7/10 | 2/10 · 5/10 | 8/18 |
+| 19、24 | 8/10 | 3/10 · 7/10 | 1/10 · 2/10 | 7/18 |
+| 21、22 | 5/10 | 2/10 · 3/10 | 1/10 · 2/10 | 9/18 |
+| 21、24 | 6/10 | 1/10 · 2/10 | 1/10 · 2/10 | 6/18 |
+
+四组使用局部对齐后的原始权重。核对共同层的权重摘要、逐题提示、位置上限和个体摘要。约 700 词元时，固定第 22 层，把第 19 层换成第 21 层后，有五题丢失原本能答出的保留字段，一题补回。固定第 24 层做同样替换，也有五题丢失保留字段，并且未补回任何一题。固定第 19 层，把第 22 层换成第 24 层时，保留字段仍为 7/10，更新值出现从 7/10 降至 4/10。
+
+在这四种搭配和当前的权重初始化下，保留第 19、22 层做结构基线。层组合改变了两处循环注意力的间距，以及它们与前馈门控的相对位置，因此结果按具体组合解读。由于四组在最长输入上都缺少可靠的完整答复，转而测量循环状态在精确注意力无法直达早期信息时能提供多少支持。 [HALO](https://arxiv.org/html/2601.22156v1#S6.T4) · [KL 引导的层选择](https://arxiv.org/html/2512.20569v1#A7.T14) · [循环记忆路径对照](spora-recurrent-pathways-20261125.md)
 
 ## 初始化命令
 
@@ -103,4 +112,5 @@ $sporaNewRun = 'runs/spora-morph-recovery-21-24-v1'
 ```powershell
 .\.venv\Scripts\python.exe -u -m scripts.benchmark_spora_recurrent_dialogue $sporaParent runs/spora-recurrent-morph-19-24-extended-v1.json runs/spora-gelu24-recurrent-layer19-v2 runs/spora-gelu24-recurrent-layer24-morph-v1 --dialogue-only --extend --parent-reference $sporaOldRef
 .\.venv\Scripts\python.exe -u -m scripts.benchmark_spora_recurrent_dialogue $sporaParent runs/spora-recurrent-morph-21-22-extended-v1.json runs/spora-gelu24-recurrent-layer21-morph-v1 runs/spora-gelu24-recurrent-layer22-v1 --dialogue-only --extend --parent-reference $sporaOldRef
+.\.venv\Scripts\python.exe -m scripts.audit_spora_recurrent_placement $sporaOldRef $sporaNewRef --crossed runs/spora-recurrent-morph-19-24-extended-v1.json runs/spora-recurrent-morph-21-22-extended-v1.json
 ```

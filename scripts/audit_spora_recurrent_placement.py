@@ -83,7 +83,58 @@ def recall_inputs(result):
     return [tuple(row[key] for key in fields) for row in result['recall']]
 
 
+def crossed_effects(paths):
+    anchor = paths[0]
+    reports = [references((anchor, path))[1] for path in paths[1:]]
+    reports.insert(0, read(anchor))
+    layouts = {tuple(row['layers']): row['dialogue']['recurrent'] for row in reports}
+    first_slots = sorted({first for first, _ in layouts})
+    second_slots = sorted({second for _, second in layouts})
+    if len(layouts) != 4 or len(first_slots) != 2 or len(second_slots) != 2:
+        raise ValueError('Expected all four combinations of two first and two second layers')
+    inputs = recall_inputs(reports[0]['dialogue']['recurrent'])
+    weights = {}
+    for report in reports:
+        if recall_inputs(report['dialogue']['recurrent']) != inputs:
+            raise ValueError('The crossed layouts used different histories')
+        candidates = {}
+        for source in report['sources']:
+            path = Path(source)
+            if path.name == 'comparison.json':
+                layer = read(path)['layer']
+                candidates[layer] = report['sources'][str(path.with_name('attention.pt'))]
+        if set(candidates) != set(report['layers']):
+            raise ValueError('Candidate sources and layer placement differ')
+        for layer, digest in candidates.items():
+            if weights.setdefault(layer, digest) != digest:
+                raise ValueError(f'Layout changed the initial weights for layer {layer}')
+
+    def move(before, after):
+        rows = {}
+        for left, right in zip(before['recall'], after['recall'], strict=True):
+            count = rows.setdefault(left['length'], Counter())
+            for key, old, new in (
+                ('complete', left['passed'], right['passed']),
+                ('new', left['values']['new'] in left['answer'], right['values']['new'] in right['answer']),
+                ('keep', left['values']['keep'] in left['answer'], right['values']['keep'] in right['answer']),
+            ):
+                count[f'{key}_gain'] += int(new and not old)
+                count[f'{key}_loss'] += int(old and not new)
+        return rows
+
+    first, alternate = first_slots
+    second, other = second_slots
+    return {'layouts': {','.join(map(str, placement)): outcome(row) for placement, row in layouts.items()},
+            'replace_first': {partner: move(layouts[first, partner], layouts[alternate, partner])
+                              for partner in second_slots},
+            'replace_second': {partner: move(layouts[partner, second], layouts[partner, other])
+                               for partner in first_slots}}
+
+
 def main(args):
+    if args.crossed:
+        print(json.dumps(crossed_effects([*args.references, *args.crossed]), ensure_ascii=False, indent=2))
+        return
     first, second = reports = references(args.references)
     result = {'parent': outcome(first['dialogue']['parent']),
               'before': {','.join(map(str, row['layers'])): outcome(row['dialogue']['recurrent']) for row in reports},
@@ -122,5 +173,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('references', nargs=2, type=Path)
-    parser.add_argument('--recoveries', nargs=2, type=Path)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--recoveries', nargs=2, type=Path)
+    mode.add_argument('--crossed', nargs=2, type=Path, help='Compare four fixed-budget layouts that share layer weights')
     main(parser.parse_args())
