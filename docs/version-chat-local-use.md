@@ -69,6 +69,16 @@ $sporaLayer22 = 'runs/spora-gelu24-recurrent-layer22-v1'
 
 循环版支持原有版次档案，启动会检验父检查点、循环层权重和词汇档案的绑定。每次模型前向最多处理 2048 个词元位置。遇到长度提示可用 `/清空对话` 再试，已登记的记忆会保留。 [循环版回放](../reports/spora-recurrent-version-chat-20261126.md)
 
+### 在线状态
+
+加上 `--awake-state` 可让清醒模块在进程空闲时继续运行。默认加载 `runs/p24-awake/core-seed7.pt`，用 CPU 做小步更新。用同一份状态文件重启时，需要保持同一档案和模型权重。
+
+```powershell
+.\spora_version_chat.cmd --profile runs\my-version-memory --recurrent $sporaParent $sporaLayer19 $sporaLayer22 --awake-state runs\my-version-memory\awake.pt
+```
+
+`/status` 显示运行状态，`/focus` 提高更新频率，`/relax` 降低频率，`/sleep` 暂停更新，`/wake` 恢复。单独查到一项记录后，短时间内可以说「再说一遍刚才查到的那项」。入口从在线张量取回那次选中的版次，再从档案读出名称。复述只能使用一次。等待过期、取消、转题、清空、睡眠或重启后，可以重新指定姓名、字段和版次。 [在线回放](../reports/spora-recurrent-awake-chat-20261126.md)
+
 ## 本机回放
 
 回放从空测试档案开始，使用 Windows 启动入口发送登记和查阅消息，然后退出并在独立进程重开。脚本只使用位于指定结果目录下的新档案。

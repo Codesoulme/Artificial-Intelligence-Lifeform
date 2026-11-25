@@ -165,7 +165,7 @@ class AwakeCore(nn.Module):
         return self.config.focus_seconds if int(self.mode)==1 or bool(self.urgent) else self.config.relax_seconds
 
 
-def attach_awake(model, core):
+def attach_awake(model, core, *, device=None):
     if hasattr(model,'awake_core'):raise ValueError('Awake extension already attached')
-    core.validate();model.awake_core=core.to(next(model.parameters()).device).eval()
+    core.validate();model.awake_core=core.to(next(model.parameters()).device if device is None else device).eval()
     return model

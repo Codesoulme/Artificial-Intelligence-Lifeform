@@ -1,7 +1,7 @@
 """Interactive DeepSeek chat with a dedicated, versioned SPORA memory profile."""
 
 import argparse
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from datetime import date
 from hashlib import sha256
 import json
@@ -26,6 +26,7 @@ from scripts.audit_spora_version_coverage import write_fresh
 from scripts.audit_spora_versioned_memory_generation import read_versions
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from scripts.deepseek_spora_ttt_read_adapter_pilot import generate
+from spora.awake_chat import awake_chat_lines
 from spora.integrated_checkpoint import load_integrated_runtime
 from spora.research_multi_version_route import resolve_address
 from spora.research_recurrent_decode import load_recurrent_replacements
@@ -57,6 +58,11 @@ COMPOSE_ACTION = re.compile(r'(?:写|拟)(?:出|好|成)?(?:一条|一句|个|�
 COMPOSE_CANCEL = re.compile(r'先别|不用写|不要写|还没定|还未确定|待定|取消|算了|换(?:个|一个)?(?:话题|问题)|改查')
 CONFIRMED_TIME = re.compile(r'(?:时间(?:是|定(?:在|为)|改(?:到|成))|(?:就)?约在)\s*(' + TIME.pattern + r')(?=[，,。！？!?；;\s]|$)')
 BARE_TIME = re.compile(r'(?:时间(?:是|定(?:在|为)|改(?:到|成))\s*)?(' + TIME.pattern + r')[。！？!?]?')
+AWAKE_RECALL = re.compile(
+    r'(?:请)?(?:再说一遍刚才查到的(?:那项|记录)?|把刚才查到的(?:那项|记录)?再说一遍'
+    r'|刚才查到的(?:那项|记录)?是什么)[。！？!?]?'
+)
+AWAKE_HELP = '/status 查看持续状态，/relax 放松，/focus 专注，/sleep 暂停，/wake 唤醒。'
 
 
 def write_request(raw, today):
@@ -157,17 +163,20 @@ def ask_lookup_coordinate(partial):
 
 class VersionChat:
     def __init__(self, store, model, tokenizer, reader, propose, settings, *, ordinary_tokens, composer=None,
-                 typed_lookup=False):
+                 typed_lookup=False, awake=None):
         self.store, self.model, self.tokenizer, self.reader = store, model, tokenizer, reader
         self.propose, self.settings, self.ordinary_tokens = propose, settings, ordinary_tokens
         self.composer = composer
         self.typed_lookup = typed_lookup
+        self.awake = awake
         embedding = model.get_input_embeddings().weight.detach()
         self.columns = compress_dimension(embedding.shape[1]).to(embedding.device)
         self.codebook = F.normalize(embedding.index_select(1, self.columns).float(), dim=-1)
         self.reset_dialogue()
 
     def reset_dialogue(self):
+        if self.awake is not None:
+            self.awake[1]()
         self.history, self.scope, self.pending = [], (), None
         self.partial_lookup = None
         self.compose_selection, self.compose_pending = (), None
@@ -193,6 +202,8 @@ class VersionChat:
     def compose(self, raw, today):
         if self.composer is None:
             raise ValueError('启动时请用 --composition 指定成句模型目录。')
+        if self.awake is not None:
+            self.awake[1]()
         self.scope, self.pending = (), None
         self.partial_lookup = None
         self.compose_selection, self.compose_pending = (), None
@@ -259,6 +270,10 @@ class VersionChat:
         if deferred_lookup(question):
             self.reset_dialogue()
             return {'kind': 'defer', 'answer': '好，等你想查时再说。', 'selected': [], 'reasons': []}
+        if self.awake is not None:
+            recent = self.awake[1]()
+            if AWAKE_RECALL.fullmatch(question):
+                return self.recall_awake(recent)
         if self.composer is not None:
             composed = self.compose_from_dialogue(question)
             if composed is not None:
@@ -306,7 +321,7 @@ class VersionChat:
             labels = None
             read_question = question
             confirmed = len(targets) == 1 and targets[0].source == 'confirmed'
-            if self.typed_lookup or confirmed:
+            if self.typed_lookup or confirmed or self.awake is not None:
                 addresses = [target.address for target in targets]
                 multi_person = len({address.name for address in addresses}) > 1
                 labels = [f'{address.name}的{FIELDS[address.field]}' if multi_person else FIELDS[address.field]
@@ -320,6 +335,11 @@ class VersionChat:
             selected, output = reply_to_route(self.model, self.tokenizer, self.store, self.codebook, self.reader,
                                               read_question, route, history=self.history, labels=labels)
             answer = output['answer']
+            if self.awake is not None and len(selected) == 1:
+                observe, _, bind = self.awake
+                field = targets[0].address.field
+                observe(tuple(float(candidate == field) for candidate in FIELDS))
+                bind(selected[0], field)
             if output['token_ids'] and output['token_ids'][-1] == self.tokenizer.eos_token_id:
                 answer = answer.rstrip('，,、 ')
                 if answer and answer[-1] not in '。！？.!?':
@@ -334,9 +354,24 @@ class VersionChat:
                         {'role': 'assistant', 'content': answer}][-4:]
         return {'kind': kind, 'answer': answer, 'selected': selected, 'reasons': list(reasons)}
 
+    def recall_awake(self, recent):
+        self.reset_dialogue()
+        if recent is None:
+            return {'kind': 'clarify', 'answer': '请告诉我要查谁的哪项记录和版次。', 'selected': []}
+        number, field, _, _ = recent
+        label = FIELDS[field]
+        selected, output = reply_to_route(self.model, self.tokenizer, self.store, self.codebook, self.reader,
+                                          f'请把刚才查到的{label}只报名称。', [number], labels=[label])
+        return {'kind': 'read', 'answer': output['answer'], 'selected': selected, 'reasons': ['awake_recall']}
+
     def dispatch(self, line):
         if line == '/帮助':
-            return {'kind': 'help', 'answer': HELP if self.composer is None else f'{HELP}\n{COMPOSE_HELP}'}
+            help_text = [HELP]
+            if self.composer is not None:
+                help_text.append(COMPOSE_HELP)
+            if self.awake is not None:
+                help_text.append(AWAKE_HELP)
+            return {'kind': 'help', 'answer': '\n'.join(help_text)}
         if line == '/清空对话':
             self.reset_dialogue()
             return {'kind': 'reset', 'answer': '已清空本轮对话，记忆记录已保留。'}
@@ -450,17 +485,39 @@ def run_chat(args, model, reader_path, normalizer_path, writer_path, binding, in
     settings = torch.load(writer_path, map_location='cpu', weights_only=True)
     args.profile.mkdir(parents=True, exist_ok=True)
     database = args.profile / 'versions.sqlite3'
-    with VersionStore(database, binding, create=not database.exists()) as store:
+    with VersionStore(database, binding, create=not database.exists()) as store, ExitStack() as resources:
+        awake = None
+        lines = terminal_lines(interactive)
+        if args.awake_state is not None:
+            path = args.awake_state.resolve()
+            recurrent = ([args.recurrent[0], *(folder / 'attention.pt' for folder in args.recurrent[1:])]
+                         if args.recurrent else [])
+            protected = (database, args.awake_core, reader_path, normalizer_path, writer_path,
+                         base.MODEL / 'model.safetensors', *recurrent)
+            if path in {file.resolve() for file in protected}:
+                raise ValueError('在线状态需要使用独立文件。')
+            individual = {'codec': binding, 'profile': str(database.resolve()),
+                          'backbone': [base.sha(file) for file in recurrent]}
+
+            def report(status):
+                if args.json:
+                    print(json.dumps({'kind': 'awake', 'status': status}, ensure_ascii=False), flush=True)
+                else:
+                    print(f"孢子> {status['mode']}，已执行 {status['neural_steps']} 次内部更新。", flush=True)
+
+            lines, observe, consume, bind = resources.enter_context(awake_chat_lines(
+                model, sys.stdin, path, args.awake_core, individual, report, topic_labels=FIELDS,
+                clear_topics_on_sleep=True, core_device='cpu',
+            ))
+            awake = (observe, consume, bind)
         chat = VersionChat(store, model, tokenizer, reader.eval().to(model.device), propose, settings,
-                           ordinary_tokens=args.reply_tokens, composer=composer, typed_lookup=args.recurrent is not None)
+                           ordinary_tokens=args.reply_tokens, composer=composer, typed_lookup=args.recurrent is not None,
+                           awake=awake)
         if interactive:
             backend = '循环注意力版' if args.recurrent else '原始注意力版'
             print(f'孢子版本记忆已就绪。当前使用{backend}。输入 /帮助 查看用法。', flush=True)
-        while True:
-            try:
-                line = input('你> ' if interactive else '').strip()
-            except (EOFError, KeyboardInterrupt):
-                break
+        for raw in lines:
+            line = raw.strip()
             if line == '/退出':
                 break
             if not line:
@@ -472,6 +529,14 @@ def run_chat(args, model, reader_path, normalizer_path, writer_path, binding, in
             print(json.dumps(result, ensure_ascii=False) if args.json else f"孢子> {result['answer']}", flush=True)
 
 
+def terminal_lines(interactive):
+    while True:
+        try:
+            yield input('你> ' if interactive else '')
+        except (EOFError, KeyboardInterrupt):
+            return
+
+
 if __name__ == '__main__':
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('--profile', type=Path, default=Path('runs/spora-version-chat-local'))
@@ -480,6 +545,8 @@ if __name__ == '__main__':
     cli.add_argument('--composition', type=Path, help='Enable the audited typed composition head')
     cli.add_argument('--recurrent', nargs=3, type=Path, metavar=('CHECKPOINT', 'LAYER19', 'LAYER22'),
                      help='Load the integrated recurrent SPORA checkpoint and both layer directories')
+    cli.add_argument('--awake-state', type=Path, help='Run and persist the online CPU state')
+    cli.add_argument('--awake-core', type=Path, default=Path('runs/p24-awake/core-seed7.pt'))
     cli.add_argument('--reply-tokens', type=int, default=72)
     cli.add_argument('--json', action='store_true', help='Emit one JSON record per stdin line')
     options = cli.parse_args()

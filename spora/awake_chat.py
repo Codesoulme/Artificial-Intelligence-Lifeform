@@ -22,7 +22,7 @@ SAVE_INTERVAL_NS = 5_000_000_000
 
 @contextmanager
 def awake_chat_lines(model, lines, path, trained_core, individual, report, *, topic_labels=(), clear_topics_on_sleep=False,
-                     on_sleep=None):
+                     on_sleep=None, core_device=None):
     core_data = trained_core.read_bytes()
     core_digest = hashlib.sha256(core_data).hexdigest()
     provenance = dict(format=FORMAT, individual=individual, core_sha256=core_digest)
@@ -37,7 +37,7 @@ def awake_chat_lines(model, lines, path, trained_core, individual, report, *, to
             payload = torch.load(BytesIO(core_data), map_location='cpu', weights_only=True)
         core = AwakeCore(AwakeConfig(**payload['config']))
         core.load_state_dict(payload['state'])
-        attach_awake(model, core.requires_grad_(False))
+        attach_awake(model, core.requires_grad_(False), device=core_device)
         session = AwakeSession(model)
         topics = AwakeTopics(topic_labels) if topic_labels else None
         if 'topics' in saved:

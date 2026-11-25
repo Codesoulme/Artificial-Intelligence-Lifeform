@@ -53,8 +53,12 @@ class AwakeTopics(nn.Module):
 
     def advance(self, elapsed_ns):
         seconds = elapsed_ns / 1e9
-        self.activity.lerp_(self.drive, -math.expm1(-seconds / .5))
-        self.drive.mul_(math.exp(-seconds / 2.))
+        # Solve both decays together so splitting the same elapsed time does not change recall.
+        drive_decay = math.exp(-seconds / 2.)
+        activity_decay = math.exp(-seconds / .5)
+        coupling = (4. / 3.) * drive_decay * -math.expm1(-1.5 * seconds)
+        self.activity.mul_(activity_decay).add_(self.drive, alpha=coupling)
+        self.drive.mul_(drive_decay)
 
     def invalidate(self):
         self.drive.zero_()

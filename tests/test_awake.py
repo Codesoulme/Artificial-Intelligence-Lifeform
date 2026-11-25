@@ -119,6 +119,21 @@ class AwakeChatTests(unittest.TestCase):
         self.assertEqual(float(drink.activity.sum()), 0.)
         self.assertEqual(int(drink.observations), 1)
 
+    def test_same_elapsed_time_reaches_same_topic_state_at_different_tick_rates(self):
+        single, relax, focus = (AwakeTopics(('drink', 'work')) for _ in range(3))
+        for topics in (single, relax, focus):
+            topics.observe([.9, .1])
+            topics.advance(500_000_000)
+            topics.observe([.2, .8])
+        single.advance(1_500_000_000)
+        for _ in range(6):
+            relax.advance(250_000_000)
+        for _ in range(30):
+            focus.advance(50_000_000)
+        for faster in (relax, focus):
+            torch.testing.assert_close(faster.activity, single.activity, atol=1e-6, rtol=0)
+            torch.testing.assert_close(faster.drive, single.drive, atol=1e-6, rtol=0)
+
     def test_clock_and_periodic_save_continue_while_chat_processes_a_line(self):
         model = torch.nn.Linear(1, 1)
         core = AwakeCore(AwakeConfig(relax_seconds=.03, focus_seconds=.01))
