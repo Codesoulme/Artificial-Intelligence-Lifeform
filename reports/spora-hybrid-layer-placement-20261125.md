@@ -12,6 +12,17 @@
 
 局部对齐只用来初始化。随后对两种真实组合使用相同的成对样本、更新数和生成条件，在各自的整网传递下恢复。比较恢复前后的长前文合并作答、有效与过期值、32 条受控持久读取、实际状态大小和延迟。现有组合充当对照，额外报告完整注意力父模型的可达到水平。该试验验证两种层组合，论文中的全网联合搜索属于后续研究范围。
 
+## 初始化结果
+
+| 单层位置 | 局部对齐后的平均 KL | 再对齐整网预测后的平均 KL | 最终首选词元一致 |
+| --- | ---: | ---: | ---: |
+| 19 | 0.04203 | 0.04068 | 23/24 |
+| 22 | 0.02769 | 0.02792 | 24/24 |
+| 21 | 0.26597 | 0.31215 | 21/24 |
+| 24 | 0.03830 | 0.03735 | 24/24 |
+
+核对四个候选使用了同一父检查点、训练与留出来源和个体摘要。两处新位置各保存一份约 296 KiB 的权重，摘要与各自报告一致。93 词元分段对照中新层保持相同的 16 词元近期上限，块状与增量实现的最大绝对误差约为 `7.15e-7`。第 21 层后续预测对齐使单层 KL 上升。该结果说明要把它作为较难的初始化情况记录，真实双层组合的长前文表现由下一环节决定。
+
 ## 初始化命令
 
 ```powershell
@@ -25,4 +36,10 @@ foreach ($sporaLayer in 21,24) {
     .\.venv\Scripts\python.exe -u -m scripts.audit_spora_recurrent_attention $sporaParent $sporaRevision $sporaOutput --layer $sporaLayer
     if ($LASTEXITCODE -ne 0) { break }
 }
+```
+
+新组合的恢复前对照使用与第 19、22 层既有报告相同的题集与 2,048 位置预算。报告应先核对两次评测的完整注意力对照及来源摘要，再进入匹配更新数的恢复试验。
+
+```powershell
+.\.venv\Scripts\python.exe -u -m scripts.benchmark_spora_recurrent_dialogue $sporaParent runs/spora-recurrent-morph-21-24-extended-v1.json runs/spora-gelu24-recurrent-layer21-morph-v1 runs/spora-gelu24-recurrent-layer24-morph-v1 --dialogue-only --extend
 ```
