@@ -27,6 +27,23 @@ cd D:\SPORA
 .\spora_version_chat.cmd --profile runs\my-version-memory --reply-tokens 96
 ```
 
+## 用两项记忆写一条消息
+
+启用成句模型后，可以指定同一人物的两个字段、各自的版次以及已经确认的时间。取出后，由本机模型按写作要求生成句子。已有档案可直接打开。 [成句模型准备](../reports/spora-typed-composition-20261125.md)
+
+```powershell
+.\spora_version_chat.cmd --profile runs\my-version-memory --composition runs\spora-typed-composition-v1
+```
+
+```text
+/记 许林秋 | 见面地点 | 杏叶廊
+/记 许林秋 | 用品 | 青布袋
+/记 许林秋 | 用品 | 灰毛帽
+/成句 许林秋 | 见面地点当前版 | 用品上一版 | 周五傍晚 | 给许林秋写一句能直接发的微信，说明周五傍晚在哪里碰面、需要带什么。只给消息正文。
+```
+
+可组合见面地点与用品、见面地点与书目、书目与饮品。版次可以选当前版、首版、上一版或指定第几版。时间按输入原文使用，支持四个词元以内的短表达。写作要求决定句子要表达的动作。可以先用普通查阅核对所需版次。 [本机写入及重启对照](../reports/spora-local-composition-20261126.md)
+
 ## 本机回放
 
 回放从空测试档案开始，使用 Windows 启动入口发送登记和查阅消息，然后退出并在独立进程重开。脚本只使用位于指定结果目录下的新档案。

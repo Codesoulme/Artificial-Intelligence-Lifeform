@@ -16,9 +16,10 @@ from torch.nn import functional as F
 
 from scripts.audit_spora_dialogue_version_scope import TemporalProposals
 from scripts.audit_spora_dialogue_working_state import FrozenTurnFeatures
-from scripts.audit_spora_dual_version_reply import FIELDS
+from scripts.audit_spora_dual_version_reply import FIELDS, reply as version_reply
 from scripts.audit_spora_dual_version_routing import reply_to_route
 from scripts.audit_spora_fast_weight_lexical_write import SOURCE, base, compress_dimension, tokens
+from scripts.audit_spora_typed_composition import SLOTS, arrangement
 from scripts.audit_spora_version_coverage import write_fresh
 from scripts.audit_spora_versioned_memory_generation import read_versions
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
@@ -28,6 +29,7 @@ from spora.research_ttt_ntp import LowRankFastWeight
 from spora.research_version_dialogue_scope import (advance_scope, dialogue_targets, pending_after_lookup,
                                                    pending_followup_targets)
 from spora.research_version_store import MemoryAddress, VersionStore
+from spora.research_version_timeline import parse_version_query
 from spora.research_versioned_memory_pointer import VersionReplyActions
 
 
@@ -39,6 +41,12 @@ DEFER_UNTIL = re.compile(r'(?:稍后|过会儿|等会儿|改天|下次)再(?:问
 HELP = ('/记 姓名 | 字段 | 短值 [| 生效日期 YYYY-MM-DD]。字段可用饮品、见面地点、用品、书目。'
         '查询时可说「请查林语的饮品当前版」，再问「那上一版呢」。'
         '/清空对话 清除本轮对话和指代范围。/退出 结束。')
+COMPOSE_HELP = ('/成句 姓名 | 字段版次 | 字段版次 | 时间 | 写作要求。'
+                '可组合见面地点和用品、见面地点和书目、书目和饮品。')
+COMPOSE_PAIRS = (
+    {'places', 'items'}, {'places', 'books'}, {'books', 'drinks'},
+)
+COMPOSE_FIELD = re.compile(r'(饮品|见面地点|用品|书目)\s*(当前版|首版|上一版|第[一二三四五六七八九1-9]版)')
 
 
 def write_request(raw, today):
@@ -59,6 +67,25 @@ def write_request(raw, today):
     except ValueError as error:
         raise ValueError('日期请用 YYYY-MM-DD。') from error
     return MemoryAddress(name, FIELD_IDS[field]), value, effective
+
+
+def compose_request(raw):
+    parts = [part.strip() for part in raw.split('|', 4)]
+    if len(parts) != 5 or not all(parts) or not NAME.fullmatch(parts[0]):
+        raise ValueError(COMPOSE_HELP)
+    name, first, second, when, question = parts
+    targets = []
+    for field in (first, second):
+        match = COMPOSE_FIELD.fullmatch(field)
+        if not match:
+            raise ValueError('请明确写出每个字段的版次，例如「见面地点当前版」。')
+        label, version = match.groups()
+        targets.append((MemoryAddress(name, FIELD_IDS[label]), parse_version_query(version)))
+    if {address.field for address, _ in targets} not in COMPOSE_PAIRS:
+        raise ValueError(COMPOSE_HELP)
+    if not VALUE.fullmatch(when) or len(question) > 512:
+        raise ValueError('请给出一个简短的明确时间及不超过 512 字的写作要求。')
+    return targets, when, question
 
 
 def clarify(catalog, targets, reasons, today):
@@ -93,9 +120,10 @@ def deferred_lookup(question):
 
 
 class VersionChat:
-    def __init__(self, store, model, tokenizer, reader, propose, settings, *, ordinary_tokens):
+    def __init__(self, store, model, tokenizer, reader, propose, settings, *, ordinary_tokens, composer=None):
         self.store, self.model, self.tokenizer, self.reader = store, model, tokenizer, reader
         self.propose, self.settings, self.ordinary_tokens = propose, settings, ordinary_tokens
+        self.composer = composer
         embedding = model.get_input_embeddings().weight.detach()
         self.columns = compress_dimension(embedding.shape[1]).to(embedding.device)
         self.codebook = F.normalize(embedding.index_select(1, self.columns).float(), dim=-1)
@@ -120,6 +148,42 @@ class VersionChat:
         number = self.store.append(uuid4().hex, address, effective, today, LowRankFastWeight(keys, values))
         self.reset_dialogue()
         return {'kind': 'saved', 'answer': f'已登记{address.name}的{FIELDS[address.field]}。', 'record': number}
+
+    @torch.inference_mode()
+    def compose(self, raw, today):
+        if self.composer is None:
+            raise ValueError('启动时请用 --composition 指定成句模型目录。')
+        self.scope, self.pending = (), None
+        targets, when, question = compose_request(raw)
+        if when not in question:
+            question += f'时间是{when}。'
+        when_ids = tokens(self.tokenizer, when)
+        if not 1 <= len(when_ids) <= 4 or self.tokenizer.decode(when_ids) != when:
+            raise ValueError('时间须能按原文编码为一至四个词元。')
+        catalog = self.store.catalog()
+        decisions = [resolve_address(catalog, address, query, today, retain_same_day=True)
+                     for address, query in targets]
+        if any(reason != 'located' for _, reason in decisions):
+            answer = next(f'未找到{address.name}的{FIELDS[address.field]}的指定版次。'
+                          for (address, _), (_, reason) in zip(targets, decisions, strict=True)
+                          if reason != 'located')
+            return {'kind': 'clarify', 'answer': answer, 'selected': []}
+        selected = [number for number, _ in decisions]
+        bank = {}
+        for number in selected:
+            state = self.store.read(number)
+            bank[number] = [(state.keys, state.values)]
+        values = read_versions(bank, self.codebook)
+        fields = [(address.field, values[number][0])
+                  for (address, _), number in zip(targets, selected, strict=True)]
+        memory = arrangement([*fields, ('time', torch.tensor(when_ids, device=self.model.device))])
+        output = version_reply(self.model, self.tokenizer, self.composer, question, memory,
+                               require_coverage=True, cover_present_slots=True, max_new_tokens=72)
+        copied = {SLOTS[item['slot']] for item in output['copied']}
+        expected = {field for field, _ in fields} | {'time'}
+        if copied != expected or output['token_ids'][-1:] != [self.tokenizer.eos_token_id]:
+            return {'kind': 'clarify', 'answer': '这次没有生成完整消息，请核对字段和写作要求。', 'selected': selected}
+        return {'kind': 'composed', 'answer': output['answer'], 'selected': selected, 'copied': sorted(copied)}
 
     @torch.inference_mode()
     def turn(self, question, today):
@@ -165,12 +229,14 @@ class VersionChat:
 
     def dispatch(self, line):
         if line == '/帮助':
-            return {'kind': 'help', 'answer': HELP}
+            return {'kind': 'help', 'answer': HELP if self.composer is None else f'{HELP}\n{COMPOSE_HELP}'}
         if line == '/清空对话':
             self.reset_dialogue()
             return {'kind': 'reset', 'answer': '已清空本轮对话，记忆记录已保留。'}
         if line.startswith('/记 '):
             return self.save(line[3:], date.today())
+        if line.startswith('/成句 '):
+            return self.compose(line[4:], date.today())
         if line.startswith('/'):
             raise ValueError('命令未识别。输入 /帮助 查看用法。')
         return self.turn(line, date.today())
@@ -193,6 +259,27 @@ def artifacts(reader_dir, normalizer_dir):
     return reader, normalizer, writer, binding
 
 
+def composition_head(directory, width, device):
+    report = json.loads((directory / 'result.json').read_text(encoding='utf-8'))
+    candidate = directory / 'typed_time.pt'
+    if base.sha(candidate) != report['head_sha256']['typed_time']:
+        raise ValueError('成句模型与评测文件不匹配。')
+    (control_path, control_digest), = ((path, digest) for path, digest in report['sources'].items()
+                                     if Path(path).name == 'result.json')
+    control = Path(control_path)
+    if base.sha(control) != control_digest:
+        raise ValueError('成句模型的底座评测文件不匹配。')
+    parent = json.loads(control.read_text(encoding='utf-8'))['sources']
+    expected_sources = {'model.safetensors': base.WEIGHT_SHA, 'tokenizer.json': base.sha(base.MODEL / 'tokenizer.json')}
+    for name, digest in expected_sources.items():
+        if not any(Path(path).name == name and value == digest for path, value in parent.items()):
+            raise ValueError('成句模型的底座或分词器不匹配。')
+    state = torch.load(candidate, map_location='cpu', weights_only=True)
+    head = VersionReplyActions(width, state['scaffold_tokens'], slots=len(SLOTS))
+    head.load_state_dict(state)
+    return head.eval().to(device)
+
+
 def main(args):
     torch.set_num_threads(2)
     interactive = sys.stdin.isatty() and not args.json
@@ -205,6 +292,7 @@ def main(args):
     state = torch.load(reader_path, map_location='cpu', weights_only=True)
     reader = VersionReplyActions(width, state['scaffold_tokens'], slots=2)
     reader.load_state_dict(state)
+    composer = composition_head(args.composition, width, model.device) if args.composition is not None else None
     extractor = FrozenTurnFeatures(SimpleNamespace(base=model), tokenizer, depth=len(model.model.layers))
     proposer = TemporalProposals(extractor, width, torch.load(normalizer_path, map_location='cpu', weights_only=True)['final_layer'])
     settings = torch.load(writer_path, map_location='cpu', weights_only=True)
@@ -212,7 +300,7 @@ def main(args):
     database = args.profile / 'versions.sqlite3'
     with VersionStore(database, binding, create=not database.exists()) as store:
         chat = VersionChat(store, model, tokenizer, reader.eval().to(model.device), proposer, settings,
-                           ordinary_tokens=args.reply_tokens)
+                           ordinary_tokens=args.reply_tokens, composer=composer)
         if interactive:
             print('孢子版本记忆已就绪。输入 /帮助 查看用法。', flush=True)
         while True:
@@ -236,6 +324,7 @@ if __name__ == '__main__':
     cli.add_argument('--profile', type=Path, default=Path('runs/spora-version-chat-local'))
     cli.add_argument('--reader', type=Path, default=Path('runs/spora-dual-version-reply-v1'))
     cli.add_argument('--normalizer', type=Path, default=Path('runs/spora-version-normalizer-v1'))
+    cli.add_argument('--composition', type=Path, help='Enable the audited typed composition head')
     cli.add_argument('--reply-tokens', type=int, default=72)
     cli.add_argument('--json', action='store_true', help='Emit one JSON record per stdin line')
     options = cli.parse_args()
