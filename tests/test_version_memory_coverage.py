@@ -52,3 +52,33 @@ class VersionReplyActionTests(unittest.TestCase):
             head.actions.bias.copy_(torch.tensor([-9., 0.]))
         logits = torch.tensor([15., 0., 0., 0., 0., 0.])
         self.assertEqual(head.choose(torch.zeros(3), logits, copied=False, room_for_copy=True, memory_fraction=.2), 0)
+
+    def test_two_whole_values_track_availability_and_completion_independently(self):
+        head = VersionReplyActions(3, [4], slots=2)
+        with torch.no_grad():
+            head.actions.weight.zero_()
+            head.actions.bias.copy_(torch.tensor([8., 9., 0.]))
+        hidden, logits = torch.zeros(3), torch.zeros(6)
+        for copied, available, expected in (
+            (0, (True, True), (1, None)),
+            (0, (True, False), (0, None)),
+            (1, (True, True), (1, None)),
+            (2, (True, True), (0, None)),
+            (3, (True, True), (None, 4)),
+            (0, (False, False), (None, 4)),
+        ):
+            with self.subTest(copied=copied, available=available):
+                self.assertEqual(head.choose_slot(hidden, logits, copied=copied, available=available,
+                                                  memory_fraction=.95), expected)
+
+    def test_blocked_end_token_is_removed_from_both_distributions(self):
+        head = VersionReplyActions(3, [4], slots=2)
+        with torch.no_grad():
+            head.actions.weight.zero_()
+            head.actions.bias.copy_(torch.tensor([-9., -9., 9.]))
+        hidden = torch.zeros(3)
+        logits = torch.tensor([0., 10., 0., 0., 20., 0.])
+        options = dict(copied=1, available=(True, True), memory_fraction=.2)
+        self.assertEqual(head.choose_slot(hidden, logits, **options), (None, 4))
+        self.assertEqual(head.choose_slot(hidden, logits, blocked_token=4, **options), (None, 1))
+        self.assertEqual(logits[4].item(), 20.)

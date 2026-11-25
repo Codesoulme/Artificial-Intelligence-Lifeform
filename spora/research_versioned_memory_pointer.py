@@ -71,27 +71,45 @@ class VersionCoverageBias:
 
 
 class VersionReplyActions(nn.Module):
-    """Learn when to emit one complete stored value during ordinary generation."""
+    """Learn when to emit complete stored values during ordinary generation."""
 
-    def __init__(self, hidden_size, scaffold_tokens):
+    def __init__(self, hidden_size, scaffold_tokens, *, slots=1):
         super().__init__()
+        if slots not in (1, 2):
+            raise ValueError('Version reply actions support one or two slots')
+        self.slots = slots
         self.register_buffer('scaffold_tokens', torch.as_tensor(scaffold_tokens, dtype=torch.long))
         self.project = nn.Linear(hidden_size, 96)
-        self.progress = nn.Embedding(2, 96)
-        self.actions = nn.Linear(96, 1 + len(scaffold_tokens))
+        self.progress = nn.Embedding(2 ** slots, 96)
+        self.actions = nn.Linear(96, slots + len(scaffold_tokens))
 
     def forward(self, hidden, copied):
         hidden = F.normalize(hidden.float(), dim=-1) * hidden.shape[-1] ** .5
-        scores = self.actions(F.gelu(self.project(hidden) + self.progress(copied.long())))
-        return torch.cat((scores[..., :1].masked_fill(copied[..., None], -torch.inf), scores[..., 1:]), dim=-1)
+        progress = copied.long()
+        scores = self.actions(F.gelu(self.project(hidden) + self.progress(progress)))
+        bits = 1 << torch.arange(self.slots, device=scores.device)
+        used = (progress[..., None] & bits) != 0
+        return torch.cat((scores[..., :self.slots].masked_fill(used, -torch.inf), scores[..., self.slots:]), dim=-1)
 
     def choose(self, hidden, native_logits, *, copied, room_for_copy, memory_fraction):
+        slot, token = self.choose_slot(hidden, native_logits, copied=int(copied), available=(room_for_copy,),
+                                       memory_fraction=memory_fraction)
+        return token if slot is None else None
+
+    def choose_slot(self, hidden, native_logits, *, copied, available, memory_fraction, blocked_token=None):
+        if len(available) != self.slots:
+            raise ValueError('Availability must cover every copy slot')
         progress = torch.as_tensor(copied, device=hidden.device)
         actions = self(hidden, progress)
-        if not room_for_copy:
-            actions[0] = -torch.inf
+        mask = torch.as_tensor(available, device=hidden.device, dtype=torch.bool)
+        actions[:self.slots] = actions[:self.slots].masked_fill(~mask, -torch.inf)
+        if blocked_token is not None:
+            actions[self.slots:] = actions[self.slots:].masked_fill(self.scaffold_tokens == blocked_token, -torch.inf)
+            native_logits = native_logits.clone()
+            native_logits[blocked_token] = -torch.inf
         actions = actions.softmax(-1) * memory_fraction
         native = native_logits.float().softmax(-1) * (1 - memory_fraction)
-        native.scatter_add_(0, self.scaffold_tokens, actions[1:])
+        native.scatter_add_(0, self.scaffold_tokens, actions[self.slots:])
         probability, token = native.max(0)
-        return None if bool(actions[0] > probability) else int(token)
+        copy_probability, slot = actions[:self.slots].max(0)
+        return (int(slot), None) if bool(copy_probability > probability) else (None, int(token))
