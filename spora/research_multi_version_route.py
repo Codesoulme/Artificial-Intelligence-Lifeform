@@ -47,6 +47,7 @@ class Mention:
     start: int
     end: int
     owner: str | None
+    possessive: bool = False
 
     def views(self, question):
         marked = question[:self.start] + '【' + question[self.start:self.end] + '】' + question[self.end:]
@@ -70,7 +71,7 @@ def mentions(question, enrolled, fields):
                           _NAME_LEAD.search(prefix[:-len(name) - 1])), None)
         elif result and re.search(r'[。！？?!\n]', question[result[-1].end:found.start()]):
             owner = None
-        result.append(Mention(labels[found[0]], found.start(), found.end(), owner))
+        result.append(Mention(labels[found[0]], found.start(), found.end(), owner, prefix.endswith('的')))
     return result
 
 
@@ -86,15 +87,27 @@ def resolve(catalog, mention, request, today):
 
 
 def resolve_query(catalog, mention, query, today):
+    address = MemoryAddress(mention.owner, mention.field) if mention.owner is not None else None
+    return resolve_address(catalog, address, query, today)
+
+
+def resolve_address(catalog, address, query, today):
     if query is None:
         return None, 'unresolved_scope'
-    address = MemoryAddress(mention.owner, mention.field) if mention.owner is not None else None
     versions = catalog.get(address, ())
     if not versions:
         return None, 'unknown_address'
     timeline = tuple((entry.effective, entry.observed) for entry in versions)
     selected = select_version(timeline, query, today)
     return (None, 'missing_version') if selected is None else (versions[selected].number, 'located')
+
+
+def parse_lookup_scope(scope):
+    normalized = _FIRST_ALIAS.sub('首版', _PREVIOUS_ALIAS.sub('上一版', scope))
+    query = parse_version_query(normalized)
+    if query is not None and query.kind == 'current' and _UNRESOLVED_RELATIVE.search(normalized):
+        return None
+    return query
 
 
 def explicit_queries(question, candidates):
@@ -107,11 +120,7 @@ def explicit_queries(question, candidates):
         if _LOCAL_SKIP.search(scope):
             queries.append(Lookup.SKIP)
             continue
-        normalized = _FIRST_ALIAS.sub('首版', _PREVIOUS_ALIAS.sub('上一版', scope))
-        query = parse_version_query(normalized)
-        if query is not None and query.kind == 'current' and _UNRESOLVED_RELATIVE.search(normalized):
-            query = None
-        queries.append(query)
+        queries.append(parse_lookup_scope(scope))
     return queries
 
 
@@ -119,11 +128,15 @@ def fallback_evidence(question, mention):
     """Isolate wording for an unresolved exact address, without exposing a stored value."""
     before = _BOUNDARY.split(question[:mention.start])[-1]
     suffix = _BOUNDARY.split(question[mention.end:])[0]
-    if _UNCERTAIN_LOOKUP.search(before + suffix) or not suffix.strip():
-        return None
     if mention.owner is not None and before.endswith(mention.owner + '的'):
         before = before[:-len(mention.owner) - 1]
-    return before + '该项' + suffix
+    return spoken_scope_evidence(suffix, prefix=before)
+
+
+def spoken_scope_evidence(scope, *, prefix=''):
+    if _UNCERTAIN_LOOKUP.search(prefix + scope) or not scope.strip():
+        return None
+    return prefix + '该项' + scope
 
 
 def normalize_version(request):

@@ -178,9 +178,9 @@ def build_bank(store, model, tokenizer, columns, source):
     return metadata
 
 
-def reply_to_route(model, tokenizer, store, codebook, reader, question, route):
+def reply_to_route(model, tokenizer, store, codebook, reader, question, route, *, history=()):
     if not route:
-        return [], reply(model, tokenizer, reader, question, (None, None))
+        return [], reply(model, tokenizer, reader, question, (None, None), history=history)
     if None in route or len(route) > 2 or len(set(route)) != len(route):
         return [], {'answer': '我没能确定全部记录，请核对姓名、事项或版本。', 'token_ids': [], 'copied': []}
     bank = {}
@@ -190,7 +190,7 @@ def reply_to_route(model, tokenizer, store, codebook, reader, question, route):
     decoded = read_versions(bank, codebook)
     values = tuple(decoded[number][0] for number in route)
     return route, reply(model, tokenizer, reader, question, values + (None,) * (2 - len(values)),
-                        require_coverage=len(values) == 2)
+                        require_coverage=len(values) == 2, history=history)
 
 
 @torch.inference_mode()

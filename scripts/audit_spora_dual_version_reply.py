@@ -105,11 +105,11 @@ def fit(model, tokenizer, head, rows, steps):
 
 
 @torch.inference_mode()
-def reply(model, tokenizer, head, question, memories, *, require_coverage=False):
+def reply(model, tokenizer, head, question, memories, *, require_coverage=False, history=()):
     if not any(value is not None for value in memories):
-        return {**generate(model, tokenizer, question), 'copied': []}
+        return {**generate(model, tokenizer, question, history=history), 'copied': []}
     require_coverage = require_coverage and all(value is not None for value in memories)
-    inputs = closed_think_inputs(tokenizer, question, model.device)['input_ids']
+    inputs = closed_think_inputs(tokenizer, question, model.device, history=history)['input_ids']
     eos = tokenizer.eos_token_id
     tail, copied, past = [], [], None
     mask = 0
