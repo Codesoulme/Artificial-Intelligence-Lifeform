@@ -124,7 +124,10 @@ def learn(head, values, rows):
 
 @torch.no_grad()
 def calibrate(head, values, rows):
-    scores = head(values).squeeze(-1).tolist()
+    return calibrate_scores(head(values).squeeze(-1).tolist(), rows)
+
+
+def calibrate_scores(scores, rows):
     points = sorted(set(scores))
     cuts = [points[0] - 1., *((left + right) / 2 for left, right in zip(points, points[1:])), points[-1] + 1.]
 
