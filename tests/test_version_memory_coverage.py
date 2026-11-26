@@ -1,4 +1,6 @@
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import torch
 
@@ -34,6 +36,34 @@ class VersionMemoryCoverageTests(unittest.TestCase):
 
 
 class VersionReplyActionTests(unittest.TestCase):
+    def test_premature_eos_can_complete_pending_fields_without_masking_eos(self):
+        from scripts.audit_spora_dual_version_reply import reply
+
+        head = VersionReplyActions(3, [4], slots=2)
+        with torch.no_grad():
+            head.actions.weight.zero_()
+            head.actions.bias.copy_(torch.tensor([-10., -9., 9.]))
+        calls = []
+
+        def model_forward(input_ids, **kwargs):
+            calls.append(input_ids.tolist()[0])
+            return SimpleNamespace(last_hidden_state=torch.zeros(1, 1, 3), past_key_values=object())
+
+        model = SimpleNamespace(device='cpu', model=model_forward, lm_head=lambda hidden: torch.zeros(12))
+        tokenizer = SimpleNamespace(eos_token_id=4, decode=lambda tokens, **_: str(tokens))
+        values = (torch.tensor([1, 2]), torch.tensor([6, 7]))
+        with patch('scripts.audit_spora_dual_version_reply.closed_think_inputs',
+                   return_value={'input_ids': torch.tensor([[0]])}):
+            output = reply(model, tokenizer, head, 'query', values, require_coverage=True,
+                           complete_on_eos=True, max_new_tokens=5)
+            short = reply(model, tokenizer, head, 'query', values, require_coverage=True,
+                          complete_on_eos=True, max_new_tokens=2)
+        self.assertEqual(output['token_ids'], [6, 7, 1, 2, 4])
+        self.assertEqual(output['copied'], [{'slot': 1, 'at': 0}, {'slot': 0, 'at': 2}])
+        self.assertEqual(calls[:3], [[0], [6, 7], [1, 2]])
+        self.assertEqual(short['token_ids'], [4])
+        self.assertEqual(short['copied'], [])
+
     def test_whole_value_action_competes_once_and_respects_the_remaining_budget(self):
         head = VersionReplyActions(3, [4])
         with torch.no_grad():

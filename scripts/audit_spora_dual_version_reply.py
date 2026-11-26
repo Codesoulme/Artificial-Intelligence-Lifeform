@@ -106,7 +106,8 @@ def fit(model, tokenizer, head, rows, steps):
 
 @torch.inference_mode()
 def reply(model, tokenizer, head, question, memories, *, require_coverage=False, history=(),
-          max_new_tokens=LIMIT, memory_fraction=MEMORY_FRACTION, cover_present_slots=False):
+          max_new_tokens=LIMIT, memory_fraction=MEMORY_FRACTION, cover_present_slots=False,
+          complete_on_eos=False):
     if not any(value is not None for value in memories):
         return {**generate(model, tokenizer, question, history=history, max_new_tokens=max_new_tokens), 'copied': []}
     require_coverage = require_coverage and (cover_present_slots or all(value is not None for value in memories))
@@ -119,10 +120,16 @@ def reply(model, tokenizer, head, question, memories, *, require_coverage=False,
         past = output.past_key_values
         hidden = output.last_hidden_state[0, -1]
         available = tuple(value is not None and len(value) <= max_new_tokens - len(tail) for value in memories)
-        pending = any(fits and not (mask & (1 << slot)) for slot, fits in enumerate(available))
+        pending = tuple(index for index, fits in enumerate(available) if fits and not (mask & (1 << index)))
         slot, token = head.choose_slot(hidden, model.lm_head(hidden), copied=mask, available=available,
                                        memory_fraction=memory_fraction,
-                                       blocked_token=eos if require_coverage and pending else None)
+                                       blocked_token=eos if require_coverage and pending and not complete_on_eos else None)
+        if complete_on_eos and require_coverage and token == eos and pending:
+            # Replace a premature stop with the best pending span, keeping room for the final EOS.
+            fitting = [index for index in pending if len(tail) + len(memories[index]) < max_new_tokens]
+            if fitting:
+                scores = head(hidden, torch.as_tensor(mask, device=hidden.device))
+                slot = fitting[int(scores[fitting].argmax())]
         if slot is not None:
             copied.append({'slot': slot, 'at': len(tail)})
             mask |= 1 << slot
