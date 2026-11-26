@@ -408,10 +408,10 @@ def main(args):
         return revision_likelihood(decoder, tokenizer, prompts, saved=saved_likelihood['results'][name])
 
     results = {}
-    if revision_audit:
+    if revision_audit and not args.skip_parent:
         results['parent'] = run_revision('parent')
         print('parent', results['parent']['summary'], flush=True)
-    elif args.revision_distance:
+    elif args.revision_distance and not args.skip_parent:
         dialogue = run_dialogue(decoder, tokenizer, prompts, [])
         persistent = evaluate(decoder, tokenizer, runtime.organism, memory)
         results['parent'] = dict(dialogue=dialogue, memory=persistent, distance=distance_summary(dialogue))
@@ -470,6 +470,7 @@ if __name__ == '__main__':
     cli.add_argument('--transfer', type=Path, help='Additional open multi-turn dialogue cases')
     cli.add_argument('--recall-transfer', type=Path, help='Replace recall cases with an independent long-dialogue set')
     cli.add_argument('--layout', type=parse_layout, action='append', help='Evaluate only the requested recovered layouts')
+    cli.add_argument('--skip-parent', action='store_true', help='Omit the parent from repeated revision audits')
     mode = cli.add_mutually_exclusive_group()
     mode.add_argument('--revision-distance', action='store_true', help='Compare edit distance and answer width on recall transfer')
     mode.add_argument('--revision-stages', action='store_true', help='Compare choice and formatted generation on recall transfer')
@@ -490,4 +491,6 @@ if __name__ == '__main__':
         cli.error('Revision probes do not accept --transfer')
     if args.revision_likelihood_reference and not args.revision_likelihood:
         cli.error('--revision-likelihood-reference requires --revision-likelihood')
+    if args.skip_parent and not (args.revision_distance or revision_probes):
+        cli.error('--skip-parent requires a revision audit')
     main(args)
