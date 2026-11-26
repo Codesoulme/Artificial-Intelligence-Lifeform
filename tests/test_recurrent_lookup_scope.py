@@ -3,6 +3,9 @@ import unittest
 import torch
 
 from scripts.audit_spora_recurrent_lookup_scope import ASK, READ, ScopePlanner, decisions, episodes
+from scripts.audit_spora_lookup_transitions import (
+    ADD, KEEP, REMOVE, LookupTransitions, apply_operations, normalize_row, operation_targets,
+)
 
 
 class RecurrentLookupScopeTests(unittest.TestCase):
@@ -34,3 +37,30 @@ class RecurrentLookupScopeTests(unittest.TestCase):
         versions = torch.zeros(4, 3)
         members = torch.tensor([[True, True], [False, False], [False, True], [True, False]])
         self.assertEqual(decisions((route, versions), .5, members), [(ASK, 0)] * 3 + [(READ, 0)])
+
+    def test_annotated_turns_update_only_the_requested_candidates(self):
+        rows = [next(row for row in episodes('held') if row.scope == kind)
+                for kind in ('replace', 'both', 'cancel', 'mention')]
+        opening, followup = operation_targets(rows).unbind(1)
+        active = apply_operations(torch.zeros(4, 2, dtype=torch.bool), opening)
+        self.assertEqual(active.tolist(), [[True, False]] * 4)
+        self.assertEqual(followup.tolist(), [[REMOVE, ADD], [KEEP, ADD], [REMOVE, REMOVE], [KEEP, KEEP]])
+        self.assertEqual(apply_operations(active, followup).tolist(),
+                         [[False, True], [True, True], [False, False], [True, False]])
+
+    def test_relative_markers_follow_the_named_address_when_swapped(self):
+        row = next(row for row in episodes('held') if row.scope == 'replace')
+        original, alternative = normalize_row(row)
+        self.assertIn('本项记录', original.events[0])
+        self.assertIn('另一项记录', original.events[1])
+        self.assertIn('另一项记录', alternative.events[0])
+        self.assertIn('本项记录', alternative.events[1])
+
+    def test_confirmed_opening_leaves_absent_episodes_empty(self):
+        head = LookupTransitions(3)
+        head.operation = torch.nn.Identity()
+        history = torch.tensor([[[[0., 1., 0.], [1., 0., 0.]], [[0., 0., 1.], [0., 1., 0.]]]]).repeat(2, 1, 1, 1)
+        valid = torch.tensor([[True, True], [False, False]])
+        confirmed = torch.tensor([[True, False], [True, False]])
+        self.assertEqual(head.advance(history, valid, opening=confirmed).tolist(),
+                         [[[True, False], [False, True]], [[False, False], [False, False]]])
