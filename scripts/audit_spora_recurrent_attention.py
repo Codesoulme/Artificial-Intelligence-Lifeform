@@ -18,7 +18,7 @@ from scripts.deepseek_local_baseline import MODEL, sha
 from scripts.deepseek_spora_full_stream_loader import load_full_streamed
 from spora.integrated_checkpoint import load_integrated_runtime
 from spora.language_training import atomic_save, frozen_digest
-from spora.research_recurrent_attention import RecurrentAttention
+from spora.research_recurrent_attention import RECURRENT_UPDATE_RULES
 from spora.research_recurrent_decode import AttentionReplacement, attention_block, project_with_history, replace
 from train_awake_partial_layer import TRAIN_FILES, corpus
 
@@ -198,7 +198,7 @@ def main(args):
     local_train, predictions = capture(decoder, source, train)
     local_held, teacher = capture(decoder, source, held)
     heads = source.sizes[0] // source.head_dim
-    core = RecurrentAttention(heads, source.head_dim, block=args.block).to(device)
+    core = RECURRENT_UPDATE_RULES[args.update_rule](heads, source.head_dim, block=args.block).to(device)
     candidate = AttentionReplacement(source, core)
     metrics = {}
     for name, include_far in (('exact_recent', False), ('untrained', True)):
@@ -220,9 +220,11 @@ def main(args):
         raise ValueError('A recurrent attention experiment input changed')
     path = args.output / 'attention.pt'
     atomic_save({'format': 'spora-recurrent-attention-v1', 'layer': args.layer, 'block': args.block,
+                 'update_rule': core.update_rule,
                  'checkpoint_sha256': protected[args.checkpoint], 'core': core.cpu().state_dict()}, path)
     result = {'metrics': metrics, 'mix_trace': mix_trace, 'prediction_trace': prediction_trace,
-              'stream': stream, 'layer': args.layer, 'block': args.block, 'train': len(train), 'held_prose': len(prose),
+              'stream': stream, 'layer': args.layer, 'block': args.block, 'update_rule': core.update_rule,
+              'train': len(train), 'held_prose': len(prose),
               'held_dialogue': len(dialogue), 'individual_sha256': digest, 'candidate_sha256': sha(path),
               'sources': {str(path): value for path, value in protected.items()},
               'peak_bytes': torch.cuda.max_memory_allocated()}
@@ -241,6 +243,7 @@ if __name__ == '__main__':
     parser.add_argument('--block', type=int, default=8)
     parser.add_argument('--steps', type=int, default=160)
     parser.add_argument('--prediction-steps', type=int, default=32)
+    parser.add_argument('--update-rule', choices=tuple(RECURRENT_UPDATE_RULES), default='sum')
     parameters = parser.parse_args()
     if min(parameters.block, parameters.steps, parameters.prediction_steps) < 1 or parameters.layer < 0:
         parser.error('Use a nonnegative layer and positive training and block sizes')

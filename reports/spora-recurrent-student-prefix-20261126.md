@@ -15,6 +15,10 @@
 
 后续结构对照改为测试有限的精确保留位置。HOLA 使用循环写入时的预测残差挑选要保留的历史条目，适合检验迁移后遗漏事实的现象。第 24 层当前权重使用求和更新，尚无预测残差。先对齐新增的增量更新，使其与同层教师混合输出可比较，再在相同条目预算下比较按写入残差保留、按近期保留及只用循环状态。首先检查能否保留被更正值和第二字段，再看独立生成。这个设计将存储限制放在历史条目数上。 [HOLA](https://arxiv.org/abs/2607.02303) · [Taylor-Calibrate](https://arxiv.org/abs/2606.16429)
 
+## 第 24 层增量更新的初始化对照
+
+复用求和候选的 36 篇训练材料、24 条短留出、8 词元块、160 步混合输出对齐及 32 步输出概率对齐，只替换为已有的带门控块增量更新。两组短留出的最高概率词元都与教师匹配 24/24。增量更新的最终 KL 为 0.04019，求和对照为 0.03735。相对混合误差分别为 0.29845 和 0.26119。新候选在一条 93 词元的回放上，整段与分块输出最大差异为 5.96×10⁻⁷，近期窗口上限为 16 词元。来源、个体摘要与对照一致，CUDA 张量峰值约 3.39 GiB。这个候选提供了可比较的增量写入路径，精确条目保留与长答复生成仍需验证。
+
 ## 复现
 
 ```powershell
@@ -24,4 +28,5 @@ $env:PYTHONUTF8 = '1'
 $run = 'runs/spora-hybrid-targeted-recovery-v1'
 $layers = @("$run/targeted/layer-19", "$run/targeted/layer-22", "$run/targeted/layer-24")
 .\.venv\Scripts\python.exe -u -m scripts.train_spora_recurrent_student_prefix runs/spora-composition-late-gates-20-23-24-v1/candidate.pt "$run/result.json" runs/spora-recurrent-student-prefix-v1 @layers
+.\.venv\Scripts\python.exe -u -m scripts.audit_spora_recurrent_attention runs/spora-composition-late-gates-20-23-24-v1/candidate.pt runs/spora-gelu24-write-revision-v1/comparison.json runs/spora-gelu24-recurrent-layer24-gated-morph-v1 --layer 24 --update-rule gated_block_delta
 ```
