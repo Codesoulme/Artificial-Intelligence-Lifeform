@@ -31,8 +31,8 @@ from spora.integrated_checkpoint import load_integrated_runtime
 from spora.research_multi_version_route import resolve_address
 from spora.research_recurrent_decode import load_recurrent_replacements
 from spora.research_ttt_ntp import LowRankFastWeight
-from spora.research_version_dialogue_scope import (PartialLookup, advance_scope, ambiguous_partial_reply, continue_partial_lookup,
-                                                   dialogue_targets, eligible_spoken_lookup, pending_after_lookup,
+from spora.research_version_dialogue_scope import (PartialLookup, advance_scope, ambiguous_partial_reply, archive_lookup_canceled,
+                                                   continue_partial_lookup, dialogue_targets, eligible_spoken_lookup, pending_after_lookup,
                                                    pending_followup_targets, resolve_spoken_proposal, start_partial_lookup)
 from spora.research_version_store import MemoryAddress, VersionStore
 from spora.research_version_timeline import parse_version_query
@@ -286,6 +286,8 @@ class VersionChat:
         if deferred_lookup(question):
             self.reset_dialogue()
             return {'kind': 'defer', 'answer': '好，等你想查时再说。', 'selected': [], 'reasons': []}
+        if archive_lookup_canceled(question):
+            self.reset_dialogue()
         if self.awake is not None:
             recent = self.awake[1]()
             if AWAKE_RECALL.fullmatch(question):

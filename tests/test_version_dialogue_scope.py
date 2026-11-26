@@ -119,6 +119,17 @@ class DialogueVersionScopeTests(unittest.TestCase):
         utterance = '先别查，闻韶宁的饮品上一版我过会儿再问。'
         self.assertEqual(dialogue_targets(utterance, NAMES, FIELDS, (DRINK,)), ())
 
+    def test_cancel_archival_lookup_preserves_a_separate_requested_field(self):
+        for utterance in ('不需要翻档。讨论一下怎样区分饮品和见面地点的用途。',
+                          '不用查档案。查闻韶宁的饮品上一版只是举例。'):
+            with self.subTest(utterance=utterance):
+                self.assertFalse(eligible_spoken_lookup(utterance))
+                self.assertEqual(dialogue_targets(utterance, NAMES, FIELDS, (DRINK,)), ())
+        mixed = '不需要查闻韶宁的饮品，查闻韶宁的见面地点上一版。'
+        self.assertTrue(eligible_spoken_lookup(mixed))
+        target, = dialogue_targets(mixed, NAMES, FIELDS, (DRINK,))
+        self.assertEqual((target.address, target.query), (PLACE, VersionQuery('previous')))
+
     def test_unquoted_wording_edit_does_not_authorize_the_embedded_lookup(self):
         for framing in ('把这句话改得礼貌些：', '将那段话写得更客气：', '把这句改成问句：'):
             text = framing + '请查闻韶宁的饮品上一版。'

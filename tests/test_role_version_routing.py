@@ -3,7 +3,8 @@ import unittest
 import torch
 
 from scripts.audit_spora_role_version_routing import (
-    CURRENT, FIRST, SKIP, FactorizedRolePlan, factorized_loss, factorized_predictions,
+    CURRENT, FIRST, SKIP, ClauseEvidencePlan, FactorizedRolePlan, clause_evidence_loss, clause_targets,
+    factorized_loss, factorized_predictions, request_clauses, training_requests,
 )
 
 
@@ -33,3 +34,26 @@ class FactorizedRoleRoutingTests(unittest.TestCase):
         torch.testing.assert_close(intent, swapped_intent)
         torch.testing.assert_close(roles, swapped_roles.flip(1))
         torch.testing.assert_close(version, swapped_version.flip(1))
+
+    def test_clause_evidence_tracks_role_order_and_ignores_padding(self):
+        head = ClauseEvidencePlan(8)
+        whole, local = torch.randn(1, 2, 8), torch.randn(1, 2, 3, 8)
+        allowed = torch.tensor([[True, False, True]])
+        intent, roles, version, evidence = head(whole, local, allowed)
+        swapped = head(whole.flip(1), local.flip(1), allowed)
+        torch.testing.assert_close(intent, swapped[0])
+        for original, permuted in zip((roles, version, evidence), swapped[1:], strict=True):
+            torch.testing.assert_close(original, permuted.flip(1))
+        self.assertTrue(evidence[:, :, 1].isneginf().all())
+        changed = local.clone()
+        changed[:, :, 1] = torch.randn(1, 2, 8) * 15
+        for original, output in zip((intent, roles, version, evidence), head(whole, changed, allowed), strict=True):
+            torch.testing.assert_close(original, output)
+
+    def test_clause_annotation_follows_the_mention_not_role_order(self):
+        case = next(row for row in training_requests() if row[0].startswith('先报'))
+        self.assertEqual(len(request_clauses(case[0])), 2)
+        self.assertEqual(clause_targets([case], 2).tolist(), [[[False, True], [True, False]]])
+        good = torch.tensor([[[-2., 2.], [2., -2.]]])
+        targets = clause_targets([case], 2)
+        self.assertLess(clause_evidence_loss(good, targets), clause_evidence_loss(good.flip(2), targets))

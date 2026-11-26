@@ -14,6 +14,7 @@ _VERSION_HINT = re.compile(r'版|档|值|记录|用过|登记|换[下掉]|替[�
 _PAIR = re.compile(r'两项|两条|两个')
 _RESET = re.compile(r'换(?:个|一个)?(?:话题|问题)|转到|转题|聊点别的|先别查|先不查|不查了|算了|先放下|先暂停')
 _CANCEL_TURN = re.compile(r'^(?:先别查(?:了)?|先不查(?:了)?|不查了|算了|先暂停)(?:[，,。；;！!\s]|$)')
+_ARCHIVE_CANCEL = re.compile(r'^(?:不需要|不用|不必|不要)(?:再)?(?:查阅|查|翻阅|翻)(?:档案|档)(?=[。！？?!\r\n]|$)')
 _REJECTED_CLAUSE = re.compile(r'^(?:不是|别查|不查|不用查|不要查|先不看)')
 _AMBIGUOUS_REFERENCE = re.compile(r'谁的|(?:他|她|对方|另一个人|别人)的')
 _ANCHORED_PERSON = re.compile(r'\S+的(?=(?:首|初|上一|前一|当前|现行|第[一二三四五六七八九1-9])版)')
@@ -150,9 +151,15 @@ def resolve_spoken_proposal(question, address, enrolled, fields):
     return 'revoked', None
 
 
+def archive_lookup_canceled(question):
+    """Recognize a standalone opening that opts out of archive use for this turn."""
+    return bool(_ARCHIVE_CANCEL.match(question.strip()))
+
+
 def eligible_spoken_lookup(question):
     """Respect text transformations and turns that close or leave a lookup."""
-    return not (_TEXT_TASK.search(question) or _RESET.search(question) or _CANCEL_TURN.match(question))
+    return not (_TEXT_TASK.search(question) or _RESET.search(question) or _CANCEL_TURN.match(question)
+                or archive_lookup_canceled(question))
 
 
 def owner_for_field(scope, field):
@@ -168,7 +175,7 @@ def owner_for_field(scope, field):
 def dialogue_targets(question, enrolled, fields, scope, *, bounded=True, confirmed_reference=True):
     """Form a proposed read. The caller still validates every address and version."""
     text = question.strip()
-    if _TEXT_TASK.search(text) or _CANCEL_TURN.match(text):
+    if _TEXT_TASK.search(text) or _CANCEL_TURN.match(text) or archive_lookup_canceled(text):
         return ()
     reference = _CONFIRMED_REFERENCE.fullmatch(text) if confirmed_reference else None
     if reference is not None:

@@ -36,6 +36,7 @@ FIRST = (
     ('请查饮品。', 'clarify', '谁的饮品'),
     ('沈予安。', 'clarify', '饮品哪一版'),
     ('首版。', 'read', 1),
+    ('不需要翻档。讨论一下怎样给饮品分类。', 'chat', tuple(VALUES.values())),
     ('请查用品当前版。', 'clarify', '谁的用品'),
     ('先别查了。', 'defer', None),
     ('沈予安。', 'chat', None),
@@ -72,6 +73,8 @@ def replay(profile, cases, recurrent):
     if process.returncode:
         raise RuntimeError(process.stderr)
     responses = [json.loads(line) for line in process.stdout.splitlines() if line.strip()]
+    if len(responses) != len(cases):
+        raise RuntimeError(f'Expected {len(cases)} replies, got {len(responses)}. {process.stderr.strip()}')
     rows = []
     for (question, kind, expectation), response in zip(cases, responses, strict=True):
         answer = response['answer']
@@ -89,6 +92,8 @@ def replay(profile, cases, recurrent):
                 passed &= expectation in answer and not any(value in answer for value in VALUES.values())
             if kind == 'defer':
                 passed &= not any(value in answer for value in VALUES.values())
+            if kind == 'chat' and expectation:
+                passed &= not any(value in answer for value in expectation)
         rows.append({'question': question, 'kind': kind, 'expected': expectation, 'actual': response, 'passed': passed})
         if not passed:
             print(rows[-1], flush=True)

@@ -1,7 +1,7 @@
 from datetime import date
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import torch
 
@@ -90,6 +90,27 @@ class VersionChatCommandTests(unittest.TestCase):
         self.assertTrue(deferred_lookup('先不查了。'))
         self.assertFalse(deferred_lookup('先不查了，帮我写封邮件。'))
         self.assertFalse(deferred_lookup('把「先不查了」翻译成英语。'))
+
+    def test_archive_opt_out_does_not_carry_addresses_or_prior_record_text(self):
+        address = MemoryAddress('林语', 'drinks')
+        embedding = torch.nn.Embedding(2, 8)
+        store = Mock()
+        store.catalog.return_value = {address: ()}
+        spoken = Mock(return_value=address)
+        chat = VersionChat(store, SimpleNamespace(get_input_embeddings=lambda: embedding),
+                           None, None, lambda _: [], {}, ordinary_tokens=4, spoken=spoken)
+        chat.history = [{'role': 'user', 'content': '请查林语的饮品'}, {'role': 'assistant', 'content': '茉莉茶'}]
+        chat.scope, chat.pending, chat.spoken_pending = (address,), address, address
+        question = '不需要翻档。讨论一下怎样给饮品分类。'
+        with patch('scripts.spora_version_chat.generate', return_value={'answer': '可以按原料分类。'}) as generate:
+            result = chat.turn(question, date(2026, 11, 26))
+        self.assertEqual((result['kind'], result['selected']), ('chat', []))
+        self.assertEqual(generate.call_args.kwargs['history'], [])
+        self.assertIsNone(chat.pending)
+        self.assertIsNone(chat.spoken_pending)
+        self.assertEqual(chat.scope, ())
+        store.read.assert_not_called()
+        spoken.assert_not_called()
 
     def test_spoken_partial_accepts_only_supported_incomplete_coordinates(self):
         embedding = torch.nn.Embedding(2, 8)

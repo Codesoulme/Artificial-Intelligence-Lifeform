@@ -6,6 +6,7 @@ from contextlib import ExitStack
 from hashlib import sha256
 import json
 from pathlib import Path
+import re
 from time import perf_counter
 
 import torch
@@ -120,6 +121,22 @@ class FactorizedRolePlan(nn.Module):
         return self.intent(roles.mean(1)).squeeze(-1), self.include(roles).squeeze(-1), self.version(roles)
 
 
+class ClauseEvidencePlan(FactorizedRolePlan):
+    """Read the whole request for intent and attend to evidence for each role."""
+
+    def __init__(self, width):
+        super().__init__(width)
+        self.evidence = nn.Linear(64, 1)
+
+    def forward(self, states, clauses, allowed):
+        roles = self.encode(states)
+        local = self.encode(clauses)
+        scores = self.evidence(local).squeeze(-1).masked_fill(~allowed[:, None, :], -torch.inf)
+        grounded = roles + (scores.softmax(-1).unsqueeze(-1) * local).sum(-2)
+        return (self.intent(roles.mean(1)).squeeze(-1), self.include(grounded).squeeze(-1),
+                self.version(grounded), scores)
+
+
 def factorized_loss(outputs, target):
     intent, include, version = outputs
     requested = target.ne(SKIP)
@@ -166,6 +183,38 @@ def query_states(extract, requests, *, role_attention):
     return states, context, allowed
 
 
+def request_clauses(question):
+    return tuple(part.strip() for part in re.split(r'[，,；;。！？?!]+', question) if part.strip()) or (question,)
+
+
+def clause_features(extract, requests):
+    whole, = query_states(extract, requests, role_attention=False)
+    segments = [request_clauses(question) for question, _, _ in requests]
+    parts = [(clause, pair, labels) for clauses, (_, pair, labels) in zip(segments, requests, strict=True)
+             for clause in clauses]
+    encoded, = query_states(extract, parts, role_attention=False)
+    counts = [len(clauses) for clauses in segments]
+    padded = nn.utils.rnn.pad_sequence(encoded.split(counts), batch_first=True).transpose(1, 2)
+    allowed = torch.arange(padded.shape[2]) < torch.tensor(counts)[:, None]
+    return whole, padded, allowed
+
+
+def clause_targets(requests, width):
+    labels = torch.zeros(len(requests), 2, width, dtype=torch.bool)
+    for index, (question, roles, _) in enumerate(requests):
+        for slot, role in enumerate(roles):
+            for column, clause in enumerate(request_clauses(question)):
+                labels[index, slot, column] = any(alias in clause for alias in ALIASES[role])
+    if not labels.any(-1).all():
+        raise ValueError('Every training role must have a clause annotation')
+    return labels
+
+
+def clause_evidence_loss(scores, support):
+    # Sum the probability of compatible clauses when an alias appears more than once.
+    return (scores.logsumexp(-1) - scores.masked_fill(~support, -torch.inf).logsumexp(-1)).mean()
+
+
 def training_requests():
     return [(form.format(a=ALIASES[pair[0]][index], b=ALIASES[pair[1]][(index + 1) % 3]), pair, labels)
             for pair in SCENES.values() for form, labels in TRAIN_FORMS for index in range(3)]
@@ -185,18 +234,24 @@ def hold_requests(forms=HOLD_FORMS):
             for form, labels in forms]
 
 
-def fit(features, requests, steps, *, role_attention, factorized=False):
+def fit(features, requests, steps, *, role_attention, factorized=False, support=None):
     torch.manual_seed(SEED)
     rng = torch.Generator().manual_seed(SEED)
     width = features[0].shape[-1]
-    head = FactorizedRolePlan(width) if factorized else RolePlan(width, role_attention=role_attention)
+    if factorized:
+        plan_type = ClauseEvidencePlan if support is not None else FactorizedRolePlan
+        head = plan_type(width)
+    else:
+        head = RolePlan(width, role_attention=role_attention)
     optimizer = torch.optim.AdamW(head.parameters(), lr=.002)
     targets = torch.tensor([labels for _, _, labels in requests])
     for _ in range(steps):
         batch = torch.randperm(len(requests), generator=rng)[:32]
         outputs = head(*(value[batch] for value in features))
-        loss = (factorized_loss(outputs, targets[batch]) if factorized else
+        loss = (factorized_loss(outputs[:3], targets[batch]) if factorized else
                 F.cross_entropy(outputs.flatten(0, 1), targets[batch].flatten()))
+        if support is not None:
+            loss += clause_evidence_loss(outputs[3], support[batch])
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
@@ -250,8 +305,15 @@ def main(args):
     if {question for question, *_ in train} & {row[1] for row in hold}:
         raise ValueError('Training and held requests overlap')
     extract = FrozenTurnFeatures(decoder, tokenizer)
-    features = query_states(extract, train, role_attention=args.role_attention)
-    head = fit(features, train, args.steps, role_attention=args.role_attention, factorized=args.factorized)
+
+    def encode(requests):
+        if args.clause_evidence:
+            return clause_features(extract, requests)
+        return query_states(extract, requests, role_attention=args.role_attention)
+
+    features = encode(train)
+    support = clause_targets(train, features[1].shape[2]) if args.clause_evidence else None
+    head = fit(features, train, args.steps, role_attention=args.role_attention, factorized=args.factorized, support=support)
     planner = args.output / 'role-plan.pt'
     atomic_save(head.state_dict(), planner)
     head.load_state_dict(torch.load(planner, weights_only=True, map_location='cpu'), strict=True)
@@ -265,18 +327,20 @@ def main(args):
                       for rows in (calibration, *splits.values())))
             if len(set().union(*groups)) != sum(len(set(group)) for group in groups):
                 raise ValueError('Training, calibration and test prompts must be disjoint')
-            calibration_features = query_states(extract, [row[1:] for row in calibration], role_attention=False)
-            thresholds = calibrate(head(*calibration_features), torch.tensor([row[3] for row in calibration]))
+            calibration_features = encode([row[1:] for row in calibration])
+            thresholds = calibrate(head(*calibration_features)[:3], torch.tensor([row[3] for row in calibration]))
 
         def predict(features):
             scores = head(*features)
-            return factorized_predictions(scores, *thresholds) if args.factorized else scores.argmax(-1)
+            return factorized_predictions(scores[:3], *thresholds) if args.factorized else scores.argmax(-1)
 
         audited = {}
         for name, held in splits.items():
-            held_features = query_states(extract, [row[1:] for row in held], role_attention=args.role_attention)
+            held_features = encode([row[1:] for row in held])
             predicted = predict(held_features).tolist()
-            swapped = predict(tuple(value.flip(1) for value in held_features)).flip(1).tolist()
+            swapped_features = tuple(value.flip(1) if not args.clause_evidence or index < 2 else value
+                                     for index, value in enumerate(held_features))
+            swapped = predict(swapped_features).flip(1).tolist()
             if predicted != swapped:
                 raise RuntimeError('Swapping proposed role order changed the version plan')
             ungated = predicted
@@ -286,15 +350,24 @@ def main(args):
             outcome = evaluate_routes(args, runtime, decoder, model, tokenizer, replacements, manifest,
                                       held, predicted, sources, identity)
             if args.factorized:
-                for row, actions in zip(outcome['rows'], ungated, strict=True):
+                scores = head(*held_features)
+                versions = (1 + scores[2].argmax(-1)).tolist()
+                for row, actions, proposed_versions in zip(outcome['rows'], ungated, versions, strict=True):
                     row['before_guard'] = actions
+                    row['versions_before_gates'] = proposed_versions
+                if args.clause_evidence:
+                    choices = scores[3].argmax(-1).tolist()
+                    for row, selected in zip(outcome['rows'], choices, strict=True):
+                        clauses = request_clauses(row['question'])
+                        row['evidence'] = [clauses[index] for index in selected]
             audited[name] = outcome
             print(name, outcome['summary'], flush=True)
     if identity != frozen_digest(runtime.organism, runtime.state) or any(sha(path) != digest for path, digest in sources.items()):
         raise RuntimeError('An input or the individual changed')
     store_json(args.output / 'result.json', dict(**audited['previous'], fresh=audited.get('fresh'),
                train_count=len(train), hold_count=len(hold), steps=args.steps,
-               role_attention=args.role_attention, factorized=args.factorized, thresholds=thresholds,
+               role_attention=args.role_attention, factorized=args.factorized, clause_evidence=args.clause_evidence,
+               thresholds=thresholds,
                individual_sha256=identity, head_sha256=sha(planner), sources={str(path): value for path, value in sources.items()},
                seconds=perf_counter() - started))
 
@@ -371,7 +444,9 @@ if __name__ == '__main__':
     mode = cli.add_mutually_exclusive_group()
     mode.add_argument('--role-attention', action='store_true')
     mode.add_argument('--factorized', action='store_true')
+    mode.add_argument('--clause-evidence', action='store_true')
     args = cli.parse_args()
+    args.factorized = args.factorized or args.clause_evidence
     if args.steps < 1:
         cli.error('Expected a positive step count')
     main(args)
