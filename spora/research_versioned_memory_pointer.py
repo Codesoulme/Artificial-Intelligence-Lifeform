@@ -73,22 +73,43 @@ class VersionCoverageBias:
 class VersionReplyActions(nn.Module):
     """Learn when to emit complete stored values during ordinary generation."""
 
-    def __init__(self, hidden_size, scaffold_tokens, *, slots=1):
+    def __init__(self, hidden_size, scaffold_tokens, *, slots=1, field_count=0, shared_role_pointer=False):
         super().__init__()
         if type(slots) is not int or not 1 <= slots <= 5:
             raise ValueError('Version reply actions support one to five slots')
+        if shared_role_pointer and not field_count:
+            raise ValueError('Shared copy scoring requires field embeddings')
         self.slots = slots
+        self.shared_role_pointer = shared_role_pointer
         self.register_buffer('scaffold_tokens', torch.as_tensor(scaffold_tokens, dtype=torch.long))
         self.project = nn.Linear(hidden_size, 96)
-        self.progress = nn.Embedding(2 ** slots, 96)
-        self.actions = nn.Linear(96, slots + len(scaffold_tokens))
+        self.progress = nn.Embedding(2 if shared_role_pointer else 2 ** slots, 96)
+        self.actions = nn.Linear(96, len(scaffold_tokens) if shared_role_pointer else slots + len(scaffold_tokens))
+        self.fields = nn.Embedding(field_count, 24) if field_count else None
+        self.field_projection = nn.Linear(24 if shared_role_pointer else slots * 24, 96, bias=False) if field_count else None
+        self.pointer = nn.Linear(96, 1, bias=False) if shared_role_pointer else None
 
-    def forward(self, hidden, copied):
+    def forward(self, hidden, copied, *, field_ids=None):
         hidden = F.normalize(hidden.float(), dim=-1) * hidden.shape[-1] ** .5
         progress = copied.long()
-        scores = self.actions(F.gelu(self.project(hidden) + self.progress(progress)))
-        bits = 1 << torch.arange(self.slots, device=scores.device)
+        context = self.project(hidden)
+        bits = 1 << torch.arange(self.slots, device=context.device)
         used = (progress[..., None] & bits) != 0
+        if (field_ids is None) != (self.fields is None):
+            raise ValueError('Field IDs are required exactly when the head uses field embeddings')
+        if field_ids is not None:
+            if field_ids.shape[-1:] != (self.slots,) or field_ids.dtype != torch.long:
+                raise ValueError('Provide one integer field ID per copy slot')
+            fields = self.fields(field_ids)
+        if self.shared_role_pointer:
+            slots = F.gelu(self.field_projection(fields) + self.progress(used.long()))
+            shared = context + slots.mean(dim=-2)
+            copies = self.pointer(F.gelu(shared.unsqueeze(-2) + slots)).squeeze(-1)
+            return torch.cat((copies.masked_fill(used, -torch.inf), self.actions(F.gelu(shared))), dim=-1)
+        action_input = context + self.progress(progress)
+        if field_ids is not None:
+            action_input = action_input + self.field_projection(fields.flatten(-2))
+        scores = self.actions(F.gelu(action_input))
         return torch.cat((scores[..., :self.slots].masked_fill(used, -torch.inf), scores[..., self.slots:]), dim=-1)
 
     def choose(self, hidden, native_logits, *, copied, room_for_copy, memory_fraction):
@@ -96,11 +117,12 @@ class VersionReplyActions(nn.Module):
                                        memory_fraction=memory_fraction)
         return token if slot is None else None
 
-    def choose_slot(self, hidden, native_logits, *, copied, available, memory_fraction, blocked_token=None):
+    def choose_slot(self, hidden, native_logits, *, copied, available, memory_fraction, blocked_token=None,
+                    field_ids=None):
         if len(available) != self.slots:
             raise ValueError('Availability must cover every copy slot')
         progress = torch.as_tensor(copied, device=hidden.device)
-        actions = self(hidden, progress)
+        actions = self(hidden, progress, field_ids=field_ids)
         mask = torch.as_tensor(available, device=hidden.device, dtype=torch.bool)
         actions[:self.slots] = actions[:self.slots].masked_fill(~mask, -torch.inf)
         if blocked_token is not None:

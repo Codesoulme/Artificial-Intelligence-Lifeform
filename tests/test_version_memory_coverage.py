@@ -36,6 +36,40 @@ class VersionMemoryCoverageTests(unittest.TestCase):
 
 
 class VersionReplyActionTests(unittest.TestCase):
+    def test_shared_role_pointer_tracks_a_slot_swap_and_preserves_text_scores(self):
+        head = VersionReplyActions(3, [4, 5], slots=2, field_count=4, shared_role_pointer=True)
+        hidden = torch.tensor([[1., 2., 3.], [-1., 1., -2.]])
+        fields = torch.tensor([[1, 2], [2, 3]])
+        initial = head(hidden, torch.tensor([0, 1]), field_ids=fields)
+        swapped = head(hidden, torch.tensor([0, 2]), field_ids=fields.flip(-1))
+        torch.testing.assert_close(initial[:, :2], swapped[:, :2].flip(-1))
+        torch.testing.assert_close(initial[:, 2:], swapped[:, 2:])
+        self.assertTrue(bool(initial[1, 0].isneginf()))
+        self.assertTrue(bool(swapped[1, 1].isneginf()))
+
+    def test_role_ids_change_action_scores_and_preserve_copy_coverage(self):
+        head = VersionReplyActions(3, [4], slots=2, field_count=3)
+        with torch.no_grad():
+            head.project.weight.zero_()
+            head.project.bias.zero_()
+            head.progress.weight.zero_()
+            head.fields.weight.zero_()
+            head.fields.weight[1, 0] = 3.
+            head.fields.weight[2, 0] = -3.
+            head.field_projection.weight.zero_()
+            head.field_projection.weight[0, 0] = 1.
+            head.actions.weight.zero_()
+            head.actions.bias.zero_()
+            head.actions.weight[0, 0] = 2.
+        hidden, logits = torch.zeros(3), torch.zeros(6)
+        options = dict(available=(True, True), memory_fraction=.95)
+        correct = torch.tensor([1, 2])
+        self.assertEqual(head.choose_slot(hidden, logits, copied=0, field_ids=correct, **options), (0, None))
+        self.assertNotEqual(head.choose_slot(hidden, logits, copied=0, field_ids=correct.flip(0), **options), (0, None))
+        self.assertNotEqual(head.choose_slot(hidden, logits, copied=1, field_ids=correct, **options), (0, None))
+        with self.assertRaisesRegex(ValueError, 'Field IDs'):
+            head(hidden, torch.tensor(0))
+
     def test_premature_eos_can_complete_pending_fields_without_masking_eos(self):
         from scripts.audit_spora_dual_version_reply import reply
 

@@ -79,9 +79,15 @@ def training_rows(tokenizer):
 
 def fit(model, tokenizer, head, rows, steps, *, histories=None):
     features, sizes = frozen_features(model, tokenizer, rows, histories=histories)
+    fit_from_features(head, rows, steps, features, sizes)
+
+
+def fit_from_features(head, rows, steps, features, sizes, *, field_ids=None):
     features = features.clone()
     scaffold = {token: head.slots + index for index, token in enumerate(head.scaffold_tokens.tolist())}
     targets, start = [], 0
+    if field_ids is not None:
+        field_ids = field_ids.repeat_interleave(torch.tensor(sizes), dim=0)
     for (_, _, actions, _), size in zip(rows, sizes, strict=True):
         copied = 0
         for offset, (kind, value) in enumerate(actions):
@@ -96,7 +102,8 @@ def fit(model, tokenizer, head, rows, steps, *, histories=None):
     rng = torch.Generator().manual_seed(SEED)
     for step in range(steps):
         indices, progress, labels = targets[torch.randperm(len(targets), generator=rng)[:64]].T
-        loss = F.cross_entropy(head(features[indices], progress), labels)
+        fields = None if field_ids is None else field_ids[indices]
+        loss = F.cross_entropy(head(features[indices], progress, field_ids=fields), labels)
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
@@ -107,7 +114,7 @@ def fit(model, tokenizer, head, rows, steps, *, histories=None):
 @torch.inference_mode()
 def reply(model, tokenizer, head, question, memories, *, require_coverage=False, history=(),
           max_new_tokens=LIMIT, memory_fraction=MEMORY_FRACTION, cover_present_slots=False,
-          complete_on_eos=False):
+          complete_on_eos=False, field_ids=None):
     if not any(value is not None for value in memories):
         return {**generate(model, tokenizer, question, history=history, max_new_tokens=max_new_tokens), 'copied': []}
     require_coverage = require_coverage and (cover_present_slots or all(value is not None for value in memories))
@@ -123,12 +130,13 @@ def reply(model, tokenizer, head, question, memories, *, require_coverage=False,
         pending = tuple(index for index, fits in enumerate(available) if fits and not (mask & (1 << index)))
         slot, token = head.choose_slot(hidden, model.lm_head(hidden), copied=mask, available=available,
                                        memory_fraction=memory_fraction,
-                                       blocked_token=eos if require_coverage and pending and not complete_on_eos else None)
+                                       blocked_token=eos if require_coverage and pending and not complete_on_eos else None,
+                                       field_ids=field_ids)
         if complete_on_eos and require_coverage and token == eos and pending:
             # Replace a premature stop with the best pending span, keeping room for the final EOS.
             fitting = [index for index in pending if len(tail) + len(memories[index]) < max_new_tokens]
             if fitting:
-                scores = head(hidden, torch.as_tensor(mask, device=hidden.device))
+                scores = head(hidden, torch.as_tensor(mask, device=hidden.device), field_ids=field_ids)
                 slot = fitting[int(scores[fitting].argmax())]
         if slot is not None:
             copied.append({'slot': slot, 'at': len(tail)})

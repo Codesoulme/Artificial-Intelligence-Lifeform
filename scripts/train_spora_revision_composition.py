@@ -82,15 +82,19 @@ def training(tokenizer, held):
     return rows, histories
 
 
+def factual_roles_correct(case, value, row):
+    text = row['answer']
+    keep = case['values']['keep']
+    fields = dict(new=re.escape(value), keep=re.escape(keep))
+    return (row['passed'] and text.count(value) == text.count(keep) == 1
+            and all(re.search(pattern.format_map(fields), text) for pattern in USE[case['case']])
+            and not re.search(r'[。！？，、]{2,}', text))
+
+
 def grade_use(case, variants):
-    for label in ('current', 'old'):
+    for label, key in (('current', 'new'), ('old', 'old')):
         row = variants[label]
-        value = case['values']['old' if label == 'old' else 'new']
-        text = row['answer']
-        fields = dict(new=re.escape(value), keep=re.escape(case['values']['keep']))
-        row['use'] = (row['passed'] and text.count(value) == text.count(case['values']['keep']) == 1
-                      and all(re.search(pattern.format_map(fields), text) for pattern in USE[case['case']])
-                      and not re.search(r'[。！？，、]{2,}', text))
+        row['use'] = factual_roles_correct(case, case['values'][key], row)
 
 
 def main(args):
