@@ -35,6 +35,7 @@ QUESTIONS = {
              ('刚定下的查询事项一并作罢吗？', '刚定下的查询事项照原样执行吗？')),
     'fresh': (('您的决定是把当前整批查询收回吗？', '您的决定是让当前整批查询照常吗？'),
               ('这些记录都先别翻，对吗？', '这些记录都按原要求翻，对吗？')),
+    'speaker': (('现在把清单上的查阅全停下来，可以吗？', '现在把清单上的查阅全做下去，可以吗？'),),
 }
 REPLIES = {
     'train': (('对，就照你说的。', '不，我的意思正好相反。', '先等等，我还得考虑。'),
@@ -46,6 +47,14 @@ REPLIES = {
              ('就按你刚说的办。', '我选另一种。', '他说「同意」，我没有表态。')),
     'fresh': (('没错，就是这个意思。', '不对，我要的是反面的决定。', '先别定，容我斟酌。'),
               ('你理解对了。', '你理解反了。', '同伴同意了，我还在考虑。')),
+    'speaker': (('她已经赞成，我也同意你刚问的。', '她已经赞成，我却不同意你刚问的。',
+                 '她已经赞成，我本人还在犹豫。'),
+                ('他在反对，不过我赞成你这个提议。', '他在反对，我也不接受你这个提议。',
+                 '他在反对，我只是把他的意见告诉你。'),
+                ('那是别人的话，我的答复是可以。', '那是别人的话，我的答复是不可以。',
+                 '那是别人的话，我自己还没有答案。'),
+                ('我想明白了，照你提的做。', '我想明白了，按你提的反面做。',
+                 '再容我想想，先别替我拍板。')),
 }
 EXPLICIT = {
     'train': (('不管刚才怎么问，我现在决定停止查阅。', CANCEL),
@@ -57,7 +66,19 @@ EXPLICIT = {
              ('谁都不用查了，这就是我的决定。', CANCEL), ('把原来定的全留下，继续办理。', PROCEED)),
     'fresh': (('我已决定终止本次所有查阅。', CANCEL), ('我授权按原范围继续核对。', PROCEED),
               ('把现有的请求全撤回吧。', CANCEL), ('每个原定事项都照常办理。', PROCEED)),
+    'speaker': (('别人说要照查，最后我决定这一次全部撤回。', CANCEL),
+                ('别人说要撤回，最后我决定全部照常查。', PROCEED)),
 }
+SPEAKER_TRAIN = (
+    ('同事点头了，我也赞同你的建议。', '同事点头了，我的答复是否定的。', '同事点头了，我还不能给你答复。'),
+    ('旁人说不，但我答应你的提议。', '旁人说不，我同样拒绝这个提议。', '旁人说不，这不代表我已有决定。'),
+    ('我已考虑过，接受你的方案。', '我已考虑过，不接受你的方案。', '我得再考虑，暂时不要执行。'),
+    ('他提了他的想法，我本人说行。', '他提了他的想法，我本人说不行。', '他提了他的想法，我本人没表态。'),
+)
+SPEAKER_CALIBRATION = (
+    ('朋友赞成，我也认可你刚才提出的。', '朋友赞成，但我不认可你刚才提出的。', '朋友赞成，我还没有定下来。'),
+    ('搭档说不，我这里答复可以。', '搭档说不，我这里也拒绝。', '搭档说不，我只是在传话。'),
+)
 
 
 def cases(split):
@@ -79,6 +100,11 @@ def examples(rows, contextual):
 def response_examples(rows):
     relative = {'yes': AGREE, 'no': DISAGREE}
     return list(dict.fromkeys((reply, relative.get(kind, label)) for _, reply, label, kind in rows))
+
+
+def speaker_examples(triples):
+    return [(reply, label) for triple in triples
+            for reply, label in zip(triple, (AGREE, DISAGREE, CLARIFY), strict=True)]
 
 
 def question_actions(split):
@@ -131,8 +157,13 @@ def main(args):
             expected.get(path.resolve()) != digest for path, digest in sources.items()):
         raise ValueError('An input differs from the preceding experiment')
     splits = ('train', 'calibration', 'held', 'fresh') if args.stored_action else ('train', 'calibration', 'held')
+    if args.speaker_contrasts:
+        splits += ('speaker',)
     groups = {name: cases(name) for name in splits}
     distinct_replies = [{reply for _, reply, _, _ in rows} for rows in groups.values()]
+    if args.speaker_contrasts:
+        distinct_replies[0].update(reply for reply, _ in speaker_examples(SPEAKER_TRAIN))
+        distinct_replies[1].update(reply for reply, _ in speaker_examples(SPEAKER_CALIBRATION))
     if any(left & right for index, left in enumerate(distinct_replies) for right in distinct_replies[index + 1:]):
         raise ValueError('Confirmation replies must be disjoint across splits')
     addresses = [tuple(MemoryAddress(*entry[index:index + 2]) for index in (0, 2)) for entry in PEOPLE['held']]
@@ -160,6 +191,8 @@ def main(args):
                 ('with_question', True, 12), ('recurrent', True, 23))
         if args.stored_action:
             arms = (('stored_action_12', False, 12), ('stored_action_23', False, 23))
+        if args.speaker_contrasts:
+            arms = (('stored_action_12', False, 12), ('speaker_contrasts', False, 12))
         for name, contextual, depth in arms:
             extract = shallow if depth == 12 else FrozenTurnFeatures(decoder, tokenizer, depth=depth, single_sequence=True)
             checkpoint = prior_head if name == 'baseline' else args.output / f'{name}.pt'
@@ -167,11 +200,15 @@ def main(args):
                 head = baseline.eval()
             else:
                 training = response_examples(groups['train']) if args.stored_action else examples(groups['train'], contextual)
+                if name == 'speaker_contrasts':
+                    training += speaker_examples(SPEAKER_TRAIN)
                 head = fit_probe(extract, training, 5 if args.stored_action else 3, clauses=True)
                 atomic_save(head.state_dict(), checkpoint)
                 head.load_state_dict(torch.load(checkpoint, weights_only=True, map_location='cpu'), strict=True)
             calibration_input = (response_examples(groups['calibration']) if args.stored_action else
                                  examples(groups['calibration'], contextual))
+            if args.speaker_contrasts:
+                calibration_input += speaker_examples(SPEAKER_CALIBRATION)
             calibration = classify(head, extract, calibration_input, clauses=True)
             cutoff = prior['results']['matched']['cutoff'] if name == 'baseline' else calibrate(calibration)
             for split in splits[2:]:
@@ -193,6 +230,8 @@ def main(args):
         raise RuntimeError('A model input or archive changed')
     training_size = len(response_examples(groups['train'])) if args.stored_action else len(groups['train'])
     store_json(args.output / 'result.json', dict(results=results, training=training_size,
+                                               augmented_training=training_size + len(speaker_examples(SPEAKER_TRAIN))
+                                               if args.speaker_contrasts else None,
                                                sources={str(path): digest for path, digest in sources.items()},
                                                seconds=perf_counter() - start))
 
@@ -228,4 +267,8 @@ if __name__ == '__main__':
     cli.add_argument('--reader', type=Path, default=Path('runs/spora-dual-version-reply-v1'))
     cli.add_argument('--normalizer', type=Path, default=Path('runs/spora-version-normalizer-v1'))
     cli.add_argument('--stored-action', action='store_true')
-    main(cli.parse_args())
+    cli.add_argument('--speaker-contrasts', action='store_true')
+    args = cli.parse_args()
+    if args.speaker_contrasts and not args.stored_action:
+        cli.error('--speaker-contrasts requires --stored-action')
+    main(args)
