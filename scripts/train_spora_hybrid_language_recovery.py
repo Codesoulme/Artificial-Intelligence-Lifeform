@@ -17,6 +17,23 @@ from spora.language_training import atomic_save
 from spora.research_recurrent_decode import load_recurrent_replacements
 
 
+DEFAULT_LAYOUTS = ((19, 22), (19, 21, 22), (19, 22, 24))
+
+
+def layout_name(layout):
+    return '-'.join(map(str, layout))
+
+
+def parse_layout(value):
+    try:
+        layers = tuple(sorted(map(int, value.split(','))))
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError('Use comma-separated layer numbers') from exc
+    if len(set(layers)) != len(layers) or min(layers) < 0:
+        raise argparse.ArgumentTypeError('A layout needs distinct nonnegative layer numbers')
+    return layers
+
+
 def response_logits(decoder, row, *, cache):
     tokens = torch.tensor([row['prompt'] + row['response'][:-1]], device=decoder.base.device)
     return decoder(input_ids=tokens, use_cache=cache, logits_to_keep=len(row['response'])).logits[0]
@@ -76,12 +93,16 @@ def main(args):
     sources = {str(path): digest for path, digest in protected.items()}
     with torch.no_grad():
         teacher = [response_logits(decoder, row, cache=False).cpu() for row in training]
+    layouts = args.layout or DEFAULT_LAYOUTS
+    required_layers = {layer for layout in layouts for layer in layout}
     results = {'parent': score(decoder, held)}
-    for layout in ((19, 22), (19, 21, 22), (19, 22, 24)):
-        name = '-'.join(map(str, layout))
+    for layout in layouts:
+        name = layout_name(layout)
         output = args.output / name
         output.mkdir()
         loaded = load_recurrent_replacements(decoder, args.layers, protected[args.checkpoint])
+        if set(loaded) != required_layers:
+            raise ValueError('Input candidates must cover the requested layouts exactly')
         replacements = {index: loaded[index] for index in layout}
         with using(replacements, 'recurrent'):
             before = score(decoder, held)
@@ -90,6 +111,7 @@ def main(args):
         peak = torch.cuda.max_memory_allocated()
         with using(replacements, 'recurrent'):
             after = score(decoder, held)
+        candidate_hashes = {}
         for index, (_, replacement) in replacements.items():
             directory = output / f'layer-{index}'
             directory.mkdir()
@@ -98,10 +120,12 @@ def main(args):
             atomic_save(dict(format='spora-recurrent-attention-v1', layer=index, block=core.block,
                              checkpoint_sha256=protected[args.checkpoint], update_rule=core.update_rule,
                              history_projection=replacement.history_projection, core=core.state_dict()), path)
+            candidate_hashes[index] = sha(path)
             store_json(directory / 'comparison.json', dict(layer=index, block=core.block, sources=sources,
                        update_rule=core.update_rule, history_projection=replacement.history_projection,
-                       individual_sha256=identity, candidate_sha256=sha(path)))
-        result = dict(before=before, after=after, trace=trace, training_peak_bytes=peak)
+                       individual_sha256=identity, candidate_sha256=candidate_hashes[index]))
+        result = dict(before=before, after=after, trace=trace, training_peak_bytes=peak,
+                      candidate_hashes=candidate_hashes)
         if identity != frozen_digest(runtime.organism, runtime.state):
             raise RuntimeError('Individual changed during recovery')
         store_json(output / 'result.json', result)
@@ -111,7 +135,7 @@ def main(args):
         torch.cuda.empty_cache()
     if any(sha(path) != digest for path, digest in protected.items()):
         raise RuntimeError('A protected source changed')
-    store_json(args.output / 'result.json', dict(results=results, sources=sources, individual_sha256=identity,
+    store_json(args.output / 'result.json', dict(results=results, layouts=layouts, sources=sources, individual_sha256=identity,
                training=training, held=held, learning_rate=args.learning_rate, seconds=perf_counter() - started))
 
 
@@ -121,11 +145,14 @@ if __name__ == '__main__':
     cli.add_argument('train', type=Path)
     cli.add_argument('test', type=Path)
     cli.add_argument('output', type=Path)
-    cli.add_argument('layers', nargs=4, type=Path)
+    cli.add_argument('layers', nargs='+', type=Path)
+    cli.add_argument('--layout', type=parse_layout, action='append', help='Repeat with comma-separated layer numbers')
     cli.add_argument('--steps', type=int, default=24)
     cli.add_argument('--count', type=int, default=48)
     cli.add_argument('--learning-rate', type=float, default=.0005)
     args = cli.parse_args()
     if args.steps < 1 or args.count < 1 or not 0 < args.learning_rate <= .01:
         cli.error('Expected positive sample counts and learning rate through .01')
+    if args.layout and len(set(args.layout)) != len(args.layout):
+        cli.error('Use distinct layouts')
     main(args)

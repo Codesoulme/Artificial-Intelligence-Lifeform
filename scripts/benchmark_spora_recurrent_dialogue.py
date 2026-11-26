@@ -56,9 +56,21 @@ def grade(answer, required, forbidden):
                 and all(not re.search(pattern, answer['answer']) for pattern in forbidden))
 
 
-def run_dialogue(decoder, tokenizer, prompts, open_cases):
-    settings = settings_for(decoder, tokenizer, 48)
-    position_limit = decoder.position_table_max_position
+def open_dialogue(model, tokenizer, cases, settings):
+    rows = []
+    for case in cases:
+        history, turns = [], []
+        for question, required, forbidden in case['turns']:
+            answer = reply(model, tokenizer, history, question, **settings)
+            answer.pop('seconds')
+            turns.append({'question': question, **answer, 'passed': grade(answer, required, forbidden)})
+            exchange(history, question, answer['answer'])
+        rows.append({'case': case['name'], 'turns': turns, 'passed': all(turn['passed'] for turn in turns)})
+    return {'open': rows, 'open_passed': sum(row['passed'] for row in rows),
+            'open_turns_passed': sum(turn['passed'] for row in rows for turn in row['turns'])}
+
+
+def recall_dialogue(decoder, tokenizer, prompts, settings, *, position_limit=None):
     recall = []
     for row in prompts:
         if position_limit is not None and row['input_tokens'] + settings['limit'] > position_limit:
@@ -70,23 +82,18 @@ def run_dialogue(decoder, tokenizer, prompts, open_cases):
             raise ValueError('Token counts used for recall prompts differ at generation')
         passed = grade(answer, [re.escape(values['new']), re.escape(values['keep'])], [re.escape(values['old'])])
         recall.append({**row, **answer, 'passed': passed})
-    ordinary = []
-    for case in open_cases:
-        history, turns = [], []
-        for question, required, forbidden in case['turns']:
-            answer = reply(decoder, tokenizer, history, question, **settings)
-            answer.pop('seconds')
-            turns.append({'question': question, **answer, 'passed': grade(answer, required, forbidden)})
-            exchange(history, question, answer['answer'])
-        ordinary.append({'case': case['name'], 'turns': turns, 'passed': all(turn['passed'] for turn in turns)})
     labels = dict.fromkeys(row['length'] for row in recall)
-    return {'recall': recall, 'open': ordinary,
+    return {'recall': recall,
             'recall_passed': {label: sum(row['passed'] for row in recall if row['length'] == label)
                               for label in labels},
             'both_variants': {label: sum(all(row['passed'] for row in recall if row['case'] == case and row['length'] == label)
-                                        for case in {row['case'] for row in recall}) for label in labels},
-            'open_passed': sum(row['passed'] for row in ordinary),
-            'open_turns_passed': sum(turn['passed'] for row in ordinary for turn in row['turns'])}
+                                        for case in {row['case'] for row in recall}) for label in labels}}
+
+
+def run_dialogue(decoder, tokenizer, prompts, open_cases):
+    settings = settings_for(decoder, tokenizer, 48)
+    recall = recall_dialogue(decoder, tokenizer, prompts, settings, position_limit=decoder.position_table_max_position)
+    return {**recall, **open_dialogue(decoder, tokenizer, open_cases, settings)}
 
 
 def cached_bytes(cache):
