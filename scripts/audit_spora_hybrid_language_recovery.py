@@ -35,7 +35,7 @@ FIELD_NAMES = {
 }
 
 
-def distance_prompts(tokenizer, source):
+def distance_prompts(tokenizer, source, *, swap_values=False):
     rows = []
     for index, case in enumerate(source['recall']):
         fillers = []
@@ -43,6 +43,8 @@ def distance_prompts(tokenizer, source):
             prompt = source['filler'][(offset + index) % len(source['filler'])]
             exchange(fillers, prompt, '收到，接着说吧。')
         for variant, items in enumerate(case['values']):
+            if swap_values:
+                items = items[1], items[0], items[2]
             values = dict(zip(('old', 'new', 'keep'), items, strict=True))
             initial, update = [], []
             exchange(initial, case['first'].format_map(values), '我记下这项安排了。')
@@ -144,6 +146,54 @@ def revision_stages(decoder, tokenizer, prompts):
     return dict(rows=rows, summary=counts)
 
 
+@torch.inference_mode()
+def score_value(decoder, tokenizer, prefix, prefix_ids, value):
+    full = tokenizer.encode(prefix + value, add_special_tokens=False)
+    target = full[len(prefix_ids):]
+    if not target or full[:len(prefix_ids)] != prefix_ids:
+        raise ValueError('Candidate value changes the tokenized prompt')
+    if len(full) > decoder.position_table_max_position:
+        raise ValueError('Candidate value exceeds the position table')
+    inputs = torch.tensor([full[:-1]], device=decoder.base.device)
+    labels = torch.tensor(target, device=inputs.device)
+    logits = decoder(input_ids=inputs, use_cache=False, logits_to_keep=len(target)).logits[0].float()
+    log_probs = logits.log_softmax(-1).gather(1, labels[:, None]).squeeze(-1)
+    if not torch.isfinite(log_probs).all():
+        raise ValueError('Nonfinite candidate value likelihood')
+    return dict(value=value, token_ids=target, log_probs=log_probs.tolist(),
+                mean=log_probs.mean().item(), total=log_probs.sum().item())
+
+
+def revision_likelihood(decoder, tokenizer, prompts):
+    rows, counts = [], {}
+    for original, swapped in zip(*prompts, strict=True):
+        distance = original['length']
+        if distance != 'near_single' and distance != 'far_single':
+            continue
+        field = FIELD_NAMES[original['case']][0]
+        question = f'按当前有效的安排填写「{field}」，只写这个字段的值。'
+        row = dict(case=original['case'], variant=original['variant'], distance=distance)
+        for name, history in (('original', original), ('swapped', swapped)):
+            messages = [*history['history'], {'role': 'user', 'content': question}]
+            prefix = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True) + '</think>\n\n'
+            prefix_ids = tokenizer.encode(prefix, add_special_tokens=False)
+            values = history['values']
+            scores = {role: score_value(decoder, tokenizer, prefix, prefix_ids, values[role])
+                      for role in ('new', 'old')}
+            row[name] = dict(scores=scores, input_tokens=len(prefix_ids),
+                             mean_margin=scores['new']['mean'] - scores['old']['mean'],
+                             total_margin=scores['new']['total'] - scores['old']['total'])
+        first, second = row['original'], row['swapped']
+        summary = counts.setdefault(distance, Counter())
+        summary.update(pairs=1, mean_correct=sum(item['mean_margin'] > 0 for item in (first, second)),
+                       total_correct=sum(item['total_margin'] > 0 for item in (first, second)),
+                       both_mean=first['mean_margin'] > 0 and second['mean_margin'] > 0,
+                       both_total=first['total_margin'] > 0 and second['total_margin'] > 0,
+                       revision_gain=first['mean_margin'] + second['mean_margin'] > 0)
+        rows.append(row)
+    return dict(rows=rows, summary=counts)
+
+
 def main(args):
     started = perf_counter()
     manifest = args.recovery / 'result.json'
@@ -178,9 +228,12 @@ def main(args):
         source['recall'] = additional_recall
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
-    if args.revision_distance or args.revision_stages:
+    revision_audit = revision_likelihood if args.revision_likelihood else revision_stages if args.revision_stages else None
+    if args.revision_distance or revision_audit:
         prompts = distance_prompts(tokenizer, source)
         source['open'] = []
+        if args.revision_likelihood:
+            prompts = prompts, distance_prompts(tokenizer, source, swap_values=True)
     else:
         prompts = recall_prompts(tokenizer, source, extended=True)
         if args.recall_transfer:
@@ -197,8 +250,8 @@ def main(args):
     memory = records(runtime.organism, HELD)
     parent_transfer = run_dialogue(decoder, tokenizer, [], transfer) if transfer else None
     results = {}
-    if args.revision_stages:
-        results['parent'] = revision_stages(decoder, tokenizer, prompts)
+    if revision_audit:
+        results['parent'] = revision_audit(decoder, tokenizer, prompts)
         print('parent', results['parent']['summary'], flush=True)
     elif args.revision_distance:
         dialogue = run_dialogue(decoder, tokenizer, prompts, [])
@@ -219,9 +272,9 @@ def main(args):
         replacements = load_recurrent_replacements(decoder, directories, protected[args.checkpoint])
         if set(replacements) != set(layout):
             raise ValueError('Loaded layout differs from the training result')
-        if args.revision_stages:
+        if revision_audit:
             with using(replacements, 'recurrent'):
-                results[name] = revision_stages(decoder, tokenizer, prompts)
+                results[name] = revision_audit(decoder, tokenizer, prompts)
             print(name, results[name]['summary'], flush=True)
             del replacements
             torch.cuda.empty_cache()
@@ -262,11 +315,12 @@ if __name__ == '__main__':
     mode = cli.add_mutually_exclusive_group()
     mode.add_argument('--revision-distance', action='store_true', help='Compare edit distance and answer width on recall transfer')
     mode.add_argument('--revision-stages', action='store_true', help='Compare choice and formatted generation on recall transfer')
+    mode.add_argument('--revision-likelihood', action='store_true', help='Score matched old and new values under reversed revisions')
     args = cli.parse_args()
     if args.output.exists():
         cli.error('Choose a new output path')
-    if (args.revision_distance or args.revision_stages) and not args.recall_transfer:
+    if (args.revision_distance or args.revision_stages or args.revision_likelihood) and not args.recall_transfer:
         cli.error('Revision comparisons require --recall-transfer')
-    if args.revision_stages and args.transfer:
-        cli.error('--revision-stages does not accept --transfer')
+    if (args.revision_stages or args.revision_likelihood) and args.transfer:
+        cli.error('Revision stage and likelihood comparisons do not accept --transfer')
     main(args)
