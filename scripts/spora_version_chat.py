@@ -45,6 +45,11 @@ FIELD_IDS = {label: field for field, label in FIELDS.items()}
 NAME = re.compile(r'[\u3400-\u9fff]{2,12}')
 VALUE = re.compile(r'[\w ·-]{1,24}')
 CANCEL = re.compile(r'^(?:先别查(?:了)?|先不查(?:了)?|不查了|算了|先暂停)(?:[，,。；;！!\s]|$)')
+STANDALONE_LOOKUP_CANCEL = re.compile(
+    r'(?:本次|本轮|这次|这轮)(?:调档|调阅|查阅|查询)'
+    r'(?:到此为止|就此结束|(?:无须|无需|不用)(?:再|接着|继续)?(?:办|查|处理))'
+    r'[。！!]*'
+)
 SWITCH_LOOKUP = re.compile(r'^(?:那就|那|请|还是|现在)?(?:改查|换查)\s*(?P<target>.+)$')
 SWITCH_ALTERNATIVE = re.compile(r'还是|或者|抑或|或是|以及|两(?:项|条)')
 DEFER_UNTIL = re.compile(r'(?:稍后|过会儿|等会儿|改天|下次)再(?:问|查|说)[。！？!?]*$')
@@ -149,6 +154,8 @@ def clarify(catalog, targets, reasons, today):
 
 
 def deferred_lookup(question):
+    if STANDALONE_LOOKUP_CANCEL.fullmatch(question.strip()):
+        return True
     canceled = CANCEL.match(question)
     if not canceled:
         return False

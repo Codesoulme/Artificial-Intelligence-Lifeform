@@ -91,6 +91,17 @@ class VersionChatCommandTests(unittest.TestCase):
         self.assertFalse(deferred_lookup('先不查了，帮我写封邮件。'))
         self.assertFalse(deferred_lookup('把「先不查了」翻译成英语。'))
 
+    def test_standalone_lookup_cancellation_keeps_questions_and_continuation_distinct(self):
+        for question in ('本次调档无须接着办。', '这轮查阅到此为止。', '本轮调阅就此结束！',
+                         '这次查询不用再查。'):
+            with self.subTest(question=question):
+                self.assertTrue(deferred_lookup(question))
+        for question in ('本次调档无须接着办吗？', '这轮查阅不要停止。', '本轮调阅不能就此结束。',
+                         '他说本轮调阅就此结束。', '把「这轮查阅到此为止」翻译成英文。',
+                         '本次调档无须接着办，帮我整理书桌。'):
+            with self.subTest(question=question):
+                self.assertFalse(deferred_lookup(question))
+
     def test_archive_opt_out_does_not_carry_addresses_or_prior_record_text(self):
         address = MemoryAddress('林语', 'drinks')
         embedding = torch.nn.Embedding(2, 8)
