@@ -2,6 +2,8 @@
 
 import argparse
 from collections import Counter
+from dataclasses import replace
+from datetime import date, timedelta
 import json
 from pathlib import Path
 from time import perf_counter
@@ -15,12 +17,35 @@ from scripts.audit_spora_recurrent_lookup_scope import (
     ASK, CHAT, READ, SEED, SCOPE_MEMBERS, PEOPLE, VALUES, FrozenTurnFeatures,
     describe, episodes, evaluate, features,
 )
-from scripts.spora_version_chat import VersionReplyActions, VersionStore, artifacts, base, compress_dimension, local_model
+from scripts.audit_spora_paired_lookup_clarification import RECORDS
+from scripts.spora_version_chat import VersionChat, VersionReplyActions, VersionStore, artifacts, base, compress_dimension, local_model
 from scripts.train_spora_recurrent_counterfactual import store_json
 from spora.language_training import atomic_save
 
 
 KEEP, ADD, REMOVE = range(3)
+
+PAIR_FORMS = (
+    ('请核对{target}，原记录继续查。', '请核对{target}，原记录不再查。'),
+    ('把{target}放进来，保留手头那项。', '把{target}放进来，撤掉手头那项。'),
+    ('也看一下{target}，先前选的还有效。', '也看一下{target}，先前选的已作废。'),
+)
+HELD_PAIR = ('接下来查看{target}，最先那条也算数。', '接下来查看{target}，最先那条不算数。')
+MIDDLE_VALUES = ('秋灯', '桃源路', '银铃', '麦茶', '潮汐')
+
+
+def paired_rows(rows, forms):
+    pairs = []
+    # These views retain the opening and final question across both alternatives.
+    for row in rows:
+        if row.scope != 'replace':
+            continue
+        for append, switch in forms:
+            target = describe(row.addresses[1])
+            pairs.append((replace(row, scope='both', events=(row.events[0], append.format(target=target)),
+                                  action=CHAT if row.action == CHAT else ASK, version=-1),
+                          replace(row, events=(row.events[0], switch.format(target=target)))))
+    return list(dict.fromkeys(pairs))
 
 
 def apply_operations(active, operations):
@@ -91,7 +116,7 @@ class LookupTransitions(nn.Module):
         return torch.stack(snapshots, dim=1)
 
 
-def fit(data, rows, steps):
+def fit(data, rows, steps, *, pairs=(), contrast=False):
     torch.manual_seed(SEED)
     rng = torch.Generator().manual_seed(SEED)
     head = LookupTransitions(data[0].shape[-1])
@@ -100,6 +125,8 @@ def fit(data, rows, steps):
     # A bare version retains its meaning even when the address set is ambiguous.
     version_for = {row.question: row.version for row in rows if row.version >= 0}
     versions = torch.tensor([version_for.get(row.question, 3) for row in rows])
+    pair_indices = torch.tensor(pairs, dtype=torch.long)
+    pair_rng = torch.Generator().manual_seed(SEED + 1)
     for _ in range(steps):
         batch = torch.randperm(len(rows), generator=rng)[:32]
         current, history, valid = (value[batch] for value in data)
@@ -107,6 +134,12 @@ def fit(data, rows, steps):
         targets = operations[batch][valid].flatten()
         operation_loss = F.cross_entropy(predicted, targets, reduction='sum') / max(1, targets.numel())
         loss = operation_loss + F.cross_entropy(head.version(current), versions[batch])
+        if contrast:
+            sampled = pair_indices[torch.randperm(len(pairs), generator=pair_rng)[:16]]
+            old_address = data[1][sampled, 1, 0]
+            scores = head.operation(old_address)
+            keep_margin = scores[..., KEEP] - scores[..., REMOVE]
+            loss += .25 * F.softplus(1. - keep_margin[:, 0] + keep_margin[:, 1]).mean()
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
@@ -162,6 +195,83 @@ def plan_metrics(rows, predictions):
     return grouped
 
 
+@torch.inference_mode()
+def three_version_archive(path, binding, model, tokenizer, writer_file):
+    today = date.today()
+    values = {}
+    with VersionStore(path, binding, create=True) as store:
+        settings = torch.load(writer_file, map_location='cpu', weights_only=True)
+        writer = VersionChat(store, model, tokenizer, None, None, settings, ordinary_tokens=12)
+        for (name, field, first, current), middle in zip(RECORDS, MIDDLE_VALUES, strict=True):
+            for offset, value in enumerate((first, middle, current)):
+                effective = today - timedelta(days=2 - offset)
+                result = writer.save(f'{name} | {field} | {value} | {effective}', today)
+                values[result['record']] = value
+    return values
+
+
+def paired_scope_metrics(snapshots, pairs):
+    states = snapshots[:, -1].reshape(len(pairs), 2, 2)
+    target = torch.tensor([[True, True], [False, True]])
+    return int(states.eq(target).flatten(1).all(1).sum())
+
+
+def compare_paired(args, model, tokenizer, reader_file, writer_file, binding, groups):
+    held_pairs = paired_rows(groups['held'], (HELD_PAIR,))
+    training_pairs = paired_rows(groups['train'], PAIR_FORMS)
+    training = list(dict.fromkeys([*groups['train'], *(row for pair in training_pairs for row in pair)]))
+    index = {row: position for position, row in enumerate(training)}
+    pair_indices = [(index[first], index[second]) for first, second in training_pairs]
+    held = [*groups['held'], *(row for pair in held_pairs for row in pair)]
+    groups = {**groups, 'train': training, 'held': held}
+    extract = FrozenTurnFeatures(SimpleNamespace(base=model), tokenizer)
+    data = transition_features(extract, groups, utterance_features=True)
+    path = args.output / 'three-versions.sqlite3'
+    values = three_version_archive(path, binding, model, tokenizer, writer_file)
+    if len(values) != 3 * len(RECORDS) or any(value in text for row in held for text in (*row.events, row.question)
+                                             for value in values.values()):
+        raise ValueError('The replay archive must contain three versions per address with no visible answers')
+    archive_digest = base.sha(path)
+    embedding = model.get_input_embeddings().weight.detach()
+    columns = compress_dimension(embedding.shape[1]).to(embedding.device)
+    codebook = F.normalize(embedding.index_select(1, columns).float(), dim=-1)
+    weights = torch.load(reader_file, map_location='cpu', weights_only=True)
+    reader = VersionReplyActions(model.config.hidden_size, weights['scaffold_tokens'], slots=2)
+    reader.load_state_dict(weights)
+    reader.eval().to(model.device)
+
+    results = {}
+    with VersionStore(path, binding) as store:
+        catalog = store.catalog()
+        if len(catalog) != len(RECORDS) or any(len(versions) != 3 for versions in catalog.values()):
+            raise ValueError('Every address must have three distinct records after reopening')
+        for name, contrast in (('classification', False), ('paired', True)):
+            head = fit(data['train'], training, args.steps, pairs=pair_indices, contrast=contrast)
+            checkpoint = args.output / f'{name}.pt'
+            atomic_save(head.state_dict(), checkpoint)
+            head.load_state_dict(torch.load(checkpoint, map_location='cpu', weights_only=True), strict=True)
+            with torch.inference_mode():
+                thresholds = calibrated_thresholds(head, data['calibration'], groups['calibration'])
+                plan, snapshots, expected = predict(head, data['held'], held, thresholds=thresholds)
+                _, confirmed, _ = predict(head, data['held'], held, confirmed_opening=True)
+                oracle, _, _ = predict(head, data['held'], held, oracle_scope=True)
+                result = evaluate(held, plan, catalog, store, model, tokenizer, codebook, reader, values=values)
+                paired_start = len(held) - 2 * len(held_pairs)
+                result.update(thresholds=thresholds, scope=scope_metrics(snapshots, expected, held),
+                              confirmed_scope=scope_metrics(confirmed, expected, held),
+                              pairs_correct=paired_scope_metrics(snapshots[paired_start:], held_pairs),
+                              confirmed_pairs_correct=paired_scope_metrics(confirmed[paired_start:], held_pairs),
+                              pairs_total=len(held_pairs), oracle_scope_metrics=plan_metrics(held, oracle),
+                              checkpoint_sha256=base.sha(checkpoint))
+            results[name] = result
+            print(name, thresholds, 'paired', result['pairs_correct'], result['confirmed_pairs_correct'],
+                  result['summary'], flush=True)
+    if base.sha(path) != archive_digest:
+        raise RuntimeError('The replay altered the written archive')
+    return dict(results=results, values=values, archive_sha256=archive_digest, training_rows=len(training),
+                training_pairs=len(training_pairs), held_rows=len(held), original_held_rows=len(groups['held']) - 2 * len(held_pairs))
+
+
 def main(args):
     started = perf_counter()
     torch.set_num_threads(2)
@@ -179,6 +289,14 @@ def main(args):
         raise ValueError('An evaluation prompt contains a stored value')
     args.output.mkdir(parents=True, exist_ok=False)
     tokenizer = base.AutoTokenizer.from_pretrained(base.MODEL, local_files_only=True, trust_remote_code=False)
+    if args.paired_transitions:
+        with local_model(args.recurrent) as model:
+            result = compare_paired(args, model, tokenizer, reader_file, writer_file, binding, groups)
+        if any(base.sha(path) != digest for path, digest in sources.items()):
+            raise RuntimeError('A protected input changed')
+        store_json(args.output / 'result.json', dict(**result, steps=args.steps,
+                   sources={str(path): digest for path, digest in sources.items()}, seconds=perf_counter() - started))
+        return
     with local_model(args.recurrent) as model, VersionStore(archive, binding) as store:
         extract = FrozenTurnFeatures(SimpleNamespace(base=model), tokenizer)
         data = transition_features(extract, groups, utterance_features=args.utterance_features)
@@ -226,6 +344,7 @@ if __name__ == '__main__':
     cli.add_argument('--normalizer', type=Path, default=Path('runs/spora-version-normalizer-v1'))
     cli.add_argument('--steps', type=int, default=240)
     cli.add_argument('--utterance-features', action='store_true')
+    cli.add_argument('--paired-transitions', action='store_true')
     args = cli.parse_args()
     if args.steps < 1:
         cli.error('--steps must be positive')

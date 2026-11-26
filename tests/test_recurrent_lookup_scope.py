@@ -4,7 +4,8 @@ import torch
 
 from scripts.audit_spora_recurrent_lookup_scope import ASK, READ, ScopePlanner, decisions, episodes
 from scripts.audit_spora_lookup_transitions import (
-    ADD, KEEP, REMOVE, LookupTransitions, apply_operations, normalize_row, operation_targets,
+    ADD, KEEP, REMOVE, HELD_PAIR, LookupTransitions, apply_operations, normalize_row, operation_targets,
+    paired_rows, paired_scope_metrics,
 )
 
 
@@ -64,3 +65,17 @@ class RecurrentLookupScopeTests(unittest.TestCase):
         confirmed = torch.tensor([[True, False], [True, False]])
         self.assertEqual(head.advance(history, valid, opening=confirmed).tolist(),
                          [[[True, False], [False, True]], [[False, False], [False, False]]])
+
+    def test_paired_revisions_match_opening_and_score_both_outcomes(self):
+        row = next(row for row in episodes('held') if row.scope == 'replace' and row.version >= 0)
+        pairs = paired_rows([row], (HELD_PAIR,))
+        (append, switch), = pairs
+        self.assertEqual((append.events[0], append.question, append.addresses),
+                         (switch.events[0], switch.question, switch.addresses))
+        self.assertEqual((append.action, switch.action), (ASK, READ + 1))
+        opening, followup = operation_targets([append, switch]).unbind(1)
+        initial = apply_operations(torch.zeros(2, 2, dtype=torch.bool), opening)
+        final = apply_operations(initial, followup)
+        snapshots = torch.stack((initial, final), dim=1)
+        self.assertEqual(paired_scope_metrics(snapshots, pairs), 1)
+        self.assertEqual(paired_scope_metrics(snapshots.flip(0), pairs), 0)

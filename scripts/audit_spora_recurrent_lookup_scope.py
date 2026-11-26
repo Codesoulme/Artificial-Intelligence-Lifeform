@@ -213,7 +213,7 @@ def calibration(logits, rows, members=None):
     return max((0., .5, .65, .8, .9, .99, 1.), key=score)
 
 
-def evaluate(rows, plan, catalog, store, model, tokenizer, codebook, reader):
+def evaluate(rows, plan, catalog, store, model, tokenizer, codebook, reader, *, values=VALUES):
     today = date.today()
     results, counts = [], Counter()
     generated = {}
@@ -241,7 +241,7 @@ def evaluate(rows, plan, catalog, store, model, tokenizer, codebook, reader):
             expected = resolve_address(catalog, row.addresses[row.action - READ], VERSIONS[row.version], today,
                                        retain_same_day=True)[0]
         counts['correct_read'] += (expected is not None and selected == expected and version == row.version
-                                   and answer is not None and VALUES[expected] in answer)
+                                   and answer == f'{FIELDS[row.addresses[row.action - READ].field]}：{values[expected]}。')
         results.append(dict(scope=row.scope, history=row.events, question=row.question,
                             expected=[row.action, row.version], decision=[action, version],
                             expected_record=expected, selected=selected, answer=answer))
