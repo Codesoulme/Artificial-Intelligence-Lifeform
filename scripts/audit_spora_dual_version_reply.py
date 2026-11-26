@@ -77,8 +77,8 @@ def training_rows(tokenizer):
     return rows
 
 
-def fit(model, tokenizer, head, rows, steps):
-    features, sizes = frozen_features(model, tokenizer, rows)
+def fit(model, tokenizer, head, rows, steps, *, histories=None):
+    features, sizes = frozen_features(model, tokenizer, rows, histories=histories)
     features = features.clone()
     scaffold = {token: head.slots + index for index, token in enumerate(head.scaffold_tokens.tolist())}
     targets, start = [], 0

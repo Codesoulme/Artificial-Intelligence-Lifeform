@@ -84,10 +84,12 @@ def supervised_rows(tokenizer):
 
 
 @torch.inference_mode()
-def frozen_features(model, tokenizer, rows):
+def frozen_features(model, tokenizer, rows, *, histories=None):
     features, frame_lengths = [], []
-    for question, tail, _, _ in rows:
-        ids = closed_think_inputs(tokenizer, question, 'cuda')['input_ids']
+    if histories is None:
+        histories = [()] * len(rows)
+    for (question, tail, _, _), history in zip(rows, histories, strict=True):
+        ids = closed_think_inputs(tokenizer, question, model.device, history=history)['input_ids']
         answer = torch.tensor([tail[:-1]], device=ids.device)
         combined = torch.cat((ids, answer), dim=1)
         hidden = model.model(input_ids=combined, use_cache=False).last_hidden_state
