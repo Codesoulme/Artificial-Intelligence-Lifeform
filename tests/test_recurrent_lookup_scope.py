@@ -2,6 +2,9 @@ import unittest
 
 import torch
 
+from scripts.audit_spora_dense_joint_address import NONE
+from scripts.audit_spora_switch_address_ranking import apply_split
+
 from scripts.audit_spora_recurrent_lookup_scope import ASK, READ, ScopePlanner, decisions, episodes
 from scripts.audit_spora_lookup_transitions import (
     ADD, KEEP, REMOVE, HELD_PAIR, LookupTransitions, apply_operations, normalize_row, operation_targets,
@@ -10,6 +13,12 @@ from scripts.audit_spora_lookup_transitions import (
 
 
 class RecurrentLookupScopeTests(unittest.TestCase):
+    def test_split_proposal_rejects_missing_target_without_substitution(self):
+        scores = [(1, .93, .92), (1, .93, .92), (1, .93, .2), (1, .2, .92)]
+        masks = torch.ones(4, NONE, dtype=torch.bool)
+        masks[1, 1] = False
+        self.assertEqual(apply_split(scores, masks, (.65, .65)), [(1, 1.), (NONE, 1.), (NONE, 1.), (NONE, 1.)])
+
     def test_candidate_swap_changes_positions_but_preserves_state_and_version(self):
         planner = ScopePlanner(8, size=6)
         query, events = torch.randn(3, 2, 8), torch.randn(3, 2, 2, 8)

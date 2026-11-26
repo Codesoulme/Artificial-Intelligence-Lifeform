@@ -9,6 +9,8 @@ from time import perf_counter
 from types import SimpleNamespace
 
 import torch
+from torch import nn
+from torch.nn import functional as F
 
 from scripts import audit_spora_dense_joint_address as dense
 from scripts import audit_spora_spoken_query_plan as plan
@@ -54,6 +56,12 @@ TRANSFER = (
     ('岑蕙安还是顾遥青？我还没选好查谁那本。', None, None),
     ('唐砚坪提过约在哪碰面？', None, None),
 )
+
+INTENT_NEED = {
+    '唐砚平原先说要喝哪一款？', '唐砚坪和我说好在哪儿会合？',
+    '夏宁摇跟我约的会合地点在哪儿？', '帮我核实叶澄依准备读的那一本。',
+    '唐砚坪提过约在哪碰面？',
+}
 
 ADDRESS_FORMS = (
     ('{owner}{field}？', True),
@@ -161,6 +169,89 @@ def train_local(extract):
                               outcomes=evaluate(cal, inputs, present, missing, cutoff))
 
 
+def full_mask(names):
+    addresses = {MemoryAddress(owner, field) for owner, field in product(names, plan.FIELDS_ORDER)}
+    return dense.mask_for(names, addresses)
+
+
+def fit_split(train, inputs):
+    states, spans, names = inputs
+    torch.manual_seed(dense.SEED)
+    pointer = dense.JointPointer(states.shape[-1])
+    intent = nn.Sequential(nn.LayerNorm(states.shape[-1]), nn.Linear(states.shape[-1], 32),
+                           nn.GELU(), nn.Linear(32, 1))
+    for parameter in pointer.none.parameters():
+        parameter.requires_grad_(False)
+    optimizer = torch.optim.AdamW([*pointer.parameters(), *intent.parameters()], lr=.002)
+    targets = torch.tensor([dense.index_of(target, owners) for (_, target), owners in zip(train, names, strict=True)])
+    reads = targets.ne(dense.NONE)
+    masks = torch.stack([full_mask(owners) for owners in names])
+    rng = torch.Generator().manual_seed(dense.SEED)
+    for _ in range(16):
+        for batch in torch.randperm(len(train), generator=rng).split(32):
+            positive = batch[reads[batch]]
+            logits = pointer(states[positive], spans[positive], masks[positive])[:, :dense.NONE]
+            field_loss = F.cross_entropy(logits, targets[positive], reduction='sum') / max(1, len(positive))
+            intent_loss = F.binary_cross_entropy_with_logits(intent(states[batch]).squeeze(-1), reads[batch].float())
+            optimizer.zero_grad(set_to_none=True)
+            (field_loss + intent_loss).backward()
+            optimizer.step()
+    return pointer.eval(), intent.eval()
+
+
+@torch.inference_mode()
+def split_scores(pointer, intent, inputs):
+    states, spans, names = inputs
+    masks = torch.stack([full_mask(owners) for owners in names])
+    # Keep an explicit empty option only on rows without any named candidate.
+    logits = pointer(states, spans, masks)
+    logits[:, dense.NONE] = torch.where(masks.any(1), -torch.inf, 0.)
+    confidence, slots = logits.softmax(-1).max(-1)
+    return list(zip(slots.tolist(), confidence.tolist(), intent(states).squeeze(-1).sigmoid().tolist(), strict=True))
+
+
+def apply_split(scores, masks, cuts):
+    intent_cut, field_cut = cuts
+    return [(slot if intent >= intent_cut and confidence >= field_cut and slot < dense.NONE and mask[slot]
+             else dense.NONE, 1.) for (slot, confidence, intent), mask in zip(scores, masks, strict=True)]
+
+
+def split_outcomes(cases, inputs, masks, absent, scores, cuts):
+    base = evaluate(cases, inputs, apply_split(scores, masks, cuts), apply_split(scores, absent, cuts), 0.)
+    counts = base['counts']
+    for row, (text, target), names, (slot, confidence, intent) in zip(base['rows'], cases, inputs[2], scores, strict=True):
+        address = dense.addressed(slot, names)
+        expected_intent = target is not None or text in INTENT_NEED
+        row.update(unmasked=None if address is None else [address.name, address.field], field_confidence=confidence,
+                   intent_confidence=intent, expected_intent=expected_intent)
+        counts.update(field_correct=target is not None and address is not None and address.field == target.field,
+                      owner_correct=target is not None and address is not None and address.name == target.name,
+                      unmasked_correct=target is not None and address == target,
+                      intent_positive=expected_intent, intent_negative=not expected_intent,
+                      intent_hit=expected_intent and intent >= cuts[0], intent_false=not expected_intent and intent >= cuts[0])
+    return base
+
+
+def train_split(extract):
+    names, cal_names = ('马澄文', '章其安'), ('陶知书', '周越溪')
+    train = training_cases(names, dense.ALIASES, ADDRESS_FORMS)
+    cal = training_cases(cal_names, dense.CAL_ALIASES, CAL_FORMS)
+    pointer, intent = fit_split(train, dense.align(extract, [text for text, _ in train], names))
+    catalog = {MemoryAddress(owner, field) for owner, field in product(cal_names, plan.FIELDS_ORDER)}
+    inputs, masks, absent = evidence(extract, cal, catalog)
+    scores = split_scores(pointer, intent, inputs)
+
+    def utility(cuts):
+        outcome = split_outcomes(cal, inputs, masks, absent, scores, cuts)['counts']
+        bad = outcome['wrong'] + outcome['unnecessary'] + outcome['substitute']
+        return outcome['correct'] - 2 * bad, -bad, -sum(cuts)
+
+    options = (.5, .65, .8, .9, .95, .99, 1.01)
+    cuts = max(product(options, repeat=2), key=utility)
+    return (pointer, intent), cuts, dict(training=len(train), calibration=len(cal), cutoffs=cuts,
+                                        outcomes=split_outcomes(cal, inputs, masks, absent, scores, cuts))
+
+
 def main(args):
     started = perf_counter()
     torch.set_num_threads(2)
@@ -201,16 +292,28 @@ def main(args):
             atomic_save(heads['retrained'].state_dict(), destination)
             heads['retrained'].load_state_dict(torch.load(destination, map_location='cpu', weights_only=True), strict=True)
             training.update(checkpoint_sha256=base.sha(destination), cutoff=cutoffs['retrained'])
+        split_training = None
+        if args.separate:
+            (pointer, intent), split_cuts, split_training = train_split(extract)
+            for name, head in (('field', pointer), ('intent', intent)):
+                destination = args.output / f'{name}.pt'
+                atomic_save(head.state_dict(), destination)
+                head.load_state_dict(torch.load(destination, map_location='cpu', weights_only=True), strict=True)
+                split_training[f'{name}_sha256'] = base.sha(destination)
         results = {}
         for mode, cases, candidates in (('regression', regression_rows(), catalog),
                                         ('fresh', addressed_rows(ARCHIVE_FRESH), catalog),
                                         ('similar_names', addressed_rows(NEAR_FRESH), near),
                                         ('transfer', addressed_rows(TRANSFER), catalog)):
             results[mode] = audit(extract, old, old_cut, heads, cutoffs, cases, candidates)
+            if args.separate:
+                inputs, masks, absent = evidence(extract, cases, candidates)
+                results[mode]['separate'] = split_outcomes(cases, inputs, masks, absent,
+                                                          split_scores(pointer, intent, inputs), split_cuts)
             print(mode, {name: outcome['counts'] for name, outcome in results[mode].items()}, flush=True)
     if any(base.sha(path) != digest for path, digest in sources.items()):
         raise RuntimeError('An input changed during the audit')
-    store_json(args.output / 'result.json', dict(results=results, training=training,
+    store_json(args.output / 'result.json', dict(results=results, training=training, separate_training=split_training,
                                                sources={str(path): digest for path, digest in sources.items()},
                                                seconds=perf_counter() - started))
 
@@ -223,4 +326,5 @@ if __name__ == '__main__':
     cli.add_argument('output', type=Path)
     cli.add_argument('--recurrent', type=Path, nargs=3, required=True)
     cli.add_argument('--retrain', action='store_true')
+    cli.add_argument('--separate', action='store_true')
     main(cli.parse_args())
