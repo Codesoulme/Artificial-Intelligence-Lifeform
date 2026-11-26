@@ -8,6 +8,17 @@ from torch.nn import functional as F
 
 
 @dataclass
+class RetainedHistory:
+    key: torch.Tensor
+    value: torch.Tensor
+    positions: torch.Tensor
+    scores: torch.Tensor
+
+    def tensors(self):
+        return self.key, self.value, self.positions, self.scores
+
+
+@dataclass
 class AttentionState:
     key: torch.Tensor
     value: torch.Tensor
@@ -15,16 +26,20 @@ class AttentionState:
     normalizer: torch.Tensor
     length: int
     history_key: torch.Tensor | None = None
+    retained: RetainedHistory | None = None
 
     def tensors(self):
         base = (self.key, self.value, self.matrix, self.normalizer)
-        return base if self.history_key is None else (*base, self.history_key)
+        if self.history_key is not None:
+            base += (self.history_key,)
+        return base if self.retained is None else (*base, *self.retained.tensors())
 
 
 class RecurrentAttention(nn.Module):
     """Use exact attention for recent blocks and a fixed-size summary for older ones."""
 
     update_rule = 'sum'
+    retention_slots = 0
 
     def __init__(self, heads, head_dim, *, block=16, features=24):
         super().__init__()
@@ -108,7 +123,7 @@ class RecurrentAttention(nn.Module):
             raise ValueError('History projection changed during the stream')
         history_query, history_key = history if history is not None else (query, key)
         groups = query.shape[1] // key.shape[1]
-        if batched_prefill and state is None and 4 * self.block <= query.shape[-2] <= 2048:
+        if batched_prefill and not self.retention_slots and state is None and 4 * self.block <= query.shape[-2] <= 2048:
             return self.prefill(query, key, value, groups, include_far=include_far, history=history)
 
         def expand(tensor):
@@ -125,13 +140,21 @@ class RecurrentAttention(nn.Module):
             state.key, state.value, state.matrix, state.normalizer, state.length,
         )
         recent_history = state.history_key
+        retained = state.retained
+        if retained is not None and not self.retention_slots:
+            raise ValueError('Retained history is incompatible with the active attention')
         outputs = []
         offset = 0
         while offset < query.shape[-2]:
             if length % self.block == 0 and recent_k.shape[-2] == 2 * self.block:
                 folded = recent_k if recent_history is None else recent_history
                 old_features = self.phi(expand(folded[:, :, :self.block]), self.k_map)
-                matrix, normalizer = self.fold(old_features, expand(recent_v[:, :, :self.block]), matrix, normalizer)
+                old_key, old_value = recent_k[:, :, :self.block], recent_v[:, :, :self.block]
+                if self.retention_slots:
+                    matrix, retained = self.fold_and_retain(old_features, expand(old_value), matrix,
+                                                           old_key, old_value, length - 2 * self.block, retained)
+                else:
+                    matrix, normalizer = self.fold(old_features, expand(old_value), matrix, normalizer)
                 recent_k = recent_k[:, :, self.block:]
                 recent_v = recent_v[:, :, self.block:]
                 if recent_history is not None:
@@ -146,8 +169,13 @@ class RecurrentAttention(nn.Module):
                 recent_history = torch.cat((recent_history, history_key[:, :, current]), dim=-2)
             query_position = torch.arange(size, device=q.device) + past
             key_position = torch.arange(recent_k.shape[-2], device=q.device)
-            local = F.scaled_dot_product_attention(q, expand(recent_k), expand(recent_v),
-                                                  attn_mask=query_position[:, None] >= key_position[None, :])
+            mask = query_position[:, None] >= key_position[None, :]
+            exact_key, exact_value = recent_k, recent_v
+            if retained is not None:
+                exact_key = torch.cat((retained.key, exact_key), dim=-2)
+                exact_value = torch.cat((retained.value, exact_value), dim=-2)
+                mask = self.retained_attention_mask(mask, retained)
+            local = F.scaled_dot_product_attention(q, expand(exact_key), expand(exact_value), attn_mask=mask)
             if include_far and length >= 2 * self.block:
                 qf = self.phi(history_query[:, :, current], self.q_map)
                 far = self.normalize_read(qf, qf @ matrix, normalizer, blocked=False)
@@ -155,7 +183,8 @@ class RecurrentAttention(nn.Module):
             outputs.append(local)
             offset += size
             length += size
-        return torch.cat(outputs, dim=-2), AttentionState(recent_k, recent_v, matrix, normalizer, length, recent_history)
+        return torch.cat(outputs, dim=-2), AttentionState(recent_k, recent_v, matrix, normalizer, length,
+                                                         recent_history, retained)
 
 
 class DeltaRecurrentAttention(RecurrentAttention):
@@ -204,13 +233,54 @@ class GatedDeltaRecurrentAttention(DeltaRecurrentAttention):
     def gate_logits(self, gate_input):
         return torch.einsum('bhf,hfg->bhg', gate_input, self.history_gates) + self.history_bias
 
-    def fold(self, keys, values, matrix, normalizer):
+    def gated_update(self, keys, values, matrix):
         gates = self.gate_logits(self.gate_input(keys))
         forget, write = gates.sigmoid().unbind(dim=-1)
         retained = matrix * (1 - forget[..., None, None])
         residual = values - keys @ retained
         update = (keys.transpose(-1, -2) @ residual) / keys.shape[-2]
-        return retained + write[..., None, None] * update, normalizer
+        return retained + write[..., None, None] * update, residual, write
+
+    def fold(self, keys, values, matrix, normalizer):
+        updated, _, _ = self.gated_update(keys, values, matrix)
+        return updated, normalizer
+
+
+class SelectiveGatedDeltaAttention(GatedDeltaRecurrentAttention):
+    """Keep a fixed number of older exact entries per native KV head."""
+
+    def __init__(self, heads, head_dim, *, retention_slots, policy, block=16, features=24):
+        super().__init__(heads, head_dim, block=block, features=features)
+        if type(retention_slots) is not int or retention_slots < 1 or policy not in ('residual', 'recency'):
+            raise ValueError('Expected a positive slot budget and residual or recency selection')
+        self.retention_slots = retention_slots
+        self.policy = policy
+
+    def retained_attention_mask(self, local_mask, retained):
+        return F.pad(local_mask, (retained.key.shape[-2], 0), value=True)
+
+    def entry_scores(self, positions, residual, write):
+        if self.policy == 'residual':
+            # GQA shares the retained entries across the query heads that use each KV head.
+            scores = (write[..., None] * residual.norm(dim=-1)).detach()
+            return scores.unflatten(1, (positions.shape[1], -1)).mean(dim=2)
+        return positions.float()
+
+    def fold_and_retain(self, features, values, matrix, key, value, start, previous):
+        updated, residual, write = self.gated_update(features, values, matrix)
+        tokens = key.shape[-2]
+        positions = torch.arange(start, start + tokens, device=key.device).expand(*key.shape[:2], tokens)
+        scores = self.entry_scores(positions, residual, write)
+        if previous is not None:
+            key = torch.cat((key, previous.key), dim=-2)
+            value = torch.cat((value, previous.value), dim=-2)
+            positions = torch.cat((positions, previous.positions), dim=-1)
+            scores = torch.cat((scores, previous.scores), dim=-1)
+        # Stable order favors the new block for a tie, independently of call chunking.
+        chosen = scores.argsort(dim=-1, descending=True, stable=True)[..., :self.retention_slots]
+        gather = chosen.unsqueeze(-1).expand(-1, -1, -1, key.shape[-1])
+        return updated, RetainedHistory(key.gather(-2, gather), value.gather(-2, gather),
+                                         positions.gather(-1, chosen), scores.gather(-1, chosen))
 
 
 class SplitGatedDeltaRecurrentAttention(GatedDeltaRecurrentAttention):

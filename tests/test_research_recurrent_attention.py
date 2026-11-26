@@ -4,7 +4,8 @@ import torch
 from torch.nn import functional as F
 
 from spora.research_recurrent_attention import (
-    DeltaRecurrentAttention, GatedDeltaRecurrentAttention, RecurrentAttention, SplitGatedDeltaRecurrentAttention,
+    DeltaRecurrentAttention, GatedDeltaRecurrentAttention, RecurrentAttention, SelectiveGatedDeltaAttention,
+    SplitGatedDeltaRecurrentAttention,
 )
 
 
@@ -105,6 +106,35 @@ class RecurrentAttentionTests(unittest.TestCase):
         for column in model.history_gates.grad.unbind(dim=-1):
             self.assertTrue(torch.isfinite(column).all())
             self.assertGreater(float(column.norm()), 0.)
+
+    def test_selective_history_keeps_residual_writes_and_native_kv_storage(self):
+        inputs = (self.q, self.k[:, :1].half(), torch.zeros_like(self.v[:, :1]).half())
+        inputs[2][:, :, 1, :] = 100.
+        model = SelectiveGatedDeltaAttention(2, 4, block=4, features=5, retention_slots=3, policy='residual')
+        expected, final = model(*inputs, batched_prefill=True)
+        state, found = None, []
+        chunks = zip(*(tensor.split((1, 9, 4, 11), dim=-2) for tensor in inputs), strict=True)
+        for chunk in chunks:
+            output, state = model(*chunk, state=state)
+            found.append(output)
+            self.assertLessEqual(state.key.shape[-2], 8)
+        torch.testing.assert_close(expected, torch.cat(found, dim=-2))
+        for original, streamed in zip(final.tensors(), state.tensors(), strict=True):
+            torch.testing.assert_close(original, streamed)
+        retained = final.retained
+        self.assertEqual(retained.key.shape, (1, 1, 3, 4))
+        self.assertEqual(retained.key.dtype, torch.float16)
+        self.assertIn(1, retained.positions[0, 0].tolist())
+        self.assertLess(int(retained.positions.max()), final.length - final.key.shape[-2])
+        for tensor in retained.tensors():
+            self.assertEqual(tensor.untyped_storage().nbytes(), tensor.numel() * tensor.element_size())
+
+    def test_recent_slots_reproduce_full_causal_attention_while_every_entry_fits(self):
+        model = SelectiveGatedDeltaAttention(2, 4, block=4, features=5, retention_slots=16, policy='recency')
+        inputs = tuple(tensor[:, :, :23] for tensor in (self.q, self.k, self.v))
+        actual, state = model(*inputs, include_far=False)
+        torch.testing.assert_close(actual, F.scaled_dot_product_attention(*inputs, is_causal=True))
+        self.assertEqual(state.retained.positions[0, 0].tolist(), list(range(15, -1, -1)))
 
     def test_split_delta_starts_tied_and_erases_only_along_matching_keys(self):
         tied = GatedDeltaRecurrentAttention(1, 1, block=2, features=2)
