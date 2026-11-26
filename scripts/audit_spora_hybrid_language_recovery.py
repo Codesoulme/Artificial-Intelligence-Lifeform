@@ -225,6 +225,38 @@ def revision_likelihood(decoder, tokenizer, prompts, *, saved=None):
     return dict(rows=rows, summary=counts)
 
 
+def revision_field_switch(decoder, tokenizer, prompts):
+    settings = settings_for(decoder, tokenizer, 48)
+    rows, counts = [], {}
+    for row in prompts:
+        if row['required_keys'] != ('new',):
+            continue
+        distance = row['length'].removesuffix('_single')
+        history, values = row['history'], row['values']
+        responses = {}
+        for role, field in zip(('new', 'keep'), FIELD_NAMES[row['case']], strict=True):
+            question = f'按当前有效的安排填写「{field}」，只写这个字段的值。'
+            prefix = encode(tokenizer, [*history, {'role': 'user', 'content': question}])
+            if len(prefix) + settings['limit'] > decoder.position_table_max_position:
+                raise ValueError('Field switch prompt exceeds the position table')
+            answer = reply(decoder, tokenizer, history, question, **settings, expected_prompt=prefix)
+            text = answer['answer']
+            other = 'keep' if role == 'new' else 'new'
+            answer.update(field=field, question=question, expected=values[role],
+                          exact=answer['eos'] and text.rstrip('。') == values[role],
+                          has_expected=values[role] in text, has_other=values[other] in text,
+                          has_old=values['old'] in text)
+            responses[role] = answer
+            counts.setdefault(f'{distance}_{role}', Counter()).update(
+                total=1, exact=answer['exact'], ended=answer['eos'], contains=answer['has_expected'],
+                other_only=answer['has_other'] and not answer['has_expected'], old=answer['has_old'])
+        counts.setdefault(distance, Counter()).update(
+            pairs=1, both_exact=all(answer['exact'] for answer in responses.values()))
+        rows.append(dict(case=row['case'], variant=row['variant'], distance=distance, values=values,
+                         responses=responses))
+    return dict(rows=rows, summary=counts)
+
+
 def main(args):
     started = perf_counter()
     manifest = args.recovery / 'result.json'
@@ -259,7 +291,12 @@ def main(args):
         source['recall'] = additional_recall
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
-    revision_audit = revision_likelihood if args.revision_likelihood else revision_stages if args.revision_stages else None
+    revision_audit = {
+        'revision_likelihood': revision_likelihood,
+        'revision_stages': revision_stages,
+        'revision_field_switch': revision_field_switch,
+    }.get(next((name for name in ('revision_likelihood', 'revision_stages', 'revision_field_switch')
+                if getattr(args, name)), None))
     if args.revision_distance or revision_audit:
         prompts = distance_prompts(tokenizer, source)
         source['open'] = []
@@ -364,15 +401,17 @@ if __name__ == '__main__':
     mode.add_argument('--revision-distance', action='store_true', help='Compare edit distance and answer width on recall transfer')
     mode.add_argument('--revision-stages', action='store_true', help='Compare choice and formatted generation on recall transfer')
     mode.add_argument('--revision-likelihood', action='store_true', help='Score matched old and new values under reversed revisions')
+    mode.add_argument('--revision-field-switch', action='store_true', help='Change only the requested field on each dialogue')
     cli.add_argument('--revision-likelihood-reference', type=Path,
                      help='Reuse verified likelihoods and generate answers with the same prompts')
     args = cli.parse_args()
     if args.output.exists():
         cli.error('Choose a new output path')
-    if (args.revision_distance or args.revision_stages or args.revision_likelihood) and not args.recall_transfer:
+    revision_probes = args.revision_stages or args.revision_likelihood or args.revision_field_switch
+    if (args.revision_distance or revision_probes) and not args.recall_transfer:
         cli.error('Revision comparisons require --recall-transfer')
-    if (args.revision_stages or args.revision_likelihood) and args.transfer:
-        cli.error('Revision stage and likelihood comparisons do not accept --transfer')
+    if revision_probes and args.transfer:
+        cli.error('Revision probes do not accept --transfer')
     if args.revision_likelihood_reference and not args.revision_likelihood:
         cli.error('--revision-likelihood-reference requires --revision-likelihood')
     main(args)
