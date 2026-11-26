@@ -62,6 +62,36 @@ FRESH_QUESTIONS = {
     'two-places': '给布展人员写一行，先交代展示牌摆放点，再说撤展时送回的地方。',
     'two-people': '用一句话交代广播组的分工，录音由哪位做，成片由另一位负责剪辑。',
 }
+ROLE_AUGMENTED_FORMS = {
+    'market-sign': (
+        '摆牌安排里，位置和最后收牌的人都写清楚。',
+        '通知撤展同事，先说牌子放哪儿，再说谁负责收回。',
+        '请把摆放地点和收牌负责人放在同一句交接里。',
+    ),
+    'radio-rehearsal': (
+        '录音通知需要开始时段和片头剪辑人的姓名。',
+        '请交代什么时候开录，以及开场剪辑交给谁。',
+        '把录制时间和剪片头的人一并写进安排。',
+    ),
+    'library-storage': (
+        '值班提醒要同时说标签材料和书籍暂放处。',
+        '请说明标签拿什么做，未登记的书放在哪个位置。',
+        '给图书角写一句话，材料和存放地点都不要漏。',
+    ),
+    'printing-handoff': (
+        '交接单要有样张数量和领取人的姓名。',
+        '请说清最后交几份，以及由谁接收。',
+        '把交付数量和接收人合成一条明确的通知。',
+    ),
+    'two-places': (
+        '交代展示牌的摆放点，也交代撤场后的归还处。',
+        '请把两个地点分别写明，一个用于展示，一个用于送还。',
+    ),
+    'two-people': (
+        '把录音人员和剪辑人员分别安排清楚。',
+        '交班时说明谁录音，谁负责最后剪辑。',
+    ),
+}
 MODES = ('positional', 'type', 'role', 'shared')
 
 
@@ -73,13 +103,14 @@ def descriptors(mode, roles):
     return [1 + keys.index(role if role_aware else ROLES[role]) for role in roles]
 
 
-def training_rows(tokenizer, cases):
+def training_rows(tokenizer, cases, *, augment=False):
     values = {item for row in cases for item in row['values'].values()}
     questions = {row['question'] for row in cases}
     rows, roles = [], []
     for scene, (forms, answer, choices) in zip((*TRAIN_SCENES, 'two-places', 'two-people'),
                                                (*TRAIN, *REPEATED_TRAIN), strict=True):
-        for question in forms:
+        scene_forms = forms + (ROLE_AUGMENTED_FORMS[scene] if augment else ())
+        for question in scene_forms:
             for pair in choices:
                 if question in questions or values.intersection(pair) or any(value in question for value in pair):
                     raise ValueError('Training repeats a held item or exposes a value in the question')
@@ -209,7 +240,7 @@ def main(args):
         raise ValueError('Held facts leak into the question or exceed the version codec budget')
     if len(previous) != 8 or len(extra) != 4:
         raise ValueError('The two evaluation splits changed')
-    rows, roles = training_rows(tokenizer, cases)
+    rows, roles = training_rows(tokenizer, cases, augment=args.augment_questions)
     scaffold = sorted({token for _, _, actions, _ in rows for kind, token in actions if kind == 'text'})
     model = load_full_streamed(stage_output_projection=True)
     rotary = model.model.rotary_emb
@@ -304,6 +335,8 @@ if __name__ == '__main__':
     cli.add_argument('--mode', action='append', choices=MODES)
     cli.add_argument('--replay', type=Path)
     cli.add_argument('--fresh-questions', action='store_true')
+    cli.add_argument('--augment-questions', action='store_true',
+                     help='Add paraphrased two-role requests to the training set')
     args = cli.parse_args()
     if args.steps < 1:
         cli.error('Expected a positive training step count')
