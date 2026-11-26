@@ -22,6 +22,8 @@ from spora.language_training import atomic_save
 from spora.research_version_store import MemoryAddress
 
 
+AGREE, DISAGREE = 3, 4
+
 # Each question pair switches what an affirmative reply authorizes.
 QUESTIONS = {
     'train': (('您是要停止这轮查阅吗？', '您是要继续这轮查阅吗？'),
@@ -31,6 +33,8 @@ QUESTIONS = {
                     ('前面提的请求都要撤掉，是吗？', '前面提的请求都要接着办，是吗？')),
     'held': (('手头这批档案还要照查，您确认吗？', '手头这批档案就不再查了，您确认吗？'),
              ('刚定下的查询事项一并作罢吗？', '刚定下的查询事项照原样执行吗？')),
+    'fresh': (('您的决定是把当前整批查询收回吗？', '您的决定是让当前整批查询照常吗？'),
+              ('这些记录都先别翻，对吗？', '这些记录都按原要求翻，对吗？')),
 }
 REPLIES = {
     'train': (('对，就照你说的。', '不，我的意思正好相反。', '先等等，我还得考虑。'),
@@ -40,6 +44,8 @@ REPLIES = {
                     ('没说错，我同意。', '恰恰不是你说的那样。', '请再等等。')),
     'held': (('是的。', '说反了。', '容我再想一想。'),
              ('就按你刚说的办。', '我选另一种。', '他说「同意」，我没有表态。')),
+    'fresh': (('没错，就是这个意思。', '不对，我要的是反面的决定。', '先别定，容我斟酌。'),
+              ('你理解对了。', '你理解反了。', '同伴同意了，我还在考虑。')),
 }
 EXPLICIT = {
     'train': (('不管刚才怎么问，我现在决定停止查阅。', CANCEL),
@@ -49,25 +55,46 @@ EXPLICIT = {
     'calibration': (('撤回我这次全部核查要求。', CANCEL), ('请依照原有名单核查。', PROCEED)),
     'held': (('我确认整批都不再调档。', CANCEL), ('一笔都不撤，接着查。', PROCEED),
              ('谁都不用查了，这就是我的决定。', CANCEL), ('把原来定的全留下，继续办理。', PROCEED)),
+    'fresh': (('我已决定终止本次所有查阅。', CANCEL), ('我授权按原范围继续核对。', PROCEED),
+              ('把现有的请求全撤回吧。', CANCEL), ('每个原定事项都照常办理。', PROCEED)),
 }
 
 
 def cases(split):
     result = []
-    for index, pair in enumerate(QUESTIONS[split]):
-        affirmative = (PROCEED, CANCEL) if split == 'held' and index == 0 else (CANCEL, PROCEED)
-        for question, agreement in zip(pair, affirmative, strict=True):
-            opposite = CANCEL if agreement == PROCEED else PROCEED
-            for replies in REPLIES[split]:
-                result.extend((question, reply, label, kind) for (reply, label), kind in zip(
-                    zip(replies, (agreement, opposite, CLARIFY), strict=True), ('yes', 'no', 'unclear'), strict=True))
-            result.extend((question, reply, label, 'explicit') for reply, label in EXPLICIT[split])
+    for question, agreement in question_actions(split).items():
+        opposite = CANCEL if agreement == PROCEED else PROCEED
+        for replies in REPLIES[split]:
+            result.extend((question, reply, label, kind) for (reply, label), kind in zip(
+                zip(replies, (agreement, opposite, CLARIFY), strict=True), ('yes', 'no', 'unclear'), strict=True))
+        result.extend((question, reply, label, 'explicit') for reply, label in EXPLICIT[split])
     return result
 
 
 def examples(rows, contextual):
     return [(f'孢子：{question}\n用户：{reply}' if contextual else reply, label)
             for question, reply, label, _ in rows]
+
+
+def response_examples(rows):
+    relative = {'yes': AGREE, 'no': DISAGREE}
+    return list(dict.fromkeys((reply, relative.get(kind, label)) for _, reply, label, kind in rows))
+
+
+def question_actions(split):
+    actions = {}
+    for index, pair in enumerate(QUESTIONS[split]):
+        labels = (PROCEED, CANCEL) if split == 'held' and index == 0 else (CANCEL, PROCEED)
+        actions.update(zip(pair, labels, strict=True))
+    return actions
+
+
+def resolve_response(proposed, response):
+    if response == AGREE:
+        return proposed
+    if response == DISAGREE:
+        return CANCEL if proposed == PROCEED else PROCEED
+    return response
 
 
 def replay(rows, picks, pairs):
@@ -103,7 +130,8 @@ def main(args):
     if sources[archive] != archive_meta['archive_sha256'] or any(
             expected.get(path.resolve()) != digest for path, digest in sources.items()):
         raise ValueError('An input differs from the preceding experiment')
-    groups = {name: cases(name) for name in QUESTIONS}
+    splits = ('train', 'calibration', 'held', 'fresh') if args.stored_action else ('train', 'calibration', 'held')
+    groups = {name: cases(name) for name in splits}
     distinct_replies = [{reply for _, reply, _, _ in rows} for rows in groups.values()]
     if any(left & right for index, left in enumerate(distinct_replies) for right in distinct_replies[index + 1:]):
         raise ValueError('Confirmation replies must be disjoint across splits')
@@ -128,43 +156,67 @@ def main(args):
         embedding = model.get_input_embeddings().weight.detach()
         indices = compress_dimension(embedding.shape[1]).to(embedding.device)
         codebook = F.normalize(embedding.index_select(1, indices).float(), dim=-1)
-        for name, contextual, depth in (('baseline', False, 12), ('reply_only', False, 12),
-                                        ('with_question', True, 12), ('recurrent', True, 23)):
+        arms = (('baseline', False, 12), ('reply_only', False, 12),
+                ('with_question', True, 12), ('recurrent', True, 23))
+        if args.stored_action:
+            arms = (('stored_action_12', False, 12), ('stored_action_23', False, 23))
+        for name, contextual, depth in arms:
             extract = shallow if depth == 12 else FrozenTurnFeatures(decoder, tokenizer, depth=depth, single_sequence=True)
             checkpoint = prior_head if name == 'baseline' else args.output / f'{name}.pt'
             if name == 'baseline':
                 head = baseline.eval()
             else:
-                head = fit_probe(extract, examples(groups['train'], contextual), 3, clauses=True)
+                training = response_examples(groups['train']) if args.stored_action else examples(groups['train'], contextual)
+                head = fit_probe(extract, training, 5 if args.stored_action else 3, clauses=True)
                 atomic_save(head.state_dict(), checkpoint)
                 head.load_state_dict(torch.load(checkpoint, weights_only=True, map_location='cpu'), strict=True)
-            calibration = classify(head, extract, examples(groups['calibration'], contextual), clauses=True)
+            calibration_input = (response_examples(groups['calibration']) if args.stored_action else
+                                 examples(groups['calibration'], contextual))
+            calibration = classify(head, extract, calibration_input, clauses=True)
             cutoff = prior['results']['matched']['cutoff'] if name == 'baseline' else calibrate(calibration)
-            held = classify(head, extract, examples(groups['held'], contextual), clauses=True)
-            picks = [decision(row, cutoff) for row in held]
-            episodes, plans, trace = replay(groups['held'], picks, addresses)
-            result = evaluate(episodes, plans, store.catalog(), store, model, tokenizer, codebook, reader, values=values)
-            totals = Counter()
-            direct = {}
-            for (_, _, label, kind), predicted in zip(groups['held'], picks, strict=True):
-                direct.setdefault(kind, Counter()).update(total=1, correct=label == predicted,
-                                                          false_cancel=predicted == CANCEL and label != CANCEL)
-            for row, state in zip(result['rows'], trace, strict=True):
-                row.update(state)
-                totals.update(cancel_total=state['label'] == CANCEL,
-                              cleared=state['label'] == CANCEL and not any(state['scope']) and not state['pending'],
-                              read_after_cancel=state['label'] == CANCEL and row['selected'] is not None,
-                              unclear_total=state['label'] == CLARIFY,
-                              waiting_unclear=state['label'] == CLARIFY and state['pending'])
-            result.update(cutoff=cutoff, totals=totals, decisions=direct, calibration=calibration, held=held,
-                          picks=picks, checkpoint_sha256=base.sha(checkpoint))
-            results[name] = result
-            print(name, cutoff, direct, totals, result['summary'], flush=True)
+            for split in splits[2:]:
+                rows = groups[split]
+                if args.stored_action:
+                    held = classify(head, extract, response_examples(rows), clauses=True)
+                    replies = {row['text']: decision(row, cutoff) for row in held}
+                    proposals = question_actions(split)
+                    picks = [resolve_response(proposals[question], replies[reply]) for question, reply, _, _ in rows]
+                else:
+                    held = classify(head, extract, examples(rows, contextual), clauses=True)
+                    picks = [decision(row, cutoff) for row in held]
+                result = evaluate_choices(rows, picks, addresses, store, model, tokenizer, codebook, reader, values)
+                result.update(cutoff=cutoff, calibration=calibration, held=held, picks=picks,
+                              checkpoint_sha256=base.sha(checkpoint))
+                results[f'{name}_{split}' if args.stored_action else name] = result
+                print(name, split, cutoff, result['decisions'], result['totals'], result['summary'], flush=True)
     if any(base.sha(path) != digest for path, digest in sources.items()):
         raise RuntimeError('A model input or archive changed')
-    store_json(args.output / 'result.json', dict(results=results, training=len(groups['train']),
+    training_size = len(response_examples(groups['train'])) if args.stored_action else len(groups['train'])
+    store_json(args.output / 'result.json', dict(results=results, training=training_size,
                                                sources={str(path): digest for path, digest in sources.items()},
                                                seconds=perf_counter() - start))
+
+
+def evaluate_choices(rows, picks, addresses, store, model, tokenizer, codebook, reader, values):
+    episodes, plans, trace = replay(rows, picks, addresses)
+    result = evaluate(episodes, plans, store.catalog(), store, model, tokenizer, codebook, reader, values=values)
+    totals = Counter()
+    direct = {}
+    for (_, _, label, kind), predicted in zip(rows, picks, strict=True):
+        direct.setdefault(kind, Counter()).update(total=1, correct=label == predicted,
+                                                  false_cancel=predicted == CANCEL and label != CANCEL)
+    for row, state in zip(result['rows'], trace, strict=True):
+        row.update(state)
+        cancellation = state['label'] == CANCEL
+        cleared = not any(state['scope']) and not state['pending']
+        nonempty = cancellation and any(state['opening'])
+        totals.update(cancel_total=cancellation, cleared=cancellation and cleared,
+                      nonempty_cancel=nonempty, cleared_nonempty=nonempty and cleared,
+                      read_after_cancel=cancellation and row['selected'] is not None,
+                      unclear_total=state['label'] == CLARIFY,
+                      waiting_unclear=state['label'] == CLARIFY and state['pending'])
+    result.update(totals=totals, decisions=direct)
+    return result
 
 
 if __name__ == '__main__':
@@ -175,4 +227,5 @@ if __name__ == '__main__':
     cli.add_argument('--recurrent', type=Path, nargs=3, required=True)
     cli.add_argument('--reader', type=Path, default=Path('runs/spora-dual-version-reply-v1'))
     cli.add_argument('--normalizer', type=Path, default=Path('runs/spora-version-normalizer-v1'))
+    cli.add_argument('--stored-action', action='store_true')
     main(cli.parse_args())
