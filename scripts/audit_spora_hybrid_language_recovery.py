@@ -38,6 +38,8 @@ FIELD_NAMES = {
 def distance_prompts(tokenizer, source, *, swap_values=False):
     rows = []
     for index, case in enumerate(source['recall']):
+        fields = case.get('fields') or FIELD_NAMES[case['name']]
+        single = SINGLE_QUESTIONS.get(case['name'], field_question(fields[0]))
         fillers = []
         for offset in range(len(source['filler'])):
             prompt = source['filler'][(offset + index) % len(source['filler'])]
@@ -50,7 +52,7 @@ def distance_prompts(tokenizer, source, *, swap_values=False):
             exchange(initial, case['first'].format_map(values), '我记下这项安排了。')
             exchange(update, case['update'].format_map(values), '好，我只修改这一项。')
             for question, required, kind in (
-                    (SINGLE_QUESTIONS[case['name']], ('new',), 'single'),
+                    (single, ('new',), 'single'),
                     (case['question'], ('new', 'keep'), 'dual')):
                 query = {'role': 'user', 'content': question}
                 near, far = initial + fillers + update, initial + update + fillers
@@ -59,7 +61,8 @@ def distance_prompts(tokenizer, source, *, swap_values=False):
                     raise ValueError(f'Unmatched prompt lengths for {case["name"]}: {lengths}')
                 for distance, history in zip(('near', 'far'), (near, far), strict=True):
                     rows.append(dict(case=case['name'], variant=variant, length=f'{distance}_{kind}', values=values,
-                                     required_keys=required, question=question, history=history, input_tokens=lengths[0]))
+                                     required_keys=required, fields=fields, question=question, history=history,
+                                     input_tokens=lengths[0]))
     return rows
 
 
@@ -225,6 +228,10 @@ def revision_likelihood(decoder, tokenizer, prompts, *, saved=None):
     return dict(rows=rows, summary=counts)
 
 
+def field_question(field):
+    return f'按当前有效的安排填写「{field}」，只写这个字段的值。'
+
+
 def revision_field_switch(decoder, tokenizer, prompts):
     settings = settings_for(decoder, tokenizer, 48)
     rows, counts = [], {}
@@ -234,8 +241,8 @@ def revision_field_switch(decoder, tokenizer, prompts):
         distance = row['length'].removesuffix('_single')
         history, values = row['history'], row['values']
         responses = {}
-        for role, field in zip(('new', 'keep'), FIELD_NAMES[row['case']], strict=True):
-            question = f'按当前有效的安排填写「{field}」，只写这个字段的值。'
+        for role, field in zip(('new', 'keep'), row['fields'], strict=True):
+            question = field_question(field)
             prefix = encode(tokenizer, [*history, {'role': 'user', 'content': question}])
             if len(prefix) + settings['limit'] > decoder.position_table_max_position:
                 raise ValueError('Field switch prompt exceeds the position table')
@@ -289,6 +296,34 @@ def revision_field_order(decoder, tokenizer, prompts):
     return dict(conditions=results, summary={order: result['summary'] for order, result in results.items()})
 
 
+def field_reference_prompts(tokenizer, source):
+    cases = source['recall']
+    if any(len(case['fields']) != 2 or len(set(case['fields'])) != 2
+           or case['update'].count('{field}') != 1 or '{new}' not in case['update']
+           for case in cases):
+        raise ValueError('Each field-reference case requires two fields and a shared revision template')
+    return {
+        mode: distance_prompts(tokenizer, {**source, 'recall': [
+            {**case, 'update': case['update'].replace('{field}', case['fields'][0] if mode == 'explicit' else '这项')}
+            for case in cases
+        ]})
+        for mode in ('implicit', 'explicit')
+    }
+
+
+def revision_field_reference(decoder, tokenizer, prompts):
+    results = {name: revision_field_switch(decoder, tokenizer, rows) for name, rows in prompts.items()}
+    changes = {}
+    for implicit, explicit in zip(results['implicit']['rows'], results['explicit']['rows'], strict=True):
+        for role in ('new', 'keep'):
+            before, after = implicit['responses'][role], explicit['responses'][role]
+            counts = changes.setdefault(f'{implicit["distance"]}_{role}', Counter())
+            counts.update(fixed=after['exact'] and not before['exact'],
+                          regressed=before['exact'] and not after['exact'])
+    return dict(conditions=results, changes=changes,
+                summary={name: result['summary'] for name, result in results.items()})
+
+
 def main(args):
     started = perf_counter()
     manifest = args.recovery / 'result.json'
@@ -328,10 +363,13 @@ def main(args):
         'revision_stages': revision_stages,
         'revision_field_switch': revision_field_switch,
         'revision_field_order': revision_field_order,
-    }.get(next((name for name in ('revision_likelihood', 'revision_stages', 'revision_field_switch', 'revision_field_order')
-                if getattr(args, name)), None))
+        'revision_field_reference': revision_field_reference,
+    }
+    revision_audit = next((audit for flag, audit in revision_audit.items() if getattr(args, flag)), None)
     if args.revision_field_order:
         prompts = library_order_prompts(tokenizer, source)
+    elif args.revision_field_reference:
+        prompts = field_reference_prompts(tokenizer, source)
     elif args.revision_distance or revision_audit:
         prompts = distance_prompts(tokenizer, source)
         source['open'] = []
@@ -438,12 +476,14 @@ if __name__ == '__main__':
     mode.add_argument('--revision-likelihood', action='store_true', help='Score matched old and new values under reversed revisions')
     mode.add_argument('--revision-field-switch', action='store_true', help='Change only the requested field on each dialogue')
     mode.add_argument('--revision-field-order', action='store_true', help='Reorder the two library fields within each source turn')
+    mode.add_argument('--revision-field-reference', action='store_true', help='Compare explicit and implicit field references')
     cli.add_argument('--revision-likelihood-reference', type=Path,
                      help='Reuse verified likelihoods and generate answers with the same prompts')
     args = cli.parse_args()
     if args.output.exists():
         cli.error('Choose a new output path')
-    revision_probes = args.revision_stages or args.revision_likelihood or args.revision_field_switch or args.revision_field_order
+    revision_probes = (args.revision_stages or args.revision_likelihood or args.revision_field_switch
+                       or args.revision_field_order or args.revision_field_reference)
     if (args.revision_distance or revision_probes) and not args.recall_transfer:
         cli.error('Revision comparisons require --recall-transfer')
     if revision_probes and args.transfer:
