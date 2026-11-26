@@ -98,9 +98,9 @@ def encode_texts(extract, texts, *, clauses=False):
                         if clauses else vectors[group[0]] for group in views])
 
 
-def fit_probe(extract, examples, classes, *, clauses=False):
+def fit_probe(extract, examples, classes, *, clauses=False, encode=encode_texts):
     torch.manual_seed(SEED)
-    values = encode_texts(extract, [text for text, _ in examples], clauses=clauses)
+    values = encode(extract, [text for text, _ in examples], clauses=clauses)
     targets = torch.tensor([label for _, label in examples])
     head = nn.Sequential(nn.LayerNorm(values.shape[-1]), nn.Linear(values.shape[-1], 32), nn.GELU(), nn.Linear(32, classes))
     optimizer = torch.optim.AdamW(head.parameters(), lr=.002)
@@ -117,8 +117,8 @@ def revocation_examples(families):
 
 
 @torch.inference_mode()
-def classify(head, extract, examples, *, clauses=False):
-    features = encode_texts(extract, [text for text, _ in examples], clauses=clauses)
+def classify(head, extract, examples, *, clauses=False, encode=encode_texts):
+    features = encode(extract, [text for text, _ in examples], clauses=clauses)
     confidence, labels = head(features).softmax(-1).max(-1)
     return [dict(text=text, expected=target, predicted=guess, confidence=score)
             for (text, target), guess, score in zip(examples, labels.tolist(), confidence.tolist(), strict=True)]
