@@ -26,26 +26,33 @@ from spora.research_version_store import MemoryAddress
 from spora.research_version_timeline import VersionQuery
 
 
-def locate(decoder, tokenizer, labels, case, candidates, *, with_history):
-    scores = [[0.] * len(candidates) for _ in range(2)]
-    history = case['history'] if with_history else []
-    votes = [[], []]
-    size = len(candidates)
+def rank_options(decoder, tokenizer, labels, question, options, history):
+    size = len(options)
+    letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[:size]
+    scores, votes = [0.] * size, []
     for rotation in range(size):
         order = [(rotation + offset) % size for offset in range(size)]
-        options = '\n'.join(f'{label}. {candidates[index][0]}' for label, index in zip('ABCD', order, strict=True))
-        for slot, ordinal in enumerate(('第一项', '第二项')):
-            question = (f'用户请求：{case["question"]}\n下面哪条记录对应请求中的{ordinal}信息？'
-                        f'按请求中提到的先后顺序判断，只回答选项字母。\n{options}')
-            prefix = encode(tokenizer, [*history, {'role': 'user', 'content': question}])
-            if len(prefix) > decoder.position_table_max_position:
-                raise ValueError('Routing prompt exceeds the model position table')
-            inputs = torch.tensor([prefix], device=decoder.base.device)
-            logits = decoder(input_ids=inputs, use_cache=True, logits_to_keep=1).logits[0, -1].float()
-            option_scores = F.log_softmax(logits[labels], dim=0).tolist()
-            votes[slot].append(order[max(range(size), key=option_scores.__getitem__)])
-            for index, score in zip(order, option_scores, strict=True):
-                scores[slot][index] += score / size
+        choices = '\n'.join(f'{label}. {options[index]}' for label, index in zip(letters, order, strict=True))
+        prefix = encode(tokenizer, [*history, {'role': 'user', 'content': f'{question}\n{choices}'}])
+        if len(prefix) > decoder.position_table_max_position:
+            raise ValueError('Routing prompt exceeds the model position table')
+        inputs = torch.tensor([prefix], device=decoder.base.device)
+        logits = decoder(input_ids=inputs, use_cache=True, logits_to_keep=1).logits[0, -1].float()
+        option_scores = F.log_softmax(logits[labels], dim=0).tolist()
+        votes.append(order[max(range(size), key=option_scores.__getitem__)])
+        for index, score in zip(order, option_scores, strict=True):
+            scores[index] += score / size
+    return scores, votes
+
+
+def locate(decoder, tokenizer, labels, case, candidates, *, with_history):
+    history = case['history'] if with_history else []
+    options = [candidate[0] for candidate in candidates]
+    scores, votes = zip(*(rank_options(decoder, tokenizer, labels,
+        f'用户请求：{case["question"]}\n下面哪条记录对应请求中的{ordinal}信息？'
+        '按请求中提到的先后顺序判断，只回答选项字母。', options, history)
+        for ordinal in ('第一项', '第二项')), strict=True)
+    size = len(candidates)
     selected = max(permutations(range(size), 2), key=lambda pair: scores[0][pair[0]] + scores[1][pair[1]])
     return selected, dict(scores=scores, votes=votes)
 
