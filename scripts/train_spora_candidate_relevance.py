@@ -70,7 +70,7 @@ HARD_HELD = (
 )
 
 
-def suite(scenes, frames, unavailable):
+def suite(scenes, frames, unavailable, *, annotate=False):
     rows = []
     for index, (owner, first, second) in enumerate(scenes):
         other, third, fourth = scenes[(index + 1) % len(scenes)]
@@ -85,8 +85,12 @@ def suite(scenes, frames, unavailable):
                 ((3,), (phrases[3], f'{owner}的{unavailable[phrasing - 1]}')),
                 ((), (f'{owner}的{unavailable[0]}', f'{other}的{unavailable[1]}')),
             ):
-                rows.append(dict(question=frame.format(first=requested[0], second=requested[1]),
-                                 candidates=candidates, target=target))
+                row = dict(question=frame.format(first=requested[0], second=requested[1]),
+                           candidates=candidates, target=target)
+                if annotate:
+                    part_targets = (*target, *([None] * (2 - len(target))))
+                    row['parts'] = list(zip(requested, part_targets, strict=True))
+                rows.append(row)
     return rows
 
 

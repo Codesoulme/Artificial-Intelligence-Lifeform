@@ -49,12 +49,13 @@ FRESH_MATCHED = (
 )
 
 
-def matched_rows(split, *, fresh=False):
+def matched_rows(split, *, fresh=False, annotate=False):
     rows = []
     families = FRESH_MATCHED if fresh else MATCHED[split]
     for index, (owner, other, first, field, near, second, other_field, other_near) in enumerate(families):
         frame = '我需要核实{first}，以及{second}。' if fresh else REQUESTS[split]
-        question = frame.format(first=f'{owner}{first}', second=f'{other}{second}')
+        parts = f'{owner}{first}', f'{other}{second}'
+        question = frame.format(first=parts[0], second=parts[1])
         for has_first, has_second in product((False, True), repeat=2):
             # Mirrored substitutions preserve both scene and field vocabulary across each family.
             candidates = ((owner, field if has_first else near), (other, near if has_first else field),
@@ -63,8 +64,12 @@ def matched_rows(split, *, fresh=False):
             order = [(index + offset) % len(candidates) for offset in range(len(candidates))]
             target = tuple(i for i, position in enumerate(order)
                            if (position == 0 and has_first) or (position == 2 and has_second))
-            rows.append(dict(question=question, candidates=[f'{candidates[i][0]}的{candidates[i][1]}' for i in order],
-                             target=target))
+            row = dict(question=question, candidates=[f'{candidates[i][0]}的{candidates[i][1]}' for i in order],
+                       target=target)
+            if annotate:
+                part_targets = (order.index(0) if has_first else None, order.index(2) if has_second else None)
+                row['parts'] = sorted(zip(parts, part_targets, strict=True), key=lambda pair: question.index(pair[0]))
+            rows.append(row)
     return rows
 
 
