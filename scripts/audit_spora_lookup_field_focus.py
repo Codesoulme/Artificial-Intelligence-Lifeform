@@ -38,6 +38,14 @@ DEFERRED = (
     ('我暂时不用知道{owner}选中的读物', '至于{owner}要找的物品也先放着'),
     ('把「{owner}打算读哪部」这句话改礼貌些', '不要回答里面的问题'),
 )
+CALIBRATION = (
+    ('告诉我档案里写定的{cue}', '这回先不必说明{cue}', '{owner}挑去阅览的那册', '{owner}交代带去的那件物品'),
+    ('核实一下{cue}', '{cue}我准备自己问清楚', '{owner}借阅清单里选的作品', '{owner}途中得用的东西'),
+)
+TRANSFER = (
+    ('报一下{cue}在档案里的名字', '这次不用翻出{cue}', '{owner}写下准备阅读的那本', '{owner}出门托我带的那件'),
+    ('说说先前登记的{cue}', '{cue}先留着，等我下回再问', '{owner}托我从书架取的那卷', '{owner}请我随手捎去的用具'),
+)
 
 
 def paired_cases(owners, families):
@@ -56,6 +64,17 @@ def requests(rows):
     return [('，'.join(parts) + '。', address) for parts, _, address in rows]
 
 
+def no_single_cases(owners, families):
+    rows = []
+    for owner in owners:
+        for ask, defer, book, item in families:
+            cues = (book.format(owner=owner), item.format(owner=owner))
+            for frame in (defer, ask):
+                parts = tuple(frame.format(cue=cue) for cue in cues)
+                rows.append((parts, -1, None))
+    return rows
+
+
 def encode_clauses(extract, rows, owners):
     clauses = list(dict.fromkeys(text for parts, _, _ in rows for text in parts))
     states, _, _ = dense.align(extract, clauses, owners)
@@ -63,13 +82,17 @@ def encode_clauses(extract, rows, owners):
     return torch.stack([torch.stack([vectors[part] for part in parts]) for parts, _, _ in rows])
 
 
-def fit_focus(features, rows):
+def fit_focus(features, rows, *, independent=False):
     torch.manual_seed(dense.SEED)
     head = nn.Sequential(nn.LayerNorm(features.shape[-1]), nn.Linear(features.shape[-1], 32), nn.GELU(), nn.Linear(32, 1))
     targets = torch.tensor([index for _, index, _ in rows])
+    if independent:
+        targets = targets[:, None].eq(torch.arange(features.shape[1])).float()
     optimizer = torch.optim.AdamW(head.parameters(), lr=.002)
     for _ in range(140):
-        loss = F.cross_entropy(head(features).squeeze(-1), targets)
+        scores = head(features).squeeze(-1)
+        loss = (F.binary_cross_entropy_with_logits(scores, targets) if independent
+                else F.cross_entropy(scores, targets))
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
@@ -80,6 +103,45 @@ def pairs_correct(outcomes):
     rows = outcomes['rows']
     return sum(left['unmasked'] == left['expected'] and right['unmasked'] == right['expected']
                for left, right in zip(rows[::2], rows[1::2], strict=True))
+
+
+def single_clause(scores, threshold):
+    allowed = scores >= threshold
+    count = allowed.sum(1)
+    return torch.where(count == 1, allowed.long().argmax(1), -1)
+
+
+def calibration_cut(scores, rows):
+    expected = torch.tensor([index for _, index, _ in rows])
+
+    def utility(cut):
+        selected = single_clause(scores, cut)
+        correct = (selected.eq(expected) & expected.ge(0)).sum().item()
+        incorrect = (selected.ne(expected) & selected.ge(0)).sum().item()
+        return correct - 2 * incorrect, -incorrect, -cut
+
+    return max((.5, .65, .8, .9, .95, .99, 1.01), key=utility)
+
+
+@torch.inference_mode()
+def evaluate_single(extract, rows, focus, pointer, intent, owners, cutoff, field_cut):
+    cases = requests(rows)
+    full = dense.align(extract, [text for text, _ in cases], owners)
+    masks = torch.stack([full_mask(names) for names in full[2]])
+    absent = dense.subtract_targets(masks, cases, full[2])
+    confidence = focus(encode_clauses(extract, rows, owners)).squeeze(-1).sigmoid()
+    selected = single_clause(confidence, cutoff).tolist()
+    # A placeholder is encoded for skipped requests but never used as a proposal.
+    chosen = [parts[max(0, index)] for (parts, _, _), index in zip(rows, selected, strict=True)]
+    local = dense.align(extract, chosen, owners)
+    ranking = split_scores(pointer, intent, local)
+    scores = [(dense.index_of(dense.addressed(slot, local_names), names), probability, float(index >= 0))
+              for (slot, probability, _), local_names, names, index in zip(ranking, local[2], full[2], selected, strict=True)]
+    outcome = split_outcomes(cases, full, masks, absent, scores, (.5, field_cut))
+    targets = [index for _, index, _ in rows]
+    outcome.update(intent_correct=sum(a == b for a, b in zip(selected, targets, strict=True)),
+                   selected=selected, targets=targets, clause_confidence=confidence.tolist())
+    return outcome
 
 
 @torch.inference_mode()
@@ -154,6 +216,22 @@ def main(args):
         deferred = [(tuple(part.format(owner=owner) for part in parts), -1, None)
                     for owner in held_owners for parts in DEFERRED]
         controls = compare(extract, deferred, focus, pointer, intent, config['cutoffs'], held_owners, deferred=True)
+        cal_owners = ('庄临修', '乔文荃')
+        calibration = [*paired_cases(cal_owners, CALIBRATION), *no_single_cases(cal_owners, CALIBRATION)]
+        calibration_vectors = encode_clauses(extract, calibration, cal_owners)
+        independent = fit_focus(encode_clauses(extract, train, train_owners), train, independent=True)
+        independent_path = args.output / 'independent.pt'
+        atomic_save(independent.state_dict(), independent_path)
+        independent.load_state_dict(torch.load(independent_path, map_location='cpu', weights_only=True), strict=True)
+        with torch.inference_mode():
+            cutoff = calibration_cut(independent(calibration_vectors).squeeze(-1).sigmoid(), calibration)
+        transfer = [*paired_cases(held_owners, TRANSFER), *no_single_cases(held_owners, TRANSFER)]
+        independent_results = {name: evaluate_single(extract, cases, independent, pointer, intent, owners,
+                                                       cutoff, config['cutoffs'][1])
+                               for name, cases, owners in (('calibration', calibration, cal_owners),
+                                                           ('held', held, held_owners),
+                                                           ('deferred', deferred, held_owners),
+                                                           ('transfer', transfer, held_owners))}
     if any(base.sha(path) != digest for path, digest in sources.items()):
         raise RuntimeError('A protected model input changed')
     print('focus', result['focus_correct'], '/', result['total'], flush=True)
@@ -161,7 +239,11 @@ def main(args):
         print(mode, outcome['correct_pairs'], outcome['counts'], flush=True)
     for mode, outcome in controls['results'].items():
         print('deferred', mode, outcome['counts'], flush=True)
+    for mode, outcome in independent_results.items():
+        print('independent', cutoff, mode, outcome['intent_correct'], outcome['counts'], flush=True)
     store_json(args.output / 'result.json', dict(**result, deferred=controls['results'], training=len(train),
+                                               independent=independent_results, independent_cutoff=cutoff,
+                                               independent_sha256=base.sha(independent_path),
                                                seconds=perf_counter() - started,
                                                checkpoint_sha256=base.sha(checkpoint),
                                                sources={str(path): digest for path, digest in sources.items()}))

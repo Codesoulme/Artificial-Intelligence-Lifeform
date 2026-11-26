@@ -3,6 +3,7 @@ import unittest
 import torch
 
 from scripts.audit_spora_dense_joint_address import NONE
+from scripts.audit_spora_lookup_field_focus import single_clause
 from scripts.audit_spora_switch_address_ranking import apply_split
 
 from scripts.audit_spora_recurrent_lookup_scope import ASK, READ, ScopePlanner, decisions, episodes
@@ -13,6 +14,10 @@ from scripts.audit_spora_lookup_transitions import (
 
 
 class RecurrentLookupScopeTests(unittest.TestCase):
+    def test_clause_selection_requires_exactly_one_accepted_clause(self):
+        scores = torch.tensor([[.8, .2], [.2, .8], [.2, .2], [.8, .8]])
+        self.assertEqual(single_clause(scores, .5).tolist(), [0, 1, -1, -1])
+
     def test_split_proposal_rejects_missing_target_without_substitution(self):
         scores = [(1, .93, .92), (1, .93, .92), (1, .93, .2), (1, .2, .92)]
         masks = torch.ones(4, NONE, dtype=torch.bool)
