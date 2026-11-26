@@ -124,7 +124,7 @@ def calibration_cut(scores, rows):
 
 
 @torch.inference_mode()
-def evaluate_single(extract, rows, focus, pointer, intent, owners, cutoff, field_cut):
+def single_evidence(extract, rows, focus, owners, cutoff):
     cases = requests(rows)
     full = dense.align(extract, [text for text, _ in cases], owners)
     masks = torch.stack([full_mask(names) for names in full[2]])
@@ -134,6 +134,11 @@ def evaluate_single(extract, rows, focus, pointer, intent, owners, cutoff, field
     # A placeholder is encoded for skipped requests but never used as a proposal.
     chosen = [parts[max(0, index)] for (parts, _, _), index in zip(rows, selected, strict=True)]
     local = dense.align(extract, chosen, owners)
+    return cases, full, masks, absent, local, confidence, selected
+
+
+def score_single(rows, evidence, pointer, intent, field_cut):
+    cases, full, masks, absent, local, confidence, selected = evidence
     ranking = split_scores(pointer, intent, local)
     scores = [(dense.index_of(dense.addressed(slot, local_names), names), probability, float(index >= 0))
               for (slot, probability, _), local_names, names, index in zip(ranking, local[2], full[2], selected, strict=True)]
@@ -142,6 +147,11 @@ def evaluate_single(extract, rows, focus, pointer, intent, owners, cutoff, field
     outcome.update(intent_correct=sum(a == b for a, b in zip(selected, targets, strict=True)),
                    selected=selected, targets=targets, clause_confidence=confidence.tolist())
     return outcome
+
+
+def evaluate_single(extract, rows, focus, pointer, intent, owners, cutoff, field_cut):
+    evidence = single_evidence(extract, rows, focus, owners, cutoff)
+    return score_single(rows, evidence, pointer, intent, field_cut)
 
 
 @torch.inference_mode()

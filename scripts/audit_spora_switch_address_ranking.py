@@ -194,10 +194,10 @@ def full_mask(names):
     return dense.mask_for(names, addresses)
 
 
-def fit_split(train, inputs, *, fixed_intent=None, steps=None):
+def fit_split(train, inputs, *, fixed_intent=None, steps=None, pointer_factory=dense.JointPointer):
     states, spans, names = inputs
     torch.manual_seed(dense.SEED)
-    pointer = dense.JointPointer(states.shape[-1])
+    pointer = pointer_factory(states.shape[-1])
     intent = nn.Sequential(nn.LayerNorm(states.shape[-1]), nn.Linear(states.shape[-1], 32),
                            nn.GELU(), nn.Linear(32, 1))
     if fixed_intent is not None:
