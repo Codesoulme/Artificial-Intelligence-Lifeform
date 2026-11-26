@@ -164,27 +164,58 @@ def score_value(decoder, tokenizer, prefix, prefix_ids, value):
                 mean=log_probs.mean().item(), total=log_probs.sum().item())
 
 
-def revision_likelihood(decoder, tokenizer, prompts):
+def revision_likelihood(decoder, tokenizer, prompts, *, saved=None):
     rows, counts = [], {}
-    for original, swapped in zip(*prompts, strict=True):
+    cases = [(original, swapped) for original, swapped in zip(*prompts, strict=True)
+             if original['length'] in ('near_single', 'far_single')]
+    settings = settings_for(decoder, tokenizer, 48) if saved is not None else None
+    reference_rows = saved['rows'] if saved is not None else [None] * len(cases)
+    for (original, swapped), reference in zip(cases, reference_rows, strict=True):
         distance = original['length']
-        if distance != 'near_single' and distance != 'far_single':
-            continue
         field = FIELD_NAMES[original['case']][0]
         question = f'按当前有效的安排填写「{field}」，只写这个字段的值。'
         row = dict(case=original['case'], variant=original['variant'], distance=distance)
+        if reference is not None and any(reference[key] != value for key, value in row.items()):
+            raise ValueError('Saved score is for a different scenario')
+        summary = counts.setdefault(distance, Counter())
         for name, history in (('original', original), ('swapped', swapped)):
             messages = [*history['history'], {'role': 'user', 'content': question}]
             prefix = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True) + '</think>\n\n'
             prefix_ids = tokenizer.encode(prefix, add_special_tokens=False)
             values = history['values']
-            scores = {role: score_value(decoder, tokenizer, prefix, prefix_ids, values[role])
-                      for role in ('new', 'old')}
+            if reference is None:
+                scores = {role: score_value(decoder, tokenizer, prefix, prefix_ids, values[role])
+                          for role in ('new', 'old')}
+            else:
+                scores = reference[name]['scores']
+                if reference[name]['input_tokens'] != len(prefix_ids) or any(
+                        scores[role]['value'] != values[role] or
+                        tokenizer.encode(prefix + values[role], add_special_tokens=False) !=
+                        prefix_ids + scores[role]['token_ids'] for role in ('new', 'old')):
+                    raise ValueError('Saved score does not match the prompt and candidates')
             row[name] = dict(scores=scores, input_tokens=len(prefix_ids),
                              mean_margin=scores['new']['mean'] - scores['old']['mean'],
                              total_margin=scores['new']['total'] - scores['old']['total'])
+            if reference is not None:
+                if len(prefix_ids) + settings['limit'] > decoder.position_table_max_position:
+                    raise ValueError('Generation exceeds the position table')
+                answer = reply(decoder, tokenizer, history['history'], question, **settings,
+                               expected_prompt=prefix_ids)
+                text = answer['answer']
+                new_tokens = scores['new']['token_ids']
+                answer.update(has_new=values['new'] in text, has_old=values['old'] in text,
+                              starts_new=answer['token_ids'][:1] == new_tokens[:1],
+                              exact=bool(answer['eos'] and text.rstrip('。') == values['new']))
+                row[name]['generation'] = answer
+                prefers_new = row[name]['mean_margin'] > 0
+                summary.update(generation_exact=answer['exact'], generation_ended=answer['eos'],
+                               generation_has_new=answer['has_new'], generation_has_old=answer['has_old'],
+                               prefers_new_but_missing=prefers_new and not answer['has_new'],
+                               prefers_new_but_old=prefers_new and answer['has_old'],
+                               prefers_new_but_starts_elsewhere=prefers_new and not answer['starts_new'],
+                               prefers_new_starts_new_but_missing=prefers_new and answer['starts_new']
+                               and not answer['has_new'])
         first, second = row['original'], row['swapped']
-        summary = counts.setdefault(distance, Counter())
         summary.update(pairs=1, mean_correct=sum(item['mean_margin'] > 0 for item in (first, second)),
                        total_correct=sum(item['total_margin'] > 0 for item in (first, second)),
                        both_mean=first['mean_margin'] > 0 and second['mean_margin'] > 0,
@@ -249,9 +280,26 @@ def main(args):
         raise ValueError('Recovery used a different individual')
     memory = records(runtime.organism, HELD)
     parent_transfer = run_dialogue(decoder, tokenizer, [], transfer) if transfer else None
+    saved_likelihood = None
+    if args.revision_likelihood_reference:
+        path = args.revision_likelihood_reference
+        protected[path] = sha(path)
+        saved_likelihood = json.loads(path.read_text(encoding='utf-8'))
+        if saved_likelihood['individual_sha256'] != identity:
+            raise ValueError('Saved likelihood used a different individual')
+
+    def run_revision(name):
+        if saved_likelihood is None:
+            return revision_audit(decoder, tokenizer, prompts)
+        expected_sources = {Path(path).resolve(): digest for path, digest in saved_likelihood['sources'].items()}
+        if any(expected_sources.get(path.resolve()) != digest for path, digest in protected.items()
+               if path != args.revision_likelihood_reference):
+            raise ValueError('Saved likelihood used different inputs')
+        return revision_likelihood(decoder, tokenizer, prompts, saved=saved_likelihood['results'][name])
+
     results = {}
     if revision_audit:
-        results['parent'] = revision_audit(decoder, tokenizer, prompts)
+        results['parent'] = run_revision('parent')
         print('parent', results['parent']['summary'], flush=True)
     elif args.revision_distance:
         dialogue = run_dialogue(decoder, tokenizer, prompts, [])
@@ -274,7 +322,7 @@ def main(args):
             raise ValueError('Loaded layout differs from the training result')
         if revision_audit:
             with using(replacements, 'recurrent'):
-                results[name] = revision_audit(decoder, tokenizer, prompts)
+                results[name] = run_revision(name)
             print(name, results[name]['summary'], flush=True)
             del replacements
             torch.cuda.empty_cache()
@@ -316,6 +364,8 @@ if __name__ == '__main__':
     mode.add_argument('--revision-distance', action='store_true', help='Compare edit distance and answer width on recall transfer')
     mode.add_argument('--revision-stages', action='store_true', help='Compare choice and formatted generation on recall transfer')
     mode.add_argument('--revision-likelihood', action='store_true', help='Score matched old and new values under reversed revisions')
+    cli.add_argument('--revision-likelihood-reference', type=Path,
+                     help='Reuse verified likelihoods and generate answers with the same prompts')
     args = cli.parse_args()
     if args.output.exists():
         cli.error('Choose a new output path')
@@ -323,4 +373,6 @@ if __name__ == '__main__':
         cli.error('Revision comparisons require --recall-transfer')
     if (args.revision_stages or args.revision_likelihood) and args.transfer:
         cli.error('Revision stage and likelihood comparisons do not accept --transfer')
+    if args.revision_likelihood_reference and not args.revision_likelihood:
+        cli.error('--revision-likelihood-reference requires --revision-likelihood')
     main(args)

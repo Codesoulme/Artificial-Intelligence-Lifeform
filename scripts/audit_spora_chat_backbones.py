@@ -27,7 +27,7 @@ FILES = ('config.json', 'generation_config.json', 'model.safetensors',
 
 
 @torch.inference_mode()
-def reply(model, tokenizer, history, question, *, device, deepseek, limit, eos):
+def reply(model, tokenizer, history, question, *, device, deepseek, limit, eos, expected_prompt=None):
     messages = [*history, {'role': 'user', 'content': question}]
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     if deepseek:
@@ -35,6 +35,8 @@ def reply(model, tokenizer, history, question, *, device, deepseek, limit, eos):
             raise ValueError('Unexpected DeepSeek template ending')
         prompt += '</think>\n\n'
     inputs = tokenizer(prompt, add_special_tokens=False, return_tensors='pt').to(device)
+    if expected_prompt is not None and inputs.input_ids[0].tolist() != expected_prompt:
+        raise ValueError('Generation prompt differs from the scored prompt')
     torch.cuda.synchronize()
     started = time.perf_counter()
     output = model.generate(
@@ -46,9 +48,12 @@ def reply(model, tokenizer, history, question, *, device, deepseek, limit, eos):
     seconds = time.perf_counter() - started
     length = inputs.input_ids.shape[1]
     tokens = output[0, length:].tolist()
-    return {'answer': tokenizer.decode(tokens, skip_special_tokens=True).strip(),
-            'prompt_tokens': length, 'generated_tokens': len(tokens),
-            'eos': bool(tokens and tokens[-1] in eos), 'seconds': seconds}
+    answer = {'answer': tokenizer.decode(tokens, skip_special_tokens=True).strip(),
+              'prompt_tokens': length, 'generated_tokens': len(tokens),
+              'eos': bool(tokens and tokens[-1] in eos), 'seconds': seconds}
+    if expected_prompt is not None:
+        answer['token_ids'] = tokens
+    return answer
 
 
 def summarize(rows):
