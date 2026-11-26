@@ -257,6 +257,38 @@ def revision_field_switch(decoder, tokenizer, prompts):
     return dict(rows=rows, summary=counts)
 
 
+def library_order_prompts(tokenizer, source):
+    case = next(row for row in source['recall'] if row['name'] == 'library-storage')
+    variants = {}
+    for name, flipped in (('original', ()), ('initial_reversed', ('first',)),
+                          ('revision_reversed', ('update',)), ('both_reversed', ('first', 'update'))):
+        reordered = case.copy()
+        for turn in flipped:
+            left, right = case[turn].removesuffix('。').rsplit('，', 1)
+            if ('{keep}' in right) != (turn == 'first'):
+                raise ValueError('The library clauses do not match the expected field order')
+            reordered[turn] = f'{right}，{left}。'
+        recall = [reordered if entry is case else entry for entry in source['recall']]
+        variants[name] = [row for row in distance_prompts(tokenizer, {**source, 'recall': recall})
+                          if row['case'] == case['name'] and row['required_keys'] == ('new',)]
+    return variants
+
+
+def revision_field_order(decoder, tokenizer, prompts):
+    results = {}
+    for order, rows in prompts.items():
+        results[order] = revision_field_switch(decoder, tokenizer, rows)
+        if order == 'original':
+            continue
+        original = results['original']['rows']
+        replay = results[order]['rows']
+        for before, after in zip(original, replay, strict=True):
+            for role in ('new', 'keep'):
+                if before['responses'][role]['prompt_tokens'] != after['responses'][role]['prompt_tokens']:
+                    raise ValueError('Field order changed the prompt token count')
+    return dict(conditions=results, summary={order: result['summary'] for order, result in results.items()})
+
+
 def main(args):
     started = perf_counter()
     manifest = args.recovery / 'result.json'
@@ -295,9 +327,12 @@ def main(args):
         'revision_likelihood': revision_likelihood,
         'revision_stages': revision_stages,
         'revision_field_switch': revision_field_switch,
-    }.get(next((name for name in ('revision_likelihood', 'revision_stages', 'revision_field_switch')
+        'revision_field_order': revision_field_order,
+    }.get(next((name for name in ('revision_likelihood', 'revision_stages', 'revision_field_switch', 'revision_field_order')
                 if getattr(args, name)), None))
-    if args.revision_distance or revision_audit:
+    if args.revision_field_order:
+        prompts = library_order_prompts(tokenizer, source)
+    elif args.revision_distance or revision_audit:
         prompts = distance_prompts(tokenizer, source)
         source['open'] = []
         if args.revision_likelihood:
@@ -402,12 +437,13 @@ if __name__ == '__main__':
     mode.add_argument('--revision-stages', action='store_true', help='Compare choice and formatted generation on recall transfer')
     mode.add_argument('--revision-likelihood', action='store_true', help='Score matched old and new values under reversed revisions')
     mode.add_argument('--revision-field-switch', action='store_true', help='Change only the requested field on each dialogue')
+    mode.add_argument('--revision-field-order', action='store_true', help='Reorder the two library fields within each source turn')
     cli.add_argument('--revision-likelihood-reference', type=Path,
                      help='Reuse verified likelihoods and generate answers with the same prompts')
     args = cli.parse_args()
     if args.output.exists():
         cli.error('Choose a new output path')
-    revision_probes = args.revision_stages or args.revision_likelihood or args.revision_field_switch
+    revision_probes = args.revision_stages or args.revision_likelihood or args.revision_field_switch or args.revision_field_order
     if (args.revision_distance or revision_probes) and not args.recall_transfer:
         cli.error('Revision comparisons require --recall-transfer')
     if revision_probes and args.transfer:
