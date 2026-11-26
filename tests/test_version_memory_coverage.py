@@ -98,6 +98,30 @@ class VersionReplyActionTests(unittest.TestCase):
         self.assertEqual(short['token_ids'], [4])
         self.assertEqual(short['copied'], [])
 
+    def test_typed_read_completes_selected_values_without_prior_answer_text(self):
+        from scripts.audit_spora_dual_version_routing import reply_to_route
+
+        head = VersionReplyActions(3, [4], slots=2)
+        with torch.no_grad():
+            head.actions.weight.zero_()
+            head.actions.bias.copy_(torch.tensor([-10., -9., 9.]))
+        model = SimpleNamespace(device='cpu', lm_head=lambda _: torch.zeros(12),
+                                model=lambda **_: SimpleNamespace(last_hidden_state=torch.zeros(1, 1, 3),
+                                                                   past_key_values=object()))
+        tokenizer = SimpleNamespace(eos_token_id=4, decode=lambda tokens, **_: str(tokens))
+        store = SimpleNamespace(read=lambda _: SimpleNamespace(keys=None, values=None))
+        history = ({'role': 'assistant', 'content': 'a previous record'},)
+        with patch('scripts.audit_spora_dual_version_routing.read_versions',
+                   return_value={3: (torch.tensor([1, 2]),), 2: (torch.tensor([6, 7]),)}), patch(
+                       'scripts.audit_spora_dual_version_reply.closed_think_inputs',
+                       return_value={'input_ids': torch.tensor([[0]])}) as prompt:
+            selected, output = reply_to_route(model, tokenizer, store, None, head, 'query', [3, 2],
+                                              history=history, labels=['地点', '书目'])
+        self.assertEqual(prompt.call_args.kwargs['history'], ())
+        self.assertEqual(selected, [3, 2])
+        self.assertEqual(output['answer'], '地点：[1, 2]；书目：[6, 7]。')
+        self.assertEqual(output['token_ids'], [6, 7, 1, 2, 4])
+
     def test_whole_value_action_competes_once_and_respects_the_remaining_budget(self):
         head = VersionReplyActions(3, [4])
         with torch.no_grad():

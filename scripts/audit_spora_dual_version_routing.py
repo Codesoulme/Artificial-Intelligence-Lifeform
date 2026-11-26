@@ -189,10 +189,12 @@ def reply_to_route(model, tokenizer, store, codebook, reader, question, route, *
         bank[number] = [(state.keys, state.values)]
     decoded = read_versions(bank, codebook)
     values = tuple(decoded[number][0] for number in route)
+    typed = labels is not None
+    # Labeled readout has already resolved every address and version.
     output = reply(model, tokenizer, reader, question, values + (None,) * (2 - len(values)),
-                   require_coverage=labels is not None or len(values) == 2,
-                   cover_present_slots=labels is not None, history=history)
-    if labels is not None:
+                   require_coverage=typed or len(values) == 2, cover_present_slots=typed,
+                   complete_on_eos=typed, history=() if typed else history)
+    if typed:
         copied = {item['slot']: item['at'] for item in output['copied']}
         if len(labels) != len(values) or set(copied) != set(range(len(values))):
             raise ValueError('这次没有完整读回选中的记忆，请重试。')

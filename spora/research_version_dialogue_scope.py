@@ -178,6 +178,11 @@ def dialogue_targets(question, enrolled, fields, scope, *, bounded=True, confirm
     text = question.strip()
     if _TEXT_TASK.search(text) or _CANCEL_TURN.match(text) or archive_lookup_canceled(text):
         return ()
+    if confirmed_reference and _PENDING_CHOICE.fullmatch(text):
+        query = parse_lookup_scope(text)
+        if len(scope) != 1:
+            return (LookupTarget(None, query, 'unresolved_confirmed_reference'),)
+        return (LookupTarget(scope[0], query, 'confirmed'),)
     reference = _CONFIRMED_REFERENCE.fullmatch(text) if confirmed_reference else None
     if reference is not None:
         version = reference['version']

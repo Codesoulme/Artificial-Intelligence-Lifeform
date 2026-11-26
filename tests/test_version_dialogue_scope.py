@@ -171,6 +171,16 @@ class DialogueVersionScopeTests(unittest.TestCase):
                 self.assertEqual(target.address, DRINK)
                 self.assertEqual(target.query, expected)
 
+    def test_bare_version_uses_only_a_single_confirmed_address(self):
+        target, = dialogue_targets('首版。', NAMES, FIELDS, (PLACE,))
+        self.assertEqual((target.address, target.query, target.source), (PLACE, VersionQuery('ordinal', 1), 'confirmed'))
+        for scope in ((), (DRINK, PLACE)):
+            with self.subTest(scope=scope):
+                unresolved, = dialogue_targets('首版。', NAMES, FIELDS, scope)
+                self.assertIsNone(unresolved.address)
+                self.assertEqual(unresolved.query, VersionQuery('ordinal', 1))
+                self.assertEqual(unresolved.source, 'unresolved_confirmed_reference')
+
     def test_spoken_proposal_requires_affirmation_before_using_a_bare_version(self):
         self.assertEqual(resolve_spoken_proposal('上一版。', DRINK, NAMES, FIELDS), ('awaiting_confirmation', None))
         self.assertEqual(resolve_spoken_proposal('是。', DRINK, NAMES, FIELDS),
