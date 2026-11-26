@@ -2,6 +2,7 @@
 
 import argparse
 from contextlib import ExitStack, contextmanager
+from dataclasses import replace
 from datetime import date
 from hashlib import sha256
 import json
@@ -32,8 +33,9 @@ from spora.research_multi_version_route import resolve_address
 from spora.research_recurrent_decode import load_recurrent_replacements
 from spora.research_ttt_ntp import LowRankFastWeight
 from spora.research_version_dialogue_scope import (PartialLookup, advance_scope, ambiguous_partial_reply, archive_lookup_canceled,
-                                                   continue_partial_lookup, dialogue_targets, eligible_spoken_lookup, pending_after_lookup,
-                                                   pending_followup_targets, resolve_spoken_proposal, start_partial_lookup)
+                                                   continue_lookup_pair, continue_partial_lookup, dialogue_targets,
+                                                   eligible_spoken_lookup, pending_after_lookup, pending_followup_targets,
+                                                   pending_pair_after_lookup, resolve_spoken_proposal, start_partial_lookup)
 from spora.research_version_store import MemoryAddress, VersionStore
 from spora.research_version_timeline import parse_version_query
 from spora.research_versioned_memory_pointer import VersionReplyActions
@@ -186,6 +188,7 @@ class VersionChat:
         if self.awake is not None:
             self.awake[1]()
         self.history, self.scope, self.pending = [], (), None
+        self.pending_pair = ()
         self.partial_lookup = None
         self.spoken_pending = None
         self.compose_selection, self.compose_pending = (), None
@@ -214,6 +217,7 @@ class VersionChat:
         if self.awake is not None:
             self.awake[1]()
         self.scope, self.pending = (), None
+        self.pending_pair = ()
         self.partial_lookup = None
         self.spoken_pending = None
         self.compose_selection, self.compose_pending = (), None
@@ -288,6 +292,7 @@ class VersionChat:
             return {'kind': 'defer', 'answer': '好，等你想查时再说。', 'selected': [], 'reasons': []}
         if archive_lookup_canceled(question):
             self.reset_dialogue()
+        pending_pair, self.pending_pair = self.pending_pair, ()
         if self.awake is not None:
             recent = self.awake[1]()
             if AWAKE_RECALL.fullmatch(question):
@@ -298,6 +303,7 @@ class VersionChat:
                 return composed
         catalog = self.store.catalog()
         enrolled = {address.name for address in catalog}
+        continued_pair = continue_lookup_pair(question, pending_pair, enrolled, FIELDS) if pending_pair else ()
         proposal, self.spoken_pending = self.spoken_pending, None
         approved = None
         if proposal is not None and eligible_spoken_lookup(question):
@@ -315,7 +321,7 @@ class VersionChat:
             return {'kind': 'clarify', 'answer': f'请确认这次要查的{label}，一次选一个。',
                     'selected': [], 'reasons': ['ambiguous_address']}
         partial = approved or (continue_partial_lookup(question, previous, enrolled, FIELDS) if previous else None)
-        if partial is None and self.pending is None:
+        if partial is None and self.pending is None and not continued_pair:
             partial = start_partial_lookup(question, enrolled, FIELDS)
         if partial is not None:
             self.scope, self.pending = (), None
@@ -323,6 +329,8 @@ class VersionChat:
             if target is None:
                 return self.ask_for_coordinate(partial)
             targets = (target,)
+        elif continued_pair:
+            targets = continued_pair
         else:
             targets = (dialogue_targets(question, enrolled, FIELDS, self.scope) if self.pending is None else
                        pending_followup_targets(question, enrolled, FIELDS, self.pending))
@@ -344,10 +352,9 @@ class VersionChat:
                 return ask_spoken_approval(suggested)
         proposals = iter(self.propose([item.evidence for item in targets
                                        if item.evidence is not None and item.address is not None]))
-        decisions = []
-        for item in targets:
-            query = next(proposals) if item.evidence is not None and item.address is not None else item.query
-            decisions.append(resolve_address(catalog, item.address, query, today, retain_same_day=True))
+        targets = tuple(replace(item, query=next(proposals), evidence=None)
+                        if item.evidence is not None and item.address is not None else item for item in targets)
+        decisions = [resolve_address(catalog, item.address, item.query, today, retain_same_day=True) for item in targets]
         route = [number for number, _ in decisions]
         reasons = tuple(reason for _, reason in decisions)
         selected = []
@@ -363,7 +370,7 @@ class VersionChat:
             labels = None
             read_question = question
             confirmed = len(targets) == 1 and targets[0].source == 'confirmed'
-            if self.typed_lookup or confirmed or self.awake is not None:
+            if self.typed_lookup or confirmed or continued_pair or self.awake is not None:
                 addresses = [target.address for target in targets]
                 multi_person = len({address.name for address in addresses}) > 1
                 labels = [f'{address.name}的{FIELDS[address.field]}' if multi_person else FIELDS[address.field]
@@ -374,6 +381,9 @@ class VersionChat:
                 if version is None:
                     version = f'第{target.query.coordinate}版'
                 read_question = f'请查{target.address.name}的{FIELDS[target.address.field]}{version}。'
+            if continued_pair:
+                requested = '；'.join(f'{item.address.name}的{FIELDS[item.address.field]}' for item in targets)
+                read_question = f'请分别列出已确认版次的记录名称：{requested}。'
             selected, output = reply_to_route(self.model, self.tokenizer, self.store, self.codebook, self.reader,
                                               read_question, route, history=self.history, labels=labels)
             answer = output['answer']
@@ -388,6 +398,9 @@ class VersionChat:
                     answer += '。'
         self.scope = advance_scope(self.scope, targets, selected)
         self.pending = pending_after_lookup(catalog, targets, selected, reasons)
+        self.pending_pair = pending_pair_after_lookup(catalog, targets, reasons, today)
+        if self.pending_pair:
+            self.compose_selection, self.compose_pending = (), None
         if (self.composer is not None and len(self.scope) == len(selected) == 2
                 and self.scope[0].name == self.scope[1].name
                 and {address.field for address in self.scope} in COMPOSE_PAIRS):

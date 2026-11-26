@@ -112,6 +112,29 @@ class VersionChatCommandTests(unittest.TestCase):
         store.read.assert_not_called()
         spoken.assert_not_called()
 
+    def test_pair_waits_for_both_versions_and_retains_the_first_choice(self):
+        today = date(2026, 11, 26)
+        drinks, books = MemoryAddress('林语', 'drinks'), MemoryAddress('周小宁', 'books')
+        first, current = (SimpleNamespace(number=number, effective=today, observed=today) for number in (1, 2))
+        old_book, new_book = (SimpleNamespace(number=number, effective=today, observed=today) for number in (3, 4))
+        store = SimpleNamespace(catalog=lambda: {drinks: (first, current), books: (old_book, new_book)})
+        embedding = torch.nn.Embedding(2, 8)
+        model = SimpleNamespace(get_input_embeddings=lambda: embedding)
+        chat = VersionChat(store, model, SimpleNamespace(eos_token_id=9), None, lambda _: [], {}, ordinary_tokens=4)
+        with patch('scripts.spora_version_chat.generate', return_value={'answer': '好。'}), patch(
+                'scripts.spora_version_chat.reply_to_route', return_value=([1, 4], {'answer': '两项。', 'token_ids': []})) as read:
+            for question, followup in (('查林语的饮品；查周小宁的书目。', '林语的饮品'),
+                                       ('首版还是当前版？', '林语的饮品'),
+                                       ('第9版。', '林语的饮品'),
+                                       ('首版。', '周小宁的书目')):
+                result = chat.turn(question, today)
+                self.assertEqual((result['kind'], result['selected']), ('clarify', []))
+                self.assertIn(followup, result['answer'])
+            read.assert_not_called()
+            self.assertEqual(chat.turn('当前版。', today)['selected'], [1, 4])
+            read.assert_called_once()
+            self.assertEqual(read.call_args.args[6], [1, 4])
+
     def test_spoken_partial_accepts_only_supported_incomplete_coordinates(self):
         embedding = torch.nn.Embedding(2, 8)
         model = SimpleNamespace(get_input_embeddings=lambda: embedding)

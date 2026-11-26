@@ -21,6 +21,7 @@ _ANCHORED_PERSON = re.compile(r'\S+的(?=(?:首|初|上一|前一|当前|现行|
 _PENDING_CHOICE = re.compile(r'(?:就|请)?(?:查|看|用|选)?(?:当前版|现行版|首版|初版|第一版|上一版|前一版)(?:吧|即可)?[。！？?!]?')
 _LOOKUP_START = re.compile(r'^(?:请|帮我|麻烦)?(?:查一下|查询|核对|查)')
 _VERSION_WORD = r'当前版|现行版|首版|初版|上一版|前一版|第[一二三四五六七八九1-9]版'
+_PAIR_CHOICE = re.compile(rf'(?:那)?两(?:项|条|个)都(?:查|看|用|选)?\s*(?P<version>{_VERSION_WORD})')
 _RECENT_RECORD = r'(?:刚才|刚刚|上一轮|上轮)(?:你|我们)?(?:查到|查过|核对过|确认过)的(?:那项|那条|那份|那笔)(?:记录)?'
 _RECHECK = r'(?:(?:请|麻烦)(?:你|帮我)?\s*)?(?:再)?(?:查|核对|看|报)(?:一下|一遍)?'
 _CONFIRMED_REFERENCE = re.compile(
@@ -249,3 +250,35 @@ def pending_after_lookup(catalog, targets, selected, reasons):
         return None
     target = targets[0]
     return target.address if target.source != 'pending' and target.address in catalog else None
+
+
+def pending_pair_after_lookup(catalog, targets, reasons, today):
+    """Keep two distinct known coordinates until their version choices are resolved."""
+    if len(targets) != 2 or len({item.address for item in targets}) != 2:
+        return ()
+    if set(reasons) == {'located'} or any(reason not in ('located', 'unresolved_scope', 'missing_version')
+                                         for reason in reasons):
+        return ()
+    if not all(any(entry.effective <= today and entry.observed <= today for entry in catalog.get(item.address, ()))
+               for item in targets):
+        return ()
+    return tuple(LookupTarget(item.address, item.query if reason == 'located' else None, 'pending_pair')
+                 for item, reason in zip(targets, reasons, strict=True))
+
+
+def continue_lookup_pair(question, pending, enrolled, fields):
+    """Fill the version of the item just asked about, or an explicit common version."""
+    text = question.strip().rstrip(_TRAILING).strip()
+    shared = _PAIR_CHOICE.fullmatch(text)
+    if shared:
+        version = parse_lookup_scope(shared['version'])
+        return tuple(replace(item, query=version) for item in pending)
+    answer = _reply_parts(text, enrolled, fields)
+    index = next(index for index, item in enumerate(pending) if item.query is None)
+    awaiting = pending[index]
+    if answer is None and ambiguous_partial_reply(text, enrolled, fields) == 'query':
+        return pending
+    if (answer is None or answer.query is None or (answer.owner is not None and answer.owner != awaiting.address.name)
+            or (answer.field is not None and answer.field != awaiting.address.field)):
+        return ()
+    return pending[:index] + (replace(awaiting, query=answer.query),) + pending[index + 1:]
