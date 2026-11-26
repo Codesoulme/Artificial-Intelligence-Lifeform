@@ -50,6 +50,25 @@ UNAVAILABLE = (
 )
 SEED = 171127
 
+HARD_HELD = (
+    ('峡谷赛事几点开始检录，领号码牌的窗口在哪里？',
+     ('峡谷赛事的检录时间', '峡谷赛事的完赛时间', '峡谷赛事的领牌窗口', '山地赛事的领牌窗口'), (0, 2)),
+    ('古乐会在哪儿彩排，花灯会的成品送到哪里？',
+     ('古乐会的演出场地', '花灯会的制作场地', '花灯会的成品交接点', '古乐会的彩排场地'), (2, 3)),
+    ('谁负责收瑜伽课的垫子，茶艺课几点开始？',
+     ('瑜伽课的材料归还时间', '瑜伽课的器材回收人员', '瑜伽课的开课时间', '茶艺课的结束时间'), (1,)),
+    ('科普短片的导演是哪位，江边摄影活动什么时候开拍？',
+     ('江边摄影的带队人员', '江边摄影的开拍时段', '科普短片的剪辑人员', '科普短片的上映时段'), (1,)),
+    ('小剧场的入场门在哪，散场从哪儿出去？',
+     ('小剧场的停车入口', '露台影厅的观众入口', '露台影厅的观众出口', '小剧场的检票时间'), ()),
+    ('铜器展的撤展负责人是谁，石刻展哪天开始布展？',
+     ('铜器展的布展负责人', '石刻展的撤展负责人', '石刻展的开放日期', '铜器展的布展日期'), ()),
+    ('志愿者培训在什么地方签到，剧团演练的签到由谁负责？',
+     ('志愿者培训的签到地点', '志愿者培训的签到人员', '剧团演练的签到人员', '剧团演练的签到地点'), (0, 2)),
+    ('陶板画的接收人数是多少，展览册谁来签收？',
+     ('陶板画的接收人员', '陶板画的作品份数', '展览册的交付人员', '展览册的签收人'), (3,)),
+)
+
 
 def suite(scenes, frames, unavailable):
     rows = []
@@ -101,25 +120,29 @@ def lexical_scores(rows):
                           for candidate in row['candidates']] for row in rows])
 
 
-def fit_layer(inputs, targets):
+def fit_layer(inputs, targets, *, rank_weight=0.):
     torch.manual_seed(SEED)
     head = nn.Sequential(nn.LayerNorm(inputs.shape[-1]), nn.Linear(inputs.shape[-1], 24), nn.GELU(), nn.Linear(24, 1))
     optimizer = torch.optim.AdamW(head.parameters(), lr=.001, weight_decay=.03)
+    ranked_pairs = targets[:, :, None] & ~targets[:, None, :]
     for _ in range(160):
         logits = head(inputs).squeeze(-1)
         loss = F.binary_cross_entropy_with_logits(logits, targets.float(), pos_weight=torch.tensor(2.2))
+        if rank_weight:
+            margins = (logits[:, :, None] - logits[:, None, :])[ranked_pairs]
+            loss = loss + rank_weight * F.softplus(1. - margins).mean()
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
     return head.eval().requires_grad_(False)
 
 
-def cutoff(scores, truth):
+def cutoff(scores, truth, *, wrong_weight=1.):
     def utility(threshold):
         chosen = scores.ge(threshold)
         correct = chosen.eq(truth).all(dim=-1).sum().item()
         erroneous = (chosen & ~truth).sum().item()
-        return correct - erroneous, -erroneous, threshold
+        return correct - wrong_weight * erroneous, -erroneous, threshold
 
     candidates = sorted(set(scores.flatten().tolist()))
     return max([*candidates, 1.01], key=utility)
@@ -148,28 +171,40 @@ def main(args):
     rows = dict(train=suite(TRAIN, FRAMES[0], UNAVAILABLE[0]),
                 calibration=suite(CALIBRATION, FRAMES[1], UNAVAILABLE[1]),
                 held=suite(HELD, FRAMES[2], UNAVAILABLE[2]), regression=regression_cases())
+    if args.ranking:
+        rows['hard'] = [dict(question=q, candidates=candidates, target=target) for q, candidates, target in HARD_HELD]
     tokenizer = base.AutoTokenizer.from_pretrained(base.MODEL, local_files_only=True, trust_remote_code=False)
     with local_model([args.checkpoint, *args.layers]) as model:
         extract = FrozenTurnFeatures(SimpleNamespace(base=model), tokenizer, depth=23, single_sequence=True)
         hidden = {name: features(extract, group) for name, group in rows.items()}
     truth = {name: target_tensor(group) for name, group in rows.items()}
-    head = fit_layer(hidden['train'], truth['train'])
-    artifact = args.output / 'relevance.pt'
-    atomic_save(head.state_dict(), artifact)
-    head.load_state_dict(torch.load(artifact, weights_only=True, map_location='cpu'), strict=True)
-    with torch.no_grad():
-        channels = {'neural': {name: head(values).squeeze(-1).sigmoid() for name, values in hidden.items()},
-                    'lexical': {name: lexical_scores(group) for name, group in rows.items()}}
+    channels, checkpoints = {}, {}
+    arms = (('neural', 0.), ('pairwise', 1.)) if args.ranking else (('neural', 0.),)
+    for name, weight in arms:
+        head = fit_layer(hidden['train'], truth['train'], rank_weight=weight)
+        artifact = args.output / ('relevance.pt' if name == 'neural' else f'{name}.pt')
+        atomic_save(head.state_dict(), artifact)
+        head.load_state_dict(torch.load(artifact, weights_only=True, map_location='cpu'), strict=True)
+        checkpoints[name] = sha(artifact)
+        with torch.no_grad():
+            channels[name] = {split: head(values).squeeze(-1).sigmoid() for split, values in hidden.items()}
+    channels['lexical'] = {name: lexical_scores(group) for name, group in rows.items()}
     results = {}
     for name, scores in channels.items():
         threshold = cutoff(scores['calibration'], truth['calibration'])
         metrics = {split: evaluate(group, scores[split], threshold) for split, group in rows.items() if split != 'train'}
         results[name] = dict(threshold=threshold, splits=metrics)
         print(name, threshold, {split: data['totals'] for split, data in metrics.items()}, flush=True)
+        if args.ranking:
+            relaxed = cutoff(scores['calibration'], truth['calibration'], wrong_weight=.25)
+            metrics = {split: evaluate(group, scores[split], relaxed)['totals']
+                       for split, group in rows.items() if split != 'train'}
+            results[name]['relaxed'] = dict(threshold=relaxed, splits=metrics)
+            print(name, 'relaxed', relaxed, metrics, flush=True)
     if any(sha(path) != digest for path, digest in sources.items()):
         raise RuntimeError('Source checkpoints changed during the relevance comparison')
     store_json(args.output / 'result.json', dict(results=results, seconds=perf_counter() - started,
-               training_requests=len(rows['train']), checkpoint_sha256=sha(artifact),
+               training_requests=len(rows['train']), checkpoint_sha256=checkpoints['neural'], checkpoints=checkpoints,
                sources={str(path): digest for path, digest in sources.items()}))
 
 
@@ -178,4 +213,5 @@ if __name__ == '__main__':
     cli.add_argument('checkpoint', type=Path)
     cli.add_argument('output', type=Path)
     cli.add_argument('layers', type=Path, nargs=2)
+    cli.add_argument('--ranking', action='store_true', help='Compare an added within-request ranking objective')
     main(cli.parse_args())
