@@ -45,6 +45,8 @@ FIELD_IDS = {label: field for field, label in FIELDS.items()}
 NAME = re.compile(r'[\u3400-\u9fff]{2,12}')
 VALUE = re.compile(r'[\w ·-]{1,24}')
 CANCEL = re.compile(r'^(?:先别查(?:了)?|先不查(?:了)?|不查了|算了|先暂停)(?:[，,。；;！!\s]|$)')
+SWITCH_LOOKUP = re.compile(r'^(?:那就|那|请|还是|现在)?(?:改查|换查)\s*(?P<target>.+)$')
+SWITCH_ALTERNATIVE = re.compile(r'还是|或者|抑或|或是|以及|两(?:项|条)')
 DEFER_UNTIL = re.compile(r'(?:稍后|过会儿|等会儿|改天|下次)再(?:问|查|说)[。！？!?]*$')
 HELP = ('/记 姓名 | 字段 | 短值 [| 生效日期 YYYY-MM-DD]。字段可用饮品、见面地点、用品、书目。'
         '查询时可说「请查林语的饮品当前版」，再问「那上一版呢」。'
@@ -303,6 +305,29 @@ class VersionChat:
                 return composed
         catalog = self.store.catalog()
         enrolled = {address.name for address in catalog}
+        switch = SWITCH_LOOKUP.fullmatch(question.strip()) if self.spoken is not None and len(self.scope) == 1 else None
+        if switch is not None and eligible_spoken_lookup(question):
+            body = switch['target']
+            explicit = dialogue_targets(f'请查{body}', enrolled, FIELDS, ())
+            literal = continue_partial_lookup(body, PartialLookup(), enrolled, FIELDS)
+            target = literal.target() if literal is not None else None
+            previous_address = self.scope[0]
+            self.reset_dialogue()
+            pending_pair = ()
+            if target is not None and target.address in catalog:
+                # Let a complete, literal request use the normal read path with no inherited address.
+                question = f'请查{body}'
+            else:
+                if SWITCH_ALTERNATIVE.search(body) or len(explicit) > 1:
+                    return self.ask_for_coordinate(PartialLookup())
+                if explicit and explicit[0].address in catalog:
+                    address = explicit[0].address
+                    return self.ask_for_coordinate(PartialLookup(address.name, address.field))
+                candidate = self.spoken(body, enrolled)
+                if isinstance(candidate, MemoryAddress) and candidate in catalog and candidate != previous_address:
+                    self.spoken_pending = candidate
+                    return ask_spoken_approval(candidate)
+                return self.ask_for_coordinate(PartialLookup())
         continued_pair = continue_lookup_pair(question, pending_pair, enrolled, FIELDS) if pending_pair else ()
         proposal, self.spoken_pending = self.spoken_pending, None
         approved = None
@@ -428,6 +453,7 @@ class VersionChat:
                 help_text.append(AWAKE_HELP)
             if self.spoken is not None:
                 help_text.append('口语查阅会先询问人物和事项。确认后可回复「是，上一版」。')
+                help_text.append('查到一项后可说「改查……」。若没有识别到目标，可回复姓名、事项和版次。')
             return {'kind': 'help', 'answer': '\n'.join(help_text)}
         if line == '/清空对话':
             self.reset_dialogue()

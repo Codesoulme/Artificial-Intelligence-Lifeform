@@ -166,3 +166,39 @@ class VersionChatCommandTests(unittest.TestCase):
                         self.assertEqual(chat.turn('先不查了。', today)['selected'], [])
                         self.assertIsNone(chat.partial_lookup)
                         self.assertEqual(chat.turn('林语当前版', today)['kind'], 'chat')
+
+    def test_spoken_switch_drops_old_address_and_confirms_model_proposal(self):
+        today = date(2026, 11, 26)
+        old, new = MemoryAddress('林语', 'drinks'), MemoryAddress('周小宁', 'places')
+        catalog = {address: (SimpleNamespace(number=i, effective=today, observed=today),)
+                   for i, address in enumerate((old, new), 1)}
+        model = SimpleNamespace(get_input_embeddings=lambda: torch.nn.Embedding(2, 8))
+        planner = Mock(return_value=new)
+        chat = VersionChat(SimpleNamespace(catalog=lambda: catalog), model, SimpleNamespace(eos_token_id=9),
+                           None, lambda _: [], {}, ordinary_tokens=4, spoken=planner)
+        chat.scope = (old,)
+        with patch('scripts.spora_version_chat.reply_to_route',
+                   return_value=([2], {'answer': '见面地点：云桥。', 'token_ids': []})) as read:
+            first = chat.turn('改查周小宁约见时定的地方。', today)
+            self.assertEqual(first['selected'], [])
+            self.assertIn('周小宁的见面地点', first['answer'])
+            self.assertEqual(chat.scope, ())
+            self.assertEqual(chat.turn('首版。', today)['selected'], [])
+            read.assert_not_called()
+            self.assertEqual(chat.turn('是，首版。', today)['selected'], [2])
+            read.assert_called_once()
+            self.assertEqual(read.call_args.args[6], [2])
+
+    def test_spoken_switch_asks_when_target_is_uncertain_without_inheriting_old_address(self):
+        today = date(2026, 11, 26)
+        old = MemoryAddress('林语', 'drinks')
+        planner = Mock(return_value=None)
+        model = SimpleNamespace(get_input_embeddings=lambda: torch.nn.Embedding(2, 8))
+        chat = VersionChat(SimpleNamespace(catalog=lambda: {old: ()}), model, None, None,
+                           lambda _: [], {}, ordinary_tokens=4, spoken=planner)
+        chat.scope = (old,)
+        reply = chat.turn('换查周小宁那本书。', today)
+        self.assertEqual((reply['kind'], reply['selected']), ('clarify', []))
+        self.assertEqual(chat.scope, ())
+        self.assertEqual(chat.partial_lookup, PartialLookup())
+        planner.assert_called_once_with('周小宁那本书。', {'林语'})
