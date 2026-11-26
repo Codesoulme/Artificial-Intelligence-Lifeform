@@ -124,7 +124,7 @@ def main(args):
     tokenizer = base.AutoTokenizer.from_pretrained(base.MODEL, local_files_only=True, trust_remote_code=False)
     results = {}
     checkpoints = {}
-    with local_model(args.recurrent) as model:
+    with local_model(args.recurrent, attention_mode=args.attention) as model:
         width = model.config.hidden_size
         make_head = lambda: nn.Sequential(nn.LayerNorm(width), nn.Linear(width, 32), nn.GELU(), nn.Linear(32, 1))
         field = dense.JointPointer(width).eval()
@@ -165,6 +165,7 @@ def main(args):
     if any(base.sha(path) != digest for path, digest in sources.items()):
         raise RuntimeError('A protected model input changed')
     store_json(args.output / 'result.json', dict(results=results, training=len(train), checkpoints=checkpoints,
+                                               attention=args.attention,
                                                sources={str(path): digest for path, digest in sources.items()},
                                                seconds=perf_counter() - start))
 
@@ -176,4 +177,5 @@ if __name__ == '__main__':
     cli.add_argument('schema', type=Path)
     cli.add_argument('output', type=Path)
     cli.add_argument('--recurrent', type=Path, nargs=3, required=True)
+    cli.add_argument('--attention', choices=('recurrent', 'parent'), default='recurrent')
     main(cli.parse_args())

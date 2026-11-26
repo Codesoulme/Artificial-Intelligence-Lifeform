@@ -506,7 +506,7 @@ def composition_head(directory, width, device):
 
 
 @contextmanager
-def local_model(recurrent):
+def local_model(recurrent, *, attention_mode='recurrent'):
     if recurrent is None:
         yield load_full_streamed()
         return
@@ -534,7 +534,7 @@ def local_model(recurrent):
 
     hook = model.model.rotary_emb.register_forward_pre_hook(check_position)
     try:
-        with using(replacements, 'recurrent'):
+        with using(replacements, attention_mode):
             yield model
     finally:
         hook.remove()
