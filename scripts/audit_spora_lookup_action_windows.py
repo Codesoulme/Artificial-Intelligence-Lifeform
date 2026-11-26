@@ -64,6 +64,7 @@ UNCLEAR = (
     '这一批档案要停还是要继续，先让我考虑。',
     '听到了你的提议，但先别替我作决定。',
 )
+OPTIONS = ('继续当前查阅', '取消本轮全部查阅', '用户尚未决定，需要澄清')
 
 
 def action_pairs(families):
@@ -93,6 +94,39 @@ def pair_metrics(scores, cutoff):
         left == CANCEL and right == PROCEED for left, right in zip(predicted[::2], predicted[1::2], strict=True)
     )
     return counts
+
+
+@torch.inference_mode()
+def choice_scores(model, tokenizer, cases):
+    letters = ('A', 'B', 'C')
+    labels = [tokenizer.encode(letter, add_special_tokens=False) for letter in letters]
+    if any(len(label) != 1 for label in labels) or len({label[0] for label in labels}) != len(letters):
+        raise ValueError('The options must be distinct single tokens')
+    tokens = [label[0] for label in labels]
+    scores = []
+    for reply, expected in cases:
+        ordered = []
+        for offset in range(len(OPTIONS)):
+            order = [(offset + index) % len(OPTIONS) for index in range(len(OPTIONS))]
+            options = '\n'.join(f'{letter}：{OPTIONS[index]}'
+                                for letter, index in zip(letters, order, strict=True))
+            question = ('判断用户本人希望如何处理当前查阅。引用他人的话不算用户的决定。'
+                        f'只回答 A、B 或 C。\n{options}\n用户答复：「{reply}」')
+            prompt = tokenizer.apply_chat_template([{'role': 'user', 'content': question}],
+                                                   tokenize=False, add_generation_prompt=True)
+            ids = tokenizer.encode(prompt + '</think>\n\n', add_special_tokens=False)
+            if len(ids) > 2048:
+                raise ValueError('Choice prompt exceeded the validated position limit')
+            inputs = torch.tensor([ids], device=model.device)
+            logits = model(input_ids=inputs, use_cache=False, logits_to_keep=1).logits[0, -1, tokens].float()
+            if not torch.isfinite(logits).all():
+                raise ValueError('Nonfinite choice logits')
+            ordered.append(logits[torch.argsort(torch.tensor(order, device=logits.device))])
+        rows = torch.stack(ordered)
+        confidence, predicted = rows.mean(0).softmax(-1).max(0)
+        scores.append(dict(text=reply, expected=expected, predicted=predicted.item(), confidence=confidence.item(),
+                           order_predictions=rows.argmax(-1).tolist(), option_logits=rows.tolist()))
+    return scores
 
 
 def main(args):
@@ -135,16 +169,25 @@ def main(args):
         indices = compress_dimension(embedding.shape[1]).to(embedding.device)
         codebook = F.normalize(embedding.index_select(1, indices).float(), dim=-1)
 
-        for name, encode in (('mean', encode_texts), ('windows', window_features)):
-            head = fit_probe(extract, train, 3, clauses=True, encode=encode)
-            checkpoint = args.output / f'{name}.pt'
-            atomic_save(head.state_dict(), checkpoint)
-            head.load_state_dict(torch.load(checkpoint, weights_only=True, map_location='cpu'), strict=True)
-            calibrated = classify(head, extract, calibration, clauses=True, encode=encode)
+        arms = (('mean', encode_texts), ('windows', window_features))
+        if args.backbone_choices:
+            arms = (arms[0], ('backbone_choices', None))
+        for name, encode in arms:
+            checkpoint_sha = None
+            if encode is None:
+                score = lambda cases: choice_scores(model, tokenizer, cases)
+            else:
+                head = fit_probe(extract, train, 3, clauses=True, encode=encode)
+                checkpoint = args.output / f'{name}.pt'
+                atomic_save(head.state_dict(), checkpoint)
+                head.load_state_dict(torch.load(checkpoint, weights_only=True, map_location='cpu'), strict=True)
+                checkpoint_sha = base.sha(checkpoint)
+                score = lambda cases: classify(head, extract, cases, clauses=True, encode=encode)
+            calibrated = score(calibration)
             cutoff = calibrate(calibrated)
             outcomes = {}
             for family, cases in held.items():
-                scores = classify(head, extract, cases, clauses=True, encode=encode)
+                scores = score(cases)
                 picks = [decision(row, cutoff) for row in scores]
                 rows = [('本轮查阅该如何处理？', reply, label, family) for reply, label in cases]
                 outcome = evaluate_choices(rows, picks, addresses, store, model, tokenizer, codebook, reader, values)
@@ -152,7 +195,7 @@ def main(args):
                 outcomes[family] = outcome
                 print(name, cutoff, family, outcome['metrics'], outcome['totals'], outcome['summary'], flush=True)
             results[name] = dict(cutoff=cutoff, calibration=calibrated, outcomes=outcomes,
-                                 checkpoint_sha256=base.sha(checkpoint))
+                                 checkpoint_sha256=checkpoint_sha)
     if any(base.sha(path) != digest for path, digest in sources.items()):
         raise RuntimeError('An input model or archive changed')
     store_json(args.output / 'result.json', dict(results=results, training=len(train),
@@ -167,4 +210,5 @@ if __name__ == '__main__':
     cli.add_argument('--recurrent', type=Path, nargs=3, required=True)
     cli.add_argument('--reader', type=Path, default=Path('runs/spora-dual-version-reply-v1'))
     cli.add_argument('--normalizer', type=Path, default=Path('runs/spora-version-normalizer-v1'))
+    cli.add_argument('--backbone-choices', action='store_true')
     main(cli.parse_args())
