@@ -4,13 +4,14 @@ import argparse
 from collections import Counter
 import json
 from pathlib import Path
+import re
 from time import perf_counter
 
 import torch
 
 from scripts.benchmark_spora_recurrent_dialogue import (
     MODEL, SOURCE, AutoTokenizer, encode, exchange, extend_positions, frozen_digest, load_full_streamed,
-    load_integrated_runtime, recall_prompts, run_dialogue, sha, using,
+    load_integrated_runtime, recall_prompts, reply, run_dialogue, settings_for, sha, using,
 )
 from scripts.train_spora_recurrent_counterfactual import store_json
 from scripts.train_spora_hybrid_language_recovery import DEFAULT_LAYOUTS, layout_name, parse_layout
@@ -24,6 +25,13 @@ SINGLE_QUESTIONS = {
     'library-storage': '只回答新书标签最后用什么。',
     'printing-handoff': '只回答最后要交几份样张。',
     'seed-workshop': '只回答新牌子上最后写什么。',
+}
+FIELD_NAMES = {
+    'market-sign': ('导览牌摆放点', '回收志愿者'),
+    'radio-rehearsal': ('广播录音时间', '剪片头的人'),
+    'library-storage': ('新书标签', '未登记书籍的存放处'),
+    'printing-handoff': ('交付的样张数量', '领取样张的人'),
+    'seed-workshop': ('新牌子上的桌名', '记录工具'),
 }
 
 
@@ -64,6 +72,78 @@ def distance_summary(dialogue):
     return counts
 
 
+def format_fields(fields, values):
+    return '\n'.join(f'{field}：{value}' for field, value in zip(fields, values, strict=True))
+
+
+def formatted_values(answer, fields):
+    values = {}
+    for line in answer.splitlines():
+        match = re.fullmatch(r'\s*([^：:]+)[：:]\s*(.+?)\s*', line)
+        if not match or match[1].strip() not in fields or match[1].strip() in values:
+            return None
+        values[match[1].strip()] = match[2].rstrip('。')
+    return tuple(values[field] for field in fields) if values.keys() == set(fields) else None
+
+
+@torch.inference_mode()
+def revision_stages(decoder, tokenizer, prompts):
+    settings = settings_for(decoder, tokenizer, 48)
+    labels = [tokenizer.encode(letter, add_special_tokens=False) for letter in ('A', 'B')]
+    if any(len(tokens) != 1 for tokens in labels) or labels[0] == labels[1]:
+        raise ValueError('Choice labels must be distinct single tokens')
+    label_ids = [tokens[0] for tokens in labels]
+    rows, counts = [], {}
+    for row in prompts:
+        if row['required_keys'] != ('new', 'keep'):
+            continue
+        fields = FIELD_NAMES[row['case']]
+        values = row['values']
+        current = values['new'], values['keep']
+        stale = values['old'], values['keep']
+        question = f'按当前有效的安排填写以下两行，每行只写字段名和值。\n{format_fields(fields, ("…", "…"))}'
+        supplied = f'已核对的当前值如下。\n{format_fields(fields, current)}\n\n{question}'
+        history = row['history']
+        distance = row['length'].removesuffix('_dual')
+        result = dict(case=row['case'], variant=row['variant'], distance=distance, values=values)
+        summary = counts.setdefault(distance, Counter())
+        summary['total'] += 1
+        for name, request in (('direct', question), ('supplied', supplied)):
+            messages = [*history, {'role': 'user', 'content': request}]
+            length = len(encode(tokenizer, messages))
+            if length + settings['limit'] > decoder.position_table_max_position:
+                raise ValueError('Revision response exceeds the position table')
+            answer = reply(decoder, tokenizer, history, request, **settings)
+            if answer['prompt_tokens'] != length:
+                raise ValueError('Revision response used a different prompt length')
+            text = answer['answer']
+            answer.update(exact=bool(answer['eos'] and formatted_values(text, fields) == current),
+                          has_new=values['new'] in text, has_old=values['old'] in text,
+                          has_keep=values['keep'] in text)
+            summary.update({f'{name}_{key}': answer[key] for key in ('exact', 'eos', 'has_new', 'has_old', 'has_keep')})
+            result[name] = answer
+        margins, lengths = [], []
+        for options in ((current, stale), (stale, current)):
+            request = ('以下两种填写只有更新字段不同。按当前有效的安排选出正确的一项，只回答 A 或 B。\n'
+                       f'A\n{format_fields(fields, options[0])}\n\nB\n{format_fields(fields, options[1])}')
+            ids = encode(tokenizer, [*history, {'role': 'user', 'content': request}])
+            if len(ids) + 1 > decoder.position_table_max_position:
+                raise ValueError('Revision choice exceeds the position table')
+            tokens = torch.tensor([ids], device=decoder.base.device)
+            logits = decoder(input_ids=tokens, use_cache=False, logits_to_keep=1).logits[0, -1, label_ids].float()
+            if not torch.isfinite(logits).all():
+                raise ValueError('Nonfinite choice logits')
+            margins.append((logits[0] - logits[1]).item())
+            lengths.append(len(ids))
+        choice = (margins[0] - margins[1]) / 2
+        result['choice'] = dict(correct=choice > 0, order_agrees=margins[0] * margins[1] < 0,
+                                margins=margins, average=choice, input_tokens=lengths)
+        summary.update(choice_correct=choice > 0, choice_order_agrees=margins[0] * margins[1] < 0,
+                       choice_correct_both=margins[0] > 0 and margins[1] < 0)
+        rows.append(result)
+    return dict(rows=rows, summary=counts)
+
+
 def main(args):
     started = perf_counter()
     manifest = args.recovery / 'result.json'
@@ -98,7 +178,7 @@ def main(args):
         source['recall'] = additional_recall
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
-    if args.revision_distance:
+    if args.revision_distance or args.revision_stages:
         prompts = distance_prompts(tokenizer, source)
         source['open'] = []
     else:
@@ -117,7 +197,10 @@ def main(args):
     memory = records(runtime.organism, HELD)
     parent_transfer = run_dialogue(decoder, tokenizer, [], transfer) if transfer else None
     results = {}
-    if args.revision_distance:
+    if args.revision_stages:
+        results['parent'] = revision_stages(decoder, tokenizer, prompts)
+        print('parent', results['parent']['summary'], flush=True)
+    elif args.revision_distance:
         dialogue = run_dialogue(decoder, tokenizer, prompts, [])
         persistent = evaluate(decoder, tokenizer, runtime.organism, memory)
         results['parent'] = dict(dialogue=dialogue, memory=persistent, distance=distance_summary(dialogue))
@@ -136,6 +219,13 @@ def main(args):
         replacements = load_recurrent_replacements(decoder, directories, protected[args.checkpoint])
         if set(replacements) != set(layout):
             raise ValueError('Loaded layout differs from the training result')
+        if args.revision_stages:
+            with using(replacements, 'recurrent'):
+                results[name] = revision_stages(decoder, tokenizer, prompts)
+            print(name, results[name]['summary'], flush=True)
+            del replacements
+            torch.cuda.empty_cache()
+            continue
         with using(replacements, 'recurrent'):
             dialogue = run_dialogue(decoder, tokenizer, prompts, source['open'])
             additional = run_dialogue(decoder, tokenizer, [], transfer) if transfer else None
@@ -169,10 +259,14 @@ if __name__ == '__main__':
     cli.add_argument('--transfer', type=Path, help='Additional open multi-turn dialogue cases')
     cli.add_argument('--recall-transfer', type=Path, help='Replace recall cases with an independent long-dialogue set')
     cli.add_argument('--layout', type=parse_layout, action='append', help='Evaluate only the requested recovered layouts')
-    cli.add_argument('--revision-distance', action='store_true', help='Compare edit distance and answer width on recall transfer')
+    mode = cli.add_mutually_exclusive_group()
+    mode.add_argument('--revision-distance', action='store_true', help='Compare edit distance and answer width on recall transfer')
+    mode.add_argument('--revision-stages', action='store_true', help='Compare choice and formatted generation on recall transfer')
     args = cli.parse_args()
     if args.output.exists():
         cli.error('Choose a new output path')
-    if args.revision_distance and not args.recall_transfer:
-        cli.error('--revision-distance requires --recall-transfer')
+    if (args.revision_distance or args.revision_stages) and not args.recall_transfer:
+        cli.error('Revision comparisons require --recall-transfer')
+    if args.revision_stages and args.transfer:
+        cli.error('--revision-stages does not accept --transfer')
     main(args)
