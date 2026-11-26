@@ -82,12 +82,14 @@ def encode_clauses(extract, rows, owners):
     return torch.stack([torch.stack([vectors[part] for part in parts]) for parts, _, _ in rows])
 
 
-def fit_focus(features, rows, *, independent=False):
+def fit_focus(features, rows, *, independent=False, clause_reads=None):
     torch.manual_seed(dense.SEED)
     head = nn.Sequential(nn.LayerNorm(features.shape[-1]), nn.Linear(features.shape[-1], 32), nn.GELU(), nn.Linear(32, 1))
     targets = torch.tensor([index for _, index, _ in rows])
     if independent:
         targets = targets[:, None].eq(torch.arange(features.shape[1])).float()
+        if clause_reads is not None:
+            targets = clause_reads.float()
     optimizer = torch.optim.AdamW(head.parameters(), lr=.002)
     for _ in range(140):
         scores = head(features).squeeze(-1)
@@ -124,12 +126,14 @@ def calibration_cut(scores, rows):
 
 
 @torch.inference_mode()
-def single_evidence(extract, rows, focus, owners, cutoff):
+def single_evidence(extract, rows, focus, owners, cutoff, *, clause_confidence=None):
     cases = requests(rows)
     full = dense.align(extract, [text for text, _ in cases], owners)
     masks = torch.stack([full_mask(names) for names in full[2]])
     absent = dense.subtract_targets(masks, cases, full[2])
-    confidence = focus(encode_clauses(extract, rows, owners)).squeeze(-1).sigmoid()
+    confidence = clause_confidence
+    if confidence is None:
+        confidence = focus(encode_clauses(extract, rows, owners)).squeeze(-1).sigmoid()
     selected = single_clause(confidence, cutoff).tolist()
     # A placeholder is encoded for skipped requests but never used as a proposal.
     chosen = [parts[max(0, index)] for (parts, _, _), index in zip(rows, selected, strict=True)]

@@ -35,17 +35,21 @@ FORMAT = 'spora-working-turn-experiment-v1'
 
 
 class FrozenTurnFeatures:
-    def __init__(self, decoder, tokenizer, *, depth=FEATURE_DEPTH):
+    def __init__(self, decoder, tokenizer, *, depth=FEATURE_DEPTH, single_sequence=False):
         self.model = decoder.base.model
         self.device = decoder.base.device
         self.tokenizer = tokenizer
         if not 1 <= depth <= len(self.model.layers):
             raise ValueError('Feature depth must name an existing decoder layer')
         self.depth = depth
+        self.single_sequence = single_sequence
 
     @torch.no_grad()
     def __call__(self, texts):
         width = max(map(len, texts))
+        if self.single_sequence and len(texts) > 1:
+            return torch.cat([torch.nn.functional.pad(self([text]), (0, 0, 0, width - len(text)))
+                              for text in texts])
         encoded = self.tokenizer(list(texts), padding=True, add_special_tokens=False,
                                  return_tensors='pt', return_offsets_mapping=True)
         offsets = encoded.pop('offset_mapping')
