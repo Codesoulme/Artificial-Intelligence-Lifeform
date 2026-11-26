@@ -2,7 +2,7 @@
 
 import argparse
 from collections import Counter
-from itertools import product
+from itertools import islice, product
 import json
 from pathlib import Path
 from time import perf_counter
@@ -62,6 +62,26 @@ INTENT_NEED = {
     '夏宁摇跟我约的会合地点在哪儿？', '帮我核实叶澄依准备读的那一本。',
     '唐砚坪提过约在哪碰面？',
 }
+
+# Each family asks about four fields while keeping the speaker and sentence frame fixed.
+MATCHED_TRAIN = (
+    ('我替{owner}准备，想核实{cue}。', ('杯里该装哪一种', '会合时该到哪个去处', '得带去的物件是哪件', '选来阅读的书是哪册')),
+    ('上回替{owner}记下的，{cue}？', ('说要点来喝的品种', '约定等人的位置', '托我携带的那样物品', '打算翻阅的那一卷')),
+    ('我想重看{owner}的安排，具体是{cue}。', ('饮用的那款叫什么', '碰面的地址是哪里', '要我捎上的器具是什么', '指定的阅读材料是哪部')),
+    ('请帮我确认{owner}{cue}。', ('喝东西挑哪样', '在哪里等对方过来', '出门前要备好什么物件', '准备看哪本作品')),
+    ('{owner}那一项请报一下，{cue}？', ('说好端来哪种饮料', '到什么地方集合', '出发时手上要拿哪样', '事先定下的读物叫什么')),
+)
+MATCHED_HELD = (
+    ('关于{owner}，先前定好的{cue}来着？', ('要啜饮的是哪款', '碰头应该走到哪处', '让我捎过去的是什么', '拿来读的是什么书')),
+    ('我按{owner}原来的话办，{cue}？', ('得给倒哪种喝的', '要去什么位置等', '手边要准备哪一个东西', '书架上该取走哪一本')),
+    ('向你确认{owner}先前那笔，{cue}？', ('端上桌给喝的是哪一样', '两个人在哪会面', '对方嘱咐随身带什么', '定的那部阅读作品是什么')),
+)
+
+
+def matched_cases(names, families):
+    return [(frame.format(owner=name, cue=cue), MemoryAddress(name, field))
+            for name, (frame, cues) in product(names, families)
+            for field, cue in zip(plan.FIELDS_ORDER, cues, strict=True)]
 
 ADDRESS_FORMS = (
     ('{owner}{field}？', True),
@@ -174,12 +194,15 @@ def full_mask(names):
     return dense.mask_for(names, addresses)
 
 
-def fit_split(train, inputs):
+def fit_split(train, inputs, *, fixed_intent=None, steps=None):
     states, spans, names = inputs
     torch.manual_seed(dense.SEED)
     pointer = dense.JointPointer(states.shape[-1])
     intent = nn.Sequential(nn.LayerNorm(states.shape[-1]), nn.Linear(states.shape[-1], 32),
                            nn.GELU(), nn.Linear(32, 1))
+    if fixed_intent is not None:
+        intent.load_state_dict(fixed_intent)
+        intent.requires_grad_(False)
     for parameter in pointer.none.parameters():
         parameter.requires_grad_(False)
     optimizer = torch.optim.AdamW([*pointer.parameters(), *intent.parameters()], lr=.002)
@@ -187,15 +210,18 @@ def fit_split(train, inputs):
     reads = targets.ne(dense.NONE)
     masks = torch.stack([full_mask(owners) for owners in names])
     rng = torch.Generator().manual_seed(dense.SEED)
-    for _ in range(16):
-        for batch in torch.randperm(len(train), generator=rng).split(32):
-            positive = batch[reads[batch]]
-            logits = pointer(states[positive], spans[positive], masks[positive])[:, :dense.NONE]
-            field_loss = F.cross_entropy(logits, targets[positive], reduction='sum') / max(1, len(positive))
-            intent_loss = F.binary_cross_entropy_with_logits(intent(states[batch]).squeeze(-1), reads[batch].float())
-            optimizer.zero_grad(set_to_none=True)
-            (field_loss + intent_loss).backward()
-            optimizer.step()
+    batches = (batch for _ in range(16) for batch in torch.randperm(len(train), generator=rng).split(32))
+    if steps is not None:
+        batches = islice(batches, steps)
+    for batch in batches:
+        positive = batch[reads[batch]]
+        logits = pointer(states[positive], spans[positive], masks[positive])[:, :dense.NONE]
+        loss = F.cross_entropy(logits, targets[positive], reduction='sum') / max(1, len(positive))
+        if fixed_intent is None:
+            loss += F.binary_cross_entropy_with_logits(intent(states[batch]).squeeze(-1), reads[batch].float())
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        optimizer.step()
     return pointer.eval(), intent.eval()
 
 
@@ -230,6 +256,15 @@ def split_outcomes(cases, inputs, masks, absent, scores, cuts):
                       intent_positive=expected_intent, intent_negative=not expected_intent,
                       intent_hit=expected_intent and intent >= cuts[0], intent_false=not expected_intent and intent >= cuts[0])
     return base
+
+
+def matched_family_totals(rows):
+    width = len(plan.FIELDS_ORDER)
+    if len(rows) % width:
+        raise ValueError('A matched family must contain all fields')
+    families = [rows[start:start + width] for start in range(0, len(rows), width)]
+    return dict(total=len(families), exact=sum(all(row['unmasked'] == row['expected'] for row in family)
+                                               for family in families))
 
 
 def train_split(extract):
@@ -300,20 +335,47 @@ def main(args):
                 atomic_save(head.state_dict(), destination)
                 head.load_state_dict(torch.load(destination, map_location='cpu', weights_only=True), strict=True)
                 split_training[f'{name}_sha256'] = base.sha(destination)
+        matched_training = None
+        suites = [('regression', regression_rows(), catalog), ('fresh', addressed_rows(ARCHIVE_FRESH), catalog),
+                  ('similar_names', addressed_rows(NEAR_FRESH), near), ('transfer', addressed_rows(TRANSFER), catalog)]
+        if args.matched:
+            train_names = ('马澄文', '章其安')
+            held_names = ('郭回霜', '夏宁瑶')
+            original = training_cases(train_names, dense.ALIASES, ADDRESS_FORMS)
+            extra = matched_cases(train_names, MATCHED_TRAIN)
+            held = matched_cases(held_names, MATCHED_HELD)
+            train = [*original, *extra]
+            normalized = [{plan.anonymize(text, names)[0] for text, _ in rows}
+                          for rows, names in ((train, train_names), (held, held_names))]
+            if normalized[0] & normalized[1]:
+                raise ValueError('Matched field training and test prompts overlap')
+            steps = 16 * ((len(original) + 31) // 32)
+            matched, _ = fit_split(train, dense.align(extract, [text for text, _ in train], train_names),
+                                   fixed_intent=intent.state_dict(), steps=steps)
+            destination = args.output / 'matched-field.pt'
+            atomic_save(matched.state_dict(), destination)
+            matched.load_state_dict(torch.load(destination, map_location='cpu', weights_only=True), strict=True)
+            matched_training = dict(training=len(train), added=len(extra), steps=steps, checkpoint_sha256=base.sha(destination))
+            suites.append(('matched_fields', held, near))
         results = {}
-        for mode, cases, candidates in (('regression', regression_rows(), catalog),
-                                        ('fresh', addressed_rows(ARCHIVE_FRESH), catalog),
-                                        ('similar_names', addressed_rows(NEAR_FRESH), near),
-                                        ('transfer', addressed_rows(TRANSFER), catalog)):
+        for mode, cases, candidates in suites:
             results[mode] = audit(extract, old, old_cut, heads, cutoffs, cases, candidates)
             if args.separate:
                 inputs, masks, absent = evidence(extract, cases, candidates)
                 results[mode]['separate'] = split_outcomes(cases, inputs, masks, absent,
                                                           split_scores(pointer, intent, inputs), split_cuts)
+                if args.matched:
+                    results[mode]['matched'] = split_outcomes(cases, inputs, masks, absent,
+                                                             split_scores(matched, intent, inputs), split_cuts)
+                    if mode == 'matched_fields':
+                        for arm in ('separate', 'matched'):
+                            outcome = results[mode][arm]
+                            outcome['families'] = matched_family_totals(outcome['rows'])
             print(mode, {name: outcome['counts'] for name, outcome in results[mode].items()}, flush=True)
     if any(base.sha(path) != digest for path, digest in sources.items()):
         raise RuntimeError('An input changed during the audit')
     store_json(args.output / 'result.json', dict(results=results, training=training, separate_training=split_training,
+                                               matched_training=matched_training,
                                                sources={str(path): digest for path, digest in sources.items()},
                                                seconds=perf_counter() - started))
 
@@ -327,4 +389,8 @@ if __name__ == '__main__':
     cli.add_argument('--recurrent', type=Path, nargs=3, required=True)
     cli.add_argument('--retrain', action='store_true')
     cli.add_argument('--separate', action='store_true')
-    main(cli.parse_args())
+    cli.add_argument('--matched', action='store_true')
+    args = cli.parse_args()
+    if args.matched and not args.separate:
+        cli.error('--matched requires --separate')
+    main(args)
