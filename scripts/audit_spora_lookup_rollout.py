@@ -12,6 +12,7 @@ import torch
 from torch.nn import functional as F
 
 from scripts import audit_spora_lookup_transitions as transitions
+from scripts.audit_spora_confirmed_revocation import classify, fit_probe
 from scripts.audit_spora_recurrent_lookup_scope import ASK, READ, Episode
 from scripts.spora_version_chat import VersionReplyActions, VersionStore, artifacts, base, compress_dimension, local_model
 from scripts.train_spora_recurrent_counterfactual import store_json
@@ -45,6 +46,32 @@ FRAMES = {
 }
 PATHS = ((1, 2, 0, 3, 0), (3, 4, 5, 0, 2), (1, 5, 1, 2, 4))
 QUESTIONS = ('首版。', '当前版。', '上一版。')
+RESET_TRAIN = (
+    ('先别核对任何一份档案。', '先别停止核对任何一份档案。'),
+    ('全部待查项目今天一起叫停。', '全部待查项目今天一起继续。'),
+    ('整个查阅我撤回，重新提出再办。', '整个查阅仍照原计划办。'),
+    ('别人希望我继续，但我决定所有记录都先不看。', '别人希望我先不看，但我决定所有记录都继续看。'),
+    ('「照原样查」只是例子，我现在想全部取消。', '「全部取消」只是例子，我现在想照原样查。'),
+    ('我自己去找，档里哪一项也不用给我翻。', '我自己去找的是别的，这些档案照查。'),
+    ('本轮档案一个都先别读。', '本轮档案先别漏读任何一项。'),
+    ('查阅现在全结束，没查完的也别做。', '查阅继续，没查完的接着做。'),
+    ('请把全部核对任务撤掉。', '只撤掉其中一件核对任务。'),
+    ('这次不查了，一个都不留。', '这次不查原项了，换成另一项。'),
+)
+RESET_CAL = (
+    ('我现在不打算核查任何记录。', '我现在不打算停下任何核查。'),
+    ('同事说照常，我决定这次统统放下。', '同事说统统放下，我决定这次照常。'),
+    ('手头所有查阅到此为止。', '手头所有查阅继续推进。'),
+    ('先收回整份名单，不做调阅。', '先收回名单里末尾那项，别的继续。'),
+)
+RESET_HELD = (
+    ('universal', '眼下我一条档案也不需要调。', '眼下我每条档案都需要调，别停。'),
+    ('negation', '查阅一个也别接着做。', '查阅一个也别给我停掉。'),
+    ('speaker', '她想让你继续翻档，但我的意思是本次全部结束。', '她想让你结束翻档，但我的意思是本次全部照旧。'),
+    ('quote', '「照原定的来」是我举例，实际这一轮全都不做了。', '「这一轮全都不做了」是我举例，实际照原定的来。'),
+    ('scope', '原先提的每个查询一并划去。', '只把{b}划去，其他继续。'),
+    ('switch', '之前那些事项一律作罢，无须接着查。', '之前那些事项一律作罢，改成查{b}。'),
+)
 
 
 def case_groups():
@@ -75,6 +102,53 @@ def fit_operations(head, data, steps):
 
 def state_action(active):
     return READ + active.long().argmax().item() if active.sum().item() == 1 else ASK
+
+
+def reset_examples(pairs):
+    return [(text, label) for cancel, control in pairs for text, label in ((cancel, 1), (control, 0))]
+
+
+def reset_threshold(rows):
+    def utility(cutoff):
+        found = [row for row in rows if row['predicted'] == 1 and row['confidence'] >= cutoff]
+        good = sum(row['expected'] == 1 for row in found)
+        bad = len(found) - good
+        return good - 2 * bad, -bad, -cutoff
+
+    return max((.5, .65, .8, .9, .95, .99, 1.01), key=utility)
+
+
+def apply_reset(operations, rows, cutoff):
+    accepted = torch.tensor([row['predicted'] == 1 and row['confidence'] >= cutoff for row in rows])
+    return operations.masked_fill(accepted[:, None], REMOVE)
+
+
+def reset_cases():
+    cases, labels = [], []
+    controls = [(KEEP, KEEP)] * 4 + [(KEEP, REMOVE), (REMOVE, ADD)]
+    for entry in transitions.PEOPLE['held']:
+        addresses = tuple(MemoryAddress(*entry[i:i + 2]) for i in (0, 2))
+        for (family, cancel, control), operations in zip(RESET_HELD, controls, strict=True):
+            cases.extend(Episode(family, addresses, (text.format(b=transitions.describe(addresses[1])),),
+                                 QUESTIONS[2], ASK, -1) for text in (cancel, control))
+            labels.extend(((REMOVE, REMOVE), operations))
+    return cases, torch.tensor(labels)
+
+
+def replay_resets(cases, targets, predicted):
+    rows, plans, states = [], [], []
+    for row, target, guess in zip(cases, targets, predicted, strict=True):
+        for initial in ((False, False), (True, False), (False, True), (True, True)):
+            active = torch.tensor(initial)
+            expected = transitions.apply_operations(active, target)
+            actual = transitions.apply_operations(active, guess)
+            wanted = state_action(expected)
+            rows.append(Episode(row.scope, row.addresses, row.events, row.question, wanted,
+                                2 if wanted >= READ else -1))
+            plans.append((state_action(actual), 2))
+            states.append(dict(initial=list(initial), expected_state=expected.tolist(), actual_state=actual.tolist(),
+                               cancel=target.tolist() == [REMOVE, REMOVE]))
+    return rows, plans, states
 
 
 @torch.inference_mode()
@@ -119,6 +193,8 @@ def main(args):
         raise ValueError('A model or archive differs from the source experiment')
     values = {int(number): value for number, value in manifest['values'].items()}
     cases = {name: cases_for(group) for name, group in case_groups().items()}
+    if args.global_reset:
+        cases['reset'], reset_labels = reset_cases()
     if any(value in text for group in cases.values() for row in group for text in row.events for value in values.values()):
         raise ValueError('A query exposes a value in the archive')
     args.output.mkdir(parents=True, exist_ok=False)
@@ -137,7 +213,25 @@ def main(args):
         reader.eval().to(model.device)
         embedding = model.get_input_embeddings().weight.detach()
         codebook = F.normalize(embedding.index_select(1, compress_dimension(embedding.shape[1]).to(model.device)).float(), dim=-1)
-        for name in ('previous', 'state_updates'):
+        reset_report = {}
+        arms = ('previous', 'state_updates')
+        if args.global_reset:
+            arms += ('global_reset',)
+            reset_head = fit_probe(extract, reset_examples(RESET_TRAIN), 2, clauses=True)
+            reset_path = args.output / 'global-reset.pt'
+            atomic_save(reset_head.state_dict(), reset_path)
+            reset_head.load_state_dict(torch.load(reset_path, map_location='cpu', weights_only=True), strict=True)
+            calibrated = classify(reset_head, extract, reset_examples(RESET_CAL), clauses=True)
+            cutoff = reset_threshold(calibrated)
+            predictions = {}
+            for split in ('calibration', 'held', 'reset'):
+                labels = (reset_labels.eq(REMOVE).all(1) if split == 'reset' else
+                          torch.arange(len(cases[split])).remainder(len(OPERATIONS)).eq(2))
+                examples = [(row.events[0], int(label)) for row, label in zip(cases[split], labels, strict=True)]
+                predictions[split] = classify(reset_head, extract, examples, clauses=True)
+            reset_report = dict(cutoff=cutoff, calibration=calibrated, predictions=predictions,
+                                checkpoint_sha256=base.sha(reset_path))
+        for name in arms:
             if name == 'state_updates':
                 fit_operations(head, inputs['train'], args.steps)
                 output = args.output / 'state-updates.pt'
@@ -148,10 +242,22 @@ def main(args):
                 for split in ('calibration', 'held'):
                     labels = torch.tensor(OPERATIONS).repeat(len(inputs[split]) // len(OPERATIONS), 1)
                     predicted = head.operation(inputs[split]).argmax(-1)
+                    if name == 'global_reset':
+                        predicted = apply_reset(predicted, predictions[split], cutoff)
                     metrics[split] = dict(correct=predicted.eq(labels).all(1).sum().item(), total=len(labels))
                     if split == 'held':
                         rows, plans, trace = rollout(cases[split], predicted)
                 result = transitions.evaluate(rows, plans, store.catalog(), store, model, tokenizer, codebook, reader, values=values)
+                if args.global_reset:
+                    reset_ops = head.operation(inputs['reset']).argmax(-1)
+                    if name == 'global_reset':
+                        reset_ops = apply_reset(reset_ops, predictions['reset'], cutoff)
+                    reset_rows, reset_plans, states = replay_resets(cases['reset'], reset_labels, reset_ops)
+                    reset_result = transitions.evaluate(reset_rows, reset_plans, store.catalog(), store, model,
+                                                        tokenizer, codebook, reader, values=values)
+                    for state, row in zip(states, reset_result['rows'], strict=True):
+                        row.update(state)
+                    result['reset_followup'] = reset_result
             empty = Counter()
             for state, row in zip((state for dialogue in trace for state in dialogue), result['rows'], strict=True):
                 if not any(state['expected']):
@@ -160,9 +266,12 @@ def main(args):
                           complete_dialogues=sum(all(turn['actual'] == turn['expected'] for turn in dialogue) for dialogue in trace))
             results[name] = result
             print(name, metrics, result['summary'], empty, result['complete_dialogues'], '/', len(trace), flush=True)
+            if args.global_reset:
+                print('reset followup', name, result['reset_followup']['summary'], flush=True)
     if any(base.sha(path) != digest for path, digest in sources.items()):
         raise RuntimeError('A protected model or archive changed')
     store_json(args.output / 'result.json', dict(results=results, training=len(cases['train']), steps=args.steps,
+                                               reset=reset_report,
                                                sources={str(path): digest for path, digest in sources.items()},
                                                seconds=perf_counter() - start))
 
@@ -175,6 +284,7 @@ if __name__ == '__main__':
     cli.add_argument('--reader', type=Path, default=Path('runs/spora-dual-version-reply-v1'))
     cli.add_argument('--normalizer', type=Path, default=Path('runs/spora-version-normalizer-v1'))
     cli.add_argument('--steps', type=int, default=120)
+    cli.add_argument('--global-reset', action='store_true')
     args = cli.parse_args()
     if args.steps < 1:
         cli.error('--steps must be positive')
