@@ -9,10 +9,13 @@
 | 答复监督 | 0.06698 | 4.97378 | 8/10 | 5/10 | 1/10 | 3/18 | 32/32 |
 | 加整段对齐 | 0.06698 | 4.97408 | 8/10 | 5/10 | 1/10 | 3/18 | 32/32 |
 | 加定向对齐 | 0.06338 | 4.96743 | 8/10 | 6/10 | 1/10 | 3/18 | 32/32 |
+| 加整段对齐，反向缩放 256 倍 | 0.06688 | 4.97387 | 8/10 | 5/10 | 1/10 | 3/18 | 32/32 |
 
 定向对齐让留出题第 24 层末端误差约降 5.4%，补回一条约 700 词元的发货更正题。三组在 CrossWOZ 48 段服务对话的首选词元准确率均为 27.53%。约 1,400 词元的更正及开放对话仍比当前双层基线低。定向训练与评估约 380 秒，CUDA 张量训练峰值约 4.08 GiB，源文件及个体状态摘要一致。 [双层基线生成](spora-hybrid-language-recovery-20261126.md)
 
-另用相同 8 条样本对比反向传播倍率 1 和 256。第 24 层 FP16 激活上，整段损失的非零梯度元素平均占比由 0.0133% 升至 96.42%。折回原尺度后，整段梯度范数中位数为 0.00591，各样本比未缩放大 314 至 453 倍，仍只相当于答复梯度的中位 1.15%。结果说明原蒸馏的微弱更新部分来自下溢，也支持单独重跑整段训练，测量修正下溢后能恢复多少生成表现。 [Mixed Precision Training](https://arxiv.org/abs/1710.03740)
+另用相同 8 条样本对比反向传播倍率 1 和 256。第 24 层 FP16 激活上，整段损失的非零梯度元素平均占比由 0.0133% 升至 96.42%。折回原尺度后，整段梯度范数中位数为 0.00591，各样本比未缩放大 314 至 453 倍，仍只相当于答复梯度的中位 1.15%。原蒸馏的微弱更新部分来自下溢。 [Mixed Precision Training](https://arxiv.org/abs/1710.03740)
+
+重跑整段训练时，使用相同初始权重、样本顺序、16 步预算、32,113 个输入词元及损失权重。在反向传播前放大合并损失，累积到 FP32 循环参数后，在裁剪前还原梯度。结果中第 24 层末端误差比未缩放时只降约 0.14%，更正题和开放题通过数相同，部分回答文字有变化。持久读取仍为 32/32。训练和评估约 343 秒，峰值约 4.09 GiB，源文件与个体摘要一致。修正下溢后，整段对齐在这次预算下依然未带来可测的生成提升。
 
 ## 复现
 
@@ -26,4 +29,5 @@ $test = 'runs/research/crosswoz-df82c9f/test.json.zip'
 $reference = 'runs/spora-hybrid-hidden-recovery-v1/result.json'
 .\.venv\Scripts\python.exe -u -m scripts.train_spora_hybrid_hidden_recovery $checkpoint $test runs/spora-hybrid-targeted-recovery-v1 @sources --reference $reference
 .\.venv\Scripts\python.exe -u -m scripts.train_spora_hybrid_hidden_recovery $checkpoint $test runs/spora-hybrid-loss-scaling-v1 @sources --reference $reference --check-loss-scaling
+.\.venv\Scripts\python.exe -u -m scripts.train_spora_hybrid_hidden_recovery $checkpoint $test runs/spora-hybrid-scaled-whole-recovery-v1 @sources --reference $reference --scale-whole-loss
 ```
