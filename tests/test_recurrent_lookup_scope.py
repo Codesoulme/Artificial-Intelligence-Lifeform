@@ -5,7 +5,7 @@ import torch
 from scripts.audit_spora_recurrent_lookup_scope import ASK, READ, ScopePlanner, decisions, episodes
 from scripts.audit_spora_lookup_transitions import (
     ADD, KEEP, REMOVE, HELD_PAIR, LookupTransitions, apply_operations, normalize_row, operation_targets,
-    paired_rows, paired_scope_metrics,
+    paired_rows, paired_scope_metrics, transition_features,
 )
 
 
@@ -79,3 +79,18 @@ class RecurrentLookupScopeTests(unittest.TestCase):
         snapshots = torch.stack((initial, final), dim=1)
         self.assertEqual(paired_scope_metrics(snapshots, pairs), 1)
         self.assertEqual(paired_scope_metrics(snapshots.flip(0), pairs), 0)
+
+    def test_clause_features_leave_version_input_and_missing_history_unchanged(self):
+        cases = episodes('held')
+        rows = [next(row for row in cases if row.scope == kind) for kind in ('absent', 'replace')]
+
+        def encode(texts):
+            return [torch.full((len(text), 1), float(len(text))) for text in texts]
+
+        original = transition_features(encode, {'held': rows}, utterance_features=True)['held']
+        multi = transition_features(encode, {'held': rows}, utterance_features=True, clause_features=True)['held']
+        torch.testing.assert_close(original[0], multi[0])
+        torch.testing.assert_close(original[2], multi[2])
+        torch.testing.assert_close(original[1], multi[1][..., :1])
+        self.assertFalse(multi[1][0].any().item())
+        self.assertTrue((multi[1][1, 1, :, 1] < multi[1][1, 1, :, 0]).all().item())

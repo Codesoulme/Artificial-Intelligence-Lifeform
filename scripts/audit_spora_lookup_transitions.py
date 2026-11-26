@@ -6,6 +6,7 @@ from dataclasses import replace
 from datetime import date, timedelta
 import json
 from pathlib import Path
+import re
 from time import perf_counter
 from types import SimpleNamespace
 
@@ -32,6 +33,13 @@ PAIR_FORMS = (
 )
 HELD_PAIR = ('接下来查看{target}，最先那条也算数。', '接下来查看{target}，最先那条不算数。')
 MIDDLE_VALUES = ('秋灯', '桃源路', '银铃', '麦茶', '潮汐')
+
+VERSION_TRANSFER = (
+    ('按有记录以来第一份来。', '档里开头那本。', '查首次录入的那个版本。'),
+    ('眼下照着办的是哪条？', '给我还在生效的记录。', '以此刻有效的为准。'),
+    ('取刚被顶替的那份。', '查最新之前紧挨着的那版。', '把最近被替换的记录给我。'),
+    ('请润色「给我还在生效的记录」。', '这句「查首次录入的版本」通顺吗？', '请翻译「取刚被顶替的那份」。'),
+)
 
 
 def paired_rows(rows, forms):
@@ -72,11 +80,18 @@ def normalize_row(row):
             for index, address in enumerate(row.addresses)]
 
 
-def transition_features(extract, groups, *, utterance_features=False):
+def transition_features(extract, groups, *, utterance_features=False, clause_features=False):
     marked = {name: [view for row in rows for view in normalize_row(row)] for name, rows in groups.items()}
     if utterance_features:
-        prompts = list(dict.fromkeys(text for views in marked.values() for row in views
-                                     for text in (*row.events, row.question)))
+        def clauses(text):
+            return tuple(part.strip() for part in re.split(r'[，,；;]', text) if part.strip()) or (text,)
+
+        prompts = dict.fromkeys(text for views in marked.values() for row in views
+                                for text in (*row.events, row.question))
+        if clause_features:
+            prompts.update(dict.fromkeys(part for views in marked.values() for row in views
+                                        for text in row.events for part in clauses(text)))
+        prompts = list(prompts)
         vectors = {}
         for offset in range(0, len(prompts), 48):
             batch = prompts[offset:offset + 48]
@@ -85,11 +100,16 @@ def transition_features(extract, groups, *, utterance_features=False):
         result = {}
         for split, views in marked.items():
             current = torch.stack([vectors[row.question] for row in views[::2]])
-            history = current.new_zeros(len(current), 2, 2, current.shape[-1])
+            width = current.shape[-1] * (2 if clause_features else 1)
+            history = current.new_zeros(len(current), 2, 2, width)
             valid = torch.zeros(len(current), 2, dtype=torch.bool)
             for index, view in enumerate(views):
                 for turn, text in enumerate(view.events):
-                    history[index // 2, turn, index % 2] = vectors[text]
+                    feature = vectors[text]
+                    if clause_features:
+                        pooled = torch.stack([vectors[part] for part in clauses(text)]).mean(0)
+                        feature = torch.cat((feature, pooled))
+                    history[index // 2, turn, index % 2] = feature
                     valid[index // 2, turn] = True
             result[split] = current, history, valid
         return result
@@ -101,9 +121,10 @@ def transition_features(extract, groups, *, utterance_features=False):
 
 
 class LookupTransitions(nn.Module):
-    def __init__(self, width, size=64):
+    def __init__(self, width, size=64, *, operation_width=None):
         super().__init__()
-        self.operation = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, size), nn.GELU(), nn.Linear(size, 3))
+        operation_width = operation_width or width
+        self.operation = nn.Sequential(nn.LayerNorm(operation_width), nn.Linear(operation_width, size), nn.GELU(), nn.Linear(size, 3))
         self.version = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, size), nn.GELU(), nn.Linear(size, 4))
 
     def advance(self, history, valid, *, opening=None):
@@ -119,7 +140,7 @@ class LookupTransitions(nn.Module):
 def fit(data, rows, steps, *, pairs=(), contrast=False):
     torch.manual_seed(SEED)
     rng = torch.Generator().manual_seed(SEED)
-    head = LookupTransitions(data[0].shape[-1])
+    head = LookupTransitions(data[0].shape[-1], operation_width=data[1].shape[-1])
     optimizer = torch.optim.AdamW(head.parameters(), lr=.002)
     operations = operation_targets(rows)
     # A bare version retains its meaning even when the address set is ambiguous.
@@ -216,6 +237,26 @@ def paired_scope_metrics(snapshots, pairs):
     return int(states.eq(target).flatten(1).all(1).sum())
 
 
+def transition_trace(head, data, rows, snapshots, confirmed):
+    operations = head.operation(data[1]).argmax(-1)
+    return [dict(addresses=[describe(address) for address in row.addresses],
+                 expected_operations=target.tolist() if row.events else [],
+                 operations=predicted.tolist() if row.events else [],
+                 opening=states[0].tolist(), final=states[-1].tolist(),
+                 confirmed_final=known[-1].tolist())
+            for row, target, predicted, states, known in zip(
+                rows, operation_targets(rows), operations, snapshots, confirmed, strict=True)]
+
+
+def version_transfer(head, extract):
+    cases = [(text, label) for label, forms in enumerate(VERSION_TRANSFER) for text in forms]
+    texts = [text for text, _ in cases]
+    features = torch.stack([vector[len(text) - 6:len(text)].float().mean(0)
+                            for text, vector in zip(texts, extract(texts), strict=True)])
+    return [dict(question=text, expected=label, predicted=guess)
+            for (text, label), guess in zip(cases, head.version(features).argmax(-1).tolist(), strict=True)]
+
+
 def compare_paired(args, model, tokenizer, reader_file, writer_file, binding, groups):
     held_pairs = paired_rows(groups['held'], (HELD_PAIR,))
     training_pairs = paired_rows(groups['train'], PAIR_FORMS)
@@ -226,6 +267,7 @@ def compare_paired(args, model, tokenizer, reader_file, writer_file, binding, gr
     groups = {**groups, 'train': training, 'held': held}
     extract = FrozenTurnFeatures(SimpleNamespace(base=model), tokenizer)
     data = transition_features(extract, groups, utterance_features=True)
+    clause_data = transition_features(extract, groups, utterance_features=True, clause_features=True) if args.compare_clauses else None
     path = args.output / 'three-versions.sqlite3'
     values = three_version_archive(path, binding, model, tokenizer, writer_file)
     if len(values) != 3 * len(RECORDS) or any(value in text for row in held for text in (*row.events, row.question)
@@ -245,16 +287,23 @@ def compare_paired(args, model, tokenizer, reader_file, writer_file, binding, gr
         catalog = store.catalog()
         if len(catalog) != len(RECORDS) or any(len(versions) != 3 for versions in catalog.values()):
             raise ValueError('Every address must have three distinct records after reopening')
-        for name, contrast in (('classification', False), ('paired', True)):
-            head = fit(data['train'], training, args.steps, pairs=pair_indices, contrast=contrast)
+        arms = ('classification', 'clause') if args.compare_clauses else ('classification', 'paired')
+        baseline_version = None
+        for name in arms:
+            inputs = clause_data if name == 'clause' else data
+            head = fit(inputs['train'], training, args.steps, pairs=pair_indices, contrast=name == 'paired')
+            if name == 'clause':
+                head.version.load_state_dict(baseline_version)
+            else:
+                baseline_version = head.version.state_dict()
             checkpoint = args.output / f'{name}.pt'
             atomic_save(head.state_dict(), checkpoint)
             head.load_state_dict(torch.load(checkpoint, map_location='cpu', weights_only=True), strict=True)
             with torch.inference_mode():
-                thresholds = calibrated_thresholds(head, data['calibration'], groups['calibration'])
-                plan, snapshots, expected = predict(head, data['held'], held, thresholds=thresholds)
-                _, confirmed, _ = predict(head, data['held'], held, confirmed_opening=True)
-                oracle, _, _ = predict(head, data['held'], held, oracle_scope=True)
+                thresholds = calibrated_thresholds(head, inputs['calibration'], groups['calibration'])
+                plan, snapshots, expected = predict(head, inputs['held'], held, thresholds=thresholds)
+                _, confirmed, _ = predict(head, inputs['held'], held, confirmed_opening=True)
+                oracle, _, _ = predict(head, inputs['held'], held, oracle_scope=True)
                 result = evaluate(held, plan, catalog, store, model, tokenizer, codebook, reader, values=values)
                 paired_start = len(held) - 2 * len(held_pairs)
                 result.update(thresholds=thresholds, scope=scope_metrics(snapshots, expected, held),
@@ -263,6 +312,9 @@ def compare_paired(args, model, tokenizer, reader_file, writer_file, binding, gr
                               confirmed_pairs_correct=paired_scope_metrics(confirmed[paired_start:], held_pairs),
                               pairs_total=len(held_pairs), oracle_scope_metrics=plan_metrics(held, oracle),
                               checkpoint_sha256=base.sha(checkpoint))
+                if args.compare_clauses:
+                    result.update(transition_trace=transition_trace(head, inputs['held'], held, snapshots, confirmed),
+                                  version_transfer=version_transfer(head, extract))
             results[name] = result
             print(name, thresholds, 'paired', result['pairs_correct'], result['confirmed_pairs_correct'],
                   result['summary'], flush=True)
@@ -345,7 +397,10 @@ if __name__ == '__main__':
     cli.add_argument('--steps', type=int, default=240)
     cli.add_argument('--utterance-features', action='store_true')
     cli.add_argument('--paired-transitions', action='store_true')
+    cli.add_argument('--compare-clauses', action='store_true', help='Compare whole-turn and clause features on paired data')
     args = cli.parse_args()
+    if args.compare_clauses and not args.paired_transitions:
+        cli.error('--compare-clauses requires --paired-transitions')
     if args.steps < 1:
         cli.error('--steps must be positive')
     main(args)
