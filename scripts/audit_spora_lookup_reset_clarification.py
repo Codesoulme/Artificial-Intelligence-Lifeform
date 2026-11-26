@@ -46,6 +46,24 @@ HELD = (
     ('scope', '这批查询整个失效，别再处理。', '这批查询仍算数，请按原来的处理。', '先把其中一笔排除，具体哪笔还不确定。'),
     ('conditional', '不用等了，我现在确定全撤。', '不用等了，我现在确定全留。', '如果今天确认不了，可能就要全撤。'),
 )
+MATCHED_TRAIN = (
+    ('所有调档都应停办。', '所有调档都不应停办。', '所有调档都应停办吗？'),
+    ('别让每项核查继续。', '别让每项核查停止。', '是否该让每项核查停止？'),
+    ('这批记录统统不用查。', '这批记录统统不得漏查。', '这批记录是不是统统不用查？'),
+    ('每份待查材料都别翻了。', '每份待查材料都别忘了翻。', '每份待查材料都别翻了吗？'),
+    ('同事说全部停办，我同意。', '同事说全部停办，我不同意。', '同事说全部停办，我还没表态。'),
+    ('旁人建议接着查，我决定全部停下。', '旁人建议停下，我决定全部接着查。', '旁人建议停下，我尚未决定。'),
+    ('「整批终止」是我的最终决定。', '「整批终止」是他的话，我决定照旧。', '「整批终止」只是我念出的原文。'),
+    ('有人说不能停查，我的意思是可以停查并且现在停。', '有人说可以停查，我的意思是不能停查。', '有人说可以停查，我暂不发表意见。'),
+)
+MATCHED_HELD = (
+    ('must', '这些检索都须终止。', '这些检索都不许终止。', '这些检索都须终止么？'),
+    ('any', '待查的卷宗一份都别开。', '待查的卷宗一份都别忘了开。', '待查的卷宗是不是一份都别开？'),
+    ('endorsement', '组长提出先把全部查询作废，我接受。', '组长提出先把全部查询作废，我反对，照办。', '组长提出先把全部查询作废，我还没有意见。'),
+    ('attribution', '旁边的人主张保留，不过我批准撤销整单。', '旁边的人主张撤销，不过我批准保留整单。', '旁边的人主张撤销，我只是转达。'),
+    ('quotation', '「照原样做」是讨论材料，我的决定是停止全部。', '「停止全部」是讨论材料，我的决定是照原样做。', '材料里的说法是「停止全部」，这事我还没拍板。'),
+    ('condition', '条件已经满足，现在把整批都停下。', '条件没有满足，现在这批接着查。', '假如条件满足，是不是就把整批都停下？'),
+)
 RESOLUTION = (
     ('cancel', '我确定这一次整批都不再查询了。', CANCEL),
     ('proceed', '确认维持当前查阅范围，请接着办。', PROCEED),
@@ -55,6 +73,18 @@ RESOLUTION = (
 def labeled(triples):
     return [(text, label) for texts in triples
             for text, label in zip(texts, (CANCEL, PROCEED, CLARIFY), strict=True)]
+
+
+def matched_summary(cases, picks):
+    comparisons = tuple(zip(cases, picks, strict=True))
+    counts = Counter()
+    for (_, _, wanted), actual in comparisons:
+        counts.update(correct=wanted == actual, false_cancel=wanted != CANCEL and actual == CANCEL,
+                      unnecessary_wait=wanted != CLARIFY and actual == CLARIFY)
+    counts.update(total=len(comparisons), complete_triples=sum(
+        all(wanted == actual for (_, _, wanted), actual in comparisons[begin:begin + 3])
+        for begin in range(0, len(comparisons), 3)))
+    return counts
 
 
 def decision(row, cutoff):
@@ -131,23 +161,29 @@ def main(args):
     train = rollout.reset_examples(rollout.RESET_TRAIN) + labeled(TRAIN_MORE)
     calibration = labeled(CALIBRATION)
     held = [(family, text, label) for family, *texts in HELD for text, label in labeled([texts])]
+    previous_size = len(held)
+    if args.matched:
+        held.extend((family, text, label) for family, *texts in MATCHED_HELD for text, label in labeled([texts]))
     held_labeled = [(text, label) for _, text, label in held]
     answers = {int(number): value for number, value in archive_meta['values'].items()}
     if any(value in text for text, _ in held_labeled for value in answers.values()):
         raise ValueError('A held prompt contains an archived value')
-    if {text for text, _ in train} & {text for text, _ in calibration + held_labeled}:
+    augmented = train + labeled(MATCHED_TRAIN) if args.matched else train
+    if {text for text, _ in augmented} & {text for text, _ in calibration + held_labeled}:
         raise ValueError('Training wording overlaps evaluation')
     args.output.mkdir(parents=True, exist_ok=False)
     tokenizer = base.AutoTokenizer.from_pretrained(base.MODEL, local_files_only=True, trust_remote_code=False)
     results = {}
     with local_model(args.recurrent) as model, VersionStore(archive, binding) as store:
         extract = FrozenTurnFeatures(SimpleNamespace(base=model), tokenizer)
-        candidate = fit_probe(extract, train, 3, clauses=True)
-        candidate_path = args.output / 'three-way.pt'
-        atomic_save(candidate.state_dict(), candidate_path)
-        candidate.load_state_dict(torch.load(candidate_path, map_location='cpu', weights_only=True), strict=True)
-        calibration_rows = classify(candidate, extract, calibration, clauses=True)
-        candidate_cut = calibrate(calibration_rows)
+        probes = {}
+        for name, training in (('three_way', train), ('matched', augmented)) if args.matched else (('three_way', train),):
+            probe = fit_probe(extract, training, 3, clauses=True)
+            path = args.output / f'{name.replace("_", "-")}.pt'
+            atomic_save(probe.state_dict(), path)
+            probe.load_state_dict(torch.load(path, map_location='cpu', weights_only=True), strict=True)
+            cal = classify(probe, extract, calibration, clauses=True)
+            probes[name] = probe, calibrate(cal), cal, base.sha(path)
 
         values = [Episode(family, addresses, (text,), '上一版。', ASK, -1)
                   for (family, text, _), addresses in product(held, pairs)]
@@ -167,8 +203,9 @@ def main(args):
         embedding = model.get_input_embeddings().weight.detach()
         columns = compress_dimension(embedding.shape[1]).to(model.device)
         codebook = F.normalize(embedding.index_select(1, columns).float(), dim=-1)
-        for name, head, cutoff in (('binary', binary.eval(), prior['reset']['cutoff']),
-                                   ('three_way', candidate, candidate_cut)):
+        arms = [('binary', binary.eval(), prior['reset']['cutoff'])]
+        arms.extend((name, probe, cutoff) for name, (probe, cutoff, _, _) in probes.items())
+        for name, head, cutoff in arms:
             classified = classify(head, extract, held_labeled, clauses=True)
             replies = classify(head, extract, [(text, label) for _, text, label in RESOLUTION], clauses=True)
             if name == 'binary':
@@ -189,12 +226,22 @@ def main(args):
                              unexpected_read=row['selected'] is not None and row['expected_record'] is None,
                              missed_read=row['selected'] is None and row['expected_record'] is not None)
             result.update(groups=grouped, cutoff=cutoff, classifications=classified, resolutions=resolutions, picks=picks)
+            if args.matched:
+                result['intent'] = {
+                    'prior': matched_summary(held[:previous_size], picks[:previous_size]),
+                    'fresh': matched_summary(held[previous_size:], picks[previous_size:len(held)]),
+                }
+                print('intent', name, result['intent'], flush=True)
             results[name] = result
             print(name, cutoff, result['summary'], grouped, resolutions, flush=True)
     if any(base.sha(path) != digest for path, digest in sources.items()):
         raise RuntimeError('A model input or archive changed')
+    _, _, calibration_rows, checkpoint_sha256 = probes['three_way']
     store_json(args.output / 'result.json', dict(results=results, training=len(train), calibration=calibration_rows,
-                                               checkpoint_sha256=base.sha(candidate_path),
+                                               checkpoint_sha256=checkpoint_sha256,
+                                               matched_training=len(augmented) if args.matched else None,
+                                               matched_calibration=probes['matched'][2] if args.matched else None,
+                                               matched_sha256=probes['matched'][3] if args.matched else None,
                                                sources={str(path): digest for path, digest in sources.items()},
                                                seconds=perf_counter() - start))
 
@@ -207,4 +254,5 @@ if __name__ == '__main__':
     cli.add_argument('--recurrent', type=Path, nargs=3, required=True)
     cli.add_argument('--reader', type=Path, default=Path('runs/spora-dual-version-reply-v1'))
     cli.add_argument('--normalizer', type=Path, default=Path('runs/spora-version-normalizer-v1'))
+    cli.add_argument('--matched', action='store_true')
     main(cli.parse_args())
