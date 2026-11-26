@@ -18,11 +18,11 @@ from scripts.train_spora_recurrent_counterfactual import store_json
 from spora.research_recurrent_decode import load_recurrent_replacements
 
 
-def cases(archive, tokenizer, count):
-    if sha(archive) != PINNED['test']:
-        raise ValueError('Unexpected CrossWOZ official test archive')
+def cases(archive, tokenizer, count, *, split='test'):
+    if sha(archive) != PINNED[split]:
+        raise ValueError(f'Unexpected CrossWOZ official {split} archive')
     with ZipFile(archive) as source:
-        records = json.loads(source.read('test.json'))
+        records = json.loads(source.read(f'{split}.json'))
     ordered = sorted(records, key=lambda key: sha256(('hybrid-language-v1/' + key).encode()).digest())
     selected = []
     for key in ordered:
