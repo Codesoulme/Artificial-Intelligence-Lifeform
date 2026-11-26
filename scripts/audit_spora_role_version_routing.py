@@ -22,6 +22,7 @@ from scripts.train_spora_revision_roles import (
     records, resolve_address, sha, store_json, using,
 )
 from spora.language_training import atomic_save
+from spora.research_version_dialogue_scope import eligible_spoken_lookup
 
 
 SKIP, CURRENT, FIRST = range(3)
@@ -67,6 +68,25 @@ HOLD_FORMS = (
     ('请润色「按现在的{a}和起初的{b}写通知」这句要求。', (SKIP, SKIP)),
 )
 
+CALIBRATION_FORMS = (
+    ('给我核一下{a}现用的内容，以及{b}第一回写下的。', (CURRENT, FIRST)),
+    ('请写明{b}还在执行的那条；{a}用第一笔。', (FIRST, CURRENT)),
+    ('{a}和{b}都查目前那条。', (CURRENT, CURRENT)),
+    ('先给出{a}当前的信息，{b}晚些再查。', (CURRENT, SKIP)),
+    ('别查{a}，给我看看{b}最初那条。', (SKIP, FIRST)),
+    ('我只是想比较{a}和{b}两个说法的区别，先不要查记录。', (SKIP, SKIP)),
+    ('「核对{a}现用及{b}首版」这句话通顺吗？', (SKIP, SKIP)),
+)
+
+FRESH_FORMS = (
+    ('交接单里，{a}照现在实际执行的那条，{b}照第一笔。', (CURRENT, FIRST)),
+    ('用初次登记的{a}，另外把眼下生效的{b}写上。', (FIRST, CURRENT)),
+    ('别翻{b}，单说今天还管用的{a}。', (CURRENT, SKIP)),
+    ('我只要刚入档时的{b}，{a}的记录先不用看。', (SKIP, FIRST)),
+    ('这次我在讨论措辞，先不调出{a}或{b}的记录。', (SKIP, SKIP)),
+    ('有人写了「把{a}最新一项和{b}初次登记的发来」，帮我改写这句。', (SKIP, SKIP)),
+)
+
 
 class RolePlan(nn.Module):
     def __init__(self, width, *, role_attention=False):
@@ -83,6 +103,53 @@ class RolePlan(nn.Module):
             weight = score.masked_fill(~allowed, -torch.inf).softmax(-1)
             states = states + (weight.unsqueeze(-1) * context).sum(-2)
         return self.actions(states)
+
+
+class FactorizedRolePlan(nn.Module):
+    """Separate turn intent, each role's participation and the selected version."""
+
+    def __init__(self, width):
+        super().__init__()
+        self.encode = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, 64), nn.GELU())
+        self.intent = nn.Linear(64, 1)
+        self.include = nn.Linear(64, 1)
+        self.version = nn.Linear(64, 2)
+
+    def forward(self, states):
+        roles = self.encode(states)
+        return self.intent(roles.mean(1)).squeeze(-1), self.include(roles).squeeze(-1), self.version(roles)
+
+
+def factorized_loss(outputs, target):
+    intent, include, version = outputs
+    requested = target.ne(SKIP)
+    flags = requested.float()
+    version_loss = F.cross_entropy(version.transpose(1, 2), (target - 1).clamp_min(0), reduction='none')
+    return (F.binary_cross_entropy_with_logits(intent, requested.any(1).float())
+            + F.binary_cross_entropy_with_logits(include, flags)
+            + (version_loss * flags).sum() / flags.sum().clamp_min(1))
+
+
+def factorized_predictions(outputs, intent_cut, role_cut):
+    intent, roles, version = outputs
+    read = (intent.sigmoid()[:, None] >= intent_cut) & (roles.sigmoid() >= role_cut)
+    return torch.where(read, 1 + version.argmax(-1), SKIP)
+
+
+def calibrate(outputs, targets):
+    best = None
+    for intent_cut in (.35, .5, .65, .8, .9):
+        for role_cut in (.35, .5, .65, .8, .9):
+            predicted = factorized_predictions(outputs, intent_cut, role_cut)
+            inactive = targets.eq(SKIP).all(1)
+            false_read = int((inactive & predicted.ne(SKIP).any(1)).sum())
+            wrong_role = int((targets.eq(SKIP) & predicted.ne(SKIP)).sum())
+            exact = int(predicted.eq(targets).all(1).sum())
+            correct_reads = int((predicted.eq(targets) & targets.ne(SKIP)).sum())
+            rank = (exact - 2 * false_read - wrong_role, exact, correct_reads)
+            if best is None or rank > best[0]:
+                best = rank, (intent_cut, role_cut)
+    return best[1]
 
 
 def query_states(extract, requests, *, role_attention):
@@ -104,7 +171,7 @@ def training_requests():
             for pair in SCENES.values() for form, labels in TRAIN_FORMS for index in range(3)]
 
 
-def hold_requests():
+def hold_requests(forms=HOLD_FORMS):
     alternatives = (
         ('导览指示牌要落在哪儿', '散场后撤牌的人'),
         ('开录的档期', '剪片头的那位'),
@@ -115,18 +182,21 @@ def hold_requests():
     )
     return [(scene, form.format(a=first, b=second), pair, labels)
             for (scene, pair), (first, second) in zip(SCENES.items(), alternatives, strict=True)
-            for form, labels in HOLD_FORMS]
+            for form, labels in forms]
 
 
-def fit(features, requests, steps, *, role_attention):
+def fit(features, requests, steps, *, role_attention, factorized=False):
     torch.manual_seed(SEED)
     rng = torch.Generator().manual_seed(SEED)
-    head = RolePlan(features[0].shape[-1], role_attention=role_attention)
+    width = features[0].shape[-1]
+    head = FactorizedRolePlan(width) if factorized else RolePlan(width, role_attention=role_attention)
     optimizer = torch.optim.AdamW(head.parameters(), lr=.002)
     targets = torch.tensor([labels for _, _, labels in requests])
     for _ in range(steps):
         batch = torch.randperm(len(requests), generator=rng)[:32]
-        loss = F.cross_entropy(head(*(value[batch] for value in features)).flatten(0, 1), targets[batch].flatten())
+        outputs = head(*(value[batch] for value in features))
+        loss = (factorized_loss(outputs, targets[batch]) if factorized else
+                F.cross_entropy(outputs.flatten(0, 1), targets[batch].flatten()))
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
@@ -181,25 +251,52 @@ def main(args):
         raise ValueError('Training and held requests overlap')
     extract = FrozenTurnFeatures(decoder, tokenizer)
     features = query_states(extract, train, role_attention=args.role_attention)
-    head = fit(features, train, args.steps, role_attention=args.role_attention)
+    head = fit(features, train, args.steps, role_attention=args.role_attention, factorized=args.factorized)
     planner = args.output / 'role-plan.pt'
     atomic_save(head.state_dict(), planner)
     head.load_state_dict(torch.load(planner, weights_only=True, map_location='cpu'), strict=True)
     with torch.inference_mode():
-        held_features = query_states(extract, [row[1:] for row in hold], role_attention=args.role_attention)
-        predicted = head(*held_features).argmax(-1).tolist()
-        swapped = head(*(value.flip(1) for value in held_features)).argmax(-1).flip(1).tolist()
-        if predicted != swapped:
-            raise RuntimeError('Swapping proposed role order changed the version plan')
-        results = evaluate_routes(args, runtime, decoder, model, tokenizer, replacements, manifest,
-                                  hold, predicted, sources, identity)
+        thresholds = None
+        splits = {'previous': hold}
+        if args.factorized:
+            calibration = hold_requests(CALIBRATION_FORMS)
+            splits['fresh'] = hold_requests(FRESH_FORMS)
+            groups = ([item[0] for item in train], *(list(row[1] for row in rows)
+                      for rows in (calibration, *splits.values())))
+            if len(set().union(*groups)) != sum(len(set(group)) for group in groups):
+                raise ValueError('Training, calibration and test prompts must be disjoint')
+            calibration_features = query_states(extract, [row[1:] for row in calibration], role_attention=False)
+            thresholds = calibrate(head(*calibration_features), torch.tensor([row[3] for row in calibration]))
+
+        def predict(features):
+            scores = head(*features)
+            return factorized_predictions(scores, *thresholds) if args.factorized else scores.argmax(-1)
+
+        audited = {}
+        for name, held in splits.items():
+            held_features = query_states(extract, [row[1:] for row in held], role_attention=args.role_attention)
+            predicted = predict(held_features).tolist()
+            swapped = predict(tuple(value.flip(1) for value in held_features)).flip(1).tolist()
+            if predicted != swapped:
+                raise RuntimeError('Swapping proposed role order changed the version plan')
+            ungated = predicted
+            if args.factorized:
+                predicted = [actions if eligible_spoken_lookup(row[1]) else [SKIP, SKIP]
+                             for row, actions in zip(held, predicted, strict=True)]
+            outcome = evaluate_routes(args, runtime, decoder, model, tokenizer, replacements, manifest,
+                                      held, predicted, sources, identity)
+            if args.factorized:
+                for row, actions in zip(outcome['rows'], ungated, strict=True):
+                    row['before_guard'] = actions
+            audited[name] = outcome
+            print(name, outcome['summary'], flush=True)
     if identity != frozen_digest(runtime.organism, runtime.state) or any(sha(path) != digest for path, digest in sources.items()):
         raise RuntimeError('An input or the individual changed')
-    store_json(args.output / 'result.json', dict(**results, train_count=len(train), hold_count=len(hold), steps=args.steps,
-               role_attention=args.role_attention,
+    store_json(args.output / 'result.json', dict(**audited['previous'], fresh=audited.get('fresh'),
+               train_count=len(train), hold_count=len(hold), steps=args.steps,
+               role_attention=args.role_attention, factorized=args.factorized, thresholds=thresholds,
                individual_sha256=identity, head_sha256=sha(planner), sources={str(path): value for path, value in sources.items()},
                seconds=perf_counter() - started))
-    print(results['summary'], flush=True)
 
 
 def evaluate_routes(args, runtime, decoder, model, tokenizer, replacements, manifest, hold, predicted, sources, identity):
@@ -271,7 +368,9 @@ if __name__ == '__main__':
     cli.add_argument('output', type=Path)
     cli.add_argument('layers', nargs=2, type=Path)
     cli.add_argument('--steps', type=int, default=220)
-    cli.add_argument('--role-attention', action='store_true')
+    mode = cli.add_mutually_exclusive_group()
+    mode.add_argument('--role-attention', action='store_true')
+    mode.add_argument('--factorized', action='store_true')
     args = cli.parse_args()
     if args.steps < 1:
         cli.error('Expected a positive step count')

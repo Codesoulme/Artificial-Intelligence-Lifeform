@@ -19,6 +19,21 @@
 
 下一轮将沿用孢子已有的读取确认路径，把「是否要查」和「每项该读哪一版」分成两个决策，再单独测试明确否定、引用中的查档描述及同一句里对两个角色的不同时间要求。相关研究发现，仅从当前问句很难恢复更早确认的对象和版本约束。可另外用已确认的结构化会话状态提供缺省坐标，仍从内存版本张量读事实。 [Parametric Session States](https://arxiv.org/abs/2610.33047)
 
+## 分开判断查档、角色与版次
+
+第三组先判断整句是否要读档，再为两个候选角色各判断是否纳入，最后只对需要读取的角色训练版次。训练仍使用同一批 216 条请求和同一冻结模型，另用 42 条不同措辞校准整句与角色的阈值，选得 0.50 和 0.80。资格过滤复用孢子已有的查档判断。逐题保存过滤前后动作。保留原有 48 条测试并加 36 条新问法，两个测试集均有 12 条无需读档的请求。新问法采用同样的六类事项与已确认对象，未引入新的资料类型。 [Drift-Bench++](https://arxiv.org/abs/2609.38604)
+
+| 指标 | 原留出，三分类 | 原留出，分开判断 | 新留出，分开判断 |
+| --- | ---: | ---: | ---: |
+| 两个角色的动作均正确 | 15/48 | 15/48 | 14/36 |
+| 实际选择的版本编号全部正确 | 18/48 | 18/48 | 16/36 |
+| 双项请求的完整动作正确 | 1/24 | 0/24 | 1/12 |
+| 单项请求的完整动作正确 | 4/12 | 3/12 | 1/12 |
+| 无需读档的请求误读 | 2/12 | 0/12 | 0/12 |
+| 应答事实都出现、竞争值未出现且正常结束 | 8/36 | 6/36 | 4/24 |
+
+原留出中分开判断的减少误读来自训练和校准，规则未改变任何决策。新留出中，规则拦下两次引用或改写语句误读，未改变正例。把查档意图与版次分开后，误读减少，但正例完整动作和最终事实通过数也减少。两套留出具名记忆读取均为 32/32，共耗时约 147 秒，84 项相关测试通过。下一轮优先分清失败发生在句内角色归属还是时间词判断，并为已确认会话中的不明确请求复用逐项追问及确认。候选仍只用于实验。
+
 ## 复现
 
 ```powershell
@@ -32,4 +47,5 @@ $layout='runs/spora-hybrid-position-recovery-v1/19-22'
 $layers=@("$layout/layer-19", "$layout/layer-22")
 .\.venv\Scripts\python.exe -u -m scripts.audit_spora_role_version_routing $parent $reference $reader runs/spora-role-version-routing-v1 @layers
 .\.venv\Scripts\python.exe -u -m scripts.audit_spora_role_version_routing $parent $reference $reader runs/spora-role-version-routing-attention-v1 @layers --role-attention
+.\.venv\Scripts\python.exe -u -m scripts.audit_spora_role_version_routing $parent $reference $reader runs/spora-role-version-routing-factorized-v1 @layers --factorized
 ```
