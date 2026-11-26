@@ -1,6 +1,7 @@
 """Reload recovered attention layouts and compare generation and persistent reads."""
 
 import argparse
+from collections import Counter
 import json
 from pathlib import Path
 from time import perf_counter
@@ -8,13 +9,59 @@ from time import perf_counter
 import torch
 
 from scripts.benchmark_spora_recurrent_dialogue import (
-    MODEL, SOURCE, AutoTokenizer, extend_positions, frozen_digest, load_full_streamed,
+    MODEL, SOURCE, AutoTokenizer, encode, exchange, extend_positions, frozen_digest, load_full_streamed,
     load_integrated_runtime, recall_prompts, run_dialogue, sha, using,
 )
 from scripts.train_spora_recurrent_counterfactual import store_json
 from scripts.train_spora_hybrid_language_recovery import DEFAULT_LAYOUTS, layout_name, parse_layout
 from scripts.train_qwen_counterfactual_reply_20261122 import HELD, evaluate, records
 from spora.research_recurrent_decode import load_recurrent_replacements
+
+
+SINGLE_QUESTIONS = {
+    'market-sign': '只回答导览牌最后放在哪儿。',
+    'radio-rehearsal': '只回答最新的广播录音时间。',
+    'library-storage': '只回答新书标签最后用什么。',
+    'printing-handoff': '只回答最后要交几份样张。',
+    'seed-workshop': '只回答新牌子上最后写什么。',
+}
+
+
+def distance_prompts(tokenizer, source):
+    rows = []
+    for index, case in enumerate(source['recall']):
+        fillers = []
+        for offset in range(len(source['filler'])):
+            prompt = source['filler'][(offset + index) % len(source['filler'])]
+            exchange(fillers, prompt, '收到，接着说吧。')
+        for variant, items in enumerate(case['values']):
+            values = dict(zip(('old', 'new', 'keep'), items, strict=True))
+            initial, update = [], []
+            exchange(initial, case['first'].format_map(values), '我记下这项安排了。')
+            exchange(update, case['update'].format_map(values), '好，我只修改这一项。')
+            for question, required, kind in (
+                    (SINGLE_QUESTIONS[case['name']], ('new',), 'single'),
+                    (case['question'], ('new', 'keep'), 'dual')):
+                query = {'role': 'user', 'content': question}
+                near, far = initial + fillers + update, initial + update + fillers
+                lengths = [len(encode(tokenizer, [*history, query])) for history in (near, far)]
+                if lengths[0] != lengths[1] or not 600 <= lengths[0] <= 750:
+                    raise ValueError(f'Unmatched prompt lengths for {case["name"]}: {lengths}')
+                for distance, history in zip(('near', 'far'), (near, far), strict=True):
+                    rows.append(dict(case=case['name'], variant=variant, length=f'{distance}_{kind}', values=values,
+                                     required_keys=required, question=question, history=history, input_tokens=lengths[0]))
+    return rows
+
+
+def distance_summary(dialogue):
+    counts = {}
+    for row in dialogue['recall']:
+        text = row['answer']
+        values = row['values']
+        counts.setdefault(row['length'], Counter()).update(
+            total=1, passed=row['passed'], ended=row['eos'], new=values['new'] in text,
+            old=values['old'] in text, retained=values['keep'] in text)
+    return counts
 
 
 def main(args):
@@ -51,9 +98,13 @@ def main(args):
         source['recall'] = additional_recall
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, local_files_only=True, trust_remote_code=False)
-    prompts = recall_prompts(tokenizer, source, extended=True)
-    if args.recall_transfer:
-        prompts = [row for row in prompts if row['length'] != 'short']
+    if args.revision_distance:
+        prompts = distance_prompts(tokenizer, source)
+        source['open'] = []
+    else:
+        prompts = recall_prompts(tokenizer, source, extended=True)
+        if args.recall_transfer:
+            prompts = [row for row in prompts if row['length'] != 'short']
     base = load_full_streamed(stage_output_projection=True)
     rotary = base.model.rotary_emb
     runtime = load_integrated_runtime(args.checkpoint, base, MODEL, disposable_base=True)
@@ -66,6 +117,11 @@ def main(args):
     memory = records(runtime.organism, HELD)
     parent_transfer = run_dialogue(decoder, tokenizer, [], transfer) if transfer else None
     results = {}
+    if args.revision_distance:
+        dialogue = run_dialogue(decoder, tokenizer, prompts, [])
+        persistent = evaluate(decoder, tokenizer, runtime.organism, memory)
+        results['parent'] = dict(dialogue=dialogue, memory=persistent, distance=distance_summary(dialogue))
+        print('parent', results['parent']['distance'], persistent['summary'], flush=True)
     for layout in layouts:
         name = layout_name(layout)
         directories = [args.recovery / name / f'layer-{index}' for index in layout]
@@ -85,6 +141,9 @@ def main(args):
             additional = run_dialogue(decoder, tokenizer, [], transfer) if transfer else None
             persistent = evaluate(decoder, tokenizer, runtime.organism, memory)
         results[name] = dict(dialogue=dialogue, memory=persistent)
+        if args.revision_distance:
+            results[name]['distance'] = distance_summary(dialogue)
+            print(name, results[name]['distance'], flush=True)
         if additional is not None:
             results[name]['transfer'] = additional
         print(name, dialogue['recall_passed'], dialogue['open_turns_passed'], persistent['summary'], flush=True)
@@ -110,7 +169,10 @@ if __name__ == '__main__':
     cli.add_argument('--transfer', type=Path, help='Additional open multi-turn dialogue cases')
     cli.add_argument('--recall-transfer', type=Path, help='Replace recall cases with an independent long-dialogue set')
     cli.add_argument('--layout', type=parse_layout, action='append', help='Evaluate only the requested recovered layouts')
+    cli.add_argument('--revision-distance', action='store_true', help='Compare edit distance and answer width on recall transfer')
     args = cli.parse_args()
     if args.output.exists():
         cli.error('Choose a new output path')
+    if args.revision_distance and not args.recall_transfer:
+        cli.error('--revision-distance requires --recall-transfer')
     main(args)

@@ -80,7 +80,8 @@ def recall_dialogue(decoder, tokenizer, prompts, settings, *, position_limit=Non
         values = row['values']
         if answer['prompt_tokens'] != row['input_tokens']:
             raise ValueError('Token counts used for recall prompts differ at generation')
-        passed = grade(answer, [re.escape(values['new']), re.escape(values['keep'])], [re.escape(values['old'])])
+        required = [values[key] for key in row.get('required_keys', ('new', 'keep'))]
+        passed = grade(answer, [re.escape(value) for value in required], [re.escape(values['old'])])
         recall.append({**row, **answer, 'passed': passed})
     labels = dict.fromkeys(row['length'] for row in recall)
     return {'recall': recall,
